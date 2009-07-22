@@ -13,7 +13,9 @@ import java.math.*;
  * 
  * The main results are a table of approximate nanoseconds per
  * element-operation (averaged across get, put etc) for each type,
- * across a range of map sizes.
+ * across a range of map sizes. It also includes category "Mixed"
+ * that includes elements of multiple types including those with
+ * identical hash codes.
  *
  * The program includes a bunch of microbenchmarking safeguards that
  * might underestimate typical performance. For example, by using many
@@ -32,29 +34,20 @@ public class MapMicroBenchmark {
     static boolean randomSearches = true;
     static boolean randomKeys = false;
 
-    static final long NANOS_PER_JOB = 8L * 1000L*1000L*1000L;
+    // Nanoseconds per run
+    static final long NANOS_PER_JOB = 6L * 1000L*1000L*1000L;
+    static final long NANOS_PER_WARMUP = 100L*1000L*1000L;
 
     // map operations per item per iteration -- change if job.work changed
     static final int OPS_PER_ITER = 11;
-    static final int MIN_ITERS_PER_TEST = 2;
-    static final int MAX_ITERS_PER_TEST = 1000000;
+    static final int MIN_ITERS_PER_TEST = 3;
+    static final int MAX_ITERS_PER_TEST = 1000000; // avoid runaway
 
     // sizes are at halfway points for HashMap default resizes
-    static final int firstSize = 36;
+    static final int firstSize = 9;
     static final int sizeStep = 4; // each size 4X last
-    static final int nsizes = 8;
+    static final int nsizes = 9;
     static final int[] sizes = new int[nsizes];
-
-    static final class Missing {} // class for guaranteed non-matches
-    static final Object MISSING = new Missing();
-
-    static Map newMap() {
-        try {
-            return (Map)mapClass.newInstance();
-        } catch(Exception e) {
-            throw new RuntimeException("Can't instantiate " + mapClass + ": " + e);
-        }
-    }
 
     public static void main(String[] args) throws Throwable {
         if (args.length == 0) {
@@ -96,75 +89,137 @@ public class MapMicroBenchmark {
         }
         sizes[nsizes - 1] = n;
 
-        Object[] ss = new Object[n];
+        int njobs = 9;
+
         Object[] os = new Object[n];
+        Object[] ss = new Object[n];
         Object[] is = new Object[n];
         Object[] ls = new Object[n];
         Object[] fs = new Object[n];
         Object[] ds = new Object[n];
         Object[] bs = new Object[n];
         Object[] es = new Object[n];
+        Object[] ms = new Object[n];
 
-        // To guarantee uniqueness, use xorshift for "random" versions
-        int j = randomKeys? 1234567 : 0;
         for (int i = 0; i < n; i++) {
-            ss[i] = String.valueOf(j);
             os[i] = new Object();
-            is[i] = Integer.valueOf(j);
-            ls[i] = Long.valueOf((long)j);
-            fs[i] = Float.valueOf((float)i); // can't use random for float
-            ds[i] = Double.valueOf((double)j);
-            bs[i] = BigInteger.valueOf(j);
-            es[i] = BigDecimal.valueOf(j);
-            j = randomKeys? xorshift(j) : j + 1;
         }
 
-	List<Job> list = new ArrayList<Job>();
-        list.add(new Job("BigDecimal", es));
-        list.add(new Job("BigInteger", bs));
-        list.add(new Job("String    ", ss));
-        list.add(new Job("Double    ", ds));
-        list.add(new Job("Float     ", fs));
-        list.add(new Job("Long      ", ls));
-        list.add(new Job("Integer   ", is));
-        list.add(new Job("Object    ", os));
+        // To guarantee uniqueness, use xorshift for "random" versions
+        int rnd = 3122688;
+        for (int i = 0; i < n; i++) {
+            rnd = xorshift(rnd);
+            int j = randomKeys? rnd : i;
+            ss[i] = String.valueOf(j);
+        }
 
-        Job[] jobs = list.toArray(new Job[0]);
-        warmup(jobs);
-        warmup(jobs);
+        for (int i = 0; i < n; i++) {
+            rnd = xorshift(rnd);
+            int j = randomKeys? rnd : i;
+            is[i] = Integer.valueOf(j);
+        }
+
+        for (int i = 0; i < n; i++) {
+            rnd = xorshift(rnd);
+            int j = randomKeys? rnd : i;
+            ls[i] = Long.valueOf((long)j);
+        }
+
+        for (int i = 0; i < n; i++) {
+            //            rnd = xorshift(rnd);
+            //            int j = randomKeys? rnd : i;
+            fs[i] = Float.valueOf((float)i); // can't use random for float
+        }
+
+        for (int i = 0; i < n; i++) {
+            rnd = xorshift(rnd);
+            int j = randomKeys? rnd : i;
+            ds[i] = Double.valueOf((double)j);
+        }
+
+        for (int i = 0; i < n; i++) {
+            rnd = xorshift(rnd);
+            int j = randomKeys? rnd : i;
+            bs[i] = BigInteger.valueOf(j);
+        }
+
+        for (int i = 0; i < n; i++) {
+            rnd = xorshift(rnd);
+            int j = randomKeys? rnd : i;
+            es[i] = BigDecimal.valueOf(j);
+        }
+
+        Job[] jobs = new Job[njobs];
+        jobs[0] = new Job("Object    ", os, Object.class);
+        jobs[1] = new Job("String    ", ss, String.class);
+        jobs[2] = new Job("Integer   ", is, Integer.class);
+        jobs[3] = new Job("Long      ", ls, Long.class);
+        jobs[4] = new Job("Float     ", fs, Float.class);
+        jobs[5] = new Job("Double    ", ds, Double.class);
+        jobs[6] = new Job("BigInteger", bs, BigInteger.class);
+        jobs[7] = new Job("BigDecimal", es, BigDecimal.class);
+
+        for (int i = 0; i < n; i +=2) {
+            rnd = xorshift(rnd);
+            int j = (rnd & 7); // change if njobs changes
+            ms[i] = jobs[j].items[i];
+            j = (j + 1) & 7;
+            ms[i+1] = jobs[j].items[i];
+        }
+
+        jobs[8] = new Job("Mixed     ", ms, Object.class);
+
+        warmup1(jobs[8]);
+        warmup2(jobs);
+        warmup1(jobs[8]);
+        warmup3(jobs);
+        warmup1(jobs[8]);
+        Thread.sleep(500);
 	time(jobs);
     }
 
-    static void runWork(Job[] jobs, int maxIters) throws Throwable {
+    static void runWork(Job[] jobs, int minIters, int maxIters, long timeLimit) throws Throwable {
         for (int k = 0; k <  nsizes; ++k) {
             int len = sizes[k];
             for (int i = 0; i < jobs.length; i++) {
-                jobs[i].setup(len);
                 Thread.sleep(50);
-                jobs[i].nanos[k] = jobs[i].work(len, maxIters);
+                jobs[i].nanos[k] = jobs[i].work(len, minIters, maxIters, timeLimit);
                 System.out.print(".");
             }
         }
         System.out.println();
     }
 
-    static void warmup(Job[] jobs) throws Throwable {
+    // First warmup -- run only mixed job to discourage type specialization
+    static void warmup1(Job job) throws Throwable {
+        for (int k = 0; k <  nsizes; ++k)
+            job.work(sizes[k], 1, 1, 0);
+    }
+
+    // Second, run each once
+    static void warmup2(Job[] jobs) throws Throwable {
         System.out.print("warm up");
-        runWork(jobs, MIN_ITERS_PER_TEST);
+        runWork(jobs, 1, 1, 0);
         long ck = jobs[0].checkSum;
-        for (int i = 1; i < jobs.length; i++) {
+        for (int i = 1; i < jobs.length - 1; i++) {
             if (jobs[i].checkSum != ck)
                 throw new Error("CheckSum");
         }
     }
 
+    // Third: short timed runs
+    static void warmup3(Job[] jobs) throws Throwable {
+        System.out.print("warm up");
+        runWork(jobs, 1, MAX_ITERS_PER_TEST, NANOS_PER_WARMUP);
+    }
+
     static void time(Job[] jobs) throws Throwable {
         System.out.print("running");
-        runWork(jobs, MAX_ITERS_PER_TEST);
+        runWork(jobs, MIN_ITERS_PER_TEST, MAX_ITERS_PER_TEST, NANOS_PER_JOB);
 
         System.out.print("Type/Size:");
         for (int k = 0; k < nsizes; ++k)
-            System.out.printf("%8d", sizes[k]);
+            System.out.printf("%7d", sizes[k]);
         System.out.println();
 
         long[] aves = new long[nsizes];
@@ -174,7 +229,7 @@ public class MapMicroBenchmark {
             System.out.print(jobs[i].name);
             for (int k = 0; k < nsizes; ++k) {
                 long nanos = jobs[i].nanos[k];
-                System.out.printf("%8d", nanos);
+                System.out.printf("%7d", nanos);
                 aves[k] += nanos;
             }
             System.out.println();
@@ -183,50 +238,50 @@ public class MapMicroBenchmark {
         System.out.println();
         System.out.print("average   ");
         for (int k = 0; k < nsizes; ++k)
-            System.out.printf("%8d", (aves[k] / njobs));
-        System.out.println();
+            System.out.printf("%7d", (aves[k] / njobs));
+        System.out.println("\n");
     }
 
 
     static final class Job {
 	final String name;
+        final Class elementClass;
         long[] nanos = new long[nsizes];
         final Object[] items;
-        final Object[] dups;
-        Object[] reordered;
+        Object[] searches;
         volatile long checkSum;
         volatile int lastSum;
-        Job(String name, Object[] items) {
+        Job(String name, Object[] items, Class elementClass) {
             this.name = name;
             this.items = items;
-            if (randomSearches)
-                this.dups = new Object[items.length];
-            else
-                this.dups = items;
-        }
-
-        public void setup(int len) {
+            this.elementClass = elementClass;
             if (randomSearches) {
-                System.arraycopy(items, 0, dups, 0, len);
-                shuffle(dups, len);
-                reordered = dups;
+                scramble(items);
+                this.searches = new Object[items.length];
+                System.arraycopy(items, 0, searches, 0, items.length);
+                scramble(searches);
             }
             else
-                reordered = items;
+                this.searches = items;
         }
 
-        public long work(int len, int maxIters) {
+        public long work(int len, int minIters, int maxIters, long timeLimit) {
+            Map m;
+            try {
+                m = (Map)mapClass.newInstance();
+            } catch(Exception e) {
+                throw new RuntimeException("Can't instantiate " + mapClass + ": " + e);
+            }
             Object[] ins = items;
-            Object[] keys = reordered;
+            Object[] keys = searches;
 
             if (ins.length < len || keys.length < len)
                 throw new Error(name);
             int half = len / 2;
-            Class eclass = ins[0].getClass();
+            int quarter = half / 2;
             int sum = lastSum;
             long startTime = System.nanoTime();
             long elapsed;
-            Map m = newMap();
             int j = 0;
             for (;;) {
                 for (int i = 0; i < half; ++i) {
@@ -235,11 +290,12 @@ public class MapMicroBenchmark {
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 1); // help avoid loop merging
+                sum += len - half;
                 for (int i = 0; i < len; ++i) {
                     Object x = keys[i];
                     Object v = m.get(x); 
-                    if (v != null && v.getClass() == eclass) // touch v
-                        sum += 2;
+                    if (elementClass.isInstance(v)) // touch v
+                        ++sum;
                 }
                 checkSum += sum ^ (sum << 2);
                 for (int i = half; i < len; ++i) {
@@ -249,26 +305,26 @@ public class MapMicroBenchmark {
                 }
                 checkSum += sum ^ (sum << 3);
                 for (Object e : m.keySet()) {
-                    if (e.getClass() == eclass)
+                    if (elementClass.isInstance(e)) 
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 4);
                 for (Object e : m.values()) {
-                    if (e.getClass() == eclass)
+                    if (elementClass.isInstance(e)) 
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 5);
                 for (int i = len - 1; i >= 0; --i) {
                     Object x = keys[i];
                     Object v = m.get(x);
-                    if (v != null && v.getClass() == eclass)
+                    if (elementClass.isInstance(v))
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 6);
                 for (int i = 0; i < len; ++i) {
                     Object x = ins[i];
                     Object v = m.get(x);
-                    if (v != null && v.getClass() == eclass)
+                    if (elementClass.isInstance(v))
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 7);
@@ -282,40 +338,37 @@ public class MapMicroBenchmark {
                 for (int i = 0; i < len; ++i) {
                     Object x = keys[i];
                     Object v = ins[i];
-                    if (v.equals(m.get(x)))
+                    if (v == m.get(x))
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 9);
                 for (int i = len - 1; i >= 0; --i) {
                     Object x = ins[i];
-                    if (m.get(x) != MISSING)
+                    Object v = m.get(x);
+                    if (elementClass.isInstance(v))
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 10);
                 for (int i = len - 1; i >= 0; --i) {
                     Object x = keys[i];
                     Object v = ins[i];
-                    if (v.equals(m.get(x)))
+                    if (v == m.get(x))
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 11);
-                if ((j & 1) == 1) { // lower remove rate
-                    for (int i = 0; i < len; ++i) {
-                        Object x = keys[i];
-                        if (m.remove(x) != null)
-                            ++sum;
-                    }
+                for (int i = 0; i < quarter; ++i) {
+                    Object x = keys[i];
+                    if (m.remove(x) != null)
+                        ++sum;
                 }
-                else {
-                    m.clear();
-                    sum += len;
-                }
+                m.clear();
+                sum += len - quarter;
                 checkSum += sum ^ (sum << 12);
 
                 elapsed = System.nanoTime() - startTime;
                 ++j;
-                if (j >= MIN_ITERS_PER_TEST &&
-                    (j >= maxIters || elapsed >= NANOS_PER_JOB))
+                if (j >= minIters &&
+                    (j >= maxIters || elapsed >= timeLimit))
                     break;
             }
             long ops = ((long)j) * len * OPS_PER_ITER;
@@ -335,8 +388,24 @@ public class MapMicroBenchmark {
     }
 
 
-    static final Random rng = new Random(3152688);
+    static final Random rng = new Random(3122688);
 
+    // Shuffle the subarrays for each size. This doesn't fully
+    // randomize, but the remaining partial locality is arguably a bit
+    // more realistic
+    static void scramble(Object[] a) {
+        for (int k = 0; k < sizes.length; ++k) {
+            int origin = k == 0? 0 : sizes[k-1];
+            for (int i = sizes[k]; i > origin + 1; i--) {
+                Object t = a[i-1];
+                int r = rng.nextInt(i - origin) + origin;
+                a[i-1] = a[r];
+                a[r] = t;
+            }
+        }
+    }            
+
+    // plain array shuffle
     static void shuffle(Object[] a, int size) {
         for (int i= size; i>1; i--) {
             Object t = a[i-1];
@@ -345,6 +414,8 @@ public class MapMicroBenchmark {
             a[r] = t;
         }
     }
+
+
 
 }
 

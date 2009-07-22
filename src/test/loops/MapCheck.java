@@ -53,6 +53,8 @@ public class MapCheck {
                 eclass = java.lang.Float.class;
             else if (et.startsWith("s"))
                 eclass = java.lang.String.class;
+            else if (et.startsWith("d"))
+                eclass = java.lang.Double.class;
         }
         if (eclass == null)
             eclass = Object.class;
@@ -235,7 +237,7 @@ public class MapCheck {
     static void valTest(Map s, Object[] key) {
         int size = s.size();
         int sum = 0;
-        timer.start("Traverse access key/val", size);
+        timer.start("Traverse key or value  ", size);
         if (s.containsValue(MISSING)) ++sum;
         timer.finish(); 
         reallyAssert (sum == 0);
@@ -246,7 +248,7 @@ public class MapCheck {
     static Object kitTest(Map s, int size) {
         Object last = null;
         int sum = 0;
-        timer.start("Traverse access key/val", size);
+        timer.start("Traverse key or value  ", size);
         for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
             Object x = it.next();
             if (x != last && x != null && x.getClass() == eclass)
@@ -262,7 +264,7 @@ public class MapCheck {
     static Object vitTest(Map s, int size) {
         Object last = null;
         int sum = 0;
-        timer.start("Traverse access key/val", size);
+        timer.start("Traverse key or value  ", size);
         for (Iterator it = s.values().iterator(); it.hasNext(); ) {
             Object x = it.next();
             if (x != last && x != null && x.getClass() == eclass)
@@ -277,7 +279,7 @@ public class MapCheck {
 
     static void eitTest(Map s, int size) {
         int sum = 0;
-        timer.start("Traverse access entry  ", size);
+        timer.start("Traverse entry         ", size);
         for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
             Object k = e.getKey();
@@ -421,7 +423,7 @@ public class MapCheck {
         Object hold = s2.get(lastkey);
         int sum = 0;
 
-        timer.start("Traverse access entry  ", size * 12); // 12 until finish
+        timer.start("Traverse entry         ", size * 12); // 12 until finish
 
         int sh1 = s.hashCode() - s2.hashCode();
         reallyAssert (sh1 == 0);
@@ -522,6 +524,9 @@ public class MapCheck {
         else if (eclass == Float.class) {
             initFloats(key, absent, size);
         }
+        else if (eclass == Double.class) {
+            initDoubles(key, absent, size);
+        }
         else if (eclass == String.class) {
             initWords(size, key, absent);
         }
@@ -555,6 +560,22 @@ public class MapCheck {
         while (k < size) {
             float r = rng.nextFloat();
             Float ir = Float.valueOf(r);
+            if (m.put(ir, ir) == null)
+                absent[k++] = ir;
+        }
+    }
+
+    static void initDoubles(Object[] key, Object[] absent, int size) {
+        Map m = newMap();
+        for (int i = 0; i < size; ++i) {
+            double r = Double.valueOf(i);
+            key[i] = r;
+            m.put(r, r);
+        }
+        int k = 0;
+        while (k < size) {
+            double r = rng.nextDouble();
+            Double ir = Double.valueOf(r);
             if (m.put(ir, ir) == null)
                 absent[k++] = ir;
         }

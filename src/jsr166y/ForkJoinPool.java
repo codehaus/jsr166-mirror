@@ -619,6 +619,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             return true;
         }
         public void run() { invoke(); }
+        private static final long serialVersionUID = 5232453952276885070L;
     }
 
     /**
@@ -647,6 +648,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             }
         }
         public void run() { invoke(); }
+        private static final long serialVersionUID = 2838392045355241008L;
     }
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
@@ -665,6 +667,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             try { invokeAll(tasks); }
             catch (Exception ignore) {}
         }
+        private static final long serialVersionUID = -7914297376763021607L;
     }
 
     // Configuration and status settings and queries

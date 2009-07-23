@@ -123,6 +123,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             nextUpdater.lazySet(this, this);
         }
 
+        private static final long serialVersionUID = -3375979862319811754L;
     }
 
     /**
@@ -134,6 +135,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         // enough padding for 64bytes with 4byte refs
         Object p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, pa, pb, pc, pd, pe;
         PaddedAtomicReference(T r) { super(r); }
+        private static final long serialVersionUID = 8170090609809740854L;
     }
 
 

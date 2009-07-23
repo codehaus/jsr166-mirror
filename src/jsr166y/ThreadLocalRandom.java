@@ -194,4 +194,5 @@ public class ThreadLocalRandom extends Random {
         return nextDouble() * (bound - least) + least;
     }
 
+    private static final long serialVersionUID = -5851777807851030925L;
 }

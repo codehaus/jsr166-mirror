@@ -139,6 +139,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /** head of the queue */
     private transient final PaddedAtomicReference<QNode> head;
+
     /** tail of the queue */
     private transient final PaddedAtomicReference<QNode> tail;
 

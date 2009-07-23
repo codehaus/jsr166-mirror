@@ -38,7 +38,7 @@ public class ThreadLocalRandom extends Random {
     private final static long mask = (1L << 48) - 1;
 
     /**
-     * The random seed. We can't use super.seed
+     * The random seed. We can't use super.seed.
      */
     private long rnd;
 
@@ -77,6 +77,7 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns the current Thread's ThreadLocalRandom.
+     *
      * @return the current Thread's ThreadLocalRandom
      */
     public static ThreadLocalRandom current() {
@@ -86,6 +87,7 @@ public class ThreadLocalRandom extends Random {
     /**
      * Throws UnsupportedOperationException. Setting seeds in this
      * generator is unsupported.
+     *
      * @throws UnsupportedOperationException always
      */
     public void setSeed(long seed) {
@@ -96,12 +98,14 @@ public class ThreadLocalRandom extends Random {
     }
 
     protected int next(int bits) {
-        return (int)((rnd = (rnd * multiplier + addend) & mask) >>> (48-bits));
+        rnd = (rnd * multiplier + addend) & mask;
+        return (int) (rnd >>> (48-bits));
     }
 
     /**
      * Returns a pseudorandom, uniformly distributed value between the
      * given least value (inclusive) and bound (exclusive).
+     *
      * @param least the least value returned
      * @param bound the upper bound (exclusive)
      * @throws IllegalArgumentException if least greater than or equal
@@ -116,7 +120,8 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns a pseudorandom, uniformly distributed value
-     * between 0 (inclusive) and the specified value (exclusive)
+     * between 0 (inclusive) and the specified value (exclusive).
+     *
      * @param n the bound on the random number to be returned.  Must be
      *        positive.
      * @return the next value
@@ -134,7 +139,7 @@ public class ThreadLocalRandom extends Random {
         while (n >= Integer.MAX_VALUE) {
             int bits = next(2);
             long half = n >>> 1;
-            long nextn = ((bits & 2) == 0)? half : n - half;
+            long nextn = ((bits & 2) == 0) ? half : n - half;
             if ((bits & 1) == 0)
                 offset += n - nextn;
             n = nextn;
@@ -145,6 +150,7 @@ public class ThreadLocalRandom extends Random {
     /**
      * Returns a pseudorandom, uniformly distributed value between the
      * given least value (inclusive) and bound (exclusive).
+     *
      * @param least the least value returned
      * @param bound the upper bound (exclusive)
      * @return the next value
@@ -159,7 +165,8 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns a pseudorandom, uniformly distributed {@code double} value
-     * between 0 (inclusive) and the specified value (exclusive)
+     * between 0 (inclusive) and the specified value (exclusive).
+     *
      * @param n the bound on the random number to be returned.  Must be
      *        positive.
      * @return the next value
@@ -174,6 +181,7 @@ public class ThreadLocalRandom extends Random {
     /**
      * Returns a pseudorandom, uniformly distributed value between the
      * given least value (inclusive) and bound (exclusive).
+     *
      * @param least the least value returned
      * @param bound the upper bound (exclusive)
      * @return the next value

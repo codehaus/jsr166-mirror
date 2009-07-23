@@ -139,7 +139,7 @@ public class ForkJoinWorkerThread extends Thread {
     private static final int MAXIMUM_QUEUE_CAPACITY = 1 << 28;
 
     /**
-     * The pool this thread works in. Accessed directly by ForkJoinTask
+     * The pool this thread works in. Accessed directly by ForkJoinTask.
      */
     final ForkJoinPool pool;
 
@@ -167,7 +167,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Activity status. When true, this worker is considered active.
      * Must be false upon construction. It must be true when executing
      * tasks, and BEFORE stealing a task. It must be false before
-     * calling pool.sync
+     * calling pool.sync.
      */
     private boolean active;
 
@@ -190,7 +190,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Index of this worker in pool array. Set once by pool before
-     * running, and accessed directly by pool during cleanup etc
+     * running, and accessed directly by pool during cleanup etc.
      */
     int poolIndex;
 
@@ -293,7 +293,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Tries to set status to active; fails on contention.
+     * Tries to set status to inactive; fails on contention.
      */
     private boolean tryInactivate() {
         if (active) {
@@ -371,7 +371,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Performs cleanup associated with termination of this worker
      * thread.  If you override this method, you must invoke
-     * super.onTermination at the end of the overridden method.
+     * {@code super.onTermination} at the end of the overridden method.
      *
      * @param exception the exception causing this thread to abort due
      * to an unrecoverable error, or null if completed normally
@@ -383,14 +383,14 @@ public class ForkJoinWorkerThread extends Thread {
                 ForkJoinTask<?> t = popTask();
                 if (t != null)
                     t.quietlyExec();
-            } catch(Throwable ex) {
+            } catch (Throwable ex) {
                 exception = ex;
             }
         }
         // Cancel other tasks, transition status, notify pool, and
         // propagate exception to uncaught exception handler
         try {
-            do;while (!tryInactivate()); // ensure inactive
+            do {} while (!tryInactivate()); // ensure inactive
             cancelTasks();
             runState = TERMINATED;
             pool.workerTerminated(this);
@@ -671,6 +671,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Returns true if at least one worker in the given array appears
      * to have at least one queued task.
+     *
      * @param ws array of workers
      */
     static boolean hasQueuedTasks(ForkJoinWorkerThread[] ws) {
@@ -707,7 +708,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Scans, returning early if joinMe done
+     * Scans, returning early if joinMe done.
      */
     final ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
         ForkJoinTask<?> t = pollTask();
@@ -719,7 +720,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Runs tasks until pool isQuiescent.
+     * Runs tasks until {@code pool.isQuiescent()}.
      */
     final void helpQuiescePool() {
         for (;;) {
@@ -729,7 +730,7 @@ public class ForkJoinWorkerThread extends Thread {
             else if (tryInactivate() && pool.isQuiescent())
                 break;
         }
-        do;while (!tryActivate()); // re-activate on exit
+        do {} while (!tryActivate()); // re-activate on exit
     }
 
     // Temporary Unsafe mechanics for preliminary release

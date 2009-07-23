@@ -211,7 +211,7 @@ public class Phaser {
     private static final int phaseMask  = 0x7fffffff;
 
     private static int unarrivedOf(long s) {
-        return (int)(s & ushortMask);
+        return (int) (s & ushortMask);
     }
 
     private static int partiesOf(long s) {
@@ -266,7 +266,7 @@ public class Phaser {
     private final AtomicReference<QNode> oddQ  = new AtomicReference<QNode>();
 
     private AtomicReference<QNode> queueFor(int phase) {
-        return (phase & 1) == 0? evenQ : oddQ;
+        return ((phase & 1) == 0) ? evenQ : oddQ;
     }
 
     /**
@@ -274,7 +274,7 @@ public class Phaser {
      * root if necessary.
      */
     private long getReconciledState() {
-        return parent == null? state : reconcileState();
+        return (parent == null) ? state : reconcileState();
     }
 
     /**
@@ -441,7 +441,7 @@ public class Phaser {
                 if (par == null) {      // directly trip
                     if (casState
                         (s,
-                         trippedStateFor(onAdvance(phase, parties)? -1 :
+                         trippedStateFor(onAdvance(phase, parties) ? -1 :
                                          ((phase + 1) & phaseMask), parties))) {
                         releaseWaiters(phase);
                         break;
@@ -502,7 +502,7 @@ public class Phaser {
                 if (unarrived == 0) {
                     if (casState
                         (s,
-                         trippedStateFor(onAdvance(phase, parties)? -1 :
+                         trippedStateFor(onAdvance(phase, parties) ? -1 :
                                          ((phase + 1) & phaseMask), parties))) {
                         releaseWaiters(phase);
                         break;
@@ -587,7 +587,8 @@ public class Phaser {
      * @throws InterruptedException if thread interrupted while waiting
      * @throws TimeoutException if timed out while waiting
      */
-    public int awaitAdvanceInterruptibly(int phase, long timeout, TimeUnit unit)
+    public int awaitAdvanceInterruptibly(int phase,
+                                         long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
         if (phase < 0)
             return phase;

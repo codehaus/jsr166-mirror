@@ -684,7 +684,7 @@
 
 
   <target name="extra166ycompile"
-          depends="init, configure-compiler"
+          depends="init, configure-compiler, jsr166ycompile"
           description="Compiles extra166y sources">
 
     <mkdir dir="${build.extra166y.dir}"/>
@@ -692,6 +692,7 @@
     <javac srcdir="${extra166ysrc.dir}"
           destdir="${build.extra166y.dir}"
             debug="${build.debug}"
+            classpath="${jsr166yproduct.jar}"
        debuglevel="${build.debuglevel}"
       deprecation="${build.deprecation}"
            source="${build.sourcelevel}"

@@ -517,7 +517,7 @@ public class ForkJoinWorkerThread extends Thread {
         if (q == null)
             return null;
         int mask = q.length - 1;
-        int i = locallyFifo? base : (sp - 1);
+        int i = locallyFifo ? base : (sp - 1);
         return q[i & mask];
     }
 
@@ -580,7 +580,7 @@ public class ForkJoinWorkerThread extends Thread {
                     ForkJoinWorkerThread v = ws[mask & idx];
                     if (v == null || v.sp == v.base) {
                         if (probes <= mask)
-                            idx = (probes++ < 0)? r : (idx + 1);
+                            idx = (probes++ < 0) ? r : (idx + 1);
                         else
                             break;
                     }
@@ -601,7 +601,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return a task, if available
      */
     final ForkJoinTask<?> pollTask() {
-        ForkJoinTask<?> t = locallyFifo? deqTask() : popTask();
+        ForkJoinTask<?> t = locallyFifo ? deqTask() : popTask();
         if (t == null && (t = scan()) != null)
             ++stealCount;
         return t;
@@ -613,7 +613,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return a task, if available
      */
     final ForkJoinTask<?> pollLocalTask() {
-        return locallyFifo? deqTask() : popTask();
+        return locallyFifo ? deqTask() : popTask();
     }
 
     /**
@@ -693,8 +693,8 @@ public class ForkJoinWorkerThread extends Thread {
      * Returns an estimate of the number of tasks in the queue.
      */
     final int getQueueSize() {
-        int n = sp - base;
-        return n < 0? 0 : n; // suppress momentarily negative values
+        // suppress momentarily negative values
+        return Math.max(0, sp - base);
     }
 
     /**

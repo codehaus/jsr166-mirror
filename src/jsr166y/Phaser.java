@@ -215,11 +215,11 @@ public class Phaser {
     }
 
     private static int partiesOf(long s) {
-        return ((int)s) >>> 16;
+        return ((int) s) >>> 16;
     }
 
     private static int phaseOf(long s) {
-        return (int)(s >>> 32);
+        return (int) (s >>> 32);
     }
 
     private static int arrivedOf(long s) {
@@ -227,13 +227,13 @@ public class Phaser {
     }
 
     private static long stateFor(int phase, int parties, int unarrived) {
-        return ((((long)phase) << 32) | (((long)parties) << 16) |
-                (long)unarrived);
+        return ((((long) phase) << 32) | (((long) parties) << 16) |
+                (long) unarrived);
     }
 
     private static long trippedStateFor(int phase, int parties) {
-        long lp = (long)parties;
-        return (((long)phase) << 32) | (lp << 16) | lp;
+        long lp = (long) parties;
+        return (((long) phase) << 32) | (lp << 16) | lp;
     }
 
     /**

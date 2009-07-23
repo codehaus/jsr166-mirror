@@ -80,7 +80,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * seems not to vary with number of CPUs (beyond 2) so is just
      * a constant.
      */
-    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32;
+    static final int maxTimedSpins = (NCPUS < 2) ? 0 : 32;
 
     /**
      * The number of times to spin before blocking in untimed waits.
@@ -202,7 +202,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     Object x = first.get();
                     if (x != first && first.compareAndSet(x, e)) {
                         LockSupport.unpark(first.waiter);
-                        return isData? e : x;
+                        return isData ? e : x;
                     }
                 }
             }
@@ -240,7 +240,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     Object x = first.get();
                     if (x != first && first.compareAndSet(x, e)) {
                         LockSupport.unpark(first.waiter);
-                        return isData? e : x;
+                        return isData ? e : x;
                     }
                 }
             }
@@ -263,7 +263,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         if (mode == NOWAIT)
             return null;
 
-        long lastTime = (mode == TIMEOUT)? System.nanoTime() : 0;
+        long lastTime = (mode == TIMEOUT) ? System.nanoTime() : 0;
         Thread w = Thread.currentThread();
         int spins = -1; // set to desired spin count below
         for (;;) {
@@ -295,7 +295,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (spins < 0) {
                 QNode h = head.get(); // only spin if at head
                 spins = ((h != null && h.next == s) ?
-                         (mode == TIMEOUT?
+                         ((mode == TIMEOUT) ?
                           maxTimedSpins : maxUntimedSpins) : 0);
             }
             if (spins > 0)
@@ -486,7 +486,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     public E take() throws InterruptedException {
         Object e = xfer(null, WAIT, 0);
         if (e != null)
-            return (E)e;
+            return (E) e;
         Thread.interrupted();
         throw new InterruptedException();
     }
@@ -494,12 +494,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         Object e = xfer(null, TIMEOUT, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
-            return (E)e;
+            return (E) e;
         throw new InterruptedException();
     }
 
     public E poll() {
-        return (E)fulfill(null);
+        return (E) fulfill(null);
     }
 
     public int drainTo(Collection<? super E> c) {
@@ -602,7 +602,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 Object x = q.get();
                 QNode s = q.next;
                 if (x != null && q != x && q != s) {
-                    nextItem = (E)x;
+                    nextItem = (E) x;
                     snext = s;
                     pnext = pred;
                     next = q;
@@ -649,7 +649,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 if (!p.isData)
                     return null;
                 if (x != null)
-                    return (E)x;
+                    return (E) x;
             }
         }
     }
@@ -772,7 +772,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         s.defaultReadObject();
         resetHeadAndTail();
         for (;;) {
-            E item = (E)s.readObject();
+            E item = (E) s.readObject();
             if (item == null)
                 break;
             else

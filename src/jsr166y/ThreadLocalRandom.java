@@ -139,7 +139,7 @@ public class ThreadLocalRandom extends Random {
                 offset += n - nextn;
             n = nextn;
         }
-        return offset + nextInt((int)n);
+        return offset + nextInt((int) n);
     }
 
     /**

@@ -10,8 +10,6 @@ import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 import java.util.*;
 import java.io.*;
-import sun.misc.Unsafe;
-import java.lang.reflect.*;
 
 /**
  * An unbounded {@linkplain TransferQueue} based on linked nodes.
@@ -102,20 +100,22 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * garbage retention. Similarly, setting the next field to this is
      * used as sentinel that node is off list.
      */
-    static final class QNode extends AtomicReference<Object> {
-        volatile QNode next;
+    static final class Node<E> extends AtomicReference<Object> {
+        volatile Node<E> next;
         volatile Thread waiter;       // to control park/unpark
         final boolean isData;
-        QNode(Object item, boolean isData) {
+
+        Node(E item, boolean isData) {
             super(item);
             this.isData = isData;
         }
 
-        static final AtomicReferenceFieldUpdater<QNode, QNode>
+        @SuppressWarnings("rawtypes")
+        static final AtomicReferenceFieldUpdater<Node, Node>
             nextUpdater = AtomicReferenceFieldUpdater.newUpdater
-            (QNode.class, QNode.class, "next");
+            (Node.class, Node.class, "next");
 
-        final boolean casNext(QNode cmp, QNode val) {
+        final boolean casNext(Node<E> cmp, Node<E> val) {
             return nextUpdater.compareAndSet(this, cmp, val);
         }
 
@@ -140,23 +140,23 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
 
     /** head of the queue */
-    private transient final PaddedAtomicReference<QNode> head;
+    private transient final PaddedAtomicReference<Node<E>> head;
 
     /** tail of the queue */
-    private transient final PaddedAtomicReference<QNode> tail;
+    private transient final PaddedAtomicReference<Node<E>> tail;
 
     /**
      * Reference to a cancelled node that might not yet have been
      * unlinked from queue because it was the last inserted node
      * when it cancelled.
      */
-    private transient final PaddedAtomicReference<QNode> cleanMe;
+    private transient final PaddedAtomicReference<Node<E>> cleanMe;
 
     /**
      * Tries to cas nh as new head; if successful, unlink
      * old head's next node to avoid garbage retention.
      */
-    private boolean advanceHead(QNode h, QNode nh) {
+    private boolean advanceHead(Node<E> h, Node<E> nh) {
         if (h == head.get() && head.compareAndSet(h, nh)) {
             h.clearNext(); // forget old next
             return true;
@@ -174,20 +174,20 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param nanos timeout in nanosecs, used only if mode is TIMEOUT
      * @return an item, or null on failure
      */
-    private Object xfer(Object e, int mode, long nanos) {
+    private E xfer(E e, int mode, long nanos) {
         boolean isData = (e != null);
-        QNode s = null;
-        final PaddedAtomicReference<QNode> head = this.head;
-        final PaddedAtomicReference<QNode> tail = this.tail;
+        Node<E> s = null;
+        final PaddedAtomicReference<Node<E>> head = this.head;
+        final PaddedAtomicReference<Node<E>> tail = this.tail;
 
         for (;;) {
-            QNode t = tail.get();
-            QNode h = head.get();
+            Node<E> t = tail.get();
+            Node<E> h = head.get();
 
             if (t != null && (t == h || t.isData == isData)) {
                 if (s == null)
-                    s = new QNode(e, isData);
-                QNode last = t.next;
+                    s = new Node<E>(e, isData);
+                Node<E> last = t.next;
                 if (last != null) {
                     if (t == tail.get())
                         tail.compareAndSet(t, last);
@@ -199,13 +199,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
 
             else if (h != null) {
-                QNode first = h.next;
+                Node<E> first = h.next;
                 if (t == tail.get() && first != null &&
                     advanceHead(h, first)) {
                     Object x = first.get();
                     if (x != first && first.compareAndSet(x, e)) {
                         LockSupport.unpark(first.waiter);
-                        return isData ? e : x;
+                        return isData ? e : (E) x;
                     }
                 }
             }
@@ -217,17 +217,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Version of xfer for poll() and tryTransfer, which
      * simplifies control paths both here and in xfer.
      */
-    private Object fulfill(Object e) {
+    private E fulfill(E e) {
         boolean isData = (e != null);
-        final PaddedAtomicReference<QNode> head = this.head;
-        final PaddedAtomicReference<QNode> tail = this.tail;
+        final PaddedAtomicReference<Node<E>> head = this.head;
+        final PaddedAtomicReference<Node<E>> tail = this.tail;
 
         for (;;) {
-            QNode t = tail.get();
-            QNode h = head.get();
+            Node<E> t = tail.get();
+            Node<E> h = head.get();
 
             if (t != null && (t == h || t.isData == isData)) {
-                QNode last = t.next;
+                Node<E> last = t.next;
                 if (t == tail.get()) {
                     if (last != null)
                         tail.compareAndSet(t, last);
@@ -236,14 +236,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 }
             }
             else if (h != null) {
-                QNode first = h.next;
+                Node<E> first = h.next;
                 if (t == tail.get() &&
                     first != null &&
                     advanceHead(h, first)) {
                     Object x = first.get();
                     if (x != first && first.compareAndSet(x, e)) {
                         LockSupport.unpark(first.waiter);
-                        return isData ? e : x;
+                        return isData ? e : (E) x;
                     }
                 }
             }
@@ -261,8 +261,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param nanos timeout value
      * @return matched item, or s if cancelled
      */
-    private Object awaitFulfill(QNode pred, QNode s, Object e,
-                                int mode, long nanos) {
+    private E awaitFulfill(Node<E> pred, Node<E> s, E e,
+                           int mode, long nanos) {
         if (mode == NOWAIT)
             return null;
 
@@ -281,7 +281,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 }
                 else if (x != null) {
                     s.set(s);             // avoid garbage retention
-                    return x;
+                    return (E) x;
                 }
                 else
                     return e;
@@ -296,7 +296,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 }
             }
             if (spins < 0) {
-                QNode h = head.get(); // only spin if at head
+                Node<E> h = head.get(); // only spin if at head
                 spins = ((h != null && h.next == s) ?
                          ((mode == TIMEOUT) ?
                           maxTimedSpins : maxUntimedSpins) : 0);
@@ -321,16 +321,16 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Returns validated tail for use in cleaning methods.
      */
-    private QNode getValidatedTail() {
+    private Node<E> getValidatedTail() {
         for (;;) {
-            QNode h = head.get();
-            QNode first = h.next;
+            Node<E> h = head.get();
+            Node<E> first = h.next;
             if (first != null && first.next == first) { // help advance
                 advanceHead(h, first);
                 continue;
             }
-            QNode t = tail.get();
-            QNode last = t.next;
+            Node<E> t = tail.get();
+            Node<E> last = t.next;
             if (t == tail.get()) {
                 if (last != null)
                     tail.compareAndSet(t, last); // help advance
@@ -346,7 +346,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param pred predecessor of cancelled node
      * @param s the cancelled node
      */
-    private void clean(QNode pred, QNode s) {
+    private void clean(Node<E> pred, Node<E> s) {
         Thread w = s.waiter;
         if (w != null) {             // Wake up thread
             s.waiter = null;
@@ -366,10 +366,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * processed, so this always terminates.
          */
         while (pred.next == s) {
-            QNode oldpred = reclean();  // First, help get rid of cleanMe
-            QNode t = getValidatedTail();
+            Node<E> oldpred = reclean();  // First, help get rid of cleanMe
+            Node<E> t = getValidatedTail();
             if (s != t) {               // If not tail, try to unsplice
-                QNode sn = s.next;      // s.next == s means s already off list
+                Node<E> sn = s.next;      // s.next == s means s already off list
                 if (sn == s || pred.casNext(s, sn))
                     break;
             }
@@ -385,7 +385,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *
      * @return current cleanMe node (or null)
      */
-    private QNode reclean() {
+    private Node<E> reclean() {
         /*
          * cleanMe is, or at one time was, predecessor of cancelled
          * node s that was the tail so could not be unspliced.  If s
@@ -397,12 +397,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * This can loop only due to contention on casNext or
          * clearing cleanMe.
          */
-        QNode pred;
+        Node<E> pred;
         while ((pred = cleanMe.get()) != null) {
-            QNode t = getValidatedTail();
-            QNode s = pred.next;
+            Node<E> t = getValidatedTail();
+            Node<E> s = pred.next;
             if (s != t) {
-                QNode sn;
+                Node<E> sn;
                 if (s == null || s == pred || s.get() != s ||
                     (sn = s.next) == s || pred.casNext(s, sn))
                     cleanMe.compareAndSet(pred, null);
@@ -417,10 +417,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Creates an initially empty {@code LinkedTransferQueue}.
      */
     public LinkedTransferQueue() {
-        QNode dummy = new QNode(null, false);
-        head = new PaddedAtomicReference<QNode>(dummy);
-        tail = new PaddedAtomicReference<QNode>(dummy);
-        cleanMe = new PaddedAtomicReference<QNode>(null);
+        Node<E> dummy = new Node<E>(null, false);
+        head = new PaddedAtomicReference<Node<E>>(dummy);
+        tail = new PaddedAtomicReference<Node<E>>(dummy);
+        cleanMe = new PaddedAtomicReference<Node<E>>(null);
     }
 
     /**
@@ -502,7 +502,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     public E poll() {
-        return (E) fulfill(null);
+        return fulfill(null);
     }
 
     public int drainTo(Collection<? super E> c) {
@@ -538,13 +538,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Returns head after performing any outstanding helping steps.
      */
-    private QNode traversalHead() {
+    private Node<E> traversalHead() {
         for (;;) {
-            QNode t = tail.get();
-            QNode h = head.get();
+            Node<E> t = tail.get();
+            Node<E> h = head.get();
             if (h != null && t != null) {
-                QNode last = t.next;
-                QNode first = h.next;
+                Node<E> last = t.next;
+                Node<E> first = h.next;
                 if (t == tail.get()) {
                     if (last != null)
                         tail.compareAndSet(t, last);
@@ -576,11 +576,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * if subsequently removed.
      */
     class Itr implements Iterator<E> {
-        QNode next;        // node to return next
-        QNode pnext;       // predecessor of next
-        QNode snext;       // successor of next
-        QNode curr;        // last returned node, for remove()
-        QNode pcurr;       // predecessor of curr, for remove()
+        Node<E> next;        // node to return next
+        Node<E> pnext;       // predecessor of next
+        Node<E> snext;       // successor of next
+        Node<E> curr;        // last returned node, for remove()
+        Node<E> pcurr;       // predecessor of curr, for remove()
         E nextItem;        // Cache of next item, once committed to in next
 
         Itr() {
@@ -592,8 +592,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          */
         void findNext() {
             for (;;) {
-                QNode pred = pnext;
-                QNode q = next;
+                Node<E> pred = pnext;
+                Node<E> q = next;
                 if (pred == null || pred == q) {
                     pred = traversalHead();
                     q = pred.next;
@@ -603,7 +603,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     return;
                 }
                 Object x = q.get();
-                QNode s = q.next;
+                Node<E> s = q.next;
                 if (x != null && q != x && q != s) {
                     nextItem = (E) x;
                     snext = s;
@@ -632,7 +632,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         public void remove() {
-            QNode p = curr;
+            Node<E> p = curr;
             if (p == null)
                 throw new IllegalStateException();
             Object x = p.get();
@@ -643,8 +643,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     public E peek() {
         for (;;) {
-            QNode h = traversalHead();
-            QNode p = h.next;
+            Node<E> h = traversalHead();
+            Node<E> p = h.next;
             if (p == null)
                 return null;
             Object x = p.get();
@@ -659,8 +659,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     public boolean isEmpty() {
         for (;;) {
-            QNode h = traversalHead();
-            QNode p = h.next;
+            Node<E> h = traversalHead();
+            Node<E> p = h.next;
             if (p == null)
                 return true;
             Object x = p.get();
@@ -675,8 +675,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     public boolean hasWaitingConsumer() {
         for (;;) {
-            QNode h = traversalHead();
-            QNode p = h.next;
+            Node<E> h = traversalHead();
+            Node<E> p = h.next;
             if (p == null)
                 return false;
             Object x = p.get();
@@ -699,8 +699,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     public int size() {
         int count = 0;
-        QNode h = traversalHead();
-        for (QNode p = h.next; p != null && p.isData; p = p.next) {
+        Node<E> h = traversalHead();
+        for (Node<E> p = h.next; p != null && p.isData; p = p.next) {
             Object x = p.get();
             if (x != null && x != p) {
                 if (++count == Integer.MAX_VALUE) // saturated
@@ -712,8 +712,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     public int getWaitingConsumerCount() {
         int count = 0;
-        QNode h = traversalHead();
-        for (QNode p = h.next; p != null && !p.isData; p = p.next) {
+        Node<E> h = traversalHead();
+        for (Node<E> p = h.next; p != null && !p.isData; p = p.next) {
             if (p.get() == null) {
                 if (++count == Integer.MAX_VALUE)
                     break;
@@ -730,9 +730,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         if (o == null)
             return false;
         for (;;) {
-            QNode pred = traversalHead();
+            Node<E> pred = traversalHead();
             for (;;) {
-                QNode q = pred.next;
+                Node<E> q = pred.next;
                 if (q == null || !q.isData)
                     return false;
                 if (q == pred) // restart
@@ -775,7 +775,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         s.defaultReadObject();
         resetHeadAndTail();
         for (;;) {
-            E item = (E) s.readObject();
+            @SuppressWarnings("unchecked") E item = (E) s.readObject();
             if (item == null)
                 break;
             else
@@ -783,61 +783,60 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
-
     // Support for resetting head/tail while deserializing
     private void resetHeadAndTail() {
-        QNode dummy = new QNode(null, false);
+        Node<E> dummy = new Node<E>(null, false);
         UNSAFE.putObjectVolatile(this, headOffset,
-                                  new PaddedAtomicReference<QNode>(dummy));
+                                 new PaddedAtomicReference<Node<E>>(dummy));
         UNSAFE.putObjectVolatile(this, tailOffset,
-                                  new PaddedAtomicReference<QNode>(dummy));
+                                 new PaddedAtomicReference<Node<E>>(dummy));
         UNSAFE.putObjectVolatile(this, cleanMeOffset,
-                                  new PaddedAtomicReference<QNode>(null));
+                                 new PaddedAtomicReference<Node<E>>(null));
     }
 
-    // Temporary Unsafe mechanics for preliminary release
-    private static Unsafe getUnsafe() throws Throwable {
+    // Unsafe mechanics for jsr166y 3rd party package.
+    private static sun.misc.Unsafe getUnsafe() {
         try {
-            return Unsafe.getUnsafe();
+            return sun.misc.Unsafe.getUnsafe();
         } catch (SecurityException se) {
             try {
                 return java.security.AccessController.doPrivileged
-                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
-                        public Unsafe run() throws Exception {
-                            return getUnsafePrivileged();
+                    (new java.security.PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                        public sun.misc.Unsafe run() throws Exception {
+                            return getUnsafeByReflection();
                         }});
             } catch (java.security.PrivilegedActionException e) {
-                throw e.getCause();
+                throw new RuntimeException("Could not initialize intrinsics",
+                                           e.getCause());
             }
         }
     }
 
-    private static Unsafe getUnsafePrivileged()
+    private static sun.misc.Unsafe getUnsafeByReflection()
             throws NoSuchFieldException, IllegalAccessException {
-        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        java.lang.reflect.Field f =
+            sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
         f.setAccessible(true);
-        return (Unsafe) f.get(null);
+        return (sun.misc.Unsafe) f.get(null);
     }
 
-    private static long fieldOffset(String fieldName)
-            throws NoSuchFieldException {
-        return UNSAFE.objectFieldOffset
-            (LinkedTransferQueue.class.getDeclaredField(fieldName));
-    }
-
-    private static final Unsafe UNSAFE;
-    private static final long headOffset;
-    private static final long tailOffset;
-    private static final long cleanMeOffset;
-    static {
+    private static long fieldOffset(String fieldName, Class<?> klazz) {
         try {
-            UNSAFE = getUnsafe();
-            headOffset = fieldOffset("head");
-            tailOffset = fieldOffset("tail");
-            cleanMeOffset = fieldOffset("cleanMe");
-        } catch (Throwable e) {
-            throw new RuntimeException("Could not initialize intrinsics", e);
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to Error
+            NoSuchFieldError error = new NoSuchFieldError(fieldName);
+            error.initCause(e);
+            throw error;
         }
     }
+
+    private static final sun.misc.Unsafe UNSAFE = getUnsafe();
+    static final long headOffset =
+        fieldOffset("head", LinkedTransferQueue.class);
+    static final long tailOffset =
+        fieldOffset("tail", LinkedTransferQueue.class);
+    static final long cleanMeOffset =
+        fieldOffset("cleanMe", LinkedTransferQueue.class);
 
 }

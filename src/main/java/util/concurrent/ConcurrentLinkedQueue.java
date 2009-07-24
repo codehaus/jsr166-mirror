@@ -666,14 +666,15 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     private static sun.misc.Unsafe getUnsafeByReflection()
             throws NoSuchFieldException, IllegalAccessException {
-        java.lang.reflect.Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+        java.lang.reflect.Field f =
+            sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
         f.setAccessible(true);
         return (sun.misc.Unsafe) f.get(null);
     }
 
     private static long fieldOffset(String fieldName, Class<?> klazz) {
         try {
-            return unsafe.objectFieldOffset(klazz.getDeclaredField(fieldName));
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
         } catch (NoSuchFieldException e) {
             NoSuchFieldError error = new NoSuchFieldError(fieldName);
             error.initCause(e);
@@ -681,9 +682,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
     }
 
-    private static final sun.misc.Unsafe unsafe = getUnsafe();
+    private static final sun.misc.Unsafe UNSAFE = getUnsafe();
     private static final long headOffset =
-        fieldOffset("head", ConcurrentLinkedQueue.class);;
+        fieldOffset("head", ConcurrentLinkedQueue.class);
     private static final long tailOffset =
         fieldOffset("tail", ConcurrentLinkedQueue.class);
 }

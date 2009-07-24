@@ -9,8 +9,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
-import sun.misc.Unsafe;
-import java.lang.reflect.*;
 
 /**
  * A thread managed by a {@link ForkJoinPool}.  This class is
@@ -733,55 +731,58 @@ public class ForkJoinWorkerThread extends Thread {
         do {} while (!tryActivate()); // re-activate on exit
     }
 
-    // Temporary Unsafe mechanics for preliminary release
-    private static Unsafe getUnsafe() throws Throwable {
+    // Unsafe mechanics for jsr166y 3rd party package.
+    private static sun.misc.Unsafe getUnsafe() {
         try {
-            return Unsafe.getUnsafe();
+            return sun.misc.Unsafe.getUnsafe();
         } catch (SecurityException se) {
             try {
                 return java.security.AccessController.doPrivileged
-                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
-                        public Unsafe run() throws Exception {
-                            return getUnsafePrivileged();
+                    (new java.security.PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                        public sun.misc.Unsafe run() throws Exception {
+                            return getUnsafeByReflection();
                         }});
             } catch (java.security.PrivilegedActionException e) {
-                throw e.getCause();
+                throw new RuntimeException("Could not initialize intrinsics",
+                                           e.getCause());
             }
         }
     }
 
-    private static Unsafe getUnsafePrivileged()
+    private static sun.misc.Unsafe getUnsafeByReflection()
             throws NoSuchFieldException, IllegalAccessException {
-        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        java.lang.reflect.Field f =
+            sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
         f.setAccessible(true);
-        return (Unsafe) f.get(null);
+        return (sun.misc.Unsafe) f.get(null);
     }
 
-    private static long fieldOffset(String fieldName)
-            throws NoSuchFieldException {
-        return UNSAFE.objectFieldOffset
-            (ForkJoinWorkerThread.class.getDeclaredField(fieldName));
+    private static long fieldOffset(String fieldName, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to Error
+            NoSuchFieldError error = new NoSuchFieldError(fieldName);
+            error.initCause(e);
+            throw error;
+        }
     }
 
-    static final Unsafe UNSAFE;
-    static final long baseOffset;
-    static final long spOffset;
-    static final long runStateOffset;
+    private static final sun.misc.Unsafe UNSAFE = getUnsafe();
+    static final long baseOffset =
+        fieldOffset("base", ForkJoinWorkerThread.class);
+    static final long spOffset =
+        fieldOffset("sp", ForkJoinWorkerThread.class);
+    static final long runStateOffset =
+        fieldOffset("runState", ForkJoinWorkerThread.class);
     static final long qBase;
     static final int qShift;
+
     static {
-        try {
-            UNSAFE = getUnsafe();
-            baseOffset = fieldOffset("base");
-            spOffset = fieldOffset("sp");
-            runStateOffset = fieldOffset("runState");
-            qBase = UNSAFE.arrayBaseOffset(ForkJoinTask[].class);
-            int s = UNSAFE.arrayIndexScale(ForkJoinTask[].class);
-            if ((s & (s-1)) != 0)
-                throw new Error("data type scale not a power of two");
-            qShift = 31 - Integer.numberOfLeadingZeros(s);
-        } catch (Throwable e) {
-            throw new RuntimeException("Could not initialize intrinsics", e);
-        }
+        qBase = UNSAFE.arrayBaseOffset(ForkJoinTask[].class);
+        int s = UNSAFE.arrayIndexScale(ForkJoinTask[].class);
+        if ((s & (s-1)) != 0)
+            throw new Error("data type scale not a power of two");
+        qShift = 31 - Integer.numberOfLeadingZeros(s);
     }
 }

@@ -604,10 +604,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @throws RuntimeException or Error if any task did so
      */
     public static void invokeAll(Collection<? extends ForkJoinTask<?>> tasks) {
-        if (!(tasks instanceof List)) {
+        if (!(tasks instanceof List<?>)) {
             invokeAll(tasks.toArray(new ForkJoinTask<?>[tasks.size()]));
             return;
         }
+        @SuppressWarnings("unchecked")
         List<? extends ForkJoinTask<?>> ts =
             (List<? extends ForkJoinTask<?>>) tasks;
         Throwable ex = null;
@@ -874,8 +875,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     public static ForkJoinPool getPool() {
         Thread t = Thread.currentThread();
-        return ((t instanceof ForkJoinWorkerThread) ?
-                ((ForkJoinWorkerThread) t).pool : null);
+        return (t instanceof ForkJoinWorkerThread) ?
+            ((ForkJoinWorkerThread) t).pool : null;
     }
 
     /**

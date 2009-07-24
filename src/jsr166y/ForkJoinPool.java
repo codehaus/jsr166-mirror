@@ -652,12 +652,15 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
-        ArrayList<ForkJoinTask<T>> ts =
+        ArrayList<ForkJoinTask<T>> forkJoinTasks =
             new ArrayList<ForkJoinTask<T>>(tasks.size());
-        for (Callable<T> c : tasks)
-            ts.add(new AdaptedCallable<T>(c));
-        invoke(new InvokeAll<T>(ts));
-        return (List<Future<T>>) (List) ts;
+        for (Callable<T> task : tasks)
+            forkJoinTasks.add(new AdaptedCallable<T>(task));
+        invoke(new InvokeAll<T>(forkJoinTasks));
+
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        List<Future<T>> futures = (List<Future<T>>) (List) forkJoinTasks;
+        return futures;
     }
 
     static final class InvokeAll<T> extends RecursiveAction {

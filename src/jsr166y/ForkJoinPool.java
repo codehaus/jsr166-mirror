@@ -1834,11 +1834,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     // AbstractExecutorService overrides
 
     protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
-        return new AdaptedRunnable(runnable, value);
+        return new AdaptedRunnable<T>(runnable, value);
     }
 
     protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
-        return new AdaptedCallable(callable);
+        return new AdaptedCallable<T>(callable);
     }
 
 

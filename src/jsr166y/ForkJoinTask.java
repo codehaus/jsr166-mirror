@@ -606,13 +606,14 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * in exceptions or errors, possibly including ClassCastException.
      *
      * @param tasks the collection of tasks
+     * @return the tasks argument, to simplify usage
      * @throws NullPointerException if tasks or any element are null
      * @throws RuntimeException or Error if any task did so
      */
-    public static void invokeAll(Collection<? extends ForkJoinTask<?>> tasks) {
+    public static <T extends ForkJoinTask<?>> Collection<T> invokeAll(Collection<T> tasks) {
         if (!(tasks instanceof List<?>)) {
             invokeAll(tasks.toArray(new ForkJoinTask<?>[tasks.size()]));
-            return;
+            return tasks;
         }
         @SuppressWarnings("unchecked")
         List<? extends ForkJoinTask<?>> ts =
@@ -647,6 +648,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         }
         if (ex != null)
             rethrowException(ex);
+        return tasks;
     }
 
     /**

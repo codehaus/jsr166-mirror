@@ -586,10 +586,8 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     public void execute(Runnable task) {
         ForkJoinTask<?> job;
-        if (task instanceof AdaptedCallable) // avoid re-wrap
-            job = (AdaptedCallable<?>)task;
-        else if (task instanceof AdaptedRunnable)
-            job = (AdaptedRunnable<?>)task;
+        if (task instanceof ForkJoinTask) // avoid re-wrap
+            job = (ForkJoinTask<?>)task;
         else
             job = new AdaptedRunnable<Void>(task, null);
         doSubmit(job);
@@ -609,10 +607,8 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     public ForkJoinTask<?> submit(Runnable task) {
         ForkJoinTask<?> job;
-        if (task instanceof AdaptedCallable) // avoid re-wrap
-            job = (AdaptedCallable<?>)task;
-        else if (task instanceof AdaptedRunnable)
-            job = (AdaptedRunnable<?>)task;
+        if (task instanceof ForkJoinTask) // avoid re-wrap
+            job = (ForkJoinTask<?>)task;
         else
             job = new AdaptedRunnable<Void>(task, null);
         doSubmit(job);

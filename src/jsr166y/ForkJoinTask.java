@@ -5,10 +5,15 @@
  */
 
 package jsr166y;
-import java.io.Serializable;
-import java.util.*;
+
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Abstract base class for tasks that run within a {@link

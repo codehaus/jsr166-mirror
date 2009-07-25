@@ -5,10 +5,10 @@
  */
 
 package jsr166y;
-import java.util.*;
+
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.*;
+
+import java.util.Collection;
 
 /**
  * A thread managed by a {@link ForkJoinPool}.  This class is

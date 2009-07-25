@@ -5,7 +5,8 @@
  */
 
 package jsr166y;
-import java.util.*;
+
+import java.util.Random;
 
 /**
  * A random number generator with the same properties as class {@link

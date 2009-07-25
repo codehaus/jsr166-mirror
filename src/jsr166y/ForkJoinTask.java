@@ -492,10 +492,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * computations (as may be determined using method {@link
      * #inForkJoinPool}). Attempts to invoke in other contexts result
      * in exceptions or errors, possibly including ClassCastException.
+     *
+     * @return <code>this</code>, to simplify usage.
      */
-    public final void fork() {
+    public final ForkJoinTask<V> fork() {
         ((ForkJoinWorkerThread) Thread.currentThread())
             .pushTask(this);
+        return this;
     }
 
     /**
@@ -1032,6 +1035,46 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     protected static ForkJoinTask<?> pollTask() {
         return ((ForkJoinWorkerThread) Thread.currentThread())
             .pollTask();
+    }
+
+    // adaptors
+
+    /**
+     * Returns a new ForkJoinTask that performs the <code>run</code>
+     * method of the given Runnable as its action, and returns a null
+     * result upon <code>join</code>.
+     *
+     * @param runnable the runnable action
+     * @return the task
+     */
+    public static ForkJoinTask<Void> adapt(Runnable runnable) {
+        return new ForkJoinPool.AdaptedRunnable<Void>(runnable, null);
+    }
+
+    /**
+     * Returns a new ForkJoinTask that performs the <code>run</code>
+     * method of the given Runnable as its action, and returns the
+     * given result upon <code>join</code>.
+     *
+     * @param runnable the runnable action
+     * @param result the result upon completion
+     * @return the task
+     */
+    public static <T> ForkJoinTask<T> adapt(Runnable runnable, T result) {
+        return new ForkJoinPool.AdaptedRunnable<T>(runnable, result);
+    }
+
+    /**
+     * Returns a new ForkJoinTask that performs the <code>call</code>
+     * method of the given Callable as its action, and returns its
+     * result upon <code>join</code>, translating any checked 
+     * exceptions encountered into <code>RuntimeException<code>.
+     *
+     * @param callable the callable action
+     * @return the task
+     */
+    public static <T> ForkJoinTask<T> adapt(Callable<T> callable) {
+        return new ForkJoinPool.AdaptedCallable<T>(callable);
     }
 
     // Serialization support

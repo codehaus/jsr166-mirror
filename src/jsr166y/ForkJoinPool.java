@@ -548,6 +548,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Common code for execute, invoke and submit
      */
     private <T> void doSubmit(ForkJoinTask<T> task) {
+        if (task == null)
+            throw new NullPointerException();
         if (isShutdown())
             throw new RejectedExecutionException();
         if (workers == null)
@@ -583,7 +585,14 @@ public class ForkJoinPool extends AbstractExecutorService {
     // AbstractExecutorService methods
 
     public void execute(Runnable task) {
-        doSubmit(new AdaptedRunnable<Void>(task, null));
+        ForkJoinTask<?> job;
+        if (task instanceof AdaptedCallable) // avoid re-wrap
+            job = (AdaptedCallable<?>)task;
+        else if (task instanceof AdaptedRunnable)
+            job = (AdaptedRunnable<?>)task;
+        else
+            job = new AdaptedRunnable<Void>(task, null);
+        doSubmit(job);
     }
 
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
@@ -599,9 +608,29 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     public ForkJoinTask<?> submit(Runnable task) {
-        ForkJoinTask<Void> job = new AdaptedRunnable<Void>(task, null);
+        ForkJoinTask<?> job;
+        if (task instanceof AdaptedCallable) // avoid re-wrap
+            job = (AdaptedCallable<?>)task;
+        else if (task instanceof AdaptedRunnable)
+            job = (AdaptedRunnable<?>)task;
+        else
+            job = new AdaptedRunnable<Void>(task, null);
         doSubmit(job);
         return job;
+    }
+
+    /**
+     * Submits a ForkJoinTask for execution.
+     *
+     * @param task the task to submit
+     * @return the task
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     * @throws NullPointerException if the task is null
+     */
+    public <T> ForkJoinTask<T> submit(ForkJoinTask<T> task) {
+        doSubmit(task);
+        return task;
     }
 
     /**

@@ -769,14 +769,12 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-    static final long baseOffset =
-        fieldOffset("base", ForkJoinWorkerThread.class);
-    static final long spOffset =
+    private static final long spOffset =
         fieldOffset("sp", ForkJoinWorkerThread.class);
-    static final long runStateOffset =
+    private static final long runStateOffset =
         fieldOffset("runState", ForkJoinWorkerThread.class);
-    static final long qBase;
-    static final int qShift;
+    private static final long qBase;
+    private static final int qShift;
 
     static {
         qBase = UNSAFE.arrayBaseOffset(ForkJoinTask[].class);

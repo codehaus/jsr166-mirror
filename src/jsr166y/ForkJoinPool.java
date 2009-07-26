@@ -1915,15 +1915,15 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-    static final long eventCountOffset =
+    private static final long eventCountOffset =
         fieldOffset("eventCount", ForkJoinPool.class);
-    static final long workerCountsOffset =
+    private static final long workerCountsOffset =
         fieldOffset("workerCounts", ForkJoinPool.class);
-    static final long runControlOffset =
+    private static final long runControlOffset =
         fieldOffset("runControl", ForkJoinPool.class);
-    static final long syncStackOffset =
+    private static final long syncStackOffset =
         fieldOffset("syncStack",ForkJoinPool.class);
-    static final long spareStackOffset =
+    private static final long spareStackOffset =
         fieldOffset("spareStack", ForkJoinPool.class);
 
     private boolean casEventCount(long cmp, long val) {

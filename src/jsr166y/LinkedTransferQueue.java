@@ -837,11 +837,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-    static final long headOffset =
+    private static final long headOffset =
         fieldOffset("head", LinkedTransferQueue.class);
-    static final long tailOffset =
+    private static final long tailOffset =
         fieldOffset("tail", LinkedTransferQueue.class);
-    static final long cleanMeOffset =
+    private static final long cleanMeOffset =
         fieldOffset("cleanMe", LinkedTransferQueue.class);
 
 }

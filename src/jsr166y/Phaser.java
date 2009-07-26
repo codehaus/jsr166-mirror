@@ -968,10 +968,10 @@ public class Phaser {
     }
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-    static final long stateOffset =
+    private static final long stateOffset =
         fieldOffset("state", Phaser.class);
 
-    final boolean casState(long cmp, long val) {
+    private final boolean casState(long cmp, long val) {
         return UNSAFE.compareAndSwapLong(this, stateOffset, cmp, val);
     }
 }

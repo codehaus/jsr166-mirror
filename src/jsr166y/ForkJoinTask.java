@@ -1149,7 +1149,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-    static final long statusOffset =
+    private static final long statusOffset =
         fieldOffset("status", ForkJoinTask.class);
 
 }

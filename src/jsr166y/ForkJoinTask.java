@@ -493,7 +493,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * #inForkJoinPool}). Attempts to invoke in other contexts result
      * in exceptions or errors, possibly including ClassCastException.
      *
-     * @return <code>this</code>, to simplify usage.
+     * @return {@code this}, to simplify usage.
      */
     public final ForkJoinTask<V> fork() {
         ((ForkJoinWorkerThread) Thread.currentThread())
@@ -1042,9 +1042,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     // adaptors
 
     /**
-     * Returns a new ForkJoinTask that performs the <code>run</code>
+     * Returns a new ForkJoinTask that performs the {@code run}
      * method of the given Runnable as its action, and returns a null
-     * result upon <code>join</code>.
+     * result upon {@code join}.
      *
      * @param runnable the runnable action
      * @return the task
@@ -1054,9 +1054,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns a new ForkJoinTask that performs the <code>run</code>
+     * Returns a new ForkJoinTask that performs the {@code run}
      * method of the given Runnable as its action, and returns the
-     * given result upon <code>join</code>.
+     * given result upon {@code join}.
      *
      * @param runnable the runnable action
      * @param result the result upon completion
@@ -1067,10 +1067,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns a new ForkJoinTask that performs the <code>call</code>
+     * Returns a new ForkJoinTask that performs the {@code call}
      * method of the given Callable as its action, and returns its
-     * result upon <code>join</code>, translating any checked 
-     * exceptions encountered into <code>RuntimeException<code>.
+     * result upon {@code join}, translating any checked
+     * exceptions encountered into {@code RuntimeException}.
      *
      * @param callable the callable action
      * @return the task

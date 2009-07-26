@@ -546,6 +546,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Common code for execute, invoke and submit
      */
     private <T> void doSubmit(ForkJoinTask<T> task) {
+        if (task == null)
+            throw new NullPointerException();
         if (isShutdown())
             throw new RejectedExecutionException();
         if (workers == null)
@@ -581,7 +583,12 @@ public class ForkJoinPool extends AbstractExecutorService {
     // AbstractExecutorService methods
 
     public void execute(Runnable task) {
-        doSubmit(new AdaptedRunnable<Void>(task, null));
+        ForkJoinTask<?> job;
+        if (task instanceof ForkJoinTask) // avoid re-wrap
+            job = (ForkJoinTask<?>)task;
+        else
+            job = new AdaptedRunnable<Void>(task, null);
+        doSubmit(job);
     }
 
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
@@ -597,9 +604,27 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     public ForkJoinTask<?> submit(Runnable task) {
-        ForkJoinTask<Void> job = new AdaptedRunnable<Void>(task, null);
+        ForkJoinTask<?> job;
+        if (task instanceof ForkJoinTask) // avoid re-wrap
+            job = (ForkJoinTask<?>)task;
+        else
+            job = new AdaptedRunnable<Void>(task, null);
         doSubmit(job);
         return job;
+    }
+
+    /**
+     * Submits a ForkJoinTask for execution.
+     *
+     * @param task the task to submit
+     * @return the task
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     * @throws NullPointerException if the task is null
+     */
+    public <T> ForkJoinTask<T> submit(ForkJoinTask<T> task) {
+        doSubmit(task);
+        return task;
     }
 
     /**
@@ -1863,15 +1888,15 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
-    static final long eventCountOffset =
+    private static final long eventCountOffset =
         fieldOffset("eventCount", ForkJoinPool.class);
-    static final long workerCountsOffset =
+    private static final long workerCountsOffset =
         fieldOffset("workerCounts", ForkJoinPool.class);
-    static final long runControlOffset =
+    private static final long runControlOffset =
         fieldOffset("runControl", ForkJoinPool.class);
-    static final long syncStackOffset =
+    private static final long syncStackOffset =
         fieldOffset("syncStack",ForkJoinPool.class);
-    static final long spareStackOffset =
+    private static final long spareStackOffset =
         fieldOffset("spareStack", ForkJoinPool.class);
 
     private boolean casEventCount(long cmp, long val) {

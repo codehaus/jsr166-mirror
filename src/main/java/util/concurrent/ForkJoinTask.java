@@ -490,10 +490,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * computations (as may be determined using method {@link
      * #inForkJoinPool}). Attempts to invoke in other contexts result
      * in exceptions or errors, possibly including ClassCastException.
+     *
+     * @return {@code this}, to simplify usage.
      */
-    public final void fork() {
+    public final ForkJoinTask<V> fork() {
         ((ForkJoinWorkerThread) Thread.currentThread())
             .pushTask(this);
+        return this;
     }
 
     /**
@@ -601,13 +604,14 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * in exceptions or errors, possibly including ClassCastException.
      *
      * @param tasks the collection of tasks
+     * @return the tasks argument, to simplify usage
      * @throws NullPointerException if tasks or any element are null
      * @throws RuntimeException or Error if any task did so
      */
-    public static void invokeAll(Collection<? extends ForkJoinTask<?>> tasks) {
+    public static <T extends ForkJoinTask<?>> Collection<T> invokeAll(Collection<T> tasks) {
         if (!(tasks instanceof List<?>)) {
             invokeAll(tasks.toArray(new ForkJoinTask<?>[tasks.size()]));
-            return;
+            return tasks;
         }
         @SuppressWarnings("unchecked")
         List<? extends ForkJoinTask<?>> ts =
@@ -642,6 +646,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         }
         if (ex != null)
             rethrowException(ex);
+        return tasks;
     }
 
     /**
@@ -1032,6 +1037,46 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             .pollTask();
     }
 
+    // adaptors
+
+    /**
+     * Returns a new ForkJoinTask that performs the {@code run}
+     * method of the given Runnable as its action, and returns a null
+     * result upon {@code join}.
+     *
+     * @param runnable the runnable action
+     * @return the task
+     */
+    public static ForkJoinTask<Void> adapt(Runnable runnable) {
+        return new ForkJoinPool.AdaptedRunnable<Void>(runnable, null);
+    }
+
+    /**
+     * Returns a new ForkJoinTask that performs the {@code run}
+     * method of the given Runnable as its action, and returns the
+     * given result upon {@code join}.
+     *
+     * @param runnable the runnable action
+     * @param result the result upon completion
+     * @return the task
+     */
+    public static <T> ForkJoinTask<T> adapt(Runnable runnable, T result) {
+        return new ForkJoinPool.AdaptedRunnable<T>(runnable, result);
+    }
+
+    /**
+     * Returns a new ForkJoinTask that performs the {@code call}
+     * method of the given Callable as its action, and returns its
+     * result upon {@code join}, translating any checked
+     * exceptions encountered into {@code RuntimeException}.
+     *
+     * @param callable the callable action
+     * @return the task
+     */
+    public static <T> ForkJoinTask<T> adapt(Callable<T> callable) {
+        return new ForkJoinPool.AdaptedCallable<T>(callable);
+    }
+
     // Serialization support
 
     private static final long serialVersionUID = -7721805057305804111L;
@@ -1078,7 +1123,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
-    static final long statusOffset =
+    private static final long statusOffset =
         fieldOffset("status", ForkJoinTask.class);
 
 }

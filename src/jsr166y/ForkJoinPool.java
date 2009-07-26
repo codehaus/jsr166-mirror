@@ -1876,55 +1876,19 @@ public class ForkJoinPool extends AbstractExecutorService {
         return new AdaptedCallable<T>(callable);
     }
 
-
-    // Unsafe mechanics for jsr166y 3rd party package.
-    private static sun.misc.Unsafe getUnsafe() {
-        try {
-            return sun.misc.Unsafe.getUnsafe();
-        } catch (SecurityException se) {
-            try {
-                return java.security.AccessController.doPrivileged
-                    (new java.security.PrivilegedExceptionAction<sun.misc.Unsafe>() {
-                        public sun.misc.Unsafe run() throws Exception {
-                            return getUnsafeByReflection();
-                        }});
-            } catch (java.security.PrivilegedActionException e) {
-                throw new RuntimeException("Could not initialize intrinsics",
-                                           e.getCause());
-            }
-        }
-    }
-
-    private static sun.misc.Unsafe getUnsafeByReflection()
-            throws NoSuchFieldException, IllegalAccessException {
-        java.lang.reflect.Field f =
-            sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-        f.setAccessible(true);
-        return (sun.misc.Unsafe) f.get(null);
-    }
-
-    private static long fieldOffset(String fieldName, Class<?> klazz) {
-        try {
-            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
-        } catch (NoSuchFieldException e) {
-            // Convert Exception to Error
-            NoSuchFieldError error = new NoSuchFieldError(fieldName);
-            error.initCause(e);
-            throw error;
-        }
-    }
+    // Unsafe mechanics
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
     private static final long eventCountOffset =
-        fieldOffset("eventCount", ForkJoinPool.class);
+        objectFieldOffset("eventCount", ForkJoinPool.class);
     private static final long workerCountsOffset =
-        fieldOffset("workerCounts", ForkJoinPool.class);
+        objectFieldOffset("workerCounts", ForkJoinPool.class);
     private static final long runControlOffset =
-        fieldOffset("runControl", ForkJoinPool.class);
+        objectFieldOffset("runControl", ForkJoinPool.class);
     private static final long syncStackOffset =
-        fieldOffset("syncStack",ForkJoinPool.class);
+        objectFieldOffset("syncStack",ForkJoinPool.class);
     private static final long spareStackOffset =
-        fieldOffset("spareStack", ForkJoinPool.class);
+        objectFieldOffset("spareStack", ForkJoinPool.class);
 
     private boolean casEventCount(long cmp, long val) {
         return UNSAFE.compareAndSwapLong(this, eventCountOffset, cmp, val);
@@ -1940,5 +1904,44 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
     private boolean casBarrierStack(WaitQueueNode cmp, WaitQueueNode val) {
         return UNSAFE.compareAndSwapObject(this, syncStackOffset, cmp, val);
+    }
+
+    private static long objectFieldOffset(String field, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
+        }
+    }
+
+    /**
+     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+     * Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a jdk.
+     *
+     * @return a sun.misc.Unsafe
+     */
+    private static sun.misc.Unsafe getUnsafe() {
+        try {
+            return sun.misc.Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security
+                     .PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                        public sun.misc.Unsafe run() throws Exception {
+                            java.lang.reflect.Field f = sun.misc
+                                .Unsafe.class.getDeclaredField("theUnsafe");
+                            f.setAccessible(true);
+                            return (sun.misc.Unsafe) f.get(null);
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw new RuntimeException("Could not initialize intrinsics",
+                                           e.getCause());
+            }
+        }
     }
 }

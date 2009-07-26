@@ -1111,16 +1111,43 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             setDoneExceptionally((Throwable) ex);
     }
 
-    // Unsafe mechanics for jsr166y 3rd party package.
+    // Unsafe mechanics
+
+    private static final sun.misc.Unsafe UNSAFE = getUnsafe();
+    private static final long statusOffset =
+        objectFieldOffset("status", ForkJoinTask.class);
+
+    private static long objectFieldOffset(String field, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
+        }
+    }
+
+    /**
+     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+     * Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a jdk.
+     *
+     * @return a sun.misc.Unsafe
+     */
     private static sun.misc.Unsafe getUnsafe() {
         try {
             return sun.misc.Unsafe.getUnsafe();
         } catch (SecurityException se) {
             try {
                 return java.security.AccessController.doPrivileged
-                    (new java.security.PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                    (new java.security
+                     .PrivilegedExceptionAction<sun.misc.Unsafe>() {
                         public sun.misc.Unsafe run() throws Exception {
-                            return getUnsafeByReflection();
+                            java.lang.reflect.Field f = sun.misc
+                                .Unsafe.class.getDeclaredField("theUnsafe");
+                            f.setAccessible(true);
+                            return (sun.misc.Unsafe) f.get(null);
                         }});
             } catch (java.security.PrivilegedActionException e) {
                 throw new RuntimeException("Could not initialize intrinsics",
@@ -1128,28 +1155,4 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             }
         }
     }
-
-    private static sun.misc.Unsafe getUnsafeByReflection()
-            throws NoSuchFieldException, IllegalAccessException {
-        java.lang.reflect.Field f =
-            sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-        f.setAccessible(true);
-        return (sun.misc.Unsafe) f.get(null);
-    }
-
-    private static long fieldOffset(String fieldName, Class<?> klazz) {
-        try {
-            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
-        } catch (NoSuchFieldException e) {
-            // Convert Exception to Error
-            NoSuchFieldError error = new NoSuchFieldError(fieldName);
-            error.initCause(e);
-            throw error;
-        }
-    }
-
-    private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-    private static final long statusOffset =
-        fieldOffset("status", ForkJoinTask.class);
-
 }

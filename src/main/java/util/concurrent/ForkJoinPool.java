@@ -584,8 +584,8 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     public void execute(Runnable task) {
         ForkJoinTask<?> job;
-        if (task instanceof ForkJoinTask) // avoid re-wrap
-            job = (ForkJoinTask<?>)task;
+        if (task instanceof ForkJoinTask<?>) // avoid re-wrap
+            job = (ForkJoinTask<?>) task;
         else
             job = new AdaptedRunnable<Void>(task, null);
         doSubmit(job);
@@ -605,8 +605,8 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     public ForkJoinTask<?> submit(Runnable task) {
         ForkJoinTask<?> job;
-        if (task instanceof ForkJoinTask) // avoid re-wrap
-            job = (ForkJoinTask<?>)task;
+        if (task instanceof ForkJoinTask<?>) // avoid re-wrap
+            job = (ForkJoinTask<?>) task;
         else
             job = new AdaptedRunnable<Void>(task, null);
         doSubmit(job);
@@ -1874,30 +1874,19 @@ public class ForkJoinPool extends AbstractExecutorService {
         return new AdaptedCallable<T>(callable);
     }
 
-
     // Unsafe mechanics
-    private static long fieldOffset(String fieldName, Class<?> klazz) {
-        try {
-            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
-        } catch (NoSuchFieldException e) {
-            // Convert Exception to Error
-            NoSuchFieldError error = new NoSuchFieldError(fieldName);
-            error.initCause(e);
-            throw error;
-        }
-    }
 
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
     private static final long eventCountOffset =
-        fieldOffset("eventCount", ForkJoinPool.class);
+        objectFieldOffset("eventCount", ForkJoinPool.class);
     private static final long workerCountsOffset =
-        fieldOffset("workerCounts", ForkJoinPool.class);
+        objectFieldOffset("workerCounts", ForkJoinPool.class);
     private static final long runControlOffset =
-        fieldOffset("runControl", ForkJoinPool.class);
+        objectFieldOffset("runControl", ForkJoinPool.class);
     private static final long syncStackOffset =
-        fieldOffset("syncStack",ForkJoinPool.class);
+        objectFieldOffset("syncStack",ForkJoinPool.class);
     private static final long spareStackOffset =
-        fieldOffset("spareStack", ForkJoinPool.class);
+        objectFieldOffset("spareStack", ForkJoinPool.class);
 
     private boolean casEventCount(long cmp, long val) {
         return UNSAFE.compareAndSwapLong(this, eventCountOffset, cmp, val);
@@ -1913,5 +1902,16 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
     private boolean casBarrierStack(WaitQueueNode cmp, WaitQueueNode val) {
         return UNSAFE.compareAndSwapObject(this, syncStackOffset, cmp, val);
+    }
+
+    private static long objectFieldOffset(String field, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
+        }
     }
 }

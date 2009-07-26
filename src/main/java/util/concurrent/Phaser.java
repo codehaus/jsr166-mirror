@@ -928,24 +928,24 @@ public class Phaser {
         return p;
     }
 
-
     // Unsafe mechanics
-    private static long fieldOffset(String fieldName, Class<?> klazz) {
-        try {
-            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
-        } catch (NoSuchFieldException e) {
-            // Convert Exception to Error
-            NoSuchFieldError error = new NoSuchFieldError(fieldName);
-            error.initCause(e);
-            throw error;
-        }
-    }
 
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
     private static final long stateOffset =
-        fieldOffset("state", Phaser.class);
+        objectFieldOffset("state", Phaser.class);
 
     private final boolean casState(long cmp, long val) {
         return UNSAFE.compareAndSwapLong(this, stateOffset, cmp, val);
+    }
+
+    private static long objectFieldOffset(String field, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
+        }
     }
 }

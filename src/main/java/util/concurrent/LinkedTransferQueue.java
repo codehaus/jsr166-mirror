@@ -797,25 +797,24 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                                  new PaddedAtomicReference<Node<E>>(null));
     }
 
-
     // Unsafe mechanics
-    private static long fieldOffset(String fieldName, Class<?> klazz) {
+
+    private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
+    private static final long headOffset =
+        objectFieldOffset("head", LinkedTransferQueue.class);
+    private static final long tailOffset =
+        objectFieldOffset("tail", LinkedTransferQueue.class);
+    private static final long cleanMeOffset =
+        objectFieldOffset("cleanMe", LinkedTransferQueue.class);
+
+    private static long objectFieldOffset(String field, Class<?> klazz) {
         try {
-            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
         } catch (NoSuchFieldException e) {
-            // Convert Exception to Error
-            NoSuchFieldError error = new NoSuchFieldError(fieldName);
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
             error.initCause(e);
             throw error;
         }
     }
-
-    private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
-    private static final long headOffset =
-        fieldOffset("head", LinkedTransferQueue.class);
-    private static final long tailOffset =
-        fieldOffset("tail", LinkedTransferQueue.class);
-    private static final long cleanMeOffset =
-        fieldOffset("cleanMe", LinkedTransferQueue.class);
-
 }

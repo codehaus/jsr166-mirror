@@ -730,22 +730,12 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     // Unsafe mechanics
-    private static long fieldOffset(String fieldName, Class<?> klazz) {
-        try {
-            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(fieldName));
-        } catch (NoSuchFieldException e) {
-            // Convert Exception to Error
-            NoSuchFieldError error = new NoSuchFieldError(fieldName);
-            error.initCause(e);
-            throw error;
-        }
-    }
 
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
     private static final long spOffset =
-        fieldOffset("sp", ForkJoinWorkerThread.class);
+        objectFieldOffset("sp", ForkJoinWorkerThread.class);
     private static final long runStateOffset =
-        fieldOffset("runState", ForkJoinWorkerThread.class);
+        objectFieldOffset("runState", ForkJoinWorkerThread.class);
     private static final long qBase;
     private static final int qShift;
 
@@ -755,5 +745,16 @@ public class ForkJoinWorkerThread extends Thread {
         if ((s & (s-1)) != 0)
             throw new Error("data type scale not a power of two");
         qShift = 31 - Integer.numberOfLeadingZeros(s);
+    }
+
+    private static long objectFieldOffset(String field, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
+        }
     }
 }

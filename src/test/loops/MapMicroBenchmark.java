@@ -5,6 +5,7 @@
  */
 
 import java.util.*;
+import java.io.*;
 import java.math.*;
 
 /**
@@ -25,14 +26,20 @@ import java.math.*;
  * but because they can be problematic for some map implementations.
  * 
  * By default, it creates and inserts in order dense numerical keys
- * and searches for keys in scrambled order. Use "r" as second arg to
- * instead use random numerical values, and "s" as third arg to search
- * in insertion order.
+ * and searches for keys in scrambled order. Use "s" as second arg to
+ * instead insert and search in unscrambled order.
+ *
+ * For String keys, the program tries to use file "testwords.txt", which
+ * is best used with real words.  We can't check in this file, but you
+ * can create one from a real dictonary (1 line per word) and then run
+ * linux "shuf" to randomize entries. If no file exists, it uses
+ * String.valueOf(i) for element i.
  */
 public class MapMicroBenchmark {
+    static final String wordFile = "testwords.txt";
+
     static Class mapClass;
     static boolean randomSearches = true;
-    static boolean randomKeys = false;
 
     // Nanoseconds per run
     static final long NANOS_PER_JOB = 6L * 1000L*1000L*1000L;
@@ -40,7 +47,7 @@ public class MapMicroBenchmark {
 
     // map operations per item per iteration -- change if job.work changed
     static final int OPS_PER_ITER = 11;
-    static final int MIN_ITERS_PER_TEST = 3;
+    static final int MIN_ITERS_PER_TEST = 3; // must be > 1
     static final int MAX_ITERS_PER_TEST = 1000000; // avoid runaway
 
     // sizes are at halfway points for HashMap default resizes
@@ -59,22 +66,12 @@ public class MapMicroBenchmark {
 
         if (args.length > 1) {
             if (args[1].startsWith("s"))
-                randomKeys = false;
-            else if (args[1].startsWith("r"))
-                randomKeys = true;
-        }
-        if (args.length > 2) {
-            if (args[2].startsWith("s"))
                 randomSearches = false;
-            else if (args[2].startsWith("r"))
+            else if (args[1].startsWith("r"))
                 randomSearches = true;
         }
 
         System.out.print("Class " + mapClass.getName());
-        if (randomKeys)
-            System.out.print(" random keys");
-        else
-            System.out.print(" sequential keys");
         if (randomSearches)
             System.out.print(" randomized searches");
         else
@@ -89,91 +86,62 @@ public class MapMicroBenchmark {
         }
         sizes[nsizes - 1] = n;
 
-        int njobs = 9;
+        int njobs = 10;
+        Job[] jobs = new Job[njobs];
 
         Object[] os = new Object[n];
-        Object[] ss = new Object[n];
-        Object[] is = new Object[n];
-        Object[] ls = new Object[n];
-        Object[] fs = new Object[n];
-        Object[] ds = new Object[n];
-        Object[] bs = new Object[n];
-        Object[] es = new Object[n];
-        Object[] ms = new Object[n];
-
-        for (int i = 0; i < n; i++) {
-            os[i] = new Object();
-        }
-
-        // To guarantee uniqueness, use xorshift for "random" versions
-        int rnd = 3122688;
-        for (int i = 0; i < n; i++) {
-            rnd = xorshift(rnd);
-            int j = randomKeys? rnd : i;
-            ss[i] = String.valueOf(j);
-        }
-
-        for (int i = 0; i < n; i++) {
-            rnd = xorshift(rnd);
-            int j = randomKeys? rnd : i;
-            is[i] = Integer.valueOf(j);
-        }
-
-        for (int i = 0; i < n; i++) {
-            rnd = xorshift(rnd);
-            int j = randomKeys? rnd : i;
-            ls[i] = Long.valueOf((long)j);
-        }
-
-        for (int i = 0; i < n; i++) {
-            //            rnd = xorshift(rnd);
-            //            int j = randomKeys? rnd : i;
-            fs[i] = Float.valueOf((float)i); // can't use random for float
-        }
-
-        for (int i = 0; i < n; i++) {
-            rnd = xorshift(rnd);
-            int j = randomKeys? rnd : i;
-            ds[i] = Double.valueOf((double)j);
-        }
-
-        for (int i = 0; i < n; i++) {
-            rnd = xorshift(rnd);
-            int j = randomKeys? rnd : i;
-            bs[i] = BigInteger.valueOf(j);
-        }
-
-        for (int i = 0; i < n; i++) {
-            rnd = xorshift(rnd);
-            int j = randomKeys? rnd : i;
-            es[i] = BigDecimal.valueOf(j);
-        }
-
-        Job[] jobs = new Job[njobs];
+        for (int i = 0; i < n; i++) os[i] = new Object();
         jobs[0] = new Job("Object    ", os, Object.class);
+
+        Object[] ss = new Object[n];
+        initStringKeys(ss, n);
         jobs[1] = new Job("String    ", ss, String.class);
+
+        Object[] is = new Object[n];
+        for (int i = 0; i < n; i++) is[i] = Integer.valueOf(i);
         jobs[2] = new Job("Integer   ", is, Integer.class);
+
+        Object[] ls = new Object[n];
+        for (int i = 0; i < n; i++) ls[i] = Long.valueOf((long)i);
         jobs[3] = new Job("Long      ", ls, Long.class);
+
+        Object[] fs = new Object[n];
+        for (int i = 0; i < n; i++) fs[i] = Float.valueOf((float)i);
         jobs[4] = new Job("Float     ", fs, Float.class);
+
+        Object[] ds = new Object[n];
+        for (int i = 0; i < n; i++) ds[i] = Double.valueOf((double)i);
         jobs[5] = new Job("Double    ", ds, Double.class);
+
+        Object[] bs = new Object[n];
+        long b = -n; // include some negatives
+        for (int i = 0; i < n; i++) bs[i] = BigInteger.valueOf(b += 3);
         jobs[6] = new Job("BigInteger", bs, BigInteger.class);
+
+        Object[] es = new Object[n];
+        long d = Integer.MAX_VALUE; // include crummy codes
+        for (int i = 0; i < n; i++) es[i] = BigDecimal.valueOf(d += 65536);
         jobs[7] = new Job("BigDecimal", es, BigDecimal.class);
 
-        for (int i = 0; i < n; i +=2) {
-            rnd = xorshift(rnd);
-            int j = (rnd & 7); // change if njobs changes
-            ms[i] = jobs[j].items[i];
-            j = (j + 1) & 7;
-            ms[i+1] = jobs[j].items[i];
+        Object[] rs = new Object[n];
+        for (int i = 0; i < n; i++) rs[i] = new RandomInt();
+        jobs[8] = new Job("RandomInt ", rs, RandomInt.class);
+
+        Object[] ms = new Object[n];
+        for (int i = 0; i < n; i += 2) {
+            int r = rng.nextInt(njobs - 1);
+            ms[i] = jobs[r].items[i];
+            // include some that will have same hash but not .equal
+            if (++r >= njobs - 1) r = 0;
+            ms[i+1] = jobs[r].items[i];
         }
+        jobs[9] = new Job("Mixed     ", ms, Object.class);
+        Job mixed = jobs[9];
 
-        jobs[8] = new Job("Mixed     ", ms, Object.class);
-
-        warmup1(jobs[8]);
+        warmup1(mixed);
         warmup2(jobs);
-        warmup1(jobs[8]);
+        warmup1(mixed);
         warmup3(jobs);
-        warmup1(jobs[8]);
         Thread.sleep(500);
 	time(jobs);
     }
@@ -361,30 +329,32 @@ public class MapMicroBenchmark {
                     if (m.remove(x) != null)
                         ++sum;
                 }
+                for (int i = 0; i < quarter; ++i) {
+                    Object x = keys[i];
+                    if (m.put(x, x) == null)
+                        ++sum;
+                }
                 m.clear();
-                sum += len - quarter;
+                sum += len - (quarter * 2);
                 checkSum += sum ^ (sum << 12);
 
+                if (j == 0 && sum != lastSum + len * OPS_PER_ITER)
+                    throw new Error(name);
+                
                 elapsed = System.nanoTime() - startTime;
                 ++j;
                 if (j >= minIters &&
                     (j >= maxIters || elapsed >= timeLimit))
                     break;
+                // non-warmup - swap some keys for next insert
+                if (minIters != 1 && randomSearches) 
+                    shuffleSome(ins, len, len >>> 3);
             }
             long ops = ((long)j) * len * OPS_PER_ITER;
-            if (sum != lastSum + (int)ops)
-                throw new Error(name);
             lastSum = sum;
             return elapsed / ops;
         }
 
-    }
-
-    static final int xorshift(int seed) { 
-        seed ^= seed << 1; 
-        seed ^= seed >>> 3; 
-        seed ^= seed << 10;
-        return seed;
     }
 
 
@@ -415,7 +385,81 @@ public class MapMicroBenchmark {
         }
     }
 
+    // swap nswaps elements
+    static void shuffleSome(Object[] a, int size, int nswaps) {
+        for (int s = 0; s < nswaps; ++s) {
+            int i = rng.nextInt(size);
+            int r = rng.nextInt(size);
+            Object t = a[i];
+            a[i] = a[r];
+            a[r] = t;
+        }
+    }
 
+    // Integer-like class with random hash codes
+    static final class RandomInt {
+        static int seed = 3122688;
+        static int next() { // a non-xorshift, 2^32-period RNG
+            int x = seed;
+            int lo = 16807 * (x & 0xFFFF);
+            int hi = 16807 * (x >>> 16);
+            lo += (hi & 0x7FFF) << 16;
+            if ((lo & 0x80000000) != 0) {
+                lo &= 0x7fffffff;
+                ++lo;
+            }
+            lo += hi >>> 15;
+            if (lo == 0 || (lo & 0x80000000) != 0) {
+                lo &= 0x7fffffff;
+                ++lo;
+            }
+            seed = lo;
+            return x;
+        }
+        final int value;
+        RandomInt() { value = next(); }
+        public int hashCode() { return value; }
+        public boolean equals(Object x) {
+            return (x instanceof RandomInt) && ((RandomInt)x).value == value;
+        }
+    }
+
+    // Read in String keys from file if possible
+    static void initStringKeys(Object[] keys, int n) throws Exception { 
+        FileInputStream fr = null;
+        try {
+            fr = new FileInputStream(wordFile);
+        } catch (IOException ex) {
+            System.out.println("No word file. Using String.valueOf(i)");
+            for (int i = 0; i < n; i++)
+                keys[i] = String.valueOf(i);
+            return;
+        }
+
+        BufferedInputStream in = new BufferedInputStream(fr);
+        int k = 0;
+        outer:while (k < n) {
+            StringBuffer sb = new StringBuffer();
+            for (;;) {
+                int c = in.read();
+                if (c < 0) 
+                    break outer;
+                char ch = (char)c;
+                if (ch == '\n') {
+                    keys[k++] = sb.toString();
+                    break;
+                }
+                if (!Character.isWhitespace(ch))
+                    sb.append(ch);
+            }
+        }
+        in.close();
+
+        // fill up remaining keys with path-like compounds of previous pairs
+        int j = 0;
+        while (k < n)
+            keys[k++] = (String)keys[j++] + "/" + (String)keys[j];
+    }
 
 }
 

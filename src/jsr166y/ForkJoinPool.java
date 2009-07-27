@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * An {@link ExecutorService} for running {@link ForkJoinTask}s.  A
- * ForkJoinPool provides the entry point for submissions from
+ * An {@link ExecutorService} for running {@link ForkJoinTask}s.
+ * A ForkJoinPool provides the entry point for submissions from
  * non-ForkJoinTasks, as well as management and monitoring operations.
  * Normally a single ForkJoinPool is used for a large number of
  * submitted tasks. Otherwise, use would not usually outweigh the
@@ -34,29 +34,29 @@ import java.util.concurrent.atomic.AtomicLong;
  * (eventually blocking if none exist). This makes them efficient when
  * most tasks spawn other subtasks (as do most ForkJoinTasks), as well
  * as the mixed execution of some plain Runnable- or Callable- based
- * activities along with ForkJoinTasks. When setting
- * {@code setAsyncMode}, a ForkJoinPools may also be appropriate for
- * use with fine-grained tasks that are never joined. Otherwise, other
- * ExecutorService implementations are typically more appropriate
- * choices.
+ * activities along with ForkJoinTasks. When setting {@linkplain
+ * #setAsyncMode async mode}, a ForkJoinPool may also be appropriate
+ * for use with fine-grained tasks that are never joined. Otherwise,
+ * other ExecutorService implementations are typically more
+ * appropriate choices.
  *
  * <p>A ForkJoinPool may be constructed with a given parallelism level
  * (target pool size), which it attempts to maintain by dynamically
  * adding, suspending, or resuming threads, even if some tasks are
  * waiting to join others. However, no such adjustments are performed
  * in the face of blocked IO or other unmanaged synchronization. The
- * nested {@code ManagedBlocker} interface enables extension of
+ * nested {@link ManagedBlocker} interface enables extension of
  * the kinds of synchronization accommodated.  The target parallelism
- * level may also be changed dynamically ({@code setParallelism})
+ * level may also be changed dynamically ({@link #setParallelism})
  * and thread construction can be limited using methods
- * {@code setMaximumPoolSize} and/or
- * {@code setMaintainsParallelism}.
+ * {@link #setMaximumPoolSize} and/or
+ * {@link #setMaintainsParallelism}.
  *
  * <p>In addition to execution and lifecycle control methods, this
  * class provides status check methods (for example
- * {@code getStealCount}) that are intended to aid in developing,
+ * {@link #getStealCount}) that are intended to aid in developing,
  * tuning, and monitoring fork/join applications. Also, method
- * {@code toString} returns indications of pool state in a
+ * {@link #toString} returns indications of pool state in a
  * convenient form for informal monitoring.
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
@@ -815,7 +815,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns the number of worker threads that have started but not
      * yet terminated.  This result returned by this method may differ
-     * from {@code getParallelism} when threads are created to
+     * from {@link #getParallelism} when threads are created to
      * maintain parallelism when others are cooperatively blocked.
      *
      * @return the number of worker threads
@@ -877,12 +877,13 @@ public class ForkJoinPool extends AbstractExecutorService {
      * tasks that are never joined. This mode may be more appropriate
      * than default locally stack-based mode in applications in which
      * worker threads only process asynchronous tasks.  This method is
-     * designed to be invoked only when pool is quiescent, and
+     * designed to be invoked only when the pool is quiescent, and
      * typically only before any tasks are submitted. The effects of
      * invocations at other times may be unpredictable.
      *
-     * @param async if true, use locally FIFO scheduling
+     * @param async if {@code true}, use locally FIFO scheduling
      * @return the previous mode
+     * @see #getAsyncMode
      */
     public boolean setAsyncMode(boolean async) {
         boolean oldMode = locallyFifo;
@@ -903,6 +904,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * scheduling mode for forked tasks that are never joined.
      *
      * @return {@code true} if this pool uses async mode
+     * @see #setAsyncMode
      */
     public boolean getAsyncMode() {
         return locallyFifo;
@@ -1131,7 +1133,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * method may or may not be rejected. Unlike some other executors,
      * this method cancels rather than collects non-executed tasks
      * upon termination, so always returns an empty list. However, you
-     * can use method {@code drainTasksTo} before invoking this
+     * can use method {@link #drainTasksTo} before invoking this
      * method to transfer unexecuted tasks to another collection.
      *
      * @return an empty list

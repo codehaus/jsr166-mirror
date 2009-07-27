@@ -25,12 +25,11 @@ import java.util.WeakHashMap;
  * <p> A "main" ForkJoinTask begins execution when submitted to a
  * {@link ForkJoinPool}. Once started, it will usually in turn start
  * other subtasks.  As indicated by the name of this class, many
- * programs using ForkJoinTasks employ only methods {@code fork}
- * and {@code join}, or derivatives such as
- * {@code invokeAll}.  However, this class also provides a number
- * of other methods that can come into play in advanced usages, as
- * well as extension mechanics that allow support of new forms of
- * fork/join processing.
+ * programs using ForkJoinTasks employ only methods {@code fork} and
+ * {@code join}, or derivatives such as {@code invokeAll}.  However,
+ * this class also provides a number of other methods that can come
+ * into play in advanced usages, as well as extension mechanics that
+ * allow support of new forms of fork/join processing.
  *
  * <p>A ForkJoinTask is a lightweight form of {@link Future}.  The
  * efficiency of ForkJoinTasks stems from a set of restrictions (that
@@ -94,8 +93,8 @@ import java.util.WeakHashMap;
  * lightweight task scheduling framework, and so cannot be overridden.
  * Developers creating new basic styles of fork/join processing should
  * minimally implement {@code protected} methods
- * {@code exec}, {@code setRawResult}, and
- * {@code getRawResult}, while also introducing an abstract
+ * {@link #exec}, {@link #setRawResult}, and
+ * {@link #getRawResult}, while also introducing an abstract
  * computational method that can be implemented in its subclasses,
  * possibly relying on other {@code protected} methods provided
  * by this class.
@@ -673,13 +672,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Asserts that the results of this task's computation will not be
      * used. If a cancellation occurs before attempting to execute this
-     * task, then execution will be suppressed, {@code isCancelled}
-     * will report true, and {@code join} will result in a
+     * task, execution will be suppressed, {@link #isCancelled}
+     * will report true, and {@link #join} will result in a
      * {@code CancellationException} being thrown. Otherwise, when
      * cancellation races with completion, there are no guarantees
-     * about whether {@code isCancelled} will report true, whether
-     * {@code join} will return normally or via an exception, or
-     * whether these behaviors will remain consistent upon repeated
+     * about whether {@code isCancelled} will report {@code true},
+     * whether {@code join} will return normally or via an exception,
+     * or whether these behaviors will remain consistent upon repeated
      * invocation.
      *
      * <p>This method may be overridden in subclasses, but if so, must
@@ -689,7 +688,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * <p> This method is designed to be invoked by <em>other</em>
      * tasks. To terminate the current task, you can just return or
      * throw an unchecked exception from its computation method, or
-     * invoke {@code completeExceptionally}.
+     * invoke {@link #completeExceptionally}.
      *
      * @param mayInterruptIfRunning this value is ignored in the
      * default implementation because tasks are not in general

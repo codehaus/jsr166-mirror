@@ -675,9 +675,9 @@ public class Phaser {
     }
 
     /**
-     * Returns the parent of this phaser, or null if none.
+     * Returns the parent of this phaser, or {@code null} if none.
      *
-     * @return the parent of this phaser, or null if none
+     * @return the parent of this phaser, or {@code null} if none
      */
     public Phaser getParent() {
         return parent;
@@ -706,12 +706,12 @@ public class Phaser {
      * Overridable method to perform an action upon phase advance, and
      * to control termination. This method is invoked whenever the
      * barrier is tripped (and thus all other waiting parties are
-     * dormant). If it returns true, then, rather than advance the
-     * phase number, this barrier will be set to a final termination
-     * state, and subsequent calls to {@code isTerminated} will
-     * return true.
+     * dormant). If it returns {@code true}, then, rather than advance
+     * the phase number, this barrier will be set to a final
+     * termination state, and subsequent calls to {@link #isTerminated}
+     * will return true.
      *
-     * <p> The default version returns true when the number of
+     * <p> The default version returns {@code true} when the number of
      * registered parties is zero. Normally, overrides that arrange
      * termination for other reasons should also preserve this
      * property.

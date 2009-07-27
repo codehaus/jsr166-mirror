@@ -265,8 +265,9 @@ public class ForkJoinWorkerThread extends Thread {
     final boolean shutdownNow()   { return transitionRunStateTo(TERMINATING); }
 
     /**
-     * Transitions to at least the given state.  Returns true if not
-     * already at least at given state.
+     * Transitions to at least the given state.
+     *
+     * @return {@code true} if not already at least at given state
      */
     private boolean transitionRunStateTo(int state) {
         for (;;) {
@@ -372,7 +373,7 @@ public class ForkJoinWorkerThread extends Thread {
      * {@code super.onTermination} at the end of the overridden method.
      *
      * @param exception the exception causing this thread to abort due
-     * to an unrecoverable error, or null if completed normally
+     * to an unrecoverable error, or {@code null} if completed normally
      */
     protected void onTermination(Throwable exception) {
         // Execute remaining local tasks unless aborting or terminating
@@ -667,8 +668,8 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns true if at least one worker in the given array appears
-     * to have at least one queued task.
+     * Returns {@code true} if at least one worker in the given array
+     * appears to have at least one queued task.
      *
      * @param ws array of workers
      */

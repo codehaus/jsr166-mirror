@@ -311,8 +311,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns true if argument represents zero active count and
-     * nonzero runstate, which is the triggering condition for
+     * Returns {@code true} if argument represents zero active count
+     * and nonzero runstate, which is the triggering condition for
      * terminating on shutdown.
      */
     private static boolean canTerminateOnShutdown(int c) {
@@ -720,7 +720,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Returns the handler for internal worker threads that terminate
      * due to unrecoverable errors encountered while executing tasks.
      *
-     * @return the handler, or null if none
+     * @return the handler, or {@code null} if none
      */
     public Thread.UncaughtExceptionHandler getUncaughtExceptionHandler() {
         Thread.UncaughtExceptionHandler h;
@@ -741,7 +741,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * as handler.
      *
      * @param h the new handler
-     * @return the old handler, or null if none
+     * @return the old handler, or {@code null} if none
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
@@ -851,12 +851,11 @@ public class ForkJoinPool extends AbstractExecutorService {
 
 
     /**
-     * Returns true if this pool dynamically maintains its target
-     * parallelism level. If false, new threads are added only to
-     * avoid possible starvation.
-     * This setting is by default true.
+     * Returns {@code true} if this pool dynamically maintains its
+     * target parallelism level. If false, new threads are added only
+     * to avoid possible starvation.  This setting is by default true.
      *
-     * @return true if maintains parallelism
+     * @return {@code true} if maintains parallelism
      */
     public boolean getMaintainsParallelism() {
         return maintainsParallelism;
@@ -867,7 +866,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * parallelism level. If false, new threads are added only to
      * avoid possible starvation.
      *
-     * @param enable true to maintains parallelism
+     * @param enable {@code true} to maintain parallelism
      */
     public void setMaintainsParallelism(boolean enable) {
         maintainsParallelism = enable;
@@ -900,10 +899,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns true if this pool uses local first-in-first-out
+     * Returns {@code true} if this pool uses local first-in-first-out
      * scheduling mode for forked tasks that are never joined.
      *
-     * @return true if this pool uses async mode
+     * @return {@code true} if this pool uses async mode
      */
     public boolean getAsyncMode() {
         return locallyFifo;
@@ -944,15 +943,15 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns true if all worker threads are currently idle. An idle
-     * worker is one that cannot obtain a task to execute because none
-     * are available to steal from other threads, and there are no
-     * pending submissions to the pool. This method is conservative;
-     * it might not return true immediately upon idleness of all
-     * threads, but will eventually become true if threads remain
-     * inactive.
+     * Returns {@code true} if all worker threads are currently idle.
+     * An idle worker is one that cannot obtain a task to execute
+     * because none are available to steal from other threads, and
+     * there are no pending submissions to the pool. This method is
+     * conservative; it might not return {@code true} immediately upon
+     * idleness of all threads, but will eventually become true if
+     * threads remain inactive.
      *
-     * @return true if all threads are currently idle
+     * @return {@code true} if all threads are currently idle
      */
     public boolean isQuiescent() {
         return activeCountOf(runControl) == 0;
@@ -1018,8 +1017,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns true if there are any tasks submitted to this pool
-     * that have not yet begun executing.
+     * Returns {@code true} if there are any tasks submitted to this
+     * pool that have not yet begun executing.
      *
      * @return {@code true} if there are any queued submissions
      */
@@ -1032,7 +1031,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * available.  This method may be useful in extensions to this
      * class that re-assign work in systems with multiple pools.
      *
-     * @return the next submission, or null if none
+     * @return the next submission, or {@code null} if none
      */
     protected ForkJoinTask<?> pollSubmission() {
         return submissionQueue.poll();
@@ -1492,7 +1491,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns true if worker waiting on sync can proceed:
+     * Returns {@code true} if worker waiting on sync can proceed:
      *  - on signal (thread == null)
      *  - on event count advance (winning race to notify vs signaller)
      *  - on interrupt
@@ -1500,7 +1499,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * If node was not signalled and event count not advanced on exit,
      * then we also help advance event count.
      *
-     * @return true if node can be released
+     * @return {@code true} if node can be released
      */
     final boolean syncIsReleasable(WaitQueueNode node) {
         long prev = node.count;
@@ -1519,8 +1518,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns true if a new sync event occurred since last call to
-     * sync or this method, if so, updating caller's count.
+     * Returns {@code true} if a new sync event occurred since last
+     * call to sync or this method, if so, updating caller's count.
      */
     final boolean hasNewSyncEvent(ForkJoinWorkerThread w) {
         long lc = w.lastEventCount;
@@ -1604,8 +1603,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns true if a spare thread appears to be needed.  If
-     * maintaining parallelism, returns true when the deficit in
+     * Returns {@code true} if a spare thread appears to be needed.
+     * If maintaining parallelism, returns true when the deficit in
      * running threads is more than the surplus of total threads, and
      * there is apparently some work to do.  This self-limiting rule
      * means that the more threads that have already been added, the
@@ -1774,10 +1773,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Interface for extending managed parallelism for tasks running
      * in ForkJoinPools. A ManagedBlocker provides two methods.
-     * Method {@code isReleasable} must return true if blocking is not
-     * necessary. Method {@code block} blocks the current thread if
-     * necessary (perhaps internally invoking {@code isReleasable}
-     * before actually blocking.).
+     * Method {@code isReleasable} must return {@code true} if
+     * blocking is not necessary. Method {@code block} blocks the
+     * current thread if necessary (perhaps internally invoking
+     * {@code isReleasable} before actually blocking.).
      *
      * <p>For example, here is a ManagedBlocker based on a
      * ReentrantLock:
@@ -1801,15 +1800,15 @@ public class ForkJoinPool extends AbstractExecutorService {
          * Possibly blocks the current thread, for example waiting for
          * a lock or condition.
          *
-         * @return true if no additional blocking is necessary (i.e.,
-         * if isReleasable would return true)
+         * @return {@code true} if no additional blocking is necessary
+         * (i.e., if isReleasable would return true)
          * @throws InterruptedException if interrupted while waiting
          * (the method is not required to do so, but is allowed to)
          */
         boolean block() throws InterruptedException;
 
         /**
-         * Returns true if blocking is unnecessary.
+         * Returns {@code true} if blocking is unnecessary.
          */
         boolean isReleasable();
     }
@@ -1819,7 +1818,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * is a ForkJoinWorkerThread, this method possibly arranges for a
      * spare thread to be activated if necessary to ensure parallelism
      * while the current thread is blocked.  If
-     * {@code maintainParallelism} is true and the pool supports
+     * {@code maintainParallelism} is {@code true} and the pool supports
      * it ({@link #getMaintainsParallelism}), this method attempts to
      * maintain the pool's nominal parallelism. Otherwise it activates
      * a thread only if necessary to avoid complete starvation. This
@@ -1837,10 +1836,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      * be expanded to ensure parallelism, and later adjusted.
      *
      * @param blocker the blocker
-     * @param maintainParallelism if true and supported by this pool,
-     * attempt to maintain the pool's nominal parallelism; otherwise
-     * activate a thread only if necessary to avoid complete
-     * starvation.
+     * @param maintainParallelism if {@code true} and supported by
+     * this pool, attempt to maintain the pool's nominal parallelism;
+     * otherwise activate a thread only if necessary to avoid
+     * complete starvation.
      * @throws InterruptedException if blocker.block did so
      */
     public static void managedBlock(ManagedBlocker blocker,

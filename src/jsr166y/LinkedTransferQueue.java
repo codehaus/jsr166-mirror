@@ -442,12 +442,20 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         addAll(c);
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public void put(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
         if (Thread.interrupted()) throw new InterruptedException();
         xfer(e, NOWAIT, 0);
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -456,18 +464,28 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return true;
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
         xfer(e, NOWAIT, 0);
         return true;
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean add(E e) {
         if (e == null) throw new NullPointerException();
         xfer(e, NOWAIT, 0);
         return true;
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public void transfer(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
         if (xfer(e, WAIT, 0) == null) {
@@ -476,6 +494,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean tryTransfer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -486,11 +508,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         throw new InterruptedException();
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean tryTransfer(E e) {
         if (e == null) throw new NullPointerException();
         return fulfill(e) != null;
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     */
     public E take() throws InterruptedException {
         Object e = xfer(null, WAIT, 0);
         if (e != null)
@@ -499,6 +527,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         throw new InterruptedException();
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         Object e = xfer(null, TIMEOUT, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
@@ -510,6 +541,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return fulfill(null);
     }
 
+    /**
+     * @throws NullPointerException    {@inheritDoc}
+     * @throwsIllegalArgumentException {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();
@@ -524,6 +559,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return n;
     }
 
+    /**
+     * @throws NullPointerException    {@inheritDoc}
+     * @throwsIllegalArgumentException {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();

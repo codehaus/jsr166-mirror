@@ -38,7 +38,7 @@ package jsr166y;
 public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
 
     /**
-     * The result returned by compute method.
+     * The result of the computation.
      */
     V result;
 

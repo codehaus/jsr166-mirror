@@ -542,8 +542,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * @throws NullPointerException    {@inheritDoc}
-     * @throwsIllegalArgumentException {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
@@ -560,8 +560,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * @throws NullPointerException    {@inheritDoc}
-     * @throwsIllegalArgumentException {@inheritDoc}
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)

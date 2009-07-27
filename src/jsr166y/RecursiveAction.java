@@ -34,10 +34,10 @@ package jsr166y;
  *   }
  * }}</pre>
  *
- * You could then sort anArray by creating {@code new SortTask(anArray, 0,
- * anArray.length-1) } and invoking it in a ForkJoinPool.
- * As a more concrete simple example, the following task increments
- * each element of an array:
+ * You could then sort {@code anArray} by creating {@code new
+ * SortTask(anArray, 0, anArray.length-1) } and invoking it in a
+ * ForkJoinPool.  As a more concrete simple example, the following
+ * task increments each element of an array:
  *  <pre> {@code
  * class IncrementTask extends RecursiveAction {
  *   final long[] array; final int lo; final int hi;

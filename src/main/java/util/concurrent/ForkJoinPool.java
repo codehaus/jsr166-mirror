@@ -1054,7 +1054,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param c the collection to transfer elements into
      * @return the number of elements transferred
      */
-    protected int drainTasksTo(Collection<ForkJoinTask<?>> c) {
+    protected int drainTasksTo(Collection<? super ForkJoinTask<?>> c) {
         int n = submissionQueue.drainTo(c);
         ForkJoinWorkerThread[] ws = workers;
         if (ws != null) {

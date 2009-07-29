@@ -98,8 +98,7 @@ package jsr166y;
  *     int l = lo;
  *     int h = hi;
  *     Applyer right = null;
- *     while (h - l > 1 &&
- *        ForkJoinWorkerThread.getEstimatedSurplusTaskCount() <= 3) {
+ *     while (h - l > 1 && getSurplusQueuedTaskCount() <= 3) {
  *        int mid = (l + h) >>> 1;
  *        right = new Applyer(array, mid, h, seqSize, right);
  *        right.fork();

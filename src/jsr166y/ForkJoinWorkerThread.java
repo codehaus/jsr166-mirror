@@ -647,7 +647,7 @@ public class ForkJoinWorkerThread extends Thread {
      *
      * @return the number of tasks drained
      */
-    final int drainTasksTo(Collection<ForkJoinTask<?>> c) {
+    final int drainTasksTo(Collection<? super ForkJoinTask<?>> c) {
         int n = 0;
         ForkJoinTask<?> t;
         while (base != sp && (t = deqTask()) != null) {

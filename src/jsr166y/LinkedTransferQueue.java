@@ -114,6 +114,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             this.isData = isData;
         }
 
+        // Unsafe mechanics
+
+        private static final sun.misc.Unsafe UNSAFE = getUnsafe();
+        private static final long nextOffset =
+            objectFieldOffset(UNSAFE, "next", Node.class);
+
         final boolean casNext(Node<E> cmp, Node<E> val) {
             return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
@@ -121,12 +127,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         final void clearNext() {
             UNSAFE.putOrderedObject(this, nextOffset, this);
         }
-
-        // Unsafe mechanics
-
-        private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-        private static final long nextOffset =
-            objectFieldOffset(UNSAFE, "next", Node.class);
 
         /**
          * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.

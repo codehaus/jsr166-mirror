@@ -120,19 +120,28 @@
  *
  * <h2>Synchronizers</h2>
  *
- * Four classes aid common special-purpose synchronization idioms.
- * {@link java.util.concurrent.Semaphore} is a classic concurrency
- * tool.  {@link java.util.concurrent.CountDownLatch} is a very simple
- * yet very common utility for blocking until a given number of
- * signals, events, or conditions hold.  A {@link
- * java.util.concurrent.CyclicBarrier} is a resettable multiway
- * synchronization point useful in some styles of parallel
- * programming.  A {@link java.util.concurrent.Phaser} provides a more
- * flexible form of barrier that may be used to control phased
- * computation among multiple threads.  An {@link
- * java.util.concurrent.Exchanger} allows two threads to exchange
- * objects at a rendezvous point, and is useful in several pipeline
- * designs.
+ * Five classes aid common special-purpose synchronization idioms.
+ * <ul>
+ *
+ * <li>{@link java.util.concurrent.Semaphore} is a classic concurrency tool.
+ *
+ * <li>{@link java.util.concurrent.CountDownLatch} is a very simple yet
+ * very common utility for blocking until a given number of signals,
+ * events, or conditions hold.
+ *
+ * <li>A {@link java.util.concurrent.CyclicBarrier} is a resettable
+ * multiway synchronization point useful in some styles of parallel
+ * programming.
+ *
+ * <li>A {@link java.util.concurrent.Phaser} provides
+ * a more flexible form of barrier that may be used to control phased
+ * computation among multiple threads.
+ *
+ * <li>An {@link java.util.concurrent.Exchanger} allows two threads to
+ * exchange objects at a rendezvous point, and is useful in several
+ * pipeline designs.
+ *
+ * </ul>
  *
  * <h2>Concurrent Collections</h2>
  *

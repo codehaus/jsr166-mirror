@@ -5,9 +5,13 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
-import java.util.concurrent.atomic.*;
 
+import java.util.AbstractQueue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 
 /**
  * An unbounded thread-safe {@linkplain Queue queue} based on linked nodes.
@@ -126,11 +130,15 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * CAS, so they never regress, although again this is merely an
      * optimization.
      */
+
     private static class Node<E> {
         private volatile E item;
         private volatile Node<E> next;
 
-        Node(E item) { lazySetItem(item); }
+        Node(E item) {
+            // Piggyback on imminent casNext()
+            lazySetItem(item);
+        }
 
         E getItem() {
             return item;
@@ -171,11 +179,31 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Pointer to first node, initialized to a dummy node.
+     * A node from which the first live (non-deleted) node (if any)
+     * can be reached in O(1) time.
+     * Invariants:
+     * - all live nodes are reachable from head via succ()
+     * - head != null
+     * - (tmp = head).next != tmp || tmp != head
+     * Non-invariants:
+     * - head.item may or may not be null.
+     * - it is permitted for tail to lag behind head, that is, for tail
+     *   to not be reachable from head!
      */
     private transient volatile Node<E> head = new Node<E>(null);
 
-    /** Pointer to last node on list */
+    /**
+     * A node from which the last node on list (that is, the unique
+     * node with node.next == null) can be reached in O(1) time.
+     * Invariants:
+     * - the last node is always reachable from tail via succ()
+     * - tail != null
+     * Non-invariants:
+     * - tail.item may or may not be null.
+     * - it is permitted for tail to lag behind head, that is, for tail
+     *   to not be reachable from head!
+     * - tail.next may or may not be self-pointing to tail.
+     */
     private transient volatile Node<E> tail = head;
 
 
@@ -210,7 +238,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * We don't bother to update head or tail pointers if less than
+     * We don't bother to update head or tail pointers if fewer than
      * HOPS links from "true" location.  We assume that volatile
      * writes are significantly more expensive than volatile reads.
      */
@@ -307,10 +335,12 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns the first actual (non-header) node on list.  This is yet
-     * another variant of poll/peek; here returning out the first
-     * node, not element (so we cannot collapse with peek() without
-     * introducing race.)
+     * Returns the first live (non-deleted) node on list, or null if none.
+     * This is yet another variant of poll/peek; here returning the
+     * first node, not element.  We could make peek() a wrapper around
+     * first(), but that would cost an extra volatile read of item,
+     * and the need to add a retry loop to deal with the possibility
+     * of losing a race to a concurrent poll().
      */
     Node<E> first() {
         Node<E> h = head;
@@ -401,7 +431,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node<E> pred = null;
         for (Node<E> p = first(); p != null; p = succ(p)) {
             E item = p.getItem();
-            if (item != null && o.equals(item) && p.casItem(item, null)) {
+            if (item != null &&
+                o.equals(item) &&
+                p.casItem(item, null)) {
                 Node<E> next = succ(p);
                 if (pred != null && next != null)
                     pred.casNext(p, next);

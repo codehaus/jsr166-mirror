@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
  * An unbounded {@linkplain TransferQueue} based on linked nodes.
@@ -113,17 +112,18 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             this.isData = isData;
         }
 
-        @SuppressWarnings("rawtypes")
-        static final AtomicReferenceFieldUpdater<Node, Node>
-            nextUpdater = AtomicReferenceFieldUpdater.newUpdater
-            (Node.class, Node.class, "next");
+        // Unsafe mechanics
+
+        private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
+        private static final long nextOffset =
+            objectFieldOffset(UNSAFE, "next", Node.class);
 
         final boolean casNext(Node<E> cmp, Node<E> val) {
-            return nextUpdater.compareAndSet(this, cmp, val);
+            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
 
         final void clearNext() {
-            nextUpdater.lazySet(this, this);
+            UNSAFE.putOrderedObject(this, nextOffset, this);
         }
 
         private static final long serialVersionUID = -3375979862319811754L;
@@ -440,12 +440,20 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         addAll(c);
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public void put(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
         if (Thread.interrupted()) throw new InterruptedException();
         xfer(e, NOWAIT, 0);
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -454,18 +462,28 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return true;
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
         xfer(e, NOWAIT, 0);
         return true;
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean add(E e) {
         if (e == null) throw new NullPointerException();
         xfer(e, NOWAIT, 0);
         return true;
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public void transfer(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
         if (xfer(e, WAIT, 0) == null) {
@@ -474,6 +492,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean tryTransfer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -484,11 +506,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         throw new InterruptedException();
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
     public boolean tryTransfer(E e) {
         if (e == null) throw new NullPointerException();
         return fulfill(e) != null;
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     */
     public E take() throws InterruptedException {
         Object e = xfer(null, WAIT, 0);
         if (e != null)
@@ -497,6 +525,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         throw new InterruptedException();
     }
 
+    /**
+     * @throws InterruptedException {@inheritDoc}
+     */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         Object e = xfer(null, TIMEOUT, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
@@ -508,6 +539,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return fulfill(null);
     }
 
+    /**
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();
@@ -522,6 +557,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return n;
     }
 
+    /**
+     * @throws NullPointerException     {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();
@@ -801,13 +840,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
     private static final long headOffset =
-        objectFieldOffset("head", LinkedTransferQueue.class);
+        objectFieldOffset(UNSAFE, "head", LinkedTransferQueue.class);
     private static final long tailOffset =
-        objectFieldOffset("tail", LinkedTransferQueue.class);
+        objectFieldOffset(UNSAFE, "tail", LinkedTransferQueue.class);
     private static final long cleanMeOffset =
-        objectFieldOffset("cleanMe", LinkedTransferQueue.class);
+        objectFieldOffset(UNSAFE, "cleanMe", LinkedTransferQueue.class);
 
-    private static long objectFieldOffset(String field, Class<?> klazz) {
+
+    static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
+                                  String field, Class<?> klazz) {
         try {
             return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
         } catch (NoSuchFieldException e) {

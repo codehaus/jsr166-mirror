@@ -30,18 +30,19 @@ import java.util.concurrent.locks.LockSupport;
  * zero, and advancing when all parties reach the barrier (wrapping
  * around to zero after reaching {@code Integer.MAX_VALUE}).
  *
- * <li> Like a CyclicBarrier, a Phaser may be repeatedly awaited.
- * Method {@code arriveAndAwaitAdvance} has effect analogous to
- * {@code CyclicBarrier.await}.  However, Phasers separate two
- * aspects of coordination, that may also be invoked independently:
+ * <li> Like a {@code CyclicBarrier}, a Phaser may be repeatedly
+ * awaited.  Method {@link #arriveAndAwaitAdvance} has effect
+ * analogous to {@link java.util.concurrent.CyclicBarrier#await
+ * CyclicBarrier.await}.  However, phasers separate two aspects of
+ * coordination, that may also be invoked independently:
  *
  * <ul>
  *
- *   <li> Arriving at a barrier. Methods {@code arrive} and
- *       {@code arriveAndDeregister} do not block, but return
+ *   <li> Arriving at a barrier. Methods {@link #arrive} and
+ *       {@link #arriveAndDeregister} do not block, but return
  *       the phase value current upon entry to the method.
  *
- *   <li> Awaiting others. Method {@code awaitAdvance} requires an
+ *   <li> Awaiting others. Method {@link #awaitAdvance} requires an
  *       argument indicating the entry phase, and returns when the
  *       barrier advances to a new phase.
  * </ul>
@@ -49,19 +50,19 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <li> Barrier actions, performed by the task triggering a phase
  * advance while others may be waiting, are arranged by overriding
- * method {@code onAdvance}, that also controls termination.
+ * method {@link #onAdvance}, that also controls termination.
  * Overriding this method may be used to similar but more flexible
- * effect as providing a barrier action to a CyclicBarrier.
+ * effect as providing a barrier action to a {@code CyclicBarrier}.
  *
  * <li> Phasers may enter a <em>termination</em> state in which all
  * actions immediately return without updating phaser state or waiting
  * for advance, and indicating (via a negative phase value) that
  * execution is complete.  Termination is triggered by executing the
  * overridable {@code onAdvance} method that is invoked each time the
- * barrier is about to be tripped. When a Phaser is controlling an
+ * barrier is about to be tripped. When a phaser is controlling an
  * action with a fixed number of iterations, it is often convenient to
  * override this method to cause termination when the current phase
- * number reaches a threshold. Method {@code forceTermination} is also
+ * number reaches a threshold. Method {@link #forceTermination} is also
  * available to abruptly release waiting threads and allow them to
  * terminate.
  *
@@ -73,7 +74,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <li> By default, {@code awaitAdvance} continues to wait even if
  * the waiting thread is interrupted. And unlike the case in
- * CyclicBarriers, exceptions encountered while tasks wait
+ * {@code CyclicBarrier}, exceptions encountered while tasks wait
  * interruptibly or with timeout do not change the state of the
  * barrier. If necessary, you can perform any associated recovery
  * within handlers of those exceptions, often after invoking
@@ -85,10 +86,10 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p><b>Sample usages:</b>
  *
- * <p>A Phaser may be used instead of a {@code CountDownLatch} to control
- * a one-shot action serving a variable number of parties. The typical
- * idiom is for the method setting this up to first register, then
- * start the actions, then deregister, as in:
+ * <p>A {@code Phaser} may be used instead of a {@code CountDownLatch}
+ * to control a one-shot action serving a variable number of
+ * parties. The typical idiom is for the method setting this up to
+ * first register, then start the actions, then deregister, as in:
  *
  *  <pre> {@code
  * void runTasks(List<Runnable> list) {
@@ -137,9 +138,9 @@ import java.util.concurrent.locks.LockSupport;
  *   phaser.arriveAndDeregister(); // deregister self, don't wait
  * }}</pre>
  *
- * <p> To create a set of tasks using a tree of Phasers,
+ * <p> To create a set of tasks using a tree of phasers,
  * you could use code of the following form, assuming a
- * Task class with a constructor accepting a Phaser that
+ * Task class with a constructor accepting a phaser that
  * it registers for upon construction:
  *  <pre> {@code
  * void build(Task[] actions, int lo, int hi, Phaser b) {
@@ -247,7 +248,7 @@ public class Phaser {
     private final Phaser parent;
 
     /**
-     * The root of Phaser tree. Equals this if not in a tree.  Used to
+     * The root of phaser tree. Equals this if not in a tree.  Used to
      * support faster state push-down.
      */
     private final Phaser root;
@@ -298,16 +299,16 @@ public class Phaser {
     }
 
     /**
-     * Creates a new Phaser without any initially registered parties,
+     * Creates a new phaser without any initially registered parties,
      * initial phase number 0, and no parent. Any thread using this
-     * Phaser will need to first register for it.
+     * phaser will need to first register for it.
      */
     public Phaser() {
         this(null);
     }
 
     /**
-     * Creates a new Phaser with the given numbers of registered
+     * Creates a new phaser with the given numbers of registered
      * unarrived parties, initial phase number 0, and no parent.
      *
      * @param parties the number of parties required to trip barrier
@@ -319,7 +320,7 @@ public class Phaser {
     }
 
     /**
-     * Creates a new Phaser with the given parent, without any
+     * Creates a new phaser with the given parent, without any
      * initially registered parties. If parent is non-null this phaser
      * is registered with the parent and its initial phase number is
      * the same as that of parent phaser.
@@ -339,7 +340,7 @@ public class Phaser {
     }
 
     /**
-     * Creates a new Phaser with the given parent and numbers of
+     * Creates a new phaser with the given parent and numbers of
      * registered unarrived parties. If parent is non-null, this phaser
      * is registered with the parent and its initial phase number is
      * the same as that of parent phaser.
@@ -673,9 +674,9 @@ public class Phaser {
     }
 
     /**
-     * Returns the parent of this phaser, or null if none.
+     * Returns the parent of this phaser, or {@code null} if none.
      *
-     * @return the parent of this phaser, or null if none
+     * @return the parent of this phaser, or {@code null} if none
      */
     public Phaser getParent() {
         return parent;
@@ -704,12 +705,12 @@ public class Phaser {
      * Overridable method to perform an action upon phase advance, and
      * to control termination. This method is invoked whenever the
      * barrier is tripped (and thus all other waiting parties are
-     * dormant). If it returns true, then, rather than advance the
-     * phase number, this barrier will be set to a final termination
-     * state, and subsequent calls to {@code isTerminated} will
-     * return true.
+     * dormant). If it returns {@code true}, then, rather than advance
+     * the phase number, this barrier will be set to a final
+     * termination state, and subsequent calls to {@link #isTerminated}
+     * will return true.
      *
-     * <p> The default version returns true when the number of
+     * <p> The default version returns {@code true} when the number of
      * registered parties is zero. Normally, overrides that arrange
      * termination for other reasons should also preserve this
      * property.
@@ -717,7 +718,7 @@ public class Phaser {
      * <p> You may override this method to perform an action with side
      * effects visible to participating tasks, but it is in general
      * only sensible to do so in designs where all parties register
-     * before any arrive, and all {@code awaitAdvance} at each phase.
+     * before any arrive, and all {@link #awaitAdvance} at each phase.
      * Otherwise, you cannot ensure lack of interference. In
      * particular, this method may be invoked more than once per
      * transition if other parties successfully register while the

@@ -23,12 +23,11 @@ import java.util.WeakHashMap;
  * <p> A "main" ForkJoinTask begins execution when submitted to a
  * {@link ForkJoinPool}. Once started, it will usually in turn start
  * other subtasks.  As indicated by the name of this class, many
- * programs using ForkJoinTasks employ only methods {@code fork}
- * and {@code join}, or derivatives such as
- * {@code invokeAll}.  However, this class also provides a number
- * of other methods that can come into play in advanced usages, as
- * well as extension mechanics that allow support of new forms of
- * fork/join processing.
+ * programs using ForkJoinTasks employ only methods {@code fork} and
+ * {@code join}, or derivatives such as {@code invokeAll}.  However,
+ * this class also provides a number of other methods that can come
+ * into play in advanced usages, as well as extension mechanics that
+ * allow support of new forms of fork/join processing.
  *
  * <p>A ForkJoinTask is a lightweight form of {@link Future}.  The
  * efficiency of ForkJoinTasks stems from a set of restrictions (that
@@ -92,8 +91,8 @@ import java.util.WeakHashMap;
  * lightweight task scheduling framework, and so cannot be overridden.
  * Developers creating new basic styles of fork/join processing should
  * minimally implement {@code protected} methods
- * {@code exec}, {@code setRawResult}, and
- * {@code getRawResult}, while also introducing an abstract
+ * {@link #exec}, {@link #setRawResult}, and
+ * {@link #getRawResult}, while also introducing an abstract
  * computational method that can be implemented in its subclasses,
  * possibly relying on other {@code protected} methods provided
  * by this class.
@@ -650,19 +649,19 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns true if the computation performed by this task has
-     * completed (or has been cancelled).
+     * Returns {@code true} if the computation performed by this task
+     * has completed (or has been cancelled).
      *
-     * @return true if this computation has completed
+     * @return {@code true} if this computation has completed
      */
     public final boolean isDone() {
         return status < 0;
     }
 
     /**
-     * Returns true if this task was cancelled.
+     * Returns {@code true} if this task was cancelled.
      *
-     * @return true if this task was cancelled
+     * @return {@code true} if this task was cancelled
      */
     public final boolean isCancelled() {
         return (status & COMPLETION_MASK) == CANCELLED;
@@ -671,13 +670,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Asserts that the results of this task's computation will not be
      * used. If a cancellation occurs before attempting to execute this
-     * task, then execution will be suppressed, {@code isCancelled}
-     * will report true, and {@code join} will result in a
+     * task, execution will be suppressed, {@link #isCancelled}
+     * will report true, and {@link #join} will result in a
      * {@code CancellationException} being thrown. Otherwise, when
      * cancellation races with completion, there are no guarantees
-     * about whether {@code isCancelled} will report true, whether
-     * {@code join} will return normally or via an exception, or
-     * whether these behaviors will remain consistent upon repeated
+     * about whether {@code isCancelled} will report {@code true},
+     * whether {@code join} will return normally or via an exception,
+     * or whether these behaviors will remain consistent upon repeated
      * invocation.
      *
      * <p>This method may be overridden in subclasses, but if so, must
@@ -687,13 +686,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * <p> This method is designed to be invoked by <em>other</em>
      * tasks. To terminate the current task, you can just return or
      * throw an unchecked exception from its computation method, or
-     * invoke {@code completeExceptionally}.
+     * invoke {@link #completeExceptionally}.
      *
      * @param mayInterruptIfRunning this value is ignored in the
      * default implementation because tasks are not in general
      * cancelled via interruption
      *
-     * @return true if this task is now cancelled
+     * @return {@code true} if this task is now cancelled
      */
     public boolean cancel(boolean mayInterruptIfRunning) {
         setCompletion(CANCELLED);
@@ -701,9 +700,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns true if this task threw an exception or was cancelled.
+     * Returns {@code true} if this task threw an exception or was cancelled.
      *
-     * @return true if this task threw an exception or was cancelled
+     * @return {@code true} if this task threw an exception or was cancelled
      */
     public final boolean isCompletedAbnormally() {
         return (status & COMPLETION_MASK) < NORMAL;
@@ -714,7 +713,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * CancellationException if cancelled, or null if none or if the
      * method has not yet completed.
      *
-     * @return the exception, or null if none
+     * @return the exception, or {@code null} if none
      */
     public final Throwable getException() {
         int s = status & COMPLETION_MASK;
@@ -877,7 +876,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * Returns the pool hosting the current task execution, or null
      * if this task is executing outside of any ForkJoinPool.
      *
-     * @return the pool, or null if none
+     * @return the pool, or {@code null} if none
      */
     public static ForkJoinPool getPool() {
         Thread t = Thread.currentThread();
@@ -908,7 +907,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * result in exceptions or errors, possibly including
      * ClassCastException.
      *
-     * @return true if unforked
+     * @return {@code true} if unforked
      */
     public boolean tryUnfork() {
         return ((ForkJoinWorkerThread) Thread.currentThread())
@@ -948,13 +947,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     // Extension methods
 
     /**
-     * Returns the result that would be returned by {@code join},
-     * even if this task completed abnormally, or null if this task is
-     * not known to have been completed.  This method is designed to
-     * aid debugging, as well as to support extensions. Its use in any
-     * other context is discouraged.
+     * Returns the result that would be returned by {@link #join}, even
+     * if this task completed abnormally, or {@code null} if this task
+     * is not known to have been completed.  This method is designed
+     * to aid debugging, as well as to support extensions. Its use in
+     * any other context is discouraged.
      *
-     * @return the result, or null if not completed
+     * @return the result, or {@code null} if not completed
      */
     public abstract V getRawResult();
 
@@ -973,10 +972,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * called otherwise. The return value controls whether this task
      * is considered to be done normally. It may return false in
      * asynchronous actions that require explicit invocations of
-     * {@code complete} to become joinable. It may throw exceptions
+     * {@link #complete} to become joinable. It may throw exceptions
      * to indicate abnormal exit.
      *
-     * @return true if completed normally
+     * @return {@code true} if completed normally
      * @throws Error or RuntimeException if encountered during computation
      */
     protected abstract boolean exec();
@@ -992,7 +991,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * #inForkJoinPool}). Attempts to invoke in other contexts result
      * in exceptions or errors, possibly including ClassCastException.
      *
-     * @return the next task, or null if none are available
+     * @return the next task, or {@code null} if none are available
      */
     protected static ForkJoinTask<?> peekNextLocalTask() {
         return ((ForkJoinWorkerThread) Thread.currentThread())
@@ -1009,7 +1008,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * contexts result in exceptions or errors, possibly including
      * ClassCastException.
      *
-     * @return the next task, or null if none are available
+     * @return the next task, or {@code null} if none are available
      */
     protected static ForkJoinTask<?> pollNextLocalTask() {
         return ((ForkJoinWorkerThread) Thread.currentThread())
@@ -1030,7 +1029,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * result in exceptions or errors, possibly including
      * ClassCastException.
      *
-     * @return a task, or null if none are available
+     * @return a task, or {@code null} if none are available
      */
     protected static ForkJoinTask<?> pollTask() {
         return ((ForkJoinWorkerThread) Thread.currentThread())
@@ -1085,7 +1084,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * Save the state to a stream.
      *
      * @serialData the current run status and the exception thrown
-     * during execution, or null if none
+     * during execution, or {@code null} if none
      * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)

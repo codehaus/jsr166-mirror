@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
  * An unbounded {@linkplain TransferQueue} based on linked nodes.
@@ -115,17 +114,46 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             this.isData = isData;
         }
 
-        @SuppressWarnings("rawtypes")
-        static final AtomicReferenceFieldUpdater<Node, Node>
-            nextUpdater = AtomicReferenceFieldUpdater.newUpdater
-            (Node.class, Node.class, "next");
-
         final boolean casNext(Node<E> cmp, Node<E> val) {
-            return nextUpdater.compareAndSet(this, cmp, val);
+            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
 
         final void clearNext() {
-            nextUpdater.lazySet(this, this);
+            UNSAFE.putOrderedObject(this, nextOffset, this);
+        }
+
+        // Unsafe mechanics
+
+        private static final sun.misc.Unsafe UNSAFE = getUnsafe();
+        private static final long nextOffset =
+            objectFieldOffset(UNSAFE, "next", Node.class);
+
+        /**
+         * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+         * Replace with a simple call to Unsafe.getUnsafe when integrating
+         * into a jdk.
+         *
+         * @return a sun.misc.Unsafe
+         */
+        private static sun.misc.Unsafe getUnsafe() {
+            try {
+                return sun.misc.Unsafe.getUnsafe();
+            } catch (SecurityException se) {
+                try {
+                    return java.security.AccessController.doPrivileged
+                        (new java.security
+                         .PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                            public sun.misc.Unsafe run() throws Exception {
+                                java.lang.reflect.Field f = sun.misc
+                                    .Unsafe.class.getDeclaredField("theUnsafe");
+                                f.setAccessible(true);
+                                return (sun.misc.Unsafe) f.get(null);
+                            }});
+                } catch (java.security.PrivilegedActionException e) {
+                    throw new RuntimeException("Could not initialize intrinsics",
+                                               e.getCause());
+                }
+            }
         }
 
         private static final long serialVersionUID = -3375979862319811754L;
@@ -842,13 +870,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
     private static final long headOffset =
-        objectFieldOffset("head", LinkedTransferQueue.class);
+        objectFieldOffset(UNSAFE, "head", LinkedTransferQueue.class);
     private static final long tailOffset =
-        objectFieldOffset("tail", LinkedTransferQueue.class);
+        objectFieldOffset(UNSAFE, "tail", LinkedTransferQueue.class);
     private static final long cleanMeOffset =
-        objectFieldOffset("cleanMe", LinkedTransferQueue.class);
+        objectFieldOffset(UNSAFE, "cleanMe", LinkedTransferQueue.class);
 
-    private static long objectFieldOffset(String field, Class<?> klazz) {
+
+    static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
+                                  String field, Class<?> klazz) {
         try {
             return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
         } catch (NoSuchFieldException e) {

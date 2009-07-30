@@ -1132,7 +1132,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                         transitionRunStateTo(TERMINATED);
                         termination.signalAll();
                     }
-                    
                 } finally {
                     lock.unlock();
                 }

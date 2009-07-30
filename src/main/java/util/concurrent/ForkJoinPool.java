@@ -1120,8 +1120,23 @@ public class ForkJoinPool extends AbstractExecutorService {
     public void shutdown() {
         checkPermission();
         transitionRunStateTo(SHUTDOWN);
-        if (canTerminateOnShutdown(runControl))
+        if (canTerminateOnShutdown(runControl)) {
+            if (workers == null) { // shutting down before workers created
+                final ReentrantLock lock = this.workerLock;
+                lock.lock();
+                try {
+                    if (workers == null) {
+                        terminate();
+                        transitionRunStateTo(TERMINATED);
+                        termination.signalAll();
+                    }
+                    
+                } finally {
+                    lock.unlock();
+                }
+            }
             terminateOnShutdown();
+        }
     }
 
     /**

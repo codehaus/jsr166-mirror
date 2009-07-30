@@ -635,7 +635,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
-
     public Iterator<E> iterator() {
         return new Itr();
     }
@@ -650,42 +649,39 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     class Itr implements Iterator<E> {
         Node<E> next;        // node to return next
         Node<E> pnext;       // predecessor of next
-        Node<E> snext;       // successor of next
         Node<E> curr;        // last returned node, for remove()
         Node<E> pcurr;       // predecessor of curr, for remove()
-        E nextItem;        // Cache of next item, once committed to in next
+        E nextItem;          // Cache of next item, once committed to in next
 
         Itr() {
-            findNext();
+            advance();
         }
 
         /**
-         * Ensures next points to next valid node, or null if none.
+         * Moves to next valid node and returns item to return for
+         * next(), or null if no such.
          */
-        void findNext() {
+        private E advance() {
+            pcurr = pnext;
+            curr = next;
+            E item = nextItem;
+
             for (;;) {
-                Node<E> pred = pnext;
-                Node<E> q = next;
-                if (pred == null || pred == q) {
-                    pred = traversalHead();
-                    q = pred.next;
-                }
-                if (q == null || !q.isData) {
+                pnext = next == null ? traversalHead() : next;
+                next = pnext.next;
+                if (next == pnext) {
                     next = null;
-                    return;
+                    continue;  // restart
                 }
-                Object x = q.get();
-                Node<E> s = q.next;
-                if (x != null && q != x && q != s) {
+                if (next == null)
+                    break;
+                Object x = next.get();
+                if (x != null && x != next) {
                     nextItem = (E) x;
-                    snext = s;
-                    pnext = pred;
-                    next = q;
-                    return;
+                    break;
                 }
-                pnext = q;
-                next = s;
             }
+            return item;
         }
 
         public boolean hasNext() {
@@ -693,14 +689,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         public E next() {
-            if (next == null) throw new NoSuchElementException();
-            pcurr = pnext;
-            curr = next;
-            pnext = next;
-            next = snext;
-            E x = nextItem;
-            findNext();
-            return x;
+            if (next == null) 
+                throw new NoSuchElementException();
+            return advance();
         }
 
         public void remove() {
@@ -770,32 +761,44 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @return the number of elements in this queue
      */
     public int size() {
-        int count = 0;
-        Node<E> h = traversalHead();
-        for (Node<E> p = h.next; p != null && p.isData; p = p.next) {
-            Object x = p.get();
-            if (x != null && x != p) {
-                if (++count == Integer.MAX_VALUE) // saturated
+        for (;;) {
+            int count = 0;
+            Node<E> pred = traversalHead();
+            for (;;) {
+                Node<E> q = pred.next;
+                if (q == pred) // restart
                     break;
+                if (q == null || !q.isData)
+                    return count;
+                Object x = q.get();
+                if (x != null && x != q) {
+                    if (++count == Integer.MAX_VALUE) // saturated
+                        return count;
+                }
+                pred = q;
             }
         }
-        return count;
     }
 
     public int getWaitingConsumerCount() {
-        int count = 0;
-        Node<E> h = traversalHead();
-        for (Node<E> p = h.next; p != null && !p.isData; p = p.next) {
-            if (p.get() == null) {
-                if (++count == Integer.MAX_VALUE)
+        // converse of size -- count valid non-data nodes
+        for (;;) {
+            int count = 0;
+            Node<E> pred = traversalHead();
+            for (;;) {
+                Node<E> q = pred.next;
+                if (q == pred) // restart
                     break;
+                if (q == null || q.isData)
+                    return count;
+                Object x = q.get();
+                if (x == null) {
+                    if (++count == Integer.MAX_VALUE) // saturated
+                        return count;
+                }
+                pred = q;
             }
         }
-        return count;
-    }
-
-    public int remainingCapacity() {
-        return Integer.MAX_VALUE;
     }
 
     public boolean remove(Object o) {
@@ -805,10 +808,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Node<E> pred = traversalHead();
             for (;;) {
                 Node<E> q = pred.next;
-                if (q == null || !q.isData)
-                    return false;
                 if (q == pred) // restart
                     break;
+                if (q == null || !q.isData)
+                    return false;
                 Object x = q.get();
                 if (x != null && x != q && o.equals(x) &&
                     q.compareAndSet(x, q)) {
@@ -818,6 +821,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 pred = q;
             }
         }
+    }
+
+    public int remainingCapacity() {
+        return Integer.MAX_VALUE;
     }
 
     /**

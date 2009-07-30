@@ -548,9 +548,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      */
     public E take() throws InterruptedException {
-        Object e = xfer(null, WAIT, 0);
+        E e = xfer(null, WAIT, 0);
         if (e != null)
-            return (E) e;
+            return e;
         Thread.interrupted();
         throw new InterruptedException();
     }
@@ -559,9 +559,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        Object e = xfer(null, TIMEOUT, unit.toNanos(timeout));
+        E e = xfer(null, TIMEOUT, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
-            return (E) e;
+            return e;
         throw new InterruptedException();
     }
 
@@ -667,7 +667,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             E item = nextItem;
 
             for (;;) {
-                pnext = next == null ? traversalHead() : next;
+                pnext = (next == null) ? traversalHead() : next;
                 next = pnext.next;
                 if (next == pnext) {
                     next = null;

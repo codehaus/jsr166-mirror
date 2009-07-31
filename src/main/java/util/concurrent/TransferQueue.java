@@ -38,9 +38,10 @@ package java.util.concurrent;
  */
 public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
-     * Transfers the specified element if there exists a consumer
-     * already waiting to receive it, otherwise returning {@code false}
-     * without enqueuing the element.
+     * Transfers the specified element immediately if there exists a
+     * consumer already waiting to receive it (in {@link #take} or
+     * timed {@link #poll(long,TimeUnit) poll}), otherwise returning
+     * {@code false} without enqueuing the element.
      *
      * @param e the element to transfer
      * @return {@code true} if the element was transferred, else
@@ -56,7 +57,7 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Inserts the specified element into this queue, waiting if
      * necessary for space to become available and the element to be
-     * dequeued by a consumer invoking {@code take} or {@code poll}.
+     * received by a consumer invoking {@code take} or {@code poll}.
      *
      * @param e the element to transfer
      * @throws InterruptedException if interrupted while waiting,
@@ -72,7 +73,7 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Inserts the specified element into this queue, waiting up to
      * the specified wait time if necessary for space to become
-     * available and the element to be dequeued by a consumer invoking
+     * available and the element to be received by a consumer invoking
      * {@code take} or {@code poll}.
      *
      * @param e the element to transfer
@@ -96,7 +97,8 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
 
     /**
      * Returns {@code true} if there is at least one consumer waiting
-     * to dequeue an element via {@code take} or {@code poll}.
+     * to receive an element via {@link #take} or
+     * timed {@link #poll(long,TimeUnit) poll}.
      * The return value represents a momentary state of affairs.
      *
      * @return {@code true} if there is at least one waiting consumer
@@ -105,15 +107,16 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
 
     /**
      * Returns an estimate of the number of consumers waiting to
-     * dequeue elements via {@code take} or {@code poll}. The return
-     * value is an approximation of a momentary state of affairs, that
-     * may be inaccurate if consumers have completed or given up
-     * waiting. The value may be useful for monitoring and heuristics,
-     * but not for synchronization control. Implementations of this
+     * receive elements via {@link #take} or timed
+     * {@link #poll(long,TimeUnit) poll}.  The return value is an
+     * approximation of a momentary state of affairs, that may be
+     * inaccurate if consumers have completed or given up waiting.
+     * The value may be useful for monitoring and heuristics, but
+     * not for synchronization control.  Implementations of this
      * method are likely to be noticeably slower than those for
      * {@link #hasWaitingConsumer}.
      *
-     * @return the number of consumers waiting to dequeue elements
+     * @return the number of consumers waiting to receive elements
      */
     int getWaitingConsumerCount();
 }

@@ -122,6 +122,7 @@ package java.util.concurrent;
  * @author Doug Lea
  */
 public abstract class RecursiveAction extends ForkJoinTask<Void> {
+    private static final long serialVersionUID = 5232453952276485070L;
 
     /**
      * The main computation performed by this task.

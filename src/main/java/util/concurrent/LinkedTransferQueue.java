@@ -8,8 +8,10 @@ package java.util.concurrent;
 
 import java.util.AbstractQueue;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -262,7 +264,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param e the comparison value for checking match
      * @param mode mode
      * @param nanos timeout value
-     * @return matched item, or s if cancelled
+     * @return matched item, or null if cancelled
      */
     private E awaitFulfill(Node<E> pred, Node<E> s, E e,
                            int mode, long nanos) {
@@ -328,7 +330,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         for (;;) {
             Node<E> h = head.get();
             Node<E> first = h.next;
-            if (first != null && first.next == first) { // help advance
+            if (first != null && first.get() == first) { // help advance
                 advanceHead(h, first);
                 continue;
             }
@@ -441,29 +443,35 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * @throws InterruptedException {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
+     * Inserts the specified element at the tail of this queue.
+     * As the queue is unbounded, this method will never block.
+     *
+     * @throws NullPointerException if the specified element is null
      */
-    public void put(E e) throws InterruptedException {
-        if (e == null) throw new NullPointerException();
-        if (Thread.interrupted()) throw new InterruptedException();
-        xfer(e, NOWAIT, 0);
+    public void put(E e) {
+        offer(e);
     }
 
     /**
-     * @throws InterruptedException {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
+     * Inserts the specified element at the tail of this queue.
+     * As the queue is unbounded, this method will never block or
+     * return {@code false}.
+     *
+     * @return {@code true} (as specified by
+     *  {@link BlockingQueue#offer(Object,long,TimeUnit) BlockingQueue.offer})
+     * @throws NullPointerException if the specified element is null
      */
-    public boolean offer(E e, long timeout, TimeUnit unit)
-        throws InterruptedException {
-        if (e == null) throw new NullPointerException();
-        if (Thread.interrupted()) throw new InterruptedException();
-        xfer(e, NOWAIT, 0);
-        return true;
+    public boolean offer(E e, long timeout, TimeUnit unit) {
+        return offer(e);
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
+     * Inserts the specified element at the tail of this queue.
+     * As the queue is unbounded, this method will never return {@code false}.
+     *
+     * @return {@code true} (as specified by
+     *         {@link BlockingQueue#offer(Object) BlockingQueue.offer})
+     * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
         if (e == null) throw new NullPointerException();
@@ -472,17 +480,36 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
+     * Inserts the specified element at the tail of this queue.
+     * As the queue is unbounded, this method will never throw
+     * {@link IllegalStateException} or return {@code false}.
+     *
+     * @return {@code true} (as specified by {@link Collection#add})
+     * @throws NullPointerException if the specified element is null
      */
     public boolean add(E e) {
-        if (e == null) throw new NullPointerException();
-        xfer(e, NOWAIT, 0);
-        return true;
+        return offer(e);
     }
 
     /**
-     * @throws InterruptedException {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
+     * Transfers the specified element immediately if there exists a
+     * consumer already waiting to receive it (in {@link #take} or
+     * timed {@link #poll(long,TimeUnit) poll}), otherwise
+     * returning {@code false} without enqueuing the element.
+     *
+     * @throws NullPointerException if the specified element is null
+     */
+    public boolean tryTransfer(E e) {
+        if (e == null) throw new NullPointerException();
+        return fulfill(e) != null;
+    }
+
+    /**
+     * Inserts the specified element at the tail of this queue,
+     * waiting if necessary for the element to be received by a
+     * consumer invoking {@code take} or {@code poll}.
+     *
+     * @throws NullPointerException if the specified element is null
      */
     public void transfer(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
@@ -493,8 +520,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * @throws InterruptedException {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
+     * Inserts the specified element at the tail of this queue,
+     * waiting up to the specified wait time if necessary for the
+     * element to be received by a consumer invoking {@code take} or
+     * {@code poll}.
+     *
+     * @throws NullPointerException if the specified element is null
      */
     public boolean tryTransfer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
@@ -506,32 +537,18 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         throw new InterruptedException();
     }
 
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public boolean tryTransfer(E e) {
-        if (e == null) throw new NullPointerException();
-        return fulfill(e) != null;
-    }
-
-    /**
-     * @throws InterruptedException {@inheritDoc}
-     */
     public E take() throws InterruptedException {
-        Object e = xfer(null, WAIT, 0);
+        E e = xfer(null, WAIT, 0);
         if (e != null)
-            return (E) e;
+            return e;
         Thread.interrupted();
         throw new InterruptedException();
     }
 
-    /**
-     * @throws InterruptedException {@inheritDoc}
-     */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        Object e = xfer(null, TIMEOUT, unit.toNanos(timeout));
+        E e = xfer(null, TIMEOUT, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
-            return (E) e;
+            return e;
         throw new InterruptedException();
     }
 
@@ -605,7 +622,19 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
-
+    /**
+     * Returns an iterator over the elements in this queue in proper
+     * sequence, from head to tail.
+     *
+     * <p>The returned iterator is a "weakly consistent" iterator that
+     * will never throw
+     * {@link ConcurrentModificationException ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed
+     * to) reflect any modifications subsequent to construction.
+     *
+     * @return an iterator over the elements in this queue in proper sequence
+     */
     public Iterator<E> iterator() {
         return new Itr();
     }
@@ -620,42 +649,39 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     class Itr implements Iterator<E> {
         Node<E> next;        // node to return next
         Node<E> pnext;       // predecessor of next
-        Node<E> snext;       // successor of next
         Node<E> curr;        // last returned node, for remove()
         Node<E> pcurr;       // predecessor of curr, for remove()
-        E nextItem;        // Cache of next item, once committed to in next
+        E nextItem;          // Cache of next item, once committed to in next
 
         Itr() {
-            findNext();
+            advance();
         }
 
         /**
-         * Ensures next points to next valid node, or null if none.
+         * Moves to next valid node and returns item to return for
+         * next(), or null if no such.
          */
-        void findNext() {
+        private E advance() {
+            pcurr = pnext;
+            curr = next;
+            E item = nextItem;
+
             for (;;) {
-                Node<E> pred = pnext;
-                Node<E> q = next;
-                if (pred == null || pred == q) {
-                    pred = traversalHead();
-                    q = pred.next;
-                }
-                if (q == null || !q.isData) {
+                pnext = (next == null) ? traversalHead() : next;
+                next = pnext.next;
+                if (next == pnext) {
                     next = null;
-                    return;
+                    continue;  // restart
                 }
-                Object x = q.get();
-                Node<E> s = q.next;
-                if (x != null && q != x && q != s) {
+                if (next == null)
+                    break;
+                Object x = next.get();
+                if (x != null && x != next) {
                     nextItem = (E) x;
-                    snext = s;
-                    pnext = pred;
-                    next = q;
-                    return;
+                    break;
                 }
-                pnext = q;
-                next = s;
             }
+            return item;
         }
 
         public boolean hasNext() {
@@ -663,14 +689,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         public E next() {
-            if (next == null) throw new NoSuchElementException();
-            pcurr = pnext;
-            curr = next;
-            pnext = next;
-            next = snext;
-            E x = nextItem;
-            findNext();
-            return x;
+            if (next == null)
+                throw new NoSuchElementException();
+            return advance();
         }
 
         public void remove() {
@@ -740,32 +761,44 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @return the number of elements in this queue
      */
     public int size() {
-        int count = 0;
-        Node<E> h = traversalHead();
-        for (Node<E> p = h.next; p != null && p.isData; p = p.next) {
-            Object x = p.get();
-            if (x != null && x != p) {
-                if (++count == Integer.MAX_VALUE) // saturated
+        for (;;) {
+            int count = 0;
+            Node<E> pred = traversalHead();
+            for (;;) {
+                Node<E> q = pred.next;
+                if (q == pred) // restart
                     break;
+                if (q == null || !q.isData)
+                    return count;
+                Object x = q.get();
+                if (x != null && x != q) {
+                    if (++count == Integer.MAX_VALUE) // saturated
+                        return count;
+                }
+                pred = q;
             }
         }
-        return count;
     }
 
     public int getWaitingConsumerCount() {
-        int count = 0;
-        Node<E> h = traversalHead();
-        for (Node<E> p = h.next; p != null && !p.isData; p = p.next) {
-            if (p.get() == null) {
-                if (++count == Integer.MAX_VALUE)
+        // converse of size -- count valid non-data nodes
+        for (;;) {
+            int count = 0;
+            Node<E> pred = traversalHead();
+            for (;;) {
+                Node<E> q = pred.next;
+                if (q == pred) // restart
                     break;
+                if (q == null || q.isData)
+                    return count;
+                Object x = q.get();
+                if (x == null) {
+                    if (++count == Integer.MAX_VALUE) // saturated
+                        return count;
+                }
+                pred = q;
             }
         }
-        return count;
-    }
-
-    public int remainingCapacity() {
-        return Integer.MAX_VALUE;
     }
 
     public boolean remove(Object o) {
@@ -775,10 +808,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Node<E> pred = traversalHead();
             for (;;) {
                 Node<E> q = pred.next;
-                if (q == null || !q.isData)
-                    return false;
                 if (q == pred) // restart
                     break;
+                if (q == null || !q.isData)
+                    return false;
                 Object x = q.get();
                 if (x != null && x != q && o.equals(x) &&
                     q.compareAndSet(x, q)) {
@@ -788,6 +821,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 pred = q;
             }
         }
+    }
+
+    /**
+     * Always returns {@code Integer.MAX_VALUE} because a
+     * {@code LinkedTransferQueue} is not capacity constrained.
+     *
+     * @return {@code Integer.MAX_VALUE} (as specified by
+     *         {@link BlockingQueue#remainingCapacity()})
+     */
+    public int remainingCapacity() {
+        return Integer.MAX_VALUE;
     }
 
     /**

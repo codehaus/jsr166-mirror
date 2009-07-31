@@ -63,6 +63,12 @@ public class ForkJoinWorkerThread extends Thread {
      * which gives threads a chance to activate if necessary before
      * stealing (see below).
      *
+     * This approach also enables support for "async mode" where local
+     * task processing is in FIFO, not LIFO order; simply by using a
+     * version of deq rather than pop when locallyFifo is true (as set
+     * by the ForkJoinPool).  This allows use in message-passing
+     * frameworks in which tasks are never joined.
+     *
      * Efficient implementation of this approach currently relies on
      * an uncomfortable amount of "Unsafe" mechanics. To maintain
      * correct orderings, reads and writes of variable base require
@@ -307,10 +313,9 @@ public class ForkJoinWorkerThread extends Thread {
      * one.  Marsaglia xor-shift is cheap and works well.
      */
     private static int xorShift(int r) {
-        r ^= r << 1;
-        r ^= r >>> 3;
-        r ^= r << 10;
-        return r;
+        r ^= (r << 13);
+        r ^= (r >>> 17);
+        return r ^ (r << 5);
     }
 
     // Lifecycle methods
@@ -468,6 +473,28 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
+     * Tries to take a task from the base of own queue, activating if
+     * necessary, failing only if empty. Called only by current thread.
+     *
+     * @return a task, or null if none
+     */
+    final ForkJoinTask<?> locallyDeqTask() {
+        int b;
+        while (sp != (b = base)) {
+            if (tryActivate()) {
+                ForkJoinTask<?>[] q = queue;
+                int i = (q.length - 1) & b;
+                ForkJoinTask<?> t = q[i];
+                if (t != null && casSlotNull(q, i, t)) {
+                    base = b + 1;
+                    return t;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns a popped task, or null if empty. Ensures active status
      * if non-null. Called only by current thread.
      */
@@ -507,7 +534,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns next task.
+     * Returns next task or null if empty or contended
      */
     final ForkJoinTask<?> peekTask() {
         ForkJoinTask<?>[] q = queue;
@@ -598,7 +625,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return a task, if available
      */
     final ForkJoinTask<?> pollTask() {
-        ForkJoinTask<?> t = locallyFifo ? deqTask() : popTask();
+        ForkJoinTask<?> t = locallyFifo ? locallyDeqTask() : popTask();
         if (t == null && (t = scan()) != null)
             ++stealCount;
         return t;
@@ -610,7 +637,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return a task, if available
      */
     final ForkJoinTask<?> pollLocalTask() {
-        return locallyFifo ? deqTask() : popTask();
+        return locallyFifo ? locallyDeqTask() : popTask();
     }
 
     /**

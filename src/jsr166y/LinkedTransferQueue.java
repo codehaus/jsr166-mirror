@@ -511,7 +511,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Inserts the specified element at the tail of this queue.
-     * As the queue is unbounded this method will never throw
+     * As the queue is unbounded, this method will never throw
      * {@link IllegalStateException} or return {@code false}.
      *
      * @return {@code true} (as specified by {@link Collection#add})

@@ -288,13 +288,13 @@ public class JSR166TestCase extends TestCase {
      * threadFail with message "should throw exception"
      */
     public void threadShouldThrow() {
-       try {
-           threadFailed = true;
-           fail("should throw exception");
-       } catch (AssertionFailedError e) {
-           e.printStackTrace();
-           throw e;
-       }
+        try {
+            threadFailed = true;
+            fail("should throw exception");
+        } catch (AssertionFailedError e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     /**

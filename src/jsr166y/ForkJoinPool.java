@@ -1833,11 +1833,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     // implement RunnableFuture.
 
     protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
-        return (RunnableFuture<T>)ForkJoinTask.adapt(runnable, value);
+        return (RunnableFuture<T>) ForkJoinTask.adapt(runnable, value);
     }
 
     protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
-        return (RunnableFuture<T>)ForkJoinTask.adapt(callable);
+        return (RunnableFuture<T>) ForkJoinTask.adapt(callable);
     }
 
     // Unsafe mechanics

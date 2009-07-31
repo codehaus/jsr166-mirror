@@ -958,8 +958,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /*
-     * transfer attempts to insert into the queue then wait until that 
-     * object is removed via take or poll. 
+     * transfer attempts to insert into the queue then wait until that
+     * object is removed via take or poll.
      */
     public void testTransfer2() {
         final LinkedTransferQueue<Integer> q = new LinkedTransferQueue<Integer>();
@@ -985,8 +985,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
     /*
-     * transfer will attempt to transfer in fifo order and continue waiting if 
-     * the element being transfered is not polled or taken 
+     * transfer will attempt to transfer in fifo order and continue waiting if
+     * the element being transfered is not polled or taken
      */
 
     public void testTransfer3() {
@@ -1003,7 +1003,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                     }
                 }
             }).start();
-        Thread interruptedThread = 
+        Thread interruptedThread =
             new Thread(new Runnable() {
                     public void run() {
                         try {
@@ -1028,7 +1028,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
     /**
      * transfer will wait as long as a poll or take occurs if one does occur
-     * the waiting is finished and the thread that tries to poll/take 
+     * the waiting is finished and the thread that tries to poll/take
      * wins in retrieving the element
      */
     public void testTransfer4() {
@@ -1186,7 +1186,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /*
-     * tryTransfer attempts to enqueue into the q and fails returning false not 
+     * tryTransfer attempts to enqueue into the q and fails returning false not
      * enqueueing and the successing poll is null
      */
     public void testTryTransfer7() {

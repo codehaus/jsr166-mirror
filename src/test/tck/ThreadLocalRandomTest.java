@@ -11,7 +11,7 @@ import java.util.*;
 public class ThreadLocalRandomTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ThreadLocalRandomTest.class);
@@ -19,14 +19,14 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
 
     /**
      * Testing coverage notes:
-     * 
+     *
      * We don't test randomness properties, but only that repeated
      * calls, up to NCALLS tries, produce at least one different
      * result.  For bounded versions, we sample various intervals
      * across multiples of primes.
      */
 
-    // 
+    //
     static final int NCALLS = 10000;
 
     // max sampled int bound
@@ -41,7 +41,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     public void testSetSeed() {
         try {
             ThreadLocalRandom.current().setSeed(17);
-        } catch(UnsupportedOperationException success) {
+        } catch (UnsupportedOperationException success) {
         }
     }
 
@@ -119,7 +119,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     public void testNextIntBoundedNeg() {
         try {
             int  f = ThreadLocalRandom.current().nextInt(-17);
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -129,7 +129,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     public void testNextIntBadBounds() {
         try {
             int  f = ThreadLocalRandom.current().nextInt(17, 2);
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -145,7 +145,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
             assertTrue(0 <= f && f < bound);
             int i = 0;
             int j;
-            while (i < NCALLS && 
+            while (i < NCALLS &&
                    (j = ThreadLocalRandom.current().nextInt(bound)) == f) {
                 assertTrue(0 <= j && j < bound);
                 ++i;
@@ -166,7 +166,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
                 assertTrue(least <= f && f < bound);
                 int i = 0;
                 int j;
-                while (i < NCALLS && 
+                while (i < NCALLS &&
                        (j = ThreadLocalRandom.current().nextInt(least, bound)) == f) {
                     assertTrue(least <= j && j < bound);
                     ++i;
@@ -182,7 +182,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     public void testNextLongBoundedNeg() {
         try {
             long  f = ThreadLocalRandom.current().nextLong(-17);
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -192,7 +192,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     public void testNextLongBadBounds() {
         try {
             long  f = ThreadLocalRandom.current().nextLong(17, 2);
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -206,7 +206,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
             assertTrue(0 <= f && f < bound);
             int i = 0;
             long j;
-            while (i < NCALLS && 
+            while (i < NCALLS &&
                    (j = ThreadLocalRandom.current().nextLong(bound)) == f) {
                 assertTrue(0 <= j && j < bound);
                 ++i;
@@ -226,7 +226,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
                 assertTrue(least <= f && f < bound);
                 int i = 0;
                 long j;
-                while (i < NCALLS && 
+                while (i < NCALLS &&
                        (j = ThreadLocalRandom.current().nextLong(least, bound)) == f) {
                     assertTrue(least <= j && j < bound);
                     ++i;
@@ -248,7 +248,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
                 assertTrue(least <= f && f < bound);
                 int i = 0;
                 double j;
-                while (i < NCALLS && 
+                while (i < NCALLS &&
                        (j = ThreadLocalRandom.current().nextDouble(least, bound)) == f) {
                     assertTrue(least <= j && j < bound);
                     ++i;

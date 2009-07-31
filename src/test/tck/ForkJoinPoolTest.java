@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.security.*;
 
-public class ForkJoinPoolTest extends JSR166TestCase{
+public class ForkJoinPoolTest extends JSR166TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run (suite());
     }

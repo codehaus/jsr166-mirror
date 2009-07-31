@@ -286,7 +286,7 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * threadFail with message "should throw exception"
-     */ 
+     */
     public void threadShouldThrow() {
        try {
            threadFailed = true;
@@ -321,9 +321,9 @@ public class JSR166TestCase extends TestCase {
         try {
             exec.shutdown();
             assertTrue(exec.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
-        } catch(SecurityException ok) {
+        } catch (SecurityException ok) {
             // Allowed in case test doesn't have privs
-        } catch(InterruptedException ie) {
+        } catch (InterruptedException ie) {
             fail("Unexpected exception");
         }
     }
@@ -421,7 +421,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SHORT_DELAY_MS);
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 threadUnexpectedException(e);
             }
         }
@@ -433,7 +433,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SHORT_DELAY_MS);
                 threadShouldThrow();
             }
-            catch(InterruptedException success) {
+            catch (InterruptedException success) {
             }
         }
     }
@@ -443,7 +443,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 threadUnexpectedException(e);
             }
         }
@@ -454,7 +454,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
             }
-            catch(Exception e) {
+            catch (Exception e) {
             }
         }
     }
@@ -464,7 +464,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 threadUnexpectedException(e);
             }
             return Boolean.TRUE;
@@ -477,7 +477,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SMALL_DELAY_MS);
                 threadShouldThrow();
             }
-            catch(InterruptedException success) {
+            catch (InterruptedException success) {
             }
         }
     }
@@ -488,7 +488,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 threadUnexpectedException(e);
             }
         }
@@ -500,7 +500,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(MEDIUM_DELAY_MS);
                 threadShouldThrow();
             }
-            catch(InterruptedException success) {
+            catch (InterruptedException success) {
             }
         }
     }
@@ -510,7 +510,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
             }
-            catch(InterruptedException success) {
+            catch (InterruptedException success) {
             }
         }
     }
@@ -520,7 +520,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(LONG_DELAY_MS);
             }
-            catch(InterruptedException success) {
+            catch (InterruptedException success) {
             }
         }
     }
@@ -528,8 +528,8 @@ public class JSR166TestCase extends TestCase {
     /**
      * For use as ThreadFactory in constructors
      */
-    static class SimpleThreadFactory implements ThreadFactory{
-        public Thread newThread(Runnable r){
+    static class SimpleThreadFactory implements ThreadFactory {
+        public Thread newThread(Runnable r) {
             return new Thread(r);
         }
     }
@@ -540,7 +540,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
-            } catch(Exception e){
+            } catch (Exception e) {
             }
         }
     }
@@ -551,7 +551,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
                 done = true;
-            } catch(Exception e){
+            } catch (Exception e) {
             }
         }
     }
@@ -562,7 +562,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(LONG_DELAY_MS);
                 done = true;
-            } catch(Exception e){
+            } catch (Exception e) {
             }
         }
     }
@@ -580,7 +580,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
-            } catch(Exception e){
+            } catch (Exception e) {
             }
             return Boolean.TRUE;
         }
@@ -590,7 +590,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * For use as RejectedExecutionHandler in constructors
      */
-    static class NoOpREHandler implements RejectedExecutionHandler{
+    static class NoOpREHandler implements RejectedExecutionHandler {
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor){}
     }
 

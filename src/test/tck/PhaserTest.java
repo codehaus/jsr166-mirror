@@ -424,7 +424,7 @@ public class PhaserTest extends JSR166TestCase {
          * waits for the second thread's party to arrive
          */
         new Thread() {
-            
+
             public void run() {
                 getRunnable(SMALL_DELAY_MS).run();
                 int phase = phaser.awaitAdvance(phaser.arrive());
@@ -437,8 +437,8 @@ public class PhaserTest extends JSR166TestCase {
         }.start();
         /*
          * This thread will cause the first thread run to wait, in doing so
-         * the main thread will force termination in which the first thread 
-         * should exit peacefully as this one 
+         * the main thread will force termination in which the first thread
+         * should exit peacefully as this one
          */
         new Thread() {
 

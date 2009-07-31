@@ -11,7 +11,7 @@ import java.util.*;
 public class RecursiveTaskTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(RecursiveTaskTest.class);
@@ -32,7 +32,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     static final Integer NoResult = Integer.valueOf(-17);
 
     // A simple recursive task for testing
-    static final class FibTask extends RecursiveTask<Integer> { 
+    static final class FibTask extends RecursiveTask<Integer> {
         final int number;
         FibTask(int n) { number = n; }
         public Integer compute() {
@@ -46,7 +46,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
     // A recursive action failing in base case
-    static final class FailingFibTask extends RecursiveTask<Integer> { 
+    static final class FailingFibTask extends RecursiveTask<Integer> {
         final int number;
         int result;
         FailingFibTask(int n) { number = n; }
@@ -60,12 +60,12 @@ public class RecursiveTaskTest extends JSR166TestCase {
         }
     }
 
-    /** 
+    /**
      * invoke returns value when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally
      * completed tasks. getRawResult of a completed non-null task
      * returns value;
-     * 
+     *
      */
     public void testInvoke() {
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
@@ -83,7 +83,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertTrue(mainPool.invoke(a) == 21);
     }
 
-    /** 
+    /**
      * quietlyInvoke task returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally
      * completed tasks
@@ -104,7 +104,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertTrue(mainPool.invoke(a) == 21);
     }
 
-    /** 
+    /**
      * join of a forked task returns when task completes
      */
     public void testForkJoin() {
@@ -121,7 +121,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertTrue(mainPool.invoke(a) == 21);
     }
 
-    /** 
+    /**
      * get of a forked task returns when task completes
      */
     public void testForkGet() {
@@ -134,7 +134,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         threadAssertTrue(r == 21);
                         threadAssertTrue(f.isDone());
                         return r;
-                    } catch(Exception ex) {
+                    } catch (Exception ex) {
                         unexpectedException();
                     }
                     return NoResult;
@@ -143,7 +143,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertTrue(mainPool.invoke(a) == 21);
     }
 
-    /** 
+    /**
      * timed get of a forked task returns when task completes
      */
     public void testForkTimedGet() {
@@ -156,7 +156,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         threadAssertTrue(r == 21);
                         threadAssertTrue(f.isDone());
                         return r;
-                    } catch(Exception ex) {
+                    } catch (Exception ex) {
                         unexpectedException();
                     }
                     return NoResult;
@@ -165,7 +165,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertTrue(mainPool.invoke(a) == 21);
     }
 
-    /** 
+    /**
      * helpJoin of a forked task returns when task completes
      */
     public void testForkHelpJoin() {
@@ -182,7 +182,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertTrue(mainPool.invoke(a) == 21);
     }
 
-    /** 
+    /**
      * quietlyJoin of a forked task returns when task completes
      */
     public void testForkQuietlyJoin() {
@@ -201,7 +201,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * quietlyHelpJoin of a forked task returns when task completes
      */
     public void testForkQuietlyHelpJoin() {
@@ -220,7 +220,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * helpQuiesce returns when tasks are complete.
      * getQueuedTaskCount returns 0 when quiescent
      */
@@ -241,7 +241,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * invoke task throws exception when task completes abnormally
      */
     public void testAbnormalInvoke() {
@@ -252,7 +252,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         f.invoke();
                         shouldThrow();
                         return NoResult;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -260,7 +260,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietelyInvoke task returns when task completes abnormally
      */
     public void testAbnormalQuietlyInvoke() {
@@ -275,7 +275,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkJoin() {
@@ -287,7 +287,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.join();
                         shouldThrow();
                         return r;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -295,7 +295,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * get of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkGet() {
@@ -307,7 +307,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get();
                         shouldThrow();
                         return r;
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                     return NoResult;
                 }
@@ -315,7 +315,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * timed get of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkTimedGet() {
@@ -327,7 +327,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
                         return r;
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                     return NoResult;
                 }
@@ -335,7 +335,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkHelpJoin() {
@@ -347,7 +347,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.helpJoin();
                         shouldThrow();
                         return r;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -355,7 +355,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyHelpJoin of a forked task returns when task completes abnormally.
      * getException of failed task returns its exception.
      * isCompletedAbnormally of a failed task returns true.
@@ -377,7 +377,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyJoin of a forked task returns when task completes abnormally
      */
     public void testAbnormalForkQuietlyJoin() {
@@ -395,7 +395,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invoke task throws exception when task cancelled
      */
     public void testCancelledInvoke() {
@@ -407,7 +407,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.invoke();
                         shouldThrow();
                         return r;
-                    } catch(CancellationException success) {
+                    } catch (CancellationException success) {
                     }
                     return NoResult;
                 }
@@ -415,7 +415,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task cancelled
      */
     public void testCancelledForkJoin() {
@@ -428,7 +428,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.join();
                         shouldThrow();
                         return r;
-                    } catch(CancellationException success) {
+                    } catch (CancellationException success) {
                     }
                     return NoResult;
                 }
@@ -436,7 +436,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * get of a forked task throws exception when task cancelled
      */
     public void testCancelledForkGet() {
@@ -449,7 +449,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get();
                         shouldThrow();
                         return r;
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                     return NoResult;
                 }
@@ -457,7 +457,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * timed get of a forked task throws exception when task cancelled
      */
     public void testCancelledForkTimedGet() {
@@ -470,7 +470,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
                         return r;
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                     return NoResult;
                 }
@@ -478,7 +478,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task cancelled
      */
     public void testCancelledForkHelpJoin() {
@@ -491,7 +491,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.helpJoin();
                         shouldThrow();
                         return r;
-                    } catch(CancellationException success) {
+                    } catch (CancellationException success) {
                     }
                     return NoResult;
                 }
@@ -499,7 +499,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyHelpJoin of a forked task returns when task cancelled.
      * getException of cancelled task returns its exception
      * isCompletedAbnormally of a cancelled task returns true.
@@ -522,7 +522,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyJoin of a forked task returns when task cancelled
      */
     public void testCancelledForkQuietlyJoin() {
@@ -566,7 +566,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         };
         a.invoke();
     }
-    
+
     /**
      * inForkJoinPool of executing task returns true
      */
@@ -606,7 +606,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertEquals(a.invoke(), NoResult);
     }
 
-    /** 
+    /**
      * A reinitialized task may be re-invoked
      */
     public void testReinitialize() {
@@ -627,7 +627,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invoke task throws exception after invoking completeExceptionally
      */
     public void testCompleteExceptionally() {
@@ -639,7 +639,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.invoke();
                         shouldThrow();
                         return r;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -647,7 +647,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invoke task suppresses execution invoking complete
      */
     public void testComplete() {
@@ -664,7 +664,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(t1, t2) invokes all task arguments
      */
     public void testInvokeAll2() {
@@ -683,7 +683,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with 1 argument invokes task
      */
     public void testInvokeAll1() {
@@ -699,7 +699,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with > 2 argument invokes tasks
      */
     public void testInvokeAll3() {
@@ -721,7 +721,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(collection) invokes all tasks in the collection
      */
     public void testInvokeAllCollection() {
@@ -748,7 +748,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * invokeAll(t1, t2) throw exception if any task does
      */
     public void testAbnormalInvokeAll2() {
@@ -760,7 +760,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         invokeAll(f, g);
                         shouldThrow();
                         return NoResult;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -768,7 +768,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with 1 argument throws exception if task does
      */
     public void testAbnormalInvokeAll1() {
@@ -779,7 +779,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         invokeAll(g);
                         shouldThrow();
                         return NoResult;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -787,7 +787,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with > 2 argument throws exception if any task does
      */
     public void testAbnormalInvokeAll3() {
@@ -800,7 +800,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         invokeAll(f, g, h);
                         shouldThrow();
                         return NoResult;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -808,7 +808,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(collection)  throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
@@ -825,7 +825,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         invokeAll(set);
                         shouldThrow();
                         return NoResult;
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                     return NoResult;
                 }
@@ -833,7 +833,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * tryUnfork returns true for most recent unexecuted task,
      * and suppresses execution
      */
@@ -854,7 +854,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * getSurplusQueuedTaskCount returns > 0 when
      * there are more tasks than threads
      */
@@ -875,7 +875,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * peekNextLocalTask returns most recent unexecuted task.
      */
     public void testPeekNextLocalTask() {
@@ -895,7 +895,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollNextLocalTask returns most recent unexecuted task
      * without executing it
      */
@@ -915,7 +915,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollTask returns an unexecuted task
      * without executing it
      */
@@ -936,7 +936,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * peekNextLocalTask returns least recent unexecuted task in async mode
      */
     public void testPeekNextLocalTaskAsync() {
@@ -956,7 +956,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         asyncSingletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollNextLocalTask returns least recent unexecuted task
      * without executing it, in async mode
      */
@@ -977,7 +977,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         asyncSingletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollTask returns an unexecuted task
      * without executing it, in async mode
      */

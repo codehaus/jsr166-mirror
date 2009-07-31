@@ -78,7 +78,7 @@ public class ThreadLocalTest extends JSR166TestCase {
             if (child != null) { // Wait for child (if any)
                 try {
                     child.join();
-                } catch(InterruptedException e) {
+                } catch (InterruptedException e) {
                     threadUnexpectedException();
                 }
             }
@@ -95,12 +95,11 @@ public class ThreadLocalTest extends JSR166TestCase {
         try {
             progenitor.start();
             progenitor.join();
-            for(int i = 0; i < threadCount; i++) {
+            for (int i = 0; i < threadCount; i++) {
                 assertEquals(i, x[i]);
             }
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
 }
-

@@ -11,7 +11,7 @@ import java.util.*;
 public class ForkJoinTaskTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ForkJoinTaskTest.class);
@@ -19,11 +19,11 @@ public class ForkJoinTaskTest extends JSR166TestCase {
 
     /**
      * Testing coverage notes:
-     * 
+     *
      * To test extension methods and overrides, most tests use
      * BinaryAsyncAction extension class that processes joins
      * differently than supplied Recursive forms.
-     */    
+     */
 
     static final ForkJoinPool mainPool = new ForkJoinPool();
     static final ForkJoinPool singletonPool = new ForkJoinPool(1);
@@ -40,7 +40,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         private volatile int controlState;
 
         static final AtomicIntegerFieldUpdater<BinaryAsyncAction> controlStateUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(BinaryAsyncAction.class, 
+            AtomicIntegerFieldUpdater.newUpdater(BinaryAsyncAction.class,
                                                  "controlState");
 
         private BinaryAsyncAction parent;
@@ -92,7 +92,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     break;
                 try {
                     p.onComplete(a, s);
-                } catch(Throwable rex) {
+                } catch (Throwable rex) {
                     p.completeExceptionally(rex);
                     return;
                 }
@@ -129,7 +129,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             return controlState;
         }
 
-        protected final boolean compareAndSetControlState(int expect, 
+        protected final boolean compareAndSetControlState(int expect,
                                                           int update) {
             return controlStateUpdater.compareAndSet(this, expect, update);
         }
@@ -150,10 +150,10 @@ public class ForkJoinTaskTest extends JSR166TestCase {
 
     static final class AsyncFib  extends BinaryAsyncAction {
         int number;
-        public AsyncFib(int n) { 
+        public AsyncFib(int n) {
             this.number = n;
         }
-        
+
         public final boolean exec() {
             AsyncFib f = this;
             int n = f.number;
@@ -179,10 +179,10 @@ public class ForkJoinTaskTest extends JSR166TestCase {
 
     static final class FailingAsyncFib  extends BinaryAsyncAction {
         int number;
-        public FailingAsyncFib(int n) { 
+        public FailingAsyncFib(int n) {
             this.number = n;
         }
-        
+
         public final boolean exec() {
             FailingAsyncFib f = this;
             int n = f.number;
@@ -205,11 +205,11 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         }
     }
 
-    /** 
+    /**
      * invoke returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally
      * completed tasks. getRawResult of a RecursiveAction returns null;
-     * 
+     *
      */
     public void testInvoke() {
         RecursiveAction a = new RecursiveAction() {
@@ -226,7 +226,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyInvoke task returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally
      * completed tasks
@@ -246,7 +246,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task returns when task completes
      */
     public void testForkJoin() {
@@ -263,7 +263,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * get of a forked task returns when task completes
      */
     public void testForkGet() {
@@ -275,7 +275,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.get();
                         threadAssertTrue(f.number == 21);
                         threadAssertTrue(f.isDone());
-                    } catch(Exception ex) {
+                    } catch (Exception ex) {
                         unexpectedException();
                     }
                 }
@@ -283,7 +283,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * timed get of a forked task returns when task completes
      */
     public void testForkTimedGet() {
@@ -295,7 +295,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.get(5L, TimeUnit.SECONDS);
                         threadAssertTrue(f.number == 21);
                         threadAssertTrue(f.isDone());
-                    } catch(Exception ex) {
+                    } catch (Exception ex) {
                         unexpectedException();
                     }
                 }
@@ -303,7 +303,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * timed get with null time unit throws NPE
      */
     public void testForkTimedGetNPE() {
@@ -313,8 +313,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         AsyncFib f = new AsyncFib(8);
                         f.fork();
                         f.get(5L, null);
-                    } catch(NullPointerException success) {
-                    } catch(Exception ex) {
+                    } catch (NullPointerException success) {
+                    } catch (Exception ex) {
                         unexpectedException();
                     }
                 }
@@ -322,7 +322,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * helpJoin of a forked task returns when task completes
      */
     public void testForkHelpJoin() {
@@ -338,7 +338,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyJoin of a forked task returns when task completes
      */
     public void testForkQuietlyJoin() {
@@ -355,7 +355,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * quietlyHelpJoin of a forked task returns when task completes
      */
     public void testForkQuietlyHelpJoin() {
@@ -372,7 +372,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * helpQuiesce returns when tasks are complete.
      * getQueuedTaskCount returns 0 when quiescent
      */
@@ -391,7 +391,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * invoke task throws exception when task completes abnormally
      */
     public void testAbnormalInvoke() {
@@ -401,14 +401,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         FailingAsyncFib f = new FailingAsyncFib(8);
                         f.invoke();
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietelyInvoke task returns when task completes abnormally
      */
     public void testAbnormalQuietlyInvoke() {
@@ -422,7 +422,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkJoin() {
@@ -433,14 +433,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.join();
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * get of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkGet() {
@@ -451,14 +451,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get();
                         shouldThrow();
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * timed get of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkTimedGet() {
@@ -469,14 +469,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkHelpJoin() {
@@ -487,14 +487,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.helpJoin();
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyHelpJoin of a forked task returns when task completes abnormally.
      * getException of failed task returns its exception.
      * isCompletedAbnormally of a failed task returns true.
@@ -515,7 +515,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyJoin of a forked task returns when task completes abnormally
      */
     public void testAbnormalForkQuietlyJoin() {
@@ -532,7 +532,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invoke task throws exception when task cancelled
      */
     public void testCancelledInvoke() {
@@ -543,14 +543,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.cancel(true);
                         f.invoke();
                         shouldThrow();
-                    } catch(CancellationException success) {
+                    } catch (CancellationException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task cancelled
      */
     public void testCancelledForkJoin() {
@@ -562,14 +562,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.join();
                         shouldThrow();
-                    } catch(CancellationException success) {
+                    } catch (CancellationException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * get of a forked task throws exception when task cancelled
      */
     public void testCancelledForkGet() {
@@ -581,14 +581,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get();
                         shouldThrow();
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * timed get of a forked task throws exception when task cancelled
      */
     public void testCancelledForkTimedGet() {
@@ -600,14 +600,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
-                    } catch(Exception success) {
+                    } catch (Exception success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * join of a forked task throws exception when task cancelled
      */
     public void testCancelledForkHelpJoin() {
@@ -619,14 +619,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.helpJoin();
                         shouldThrow();
-                    } catch(CancellationException success) {
+                    } catch (CancellationException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyHelpJoin of a forked task returns when task cancelled.
      * getException of cancelled task returns its exception.
      * isCompletedAbnormally of a cancelled task returns true.
@@ -648,7 +648,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * quietlyJoin of a forked task returns when task cancelled
      */
     public void testCancelledForkQuietlyJoin() {
@@ -726,7 +726,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         a.invoke();
     }
 
-    /** 
+    /**
      * invoke task throws exception after invoking completeExceptionally
      */
     public void testCompleteExceptionally() {
@@ -737,14 +737,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.completeExceptionally(new FJException());
                         f.invoke();
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(t1, t2) invokes all task arguments
      */
     public void testInvokeAll2() {
@@ -762,7 +762,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with 1 argument invokes task
      */
     public void testInvokeAll1() {
@@ -777,7 +777,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with > 2 argument invokes tasks
      */
     public void testInvokeAll3() {
@@ -798,7 +798,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(collection) invokes all tasks in the collection
      */
     public void testInvokeAllCollection() {
@@ -824,7 +824,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * invokeAll(tasks) with any null task throws NPE
      */
     public void testInvokeAllNPE() {
@@ -843,7 +843,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(t1, t2) throw exception if any task does
      */
     public void testAbnormalInvokeAll2() {
@@ -854,14 +854,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         FailingAsyncFib g = new FailingAsyncFib(9);
                         invokeAll(f, g);
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with 1 argument throws exception if task does
      */
     public void testAbnormalInvokeAll1() {
@@ -871,14 +871,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         FailingAsyncFib g = new FailingAsyncFib(9);
                         invokeAll(g);
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(tasks) with > 2 argument throws exception if any task does
      */
     public void testAbnormalInvokeAll3() {
@@ -890,14 +890,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         AsyncFib h = new AsyncFib(7);
                         invokeAll(f, g, h);
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * invokeAll(collection)  throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
@@ -913,14 +913,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         set.add(h);
                         invokeAll(set);
                         shouldThrow();
-                    } catch(FJException success) {
+                    } catch (FJException success) {
                     }
                 }
             };
         mainPool.invoke(a);
     }
 
-    /** 
+    /**
      * tryUnfork returns true for most recent unexecuted task,
      * and suppresses execution
      */
@@ -940,7 +940,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * getSurplusQueuedTaskCount returns > 0 when
      * there are more tasks than threads
      */
@@ -960,7 +960,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * peekNextLocalTask returns most recent unexecuted task.
      */
     public void testPeekNextLocalTask() {
@@ -979,7 +979,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollNextLocalTask returns most recent unexecuted task
      * without executing it
      */
@@ -998,7 +998,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollTask returns an unexecuted task
      * without executing it
      */
@@ -1018,7 +1018,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         singletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * peekNextLocalTask returns least recent unexecuted task in async mode
      */
     public void testPeekNextLocalTaskAsync() {
@@ -1037,7 +1037,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         asyncSingletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollNextLocalTask returns least recent unexecuted task
      * without executing it, in async mode
      */
@@ -1057,7 +1057,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         asyncSingletonPool.invoke(a);
     }
 
-    /** 
+    /**
      * pollTask returns an unexecuted task
      * without executing it, in async mode
      */

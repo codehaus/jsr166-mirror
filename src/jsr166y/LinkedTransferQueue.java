@@ -551,8 +551,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Inserts the specified element at the tail of this queue,
-     * waiting up to the specified wait time for the element to be
-     * received by a consumer invoking {@code take} or {@code poll}.
+     * waiting up to the specified wait time if necessary for the
+     * element to be received by a consumer invoking {@code take} or
+     * {@code poll}.
      *
      * @throws NullPointerException if the specified element is null
      */

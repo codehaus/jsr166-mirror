@@ -9,16 +9,15 @@ package jsr166y;
 import java.util.Random;
 
 /**
- * A random number generator with the same properties as class {@link
- * Random} but isolated to the current Thread.  Like the global
- * generator used by the {@link java.lang.Math} class, a
- * ThreadLocalRandom is initialized with an internally generated seed
- * that may not otherwise be modified. When applicable, use of
- * ThreadLocalRandom rather than shared Random objects in concurrent
- * programs will typically encounter much less overhead and
- * contention.  ThreadLocalRandoms are particularly appropriate when
- * multiple tasks (for example, each a {@link ForkJoinTask}), use
- * random numbers in parallel in thread pools.
+ * A random number generator isolated to the current Thread.  Like the
+ * global {@link java.util.Random} generator used by the {@link
+ * java.lang.Math} class, a ThreadLocalRandom is initialized with an
+ * internally generated seed that may not otherwise be modified. When
+ * applicable, use of ThreadLocalRandom rather than shared Random
+ * objects in concurrent programs will typically encounter much less
+ * overhead and contention.  ThreadLocalRandoms are particularly
+ * appropriate when multiple tasks (for example, each a {@link
+ * ForkJoinTask}), use random numbers in parallel in thread pools.
  *
  * <p>Usages of this class should typically be of the form:
  * {@code ThreadLocalRandom.current().nextX(...)} (where

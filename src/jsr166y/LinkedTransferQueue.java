@@ -294,7 +294,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param e the comparison value for checking match
      * @param mode mode
      * @param nanos timeout value
-     * @return matched item, or s if cancelled
+     * @return matched item, or null if cancelled
      */
     private E awaitFulfill(Node<E> pred, Node<E> s, E e,
                            int mode, long nanos) {
@@ -360,7 +360,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         for (;;) {
             Node<E> h = head.get();
             Node<E> first = h.next;
-            if (first != null && first.next == first) { // help advance
+            if (first != null && first.get() == first) { // help advance
                 advanceHead(h, first);
                 continue;
             }

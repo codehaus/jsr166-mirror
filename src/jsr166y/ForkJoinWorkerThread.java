@@ -317,7 +317,7 @@ public class ForkJoinWorkerThread extends Thread {
     private static int xorShift(int r) {
         r ^= (r << 13);
         r ^= (r >>> 17);
-        return r ^ (r << 5); 
+        return r ^ (r << 5);
     }
 
     // Lifecycle methods

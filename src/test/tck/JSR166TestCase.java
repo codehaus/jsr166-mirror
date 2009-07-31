@@ -108,6 +108,13 @@ public class JSR166TestCase extends TestCase {
     public static Test suite ( ) {
         TestSuite suite = new TestSuite("JSR166 Unit Tests");
 
+        suite.addTest(new TestSuite(ForkJoinPoolTest.class));
+        suite.addTest(new TestSuite(ForkJoinTaskTest.class));
+        suite.addTest(new TestSuite(RecursiveActionTest.class));
+        suite.addTest(new TestSuite(RecursiveTaskTest.class));
+        suite.addTest(new TestSuite(LinkedTransferQueueTest.class));
+        suite.addTest(new TestSuite(PhaserTest.class));
+        suite.addTest(new TestSuite(ThreadLocalRandomTest.class));
         suite.addTest(new TestSuite(AbstractExecutorServiceTest.class));
         suite.addTest(new TestSuite(AbstractQueueTest.class));
         suite.addTest(new TestSuite(AbstractQueuedSynchronizerTest.class));

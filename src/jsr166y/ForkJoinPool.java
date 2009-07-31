@@ -589,18 +589,18 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (task instanceof ForkJoinTask<?>) // avoid re-wrap
             job = (ForkJoinTask<?>) task;
         else
-            job = new AdaptedRunnable<Void>(task, null);
+            job = ForkJoinTask.adapt(task, null);
         doSubmit(job);
     }
 
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
-        ForkJoinTask<T> job = new AdaptedCallable<T>(task);
+        ForkJoinTask<T> job = ForkJoinTask.adapt(task);
         doSubmit(job);
         return job;
     }
 
     public <T> ForkJoinTask<T> submit(Runnable task, T result) {
-        ForkJoinTask<T> job = new AdaptedRunnable<T>(task, result);
+        ForkJoinTask<T> job = ForkJoinTask.adapt(task, result);
         doSubmit(job);
         return job;
     }
@@ -610,7 +610,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (task instanceof ForkJoinTask<?>) // avoid re-wrap
             job = (ForkJoinTask<?>) task;
         else
-            job = new AdaptedRunnable<Void>(task, null);
+            job = ForkJoinTask.adapt(task, null);
         doSubmit(job);
         return job;
     }
@@ -629,65 +629,12 @@ public class ForkJoinPool extends AbstractExecutorService {
         return task;
     }
 
-    /**
-     * Adaptor for Runnables. This implements RunnableFuture
-     * to be compliant with AbstractExecutorService constraints.
-     */
-    static final class AdaptedRunnable<T> extends ForkJoinTask<T>
-        implements RunnableFuture<T> {
-        final Runnable runnable;
-        final T resultOnCompletion;
-        T result;
-        AdaptedRunnable(Runnable runnable, T result) {
-            if (runnable == null) throw new NullPointerException();
-            this.runnable = runnable;
-            this.resultOnCompletion = result;
-        }
-        public T getRawResult() { return result; }
-        public void setRawResult(T v) { result = v; }
-        public boolean exec() {
-            runnable.run();
-            result = resultOnCompletion;
-            return true;
-        }
-        public void run() { invoke(); }
-        private static final long serialVersionUID = 5232453952276885070L;
-    }
-
-    /**
-     * Adaptor for Callables
-     */
-    static final class AdaptedCallable<T> extends ForkJoinTask<T>
-        implements RunnableFuture<T> {
-        final Callable<T> callable;
-        T result;
-        AdaptedCallable(Callable<T> callable) {
-            if (callable == null) throw new NullPointerException();
-            this.callable = callable;
-        }
-        public T getRawResult() { return result; }
-        public void setRawResult(T v) { result = v; }
-        public boolean exec() {
-            try {
-                result = callable.call();
-                return true;
-            } catch (Error err) {
-                throw err;
-            } catch (RuntimeException rex) {
-                throw rex;
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-        public void run() { invoke(); }
-        private static final long serialVersionUID = 2838392045355241008L;
-    }
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
         ArrayList<ForkJoinTask<T>> forkJoinTasks =
             new ArrayList<ForkJoinTask<T>>(tasks.size());
         for (Callable<T> task : tasks)
-            forkJoinTasks.add(new AdaptedCallable<T>(task));
+            forkJoinTasks.add(ForkJoinTask.adapt(task));
         invoke(new InvokeAll<T>(forkJoinTasks));
 
         @SuppressWarnings({"unchecked", "rawtypes"})
@@ -1881,14 +1828,16 @@ public class ForkJoinPool extends AbstractExecutorService {
         do {} while (!blocker.isReleasable() && !blocker.block());
     }
 
-    // AbstractExecutorService overrides
+    // AbstractExecutorService overrides.  These rely on undocumented
+    // fact that ForkJoinTask.adapt returns ForkJoinTasks that also
+    // implement RunnableFuture.
 
     protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
-        return new AdaptedRunnable<T>(runnable, value);
+        return (RunnableFuture<T>)ForkJoinTask.adapt(runnable, value);
     }
 
     protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
-        return new AdaptedCallable<T>(callable);
+        return (RunnableFuture<T>)ForkJoinTask.adapt(callable);
     }
 
     // Unsafe mechanics

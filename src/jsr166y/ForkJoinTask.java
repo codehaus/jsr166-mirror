@@ -247,7 +247,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         synchronized (this) {
             try {
                 while (status >= 0) {
-                    long nt = nanos - System.nanoTime() - startTime;
+                    long nt = nanos - (System.nanoTime() - startTime);
                     if (nt <= 0)
                         break;
                     wait(nt / 1000000, (int) (nt % 1000000));
@@ -777,9 +777,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     public final V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
+        long nanos = unit.toNanos(timeout);
         ForkJoinWorkerThread w = getWorker();
         if (w == null || status < 0 || !w.unpushTask(this) || !tryQuietlyInvoke())
-            awaitDone(w, unit.toNanos(timeout));
+            awaitDone(w, nanos);
         return reportTimedFutureResult();
     }
 
@@ -983,15 +984,18 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     protected abstract boolean exec();
 
     /**
-     * Returns, but does not unschedule or execute, the task queued by
-     * the current thread but not yet executed, if one is
+     * Returns, but does not unschedule or execute, a task queued by
+     * the current thread but not yet executed, if one is immediately
      * available. There is no guarantee that this task will actually
-     * be polled or executed next.  This method is designed primarily
-     * to support extensions, and is unlikely to be useful otherwise.
-     * This method may be invoked only from within ForkJoinTask
-     * computations (as may be determined using method {@link
-     * #inForkJoinPool}). Attempts to invoke in other contexts result
-     * in exceptions or errors, possibly including ClassCastException.
+     * be polled or executed next. Conversely, this method may return
+     * null even if a task exists but cannot be accessed without
+     * contention with other threads.  This method is designed
+     * primarily to support extensions, and is unlikely to be useful
+     * otherwise.  This method may be invoked only from within
+     * ForkJoinTask computations (as may be determined using method
+     * {@link #inForkJoinPool}). Attempts to invoke in other contexts
+     * result in exceptions or errors, possibly including
+     * ClassCastException.
      *
      * @return the next task, or {@code null} if none are available
      */
@@ -1038,7 +1042,60 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             .pollTask();
     }
 
-    // adaptors
+    /**
+     * Adaptor for Runnables. This implements RunnableFuture
+     * to be compliant with AbstractExecutorService constraints
+     * when used in ForkJoinPool.
+     */
+    static final class AdaptedRunnable<T> extends ForkJoinTask<T>
+        implements RunnableFuture<T> {
+        final Runnable runnable;
+        final T resultOnCompletion;
+        T result;
+        AdaptedRunnable(Runnable runnable, T result) {
+            if (runnable == null) throw new NullPointerException();
+            this.runnable = runnable;
+            this.resultOnCompletion = result;
+        }
+        public T getRawResult() { return result; }
+        public void setRawResult(T v) { result = v; }
+        public boolean exec() {
+            runnable.run();
+            result = resultOnCompletion;
+            return true;
+        }
+        public void run() { invoke(); }
+        private static final long serialVersionUID = 5232453952276885070L;
+    }
+
+    /**
+     * Adaptor for Callables
+     */
+    static final class AdaptedCallable<T> extends ForkJoinTask<T>
+        implements RunnableFuture<T> {
+        final Callable<T> callable;
+        T result;
+        AdaptedCallable(Callable<T> callable) {
+            if (callable == null) throw new NullPointerException();
+            this.callable = callable;
+        }
+        public T getRawResult() { return result; }
+        public void setRawResult(T v) { result = v; }
+        public boolean exec() {
+            try {
+                result = callable.call();
+                return true;
+            } catch (Error err) {
+                throw err;
+            } catch (RuntimeException rex) {
+                throw rex;
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        public void run() { invoke(); }
+        private static final long serialVersionUID = 2838392045355241008L;
+    }
 
     /**
      * Returns a new ForkJoinTask that performs the {@code run}
@@ -1049,7 +1106,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return the task
      */
     public static ForkJoinTask<Void> adapt(Runnable runnable) {
-        return new ForkJoinPool.AdaptedRunnable<Void>(runnable, null);
+        return new AdaptedRunnable<Void>(runnable, null);
     }
 
     /**
@@ -1062,7 +1119,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return the task
      */
     public static <T> ForkJoinTask<T> adapt(Runnable runnable, T result) {
-        return new ForkJoinPool.AdaptedRunnable<T>(runnable, result);
+        return new AdaptedRunnable<T>(runnable, result);
     }
 
     /**
@@ -1075,7 +1132,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return the task
      */
     public static <T> ForkJoinTask<T> adapt(Callable<T> callable) {
-        return new ForkJoinPool.AdaptedCallable<T>(callable);
+        return new AdaptedCallable<T>(callable);
     }
 
     // Serialization support

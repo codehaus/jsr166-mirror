@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
 public class OfferRemoveLoops {
     final long testDurationMillisDefault = 10L * 1000L;
     final long testDurationMillis;
@@ -71,7 +71,8 @@ public class OfferRemoveLoops {
         final AtomicLong approximateCount = new AtomicLong(0L);
 
         abstract class CheckedThread extends Thread {
-            CheckedThread() {
+            CheckedThread(String name) {
+                super(name);
                 setDaemon(true);
                 start();
             }
@@ -89,7 +90,7 @@ public class OfferRemoveLoops {
             }
         }
 
-        Thread offerer = new CheckedThread() {
+        Thread offerer = new CheckedThread("offerer") {
             protected void realRun() {
                 final ThreadLocalRandom rnd = ThreadLocalRandom.current();
                 final long chunkSize = rnd.nextInt(maxChunkSize) + 2;
@@ -105,7 +106,7 @@ public class OfferRemoveLoops {
                         Thread.yield();
                     }}}};
 
-        Thread remover = new CheckedThread() {
+        Thread remover = new CheckedThread("remover") {
             protected void realRun() {
                 final ThreadLocalRandom rnd = ThreadLocalRandom.current();
                 final long chunkSize = rnd.nextInt(maxChunkSize) + 2;
@@ -123,26 +124,21 @@ public class OfferRemoveLoops {
                 approximateCount.set(0); // Releases waiting offerer thread
             }};
 
-//         Thread scanner = new CheckedThread() {
-//             protected void realRun() {
-//                 final ThreadLocalRandom rnd = ThreadLocalRandom.current();
-//                 while (! quittingTime()) {
-//                     switch (rnd.nextInt(2)) {
-//                     case 0: checkNotContainsNull(q); break;
-//                     case 1: q.size(); break;
-// //                     case 2:
-// //                         Long[] a = (Long[]) q.toArray(new Long[0]);
-// //                         int n = a.length;
-// //                         for (int j = 0; j < n - 1; j++) {
-// //                             check(a[j] < a[j+1]);
-// //                             check(a[j] != null);
-// //                         }
-// //                         break;
-//                     }
-//                     Thread.yield();
-//                 }}};
+        Thread scanner = new CheckedThread("scanner") {
+            protected void realRun() {
+                final ThreadLocalRandom rnd = ThreadLocalRandom.current();
+                while (! quittingTime()) {
+                    switch (rnd.nextInt(3)) {
+                    case 0: checkNotContainsNull(q); break;
+                    case 1: q.size(); break;
+                    case 2: checkNotContainsNull
+                            (Arrays.asList(q.toArray(new Long[0])));
+                        break;
+                    }
+                    Thread.yield();
+                }}};
 
-        for (Thread thread : new Thread[] { offerer, remover }) {
+        for (Thread thread : new Thread[] { offerer, remover, scanner }) {
             thread.join(timeoutMillis + testDurationMillis);
             if (thread.isAlive()) {
                 System.err.printf("Hung thread: %s%n", thread.getName());

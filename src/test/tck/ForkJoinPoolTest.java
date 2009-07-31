@@ -25,12 +25,12 @@ public class ForkJoinPoolTest extends JSR166TestCase{
      * 1. shutdown and related methods are tested via super.joinPool.
      *
      * 2. newTaskFor and adapters are tested in submit/invoke tests
-     * 
+     *
      * 3. We cannot portably test monitoring methods such as
      * getStealCount() since they rely ultimately on random task
      * stealing that may cause tasks not to be stolen/propagated
      * across threads, especially on uniprocessors.
-     * 
+     *
      * 4. There are no independently testable ForkJoinWorkerThread
      * methods, but they are covered here and in task tests.
      */
@@ -52,13 +52,13 @@ public class ForkJoinPoolTest extends JSR166TestCase{
 
     static class FailingThreadFactory implements ForkJoinPool.ForkJoinWorkerThreadFactory {
         int calls = 0;
-        public ForkJoinWorkerThread newThread(ForkJoinPool p){
+        public ForkJoinWorkerThread newThread(ForkJoinPool p) {
             if (++calls > 1) return null;
             return new FailingFJWSubclass(p);
-        }   
+        }
     }
 
-    static class SubFJP extends ForkJoinPool { // to expose protected 
+    static class SubFJP extends ForkJoinPool { // to expose protected
         SubFJP() { super(1); }
         public int drainTasksTo(Collection<? super ForkJoinTask<?>> c) {
             return super.drainTasksTo(c);
@@ -83,7 +83,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
     }
 
     // A simple recursive task for testing
-    static final class FibTask extends RecursiveTask<Integer> { 
+    static final class FibTask extends RecursiveTask<Integer> {
         final int number;
         FibTask(int n) { number = n; }
         public Integer compute() {
@@ -97,7 +97,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
     }
 
     // A failing task for testing
-    static final class FailingTask extends ForkJoinTask<Void> { 
+    static final class FailingTask extends ForkJoinTask<Void> {
         public final Void getRawResult() { return null; }
         protected final void setRawResult(Void mustBeNull) { }
         protected final boolean exec() { throw new Error(); }
@@ -105,12 +105,12 @@ public class ForkJoinPoolTest extends JSR166TestCase{
     }
 
     // Fib needlessly using locking to test ManagedBlockers
-    static final class LockingFibTask extends RecursiveTask<Integer> { 
+    static final class LockingFibTask extends RecursiveTask<Integer> {
         final int number;
         final ManagedLocker locker;
         final ReentrantLock lock;
-        LockingFibTask(int n, ManagedLocker locker, ReentrantLock lock) { 
-            number = n; 
+        LockingFibTask(int n, ManagedLocker locker, ReentrantLock lock) {
+            number = n;
             this.locker = locker;
             this.lock = lock;
         }
@@ -119,7 +119,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             LockingFibTask f1 = null;
             LockingFibTask f2 = null;
             locker.block();
-            n = number; 
+            n = number;
             if (n > 1) {
                 f1 = new LockingFibTask(n - 1, locker, lock);
                 f2 = new LockingFibTask(n - 2, locker, lock);
@@ -134,7 +134,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    /** 
+    /**
      * Succesfully constructed pool reports default factory,
      * parallelism and async mode policies, no active threads or
      * tasks, and quiescent running state.
@@ -160,31 +160,31 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    /** 
-     * Constructor throws if size argument is less than zero 
+    /**
+     * Constructor throws if size argument is less than zero
      */
     public void testConstructor1() {
         try {
             new ForkJoinPool(-1);
             shouldThrow();
         }
-        catch (IllegalArgumentException success){}
+        catch (IllegalArgumentException success) {}
     }
 
-    /** 
-     * Constructor throws if factory argument is null 
+    /**
+     * Constructor throws if factory argument is null
      */
     public void testConstructor2() {
         try {
             new ForkJoinPool(1, null);
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success) {}
     }
 
 
-    /** 
-     * getParallelism returns size set in constructor 
+    /**
+     * getParallelism returns size set in constructor
      */
     public void testGetParallelism() {
         ForkJoinPool p = null;
@@ -196,7 +196,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    /** 
+    /**
      * setParallelism changes reported parallelism level.
      */
     public void testSetParallelism() {
@@ -211,7 +211,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    /** 
+    /**
      * setParallelism with argument <= 0 throws exception
      */
     public void testSetParallelism2() {
@@ -221,13 +221,13 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             assertTrue(p.getParallelism() == 1);
             p.setParallelism(-2);
             shouldThrow();
-        }catch (IllegalArgumentException success){
+        } catch (IllegalArgumentException success) {
         } finally {
             joinPool(p);
         }
     }
 
-    /** 
+    /**
      * getPoolSize returns number of started workers.
      */
     public void testGetPoolSize() {
@@ -243,7 +243,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    /** 
+    /**
      * setMaximumPoolSize changes size reported by getMaximumPoolSize.
      */
     public void testSetMaximumPoolSize() {
@@ -257,7 +257,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    /** 
+    /**
      * setMaximumPoolSize with argument <= 0 throws exception
      */
     public void testSetMaximumPoolSize2() {
@@ -266,13 +266,13 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             p = new ForkJoinPool(1);
             p.setMaximumPoolSize(-2);
             shouldThrow();
-        }catch (IllegalArgumentException success){
+        } catch (IllegalArgumentException success) {
         } finally {
             joinPool(p);
         }
     }
 
-    /** 
+    /**
      * setMaintainsParallelism changes policy reported by
      * getMaintainsParallelism.
      */
@@ -286,8 +286,8 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             joinPool(p);
         }
     }
-    
-    /** 
+
+    /**
      * setAsyncMode changes policy reported by
      * getAsyncMode.
      */
@@ -302,7 +302,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    /** 
+    /**
      * setUncaughtExceptionHandler changes handler for uncaught exceptions.
      *
      * Additionally tests: Overriding ForkJoinWorkerThread.onStart
@@ -318,14 +318,14 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             p.execute(new FailingTask());
             Thread.sleep(MEDIUM_DELAY_MS);
             assertTrue(eh.catches > 0);
-        } catch(InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         } finally {
             joinPool(p);
         }
     }
 
-    /** 
+    /**
      * setUncaughtExceptionHandler of null removes handler
      */
     public void testSetUncaughtExceptionHandler2() {
@@ -340,7 +340,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
     }
 
 
-    /** 
+    /**
      * After invoking a single task, isQuiescent is true,
      * queues are empty, threads are not active, and
      * construction parameters continue to hold
@@ -362,7 +362,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             assertFalse(p.isShutdown());
             assertFalse(p.isTerminating());
             assertFalse(p.isTerminated());
-        } catch(InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         } finally {
             joinPool(p);
@@ -468,7 +468,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         }
     }
 
-    
+
     // FJ Versions of AbstractExecutorService tests
 
     /**
@@ -558,7 +558,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             policy.addPermission(new RuntimePermission("getContextClassLoader"));
             policy.addPermission(new RuntimePermission("setContextClassLoader"));
             Policy.setPolicy(policy);
-        } catch(AccessControlException ok) {
+        } catch (AccessControlException ok) {
             return;
         }
         try {
@@ -580,7 +580,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         finally {
             try {
                 Policy.setPolicy(savedPolicy);
-            } catch(AccessControlException ok) {
+            } catch (AccessControlException ok) {
                 return;
             }
         }
@@ -597,7 +597,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             policy.addPermission(new RuntimePermission("getContextClassLoader"));
             policy.addPermission(new RuntimePermission("setContextClassLoader"));
             Policy.setPolicy(policy);
-        } catch(AccessControlException ok) {
+        } catch (AccessControlException ok) {
             return;
         }
 
@@ -633,7 +633,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             policy.addPermission(new RuntimePermission("getContextClassLoader"));
             policy.addPermission(new RuntimePermission("setContextClassLoader"));
             Policy.setPolicy(policy);
-        } catch(AccessControlException ok) {
+        } catch (AccessControlException ok) {
             return;
         }
 
@@ -708,13 +708,13 @@ public class ForkJoinPoolTest extends JSR166TestCase{
                                     try {
                                         Thread.sleep(MEDIUM_DELAY_MS);
                                         shouldThrow();
-                                    } catch(InterruptedException e){
+                                    } catch (InterruptedException e) {
                                     }
                                     return null;
                                 }
                             }).get();
-                    } catch(InterruptedException success){
-                    } catch(Exception e) {
+                    } catch (InterruptedException success) {
+                    } catch (Exception e) {
                         unexpectedException();
                     }
 
@@ -724,7 +724,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
-        } catch(Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
         joinPool(p);
@@ -745,15 +745,14 @@ public class ForkJoinPoolTest extends JSR166TestCase{
                     }
                 };
 
-            for(int i =0; i < 5; i++){
+            for (int i = 0; i < 5; i++) {
                 p.submit(c).get();
             }
 
             shouldThrow();
-        }
-        catch(ExecutionException success){
+        } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception e) {
+        } catch (Exception e) {
             unexpectedException();
         }
         joinPool(p);
@@ -767,7 +766,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             e.invokeAny(null);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
@@ -782,7 +781,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             e.invokeAny(new ArrayList<Callable<String>>());
         } catch (IllegalArgumentException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
@@ -800,7 +799,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(null);
             e.invokeAny(l);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -817,9 +816,9 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new NPETask());
             e.invokeAny(l);
-        } catch(ExecutionException success) {
+        } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
@@ -839,7 +838,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             assertSame(TEST_STRING, result);
         } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
@@ -854,7 +853,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             e.invokeAll(null);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
@@ -869,7 +868,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>());
             assertTrue(r.isEmpty());
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
@@ -887,7 +886,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(null);
             e.invokeAll(l);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
@@ -904,11 +903,11 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
-        } catch(ExecutionException success) {
+        } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -927,11 +926,11 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -948,7 +947,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             e.invokeAny(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -966,7 +965,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(new StringTask());
             e.invokeAny(l, MEDIUM_DELAY_MS, null);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -982,7 +981,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             e.invokeAny(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
         } catch (IllegalArgumentException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1001,7 +1000,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(null);
             e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1018,9 +1017,9 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new NPETask());
             e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-        } catch(ExecutionException success) {
+        } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1041,7 +1040,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             assertSame(TEST_STRING, result);
         } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1057,7 +1056,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             e.invokeAll(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1075,7 +1074,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(new StringTask());
             e.invokeAll(l, MEDIUM_DELAY_MS, null);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1091,7 +1090,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
         try {
             List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertTrue(r.isEmpty());
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1110,7 +1109,7 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(null);
             e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1128,11 +1127,11 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
-        } catch(ExecutionException success) {
+        } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {
@@ -1151,11 +1150,11 @@ public class ForkJoinPoolTest extends JSR166TestCase{
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch (CancellationException success) {
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             unexpectedException();
         } finally {

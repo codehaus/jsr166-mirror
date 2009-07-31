@@ -41,8 +41,8 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Transfers the specified element immediately if there exists a
      * consumer already waiting to receive it (in {@link #take} or
-     * timed {@link #poll(Object,long,TimeUnit) poll}), otherwise
-     * returning {@code false} without enqueuing the element.
+     * timed {@link #poll(long,TimeUnit) poll}), otherwise returning
+     * {@code false} without enqueuing the element.
      *
      * @param e the element to transfer
      * @return {@code true} if the element was transferred, else
@@ -99,7 +99,7 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
      * Returns {@code true} if there is at least one consumer waiting
      * to receive an element via {@link #take} or
-     * timed {@link #poll(Object,long,TimeUnit) poll}.
+     * timed {@link #poll(long,TimeUnit) poll}.
      * The return value represents a momentary state of affairs.
      *
      * @return {@code true} if there is at least one waiting consumer
@@ -108,12 +108,12 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
 
     /**
      * Returns an estimate of the number of consumers waiting to
-     * receive elements via {@link #take} or
-     * timed {@link #poll(Object,long,TimeUnit) poll}. The return
-     * value is an approximation of a momentary state of affairs, that
-     * may be inaccurate if consumers have completed or given up
-     * waiting. The value may be useful for monitoring and heuristics,
-     * but not for synchronization control. Implementations of this
+     * receive elements via {@link #take} or timed
+     * {@link #poll(long,TimeUnit) poll}.  The return value is an
+     * approximation of a momentary state of affairs, that may be
+     * inaccurate if consumers have completed or given up waiting.
+     * The value may be useful for monitoring and heuristics, but
+     * not for synchronization control.  Implementations of this
      * method are likely to be noticeably slower than those for
      * {@link #hasWaitingConsumer}.
      *

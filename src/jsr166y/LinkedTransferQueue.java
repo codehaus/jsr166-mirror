@@ -524,7 +524,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Transfers the specified element immediately if there exists a
      * consumer already waiting to receive it (in {@link #take} or
-     * timed {@link #poll(Object,long,TimeUnit) poll}), otherwise
+     * timed {@link #poll(long,TimeUnit) poll}), otherwise
      * returning {@code false} without enqueuing the element.
      *
      * @throws NullPointerException if the specified element is null
@@ -539,7 +539,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * waiting if necessary for the element to be received by a
      * consumer invoking {@code take} or {@code poll}.
      *
-     * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException if the specified element is null
      */
     public void transfer(E e) throws InterruptedException {
@@ -555,7 +554,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * waiting up to the specified wait time for the element to be
      * received by a consumer invoking {@code take} or {@code poll}.
      *
-     * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException if the specified element is null
      */
     public boolean tryTransfer(E e, long timeout, TimeUnit unit)
@@ -576,9 +574,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         throw new InterruptedException();
     }
 
-    /**
-     * @throws InterruptedException {@inheritDoc}
-     */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         E e = xfer(null, TIMEOUT, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())

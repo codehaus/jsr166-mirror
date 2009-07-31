@@ -39,20 +39,10 @@ public class RemovePollRace {
         queues.add(new ArrayBlockingQueue<Boolean>(count, true));
         queues.add(new LinkedBlockingQueue<Boolean>());
         queues.add(new LinkedBlockingDeque<Boolean>());
-
-        try {
-            queues.add((Queue<Boolean>)
-                       Class.forName("java.util.concurrent.LinkedTransferQueue")
-                       .newInstance());
-        } catch (IllegalAccessException e) {
-        } catch (InstantiationException e) {
-        } catch (ClassNotFoundException e) {
-            // OK; not yet added to JDK
-        }
+        queues.add(new LinkedTransferQueue<Boolean>());
 
         // Following additional implementations are available from:
         // http://gee.cs.oswego.edu/dl/concurrency-interest/index.html
-        // queues.add(new LinkedTransferQueue<Boolean>());
         // queues.add(new SynchronizedLinkedListQueue<Boolean>());
 
         // Avoid "first fast, second slow" benchmark effect.

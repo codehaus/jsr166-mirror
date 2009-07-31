@@ -50,39 +50,31 @@ public class MultipleProducersSingleConsumerLoops {
         print = true;
 
         for (int i = 1; i <= maxProducers; i += (i+1) >>> 1) {
+            System.out.println("----------------------------------------");
             System.out.println("Producers:" + i);
             oneTest(i, iters);
             Thread.sleep(100);
         }
         pool.shutdown();
-	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
-	    throw new Error();
+        if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+            throw new Error();
    }
 
     static void oneTest(int producers, int iters) throws Exception {
-        if (print)
-            System.out.print("ArrayBlockingQueue      ");
         oneRun(new ArrayBlockingQueue<Integer>(CAPACITY), producers, iters);
-
-        if (print)
-            System.out.print("LinkedBlockingQueue     ");
         oneRun(new LinkedBlockingQueue<Integer>(CAPACITY), producers, iters);
+        oneRun(new LinkedBlockingDeque<Integer>(CAPACITY), producers, iters);
+        oneRun(new LinkedTransferQueue<Integer>(), producers, iters);
 
         // Don't run PBQ since can legitimately run out of memory
         //        if (print)
         //            System.out.print("PriorityBlockingQueue   ");
         //        oneRun(new PriorityBlockingQueue<Integer>(), producers, iters);
 
-        if (print)
-            System.out.print("SynchronousQueue        ");
         oneRun(new SynchronousQueue<Integer>(), producers, iters);
-
         if (print)
-            System.out.print("SynchronousQueue(fair)  ");
+            System.out.println("fair implementations:");
         oneRun(new SynchronousQueue<Integer>(true), producers, iters);
-
-        if (print)
-            System.out.print("ArrayBlockingQueue(fair)");
         oneRun(new ArrayBlockingQueue<Integer>(CAPACITY, true), producers, iters);
     }
 
@@ -147,6 +139,8 @@ public class MultipleProducersSingleConsumerLoops {
     }
 
     static void oneRun(BlockingQueue<Integer> q, int nproducers, int iters) throws Exception {
+        if (print)
+            System.out.printf("%-18s", q.getClass().getSimpleName());
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(nproducers + 2, timer);
         for (int i = 0; i < nproducers; ++i) {

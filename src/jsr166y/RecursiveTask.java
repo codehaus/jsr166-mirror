@@ -36,6 +36,7 @@ package jsr166y;
  * @author Doug Lea
  */
 public abstract class RecursiveTask<V> extends ForkJoinTask<V> {
+    private static final long serialVersionUID = 5232453952276485270L;
 
     /**
      * The result of the computation.

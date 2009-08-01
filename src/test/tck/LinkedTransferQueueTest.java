@@ -39,7 +39,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * Initizialing constructor with null collection throws NPE
+     * Initializing constructor with null collection throws NPE
      */
     public void testConstructor2() {
         try {
@@ -1186,7 +1186,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
     /**
      * tryTransfer attempts to enqueue into the q and fails returning false not
-     * enqueueing and the successing poll is null
+     * enqueueing and the successive poll is null
      */
     public void testTryTransfer7() {
         final LinkedTransferQueue q = new LinkedTransferQueue();

@@ -787,7 +787,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Setting this value has no effect on current pool size. It
      * controls construction of new threads.
      *
-     * @throws IllegalArgumentException if negative or greater then
+     * @throws IllegalArgumentException if negative or greater than
      * internal implementation limit
      */
     public void setMaximumPoolSize(int newMax) {

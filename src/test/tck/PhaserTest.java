@@ -88,7 +88,7 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * Registering any more then 65536 parties causes IllegalStateExceptiom
+     * Registering more than 65536 parties causes IllegalStateException
      */
     public void testRegister2() {
         Phaser phaser = new Phaser(0);
@@ -137,7 +137,7 @@ public class PhaserTest extends JSR166TestCase {
 
     /**
      * Invoking bulkRegister with a negative parameter throws an
-     * IllegalArgumentExceptiom
+     * IllegalArgumentException
      */
     public void testBulkRegister1() {
         try {
@@ -158,8 +158,8 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * Registering with a number of parties greater then or equal to 1<<16
-     * throws IllegalStateExceptiom.
+     * Registering with a number of parties greater than or equal to 1<<16
+     * throws IllegalStateException.
      */
     public void testBulkRegister3() {
         try {

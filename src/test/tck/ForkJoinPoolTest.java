@@ -135,7 +135,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     }
 
     /**
-     * Succesfully constructed pool reports default factory,
+     * Successfully constructed pool reports default factory,
      * parallelism and async mode policies, no active threads or
      * tasks, and quiescent running state.
      */

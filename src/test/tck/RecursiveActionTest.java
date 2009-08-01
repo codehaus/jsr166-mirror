@@ -268,7 +268,7 @@ public class RecursiveActionTest extends JSR166TestCase {
     }
 
     /**
-     * quietelyInvoke task returns when task completes abnormally
+     * quietlyInvoke task returns when task completes abnormally
      */
     public void testAbnormalQuietlyInvoke() {
         RecursiveAction a = new RecursiveAction() {

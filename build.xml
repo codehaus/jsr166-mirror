@@ -27,24 +27,24 @@
   <property name="build.deprecation"    value="false"/>
 
   <!-- Build locations -->
-  <property name="build.dir"            location="build"/>
-  <property name="build.classes.dir"    location="${build.dir}/classes"/>
-  <property name="build.testcases.dir"  location="${build.dir}/testcases"/>
-  <property name="build.loops.dir"      location="${build.dir}/loops"/>
-  <property name="build.lib.dir"        location="${build.dir}/lib"/>
-  <property name="build.javadocs.dir"   location="${build.dir}/javadocs"/>
-  <property name="build.reports.dir"    location="${build.dir}/reports"/>
-  <property name="build.jsr166x.dir"    location="${build.dir}/jsr166x"/>
+  <property name="build.dir"                   location="build"/>
+  <property name="build.classes.dir"           location="${build.dir}/classes"/>
+  <property name="build.testcases.dir"         location="${build.dir}/testcases"/>
+  <property name="build.loops.dir"             location="${build.dir}/loops"/>
+  <property name="build.lib.dir"               location="${build.dir}/lib"/>
+  <property name="build.javadocs.dir"          location="${build.dir}/javadocs"/>
+  <property name="build.reports.dir"           location="${build.dir}/reports"/>
+  <property name="build.jsr166x.dir"           location="${build.dir}/jsr166x"/>
   <property name="build.jsr166xlib.dir"        location="${build.dir}/jsr166xlib"/>
   <property name="build.jsr166xjavadocs.dir"   location="${build.dir}/jsr166xjavadocs"/>
 
-  <property name="build.jsr166y.dir"    location="${build.dir}/jsr166y"/>
+  <property name="build.jsr166y.dir"           location="${build.dir}/jsr166y"/>
   <property name="build.jsr166ylib.dir"        location="${build.dir}/jsr166ylib"/>
   <property name="build.jsr166yjavadocs.dir"   location="${build.dir}/jsr166yjavadocs"/>
 
-  <property name="build.extra166y.dir"    location="${build.dir}/extra166y"/>
-  <property name="build.extra166ylib.dir"        location="${build.dir}/extra166ylib"/>
-  <property name="build.extra166yjavadocs.dir"   location="${build.dir}/extra166yjavadocs"/>
+  <property name="build.extra166y.dir"         location="${build.dir}/extra166y"/>
+  <property name="build.extra166ylib.dir"      location="${build.dir}/extra166ylib"/>
+  <property name="build.extra166yjavadocs.dir" location="${build.dir}/extra166yjavadocs"/>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -57,19 +57,19 @@
   <property name="topsrc.dir"           location="${basedir}/src"/>
   <property name="jsr166xsrc.dir"       location="${basedir}/src/jsr166x"/>
   <property name="jsr166ysrc.dir"       location="${basedir}/src/jsr166y"/>
-  <property name="extra166ysrc.dir"       location="${basedir}/src/extra166y"/>
+  <property name="extra166ysrc.dir"     location="${basedir}/src/extra166y"/>
 
   <!-- Distribution locations -->
-  <property name="dist.javadocs.dir"    location="${dist.dir}/docs"/>
+  <property name="dist.javadocs.dir"           location="${dist.dir}/docs"/>
   <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
   <property name="dist.jsr166yjavadocs.dir"    location="${dist.dir}/jsr166ydocs"/>
-  <property name="dist.extra166yjavadocs.dir"    location="${dist.dir}/extra166ydocs"/>
+  <property name="dist.extra166yjavadocs.dir"  location="${dist.dir}/extra166ydocs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
   <property name="jsr166xproduct.jar"   location="${build.jsr166xlib.dir}/jsr166x.jar"/>
   <property name="jsr166yproduct.jar"   location="${build.jsr166ylib.dir}/jsr166y.jar"/>
-  <property name="extra166yproduct.jar"   location="${build.extra166ylib.dir}/extra166y.jar"/>
+  <property name="extra166yproduct.jar" location="${build.extra166ylib.dir}/extra166y.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
 
   <!-- Bootclasspath argument -->

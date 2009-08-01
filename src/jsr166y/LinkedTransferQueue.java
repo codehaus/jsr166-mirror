@@ -762,6 +762,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns {@code true} if this queue contains no elements.
+     *
+     * @return {@code true} if this queue contains no elements
+     */
     public boolean isEmpty() {
         for (;;) {
             Node<E> h = traversalHead();

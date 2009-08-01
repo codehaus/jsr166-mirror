@@ -522,10 +522,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Transfers the specified element immediately if there exists a
-     * consumer already waiting to receive it (in {@link #take} or
-     * timed {@link #poll(long,TimeUnit) poll}), otherwise
-     * returning {@code false} without enqueuing the element.
+     * Transfers the element to a waiting consumer immediately, if possible.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * otherwise returning {@code false} without enqueuing the element.
      *
      * @throws NullPointerException if the specified element is null
      */
@@ -535,9 +537,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element at the tail of this queue,
-     * waiting if necessary for the element to be received by a
-     * consumer invoking {@code take} or {@code poll}.
+     * Transfers the element to a consumer, waiting if necessary to do so.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * else inserts the specified element at the tail of this queue
+     * and waits until the element is received by a consumer.
      *
      * @throws NullPointerException if the specified element is null
      */
@@ -550,10 +556,16 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element at the tail of this queue,
-     * waiting up to the specified wait time if necessary for the
-     * element to be received by a consumer invoking {@code take} or
-     * {@code poll}.
+     * Transfers the element to a consumer if it is possible to do so
+     * before the timeout elapses.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * else inserts the specified element at the tail of this queue
+     * and waits until the element is received by a consumer,
+     * returning {@code false} if the specified wait time elapses
+     * before the element can be transferred.
      *
      * @throws NullPointerException if the specified element is null
      */

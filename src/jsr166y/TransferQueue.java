@@ -39,10 +39,12 @@ import java.util.concurrent.*;
  */
 public interface TransferQueue<E> extends BlockingQueue<E> {
     /**
-     * Transfers the specified element immediately if there exists a
-     * consumer already waiting to receive it (in {@link #take} or
-     * timed {@link #poll(long,TimeUnit) poll}), otherwise returning
-     * {@code false} without enqueuing the element.
+     * Transfers the element to a waiting consumer immediately, if possible.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * otherwise returning {@code false} without enqueuing the element.
      *
      * @param e the element to transfer
      * @return {@code true} if the element was transferred, else
@@ -56,13 +58,16 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     boolean tryTransfer(E e);
 
     /**
-     * Inserts the specified element into this queue, waiting if
-     * necessary for space to become available and the element to be
-     * received by a consumer invoking {@code take} or {@code poll}.
+     * Transfers the element to a consumer, waiting if necessary to do so.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * else waits until the element is received by a consumer.
      *
      * @param e the element to transfer
      * @throws InterruptedException if interrupted while waiting,
-     *         in which case the element is not enqueued
+     *         in which case the element is not left enqueued
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this queue
      * @throws NullPointerException if the specified element is null
@@ -72,10 +77,15 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
     void transfer(E e) throws InterruptedException;
 
     /**
-     * Inserts the specified element into this queue, waiting up to
-     * the specified wait time if necessary for space to become
-     * available and the element to be received by a consumer invoking
-     * {@code take} or {@code poll}.
+     * Transfers the element to a consumer if it is possible to do so
+     * before the timeout elapses.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * else waits until the element is received by a consumer,
+     * returning {@code false} if the specified wait time elapses
+     * before the element can be transferred.
      *
      * @param e the element to transfer
      * @param timeout how long to wait before giving up, in units of
@@ -84,9 +94,9 @@ public interface TransferQueue<E> extends BlockingQueue<E> {
      *        {@code timeout} parameter
      * @return {@code true} if successful, or {@code false} if
      *         the specified waiting time elapses before completion,
-     *         in which case the element is not enqueued
+     *         in which case the element is not left enqueued
      * @throws InterruptedException if interrupted while waiting,
-     *         in which case the element is not enqueued
+     *         in which case the element is not left enqueued
      * @throws ClassCastException if the class of the specified element
      *         prevents it from being added to this queue
      * @throws NullPointerException if the specified element is null

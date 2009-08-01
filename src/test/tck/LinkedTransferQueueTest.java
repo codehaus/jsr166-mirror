@@ -1,4 +1,3 @@
-
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
@@ -31,15 +30,15 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         return new TestSuite(LinkedTransferQueueTest.class);
     }
 
-    /*
-     *Constructor builds new queue with size being zero and empty being true
+    /**
+     * Constructor builds new queue with size being zero and empty being true
      */
     public void testConstructor1() {
         assertEquals(0, new LinkedTransferQueue().size());
         assertTrue(new LinkedTransferQueue().isEmpty());
     }
 
-    /*
+    /**
      * Initizialing constructor with null collection throws NPE
      */
     public void testConstructor2() {
@@ -61,11 +60,11 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         } catch (NullPointerException success) {
         }
     }
-    /*
+
+    /**
      * Initializing constructor with a collection containing some null elements
      * throws NPE
      */
-
     public void testConstructor4() {
         try {
             Integer[] ints = new Integer[SIZE];
@@ -78,7 +77,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
 
-    /*
+    /**
      * Queue contains all elements of the collection it is initialized by
      */
     public void testConstructor5() {
@@ -279,10 +278,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    /*
+
+    /**
      * Take removes existing elements until empty, then blocks interruptibly
      */
-
     public void testBlockingTake() {
         Thread t = new Thread(new Runnable() {
 
@@ -378,8 +377,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
+     * timed poll before a delayed offer fails; after offer succeeds;
+     * on interruption throws
      */
     public void testTimedPollWithOffer() {
         final LinkedTransferQueue q = new LinkedTransferQueue();
@@ -916,7 +915,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
 
-    /*
+    /**
      * poll and take should decrement the waiting consumer count
      */
     public void testWaitingConsumer() {
@@ -942,10 +941,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             this.unexpectedException();
         }
     }
-    /*
+
+    /**
      * Inserts null into transfer throws NPE
      */
-
     public void testTransfer1() {
         try {
             LinkedTransferQueue q = new LinkedTransferQueue();
@@ -957,7 +956,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
 
-    /*
+    /**
      * transfer attempts to insert into the queue then wait until that
      * object is removed via take or poll.
      */
@@ -984,11 +983,11 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             this.unexpectedException();
         }
     }
-    /*
-     * transfer will attempt to transfer in fifo order and continue waiting if
-     * the element being transfered is not polled or taken
-     */
 
+    /**
+     * transfer will attempt to transfer in fifo order and continue
+     * waiting if the element being transfered is not polled or taken
+     */
     public void testTransfer3() {
         final LinkedTransferQueue<Integer> q = new LinkedTransferQueue<Integer>();
         new Thread(new Runnable() {
@@ -1053,10 +1052,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             this.unexpectedException();
         }
     }
-    /*
-     * Insert null into trTransfer throws NPE
-     */
 
+    /**
+     * Insert null into tryTransfer throws NPE
+     */
     public void testTryTransfer1() {
         try {
             final LinkedTransferQueue q = new LinkedTransferQueue();
@@ -1067,11 +1066,11 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             this.unexpectedException();
         }
     }
-    /*
+
+    /**
      * tryTransfer returns false and does not enqueue if there are no consumers
      * waiting to poll or take.
      */
-
     public void testTryTransfer2() {
         try {
             final LinkedTransferQueue q = new LinkedTransferQueue();
@@ -1081,11 +1080,11 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             this.unexpectedException();
         }
     }
-    /*
+
+    /**
      * if there is a consumer waiting poll or take tryTransfer returns
      * true while enqueueing object
      */
-
     public void testTryTransfer3() {
         try {
             final LinkedTransferQueue q = new LinkedTransferQueue();
@@ -1108,7 +1107,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
 
-    /*
+    /**
      * tryTransfer waits the amount given if interrupted, show an
      * interrupted exception
      */
@@ -1133,7 +1132,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
 
-    /*
+    /**
      * tryTransfer gives up after the timeout and return false
      */
     public void testTryTransfer5() {
@@ -1156,7 +1155,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
 
-    /*
+    /**
      * tryTransfer waits for any elements previously in to be removed
      * before transfering to a poll or take
      */
@@ -1185,7 +1184,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
     }
 
-    /*
+    /**
      * tryTransfer attempts to enqueue into the q and fails returning false not
      * enqueueing and the successing poll is null
      */

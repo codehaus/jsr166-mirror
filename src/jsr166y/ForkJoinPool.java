@@ -81,10 +81,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final int MAX_THREADS =  0x7FFF;
 
     /**
-     * Factory for creating new ForkJoinWorkerThreads.  A
-     * ForkJoinWorkerThreadFactory must be defined and used for
-     * ForkJoinWorkerThread subclasses that extend base functionality
-     * or initialize threads with different contexts.
+     * Factory for creating new {@link ForkJoinWorkerThread}s.
+     * A {@code ForkJoinWorkerThreadFactory} must be defined and used
+     * for {@code ForkJoinWorkerThread} subclasses that extend base
+     * functionality or initialize threads with different contexts.
      */
     public static interface ForkJoinWorkerThreadFactory {
         /**
@@ -1735,7 +1735,9 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Interface for extending managed parallelism for tasks running
-     * in ForkJoinPools. A ManagedBlocker provides two methods.
+     * in {@link ForkJoinPool}s.
+     *
+     * <p>A {@code ManagedBlocker} provides two methods.
      * Method {@code isReleasable} must return {@code true} if
      * blocking is not necessary. Method {@code block} blocks the
      * current thread if necessary (perhaps internally invoking

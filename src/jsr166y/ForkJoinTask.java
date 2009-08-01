@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * Abstract base class for tasks that run within a {@link
- * ForkJoinPool}.  A ForkJoinTask is a thread-like entity that is much
+ * Abstract base class for tasks that run within a {@link ForkJoinPool}.
+ * A {@code ForkJoinTask} is a thread-like entity that is much
  * lighter weight than a normal thread.  Huge numbers of tasks and
  * subtasks may be hosted by a small number of actual threads in a
  * ForkJoinPool, at the price of some usage limitations.

@@ -7,8 +7,9 @@
 package jsr166y;
 
 /**
- * Recursive result-bearing ForkJoinTasks.
- * <p> For a classic example, here is a task computing Fibonacci numbers:
+ * A recursive result-bearing {@link ForkJoinTask}.
+ *
+ * <p>For a classic example, here is a task computing Fibonacci numbers:
  *
  *  <pre> {@code
  * class Fibonacci extends RecursiveTask<Integer> {

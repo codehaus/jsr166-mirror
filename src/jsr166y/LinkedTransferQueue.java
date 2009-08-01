@@ -18,7 +18,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * An unbounded {@linkplain TransferQueue} based on linked nodes.
+ * An unbounded {@link TransferQueue} based on linked nodes.
  * This queue orders elements FIFO (first-in-first-out) with respect
  * to any given producer.  The <em>head</em> of the queue is that
  * element that has been on the queue the longest time for some

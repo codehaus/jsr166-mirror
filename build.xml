@@ -21,7 +21,7 @@
 
 
   <!-- Compilation options -->
-  <property name="build.sourcelevel"    value="1.5"/>
+  <property name="build.sourcelevel"    value="1.6"/>
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
@@ -58,7 +58,7 @@
   <property name="jsr166xsrc.dir"       location="${basedir}/src/jsr166x"/>
   <property name="jsr166ysrc.dir"       location="${basedir}/src/jsr166y"/>
   <property name="extra166ysrc.dir"     location="${basedir}/src/extra166y"/>
-
+  <property name="jdksrc.dir"           location="/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"/>
   <!-- Distribution locations -->
   <property name="dist.javadocs.dir"           location="${dist.dir}/docs"/>
   <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
@@ -89,6 +89,9 @@
 
   <!-- Main targets -->
 
+  <target name="dists"
+          depends="dist, jsr166xdist, jsr166ydist, extra166ydist"
+          description="Builds all public jars and docs"/>
 
   <target name="compile"
           depends="init, configure-compiler"
@@ -148,7 +151,7 @@
     <javadoc destdir="${build.javadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
             overview="${src.dir}/intro.html"
-            sourcepath="${src.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${src.dir}:${jdksrc.dir}"
     >           
 
       <packageset dir="${src.dir}"/>
@@ -162,7 +165,6 @@
   <target name="dist"
           depends="init, dist-clean, dist-jar, dist-docs"
           description="Puts all distributable products in single hierarchy"/>
-
 
 
   <target name="release"
@@ -215,7 +217,7 @@
             link="http://java.sun.com/javase/6/docs/api/"
             overview="${src.dir}/intro.html"
 
-            sourcepath="${src.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${src.dir}:${jdksrc.dir}"
      >
 <!--
       <packageset dir="${src.dir}" defaultexcludes="yes">
@@ -511,7 +513,7 @@
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
              link="http://java.sun.com/javase/6/docs/api/"
 
-            sourcepath="${jsr166xsrc.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${topsrc.dir}:${jdksrc.dir}"
 
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="yes">
@@ -623,7 +625,7 @@
 
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
-            sourcepath="${src.dir}:${jsr166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${topsrc.dir}:${jdksrc.dir}"
 
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
@@ -666,7 +668,7 @@
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
               source="${build.sourcelevel}"
-            sourcepath="${src.dir}:${jsr166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${topsrc.dir}:${jdksrc.dir}"
             >           
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="jsr166y/*.java"/>
@@ -734,7 +736,7 @@
 
     <javadoc destdir="${build.extra166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
-            sourcepath="${src.dir}:${jsr166ysrc.dir}:${extra166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${topsrc.dir}:${jdksrc.dir}"
 
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
@@ -777,7 +779,7 @@
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
               source="${build.sourcelevel}"
-            sourcepath="${src.dir}:${jsr166ysrc.dir}:${extra166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${topsrc.dir}:${jdksrc.dir}"
             >
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="extra166y/*.java"/>

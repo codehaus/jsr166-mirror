@@ -167,7 +167,7 @@ public final class CheckedLockLoops {
     private static class BuiltinLockLoop extends LockLoop {
         final int loop(int n) {
             int sum = 0;
-            int x = 0;;
+            int x = 0;
             while (n-- > 0) {
                 synchronized(this) {
                     x = setValue(LoopHelpers.compute1(getValue()));

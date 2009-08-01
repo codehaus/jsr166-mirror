@@ -183,7 +183,7 @@ public final class UncheckedLockLoops {
         private volatile int readBarrier;
         final int loop(int n) {
             int sum = 0;
-            int x = 0;;
+            int x = 0;
             while (n-- > 0) {
                 int r1 = readBarrier;
                 x = setValue(LoopHelpers.compute1(getValue()));
@@ -199,7 +199,7 @@ public final class UncheckedLockLoops {
     private static class BuiltinLockLoop extends LockLoop {
         final int loop(int n) {
             int sum = 0;
-            int x = 0;;
+            int x = 0;
             while (n-- > 0) {
                 synchronized(this) {
                     x = setValue(LoopHelpers.compute1(getValue()));

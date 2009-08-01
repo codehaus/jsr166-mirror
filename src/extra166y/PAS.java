@@ -1524,7 +1524,7 @@ class PAS {
                     continue;
                 double x = src[k];
                 long bits = Double.doubleToLongBits(x);
-                int hash = hash((int)(bits ^ (bits >>> 32)));;
+                int hash = hash((int)(bits ^ (bits >>> 32)));
                 long entry = (((long)hash) << 32) + (k + 1);
                 int idx = hash & mask;
                 for (;;) {

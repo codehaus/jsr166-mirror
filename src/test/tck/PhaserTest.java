@@ -216,7 +216,7 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * arrive() returns a negative number if the Phaser is termindated
+     * arrive() returns a negative number if the Phaser is terminated
      */
     public void testArrive3() {
         Phaser phaser = new Phaser(1);
@@ -227,7 +227,7 @@ public class PhaserTest extends JSR166TestCase {
 
     /**
      * arriveAndDeregister() throws IllegalStateException if number of
-     * registered or unnarived parties would become negative
+     * registered or unarrived parties would become negative
      */
     public void testArriveAndDeregister1() {
         try {
@@ -240,7 +240,7 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * arriveAndDeregister derigisters reduces the number of arrived parties
+     * arriveAndDeregister deregisters reduces the number of arrived parties
      */
     public void testArriveAndDergeister2() {
         final Phaser phaser = new Phaser(1);

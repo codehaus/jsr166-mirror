@@ -695,8 +695,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
 
 
     /**
-     *  Blocking on submit(callable) throws InterruptedException if
-     *  caller interrupted.
+     * Blocking on submit(callable) throws InterruptedException if
+     * caller interrupted.
      */
     public void testInterruptedSubmit() {
         final ForkJoinPool p = new ForkJoinPool(1);
@@ -731,8 +731,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     }
 
     /**
-     *  get of submit(callable) throws ExecutionException if callable
-     *  throws exception
+     * get of submit(callable) throws ExecutionException if callable
+     * throws exception
      */
     public void testSubmitEE() {
         ForkJoinPool p = new ForkJoinPool(1);

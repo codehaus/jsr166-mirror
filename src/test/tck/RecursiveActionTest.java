@@ -825,7 +825,7 @@ public class RecursiveActionTest extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
         RecursiveAction a = new RecursiveAction() {

@@ -809,7 +809,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {

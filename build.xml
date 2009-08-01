@@ -623,7 +623,7 @@
 
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
-            sourcepath="${jsr166ysrc.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${src.dir}:${jsr166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
 
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
@@ -665,7 +665,9 @@
 
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
-              source="${build.sourcelevel}">
+              source="${build.sourcelevel}"
+            sourcepath="${src.dir}:${jsr166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            >           
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="jsr166y/*.java"/>
             </fileset>
@@ -732,7 +734,7 @@
 
     <javadoc destdir="${build.extra166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
-            sourcepath="${extra166ysrc.dir}:/home/dl/1.5.0/j2se/martin/j2se/src/share/classes"
+            sourcepath="${src.dir}:${jsr166ysrc.dir}:${extra166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
 
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
@@ -774,7 +776,9 @@
 
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
-              source="${build.sourcelevel}">
+              source="${build.sourcelevel}"
+            sourcepath="${src.dir}:${jsr166ysrc.dir}:${extra166ysrc.dir}:/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"
+            >
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="extra166y/*.java"/>
             </fileset>

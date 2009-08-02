@@ -884,8 +884,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * this task, but only if reuse occurs when this task has either
      * never been forked, or has been forked, then completed and all
      * outstanding joins of this task have also completed. Effects
-     * under any other usage conditions are not guaranteed, and are
-     * discouraged. This method may be useful when executing
+     * under any other usage conditions are not guaranteed.
+     * This method may be useful when executing
      * pre-constructed trees of subtasks in loops.
      */
     public void reinitialize() {
@@ -965,7 +965,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * ForkJoinTask computations (as may be determined using method
      * {@link #inForkJoinPool}). Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including
-     * ClassCastException.  *
+     * ClassCastException.
      * @return the surplus number of tasks, which may be negative
      */
     public static int getSurplusQueuedTaskCount() {

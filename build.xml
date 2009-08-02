@@ -512,9 +512,7 @@
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
              link="http://java.sun.com/javase/6/docs/api/"
-
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
-
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="jsr166x"/>
@@ -626,7 +624,6 @@
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
-
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
       <include name="jsr166y"/>
@@ -737,7 +734,6 @@
     <javadoc destdir="${build.extra166yjavadocs.dir}"
                 link="http://java.sun.com/javase/6/docs/api/"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
-
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
       <include name="extra166y"/>

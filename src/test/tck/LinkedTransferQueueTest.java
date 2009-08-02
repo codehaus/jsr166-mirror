@@ -837,7 +837,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * poll and take should decrement the waiting consumer count
+     * poll and take decrement the waiting consumer count
      */
     public void testWaitingConsumer() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();
@@ -869,8 +869,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * transfer attempts to insert into the queue then wait until that
-     * object is removed via take or poll.
+     * transfer waits until a poll occurs. The transfered element
+     * is returned by this associated poll.
      */
     public void testTransfer2() throws InterruptedException {
         final LinkedTransferQueue<Integer> q = new LinkedTransferQueue<Integer>();
@@ -892,8 +892,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * transfer will attempt to transfer in fifo order and continue
-     * waiting if the element being transfered is not polled or taken
+     * transfer waits until a poll occurs, and then transfers in fifo order
      */
     public void testTransfer3() throws InterruptedException {
         final LinkedTransferQueue<Integer> q = new LinkedTransferQueue<Integer>();
@@ -940,9 +939,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * transfer will wait as long as a poll or take occurs if one does occur
-     * the waiting is finished and the thread that tries to poll/take
-     * wins in retrieving the element
+     * transfer waits until a poll occurs, at which point the polling
+     * thread returns the element
      */
     public void testTransfer4() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();
@@ -959,6 +957,28 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         Thread.sleep(MEDIUM_DELAY_MS);
         assertTrue(q.offer(three));
         assertEquals(four, q.poll());
+    }
+
+    /**
+     * transfer waits until a take occurs. The transfered element
+     * is returned by this associated take.
+     */
+    public void testTransfer5() throws InterruptedException {
+        final LinkedTransferQueue<Integer> q = new LinkedTransferQueue<Integer>();
+
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    q.transfer(SIZE);
+                    threadAssertTrue(q.isEmpty());
+                } catch (Throwable ex) {
+                    threadUnexpectedException(ex);
+                }
+            }}).start();
+
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(SIZE, (int) q.take());
+        assertTrue(q.isEmpty());
     }
 
     /**
@@ -1034,8 +1054,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * tryTransfer waits the amount given if interrupted, show an
-     * interrupted exception
+     * tryTransfer waits the amount given if interrupted, and
+     * throws interrupted exception
      */
     public void testTryTransfer5() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();

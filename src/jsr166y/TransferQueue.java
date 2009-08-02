@@ -14,13 +14,13 @@ import java.util.concurrent.*;
  * sometimes (using method {@link #transfer}) await receipt of
  * elements by consumers invoking {@code take} or {@code poll}, while
  * at other times enqueue elements (via method {@code put}) without
- * waiting for receipt.  {@linkplain
- * #tryTransfer(Object) Non-blocking} and {@linkplain
- * #tryTransfer(Object,long,TimeUnit) time-out} versions of {@code
- * tryTransfer} are also available.  A {@code TransferQueue} may also
- * be queried, via {@link #hasWaitingConsumer}, whether there are any
- * threads waiting for items, which is a converse analogy to a {@code
- * peek} operation.
+ * waiting for receipt.
+ * {@linkplain #tryTransfer(Object) Non-blocking} and
+ * {@linkplain #tryTransfer(Object,long,TimeUnit) time-out} versions of
+ * {@code tryTransfer} are also available.
+ * A {@code TransferQueue} may also be queried, via {@link
+ * #hasWaitingConsumer}, whether there are any threads waiting for
+ * items, which is a converse analogy to a {@code peek} operation.
  *
  * <p>Like other blocking queues, a {@code TransferQueue} may be
  * capacity bounded.  If so, an attempted transfer operation may

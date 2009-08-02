@@ -1780,25 +1780,27 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Blocks in accord with the given blocker.  If the current thread
-     * is a ForkJoinWorkerThread, this method possibly arranges for a
-     * spare thread to be activated if necessary to ensure parallelism
-     * while the current thread is blocked.  If
-     * {@code maintainParallelism} is {@code true} and the pool supports
-     * it ({@link #getMaintainsParallelism}), this method attempts to
-     * maintain the pool's nominal parallelism. Otherwise it activates
-     * a thread only if necessary to avoid complete starvation. This
-     * option may be preferable when blockages use timeouts, or are
-     * almost always brief.
+     * is a {@link ForkJoinWorkerThread}, this method possibly
+     * arranges for a spare thread to be activated if necessary to
+     * ensure parallelism while the current thread is blocked.
      *
-     * <p> If the caller is not a ForkJoinTask, this method is behaviorally
-     * equivalent to
+     * <p>If {@code maintainParallelism} is {@code true} and the pool
+     * supports it ({@link #getMaintainsParallelism}), this method
+     * attempts to maintain the pool's nominal parallelism. Otherwise
+     * it activates a thread only if necessary to avoid complete
+     * starvation. This option may be preferable when blockages use
+     * timeouts, or are almost always brief.
+     *
+     * <p>If the caller is not a {@link ForkJoinTask}, this method is
+     * behaviorally equivalent to
      *  <pre> {@code
      * while (!blocker.isReleasable())
      *   if (blocker.block())
      *     return;
      * }</pre>
-     * If the caller is a ForkJoinTask, then the pool may first
-     * be expanded to ensure parallelism, and later adjusted.
+     *
+     * If the caller is a {@code ForkJoinTask}, then the pool may
+     * first be expanded to ensure parallelism, and later adjusted.
      *
      * @param blocker the blocker
      * @param maintainParallelism if {@code true} and supported by

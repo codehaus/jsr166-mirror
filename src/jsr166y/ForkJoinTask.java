@@ -22,40 +22,42 @@ import java.util.WeakHashMap;
  * subtasks may be hosted by a small number of actual threads in a
  * ForkJoinPool, at the price of some usage limitations.
  *
- * <p> A "main" ForkJoinTask begins execution when submitted to a
- * {@link ForkJoinPool}. Once started, it will usually in turn start
- * other subtasks.  As indicated by the name of this class, many
- * programs using ForkJoinTasks employ only methods {@code fork} and
- * {@code join}, or derivatives such as {@code invokeAll}.  However,
- * this class also provides a number of other methods that can come
- * into play in advanced usages, as well as extension mechanics that
- * allow support of new forms of fork/join processing.
+ * <p>A "main" {@code ForkJoinTask} begins execution when submitted
+ * to a {@link ForkJoinPool}.  Once started, it will usually in turn
+ * start other subtasks.  As indicated by the name of this class,
+ * many programs using {@code ForkJoinTask} employ only methods
+ * {@link #fork} and {@link #join}, or derivatives such as {@link
+ * #invokeAll}.  However, this class also provides a number of other
+ * methods that can come into play in advanced usages, as well as
+ * extension mechanics that allow support of new forms of fork/join
+ * processing.
  *
- * <p>A ForkJoinTask is a lightweight form of {@link Future}.  The
- * efficiency of ForkJoinTasks stems from a set of restrictions (that
- * are only partially statically enforceable) reflecting their
- * intended use as computational tasks calculating pure functions or
- * operating on purely isolated objects.  The primary coordination
- * mechanisms are {@link #fork}, that arranges asynchronous execution,
- * and {@link #join}, that doesn't proceed until the task's result has
- * been computed.  Computations should avoid {@code synchronized}
- * methods or blocks, and should minimize other blocking
- * synchronization apart from joining other tasks or using
- * synchronizers such as Phasers that are advertised to cooperate with
- * fork/join scheduling. Tasks should also not perform blocking IO,
- * and should ideally access variables that are completely independent
- * of those accessed by other running tasks. Minor breaches of these
- * restrictions, for example using shared output streams, may be
- * tolerable in practice, but frequent use may result in poor
- * performance, and the potential to indefinitely stall if the number
- * of threads not waiting for IO or other external synchronization
- * becomes exhausted. This usage restriction is in part enforced by
- * not permitting checked exceptions such as {@code IOExceptions}
- * to be thrown. However, computations may still encounter unchecked
- * exceptions, that are rethrown to callers attempting join
- * them. These exceptions may additionally include
- * RejectedExecutionExceptions stemming from internal resource
- * exhaustion such as failure to allocate internal task queues.
+ * <p>A {@code ForkJoinTask} is a lightweight form of {@link Future}.
+ * The efficiency of {@code ForkJoinTask}s stems from a set of
+ * restrictions (that are only partially statically enforceable)
+ * reflecting their intended use as computational tasks calculating
+ * pure functions or operating on purely isolated objects.  The
+ * primary coordination mechanisms are {@link #fork}, that arranges
+ * asynchronous execution, and {@link #join}, that doesn't proceed
+ * until the task's result has been computed.  Computations should
+ * avoid {@code synchronized} methods or blocks, and should minimize
+ * other blocking synchronization apart from joining other tasks or
+ * using synchronizers such as Phasers that are advertised to
+ * cooperate with fork/join scheduling. Tasks should also not perform
+ * blocking IO, and should ideally access variables that are
+ * completely independent of those accessed by other running
+ * tasks. Minor breaches of these restrictions, for example using
+ * shared output streams, may be tolerable in practice, but frequent
+ * use may result in poor performance, and the potential to
+ * indefinitely stall if the number of threads not waiting for IO or
+ * other external synchronization becomes exhausted. This usage
+ * restriction is in part enforced by not permitting checked
+ * exceptions such as {@code IOExceptions} to be thrown. However,
+ * computations may still encounter unchecked exceptions, that are
+ * rethrown to callers attempting join them. These exceptions may
+ * additionally include RejectedExecutionExceptions stemming from
+ * internal resource exhaustion such as failure to allocate internal
+ * task queues.
  *
  * <p>The primary method for awaiting completion and extracting
  * results of a task is {@link #join}, but there are several variants:
@@ -74,7 +76,7 @@ import java.util.WeakHashMap;
  * performs the most common form of parallel invocation: forking a set
  * of tasks and joining them all.
  *
- * <p> The ForkJoinTask class is not usually directly subclassed.
+ * <p>The ForkJoinTask class is not usually directly subclassed.
  * Instead, you subclass one of the abstract classes that support a
  * particular style of fork/join processing, typically {@link
  * RecursiveAction} for computations that do not return results, or
@@ -698,7 +700,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * still ensure that these minimal properties hold. In particular,
      * the cancel method itself must not throw exceptions.
      *
-     * <p> This method is designed to be invoked by <em>other</em>
+     * <p>This method is designed to be invoked by <em>other</em>
      * tasks. To terminate the current task, you can just return or
      * throw an unchecked exception from its computation method, or
      * invoke {@link #completeExceptionally}.

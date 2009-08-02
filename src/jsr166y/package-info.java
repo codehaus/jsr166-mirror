@@ -15,7 +15,7 @@
  * Threads. However, when applicable, they typically provide
  * significantly greater performance on multiprocessor platforms.
  *
- * <p> Candidates for fork/join processing mainly include those that
+ * <p>Candidates for fork/join processing mainly include those that
  * can be expressed using parallel divide-and-conquer techniques: To
  * solve a problem, break it in two (or more) parts, and then solve
  * those parts in parallel, continuing on in this way until the

@@ -21,36 +21,37 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * An {@link ExecutorService} for running {@link ForkJoinTask}s.
- * A ForkJoinPool provides the entry point for submissions from
- * non-ForkJoinTasks, as well as management and monitoring operations.
- * Normally a single ForkJoinPool is used for a large number of
- * submitted tasks. Otherwise, use would not usually outweigh the
- * construction and bookkeeping overhead of creating a large set of
- * threads.
+ * A {@code ForkJoinPool} provides the entry point for submissions
+ * from non-{@code ForkJoinTask}s, as well as management and
+ * monitoring operations.  Normally a single {@code ForkJoinPool} is
+ * used for a large number of submitted tasks. Otherwise, use would
+ * not usually outweigh the construction and bookkeeping overhead of
+ * creating a large set of threads.
  *
- * <p>ForkJoinPools differ from other kinds of Executors mainly in
- * that they provide <em>work-stealing</em>: all threads in the pool
- * attempt to find and execute subtasks created by other active tasks
- * (eventually blocking if none exist). This makes them efficient when
- * most tasks spawn other subtasks (as do most ForkJoinTasks), as well
- * as the mixed execution of some plain Runnable- or Callable- based
- * activities along with ForkJoinTasks. When setting {@linkplain
- * #setAsyncMode async mode}, a ForkJoinPool may also be appropriate
- * for use with fine-grained tasks that are never joined. Otherwise,
- * other ExecutorService implementations are typically more
+ * <p>{@code ForkJoinPool}s differ from other kinds of {@link
+ * Executor}s mainly in that they provide <em>work-stealing</em>: all
+ * threads in the pool attempt to find and execute subtasks created by
+ * other active tasks (eventually blocking if none exist). This makes
+ * them efficient when most tasks spawn other subtasks (as do most
+ * {@code ForkJoinTask}s), as well as the mixed execution of some
+ * plain {@code Runnable}- or {@code Callable}- based activities along
+ * with {@code ForkJoinTask}s. When setting {@linkplain #setAsyncMode
+ * async mode}, a {@code ForkJoinPool} may also be appropriate for use
+ * with fine-grained tasks that are never joined. Otherwise, other
+ * {@code ExecutorService} implementations are typically more
  * appropriate choices.
  *
- * <p>A ForkJoinPool may be constructed with a given parallelism level
- * (target pool size), which it attempts to maintain by dynamically
- * adding, suspending, or resuming threads, even if some tasks are
- * waiting to join others. However, no such adjustments are performed
- * in the face of blocked IO or other unmanaged synchronization. The
- * nested {@link ManagedBlocker} interface enables extension of
- * the kinds of synchronization accommodated.  The target parallelism
- * level may also be changed dynamically ({@link #setParallelism})
- * and thread construction can be limited using methods
- * {@link #setMaximumPoolSize} and/or
- * {@link #setMaintainsParallelism}.
+ * <p>A {@code ForkJoinPool} may be constructed with a given
+ * parallelism level (target pool size), which it attempts to maintain
+ * by dynamically adding, suspending, or resuming threads, even if
+ * some tasks are waiting to join others. However, no such adjustments
+ * are performed in the face of blocked IO or other unmanaged
+ * synchronization. The nested {@link ManagedBlocker} interface
+ * enables extension of the kinds of synchronization accommodated.
+ * The target parallelism level may also be changed dynamically
+ * ({@link #setParallelism}) and thread construction can be limited
+ * using methods {@link #setMaximumPoolSize} and/or {@link
+ * #setMaintainsParallelism}.
  *
  * <p>In addition to execution and lifecycle control methods, this
  * class provides status check methods (for example
@@ -62,7 +63,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
  * pools with greater than the maximum result in
- * IllegalArgumentExceptions.
+ * {@code IllegalArgumentException}.
  *
  * @since 1.7
  * @author Doug Lea

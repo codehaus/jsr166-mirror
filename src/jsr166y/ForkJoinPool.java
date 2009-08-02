@@ -578,7 +578,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws NullPointerException if task is null
      * @throws RejectedExecutionException if pool is shut down
      */
-    public <T> void execute(ForkJoinTask<T> task) {
+    public void execute(ForkJoinTask<?> task) {
         doSubmit(task);
     }
 

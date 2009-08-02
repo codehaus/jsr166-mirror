@@ -23,11 +23,11 @@ import java.util.concurrent.*;
  * peek} operation.
  *
  * <p>Like other blocking queues, a {@code TransferQueue} may be
- * capacity bounded. If so, an attempted {@code transfer} operation
- * may initially block waiting for available space, and/or
- * subsequently block waiting for reception by a consumer.  Note that
- * in a queue with zero capacity, such as {@link SynchronousQueue},
- * {@code put} and {@code transfer} are effectively synonymous.
+ * capacity bounded.  If so, an attempted transfer operation may
+ * initially block waiting for available space, and/or subsequently
+ * block waiting for reception by a consumer.  Note that in a queue
+ * with zero capacity, such as {@link SynchronousQueue}, {@code put}
+ * and {@code transfer} are effectively synonymous.
  *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">

@@ -698,7 +698,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      *
      * <p>This method may be overridden in subclasses, but if so, must
      * still ensure that these minimal properties hold. In particular,
-     * the cancel method itself must not throw exceptions.
+     * the {@code cancel} method itself must not throw exceptions.
      *
      * <p>This method is designed to be invoked by <em>other</em>
      * tasks. To terminate the current task, you can just return or
@@ -727,8 +727,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Returns the exception thrown by the base computation, or a
-     * CancellationException if cancelled, or null if none or if the
-     * method has not yet completed.
+     * {@code CancellationException} if cancelled, or {@code null} if
+     * none or if the method has not yet completed.
      *
      * @return the exception, or {@code null} if none
      */

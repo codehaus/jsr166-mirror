@@ -343,9 +343,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     // Constructors
 
     /**
-     * Creates a ForkJoinPool with a pool size equal to the number of
-     * processors available on the system, using the default
-     * ForkJoinWorkerThreadFactory.
+     * Creates a {@code ForkJoinPool} with a pool size equal to the
+     * number of processors available on the system, using the
+     * {@linkplain #defaultForkJoinWorkerThreadFactory default thread factory}.
      *
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
@@ -358,8 +358,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a ForkJoinPool with the indicated parallelism level
-     * threads and using the default ForkJoinWorkerThreadFactory.
+     * Creates a {@code ForkJoinPool} with the indicated parallelism level
+     * threads and using the
+     * {@linkplain #defaultForkJoinWorkerThreadFactory default thread factory}.
      *
      * @param parallelism the number of worker threads
      * @throws IllegalArgumentException if parallelism less than or
@@ -374,9 +375,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a ForkJoinPool with parallelism equal to the number of
-     * processors available on the system and using the given
-     * ForkJoinWorkerThreadFactory.
+     * Creates a {@code ForkJoinPool} with parallelism equal to the
+     * number of processors available on the system and using the
+     * given thread factory.
      *
      * @param factory the factory for creating new threads
      * @throws NullPointerException if factory is null
@@ -390,7 +391,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a ForkJoinPool with the given parallelism and factory.
+     * Creates a {@code ForkJoinPool} with the given parallelism and
+     * thread factory.
      *
      * @param parallelism the targeted number of worker threads
      * @param factory the factory for creating new threads
@@ -424,7 +426,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Creates a new worker thread using factory.
      *
      * @param index the index to assign worker
-     * @return new worker, or null of factory failed
+     * @return new worker, or null if factory failed
      */
     private ForkJoinWorkerThread createWorker(int index) {
         Thread.UncaughtExceptionHandler h = ueh;
@@ -991,8 +993,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Removes all available unexecuted submitted and forked tasks
      * from scheduling queues and adds them to the given collection,
      * without altering their execution status. These may include
-     * artificially generated or wrapped tasks. This method is designed
-     * to be invoked only when the pool is known to be
+     * artificially generated or wrapped tasks. This method is
+     * designed to be invoked only when the pool is known to be
      * quiescent. Invocations at other times may not remove all
      * tasks. A failure encountered while attempting to add elements
      * to collection {@code c} may result in elements being in

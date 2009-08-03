@@ -57,14 +57,14 @@ public class ForkJoinWorkerThread extends Thread {
      * considered individually, is not wait-free. One thief cannot
      * successfully continue until another in-progress one (or, if
      * previously empty, a push) completes.  However, in the
-     * aggregate, we ensure at least probabilistic non-blockingness. If
-     * an attempted steal fails, a thief always chooses a different
-     * random victim target to try next. So, in order for one thief to
-     * progress, it suffices for any in-progress deq or new push on
-     * any empty queue to complete. One reason this works well here is
-     * that apparently-nonempty often means soon-to-be-stealable,
-     * which gives threads a chance to activate if necessary before
-     * stealing (see below).
+     * aggregate, we ensure at least probabilistic
+     * non-blockingness. If an attempted steal fails, a thief always
+     * chooses a different random victim target to try next. So, in
+     * order for one thief to progress, it suffices for any
+     * in-progress deq or new push on any empty queue to complete. One
+     * reason this works well here is that apparently-nonempty often
+     * means soon-to-be-stealable, which gives threads a chance to
+     * activate if necessary before stealing (see below).
      *
      * This approach also enables support for "async mode" where local
      * task processing is in FIFO, not LIFO order; simply by using a
@@ -80,15 +80,21 @@ public class ForkJoinWorkerThread extends Thread {
      * protected by volatile base reads, reads of the queue array and
      * its slots do not need volatile load semantics, but writes (in
      * push) require store order and CASes (in pop and deq) require
-     * (volatile) CAS semantics. Since these combinations aren't
-     * supported using ordinary volatiles, the only way to accomplish
-     * these efficiently is to use direct Unsafe calls. (Using external
+     * (volatile) CAS semantics.  (See "Idempotent work stealing" by
+     * Michael, Saraswat, and Vechev, PPoPP 2009
+     * http://portal.acm.org/citation.cfm?id=1504186 for an algorithm
+     * with similar properties, but without support for nulling
+     * slots.)  Since these combinations aren't supported using
+     * ordinary volatiles, the only way to accomplish these
+     * efficiently is to use direct Unsafe calls. (Using external
      * AtomicIntegers and AtomicReferenceArrays for the indices and
      * array is significantly slower because of memory locality and
-     * indirection effects.) Further, performance on most platforms is
-     * very sensitive to placement and sizing of the (resizable) queue
-     * array.  Even though these queues don't usually become all that
-     * big, the initial size must be large enough to counteract cache
+     * indirection effects.)
+     * 
+     * Further, performance on most platforms is very sensitive to
+     * placement and sizing of the (resizable) queue array.  Even
+     * though these queues don't usually become all that big, the
+     * initial size must be large enough to counteract cache
      * contention effects across multiple queues (especially in the
      * presence of GC cardmarking). Also, to improve thread-locality,
      * queues are currently initialized immediately after the thread
@@ -105,19 +111,18 @@ public class ForkJoinWorkerThread extends Thread {
      * counter (activeCount) held by the pool. It uses an algorithm
      * similar to that in Herlihy and Shavit section 17.6 to cause
      * threads to eventually block when all threads declare they are
-     * inactive. (See variable "scans".)  For this to work, threads
-     * must be declared active when executing tasks, and before
-     * stealing a task. They must be inactive before blocking on the
-     * Pool Barrier (awaiting a new submission or other Pool
-     * event). In between, there is some free play which we take
-     * advantage of to avoid contention and rapid flickering of the
-     * global activeCount: If inactive, we activate only if a victim
-     * queue appears to be nonempty (see above).  Similarly, a thread
-     * tries to inactivate only after a full scan of other threads.
-     * The net effect is that contention on activeCount is rarely a
-     * measurable performance issue. (There are also a few other cases
-     * where we scan for work rather than retry/block upon
-     * contention.)
+     * inactive. For this to work, threads must be declared active
+     * when executing tasks, and before stealing a task. They must be
+     * inactive before blocking on the Pool Barrier (awaiting a new
+     * submission or other Pool event). In between, there is some free
+     * play which we take advantage of to avoid contention and rapid
+     * flickering of the global activeCount: If inactive, we activate
+     * only if a victim queue appears to be nonempty (see above).
+     * Similarly, a thread tries to inactivate only after a full scan
+     * of other threads.  The net effect is that contention on
+     * activeCount is rarely a measurable performance issue. (There
+     * are also a few other cases where we scan for work rather than
+     * retry/block upon contention.)
      *
      * 3. Selection control. We maintain policy of always choosing to
      * run local tasks rather than stealing, and always trying to

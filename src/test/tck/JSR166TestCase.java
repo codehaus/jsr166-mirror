@@ -394,6 +394,45 @@ public class JSR166TestCase extends TestCase {
 
     // Some convenient Runnable classes
 
+    abstract class CheckedRunnable implements Runnable {
+        abstract void realRun() throws Throwable;
+
+        public final void run() {
+            try {
+                realRun();
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+        }
+    }
+
+    abstract class CheckedInterruptedRunnable implements Runnable {
+        abstract void realRun() throws Throwable;
+
+        public final void run() {
+            try {
+                realRun();
+                threadShouldThrow();
+            } catch (InterruptedException success) {
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+        }
+    }
+
+    abstract class CheckedCallable<T> implements Callable<T> {
+        abstract T realCall() throws Throwable;
+
+        public final T call() {
+            try {
+                return realCall();
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+                return null;
+            }
+        }
+    }
+
     static class NoOpRunnable implements Runnable {
         public void run() {}
     }
@@ -416,111 +455,75 @@ public class JSR166TestCase extends TestCase {
         public Integer call() { return one; }
     }
 
-    class ShortRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SHORT_DELAY_MS);
-            }
-            catch (Exception e) {
-                threadUnexpectedException(e);
-            }
+    class ShortRunnable extends CheckedRunnable {
+        void realRun() throws Throwable {
+            Thread.sleep(SHORT_DELAY_MS);
         }
     }
 
-    class ShortInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SHORT_DELAY_MS);
-                threadShouldThrow();
-            }
-            catch (InterruptedException success) {
-            }
+    class ShortInterruptedRunnable extends CheckedInterruptedRunnable {
+        void realRun() throws InterruptedException {
+            Thread.sleep(SHORT_DELAY_MS);
         }
     }
 
-    class SmallRunnable implements Runnable {
-        public void run() {
+    class SmallRunnable extends CheckedRunnable {
+        void realRun() throws Throwable {
+            Thread.sleep(SMALL_DELAY_MS);
+        }
+    }
+
+    class SmallPossiblyInterruptedRunnable extends CheckedRunnable {
+        void realRun() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
             }
-            catch (Exception e) {
-                threadUnexpectedException(e);
+            catch (InterruptedException ok) {
             }
         }
     }
 
-    class SmallPossiblyInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-            }
-            catch (Exception e) {
-            }
-        }
-    }
-
-    class SmallCallable implements Callable {
-        public Object call() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-            }
-            catch (Exception e) {
-                threadUnexpectedException(e);
-            }
+    class SmallCallable extends CheckedCallable {
+        Object realCall() throws Throwable {
+            Thread.sleep(SMALL_DELAY_MS);
             return Boolean.TRUE;
         }
     }
 
-    class SmallInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-                threadShouldThrow();
-            }
-            catch (InterruptedException success) {
-            }
+    class SmallInterruptedRunnable extends CheckedInterruptedRunnable {
+        void realRun() throws InterruptedException {
+            Thread.sleep(SMALL_DELAY_MS);
         }
     }
 
-
-    class MediumRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(MEDIUM_DELAY_MS);
-            }
-            catch (Exception e) {
-                threadUnexpectedException(e);
-            }
+    class MediumRunnable extends CheckedRunnable {
+        void realRun() throws Throwable {
+            Thread.sleep(MEDIUM_DELAY_MS);
         }
     }
 
-    class MediumInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(MEDIUM_DELAY_MS);
-                threadShouldThrow();
-            }
-            catch (InterruptedException success) {
-            }
+    class MediumInterruptedRunnable extends CheckedInterruptedRunnable {
+        void realRun() throws InterruptedException {
+            Thread.sleep(MEDIUM_DELAY_MS);
         }
     }
 
-    class MediumPossiblyInterruptedRunnable implements Runnable {
-        public void run() {
+    class MediumPossiblyInterruptedRunnable extends CheckedRunnable {
+        void realRun() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
             }
-            catch (InterruptedException success) {
+            catch (InterruptedException ok) {
             }
         }
     }
 
-    class LongPossiblyInterruptedRunnable implements Runnable {
-        public void run() {
+    class LongPossiblyInterruptedRunnable extends CheckedRunnable {
+        void realRun() {
             try {
                 Thread.sleep(LONG_DELAY_MS);
             }
-            catch (InterruptedException success) {
+            catch (InterruptedException ok) {
             }
         }
     }
@@ -591,8 +594,8 @@ public class JSR166TestCase extends TestCase {
      * For use as RejectedExecutionHandler in constructors
      */
     static class NoOpREHandler implements RejectedExecutionHandler {
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor){}
+        public void rejectedExecution(Runnable r,
+                                      ThreadPoolExecutor executor) {}
     }
-
 
 }

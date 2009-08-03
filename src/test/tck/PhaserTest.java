@@ -101,8 +101,6 @@ public class PhaserTest extends JSR166TestCase {
             phaser.register();
             shouldThrow();
         } catch (IllegalStateException success) {
-        } catch (Exception ex) {
-            threadUnexpectedException(ex);
         }
     }
 
@@ -200,13 +198,11 @@ public class PhaserTest extends JSR166TestCase {
         Thread thread = null;
         for (final Runnable r : getRunnables(10, SHORT_DELAY_MS)) {
             phaser.register();
-            thread = new Thread() {
-
-                public void run() {
+            thread = new Thread(new CheckedRunnable() {
+                void realRun() {
                     r.run();
                     phaser.arriveAndDeregister();
-                }
-            };
+                }});
             thread.start();
         }
 
@@ -306,13 +302,11 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testArriveAndDeregister6() {
         final Phaser phaser = new Phaser(2);
-        new Thread() {
-
-            public void run() {
+        new Thread(new CheckedRunnable() {
+            void realRun() {
                 getRunnable(SHORT_DELAY_MS).run();
                 phaser.arrive();
-            }
-        }.start();
+            }}).start();
         phaser.arriveAndAwaitAdvance();
         int phase = phaser.arriveAndDeregister();
         assertEquals(phase, phaser.getPhase());
@@ -344,19 +338,13 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testAwaitAdvance3() {
         final Phaser phaser = new Phaser();
-        Thread th1 = new Thread() {
 
-            public void run() {
-                try {
-                    phaser.register();
-                    getRunnable(LONG_DELAY_MS).run();
-                    phaser.awaitAdvance(phaser.arrive());
-                } catch (Exception failure) {
-                    threadUnexpectedException(failure);
-                }
-
-            }
-        };
+        Thread th1 = new Thread(new CheckedRunnable() {
+            void realRun() throws InterruptedException {
+                phaser.register();
+                getRunnable(LONG_DELAY_MS).run();
+                phaser.awaitAdvance(phaser.arrive());
+            }});
         phaser.register();
         th1.start();
         try {
@@ -364,8 +352,8 @@ public class PhaserTest extends JSR166TestCase {
             th1.interrupt();
             Thread.sleep(LONG_DELAY_MS);
             phaser.arrive();
-        } catch (Exception failure) {
-            unexpectedException();
+        } catch (InterruptedException failure) {
+            threadUnexpectedException(failure);
         }
         assertFalse(th1.isInterrupted());
     }
@@ -374,21 +362,24 @@ public class PhaserTest extends JSR166TestCase {
      * awaitAdvance atomically waits for all parties within the same phase to
      * complete before continuing
      */
-    public void testAwaitAdvance4() {
-        final Phaser phaser = new Phaser(four);
+    public void testAwaitAdvance4() throws InterruptedException {
+        final Phaser phaser = new Phaser(4);
         final AtomicInteger phaseCount = new AtomicInteger(0);
-        for (int i = 0; i < four; i++) {
-            new Thread() {
-
-                public void run() {
+        List<Thread> threads = new ArrayList<Thread>();
+        for (int i = 0; i < 4; i++) {
+            threads.add(new Thread(new CheckedRunnable() {
+                void realRun() {
                     int phase = phaser.arrive();
                     phaseCount.incrementAndGet();
                     getRunnable(LONG_DELAY_MS).run();
                     phaser.awaitAdvance(phase);
-                    assertTrue(phaseCount.get() == four);
-                }
-            }.start();
+                    threadAssertTrue(phaseCount.get() == 4);
+                }}));
         }
+        for (Thread thread : threads)
+            thread.start();
+        for (Thread thread : threads)
+            thread.join();
     }
 
     /**
@@ -400,15 +391,14 @@ public class PhaserTest extends JSR166TestCase {
         assertEquals(phase, phaser.getPhase());
         phaser.register();
         for (int i = 0; i < eight; i++) {
-            new Thread() {
-
-                public void run() {
+            new Thread(new CheckedRunnable() {
+                void realRun() {
                     getRunnable(SHORT_DELAY_MS).run();
                     phaser.arrive();
                 }
-            }.start();
+                }).start();
             phase = phaser.awaitAdvance(phaser.arrive());
-            assertEquals(phase, phaser.getPhase());
+            threadAssertEquals(phase, phaser.getPhase());
         }
     }
 
@@ -423,9 +413,8 @@ public class PhaserTest extends JSR166TestCase {
          * in the main thread arrives quickly so at best this thread
          * waits for the second thread's party to arrive
          */
-        new Thread() {
-
-            public void run() {
+        new Thread(new CheckedRunnable() {
+            void realRun() {
                 getRunnable(SMALL_DELAY_MS).run();
                 int phase = phaser.awaitAdvance(phaser.arrive());
                 /*
@@ -433,23 +422,20 @@ public class PhaserTest extends JSR166TestCase {
                  */
                 threadAssertTrue(phase < 0);
                 threadAssertTrue(phaser.isTerminated());
-            }
-        }.start();
+            }}).start();
         /*
          * This thread will cause the first thread run to wait, in doing so
          * the main thread will force termination in which the first thread
          * should exit peacefully as this one
          */
-        new Thread() {
-
-            public void run() {
+        new Thread(new CheckedRunnable() {
+            void realRun() {
                 getRunnable(LONG_DELAY_MS).run();
                 int p1 = phaser.arrive();
                 int phase = phaser.awaitAdvance(p1);
                 threadAssertTrue(phase < 0);
                 threadAssertTrue(phaser.isTerminated());
-            }
-        }.start();
+            }}).start();
 
         phaser.arrive();
         phaser.forceTermination();
@@ -473,15 +459,10 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testArriveAndAwaitAdvance2() {
         final Phaser phaser = new Phaser(2);
-        Thread th = new Thread() {
-            public void run() {
-                try {
-                    phaser.arriveAndAwaitAdvance();
-                } catch (Exception failure) {
-                    threadUnexpectedException(failure);
-                }
-            }
-        };
+        Thread th = new Thread(new CheckedRunnable() {
+            void realRun() {
+                phaser.arriveAndAwaitAdvance();
+            }});
 
         try {
             th.start();
@@ -504,15 +485,13 @@ public class PhaserTest extends JSR166TestCase {
         final Phaser phaser = new Phaser(1);
         final AtomicInteger arrivingCount = new AtomicInteger(0);
         for (final Runnable run : getRunnables(six, SHORT_DELAY_MS)) {
-            new Thread() {
-
-                public void run() {
+            new Thread(new CheckedRunnable() {
+                void realRun() {
                     phaser.register();
                     run.run();
                     arrivingCount.getAndIncrement();
                     phaser.arrive();
-                }
-            }.start();
+                }}).start();
         }
         int phaseNumber = phaser.arriveAndAwaitAdvance();
         arrivingCount.incrementAndGet();
@@ -530,17 +509,13 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     private Runnable getRunnable(final long wait) {
-        return new Runnable() {
-
-            public void run() {
+        return new CheckedRunnable() {
+            void realRun() {
                 try {
                     Thread.sleep(wait);
                 } catch (InterruptedException noop) {
                 // sleep interruption isn't a problem case for these example
-                } catch (Exception ex) {
-                    threadUnexpectedException(ex);
                 }
-
             }
         };
     }

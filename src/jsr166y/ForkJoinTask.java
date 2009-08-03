@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.RandomAccess;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -54,7 +55,7 @@ import java.util.WeakHashMap;
  * restriction is in part enforced by not permitting checked
  * exceptions such as {@code IOExceptions} to be thrown. However,
  * computations may still encounter unchecked exceptions, that are
- * rethrown to callers attempting join them. These exceptions may
+ * rethrown to callers attempting to join them. These exceptions may
  * additionally include RejectedExecutionExceptions stemming from
  * internal resource exhaustion such as failure to allocate internal
  * task queues.
@@ -85,30 +86,30 @@ import java.util.WeakHashMap;
  * established in a constructor, and then defines a {@code compute}
  * method that somehow uses the control methods supplied by this base
  * class. While these methods have {@code public} access (to allow
- * instances of different task subclasses to call each others
+ * instances of different task subclasses to call each other's
  * methods), some of them may only be called from within other
  * ForkJoinTasks (as may be determined using method {@link
  * #inForkJoinPool}).  Attempts to invoke them in other contexts
  * result in exceptions or errors, possibly including
  * ClassCastException.
  *
- * <p>Most base support methods are {@code final} because their
- * implementations are intrinsically tied to the underlying
- * lightweight task scheduling framework, and so cannot be overridden.
- * Developers creating new basic styles of fork/join processing should
- * minimally implement {@code protected} methods
- * {@link #exec}, {@link #setRawResult}, and
- * {@link #getRawResult}, while also introducing an abstract
- * computational method that can be implemented in its subclasses,
- * possibly relying on other {@code protected} methods provided
- * by this class.
+ * <p>Most base support methods are {@code final}, to prevent
+ * overriding of implementations that are intrinsically tied to the
+ * underlying lightweight task scheduling framework.  Developers
+ * creating new basic styles of fork/join processing should minimally
+ * implement {@code protected} methods {@link #exec}, {@link
+ * #setRawResult}, and {@link #getRawResult}, while also introducing
+ * an abstract computational method that can be implemented in its
+ * subclasses, possibly relying on other {@code protected} methods
+ * provided by this class.
  *
  * <p>ForkJoinTasks should perform relatively small amounts of
- * computations, otherwise splitting into smaller tasks. As a very
- * rough rule of thumb, a task should perform more than 100 and less
- * than 10000 basic computational steps. If tasks are too big, then
- * parallelism cannot improve throughput. If too small, then memory
- * and internal task maintenance overhead may overwhelm processing.
+ * computation. Large tasks should be split into smaller subtasks,
+ * usually via recursive decomposition. As a very rough rule of thumb,
+ * a task should perform more than 100 and less than 10000 basic
+ * computational steps. If tasks are too big, then parallelism cannot
+ * improve throughput. If too small, then memory and internal task
+ * maintenance overhead may overwhelm processing.
  *
  * <p>This class provides {@code adapt} methods for {@link
  * java.lang.Runnable} and {@link java.util.concurrent.Callable}, that
@@ -116,11 +117,10 @@ import java.util.WeakHashMap;
  * kinds of tasks. When all tasks are of this form, consider using a
  * pool in {@link ForkJoinPool#setAsyncMode}.
  *
- * <p>ForkJoinTasks are {@code Serializable}, which enables them
- * to be used in extensions such as remote execution frameworks. It is
- * in general sensible to serialize tasks only before or after, but
- * not during execution. Serialization is not relied on during
- * execution itself.
+ * <p>ForkJoinTasks are {@code Serializable}, which enables them to be
+ * used in extensions such as remote execution frameworks. It is
+ * sensible to serialize tasks only before or after, but not during,
+ * execution. Serialization is not relied on during execution itself.
  *
  * @since 1.7
  * @author Doug Lea
@@ -575,9 +575,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
      *
-     * <p>Overloadings of this method exist for the special cases
-     * of one to four arguments.
-     *
      * @param tasks the tasks
      * @throws NullPointerException if tasks or any element are null
      * @throws RuntimeException or Error if any task did so
@@ -616,10 +613,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Forks all tasks in the collection, returning when {@code
-     * isDone} holds for each task or an exception is encountered.
-     * If any task encounters an exception, others may be, but are
-     * not guaranteed to be, cancelled.
+     * Forks all tasks in the specified collection, returning when
+     * {@code isDone} holds for each task or an exception is
+     * encountered.  If any task encounters an exception, others may
+     * be, but are not guaranteed to be, cancelled. The behavior of
+     * this operation is undefined if the specified collection is
+     * modified while the operation is in progress.
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method
@@ -633,7 +632,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @throws RuntimeException or Error if any task did so
      */
     public static <T extends ForkJoinTask<?>> Collection<T> invokeAll(Collection<T> tasks) {
-        if (!(tasks instanceof List<?>)) {
+        if (!(tasks instanceof RandomAccess) || !(tasks instanceof List<?>)) {
             invokeAll(tasks.toArray(new ForkJoinTask<?>[tasks.size()]));
             return tasks;
         }
@@ -832,7 +831,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Possibly executes other tasks until this task is ready.
+     * Possibly executes other tasks until this task is ready.  This
+     * method may be useful when processing collections of tasks when
+     * some have been cancelled or otherwise known to have aborted.
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method

@@ -383,7 +383,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     protected void onTermination(Throwable exception) {
         // Execute remaining local tasks unless aborting or terminating
-        while (exception == null &&  !pool.isTerminating() && base != sp) {
+        while (exception == null && pool.isProcessingTasks() && base != sp) {
             try {
                 ForkJoinTask<?> t = popTask();
                 if (t != null)

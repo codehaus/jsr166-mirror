@@ -7,11 +7,11 @@
 package java.util.concurrent;
 
 /**
- * Recursive resultless ForkJoinTasks. This class establishes
- * conventions to parameterize resultless actions as {@code Void}
- * ForkJoinTasks. Because {@code null} is the only valid value of
- * type {@code Void}, methods such as join always return {@code null}
- * upon completion.
+ * A recursive resultless {@link ForkJoinTask}.  This class
+ * establishes conventions to parameterize resultless actions as
+ * {@code Void} {@code ForkJoinTask}s. Because {@code null} is the
+ * only valid value of type {@code Void}, methods such as join always
+ * return {@code null} upon completion.
  *
  * <p><b>Sample Usages.</b> Here is a sketch of a ForkJoin sort that
  * sorts a given {@code long[]} array:

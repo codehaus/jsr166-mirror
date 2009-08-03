@@ -16,7 +16,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * An unbounded {@linkplain TransferQueue} based on linked nodes.
+ * An unbounded {@link TransferQueue} based on linked nodes.
  * This queue orders elements FIFO (first-in-first-out) with respect
  * to any given producer.  The <em>head</em> of the queue is that
  * element that has been on the queue the longest time for some
@@ -492,10 +492,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Transfers the specified element immediately if there exists a
-     * consumer already waiting to receive it (in {@link #take} or
-     * timed {@link #poll(long,TimeUnit) poll}), otherwise
-     * returning {@code false} without enqueuing the element.
+     * Transfers the element to a waiting consumer immediately, if possible.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * otherwise returning {@code false} without enqueuing the element.
      *
      * @throws NullPointerException if the specified element is null
      */
@@ -505,9 +507,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element at the tail of this queue,
-     * waiting if necessary for the element to be received by a
-     * consumer invoking {@code take} or {@code poll}.
+     * Transfers the element to a consumer, waiting if necessary to do so.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * else inserts the specified element at the tail of this queue
+     * and waits until the element is received by a consumer.
      *
      * @throws NullPointerException if the specified element is null
      */
@@ -520,10 +526,16 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element at the tail of this queue,
-     * waiting up to the specified wait time if necessary for the
-     * element to be received by a consumer invoking {@code take} or
-     * {@code poll}.
+     * Transfers the element to a consumer if it is possible to do so
+     * before the timeout elapses.
+     *
+     * <p>More precisely, transfers the specified element immediately
+     * if there exists a consumer already waiting to receive it (in
+     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),
+     * else inserts the specified element at the tail of this queue
+     * and waits until the element is received by a consumer,
+     * returning {@code false} if the specified wait time elapses
+     * before the element can be transferred.
      *
      * @throws NullPointerException if the specified element is null
      */
@@ -720,6 +732,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns {@code true} if this queue contains no elements.
+     *
+     * @return {@code true} if this queue contains no elements
+     */
     public boolean isEmpty() {
         for (;;) {
             Node<E> h = traversalHead();
@@ -801,6 +818,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Removes a single instance of the specified element from this queue,
+     * if it is present.  More formally, removes an element {@code e} such
+     * that {@code o.equals(e)}, if this queue contains one or more such
+     * elements.
+     * Returns {@code true} if this queue contained the specified element
+     * (or equivalently, if this queue changed as a result of the call).
+     *
+     * @param o element to be removed from this queue, if present
+     * @return {@code true} if this queue changed as a result of the call
+     */
     public boolean remove(Object o) {
         if (o == null)
             return false;

@@ -138,7 +138,7 @@ import java.util.concurrent.locks.LockSupport;
  *   phaser.arriveAndDeregister(); // deregister self, don't wait
  * }}</pre>
  *
- * <p> To create a set of tasks using a tree of phasers,
+ * <p>To create a set of tasks using a tree of phasers,
  * you could use code of the following form, assuming a
  * Task class with a constructor accepting a phaser that
  * it registers for upon construction:
@@ -710,12 +710,12 @@ public class Phaser {
      * termination state, and subsequent calls to {@link #isTerminated}
      * will return true.
      *
-     * <p> The default version returns {@code true} when the number of
+     * <p>The default version returns {@code true} when the number of
      * registered parties is zero. Normally, overrides that arrange
      * termination for other reasons should also preserve this
      * property.
      *
-     * <p> You may override this method to perform an action with side
+     * <p>You may override this method to perform an action with side
      * effects visible to participating tasks, but it is in general
      * only sensible to do so in designs where all parties register
      * before any arrive, and all {@link #awaitAdvance} at each phase.

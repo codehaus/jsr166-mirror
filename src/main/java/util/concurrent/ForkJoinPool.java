@@ -19,36 +19,37 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * An {@link ExecutorService} for running {@link ForkJoinTask}s.
- * A ForkJoinPool provides the entry point for submissions from
- * non-ForkJoinTasks, as well as management and monitoring operations.
- * Normally a single ForkJoinPool is used for a large number of
- * submitted tasks. Otherwise, use would not usually outweigh the
- * construction and bookkeeping overhead of creating a large set of
- * threads.
+ * A {@code ForkJoinPool} provides the entry point for submissions
+ * from non-{@code ForkJoinTask}s, as well as management and
+ * monitoring operations.  Normally a single {@code ForkJoinPool} is
+ * used for a large number of submitted tasks. Otherwise, use would
+ * not usually outweigh the construction and bookkeeping overhead of
+ * creating a large set of threads.
  *
- * <p>ForkJoinPools differ from other kinds of Executors mainly in
- * that they provide <em>work-stealing</em>: all threads in the pool
- * attempt to find and execute subtasks created by other active tasks
- * (eventually blocking if none exist). This makes them efficient when
- * most tasks spawn other subtasks (as do most ForkJoinTasks), as well
- * as the mixed execution of some plain Runnable- or Callable- based
- * activities along with ForkJoinTasks. When setting {@linkplain
- * #setAsyncMode async mode}, a ForkJoinPool may also be appropriate
- * for use with fine-grained tasks that are never joined. Otherwise,
- * other ExecutorService implementations are typically more
+ * <p>{@code ForkJoinPool}s differ from other kinds of {@link
+ * Executor}s mainly in that they provide <em>work-stealing</em>: all
+ * threads in the pool attempt to find and execute subtasks created by
+ * other active tasks (eventually blocking if none exist). This makes
+ * them efficient when most tasks spawn other subtasks (as do most
+ * {@code ForkJoinTask}s), as well as the mixed execution of some
+ * plain {@code Runnable}- or {@code Callable}- based activities along
+ * with {@code ForkJoinTask}s. When setting {@linkplain #setAsyncMode
+ * async mode}, a {@code ForkJoinPool} may also be appropriate for use
+ * with fine-grained tasks that are never joined. Otherwise, other
+ * {@code ExecutorService} implementations are typically more
  * appropriate choices.
  *
- * <p>A ForkJoinPool may be constructed with a given parallelism level
- * (target pool size), which it attempts to maintain by dynamically
- * adding, suspending, or resuming threads, even if some tasks are
- * waiting to join others. However, no such adjustments are performed
- * in the face of blocked IO or other unmanaged synchronization. The
- * nested {@link ManagedBlocker} interface enables extension of
- * the kinds of synchronization accommodated.  The target parallelism
- * level may also be changed dynamically ({@link #setParallelism})
- * and thread construction can be limited using methods
- * {@link #setMaximumPoolSize} and/or
- * {@link #setMaintainsParallelism}.
+ * <p>A {@code ForkJoinPool} may be constructed with a given
+ * parallelism level (target pool size), which it attempts to maintain
+ * by dynamically adding, suspending, or resuming threads, even if
+ * some tasks are waiting to join others. However, no such adjustments
+ * are performed in the face of blocked IO or other unmanaged
+ * synchronization. The nested {@link ManagedBlocker} interface
+ * enables extension of the kinds of synchronization accommodated.
+ * The target parallelism level may also be changed dynamically
+ * ({@link #setParallelism}) and thread construction can be limited
+ * using methods {@link #setMaximumPoolSize} and/or {@link
+ * #setMaintainsParallelism}.
  *
  * <p>In addition to execution and lifecycle control methods, this
  * class provides status check methods (for example
@@ -60,7 +61,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
  * pools with greater than the maximum result in
- * IllegalArgumentExceptions.
+ * {@code IllegalArgumentException}.
  *
  * @since 1.7
  * @author Doug Lea
@@ -79,10 +80,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final int MAX_THREADS =  0x7FFF;
 
     /**
-     * Factory for creating new ForkJoinWorkerThreads.  A
-     * ForkJoinWorkerThreadFactory must be defined and used for
-     * ForkJoinWorkerThread subclasses that extend base functionality
-     * or initialize threads with different contexts.
+     * Factory for creating new {@link ForkJoinWorkerThread}s.
+     * A {@code ForkJoinWorkerThreadFactory} must be defined and used
+     * for {@code ForkJoinWorkerThread} subclasses that extend base
+     * functionality or initialize threads with different contexts.
      */
     public static interface ForkJoinWorkerThreadFactory {
         /**
@@ -340,9 +341,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     // Constructors
 
     /**
-     * Creates a ForkJoinPool with a pool size equal to the number of
-     * processors available on the system, using the default
-     * ForkJoinWorkerThreadFactory.
+     * Creates a {@code ForkJoinPool} with a pool size equal to the
+     * number of processors available on the system, using the
+     * {@linkplain #defaultForkJoinWorkerThreadFactory default thread factory}.
      *
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
@@ -355,8 +356,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a ForkJoinPool with the indicated parallelism level
-     * threads and using the default ForkJoinWorkerThreadFactory.
+     * Creates a {@code ForkJoinPool} with the indicated parallelism level
+     * threads and using the
+     * {@linkplain #defaultForkJoinWorkerThreadFactory default thread factory}.
      *
      * @param parallelism the number of worker threads
      * @throws IllegalArgumentException if parallelism less than or
@@ -371,9 +373,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a ForkJoinPool with parallelism equal to the number of
-     * processors available on the system and using the given
-     * ForkJoinWorkerThreadFactory.
+     * Creates a {@code ForkJoinPool} with parallelism equal to the
+     * number of processors available on the system and using the
+     * given thread factory.
      *
      * @param factory the factory for creating new threads
      * @throws NullPointerException if factory is null
@@ -387,7 +389,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a ForkJoinPool with the given parallelism and factory.
+     * Creates a {@code ForkJoinPool} with the given parallelism and
+     * thread factory.
      *
      * @param parallelism the targeted number of worker threads
      * @param factory the factory for creating new threads
@@ -421,7 +424,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Creates a new worker thread using factory.
      *
      * @param index the index to assign worker
-     * @return new worker, or null of factory failed
+     * @return new worker, or null if factory failed
      */
     private ForkJoinWorkerThread createWorker(int index) {
         Thread.UncaughtExceptionHandler h = ueh;
@@ -576,7 +579,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @throws NullPointerException if task is null
      * @throws RejectedExecutionException if pool is shut down
      */
-    public <T> void execute(ForkJoinTask<T> task) {
+    public void execute(ForkJoinTask<?> task) {
         doSubmit(task);
     }
 
@@ -785,7 +788,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Setting this value has no effect on current pool size. It
      * controls construction of new threads.
      *
-     * @throws IllegalArgumentException if negative or greater then
+     * @throws IllegalArgumentException if negative or greater than
      * internal implementation limit
      */
     public void setMaximumPoolSize(int newMax) {
@@ -953,8 +956,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns an estimate of the number tasks submitted to this pool
-     * that have not yet begun executing. This method takes time
+     * Returns an estimate of the number of tasks submitted to this
+     * pool that have not yet begun executing.  This method takes time
      * proportional to the number of submissions.
      *
      * @return the number of queued submissions
@@ -988,8 +991,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Removes all available unexecuted submitted and forked tasks
      * from scheduling queues and adds them to the given collection,
      * without altering their execution status. These may include
-     * artificially generated or wrapped tasks. This method is designed
-     * to be invoked only when the pool is known to be
+     * artificially generated or wrapped tasks. This method is
+     * designed to be invoked only when the pool is known to be
      * quiescent. Invocations at other times may not remove all
      * tasks. A failure encountered while attempting to add elements
      * to collection {@code c} may result in elements being in
@@ -1733,11 +1736,13 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Interface for extending managed parallelism for tasks running
-     * in ForkJoinPools. A ManagedBlocker provides two methods.
+     * in {@link ForkJoinPool}s.
+     *
+     * <p>A {@code ManagedBlocker} provides two methods.
      * Method {@code isReleasable} must return {@code true} if
      * blocking is not necessary. Method {@code block} blocks the
      * current thread if necessary (perhaps internally invoking
-     * {@code isReleasable} before actually blocking.).
+     * {@code isReleasable} before actually blocking).
      *
      * <p>For example, here is a ManagedBlocker based on a
      * ReentrantLock:
@@ -1776,25 +1781,27 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Blocks in accord with the given blocker.  If the current thread
-     * is a ForkJoinWorkerThread, this method possibly arranges for a
-     * spare thread to be activated if necessary to ensure parallelism
-     * while the current thread is blocked.  If
-     * {@code maintainParallelism} is {@code true} and the pool supports
-     * it ({@link #getMaintainsParallelism}), this method attempts to
-     * maintain the pool's nominal parallelism. Otherwise it activates
-     * a thread only if necessary to avoid complete starvation. This
-     * option may be preferable when blockages use timeouts, or are
-     * almost always brief.
+     * is a {@link ForkJoinWorkerThread}, this method possibly
+     * arranges for a spare thread to be activated if necessary to
+     * ensure parallelism while the current thread is blocked.
      *
-     * <p> If the caller is not a ForkJoinTask, this method is behaviorally
-     * equivalent to
+     * <p>If {@code maintainParallelism} is {@code true} and the pool
+     * supports it ({@link #getMaintainsParallelism}), this method
+     * attempts to maintain the pool's nominal parallelism. Otherwise
+     * it activates a thread only if necessary to avoid complete
+     * starvation. This option may be preferable when blockages use
+     * timeouts, or are almost always brief.
+     *
+     * <p>If the caller is not a {@link ForkJoinTask}, this method is
+     * behaviorally equivalent to
      *  <pre> {@code
      * while (!blocker.isReleasable())
      *   if (blocker.block())
      *     return;
      * }</pre>
-     * If the caller is a ForkJoinTask, then the pool may first
-     * be expanded to ensure parallelism, and later adjusted.
+     *
+     * If the caller is a {@code ForkJoinTask}, then the pool may
+     * first be expanded to ensure parallelism, and later adjusted.
      *
      * @param blocker the blocker
      * @param maintainParallelism if {@code true} and supported by

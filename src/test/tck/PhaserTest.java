@@ -40,7 +40,7 @@ public class PhaserTest extends JSR166TestCase {
     public void testConstructor2() {
         try {
             new Phaser(-1);
-            this.shouldThrow();
+            shouldThrow();
         } catch (IllegalArgumentException success) {
         }
     }
@@ -230,7 +230,6 @@ public class PhaserTest extends JSR166TestCase {
             Phaser phaser = new Phaser();
             phaser.arriveAndDeregister();
             shouldThrow();
-
         } catch (IllegalStateException success) {
         }
     }
@@ -325,18 +324,14 @@ public class PhaserTest extends JSR166TestCase {
      * phaser
      */
     public void testAwaitAdvance2() {
-        try {
-            Phaser phaser = new Phaser();
-            phaser.awaitAdvance(-1);
-        } catch (Exception failure) {
-            this.unexpectedException();
-        }
+        Phaser phaser = new Phaser();
+        phaser.awaitAdvance(-1);
     }
 
     /**
      * awaitAdvance while waiting does not abort on interrupt.
      */
-    public void testAwaitAdvance3() {
+    public void testAwaitAdvance3() throws InterruptedException {
         final Phaser phaser = new Phaser();
 
         Thread th1 = new Thread(new CheckedRunnable() {
@@ -347,14 +342,10 @@ public class PhaserTest extends JSR166TestCase {
             }});
         phaser.register();
         th1.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            th1.interrupt();
-            Thread.sleep(LONG_DELAY_MS);
-            phaser.arrive();
-        } catch (InterruptedException failure) {
-            threadUnexpectedException(failure);
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        th1.interrupt();
+        Thread.sleep(LONG_DELAY_MS);
+        phaser.arrive();
         assertFalse(th1.isInterrupted());
     }
 
@@ -395,8 +386,7 @@ public class PhaserTest extends JSR166TestCase {
                 void realRun() {
                     getRunnable(SHORT_DELAY_MS).run();
                     phaser.arrive();
-                }
-                }).start();
+                }}).start();
             phase = phaser.awaitAdvance(phaser.arrive());
             threadAssertEquals(phase, phaser.getPhase());
         }
@@ -457,22 +447,18 @@ public class PhaserTest extends JSR166TestCase {
     /**
      * Interrupted arriveAndAwaitAdvance does not throw InterruptedException
      */
-    public void testArriveAndAwaitAdvance2() {
+    public void testArriveAndAwaitAdvance2() throws InterruptedException {
         final Phaser phaser = new Phaser(2);
         Thread th = new Thread(new CheckedRunnable() {
             void realRun() {
                 phaser.arriveAndAwaitAdvance();
             }});
 
-        try {
-            th.start();
-            Thread.sleep(LONG_DELAY_MS);
-            th.interrupt();
-            Thread.sleep(LONG_DELAY_MS);
-            phaser.arrive();
-        } catch (InterruptedException failure) {
-            this.unexpectedException();
-        }
+        th.start();
+        Thread.sleep(LONG_DELAY_MS);
+        th.interrupt();
+        Thread.sleep(LONG_DELAY_MS);
+        phaser.arrive();
         assertFalse(th.isInterrupted());
     }
 

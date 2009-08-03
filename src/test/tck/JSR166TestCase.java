@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 import java.security.*;
 
@@ -320,7 +321,7 @@ public class JSR166TestCase extends TestCase {
     public void joinPool(ExecutorService exec) {
         try {
             exec.shutdown();
-            assertTrue(exec.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertTrue(exec.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
         } catch (SecurityException ok) {
             // Allowed in case test doesn't have privs
         } catch (InterruptedException ie) {
@@ -341,6 +342,14 @@ public class JSR166TestCase extends TestCase {
      */
     public void unexpectedException() {
         fail("Unexpected exception");
+    }
+
+    /**
+     * fail with message "Unexpected exception", with argument
+     */
+    public void unexpectedException(Throwable ex) {
+        ex.printStackTrace();
+        fail("Unexpected exception: " + ex);
     }
 
 

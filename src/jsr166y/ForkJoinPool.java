@@ -956,8 +956,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns an estimate of the number tasks submitted to this pool
-     * that have not yet begun executing. This method takes time
+     * Returns an estimate of the number of tasks submitted to this
+     * pool that have not yet begun executing.  This method takes time
      * proportional to the number of submissions.
      *
      * @return the number of queued submissions
@@ -1742,7 +1742,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Method {@code isReleasable} must return {@code true} if
      * blocking is not necessary. Method {@code block} blocks the
      * current thread if necessary (perhaps internally invoking
-     * {@code isReleasable} before actually blocking.).
+     * {@code isReleasable} before actually blocking).
      *
      * <p>For example, here is a ManagedBlocker based on a
      * ReentrantLock:

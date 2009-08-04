@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.math.BigInteger;
 import java.security.*;
-import sun.security.util.SecurityConstants;
 
 public class ExecutorsTest extends JSR166TestCase{
     public static void main(String[] args) {
@@ -431,7 +430,7 @@ public class ExecutorsTest extends JSR166TestCase{
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new RuntimePermission("setContextClassLoader"));
-            sm.checkPermission(SecurityConstants.GET_CLASSLOADER_PERMISSION);
+            sm.checkPermission(new RuntimePermission("getClassLoader"));
         }
     }
 

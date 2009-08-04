@@ -276,7 +276,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         threadAssertTrue(f.number == 21);
                         threadAssertTrue(f.isDone());
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -296,7 +296,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         threadAssertTrue(f.number == 21);
                         threadAssertTrue(f.isDone());
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -313,9 +313,10 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         AsyncFib f = new AsyncFib(8);
                         f.fork();
                         f.get(5L, null);
+                        shouldThrow();
                     } catch (NullPointerException success) {
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -451,7 +452,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get();
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (ExecutionException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -469,7 +472,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (ExecutionException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -581,7 +586,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get();
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (CancellationException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -600,7 +607,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         f.fork();
                         f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (CancellationException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };

@@ -307,7 +307,9 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get();
                         shouldThrow();
                         return r;
-                    } catch (Exception success) {
+                    } catch (ExecutionException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                     return NoResult;
                 }
@@ -327,7 +329,9 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
                         return r;
-                    } catch (Exception success) {
+                    } catch (ExecutionException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                     return NoResult;
                 }
@@ -449,7 +453,9 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get();
                         shouldThrow();
                         return r;
-                    } catch (Exception success) {
+                    } catch (CancellationException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                     return NoResult;
                 }
@@ -470,7 +476,9 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         Integer r = f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
                         return r;
-                    } catch (Exception success) {
+                    } catch (CancellationException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                     return NoResult;
                 }

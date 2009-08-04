@@ -66,10 +66,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * used for all parallel task execution in a program or subsystem.
  * Otherwise, use would not usually outweigh the construction and
  * bookkeeping overhead of creating a large set of threads. For
- * example a common pool could be used for the {@code SortTasks}
+ * example, a common pool could be used for the {@code SortTasks}
  * illustrated in {@link RecursiveAction}. Because {@code
  * ForkJoinPool} uses threads in {@linkplain java.lang.Thread#isDaemon
- * daemon} mode, there is typically no need to explictly {@link
+ * daemon} mode, there is typically no need to explicitly {@link
  * #shutdown} such a pool upon program exit.
  *
  * <pre>

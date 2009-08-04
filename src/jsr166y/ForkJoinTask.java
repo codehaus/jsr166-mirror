@@ -692,16 +692,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Asserts that the results of this task's computation will not be
-     * used. If a cancellation occurs before attempting to execute this
-     * task, execution will be suppressed, {@link #isCancelled}
-     * will report true, and {@link #join} will result in a
-     * {@code CancellationException} being thrown. Otherwise, when
-     * cancellation races with completion, there are no guarantees
-     * about whether {@code isCancelled} will report {@code true},
-     * whether {@code join} will return normally or via an exception,
-     * or whether these behaviors will remain consistent upon repeated
-     * invocation.
+     * Attempts to cancel execution of this task. This attempt will
+     * fail if the task has already completed, has already been
+     * cancelled, or could not be cancelled for some other reason. If
+     * successful, and this task has not started when cancel is
+     * called, execution of this task is suppressed, {@link
+     * #isCancelled} will report true, and {@link #join} will result
+     * in a {@code CancellationException} being thrown.
      *
      * <p>This method may be overridden in subclasses, but if so, must
      * still ensure that these minimal properties hold. In particular,
@@ -713,7 +710,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * invoke {@link #completeExceptionally}.
      *
      * @param mayInterruptIfRunning this value is ignored in the
-     * default implementation because tasks are not in general
+     * default implementation because tasks are not
      * cancelled via interruption
      *
      * @return {@code true} if this task is now cancelled
@@ -878,9 +875,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Possibly executes tasks until the pool hosting the current task
-     * {@link ForkJoinPool#isQuiescent}. This method may be of use in
-     * designs in which many tasks are forked, but none are explicitly
-     * joined, instead executing them until all are processed.
+     * {@link ForkJoinPool#isQuiescent is quiescent}. This method may
+     * be of use in designs in which many tasks are forked, but none
+     * are explicitly joined, instead executing them until all are
+     * processed.
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method

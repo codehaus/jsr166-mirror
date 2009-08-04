@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.math.BigInteger;
 import java.security.*;
+import sun.security.util.SecurityConstants;
 
 public class ExecutorsTest extends JSR166TestCase{
     public static void main(String[] args) {
@@ -427,7 +428,11 @@ public class ExecutorsTest extends JSR166TestCase{
     }
 
     void checkCCL() {
-            AccessController.getContext().checkPermission(new RuntimePermission("getContextClassLoader"));
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("setContextClassLoader"));
+            sm.checkPermission(SecurityConstants.GET_CLASSLOADER_PERMISSION);
+        }
     }
 
     class CheckCCL implements Callable<Object> {

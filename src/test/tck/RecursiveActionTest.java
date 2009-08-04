@@ -172,6 +172,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                         FibAction f = new FibAction(8);
                         f.fork();
                         f.get(5L, null);
+                        shouldThrow();
                     } catch (NullPointerException success) {
                     } catch (Exception ex) {
                         unexpectedException();
@@ -310,7 +311,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                         f.fork();
                         f.get();
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (ExecutionException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -328,7 +331,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                         f.fork();
                         f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (ExecutionException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -440,7 +445,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                         f.fork();
                         f.get();
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (CancellationException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -459,7 +466,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                         f.fork();
                         f.get(5L, TimeUnit.SECONDS);
                         shouldThrow();
-                    } catch (Exception success) {
+                    } catch (CancellationException success) {
+                    } catch (Exception ex) {
+                        unexpectedException(ex);
                     }
                 }
             };

@@ -43,8 +43,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * #setMaintainsParallelism}, the pool attempts to maintain this
  * number of active (or available) threads by dynamically adding,
  * suspending, or resuming internal worker threads, even if some tasks
- * are waiting to join others. However, no such adjustments are
- * performed in the face of blocked IO or other unmanaged
+ * are stalled waiting to join others. However, no such adjustments
+ * are performed in the face of blocked IO or other unmanaged
  * synchronization. The nested {@link ManagedBlocker} interface
  * enables extension of the kinds of synchronization accommodated.
  * The target parallelism level may also be changed dynamically
@@ -802,7 +802,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Returns the maximum number of threads allowed to exist in the
-     * pool.  Unless set using {@link #setMaximumPoolSize}, the
+     * pool. Unless set using {@link #setMaximumPoolSize}, the
      * maximum is an implementation-defined value designed only to
      * prevent runaway growth.
      *
@@ -814,8 +814,10 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Sets the maximum number of threads allowed to exist in the
-     * pool.  Setting this value has no effect on current pool
-     * size. It controls construction of new threads.
+     * pool. The given value should normally be greater than or equal
+     * to the {@link #getParallelism parallelism} level. Setting this
+     * value has no effect on current pool size. It controls
+     * construction of new threads.
      *
      * @throws IllegalArgumentException if negative or greater than
      * internal implementation limit
@@ -1574,7 +1576,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         while (spareStack == null || !tryResumeSpare(dec)) {
             int counts = workerCounts;
             if (dec || (dec = casWorkerCounts(counts, --counts))) {
-                // CAS cheat
                 if (!needSpare(counts, maintainParallelism))
                     break;
                 if (joinMe.status < 0)

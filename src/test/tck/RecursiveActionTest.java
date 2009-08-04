@@ -135,7 +135,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                         threadAssertTrue(f.result == 21);
                         threadAssertTrue(f.isDone());
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -155,7 +155,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                         threadAssertTrue(f.result == 21);
                         threadAssertTrue(f.isDone());
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                 }
             };
@@ -175,7 +175,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                         shouldThrow();
                     } catch (NullPointerException success) {
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                 }
             };

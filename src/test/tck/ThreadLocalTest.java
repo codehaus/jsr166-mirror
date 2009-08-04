@@ -79,7 +79,7 @@ public class ThreadLocalTest extends JSR166TestCase {
                 try {
                     child.join();
                 } catch (InterruptedException e) {
-                    threadUnexpectedException();
+                    threadUnexpectedException(e);
                 }
             }
         }
@@ -99,7 +99,7 @@ public class ThreadLocalTest extends JSR166TestCase {
                 assertEquals(i, x[i]);
             }
         } catch (InterruptedException e) {
-            unexpectedException();
+            unexpectedException(e);
         }
     }
 }

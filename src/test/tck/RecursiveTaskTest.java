@@ -135,7 +135,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         threadAssertTrue(f.isDone());
                         return r;
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                     return NoResult;
                 }
@@ -157,7 +157,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         threadAssertTrue(f.isDone());
                         return r;
                     } catch (Exception ex) {
-                        unexpectedException();
+                        unexpectedException(ex);
                     }
                     return NoResult;
                 }

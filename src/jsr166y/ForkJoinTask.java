@@ -89,7 +89,7 @@ import java.util.WeakHashMap;
  * (in which case {@link #getException} returns a {@link
  * java.util.concurrent.CancellationException}); and {@link
  * #isCompletedAbnormally} is true if a task was either cancelled or
- * encountered an exception. 
+ * encountered an exception.
  *
  * <p>The ForkJoinTask class is not usually directly subclassed.
  * Instead, you subclass one of the abstract classes that support a
@@ -125,11 +125,11 @@ import java.util.WeakHashMap;
  * improve throughput. If too small, then memory and internal task
  * maintenance overhead may overwhelm processing.
  *
- * <p>This class provides {@code adapt} methods for {@link
- * java.lang.Runnable} and {@link java.util.concurrent.Callable}, that
- * may be of use when mixing execution of ForkJoinTasks with other
- * kinds of tasks. When all tasks are of this form, consider using a
- * pool in {@link ForkJoinPool#setAsyncMode async mode}.
+ * <p>This class provides {@code adapt} methods for {@link Runnable}
+ * and {@link Callable}, that may be of use when mixing execution of
+ * {@code ForkJoinTasks} with other kinds of tasks. When all tasks
+ * are of this form, consider using a pool in
+ * {@linkplain ForkJoinPool#setAsyncMode async mode}.
  *
  * <p>ForkJoinTasks are {@code Serializable}, which enables them to be
  * used in extensions such as remote execution frameworks. It is
@@ -395,7 +395,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * Only call when {@code isDone} known to be true.
      */
     private V reportFutureResult()
-        throws ExecutionException, InterruptedException {
+        throws InterruptedException, ExecutionException {
         if (Thread.interrupted())
             throw new InterruptedException();
         int s = status & COMPLETION_MASK;
@@ -421,11 +421,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         int s = status & COMPLETION_MASK;
         if (s == NORMAL)
             return getRawResult();
-        if (s == CANCELLED)
+        else if (s == CANCELLED)
             throw new CancellationException();
-        if (s == EXCEPTIONAL && (ex = exceptionMap.get(this)) != null)
+        else if (s == EXCEPTIONAL && (ex = exceptionMap.get(this)) != null)
             throw new ExecutionException(ex);
-        throw new TimeoutException();
+        else
+            throw new TimeoutException();
     }
 
     // internal execution methods
@@ -780,11 +781,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     public final Throwable getException() {
         int s = status & COMPLETION_MASK;
-        if (s >= NORMAL)
-            return null;
-        if (s == CANCELLED)
-            return new CancellationException();
-        return exceptionMap.get(this);
+        return ((s >= NORMAL)    ? null :
+                (s == CANCELLED) ? new CancellationException() :
+                exceptionMap.get(this));
     }
 
     /**

@@ -87,7 +87,7 @@ import java.util.WeakHashMap;
  * exception (in which case {@link #getException} returns the
  * exception); {@link #isCancelled} is true if the task was cancelled
  * (in which case {@link #getException} returns a {@link
- * java.util.concurrent.CancellationException}; and {@link
+ * java.util.concurrent.CancellationException}); and {@link
  * #isCompletedAbnormally} is true if a task was either cancelled or
  * encountered an exception. 
  *

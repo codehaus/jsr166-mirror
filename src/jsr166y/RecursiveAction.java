@@ -64,9 +64,10 @@ package jsr166y;
  * of each element of a double array, by subdividing out only the
  * right-hand-sides of repeated divisions by two, and keeping track of
  * them with a chain of {@code next} references. It uses a dynamic
- * threshold based on method {@code surplus}, but counterbalances
- * potential excess partitioning by directly performing leaf actions
- * on unstolen tasks rather than further subdividing.
+ * threshold based on method {@code getEstimatedSurplusTaskCount}, but
+ * counterbalances potential excess partitioning by directly
+ * performing leaf actions on unstolen tasks rather than further
+ * subdividing.
  *
  *  <pre> {@code
  * double sumOfSquares(ForkJoinPool pool, double[] array) {

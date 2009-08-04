@@ -219,7 +219,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Node<E> t = tail.get();
             Node<E> h = head.get();
 
-            if (t != null && (t == h || t.isData == isData)) {
+            if (t == h || t.isData == isData) {
                 if (s == null)
                     s = new Node<E>(e, isData);
                 Node<E> last = t.next;
@@ -231,9 +231,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     tail.compareAndSet(t, s);
                     return awaitFulfill(t, s, e, mode, nanos);
                 }
-            }
-
-            else if (h != null) {
+            } else {
                 Node<E> first = h.next;
                 if (t == tail.get() && first != null &&
                     advanceHead(h, first)) {
@@ -261,7 +259,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Node<E> t = tail.get();
             Node<E> h = head.get();
 
-            if (t != null && (t == h || t.isData == isData)) {
+            if (t == h || t.isData == isData) {
                 Node<E> last = t.next;
                 if (t == tail.get()) {
                     if (last != null)
@@ -269,8 +267,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     else
                         return null;
                 }
-            }
-            else if (h != null) {
+            } else {
                 Node<E> first = h.next;
                 if (t == tail.get() &&
                     first != null &&
@@ -332,9 +329,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
             if (spins < 0) {
                 Node<E> h = head.get(); // only spin if at head
-                spins = ((h != null && h.next == s) ?
-                         ((mode == TIMEOUT) ?
-                          maxTimedSpins : maxUntimedSpins) : 0);
+                spins = ((h.next != s) ? 0 :
+                         (mode == TIMEOUT) ? maxTimedSpins :
+                         maxUntimedSpins);
             }
             if (spins > 0)
                 --spins;
@@ -643,22 +640,20 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         for (;;) {
             Node<E> t = tail.get();
             Node<E> h = head.get();
-            if (h != null && t != null) {
-                Node<E> last = t.next;
-                Node<E> first = h.next;
-                if (t == tail.get()) {
-                    if (last != null)
-                        tail.compareAndSet(t, last);
-                    else if (first != null) {
-                        Object x = first.get();
-                        if (x == first)
-                            advanceHead(h, first);
-                        else
-                            return h;
-                    }
+            Node<E> last = t.next;
+            Node<E> first = h.next;
+            if (t == tail.get()) {
+                if (last != null)
+                    tail.compareAndSet(t, last);
+                else if (first != null) {
+                    Object x = first.get();
+                    if (x == first)
+                        advanceHead(h, first);
                     else
                         return h;
                 }
+                else
+                    return h;
             }
             reclean();
         }

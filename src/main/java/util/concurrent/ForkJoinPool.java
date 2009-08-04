@@ -21,35 +21,37 @@ import java.util.concurrent.atomic.AtomicLong;
  * An {@link ExecutorService} for running {@link ForkJoinTask}s.
  * A {@code ForkJoinPool} provides the entry point for submissions
  * from non-{@code ForkJoinTask}s, as well as management and
- * monitoring operations.  Normally a single {@code ForkJoinPool} is
- * used for a large number of submitted tasks. Otherwise, use would
- * not usually outweigh the construction and bookkeeping overhead of
- * creating a large set of threads.
+ * monitoring operations.  
  *
- * <p>{@code ForkJoinPool}s differ from other kinds of {@link
- * Executor}s mainly in that they provide <em>work-stealing</em>: all
- * threads in the pool attempt to find and execute subtasks created by
- * other active tasks (eventually blocking if none exist). This makes
- * them efficient when most tasks spawn other subtasks (as do most
- * {@code ForkJoinTask}s), as well as the mixed execution of some
- * plain {@code Runnable}- or {@code Callable}- based activities along
- * with {@code ForkJoinTask}s. When setting {@linkplain #setAsyncMode
- * async mode}, a {@code ForkJoinPool} may also be appropriate for use
- * with fine-grained tasks that are never joined. Otherwise, other
- * {@code ExecutorService} implementations are typically more
- * appropriate choices.
+ * <p>A {@code ForkJoinPool} differs from other kinds of {@link
+ * ExecutorService} mainly by virtue of employing
+ * <em>work-stealing</em>: all threads in the pool attempt to find and
+ * execute subtasks created by other active tasks (eventually blocking
+ * waiting for work if none exist). This enables efficient processing
+ * when most tasks spawn other subtasks (as do most {@code
+ * ForkJoinTask}s). A {@code ForkJoinPool} may also be used for mixed
+ * execution of some plain {@code Runnable}- or {@code Callable}-
+ * based activities along with {@code ForkJoinTask}s. When setting
+ * {@linkplain #setAsyncMode async mode}, a {@code ForkJoinPool} may
+ * also be appropriate for use with fine-grained tasks of any form
+ * that are never joined. Otherwise, other {@code ExecutorService}
+ * implementations are typically more appropriate choices.
  *
- * <p>A {@code ForkJoinPool} may be constructed with a given
- * parallelism level (target pool size), which it attempts to maintain
- * by dynamically adding, suspending, or resuming threads, even if
- * some tasks are waiting to join others. However, no such adjustments
- * are performed in the face of blocked IO or other unmanaged
+ * <p>A {@code ForkJoinPool} is constructed with a given target
+ * parallelism level; by default, equal to the number of available
+ * processors. Unless configured otherwise via {@link
+ * #setMaintainsParallelism}, the pool attempts to maintain this
+ * number of active (or available) threads by dynamically adding,
+ * suspending, or resuming internal worker threads, even if some tasks
+ * are waiting to join others. However, no such adjustments are
+ * performed in the face of blocked IO or other unmanaged
  * synchronization. The nested {@link ManagedBlocker} interface
  * enables extension of the kinds of synchronization accommodated.
  * The target parallelism level may also be changed dynamically
- * ({@link #setParallelism}) and thread construction can be limited
- * using methods {@link #setMaximumPoolSize} and/or {@link
- * #setMaintainsParallelism}.
+ * ({@link #setParallelism}). The total number of threads may be
+ * limited using method {@link #setMaximumPoolSize}, in which case it
+ * may become possible for the activities of a pool to stall due to
+ * the lack of available threads to process new tasks.
  *
  * <p>In addition to execution and lifecycle control methods, this
  * class provides status check methods (for example
@@ -57,6 +59,24 @@ import java.util.concurrent.atomic.AtomicLong;
  * tuning, and monitoring fork/join applications. Also, method
  * {@link #toString} returns indications of pool state in a
  * convenient form for informal monitoring.
+ *
+ * <p><b>Sample Usage.</b> Normally a single {@code ForkJoinPool} is
+ * used for all parallel task execution in a program or subsystem.
+ * Otherwise, use would not usually outweigh the construction and
+ * bookkeeping overhead of creating a large set of threads. For
+ * example, a common pool could be used for the {@code SortTasks}
+ * illustrated in {@link RecursiveAction}. Because {@code
+ * ForkJoinPool} uses threads in {@linkplain java.lang.Thread#isDaemon
+ * daemon} mode, there is typically no need to explicitly {@link
+ * #shutdown} such a pool upon program exit.
+ *
+ * <pre>
+ * static final ForkJoinPool mainPool = new ForkJoinPool();
+ * ...
+ * public void sort(long[] array) {
+ *   mainPool.invoke(new SortTask(array, 0, array.length));
+ * }
+ * </pre>
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
@@ -341,9 +361,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     // Constructors
 
     /**
-     * Creates a {@code ForkJoinPool} with a pool size equal to the
-     * number of processors available on the system, using the
-     * {@linkplain #defaultForkJoinWorkerThreadFactory default thread factory}.
+     * Creates a {@code ForkJoinPool} with parallelism equal to {@link
+     * java.lang.Runtime#availableProcessors}, and using the {@linkplain
+     * #defaultForkJoinWorkerThreadFactory default thread factory}.
      *
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
@@ -356,11 +376,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a {@code ForkJoinPool} with the indicated parallelism level
-     * threads and using the
-     * {@linkplain #defaultForkJoinWorkerThreadFactory default thread factory}.
+     * Creates a {@code ForkJoinPool} with the indicated parallelism
+     * level and using the {@linkplain
+     * #defaultForkJoinWorkerThreadFactory default thread factory}.
      *
-     * @param parallelism the number of worker threads
+     * @param parallelism the parallelism level
      * @throws IllegalArgumentException if parallelism less than or
      * equal to zero
      * @throws SecurityException if a security manager exists and
@@ -373,9 +393,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates a {@code ForkJoinPool} with parallelism equal to the
-     * number of processors available on the system and using the
-     * given thread factory.
+     * Creates a {@code ForkJoinPool} with parallelism equal to {@link
+     * java.lang.Runtime#availableProcessors}, and using the given
+     * thread factory.
      *
      * @param factory the factory for creating new threads
      * @throws NullPointerException if factory is null
@@ -392,7 +412,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Creates a {@code ForkJoinPool} with the given parallelism and
      * thread factory.
      *
-     * @param parallelism the targeted number of worker threads
+     * @param parallelism the parallelism level
      * @param factory the factory for creating new threads
      * @throws IllegalArgumentException if parallelism less than or
      * equal to zero, or greater than implementation limit
@@ -445,8 +465,16 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Currently requires size to be a power of two.
      */
     private static int arraySizeFor(int poolSize) {
-        return (poolSize <= 1) ? 1 :
-            (1 << (32 - Integer.numberOfLeadingZeros(poolSize-1)));
+        if (poolSize <= 1)
+            return 1;
+        // See Hackers Delight, sec 3.2
+        int c = poolSize >= MAX_THREADS ? MAX_THREADS : (poolSize - 1);
+        c |= c >>>  1;
+        c |= c >>>  2;
+        c |= c >>>  4;
+        c |= c >>>  8;
+        c |= c >>> 16;
+        return c + 1;
     }
 
     /**
@@ -737,7 +765,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
-            if (!isTerminating()) {
+            if (isProcessingTasks()) {
                 int p = this.parallelism;
                 this.parallelism = parallelism;
                 if (parallelism > p)
@@ -752,9 +780,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns the targeted number of worker threads in this pool.
+     * Returns the targeted parallelism level of this pool.
      *
-     * @return the targeted number of worker threads in this pool
+     * @return the targeted parallelism level of this pool
      */
     public int getParallelism() {
         return parallelism;
@@ -774,7 +802,9 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Returns the maximum number of threads allowed to exist in the
-     * pool, even if there are insufficient unblocked running threads.
+     * pool.  Unless set using {@link #setMaximumPoolSize}, the
+     * maximum is an implementation-defined value designed only to
+     * prevent runaway growth.
      *
      * @return the maximum
      */
@@ -784,9 +814,8 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Sets the maximum number of threads allowed to exist in the
-     * pool, even if there are insufficient unblocked running threads.
-     * Setting this value has no effect on current pool size. It
-     * controls construction of new threads.
+     * pool.  Setting this value has no effect on current pool
+     * size. It controls construction of new threads.
      *
      * @throws IllegalArgumentException if negative or greater than
      * internal implementation limit
@@ -1089,14 +1118,14 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Attempts to stop all actively executing tasks, and cancels all
-     * waiting tasks.  Tasks that are in the process of being
-     * submitted or executed concurrently during the course of this
-     * method may or may not be rejected. Unlike some other executors,
-     * this method cancels rather than collects non-executed tasks
-     * upon termination, so always returns an empty list. However, you
-     * can use method {@link #drainTasksTo} before invoking this
-     * method to transfer unexecuted tasks to another collection.
+     * Attempts to cancel and/or stop all tasks, and reject all
+     * subsequently submitted tasks.  Tasks that are in the process of
+     * being submitted or executed concurrently during the course of
+     * this method may or may not be rejected. This method cancels
+     * both existing and unexecuted tasks, in order to permit
+     * termination in the presence of task dependencies. So the method
+     * always returns an empty list (unlike the case for some other
+     * Executors).
      *
      * @return an empty list
      * @throws SecurityException if a security manager exists and
@@ -1121,12 +1150,16 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Returns {@code true} if the process of termination has
-     * commenced but possibly not yet completed.
+     * commenced but not yet completed.  This method may be useful for
+     * debugging. A return of {@code true} reported a sufficient
+     * period after shutdown may indicate that submitted tasks have
+     * ignored or suppressed interruption, causing this executor not
+     * to properly terminate.
      *
-     * @return {@code true} if terminating
+     * @return {@code true} if terminating but not yet terminated
      */
     public boolean isTerminating() {
-        return runStateOf(runControl) >= TERMINATING;
+        return runStateOf(runControl) == TERMINATING;
     }
 
     /**
@@ -1136,6 +1169,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public boolean isShutdown() {
         return runStateOf(runControl) >= SHUTDOWN;
+    }
+
+    /**
+     * Returns true if pool is not terminating or terminated.
+     * Used internally to suppress execution when terminating.
+     */
+    final boolean isProcessingTasks() {
+        return runStateOf(runControl) < TERMINATING;
     }
 
     /**
@@ -1192,7 +1233,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     transitionRunStateTo(TERMINATED);
                     termination.signalAll();
                 }
-                else if (!isTerminating()) {
+                else if (isProcessingTasks()) {
                     tryShrinkWorkerArray();
                     tryResumeSpare(true); // allow replacement
                 }
@@ -1433,7 +1474,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     final void sync(ForkJoinWorkerThread w) {
         updateStealCount(w); // Transfer w's count while it is idle
 
-        while (!w.isShutdown() && !isTerminating() && !suspendIfSpare(w)) {
+        while (!w.isShutdown() && isProcessingTasks() && !suspendIfSpare(w)) {
             long prev = w.lastEventCount;
             WaitQueueNode node = null;
             WaitQueueNode h;
@@ -1638,7 +1679,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             for (k = 0; k < len && ws[k] != null; ++k)
                 ;
         }
-        if (k < len && !isTerminating() && (w = createWorker(k)) != null) {
+        if (k < len && isProcessingTasks() && (w = createWorker(k)) != null) {
             ws[k] = w;
             w.start();
         }

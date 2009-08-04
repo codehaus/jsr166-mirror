@@ -804,7 +804,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Returns the maximum number of threads allowed to exist in the
-     * pool.  Unless set using {@link #setMaximumPoolSize}, the
+     * pool. Unless set using {@link #setMaximumPoolSize}, the
      * maximum is an implementation-defined value designed only to
      * prevent runaway growth.
      *
@@ -816,8 +816,10 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Sets the maximum number of threads allowed to exist in the
-     * pool.  Setting this value has no effect on current pool
-     * size. It controls construction of new threads.
+     * pool. The given value should normally be greater than or equal
+     * to the {@link #getParallelism parallelism} level. Setting this
+     * value has no effect on current pool size. It controls
+     * construction of new threads.
      *
      * @throws IllegalArgumentException if negative or greater than
      * internal implementation limit

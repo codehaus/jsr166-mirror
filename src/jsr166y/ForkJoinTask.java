@@ -68,14 +68,28 @@ import java.util.WeakHashMap;
  * execute other tasks while awaiting joins, which is sometimes more
  * efficient but only applies when all subtasks are known to be
  * strictly tree-structured. Method {@link #invoke} is semantically
- * equivalent to {@code fork(); join()} but always attempts to
- * begin execution in the current thread. The "<em>quiet</em>" forms
- * of these methods do not extract results or report exceptions. These
+ * equivalent to {@code fork(); join()} but always attempts to begin
+ * execution in the current thread. The "<em>quiet</em>" forms of
+ * these methods do not extract results or report exceptions. These
  * may be useful when a set of tasks are being executed, and you need
  * to delay processing of results or exceptions until all complete.
  * Method {@code invokeAll} (available in multiple versions)
  * performs the most common form of parallel invocation: forking a set
  * of tasks and joining them all.
+ *
+ * <p>The execution status of tasks may be queried at several levels
+ * of detail: {@link #isDone} is true if a task completed in any way
+ * (including the case where a task was cancelled without executing);
+ * {@link #isCancelled} is true if completion was due to cancellation;
+ * {@link #isCompletedNormally} is true if a task completed without
+ * cancellation or encountering an exception; {@link
+ * #isCompletedExceptionally} is true if if the task encountered an
+ * exception (in which case {@link #getException} returns the
+ * exception); {@link #isCancelled} is true if the task was cancelled
+ * (in which case {@link #getException} returns a {@link
+ * java.util.concurrent.CancellationException}; and {@link
+ * #isCompletedAbnormally} is true if a task was either cancelled or
+ * encountered an exception. 
  *
  * <p>The ForkJoinTask class is not usually directly subclassed.
  * Instead, you subclass one of the abstract classes that support a

@@ -1578,7 +1578,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         while (spareStack == null || !tryResumeSpare(dec)) {
             int counts = workerCounts;
             if (dec || (dec = casWorkerCounts(counts, --counts))) {
-                // CAS cheat
                 if (!needSpare(counts, maintainParallelism))
                     break;
                 if (joinMe.status < 0)

@@ -416,7 +416,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             int r = f.get();
             assertTrue(r ==  832040);
         } finally {
-            joinPool(p);
+            p.shutdownNow(); // don't wait out shutdown
         }
     }
 
@@ -642,9 +642,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
-        joinPool(p);
+        p.shutdownNow();
     }
 
     /**

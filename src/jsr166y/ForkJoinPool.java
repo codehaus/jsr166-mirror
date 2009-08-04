@@ -45,8 +45,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * #setMaintainsParallelism}, the pool attempts to maintain this
  * number of active (or available) threads by dynamically adding,
  * suspending, or resuming internal worker threads, even if some tasks
- * are waiting to join others. However, no such adjustments are
- * performed in the face of blocked IO or other unmanaged
+ * are stalled waiting to join others. However, no such adjustments
+ * are performed in the face of blocked IO or other unmanaged
  * synchronization. The nested {@link ManagedBlocker} interface
  * enables extension of the kinds of synchronization accommodated.
  * The target parallelism level may also be changed dynamically

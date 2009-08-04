@@ -636,14 +636,20 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             void realRun() throws Throwable {
                 p.submit(new CheckedCallable<Object>() {
                     public Object realCall() throws Throwable {
-                        Thread.sleep(MEDIUM_DELAY_MS);
+                        try {
+                            Thread.sleep(MEDIUM_DELAY_MS);
+                        } catch (InterruptedException ok) {
+                        }
                         return null;
                     }}).get();
             }});
 
         t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
+        t.join();
         p.shutdownNow();
+        joinPool(p);
     }
 
     /**
@@ -652,18 +658,12 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      */
     public void testSubmitEE() throws Throwable {
         ForkJoinPool p = new ForkJoinPool(1);
-
         try {
-            Callable c = new Callable() {
-                    public Object call() {
-                        int i = 5/0;
-                        return Boolean.TRUE;
-                    }
-                };
-
-            for (int i = 0; i < 5; i++) {
-                p.submit(c).get();
-            }
+            p.submit(new Callable() {
+                public Object call() {
+                    int i = 5/0;
+                    return Boolean.TRUE;
+                }}).get();
             shouldThrow();
         } catch (ExecutionException success) {
         }

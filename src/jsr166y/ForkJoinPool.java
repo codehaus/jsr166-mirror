@@ -384,7 +384,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param parallelism the parallelism level
      * @throws IllegalArgumentException if parallelism less than or
-     * equal to zero
+     *         equal to zero, or greater than implementation limit
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
@@ -417,7 +417,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param parallelism the parallelism level
      * @param factory the factory for creating new threads
      * @throws IllegalArgumentException if parallelism less than or
-     * equal to zero, or greater than implementation limit
+     *         equal to zero, or greater than implementation limit
      * @throws NullPointerException if factory is null
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads

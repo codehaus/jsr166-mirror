@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -11,9 +11,9 @@ import java.util.concurrent.Semaphore;
 
 public class ThreadLocalTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run(suite());	
+	junit.textui.TestRunner.run(suite());
     }
-    
+
     public static Test suite() {
 	return new TestSuite(ThreadLocalTest.class);
     }
@@ -29,7 +29,7 @@ public class ThreadLocalTest extends JSR166TestCase {
             protected Integer initialValue() {
                 return zero;
             }
-            
+
             protected Integer childValue(Integer parentValue) {
                 return new Integer(parentValue.intValue() + 1);
             }
@@ -68,13 +68,13 @@ public class ThreadLocalTest extends JSR166TestCase {
                 child.start();
             }
             Thread.currentThread().yield();
-            
+
             int threadId = itl.get().intValue();
             for (int j = 0; j < threadId; j++) {
                 x[threadId]++;
                 Thread.currentThread().yield();
             }
-            
+
             if (child != null) { // Wait for child (if any)
                 try {
                     child.join();

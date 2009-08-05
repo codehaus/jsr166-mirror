@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 
@@ -15,7 +15,7 @@ import java.security.*;
 
 public class ExecutorsTest extends JSR166TestCase{
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());  
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
         return new TestSuite(ExecutorsTest.class);
@@ -25,13 +25,13 @@ public class ExecutorsTest extends JSR166TestCase{
         private final ExecutorService exec;
         private final Callable<T> func;
         private final long msecs;
-        
+
         TimedCallable(ExecutorService exec, Callable<T> func, long msecs) {
             this.exec = exec;
             this.func = func;
             this.msecs = msecs;
         }
-        
+
         public T call() throws Exception {
             Future<T> ftask = exec.submit(func);
             try {
@@ -294,13 +294,13 @@ public class ExecutorsTest extends JSR166TestCase{
         List<Callable<BigInteger>> tasks = new ArrayList<Callable<BigInteger>>(N);
         try {
             long startTime = System.currentTimeMillis();
-            
+
             long i = 0;
             while (tasks.size() < N) {
                 tasks.add(new TimedCallable<BigInteger>(executor, new Fib(i), 1));
                 i += 10;
             }
-            
+
             int iters = 0;
             BigInteger sum = BigInteger.ZERO;
             for (Iterator<Callable<BigInteger>> it = tasks.iterator(); it.hasNext();) {
@@ -325,7 +325,7 @@ public class ExecutorsTest extends JSR166TestCase{
         }
     }
 
-    
+
     /**
      * ThreadPoolExecutor using defaultThreadFactory has
      * specified group, priority, daemon status, and name
@@ -352,13 +352,13 @@ public class ExecutorsTest extends JSR166TestCase{
                 }
             };
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
-        
+
         e.execute(r);
         try {
             e.shutdown();
         } catch(SecurityException ok) {
         }
-        
+
         try {
             Thread.sleep(SHORT_DELAY_MS);
         } catch (Exception eX) {
@@ -409,7 +409,7 @@ public class ExecutorsTest extends JSR166TestCase{
                 }
             };
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
-        
+
         Policy.setPolicy(savedPolicy);
         e.execute(r);
         try {
@@ -463,7 +463,7 @@ public class ExecutorsTest extends JSR166TestCase{
             Policy.setPolicy(savedPolicy);
             return;
         } catch(AccessControlException ok) {
-        } 
+        }
 
         try {
             Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
@@ -471,7 +471,7 @@ public class ExecutorsTest extends JSR166TestCase{
         } catch(AccessControlException success) {
         } catch(Exception ex) {
             unexpectedException();
-        } 
+        }
         finally {
             Policy.setPolicy(savedPolicy);
         }
@@ -492,13 +492,13 @@ public class ExecutorsTest extends JSR166TestCase{
         } catch (AccessControlException ok) {
             return;
         }
-            
+
         try {
             Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
             task.call();
         } catch(Exception ex) {
             unexpectedException();
-        } 
+        }
         finally {
             Policy.setPolicy(savedPolicy);
         }
@@ -523,7 +523,7 @@ public class ExecutorsTest extends JSR166TestCase{
             return; // program has too few permissions to set up test
         }
 
-        // Make sure that program doesn't have too many permissions 
+        // Make sure that program doesn't have too many permissions
         try {
             AccessController.doPrivileged(new PrivilegedAction() {
                     public Object run() {
@@ -541,7 +541,7 @@ public class ExecutorsTest extends JSR166TestCase{
         } catch(AccessControlException success) {
         } catch(Exception ex) {
             unexpectedException();
-        } 
+        }
     }
 
     /**
@@ -558,7 +558,7 @@ public class ExecutorsTest extends JSR166TestCase{
         } catch (AccessControlException ok) {
             return;
         }
-            
+
         Callable task = Executors.privilegedCallable(new CheckCCL());
         try {
             task.call();
@@ -571,7 +571,7 @@ public class ExecutorsTest extends JSR166TestCase{
 
     /**
      * callable(Runnable) returns null when called
-     */ 
+     */
     public void testCallable1() {
         try {
             Callable c = Executors.callable(new NoOpRunnable());
@@ -579,12 +579,12 @@ public class ExecutorsTest extends JSR166TestCase{
         } catch(Exception ex) {
             unexpectedException();
         }
-        
+
     }
 
     /**
      * callable(Runnable, result) returns result when called
-     */ 
+     */
     public void testCallable2() {
         try {
             Callable c = Executors.callable(new NoOpRunnable(), one);
@@ -596,7 +596,7 @@ public class ExecutorsTest extends JSR166TestCase{
 
     /**
      * callable(PrivilegedAction) returns its result when called
-     */ 
+     */
     public void testCallable3() {
         try {
             Callable c = Executors.callable(new PrivilegedAction() {
@@ -609,7 +609,7 @@ public class ExecutorsTest extends JSR166TestCase{
 
     /**
      * callable(PrivilegedExceptionAction) returns its result when called
-     */ 
+     */
     public void testCallable4() {
         try {
             Callable c = Executors.callable(new PrivilegedExceptionAction() {
@@ -623,7 +623,7 @@ public class ExecutorsTest extends JSR166TestCase{
 
     /**
      * callable(null Runnable) throws NPE
-     */ 
+     */
     public void testCallableNPE1() {
         try {
             Runnable r = null;
@@ -634,7 +634,7 @@ public class ExecutorsTest extends JSR166TestCase{
 
     /**
      * callable(null, result) throws NPE
-     */ 
+     */
     public void testCallableNPE2() {
         try {
             Runnable r = null;
@@ -645,7 +645,7 @@ public class ExecutorsTest extends JSR166TestCase{
 
     /**
      * callable(null PrivilegedAction) throws NPE
-     */ 
+     */
     public void testCallableNPE3() {
         try {
             PrivilegedAction r = null;
@@ -656,7 +656,7 @@ public class ExecutorsTest extends JSR166TestCase{
 
     /**
      * callable(null PrivilegedExceptionAction) throws NPE
-     */ 
+     */
     public void testCallableNPE4() {
         try {
             PrivilegedExceptionAction r = null;

@@ -13,8 +13,8 @@ import java.lang.reflect.*;
  * Language Specification section 17.4.4) among accesses to variables.
  *
  * <p> This class is designed for use in uncommon situations where
- * declaring variables <code>volatile</code> or <code>final</code>,
- * using instances of atomic classes, using <code>synchronized</code>
+ * declaring variables {@code volatile} or {@code final},
+ * using instances of atomic classes, using {@code synchronized}
  * blocks or methods, or using other synchronization facilities are
  * not possible or do not provide the desired control over ordering.
  * Fences should be used only when these alternatives do not
@@ -24,10 +24,10 @@ import java.lang.reflect.*;
  * safety properties expected by users of a class employing them.
  *
  * <p>There are three kinds of fences for controlling the ordering
- * relations among memory accesses: A <code>postLoadFence</code> is
+ * relations among memory accesses: A {@code postLoadFence} is
  * generally used to enforce order between two reads, a
- * <code>preStoreFence</code> between two writes, and a
- * <code>postStorePreLoadFence</code> between a write and a read.
+ * {@code preStoreFence} between two writes, and a
+ * {@code postStorePreLoadFence} between a write and a read.
  * These Fence methods specify relationships among accesses, not the
  * accesses themselves. Invocations of Fence methods must be placed,
  * in sometimes nonintuitive ways, <em>between</em> accesses that load
@@ -46,11 +46,11 @@ import java.lang.reflect.*;
  * provided Fence methods are not quite symmetrical in effect, and
  * that some methods that you might expect to be defined are not,
  * because their effects are entailed by those provided.
- * 
- * <p>Additionally, method <code>reachabilityFence</code> establishes
+ *
+ * <p>Additionally, method {@code reachabilityFence} establishes
  * an ordering for strong reachability (as defined in the {@link
  * java.lang.ref} package specification) with respect to garbage
- * collection.  Method <code>reachabilityFence</code> differs from the
+ * collection.  Method {@code reachabilityFence} differs from the
  * others in that it controls relations that are otherwise only
  * implicit in a program -- the reachability conditions triggering
  * garbage collection. As illustrated in the sample usages below, this
@@ -58,31 +58,31 @@ import java.lang.reflect.*;
  * effects, which is possible for objects with finalizers (see Section
  * 12.6 of the Java Language Specification) that are implemented in
  * ways that rely on ordering control for correctness.
- * 
- * <p>Each fence method requires an Object <code>ref</code> argument
+ *
+ * <p>Each fence method requires an Object {@code ref} argument
  * controlling the <em>scope</em> of the fence. Effects are ensured
- * only within that scope -- accesses to <code>ref</code> itself, as
+ * only within that scope -- accesses to {@code ref} itself, as
  * well as those accesses that, in accord with the rules in chapter 17
  * of The Java Language Specification for any other accesses in the
  * program, are guaranteed to be directly reachable using
- * <code>ref</code> at the point of invocation of the fence
+ * {@code ref} at the point of invocation of the fence
  * method. This includes accesses of the fields of the object referred
- * to, or if an array, its elements. The supplied <code>ref</code>
+ * to, or if an array, its elements. The supplied {@code ref}
  * argument should designate the narrowest applicable scope.  A fence
  * used inside a method of a class accessing its own fields will
- * normally have the scope of <code>this</code>.  For arrays, the
+ * normally have the scope of {@code this}.  For arrays, the
  * scope is normally the array object, and for static fields, the
  * {@link java.lang.Class} object of the class declaring the field.
  *
- * <p><b>Sample Usages.</b> 
+ * <p><b>Sample Usages.</b>
  *
- * <p><b>Emulating <code>final</code>.</b> With care, a fence may be
- * used to obtain the memory safety effects of <code>final</code> for
- * a field that cannot be declared as <code>final</code>, because its
+ * <p><b>Emulating {@code final}.</b> With care, a fence may be
+ * used to obtain the memory safety effects of {@code final} for
+ * a field that cannot be declared as {@code final}, because its
  * primary initialization cannot be performed in a constructor, in
  * turn because it is used in a framework requiring that all classes
  * have a no-argument constructor. For example:
- * 
+ *
  * <pre>
  * class WidgetHolder {
  *   private Widget widget;
@@ -92,14 +92,14 @@ import java.lang.reflect.*;
  *     h.widget = new Widget(params);
  *     Fences.preStoreFence(h);
  *     return h;
- *  } 
+ *  }
  *  // ...
  * }
  * </pre>
- * 
+ *
  * Here, the fence ensures that the effects of the widget assignment
  * are ordered before those of any (unknown) subsequent stores of
- * <code>h</code> in other variables that make <code>h</code>
+ * {@code h} in other variables that make {@code h}
  * available for use by other objects. Notice that this method
  * observes the care required for final fields: It does not internally
  * "leak" the reference by using it as an argument to a callback
@@ -107,7 +107,7 @@ import java.lang.reflect.*;
  * functionality were required, it may be possible to cope using more
  * extensive sets of fences, or as a normally better choice, using
  * synchronization (locking).  Notice also that because
- * <code>final</code> could not be used here, the compiler and JVM
+ * {@code final} could not be used here, the compiler and JVM
  * cannot help you ensure that the field is set correctly
  * across all usages.
  *
@@ -116,7 +116,7 @@ import java.lang.reflect.*;
  * Here is a stripped-down example illustrating the essentials. (In
  * practice, among other changes, you would use access methods instead
  * of a public field).
- * 
+ *
  * <pre>
  * class AnotherWidgetHolder {
  *   public Widget widget;
@@ -136,13 +136,13 @@ import java.lang.reflect.*;
  * objects using a thread-safe collection that itself guarantees the
  * expected ordering relations. However, it may come into play in the
  * construction of such classes themselves.
- * 
- * <p><b>Emulating <code>volatile</code> access.</b> Suppose there is an
+ *
+ * <p><b>Emulating {@code volatile} access.</b> Suppose there is an
  * accessible variable that should have been declared as
- * <code>volatile</code> but wasn't:
- * 
+ * {@code volatile} but wasn't:
+ *
  * <pre>
- * class C { int data;  ...  } 
+ * class C { int data;  ...  }
  * class App {
  *   int getData(C c) {
  *      Fences.postLoadFence(c);
@@ -159,7 +159,7 @@ import java.lang.reflect.*;
  *   // ...
  * }
  * </pre>
- * 
+ *
  * Method getData provides a faithful emulation of volatile reads of
  * (non-long/double) fields through references: issue a postLoadFence
  * to ensure that the read of C obtained as an argument is ordered
@@ -171,7 +171,7 @@ import java.lang.reflect.*;
  * other access.  These techniques may apply even when fields are not
  * directly accessible, in which case the fences would surround calls
  * to methods such as c.getData().  However, these techniques cannot
- * be applied to <code>long</code> or <code>double</code> fields
+ * be applied to {@code long} or {@code double} fields
  * because reads and writes of fields of these types are not
  * guaranteed to be atomic. Additionally, correctness may require that
  * all accesses of such data use these kinds of wrapper methods, which
@@ -185,7 +185,7 @@ import java.lang.reflect.*;
  * differs by virtue of not itself ensuring an ordering of its write
  * with subsequent reads, because the required effects are already
  * ensured by the referenced objects.  For example:
- * 
+ *
  * <pre>
  * class Item {
  *    synchronized f(); // ALL methods are synchronized
@@ -221,14 +221,14 @@ import java.lang.reflect.*;
  * use, so long as the object has otherwise become unreachable. This
  * may have surprising and undesirable effects in cases such as the
  * following example in which the bookkeeping associated with a class
- * is managed through array indices. Here, method <code>action</code>
- * uses a <code>reachabilityFence</code> to ensure that the Resource
+ * is managed through array indices. Here, method {@code action}
+ * uses a {@code reachabilityFence} to ensure that the Resource
  * object is not reclaimed before bookkeeping on an associated
  * ExternalResource has been performed; in particular here, to ensure
  * that the array slot holding the ExternalResource is not nulled out
  * in method {@link Object#finalize}, which may otherwise run
  * concurrently.
- * 
+ *
  * <pre>
  * class Resource {
  *   private static ExternalResource[] externalResourceArray = ...
@@ -252,32 +252,32 @@ import java.lang.reflect.*;
  *       Fences.reachabilityFence(this);
  *     }
  *   }
- *   private static void update(ExternalResource ext) { 
+ *   private static void update(ExternalResource ext) {
  *     ext.status = ...;
  *   }
  * }
  * </pre>
  *
  * Notice the nonintuitive placement of the call to
- * <code>reachabilityFence</code>.  It is placed <em>after</em> the
- * call to <code>update</code>, to ensure that the array slot is not
+ * {@code reachabilityFence}.  It is placed <em>after</em> the
+ * call to {@code update}, to ensure that the array slot is not
  * nulled out by {@link Object#finalize} before the update, even if
- * the call to <code>action</code> was last use of this object. This
+ * the call to {@code action} was last use of this object. This
  * might be the case if for example a usage in a user program had the
- * form <code>new Resource().action();</code> which retains no other
+ * form {@code new Resource().action();} which retains no other
  * reference to this Resource.  While probably overkill here,
- * <code>reachabilityFence</code> is placed in a <code>finally</code>
+ * {@code reachabilityFence} is placed in a {@code finally}
  * block to ensure that it is invoked across all paths in the method.
  * In a method with more complex control paths, you might need further
- * precautions to ensure that <code>reachabilityFence</code> is
+ * precautions to ensure that {@code reachabilityFence} is
  * encountered along all of them.
  *
  * <p>It is sometimes possible to better encapsulate use of
- * <code>reachabilityFence</code>. Continuing the above example, if it
+ * {@code reachabilityFence}. Continuing the above example, if it
  * were OK for the call to method update to proceed even if the
  * finalizer had already executed (nulling out slot), then you could
- * localize use of <code>reachabilityFence</code>:
- * 
+ * localize use of {@code reachabilityFence}:
+ *
  * <pre>
  *   public void action2() {
  *     // ...
@@ -291,17 +291,17 @@ import java.lang.reflect.*;
  * </pre>
  *
  * <p>Further continuing this example, you might be able to avoid use
- * of <code>reachabilityFence</code> entirely if it were OK to skip
+ * of {@code reachabilityFence} entirely if it were OK to skip
  * updates in ExternalResources for Resource objects that have become
  * reclaimed (hence have null slots) by the time operations on them
  * are invoked:
- * 
+ *
  * <pre>
  *   public void action3() {
  *     // ...
  *     Resource.update3(externalResourceArray[myIndex]);
  *   }
- *   private static void update3(ExternalResource ext) { 
+ *   private static void update3(ExternalResource ext) {
  *     if (ext != null) ...
  *   }
  * </pre>
@@ -310,16 +310,16 @@ import java.lang.reflect.*;
  * methods that allocate and reallocate array slots for
  * ExternalResources, to cope with the fact that one associated with
  * an apparently null slot might still be in use, and vice versa.
- * 
- * <p>Additionally, method <code>reachabilityFence</code> is not
+ *
+ * <p>Additionally, method {@code reachabilityFence} is not
  * required in constructions that themselves ensure reachability. For
  * example, because objects that are locked cannot in general be
  * reclaimed, it would suffice if all accesses of the object, in all
- * methods of class Resource (including <code>finalize</code>) were
- * enclosed in <code>synchronized(this)</code> blocks. (Further, such
+ * methods of class Resource (including {@code finalize}) were
+ * enclosed in {@code synchronized(this)} blocks. (Further, such
  * blocks must not include infinite loops, or themselves be
  * unreachable, which fall into the corner case exceptions to the "in
- * general" disclaimer.) Method <code>reachabilityFence</code> remains
+ * general" disclaimer.) Method {@code reachabilityFence} remains
  * an option in cases where this approach is not desirable or
  * possible; for example because it would encounter deadlock.
  */
@@ -392,7 +392,7 @@ public class Fences {
      * itself initiate garbage collection or finalization. See the
      * class-level documentation for further explanation and usage
      * examples.
-     * 
+     *
      * @param ref the (nonnull) reference. If null, the effects
      * of the method are undefined.
      */

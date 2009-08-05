@@ -344,6 +344,7 @@ public class Fences {
      * subsequent to the invocation of this method
      * See the class-level documentation for further explanation
      * and usage examples.
+     *
      * @param ref the (nonnull) reference. If null, the effects
      * of the method are undefined.
      */
@@ -359,6 +360,7 @@ public class Fences {
      * write subsequent to the invocation of this method.
      * See the class-level documentation for further explanation
      * and usage examples.
+     *
      * @param ref the (nonnull) reference. If null, the effects
      * of the method are undefined.
      */
@@ -374,6 +376,7 @@ public class Fences {
      * subsequent to the invocation of this method.
      * See the class-level documentation for further explanation
      * and usage examples.
+     *
      * @param ref the (nonnull) reference. If null, the effects
      * of the method are undefined.
      */

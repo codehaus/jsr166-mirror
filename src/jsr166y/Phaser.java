@@ -32,7 +32,7 @@ import java.util.concurrent.locks.LockSupport;
  * zero, and advancing when all parties reach the barrier (wrapping
  * around to zero after reaching {@code Integer.MAX_VALUE}).
  *
- * <li> Like a {@code CyclicBarrier}, a Phaser may be repeatedly
+ * <li> Like a {@code CyclicBarrier}, a phaser may be repeatedly
  * awaited.  Method {@link #arriveAndAwaitAdvance} has effect
  * analogous to {@link java.util.concurrent.CyclicBarrier#await
  * CyclicBarrier.await}.  However, phasers separate two aspects of

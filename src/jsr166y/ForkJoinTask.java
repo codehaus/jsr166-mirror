@@ -529,7 +529,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns the result of the computation when it is ready.
+     * Returns the result of the computation when it {@link #isDone is done}.
      * This method differs from {@link #get()} in that
      * abnormal completion results in {@code RuntimeException} or
      * {@code Error}, not {@code ExecutionException}.
@@ -836,13 +836,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Possibly executes other tasks until this task is ready, then
-     * returns the result of the computation.  This method may be more
-     * efficient than {@code join}, but is only applicable when
-     * there are no potential dependencies between continuation of the
-     * current task and that of any other task that might be executed
-     * while helping. (This usually holds for pure divide-and-conquer
-     * tasks).
+     * Possibly executes other tasks until this task {@link #isDone is
+     * done}, then returns the result of the computation.  This method
+     * may be more efficient than {@code join}, but is only applicable
+     * when there are no potential dependencies between continuation
+     * of the current task and that of any other task that might be
+     * executed while helping. (This usually holds for pure
+     * divide-and-conquer tasks).
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method
@@ -860,9 +860,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Possibly executes other tasks until this task is ready.  This
-     * method may be useful when processing collections of tasks when
-     * some have been cancelled or otherwise known to have aborted.
+     * Possibly executes other tasks until this task {@link #isDone is
+     * done}.  This method may be useful when processing collections
+     * of tasks when some have been cancelled or otherwise known to
+     * have aborted.
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method

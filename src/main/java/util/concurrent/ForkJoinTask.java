@@ -390,7 +390,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Returns result or throws exception using j.u.c.Future conventions.
-     * Only call when {@code isDone} known to be true.
+     * Only call when {@code isDone} known to be true or thread known
+     * to be interrupted.
      */
     private V reportFutureResult()
         throws InterruptedException, ExecutionException {
@@ -557,9 +558,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Forks the given tasks, returning when {@code isDone} holds for
      * each task or an (unchecked) exception is encountered, in which
-     * case the exception is rethrown.  If more than one task
-     * encounters an exception, then this method throws any one of
-     * these exceptions.  The individual status of each task may be
+     * case the exception is rethrown.  If either task encounters an
+     * exception, the other one may be, but is not guaranteed to be,
+     * cancelled.  If both tasks throw an exception, then this method
+     * throws one of them.  The individual status of each task may be
      * checked using {@link #getException()} and related methods.
      *
      * <p>This method may be invoked only from within {@code

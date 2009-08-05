@@ -726,21 +726,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         return (status & COMPLETION_MASK) == CANCELLED;
     }
 
-    /**
-     * Returns {@code true} if the computation performed by this task
-     * has completed (or has been cancelled).
-     *
-     * @return {@code true} if this computation has completed
-     */
     public final boolean isDone() {
         return status < 0;
     }
 
-    /**
-     * Returns {@code true} if this task was cancelled.
-     *
-     * @return {@code true} if this task was cancelled
-     */
     public final boolean isCancelled() {
         return (status & COMPLETION_MASK) == CANCELLED;
     }

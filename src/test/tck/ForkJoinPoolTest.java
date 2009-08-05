@@ -699,13 +699,35 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     }
 
     /**
-     * invokeAny(c) throws NullPointerException if c has null elements
+     * invokeAny(c) throws NullPointerException if c has a single null element
      */
     public void testInvokeAny3() throws Throwable {
         ExecutorService e = new ForkJoinPool(1);
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
+            l.add(null);
+            e.invokeAny(l);
+            shouldThrow();
+        } catch (NullPointerException success) {
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * invokeAny(c) throws NullPointerException if c has null elements
+     */
+    public void testInvokeAny4() throws Throwable {
+        ExecutorService e = new ForkJoinPool(1);
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            l.add(new Callable<String>() {
+                public String call() {
+                    // The delay gives the pool a chance to notice
+                    // the null element.
+                    sleepTillInterrupted(SMALL_DELAY_MS);
+                    return "foo";
+                }});
             l.add(null);
             e.invokeAny(l);
             shouldThrow();
@@ -718,7 +740,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     /**
      * invokeAny(c) throws ExecutionException if no task in c completes
      */
-    public void testInvokeAny4() throws Throwable {
+    public void testInvokeAny5() throws Throwable {
         ExecutorService e = new ForkJoinPool(1);
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
@@ -734,7 +756,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     /**
      * invokeAny(c) returns result of some task in c if at least one completes
      */
-    public void testInvokeAny5() throws Throwable {
+    public void testInvokeAny6() throws Throwable {
         ExecutorService e = new ForkJoinPool(1);
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();

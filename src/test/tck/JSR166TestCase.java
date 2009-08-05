@@ -395,6 +395,25 @@ public class JSR166TestCase extends TestCase {
 	public void refresh() {}
     }
 
+    /**
+     * Sleep until the timeout has elapsed, or interrupted.
+     * Does <em>NOT</em> throw InterruptedException.
+     */
+    void sleepTillInterrupted(long timeoutMillis) {
+        try {
+            Thread.sleep(timeoutMillis);
+        } catch (InterruptedException wakeup) {
+        }
+    }
+
+    /**
+     * Returns a new started Thread running the given runnable.
+     */
+    Thread newStartedThread(Runnable runnable) {
+        Thread t = new Thread(runnable);
+        t.start();
+        return t;
+    }
 
     // Some convenient Runnable classes
 

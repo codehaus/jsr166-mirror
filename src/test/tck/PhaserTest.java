@@ -190,25 +190,25 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * arrive does not wait for others to arrive at barrier
+     * arriveAndDeregister does not wait for others to arrive at barrier
      */
-    public void testArrive2() {
+    public void testArrive2() throws InterruptedException {
         final Phaser phaser = new Phaser(1);
         phaser.register();
-        Thread thread = null;
-        for (final Runnable r : getRunnables(10, SHORT_DELAY_MS)) {
+        List<Thread> threads = new ArrayList<Thread>();
+        for (int i = 0; i < 10; i++)
             phaser.register();
-            thread = new Thread(new CheckedRunnable() {
-                void realRun() {
-                    r.run();
+            threads.add(newStartedThread(new CheckedRunnable() {
+                void realRun() throws InterruptedException {
+                    Thread.sleep(SMALL_DELAY_MS);
                     phaser.arriveAndDeregister();
-                }});
-            thread.start();
-        }
+                }}));
 
         phaser.arrive();
-        assertTrue(thread.isAlive());
+        assertTrue(threads.get(0).isAlive());
         assertFalse(phaser.isTerminated());
+        for (Thread thread : threads)
+            thread.join();
     }
 
     /**
@@ -218,7 +218,6 @@ public class PhaserTest extends JSR166TestCase {
         Phaser phaser = new Phaser(1);
         phaser.forceTermination();
         assertTrue(phaser.arrive() < 0);
-
     }
 
     /**
@@ -299,16 +298,17 @@ public class PhaserTest extends JSR166TestCase {
      * arriveAndDeregister returns the phase in which it leaves the
      * phaser in after deregistration
      */
-    public void testArriveAndDeregister6() {
+    public void testArriveAndDeregister6() throws InterruptedException {
         final Phaser phaser = new Phaser(2);
-        new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             void realRun() {
-                getRunnable(SHORT_DELAY_MS).run();
+                sleepTillInterrupted(SHORT_DELAY_MS);
                 phaser.arrive();
-            }}).start();
+            }});
         phaser.arriveAndAwaitAdvance();
         int phase = phaser.arriveAndDeregister();
         assertEquals(phase, phaser.getPhase());
+        t.join();
     }
 
     /**
@@ -333,20 +333,20 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testAwaitAdvance3() throws InterruptedException {
         final Phaser phaser = new Phaser();
+        phaser.register();
 
-        Thread th1 = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             void realRun() throws InterruptedException {
                 phaser.register();
-                getRunnable(LONG_DELAY_MS).run();
+                sleepTillInterrupted(LONG_DELAY_MS);
                 phaser.awaitAdvance(phaser.arrive());
             }});
-        phaser.register();
-        th1.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        th1.interrupt();
-        Thread.sleep(LONG_DELAY_MS);
+        Thread.sleep(SMALL_DELAY_MS);
+        t.interrupt();
+        Thread.sleep(SMALL_DELAY_MS);
         phaser.arrive();
-        assertFalse(th1.isInterrupted());
+        assertFalse(t.isInterrupted());
+        t.join();
     }
 
     /**
@@ -358,17 +358,15 @@ public class PhaserTest extends JSR166TestCase {
         final AtomicInteger phaseCount = new AtomicInteger(0);
         List<Thread> threads = new ArrayList<Thread>();
         for (int i = 0; i < 4; i++) {
-            threads.add(new Thread(new CheckedRunnable() {
+            threads.add(newStartedThread(new CheckedRunnable() {
                 void realRun() {
                     int phase = phaser.arrive();
                     phaseCount.incrementAndGet();
-                    getRunnable(LONG_DELAY_MS).run();
+                    sleepTillInterrupted(SMALL_DELAY_MS);
                     phaser.awaitAdvance(phase);
                     threadAssertTrue(phaseCount.get() == 4);
                 }}));
         }
-        for (Thread thread : threads)
-            thread.start();
         for (Thread thread : threads)
             thread.join();
     }
@@ -376,26 +374,29 @@ public class PhaserTest extends JSR166TestCase {
     /**
      * awaitAdvance returns the current phase
      */
-    public void testAwaitAdvance5() {
+    public void testAwaitAdvance5() throws InterruptedException {
         final Phaser phaser = new Phaser(1);
         int phase = phaser.awaitAdvance(phaser.arrive());
         assertEquals(phase, phaser.getPhase());
         phaser.register();
-        for (int i = 0; i < eight; i++) {
-            new Thread(new CheckedRunnable() {
+        List<Thread> threads = new ArrayList<Thread>();
+        for (int i = 0; i < 8; i++) {
+            threads.add(newStartedThread(new CheckedRunnable() {
                 void realRun() {
-                    getRunnable(SHORT_DELAY_MS).run();
+                    sleepTillInterrupted(SHORT_DELAY_MS);
                     phaser.arrive();
-                }}).start();
+                }}));
             phase = phaser.awaitAdvance(phaser.arrive());
             threadAssertEquals(phase, phaser.getPhase());
         }
+        for (Thread thread : threads)
+            thread.join();
     }
 
     /**
      * awaitAdvance returns when the phaser is externally terminated
      */
-    public void testAwaitAdvance6() {
+    public void testAwaitAdvance6() throws InterruptedException {
         final Phaser phaser = new Phaser(3);
         /*
          * Start new thread. This thread waits a small amount of time
@@ -403,32 +404,34 @@ public class PhaserTest extends JSR166TestCase {
          * in the main thread arrives quickly so at best this thread
          * waits for the second thread's party to arrive
          */
-        new Thread(new CheckedRunnable() {
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             void realRun() {
-                getRunnable(SMALL_DELAY_MS).run();
+                sleepTillInterrupted(SMALL_DELAY_MS);
                 int phase = phaser.awaitAdvance(phaser.arrive());
                 /*
                  * This point is reached when force termination is called in which phase = -1
                  */
                 threadAssertTrue(phase < 0);
                 threadAssertTrue(phaser.isTerminated());
-            }}).start();
+            }});
         /*
          * This thread will cause the first thread run to wait, in doing so
          * the main thread will force termination in which the first thread
          * should exit peacefully as this one
          */
-        new Thread(new CheckedRunnable() {
+        Thread t2 = newStartedThread(new CheckedRunnable() {
             void realRun() {
-                getRunnable(LONG_DELAY_MS).run();
+                sleepTillInterrupted(MEDIUM_DELAY_MS);
                 int p1 = phaser.arrive();
                 int phase = phaser.awaitAdvance(p1);
                 threadAssertTrue(phase < 0);
                 threadAssertTrue(phaser.isTerminated());
-            }}).start();
+            }});
 
         phaser.arrive();
         phaser.forceTermination();
+        t1.join();
+        t2.join();
     }
 
     /**
@@ -449,17 +452,17 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testArriveAndAwaitAdvance2() throws InterruptedException {
         final Phaser phaser = new Phaser(2);
-        Thread th = new Thread(new CheckedRunnable() {
+        Thread th = newStartedThread(new CheckedRunnable() {
             void realRun() {
                 phaser.arriveAndAwaitAdvance();
             }});
 
-        th.start();
-        Thread.sleep(LONG_DELAY_MS);
+        Thread.sleep(SMALL_DELAY_MS);
         th.interrupt();
-        Thread.sleep(LONG_DELAY_MS);
+        Thread.sleep(SMALL_DELAY_MS);
         phaser.arrive();
         assertFalse(th.isInterrupted());
+        th.join();
     }
 
     /**
@@ -467,43 +470,26 @@ public class PhaserTest extends JSR166TestCase {
      * number of arrived parties is the same number that is accounted
      * for when the main thread awaitsAdvance
      */
-    public void testArriveAndAwaitAdvance3() {
+    public void testArriveAndAwaitAdvance3() throws InterruptedException {
         final Phaser phaser = new Phaser(1);
         final AtomicInteger arrivingCount = new AtomicInteger(0);
-        for (final Runnable run : getRunnables(six, SHORT_DELAY_MS)) {
-            new Thread(new CheckedRunnable() {
-                void realRun() {
+        final List<Thread> threads = new ArrayList<Thread>();
+        for (int i = 0; i < 6; i++) {
+            threads.add(newStartedThread(new CheckedRunnable() {
+                void realRun() throws InterruptedException {
                     phaser.register();
-                    run.run();
+                    sleepTillInterrupted(SHORT_DELAY_MS);
                     arrivingCount.getAndIncrement();
                     phaser.arrive();
-                }}).start();
+                }}));
         }
         int phaseNumber = phaser.arriveAndAwaitAdvance();
         arrivingCount.incrementAndGet();
         //the + 1 adds to expectedArrive to account for the main threads arrival
         int expectedArrived = phaseNumber > 0 ? phaseNumber * six + 1 : phaser.getArrivedParties() + 1;
         threadAssertEquals(expectedArrived, arrivingCount.get());
-    }
-    // .. initially called, for n tasks via
-    private List<Runnable> getRunnables(int size, long wait) {
-        List<Runnable> list = new ArrayList<Runnable>();
-        for (int i = 0; i < size; i++) {
-            list.add(getRunnable(wait));
-        }
-        return list;
-    }
-
-    private Runnable getRunnable(final long wait) {
-        return new CheckedRunnable() {
-            void realRun() {
-                try {
-                    Thread.sleep(wait);
-                } catch (InterruptedException noop) {
-                // sleep interruption isn't a problem case for these example
-                }
-            }
-        };
+        for (Thread thread : threads)
+            thread.join();
     }
 
 }

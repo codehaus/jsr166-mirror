@@ -322,6 +322,9 @@ import java.lang.reflect.*;
  * general" disclaimer.) Method {@code reachabilityFence} remains
  * an option in cases where this approach is not desirable or
  * possible; for example because it would encounter deadlock.
+ *
+ * @since 1.7
+ * @author Doug Lea
  */
 public class Fences {
     private Fences() {} // Non-instantiable
@@ -341,11 +344,12 @@ public class Fences {
      * prior to the invocation of this method in program order
      * happens-before and is in synchronization order with, as defined
      * in The Java Language Specification section 17.4.4, any access
-     * subsequent to the invocation of this method
-     * See the class-level documentation for further explanation
+     * subsequent to the invocation of this method.
+     *
+     * <p>See the class-level documentation for further explanation
      * and usage examples.
      *
-     * @param ref the (nonnull) reference. If null, the effects
+     * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
      */
     public static void postLoadFence(Object ref) {
@@ -358,10 +362,11 @@ public class Fences {
      * happens-before and is in synchronization order with, as
      * defined in The Java Language Specification section 17.4.4, any
      * write subsequent to the invocation of this method.
-     * See the class-level documentation for further explanation
+     *
+     * <p>See the class-level documentation for further explanation
      * and usage examples.
      *
-     * @param ref the (nonnull) reference. If null, the effects
+     * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
      */
     public static void preStoreFence(Object ref) {
@@ -374,10 +379,11 @@ public class Fences {
      * happens-before and is in synchronization order with, as defined
      * in The Java Language Specification section 17.4.4, any access
      * subsequent to the invocation of this method.
-     * See the class-level documentation for further explanation
+     *
+     * <p>See the class-level documentation for further explanation
      * and usage examples.
      *
-     * @param ref the (nonnull) reference. If null, the effects
+     * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
      */
     public static void postStorePreLoadFence(Object ref) {
@@ -392,16 +398,17 @@ public class Fences {
      * become unreachable; thus, the referenced object is not
      * reclaimable by garbage collection at least until after the
      * invocation of this method. Invocation of this method does not
-     * itself initiate garbage collection or finalization. See the
-     * class-level documentation for further explanation and usage
-     * examples.
+     * itself initiate garbage collection or finalization.
      *
-     * @param ref the (nonnull) reference. If null, the effects
+     * <p>See the class-level documentation for further explanation
+     * and usage examples.
+     *
+     * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
      */
     public static void reachabilityFence(Object ref) {
         if (ref != null) {
-            synchronized(ref) {}
+            synchronized (ref) {}
         }
     }
 }

@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class LinkedTransferQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
@@ -551,9 +552,11 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     public void testIterator() throws InterruptedException {
         LinkedTransferQueue q = populatedQueue(SIZE);
         Iterator it = q.iterator();
+        int i = 0;
         while (it.hasNext()) {
-            assertEquals(it.next(), q.take());
+            assertEquals(it.next(), i++);
         }
+        assertEquals(i, SIZE);
     }
 
     /**

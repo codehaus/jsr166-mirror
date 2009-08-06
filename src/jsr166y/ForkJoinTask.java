@@ -80,16 +80,14 @@ import java.util.WeakHashMap;
  * <p>The execution status of tasks may be queried at several levels
  * of detail: {@link #isDone} is true if a task completed in any way
  * (including the case where a task was cancelled without executing);
- * {@link #isCancelled} is true if completion was due to cancellation;
  * {@link #isCompletedNormally} is true if a task completed without
- * cancellation or encountering an exception; {@link
- * #isCompletedExceptionally} is true if if the task encountered an
- * exception (in which case {@link #getException} returns the
- * exception); {@link #isCancelled} is true if the task was cancelled
- * (in which case {@link #getException} returns a {@link
- * java.util.concurrent.CancellationException}); and {@link
- * #isCompletedAbnormally} is true if a task was either cancelled or
- * encountered an exception.
+ * cancellation or encountering an exception; {@link #isCancelled} is
+ * true if the task was cancelled (in which case {@link #getException}
+ * returns a {@link java.util.concurrent.CancellationException}); and
+ * {@link #isCompletedAbnormally} is true if a task was either
+ * cancelled or encountered an exception, in which case {@link
+ * #getException} will return either the encountered exception or
+ * {@link java.util.concurrent.CancellationException}.
  *
  * <p>The ForkJoinTask class is not usually directly subclassed.
  * Instead, you subclass one of the abstract classes that support a
@@ -752,15 +750,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     public final boolean isCompletedNormally() {
         return (status & COMPLETION_MASK) == NORMAL;
-    }
-
-    /**
-     * Returns {@code true} if this task threw an exception.
-     *
-     * @return {@code true} if this task threw an exception
-     */
-    public final boolean isCompletedExceptionally() {
-        return (status & COMPLETION_MASK) == EXCEPTIONAL;
     }
 
     /**

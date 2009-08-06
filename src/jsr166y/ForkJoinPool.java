@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * An {@link ExecutorService} for running {@link ForkJoinTask}s.
  * A {@code ForkJoinPool} provides the entry point for submissions
  * from non-{@code ForkJoinTask}s, as well as management and
- * monitoring operations.  
+ * monitoring operations.
  *
  * <p>A {@code ForkJoinPool} differs from other kinds of {@link
  * ExecutorService} mainly by virtue of employing
@@ -82,8 +82,11 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
- * pools with greater than the maximum result in
+ * pools with greater than the maximum number result in
  * {@code IllegalArgumentException}.
+ *
+ * <p>This implementation rejects submitted tasks (that is, by throwing
+ * {@link RejectedExecutionException}) only when the pool is shut down.
  *
  * @since 1.7
  * @author Doug Lea
@@ -112,7 +115,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * Returns a new worker thread operating in the given pool.
          *
          * @param pool the pool this thread works in
-         * @throws NullPointerException if pool is null
+         * @throws NullPointerException if the pool is null
          */
         public ForkJoinWorkerThread newThread(ForkJoinPool pool);
     }
@@ -400,7 +403,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * thread factory.
      *
      * @param factory the factory for creating new threads
-     * @throws NullPointerException if factory is null
+     * @throws NullPointerException if the factory is null
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
@@ -418,7 +421,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param factory the factory for creating new threads
      * @throws IllegalArgumentException if parallelism less than or
      *         equal to zero, or greater than implementation limit
-     * @throws NullPointerException if factory is null
+     * @throws NullPointerException if the factory is null
      * @throws SecurityException if a security manager exists and
      *         the caller is not permitted to modify threads
      *         because it does not hold {@link
@@ -594,8 +597,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param task the task
      * @return the task's result
-     * @throws NullPointerException if task is null
-     * @throws RejectedExecutionException if pool is shut down
+     * @throws NullPointerException if the task is null
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
      */
     public <T> T invoke(ForkJoinTask<T> task) {
         doSubmit(task);
@@ -606,8 +610,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Arranges for (asynchronous) execution of the given task.
      *
      * @param task the task
-     * @throws NullPointerException if task is null
-     * @throws RejectedExecutionException if pool is shut down
+     * @throws NullPointerException if the task is null
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
      */
     public void execute(ForkJoinTask<?> task) {
         doSubmit(task);
@@ -615,6 +620,11 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     // AbstractExecutorService methods
 
+    /**
+     * @throws NullPointerException if the task is null
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     */
     public void execute(Runnable task) {
         ForkJoinTask<?> job;
         if (task instanceof ForkJoinTask<?>) // avoid re-wrap
@@ -624,18 +634,33 @@ public class ForkJoinPool extends AbstractExecutorService {
         doSubmit(job);
     }
 
+    /**
+     * @throws NullPointerException if the task is null
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     */
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
         ForkJoinTask<T> job = ForkJoinTask.adapt(task);
         doSubmit(job);
         return job;
     }
 
+    /**
+     * @throws NullPointerException if the task is null
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     */
     public <T> ForkJoinTask<T> submit(Runnable task, T result) {
         ForkJoinTask<T> job = ForkJoinTask.adapt(task, result);
         doSubmit(job);
         return job;
     }
 
+    /**
+     * @throws NullPointerException if the task is null
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     */
     public ForkJoinTask<?> submit(Runnable task) {
         ForkJoinTask<?> job;
         if (task instanceof ForkJoinTask<?>) // avoid re-wrap
@@ -651,9 +676,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param task the task to submit
      * @return the task
+     * @throws NullPointerException if the task is null
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if the task is null
      */
     public <T> ForkJoinTask<T> submit(ForkJoinTask<T> task) {
         doSubmit(task);
@@ -661,6 +686,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
 
+    /**
+     * @throws NullPointerException       {@inheritDoc}
+     * @throws RejectedExecutionException {@inheritDoc}
+     */
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
         ArrayList<ForkJoinTask<T>> forkJoinTasks =
             new ArrayList<ForkJoinTask<T>>(tasks.size());

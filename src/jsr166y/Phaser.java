@@ -36,7 +36,7 @@ import java.util.concurrent.locks.LockSupport;
  * awaited.  Method {@link #arriveAndAwaitAdvance} has effect
  * analogous to {@link java.util.concurrent.CyclicBarrier#await
  * CyclicBarrier.await}.  However, phasers separate two aspects of
- * coordination, that may also be invoked independently:
+ * coordination, which may also be invoked independently:
  *
  * <ul>
  *
@@ -51,22 +51,21 @@ import java.util.concurrent.locks.LockSupport;
  *
  *
  * <li> Barrier actions, performed by the task triggering a phase
- * advance while others may be waiting, are arranged by overriding
- * method {@link #onAdvance}, that also controls termination.
- * Overriding this method may be used to similar but more flexible
- * effect as providing a barrier action to a {@code CyclicBarrier}.
+ * advance, are arranged by overriding method {@link #onAdvance(int,
+ * int)}, which also controls termination. Overriding this method is
+ * similar to, but more flexible than, providing a barrier action to a
+ * {@code CyclicBarrier}.
  *
  * <li> Phasers may enter a <em>termination</em> state in which all
  * actions immediately return without updating phaser state or waiting
  * for advance, and indicating (via a negative phase value) that
- * execution is complete.  Termination is triggered by executing the
- * overridable {@code onAdvance} method that is invoked each time the
- * barrier is about to be tripped. When a phaser is controlling an
- * action with a fixed number of iterations, it is often convenient to
- * override this method to cause termination when the current phase
- * number reaches a threshold. Method {@link #forceTermination} is also
- * available to abruptly release waiting threads and allow them to
- * terminate.
+ * execution is complete.  Termination is triggered when an invocation
+ * of {@code onAdvance} returns {@code true}.  When a phaser is
+ * controlling an action with a fixed number of iterations, it is
+ * often convenient to override this method to cause termination when
+ * the current phase number reaches a threshold. Method {@link
+ * #forceTermination} is also available to abruptly release waiting
+ * threads and allow them to terminate.
  *
  * <li> Phasers may be tiered to reduce contention. Phasers with large
  * numbers of parties that would otherwise experience heavy
@@ -82,7 +81,9 @@ import java.util.concurrent.locks.LockSupport;
  * within handlers of those exceptions, often after invoking
  * {@code forceTermination}.
  *
- * <li>Phasers ensure lack of starvation when used by ForkJoinTasks.
+ * <li>Phasers may be used to coordinate tasks executing in a {@link
+ * ForkJoinPool}, which will ensure sufficient parallelism to execute
+ * tasks when others are blocked waiting for a phase to advance.
  *
  * </ul>
  *
@@ -96,23 +97,19 @@ import java.util.concurrent.locks.LockSupport;
  *  <pre> {@code
  * void runTasks(List<Runnable> list) {
  *   final Phaser phaser = new Phaser(1); // "1" to register self
+ *   // create and start threads
  *   for (Runnable r : list) {
  *     phaser.register();
  *     new Thread() {
  *       public void run() {
  *         phaser.arriveAndAwaitAdvance(); // await all creation
  *         r.run();
- *         phaser.arriveAndDeregister();   // signal completion
  *       }
  *     }.start();
  *   }
  *
- *   doSomethingOnBehalfOfWorkers();
- *   phaser.arrive(); // allow threads to start
- *   int p = phaser.arriveAndDeregister(); // deregister self  ...
- *   p = phaser.awaitAdvance(p); // ... and await arrival
- *   otherActions(); // do other things while tasks execute
- *   phaser.awaitAdvance(p); // await final completion
+ *   // allow threads to start and deregister self
+ *   phaser.arriveAndDeregister();
  * }}</pre>
  *
  * <p>One way to cause a set of threads to repeatedly perform actions
@@ -464,11 +461,12 @@ public class Phaser {
     }
 
     /**
-     * Arrives at the barrier, and deregisters from it, without
-     * waiting for others. Deregistration reduces number of parties
+     * Arrives at the barrier and deregisters from it without waiting
+     * for others. Deregistration reduces the number of parties
      * required to trip the barrier in future phases.  If this phaser
      * has a parent, and deregistration causes this phaser to have
-     * zero parties, this phaser is also deregistered from its parent.
+     * zero parties, this phaser also arrives at and is deregistered
+     * from its parent.
      *
      * @return the current barrier phase number upon entry to
      * this method, or a negative value if terminated
@@ -521,9 +519,11 @@ public class Phaser {
 
     /**
      * Arrives at the barrier and awaits others. Equivalent in effect
-     * to {@code awaitAdvance(arrive())}.  If you instead need to
-     * await with interruption of timeout, and/or deregister upon
-     * arrival, you can arrange them using analogous constructions.
+     * to {@code awaitAdvance(arrive())}.  If you need to await with
+     * interruption or timeout, you can arrange this with an analogous
+     * construction using one of the other forms of the awaitAdvance
+     * method.  If instead you need to deregister upon arrival use
+     * {@code arriveAndDeregister}.
      *
      * @return the phase on entry to this method
      * @throws IllegalStateException if not terminated and the number
@@ -534,9 +534,10 @@ public class Phaser {
     }
 
     /**
-     * Awaits the phase of the barrier to advance from the given
-     * value, or returns immediately if argument is negative or this
-     * barrier is terminated.
+     * Awaits the phase of the barrier to advance from the given phase
+     * value, or returns immediately if current phase of the barrier
+     * is not equal to the given phase value or this barrier is
+     * terminated.
      *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
@@ -637,16 +638,6 @@ public class Phaser {
     }
 
     /**
-     * Returns {@code true} if the current phase number equals the given phase.
-     *
-     * @param phase the phase
-     * @return {@code true} if the current phase number equals the given phase
-     */
-    public final boolean hasPhase(int phase) {
-        return phaseOf(getReconciledState()) == phase;
-    }
-
-    /**
      * Returns the number of parties registered at this barrier.
      *
      * @return the number of parties
@@ -721,12 +712,8 @@ public class Phaser {
      * effects visible to participating tasks, but it is in general
      * only sensible to do so in designs where all parties register
      * before any arrive, and all {@link #awaitAdvance} at each phase.
-     * Otherwise, you cannot ensure lack of interference. In
-     * particular, this method may be invoked more than once per
-     * transition if other parties successfully register while the
-     * invocation of this method is in progress, thus postponing the
-     * transition until those parties also arrive, re-triggering this
-     * method.
+     * Otherwise, you cannot ensure lack of interference from other
+     * parties during the the invocation of this method.
      *
      * @param phase the phase number on entering the barrier
      * @param registeredParties the current number of registered parties

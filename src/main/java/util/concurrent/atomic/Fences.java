@@ -94,7 +94,7 @@ import java.lang.reflect.*;
  *     WidgetHolder h = new WidgetHolder();
  *     h.widget = new Widget(params);
  *     return Fences.orderWrites(h);
- *  }
+ *   }
  * }
  * </pre>
  *
@@ -121,7 +121,7 @@ import java.lang.reflect.*;
  * class AnotherWidgetHolder {
  *   public Widget widget;
  *   void publish(Widget w) {
- *     this.widget = Femces.orderWrites(w);
+ *     this.widget = Fences.orderWrites(w);
  *   }
  *   // ...
  * }
@@ -198,7 +198,7 @@ import java.lang.reflect.*;
  *   void releaseItem(Item x) {
  *      item = Fences.orderWrites(x);
  *   }
- *   
+ *
  *   // ...
  * }
  * </pre>
@@ -326,7 +326,7 @@ public class Fences {
     private Fences() {} // Non-instantiable
 
     /*
-     * The methods of this class are intended to be intrinisified by a
+     * The methods of this class are intended to be intrinsified by a
      * JVM. However, we provide correct but inefficient Java-level
      * code that simply reads and writes a static volatile
      * variable. Without JVM support, the consistency effects are
@@ -386,7 +386,7 @@ public class Fences {
      * Informally: Ensures that, within the scope of the given
      * reference, accesses (reads or writes) prior to the invocation
      * of this method occur before subsequent accesses.
-     * 
+     *
      * <p>More formally, using the terminology of the Java Language
      * Specification (see especially section 17.4.4), given a write
      * <em>w</em> such that <em>dereferences(ref, w)</em>, an
@@ -395,7 +395,7 @@ public class Fences {
      * such that <em>f happens-before r</em>, and
      * <em>dereferences(ref, r)</em>, then <em>w synchronizes-with
      * r</em>.
-     * 
+     *
      * @param ref the reference. If null, this method has no effect.
      * @return a reference to the same object as ref
      */

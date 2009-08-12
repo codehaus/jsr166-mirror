@@ -418,7 +418,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertTrue(q.remove(one));
         assertTrue(q.remove(two));
         assertTrue(q.add(three));
-        assertTrue(q.take() != null);
+        assertTrue(q.take() == three);
     }
 
     /**

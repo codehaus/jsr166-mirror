@@ -81,7 +81,7 @@ import sun.misc.Unsafe;
  * via a background thread common across all maps. Because of the
  * potential for asynchronous clearing of References, methods such as
  * <code>containsValue</code> have weaker guarantees than you might
- * expect even in the absence of other explicity concurrent
+ * expect even in the absence of other explicitly concurrent
  * operations. For example <code>containsValue(value)</code> may
  * return true even if <code>value</code> is no longer available upon
  * return from the method.
@@ -275,11 +275,12 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     static interface NodeFactory extends Serializable {
         /**
-         * Creates and returns a Node using the given parameters
+         * Creates and returns a Node using the given parameters.
+         *
          * @param locator an opaque immutable locator for this node
-         * @parem key the (nonnull) immutable key
-         * @parem value the (nonnull) volatile value;
-         * @param cchm the table creating this node.
+         * @param key the (non-null) immutable key
+         * @param value the (non-null) volatile value
+         * @param cchm the table creating this node
          * @param linkage an opaque volatile linkage for maintaining this node
          */
         Node newNode(int locator, Object key, Object value,
@@ -303,7 +304,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static interface Node extends Reclaimable {
         /**
          * Returns the key established during the creation of this node.
-         * Note: This method is named "get" rether than "getKey"
+         * Note: This method is named "get" rather than "getKey"
          * to simplify usage of Reference keys.
          * @return the key
          */
@@ -332,7 +333,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         void setValue(Object value);
 
         /**
-         * Returns the lonkage established during the creation of this
+         * Returns the linkage established during the creation of this
          * node or, if since updated, the linkage set by the most
          * recent call to setLinkage.
          * @return the linkage
@@ -629,7 +630,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Returns the segment for possibly inserting into the table
-     * associated with given hash, constructing it if necesary.
+     * associated with given hash, constructing it if necessary.
      * @param hash the hash code for the key
      * @return the segment
      */
@@ -696,7 +697,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * if no such mapping exists
      *
      * @param  key   possible key
-     * @return the value associated with the kew or <tt>null</tt> if
+     * @return the value associated with the key or <tt>null</tt> if
      * there is no mapping.
      * @throws NullPointerException if the specified key is null
      */
@@ -712,7 +713,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Share dimplementation for put, putIfAbsent
+     * Shared implementation for put, putIfAbsent
      */
     final V doPut(K key, V value, boolean onlyIfNull) {
         if (key == null || value == null)
@@ -1078,7 +1079,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * </pre>
      *
      * except that the action is performed atomically.  Some
-     * attemmpted operations on this map by other threads may be
+     * attempted operations on this map by other threads may be
      * blocked while computation is in progress. Because this function
      * is invoked within atomicity control, the computation should be
      * short and simple. The most common usage is to construct a new
@@ -1145,7 +1146,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *     return remove(key);
      * </pre>
      *
-     * except that the action is performed atomically. Some attemmpted
+     * except that the action is performed atomically. Some attempted
      * operations on this map by other threads may be blocked while
      * computation is in progress.
      *

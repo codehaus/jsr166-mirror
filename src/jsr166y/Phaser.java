@@ -713,7 +713,7 @@ public class Phaser {
      * only sensible to do so in designs where all parties register
      * before any arrive, and all {@link #awaitAdvance} at each phase.
      * Otherwise, you cannot ensure lack of interference from other
-     * parties during the the invocation of this method.
+     * parties during the invocation of this method.
      *
      * @param phase the phase number on entering the barrier
      * @param registeredParties the current number of registered parties

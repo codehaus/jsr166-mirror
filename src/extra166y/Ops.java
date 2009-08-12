@@ -133,10 +133,10 @@ import java.util.*;
  * <td >
  * <td >
  * <td ><tt>double</tt>
- * <td ><a href="Ops.IntandDoubleToInt.html">Ops.IntandDoubleToInt</a>
- * <td ><a href="Ops.IntandDoubleToLong.html">Ops.IntandDoubleToLong</a>
- * <td ><a href="Ops.IntandDoubleToDouble.html">Ops.IntandDoubleToDouble</a>
- * <td ><a href="Ops.IntandDoubleToObject.html">Ops.IntandDoubleToObject</a>
+ * <td ><a href="Ops.IntAndDoubleToInt.html">Ops.IntAndDoubleToInt</a>
+ * <td ><a href="Ops.IntAndDoubleToLong.html">Ops.IntAndDoubleToLong</a>
+ * <td ><a href="Ops.IntAndDoubleToDouble.html">Ops.IntAndDoubleToDouble</a>
+ * <td ><a href="Ops.IntAndDoubleToObject.html">Ops.IntAndDoubleToObject</a>
  * <td >
  * <tr>
  * <td >
@@ -178,10 +178,10 @@ import java.util.*;
  * <td >
  * <td >
  * <td ><tt>long</tt>
- * <td ><a href="Ops.LongandLongToInt.html">Ops.LongandLongToInt</a>
+ * <td ><a href="Ops.LongAndLongToInt.html">Ops.LongAndLongToInt</a>
  * <td ><a href="Ops.BinaryLongOp.html">Ops.BinaryLongOp</a>
- * <td ><a href="Ops.LongandLongToDouble.html">Ops.LongandLongToDouble</a>
- * <td ><a href="Ops.LongandLongToObject.html">Ops.LongandLongToObject</a>
+ * <td ><a href="Ops.LongAndLongToDouble.html">Ops.LongAndLongToDouble</a>
+ * <td ><a href="Ops.LongAndLongToObject.html">Ops.LongAndLongToObject</a>
  * <td >
  * <tr>
  * <td >

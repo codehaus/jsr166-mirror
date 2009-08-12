@@ -88,7 +88,7 @@ public class ForkJoinWorkerThread extends Thread {
      * AtomicIntegers and AtomicReferenceArrays for the indices and
      * array is significantly slower because of memory locality and
      * indirection effects.)
-     * 
+     *
      * Further, performance on most platforms is very sensitive to
      * placement and sizing of the (resizable) queue array.  Even
      * though these queues don't usually become all that big, the

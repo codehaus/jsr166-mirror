@@ -78,16 +78,14 @@ import java.util.WeakHashMap;
  * <p>The execution status of tasks may be queried at several levels
  * of detail: {@link #isDone} is true if a task completed in any way
  * (including the case where a task was cancelled without executing);
- * {@link #isCancelled} is true if completion was due to cancellation;
  * {@link #isCompletedNormally} is true if a task completed without
- * cancellation or encountering an exception; {@link
- * #isCompletedExceptionally} is true if if the task encountered an
- * exception (in which case {@link #getException} returns the
- * exception); {@link #isCancelled} is true if the task was cancelled
- * (in which case {@link #getException} returns a {@link
- * java.util.concurrent.CancellationException}); and {@link
- * #isCompletedAbnormally} is true if a task was either cancelled or
- * encountered an exception.
+ * cancellation or encountering an exception; {@link #isCancelled} is
+ * true if the task was cancelled (in which case {@link #getException}
+ * returns a {@link java.util.concurrent.CancellationException}); and
+ * {@link #isCompletedAbnormally} is true if a task was either
+ * cancelled or encountered an exception, in which case {@link
+ * #getException} will return either the encountered exception or
+ * {@link java.util.concurrent.CancellationException}.
  *
  * <p>The ForkJoinTask class is not usually directly subclassed.
  * Instead, you subclass one of the abstract classes that support a
@@ -527,7 +525,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns the result of the computation when it is ready.
+     * Returns the result of the computation when it {@link #isDone is done}.
      * This method differs from {@link #get()} in that
      * abnormal completion results in {@code RuntimeException} or
      * {@code Error}, not {@code ExecutionException}.
@@ -724,21 +722,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         return (status & COMPLETION_MASK) == CANCELLED;
     }
 
-    /**
-     * Returns {@code true} if the computation performed by this task
-     * has completed (or has been cancelled).
-     *
-     * @return {@code true} if this computation has completed
-     */
     public final boolean isDone() {
         return status < 0;
     }
 
-    /**
-     * Returns {@code true} if this task was cancelled.
-     *
-     * @return {@code true} if this task was cancelled
-     */
     public final boolean isCancelled() {
         return (status & COMPLETION_MASK) == CANCELLED;
     }
@@ -761,15 +748,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     public final boolean isCompletedNormally() {
         return (status & COMPLETION_MASK) == NORMAL;
-    }
-
-    /**
-     * Returns {@code true} if this task threw an exception.
-     *
-     * @return {@code true} if this task threw an exception
-     */
-    public final boolean isCompletedExceptionally() {
-        return (status & COMPLETION_MASK) == EXCEPTIONAL;
     }
 
     /**
@@ -845,13 +823,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Possibly executes other tasks until this task is ready, then
-     * returns the result of the computation.  This method may be more
-     * efficient than {@code join}, but is only applicable when
-     * there are no potential dependencies between continuation of the
-     * current task and that of any other task that might be executed
-     * while helping. (This usually holds for pure divide-and-conquer
-     * tasks).
+     * Possibly executes other tasks until this task {@link #isDone is
+     * done}, then returns the result of the computation.  This method
+     * may be more efficient than {@code join}, but is only applicable
+     * when there are no potential dependencies between continuation
+     * of the current task and that of any other task that might be
+     * executed while helping. (This usually holds for pure
+     * divide-and-conquer tasks).
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method
@@ -869,9 +847,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Possibly executes other tasks until this task is ready.  This
-     * method may be useful when processing collections of tasks when
-     * some have been cancelled or otherwise known to have aborted.
+     * Possibly executes other tasks until this task {@link #isDone is
+     * done}.  This method may be useful when processing collections
+     * of tasks when some have been cancelled or otherwise known to
+     * have aborted.
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method

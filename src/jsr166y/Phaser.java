@@ -535,7 +535,7 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given phase
-     * value, or returns immediately if current phase of the barrier
+     * value, or returns immediately if the current phase of the barrier
      * is not equal to the given phase value or this barrier is
      * terminated.
      *

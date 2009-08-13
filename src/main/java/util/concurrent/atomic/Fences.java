@@ -29,21 +29,20 @@ import java.lang.reflect.*;
  * and a read.  Method {@code orderReads} is used to enforce order
  * between two reads with respect to other {@code orderWrites} and/or
  * {@code orderAccesses} invocations.  Each method accepts and returns
- * a {@code ref} argument.  Effects are specified in terms of accesses
- * to any field (or if an array, array element) of the denoted object
- * using {@code ref}. These methods specify relationships among
- * accesses, not the accesses themselves.  Invocations must be placed
- * <em>between</em> accesses performed in expression evaluations and
- * assignment statements to control the orderings of prior versus
- * subsequent accesses appearing in program order. (As illustrated
- * below, these methods return their arguments to simplify correct
- * usage in these contexts.)  The methods provide platform-independent
- * ordering guarantees that are honored by all levels of a platform
- * (compilers, systems, processors).  The use of these methods may
- * result in the suppression of otherwise valid compiler
- * transformations and optimizations that could visibly violate the
- * specified orderings, and may or may not entail the use of
- * processor-level "memory barrier" instructions.
+ * a {@code ref} argument, and controls ordering with respect to
+ * accesses to the denoted object using {@code ref}. These methods
+ * specify relationships among accesses, not the accesses themselves.
+ * Invocations must be placed <em>between</em> accesses performed in
+ * expression evaluations and assignment statements to control the
+ * orderings of prior versus subsequent accesses appearing in program
+ * order. (As illustrated below, these methods return their arguments
+ * to simplify correct usage in these contexts.)  The methods provide
+ * platform-independent ordering guarantees that are honored by all
+ * levels of a platform (compilers, systems, processors).  The use of
+ * these methods may result in the suppression of otherwise valid
+ * compiler transformations and optimizations that could visibly
+ * violate the specified orderings, and may or may not entail the use
+ * of processor-level "memory barrier" instructions.
  *
  * <p><b>Ordering Semantics.</b> Informal descriptions of ordering
  * methods are provided in method specifications and the usage
@@ -62,16 +61,15 @@ import java.lang.reflect.*;
  *
  *     <li><em>ref</em>, a reference to an object,
  *
- *     <li><em>fw</em>, an invocation of {@code orderWrites(ref)} or
+ *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or
  *       {@code orderAccesses(ref)},
  *
- *     <li><em>w</em>, a write to a field or element of the object denoted
- *       by <em>ref</em>, where <em>fw</em> precedes <em>w</em> in program
+ *     <li><em>w</em>, a write that follows <em>wf</em> in program
  *       order,
  *
  *     <li> <em>r</em>, a read that sees write <em>w</em>,
  *
- *     <li> <em>fr</em>, taking either of two forms:
+ *     <li> <em>rf</em>, taking either of two forms:
  *
  *      <ul COMPACT>
  *
@@ -90,9 +88,9 @@ import java.lang.reflect.*;
  *
  *   <ul COMPACT>
  *
- *     <li> <em>fw happens-before fr</em> and,
+ *     <li> <em>wf happens-before rf</em>, and
  *
- *     <li> <em>fw</em> precedes <em>fr</em> in the
+ *     <li> <em>wf</em> precedes <em>rf</em> in the
  *          <em>synchronization order</em>.
  *
  *   </ul>
@@ -135,21 +133,19 @@ import java.lang.reflect.*;
  * Here, the invocation of {@code orderWrites} makes sure that the
  * effects of the widget assignment are ordered before those of any
  * (unknown) subsequent stores of {@code h} in other variables that
- * make {@code h} available for use by other objects. Notice that this
- * method observes the care required for final fields: It does not
- * internally "leak" the reference by using it as an argument to a
- * callback method or adding it to a static data structure. If such
- * functionality were required, it may be possible to cope using more
- * extensive sets of fences, or as a normally better choice, using
- * synchronization (locking).
- *
- * <p>Notice that because {@code final} could not be used here, the
- * compiler and JVM cannot help you ensure that the field is set
- * correctly across all usages.  Initialization sequences using {@code
- * orderWrites} may require more care than those involving {@code
- * final} fields: You must fully initialize objects <em>before</em>
- * the {@code orderWrites} invocation that makes references to them
- * safe to assign to accessible variables.
+ * make {@code h} available for use by other objects.  Because {@code
+ * final} could not be used here, the compiler and JVM cannot help
+ * ensure that the field is set correctly across all usages.  Still,
+ * this method must observe the care required for final fields: It
+ * does not internally "leak" the reference by using it as an argument
+ * to a callback method or adding it to a static data structure.
+ * Initialization sequences using {@code orderWrites} may require more
+ * care than those involving {@code final} fields: You must fully
+ * initialize objects <em>before</em> the {@code orderWrites}
+ * invocation that makes references to them safe to assign to
+ * accessible variables.  If less constrained usages were required, it
+ * may be possible to cope using more extensive sets of fences, or as
+ * a normally better choice, using synchronization (locking).
  *
  * <p>An alternative approach is to place similar mechanics in the
  * (sole) method that makes such objects available for use by others.
@@ -175,8 +171,6 @@ import java.lang.reflect.*;
  * would publish objects using a thread-safe collection that itself
  * guarantees the expected ordering relations. However, it may come
  * into play in the construction of such classes themselves.
- *
- *
  *
  * <p><b>Emulating {@code volatile} access.</b> Outside of the
  * initialization idioms illustrated above, Fence methods ordering
@@ -398,11 +392,10 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that accesses (reads or writes) of the
-     * fields (or if an array, elements) of the denoted object using
-     * the given reference prior to the invocation of this method
-     * occur before subsequent writes. For details, see the class
-     * documentation for this class.
+     * Informally: Ensures that accesses (reads or writes) to the
+     * denoted object using the given reference prior to the
+     * invocation of this method occur before subsequent writes. For
+     * details, see the class documentation for this class.
      *
      * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
@@ -414,11 +407,10 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that accesses (reads or writes) of the
-     * fields (or if an array, elements) of the denoted object using
-     * the given reference prior to the invocation of this method
-     * occur before subsequent accesses.  For details, see the class
-     * documentation for this class.
+     * Informally: Ensures that accesses (reads or writes) to the
+     * denoted object using the given reference prior to the
+     * invocation of this method occur before subsequent accesses.
+     * For details, see the class documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
      * @return a reference to the same object as ref

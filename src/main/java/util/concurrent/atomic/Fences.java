@@ -8,10 +8,9 @@ package java.util.concurrent.atomic;
 import java.lang.reflect.*;
 
 /**
- * A set of methods providing fine-grained control over
- * happens-before and synchronization order relations (as defined in
- * The Java Language Specification, chapter 17) among accesses
- * (i.e., reads or writes) to variables.
+ * A set of methods providing fine-grained control over happens-before
+ * and synchronization order relations among reads and/or writes to
+ * variables.
  *
  * <p> This class is designed for use in uncommon situations where
  * declaring variables {@code volatile} or {@code final}, using
@@ -23,53 +22,88 @@ import java.lang.reflect.*;
  * arranging some of the ordering properties associated with {@code
  * volatile}, etc.
  *
- * <p>There are three methods for controlling ordering relations among
- * memory accesses: Method {@code orderReads} is used to enforce order
- * between two reads. Method {@code orderWrites} is normally used
- * between two writes, and {@code orderAccesses} between a write and a
- * read.  These methods specify relationships among accesses, not the
- * accesses themselves. Invocations must be placed <em>between</em>
- * accesses that load or store variables (i.e., those typically
- * performed in expression evaluations and assignment statements) to
- * control the orderings of preceding versus subsequent accesses
- * appearing in program order. Fence methods do not control any other
- * properties of those accesses themselves, which in some usage
- * scenarios may be unknown to you, so correctness may be context
- * dependent. The methods provide platform-independent ordering
- * guarantees that are honored by all levels of a platform (compilers,
- * systems, processors).  The use of these methods may result in the
- * suppression of otherwise valid compiler transformations and
- * optimizations that could visibly violate the specified orderings,
- * and may or may not entail the use of processor-level "memory
- * barrier" instructions.
+ * <p><b>Memory Ordering.</b> There are three methods for controlling
+ * ordering relations among memory accesses (i.e., reads and
+ * writes). Method {@code orderWrites} is normally used to enforce
+ * order between two writes, and {@code orderAccesses} between a write
+ * and a read.  Method {@code orderReads} is used to enforce order
+ * between two reads with respect to other {@code orderWrites} and/or
+ * {@code orderAccesses} invocations.  Each method accepts and returns
+ * a {@code ref} argument.  Effects are specified in terms of accesses
+ * to any field (or if an array, array element) of the denoted object
+ * using {@code ref}. These methods specify relationships among
+ * accesses, not the accesses themselves.  Invocations must be placed
+ * <em>between</em> accesses performed in expression evaluations and
+ * assignment statements to control the orderings of prior versus
+ * subsequent accesses appearing in program order. (As illustrated
+ * below, these methods return their arguments to simplify correct
+ * usage in these contexts.)  The methods provide platform-independent
+ * ordering guarantees that are honored by all levels of a platform
+ * (compilers, systems, processors).  The use of these methods may
+ * result in the suppression of otherwise valid compiler
+ * transformations and optimizations that could visibly violate the
+ * specified orderings, and may or may not entail the use of
+ * processor-level "memory barrier" instructions.
  *
- * <p>Each method accepts and returns a {@code ref} argument
- * controlling the <em>scope</em> of ordering guarantees.  The scope
- * of {@code ref} includes accesses to {@code ref} itself, as well as
- * any field (or if an array, array element) directly reachable using
- * ref at the point of invocation of the method. More formally, the
- * scope corresponds to any access <em>a</em> obeying the The Java
- * Language Specification section 17.5.1 relation
- * <em>dereferences(ref, a)</em>, where the <em>dereferences</em>
- * relation is defined as: For a read action r, and an action a that
- * reads or writes object o in thread t, dereferences(r, a) holds iff
- * t did not initialize o, and a accesses the object (o) returned by
- * r.
+ * <p><b>Ordering Semantics.</b> Informal descriptions of ordering
+ * methods are provided in method specifications and the usage
+ * examples below.  More formally, using the terminology of The Java
+ * Language Specification chapter 17, the two rules governing their
+ * semantics are as follows:
  *
- * <p>It is good practice for scope arguments to designate the
- * narrowest applicable scopes. An invocation inside a method of a
- * class accessing its own fields will normally have the scope of
- * {@code this}. For arrays, the scope is normally the array
- * object. Usages should be restricted to the control of strictly
- * internal implementation matters inside a class or package, and must
- * avoid any consequent violations of ordering or safety properties
- * expected by users of a class employing them.
+ * <ol>
  *
- * <p>Additionally, method {@code reachabilityFence} establishes
- * an ordering for strong reachability (as defined in the {@link
- * java.lang.ref} package specification) with respect to garbage
- * collection.  Method {@code reachabilityFence} differs from the
- * others in that it controls relations that are otherwise only
+ *   <li>Every invocation of {@code orderAccesses} is an element of the
+ *   <em>synchronization order</em>.
+ *
+ *   <li>Given:
+ *
+ *   <ul COMPACT>
+ *     
+ *     <li><em>ref</em>, a reference to an object,
+ *
+ *     <li><em>fw</em>, an invocation of {@code orderWrites(ref)} or
+ *       {@code orderAccesses(ref)}, 
+ *
+ *     <li><em>w</em>, a write to a field or element of the object denoted
+ *       by <em>ref</em>, where <em>fw</em> precedes <em>w</em> in program
+ *       order, 
+ *
+ *     <li> <em>r</em>, a read that sees write <em>w</em>,
+ *
+ *     <li> <em>fr</em>, taking either of two forms:
+ *
+ *      <ul COMPACT> 
+ *
+ *       <li> an invocation of {@code orderReads(ref)} or {@code
+ *        orderAccesses(ref)} following <em>r</em> in program order, or
+ *
+ *       <li> if <em>r</em> is the initial read of ref by thread
+ *        <em>t</em>, a program point following <em>r</em> but prior to
+ *        any other read by <em>t</em>.
+ *
+ *      </ul>
+ *
+ *   </ul> 
+ *
+ *    then:
+ *
+ *   <ul COMPACT> 
+ *
+ *     <li> <em>fw happens-before fr</em> and,
+ *
+ *     <li> <em>fw</em> precedes <em>fr</em> in the 
+ *          <em>synchronization order</em>.
+ *
+ *   </ul>
+ *
+ * </ol>
+ *
+ * <p><b>Reachability.</b> Method {@code reachabilityFence}
+ * establishes an ordering for strong reachability (as defined in the
+ * {@link java.lang.ref} package specification) with respect to
+ * garbage collection.  Method {@code reachabilityFence} differs from
+ * the others in that it controls relations that are otherwise only
  * implicit in a program -- the reachability conditions triggering
  * garbage collection. As illustrated in the sample usages below, this
  * method is applicable only when reclamation may have visible
@@ -94,7 +128,7 @@ import java.lang.reflect.*;
  *     WidgetHolder h = new WidgetHolder();
  *     h.widget = new Widget(params);
  *     return Fences.orderWrites(h);
- *   }
+ *  }
  * }
  * </pre>
  *
@@ -107,9 +141,15 @@ import java.lang.reflect.*;
  * callback method or adding it to a static data structure. If such
  * functionality were required, it may be possible to cope using more
  * extensive sets of fences, or as a normally better choice, using
- * synchronization (locking).  Notice also that because {@code final}
- * could not be used here, the compiler and JVM cannot help you ensure
- * that the field is set correctly across all usages.
+ * synchronization (locking).  
+ *
+ * <p>Notice that because {@code final} could not be used here, the
+ * compiler and JVM cannot help you ensure that the field is set
+ * correctly across all usages.  Initialization sequences using {@code
+ * orderWrites} may require more care than those involving {@code
+ * final} fields: You must fully initialize objects <em>before</em>
+ * the {@code orderWrites} invocation that makes references to them
+ * safe to assign to accessible variables.
  *
  * <p>An alternative approach is to place similar mechanics in the
  * (sole) method that makes such objects available for use by others.
@@ -136,9 +176,13 @@ import java.lang.reflect.*;
  * guarantees the expected ordering relations. However, it may come
  * into play in the construction of such classes themselves.
  *
- * <p><b>Emulating {@code volatile} access.</b> Suppose there is an
- * accessible variable that should have been declared as
- * {@code volatile} but wasn't:
+ * 
+ *
+ * <p><b>Emulating {@code volatile} access.</b> Outside of the
+ * initialization idioms illustrated above, Fence methods ordering
+ * writes must be paired with those ordering reads.  Suppose there is
+ * an accessible variable that should have been declared as {@code
+ * volatile} but wasn't:
  *
  * <pre>
  * class C { Object data;  ...  }
@@ -176,12 +220,12 @@ import java.lang.reflect.*;
  * <p><b>Acquire/Release management of threadsafe objects</b>. It may
  * be possible to use weaker conventions for volatile-like variables
  * when they are used to keep track of objects that fully manage their
- * own thread-safety and synchronization.  Here, a {@code
- * memoryAcquire} operation remains the same as a volatile-read, but a
- * {@code memoryRelease} differs by virtue of not itself ensuring an
- * ordering of its write with subsequent reads, because the required
- * effects are already ensured by the referenced objects.  For
- * example:
+ * own thread-safety and synchronization.  Here, an acquiring read
+ * operation remains the same as a volatile-read, but a releasing
+ * write differs by virtue of not itself ensuring an ordering of its
+ * write with subsequent reads, because the required effects are
+ * already ensured by the referenced objects.  
+ * For example:
  *
  * <pre>
  * class Item {
@@ -198,17 +242,20 @@ import java.lang.reflect.*;
  *   void releaseItem(Item x) {
  *      item = Fences.orderWrites(x);
  *   }
- *
+ *   
  *   // ...
  * }
  * </pre>
  *
- * As is the case with most applications of fence methods, correctness
- * relies on the usage context -- here, the thread safety of {@code
- * Item}, as well as the lack of need for full volatile semantics
- * inside this class itself. However, the second concern means that
- * can be difficult to extend the {@code ItemHolder} class in this
- * example to be more useful.
+ * Because this construction avoids use of {@code orderAccesses},
+ * which is typically more costly than the other fence methods, it may
+ * result in better performance than using {@code volatile} or its
+ * emulation. However, as is the case with most applications of fence
+ * methods, correctness relies on the usage context -- here, the
+ * thread safety of {@code Item}, as well as the lack of need for full
+ * volatile semantics inside this class itself. However, the second
+ * concern means that can be difficult to extend the {@code
+ * ItemHolder} class in this example to be more useful.
  *
  * <p><b>Avoiding premature finalization.</b> Finalization may occur
  * whenever a Java Virtual Machine detects that no reference to an
@@ -280,7 +327,7 @@ import java.lang.reflect.*;
  *     Resource.update(getExternalResource());
  *   }
  *   private ExternalResource getExternalResource() {
- *     ExternalResource extRes = externalResourceArray[myIndex];
+ *     ExternalResource ext = externalResourceArray[myIndex];
  *     Fences.reachabilityFence(this);
  *     return ext;
  *   }
@@ -326,7 +373,7 @@ public class Fences {
     private Fences() {} // Non-instantiable
 
     /*
-     * The methods of this class are intended to be intrinsified by a
+     * The methods of this class are intended to be intrinisified by a
      * JVM. However, we provide correct but inefficient Java-level
      * code that simply reads and writes a static volatile
      * variable. Without JVM support, the consistency effects are
@@ -336,18 +383,11 @@ public class Fences {
     private static volatile int theVolatile;
 
     /**
-     * Informally: Ensures that, within the scope of the given
-     * reference, reads prior to the invocation of this method
-     * occur before subsequent reads.
-     *
-     * <p>More formally, using the terminology of the Java Language
-     * Specification, given a write <em>w</em>, a read <em>r1</em>
-     * such that <em>dereferences(ref, r1)</em> and <em>r1</em> sees
-     * the write <em>w</em>, and an invocation of {@code
-     * orderReads(ref)} <em>f</em> such that <em>r1 happens-before
-     * f</em>, and read <em>r2</em> such that <em>f happens-before
-     * r2</em> and <em>dereferences(ref, r1)</em>, then the value of
-     * <em>r2</em> is constrained by <em>w happens-before r2</em>.
+     * Informally: Ensures that reads prior to the invocation of this
+     * method occur before subsequent reads, relative to other
+     * invocations of {@link #orderWrites} and/or {@link
+     * #orderAccesses} for the given reference. For details, see the
+     * class documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
      * @return a reference to the same object as ref
@@ -358,20 +398,11 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that, within the scope of the given
-     * reference, accesses prior to the invocation of this method occur
-     * before subsequent writes.
-     *
-     * <p>More formally, using the terminology of the Java Language
-     * Specification (especially section 17.5.1), given an access
-     * <em>b</em> such that <em>dereferences(ref, b)</em>, an
-     * invocation of {@code orderWrites(ref)} <em>f</em> such that
-     * <em>b happens-before f</em>, an access <em>a</em> such that
-     * <em>f happens-before a</em>, a read <em>r1</em> in the
-     * <em>memory chain</em> <em>mc(a, r1)</em>, and a read
-     * <em>r2</em> such that <em>dereferences(r1, r2)</em> (where r1
-     * and r2 may be the same), then the value for <em>r2</em> is
-     * constrained by the relation <em>b happens-before r2</em>.
+     * Informally: Ensures that accesses (reads or writes) of the
+     * fields (or if an array, elements) of the denoted object using
+     * the given reference prior to the invocation of this method
+     * occur before subsequent writes. For details, see the class
+     * documentation for this class.
      *
      * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
@@ -383,19 +414,12 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that, within the scope of the given
-     * reference, accesses (reads or writes) prior to the invocation
-     * of this method occur before subsequent accesses.
-     *
-     * <p>More formally, using the terminology of the Java Language
-     * Specification (see especially section 17.4.4), given a write
-     * <em>w</em> such that <em>dereferences(ref, w)</em>, an
-     * invocation of {@code orderAccesses(ref)} <em>f</em> such that
-     * <em>w happens-before f</em>, and a read <em>r</em> such that
-     * such that <em>f happens-before r</em>, and
-     * <em>dereferences(ref, r)</em>, then <em>w synchronizes-with
-     * r</em>.
-     *
+     * Informally: Ensures that accesses (reads or writes) of the
+     * fields (or if an array, elements) of the denoted object using
+     * the given reference prior to the invocation of this method
+     * occur before subsequent accesses.  For details, see the class
+     * documentation for this class.
+     * 
      * @param ref the reference. If null, this method has no effect.
      * @return a reference to the same object as ref
      */

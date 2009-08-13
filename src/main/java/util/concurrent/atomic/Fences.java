@@ -59,40 +59,40 @@ import java.lang.reflect.*;
  *   <li>Given:
  *
  *   <ul COMPACT>
- *     
+ *
  *     <li><em>ref</em>, a reference to an object,
  *
  *     <li><em>fw</em>, an invocation of {@code orderWrites(ref)} or
- *       {@code orderAccesses(ref)}, 
+ *       {@code orderAccesses(ref)},
  *
  *     <li><em>w</em>, a write to a field or element of the object denoted
  *       by <em>ref</em>, where <em>fw</em> precedes <em>w</em> in program
- *       order, 
+ *       order,
  *
  *     <li> <em>r</em>, a read that sees write <em>w</em>,
  *
  *     <li> <em>fr</em>, taking either of two forms:
  *
- *      <ul COMPACT> 
+ *      <ul COMPACT>
  *
  *       <li> an invocation of {@code orderReads(ref)} or {@code
  *        orderAccesses(ref)} following <em>r</em> in program order, or
  *
- *       <li> if <em>r</em> is the initial read of ref by thread
- *        <em>t</em>, a program point following <em>r</em> but prior to
- *        any other read by <em>t</em>.
+ *       <li> a program point following the initial read obtaining
+ *        value <em>ref</em> by some thread <em>t</em>,
+ *        but prior to any other read by <em>t</em>.
  *
  *      </ul>
  *
- *   </ul> 
+ *   </ul>
  *
  *    then:
  *
- *   <ul COMPACT> 
+ *   <ul COMPACT>
  *
  *     <li> <em>fw happens-before fr</em> and,
  *
- *     <li> <em>fw</em> precedes <em>fr</em> in the 
+ *     <li> <em>fw</em> precedes <em>fr</em> in the
  *          <em>synchronization order</em>.
  *
  *   </ul>
@@ -141,7 +141,7 @@ import java.lang.reflect.*;
  * callback method or adding it to a static data structure. If such
  * functionality were required, it may be possible to cope using more
  * extensive sets of fences, or as a normally better choice, using
- * synchronization (locking).  
+ * synchronization (locking).
  *
  * <p>Notice that because {@code final} could not be used here, the
  * compiler and JVM cannot help you ensure that the field is set
@@ -176,7 +176,7 @@ import java.lang.reflect.*;
  * guarantees the expected ordering relations. However, it may come
  * into play in the construction of such classes themselves.
  *
- * 
+ *
  *
  * <p><b>Emulating {@code volatile} access.</b> Outside of the
  * initialization idioms illustrated above, Fence methods ordering
@@ -224,7 +224,7 @@ import java.lang.reflect.*;
  * operation remains the same as a volatile-read, but a releasing
  * write differs by virtue of not itself ensuring an ordering of its
  * write with subsequent reads, because the required effects are
- * already ensured by the referenced objects.  
+ * already ensured by the referenced objects.
  * For example:
  *
  * <pre>
@@ -242,7 +242,7 @@ import java.lang.reflect.*;
  *   void releaseItem(Item x) {
  *      item = Fences.orderWrites(x);
  *   }
- *   
+ *
  *   // ...
  * }
  * </pre>
@@ -419,7 +419,7 @@ public class Fences {
      * the given reference prior to the invocation of this method
      * occur before subsequent accesses.  For details, see the class
      * documentation for this class.
-     * 
+     *
      * @param ref the reference. If null, this method has no effect.
      * @return a reference to the same object as ref
      */

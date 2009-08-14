@@ -5,52 +5,52 @@
  */
 
 package java.util.concurrent.atomic;
-import java.lang.reflect.*;
 
 /**
  * A set of methods providing fine-grained control over happens-before
- * and synchronization order relations among reads and/or writes to
- * variables.
- *
- * <p> This class is designed for use in uncommon situations where
- * declaring variables {@code volatile} or {@code final}, using
+ * and synchronization order relations among reads and/or writes.  The
+ * methods of this class are designed for use in uncommon situations
+ * where declaring variables {@code volatile} or {@code final}, using
  * instances of atomic classes, using {@code synchronized} blocks or
  * methods, or using other synchronization facilities are not possible
- * or do not provide the desired control over ordering.  Fence methods
- * should be used only when these alternatives do not apply.  Usages
- * almost always take one of the forms illustrated in examples below,
- * arranging some of the ordering properties associated with {@code
- * volatile}, etc.
+ * or do not provide the desired control.
  *
  * <p><b>Memory Ordering.</b> There are three methods for controlling
  * ordering relations among memory accesses (i.e., reads and
- * writes). Method {@code orderWrites} is normally used to enforce
+ * writes). Method {@code orderWrites} is typically used to enforce
  * order between two writes, and {@code orderAccesses} between a write
  * and a read.  Method {@code orderReads} is used to enforce order
  * between two reads with respect to other {@code orderWrites} and/or
- * {@code orderAccesses} invocations.  Each method accepts and returns
- * a {@code ref} argument, and controls ordering with respect to
- * accesses to the denoted object using {@code ref}. These methods
- * specify relationships among accesses, not the accesses themselves.
+ * {@code orderAccesses} invocations.  These methods provide
+ * platform-independent guarantees that are honored by all levels of a
+ * platform (compilers, systems, processors).  The use of these
+ * methods may result in the suppression of otherwise valid compiler
+ * transformations and optimizations that could visibly violate the
+ * specified orderings, and may or may not entail the use of
+ * processor-level "memory barrier" instructions.
+ *
+ * <p>Each ordering method accepts a {@code ref} argument, and
+ * controls ordering among accesses with respect to this reference.
  * Invocations must be placed <em>between</em> accesses performed in
  * expression evaluations and assignment statements to control the
  * orderings of prior versus subsequent accesses appearing in program
- * order. (As illustrated below, these methods return their arguments
- * to simplify correct usage in these contexts.)  The methods provide
- * platform-independent ordering guarantees that are honored by all
- * levels of a platform (compilers, systems, processors).  The use of
- * these methods may result in the suppression of otherwise valid
- * compiler transformations and optimizations that could visibly
- * violate the specified orderings, and may or may not entail the use
- * of processor-level "memory barrier" instructions.
+ * order. These methods also return their arguments to simplify
+ * correct usage in these contexts.
+ *
+ * <p>Usages of ordering methods almost always take one of the forms
+ * illustrated in the examples below.  These idioms arrange some of
+ * the ordering properties associated with {@code volatile} and
+ * related language-based constructions, but without other
+ * compile-time and runtime benefits that make language-based
+ * constructions far better choices when they are applicable.
  *
  * <p><b>Ordering Semantics.</b> Informal descriptions of ordering
- * methods are provided in method specifications and the usage
- * examples below.  More formally, using the terminology of The Java
- * Language Specification chapter 17, the two rules governing their
- * semantics are as follows:
+ * methods are provided in method specifications and usage examples
+ * below.  More formally, using the terminology of The Java Language
+ * Specification chapter 17, the two rules governing their semantics
+ * are as follows:
  *
- * <ol>
+ * <ol COMPACT>
  *
  *   <li>Every invocation of {@code orderAccesses} is an element of the
  *   <em>synchronization order</em>.
@@ -78,7 +78,7 @@ import java.lang.reflect.*;
  *
  *       <li> a program point following the initial read obtaining
  *        value <em>ref</em> by some thread <em>t</em>,
- *        but prior to any other read by <em>t</em>.
+ *        but prior to any other read by <em>t</em> using <em>ref</em>.
  *
  *      </ul>
  *
@@ -109,7 +109,7 @@ import java.lang.reflect.*;
  * 12.6 of the Java Language Specification) that are implemented in
  * ways that rely on ordering control for correctness.
  *
- * <p><b>Sample Usages.</b>
+ * <p><b>Sample Usages</b>
  *
  * <p><b>Emulating {@code final}.</b> With care, method {@code
  * orderWrites} may be used to obtain the memory safety effects of
@@ -130,22 +130,23 @@ import java.lang.reflect.*;
  * }
  * </pre>
  *
- * Here, the invocation of {@code orderWrites} makes sure that the
+ * Here, the invocation of {@code orderWrites} ensures that the
  * effects of the widget assignment are ordered before those of any
  * (unknown) subsequent stores of {@code h} in other variables that
- * make {@code h} available for use by other objects.  Because {@code
- * final} could not be used here, the compiler and JVM cannot help
- * ensure that the field is set correctly across all usages.  Still,
- * this method must observe the care required for final fields: It
- * does not internally "leak" the reference by using it as an argument
- * to a callback method or adding it to a static data structure.
- * Initialization sequences using {@code orderWrites} may require more
- * care than those involving {@code final} fields: You must fully
- * initialize objects <em>before</em> the {@code orderWrites}
- * invocation that makes references to them safe to assign to
- * accessible variables.  If less constrained usages were required, it
- * may be possible to cope using more extensive sets of fences, or as
- * a normally better choice, using synchronization (locking).
+ * make {@code h} available for use by other objects.  Initialization
+ * sequences using {@code orderWrites} require more care than those
+ * involving {@code final} fields.  When {@code final} is not used,
+ * compilers cannot help you to ensure that the field is set correctly
+ * across all usages.  You must fully initialize objects
+ * <em>before</em> the {@code orderWrites} invocation that makes
+ * references to them safe to assign to accessible variables. Further,
+ * initialization sequences must not internally "leak" the reference
+ * by using it as an argument to a callback method or adding it to a
+ * static data structure.  If less constrained usages were required,
+ * it may be possible to cope using more extensive sets of fences, or
+ * as a normally better choice, using synchronization (locking).
+ * Conversely, if it were possible to do so, the best option would be
+ * to rewrite class {@code WidgetHolder} to use {@code final}.
  *
  * <p>An alternative approach is to place similar mechanics in the
  * (sole) method that makes such objects available for use by others.
@@ -163,14 +164,14 @@ import java.lang.reflect.*;
  * }
  * </pre>
  *
- * In this case, the {@code orderWrites} occurs before the store
- * making the object available. Correctness again relies on ensuring
- * that there are no leaks prior to invoking this method, and that it
- * really is the <em>only</em> means of accessing the published
- * object.  This approach is not often applicable -- normally you
- * would publish objects using a thread-safe collection that itself
- * guarantees the expected ordering relations. However, it may come
- * into play in the construction of such classes themselves.
+ * In this case, the {@code orderWrites} invocation occurs before the
+ * store making the object available. Correctness again relies on
+ * ensuring that there are no leaks prior to invoking this method, and
+ * that it really is the <em>only</em> means of accessing the
+ * published object.  This approach is not often applicable --
+ * normally you would publish objects using a thread-safe collection
+ * that itself guarantees the expected ordering relations. However, it
+ * may come into play in the construction of such classes themselves.
  *
  * <p><b>Emulating {@code volatile} access.</b> Outside of the
  * initialization idioms illustrated above, Fence methods ordering
@@ -248,7 +249,7 @@ import java.lang.reflect.*;
  * methods, correctness relies on the usage context -- here, the
  * thread safety of {@code Item}, as well as the lack of need for full
  * volatile semantics inside this class itself. However, the second
- * concern means that can be difficult to extend the {@code
+ * concern means that it can be difficult to extend the {@code
  * ItemHolder} class in this example to be more useful.
  *
  * <p><b>Avoiding premature finalization.</b> Finalization may occur
@@ -295,19 +296,18 @@ import java.lang.reflect.*;
  * }
  * </pre>
  *
- * Notice the nonintuitive placement of the call to
- * {@code reachabilityFence}.  It is placed <em>after</em> the
- * call to {@code update}, to ensure that the array slot is not
- * nulled out by {@link Object#finalize} before the update, even if
- * the call to {@code action} was last use of this object. This
- * might be the case if for example a usage in a user program had the
- * form {@code new Resource().action();} which retains no other
- * reference to this Resource.  While probably overkill here,
- * {@code reachabilityFence} is placed in a {@code finally}
- * block to ensure that it is invoked across all paths in the method.
- * In a method with more complex control paths, you might need further
- * precautions to ensure that {@code reachabilityFence} is
- * encountered along all of them.
+ * Here, the call to {@code reachabilityFence} is nonintuitively
+ * placed <em>after</em> the call to {@code update}, to ensure that
+ * the array slot is not nulled out by {@link Object#finalize} before
+ * the update, even if the call to {@code action} was the last use of
+ * this object. This might be the case if for example a usage in a
+ * user program had the form {@code new Resource().action();} which
+ * retains no other reference to this Resource.  While probably
+ * overkill here, {@code reachabilityFence} is placed in a {@code
+ * finally} block to ensure that it is invoked across all paths in the
+ * method.  In a method with more complex control paths, you might
+ * need further precautions to ensure that {@code reachabilityFence}
+ * is encountered along all of them.
  *
  * <p>It is sometimes possible to better encapsulate use of
  * {@code reachabilityFence}. Continuing the above example, if it
@@ -384,7 +384,7 @@ public class Fences {
      * class documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
-     * @return a reference to the same object as ref
+     * @return the given ref, to simplify usage
      */
     public static <T> T orderReads(T ref) {
         int ignore = theVolatile;
@@ -392,14 +392,14 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that accesses (reads or writes) to the
-     * denoted object using the given reference prior to the
-     * invocation of this method occur before subsequent writes. For
-     * details, see the class documentation for this class.
+     * Informally: Ensures that, with respect to the given reference,
+     * accesses (reads or writes) prior to the invocation of this
+     * method occur before subsequent writes. For details, see the
+     * class documentation for this class.
      *
      * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
-     * @return a reference to the same object as ref
+     * @return the given ref, to simplify usage
      */
     public static <T> T orderWrites(T ref) {
         theVolatile = 0;
@@ -407,13 +407,13 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that accesses (reads or writes) to the
-     * denoted object using the given reference prior to the
-     * invocation of this method occur before subsequent accesses.
-     * For details, see the class documentation for this class.
+     * Informally: Ensures that, with respect to the given reference,
+     * accesses (reads or writes) prior to the invocation of this
+     * method occur before subsequent accesses.  For details, see the
+     * class documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
-     * @return a reference to the same object as ref
+     * @return the given ref, to simplify usage
      */
     public static <T> T orderAccesses(T ref) {
         theVolatile = 0;

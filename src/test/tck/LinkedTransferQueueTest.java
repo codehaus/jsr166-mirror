@@ -545,7 +545,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray contains all elements
+     * toArray() contains all elements
      */
     public void testToArray() throws InterruptedException {
         LinkedTransferQueue q = populatedQueue(SIZE);
@@ -580,7 +580,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatible array type throws CCE
+     * toArray(incompatible array type) throws CCE
      */
     public void testToArray1_BadArg() {
         try {
@@ -692,7 +692,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * poll retrieves elements across Executor threads
+     * timed poll retrieves elements across Executor threads
      */
     public void testPollInExecutor() {
         final LinkedTransferQueue q = new LinkedTransferQueue();
@@ -790,7 +790,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo empties full queue, unblocking a waiting put.
+     * drainTo(c) empties full queue, unblocking a waiting put.
      */
     public void testDrainToWithActivePut() throws InterruptedException {
         final LinkedTransferQueue q = populatedQueue(SIZE);
@@ -855,23 +855,27 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * poll and take decrement the waiting consumer count
+     * timed poll() or take() increments the waiting consumer count;
+     * offer(e) decrements the waiting consumer count
      */
     public void testWaitingConsumer() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();
-        final ConsumerObserver waiting = new ConsumerObserver();
+        assertEquals(q.getWaitingConsumerCount(), 0);
+        assertFalse(q.hasWaitingConsumer());
 
         Thread t = newStartedThread(new CheckedRunnable() {
             void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
                 threadAssertTrue(q.hasWaitingConsumer());
-                waiting.setWaitingConsumer(q.getWaitingConsumerCount());
+                threadAssertEquals(q.getWaitingConsumerCount(), 1);
                 threadAssertTrue(q.offer(new Object()));
+                threadAssertFalse(q.hasWaitingConsumer());
+                threadAssertEquals(q.getWaitingConsumerCount(), 0);
             }});
 
         assertTrue(q.poll(LONG_DELAY_MS, MILLISECONDS) != null);
-        assertTrue(q.getWaitingConsumerCount()
-                   < waiting.getWaitingConsumers());
+        assertEquals(q.getWaitingConsumerCount(), 0);
+        assertFalse(q.hasWaitingConsumer());
         t.join();
     }
 
@@ -1121,8 +1125,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertFalse(q.tryTransfer(five, SHORT_DELAY_MS, MILLISECONDS));
         assertEquals(1, q.size());
         assertEquals(four, q.poll());
-        checkEmpty(q);
         assertNull(q.poll());
+        checkEmpty(q);
     }
 
     private LinkedTransferQueue<Integer> populatedQueue(int n) {
@@ -1135,21 +1139,5 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
         assertFalse(q.isEmpty());
         return q;
-    }
-
-    private static class ConsumerObserver {
-
-        private int waitingConsumers;
-
-        private ConsumerObserver() {
-        }
-
-        private void setWaitingConsumer(int i) {
-            this.waitingConsumers = i;
-        }
-
-        private int getWaitingConsumers() {
-            return waitingConsumers;
-        }
     }
 }

@@ -42,12 +42,16 @@ package java.util.concurrent.atomic;
  * the ordering properties associated with {@code volatile} and
  * related language-based constructions, but without other
  * compile-time and runtime benefits that make language-based
- * constructions far better choices when they are applicable.
+ * constructions far better choices when they are applicable.  Usages
+ * should be is restricted to the control of strictly internal
+ * implementation matters inside a class or package, and must either
+ * avoid or document any consequent violations of ordering or safety
+ * properties expected by users of a class employing them.
  *
  * <p><b>Ordering Semantics.</b> Informal descriptions of ordering
  * methods are provided in method specifications and usage examples
  * below.  More formally, using the terminology of The Java Language
- * Specification chapter 17, the two rules governing their semantics
+ * Specification chapter 17, the rules governing their semantics
  * are as follows:
  *
  * <ol COMPACT>
@@ -61,26 +65,17 @@ package java.util.concurrent.atomic;
  *
  *     <li><em>ref</em>, a reference to an object,
  *
- *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or
- *       {@code orderAccesses(ref)},
+ *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or,
+ *       (for some reference <em>p</em>) {@code orderAccesses(p)},
  *
- *     <li><em>w</em>, a write that follows <em>wf</em> in program
- *       order,
+ *     <li><em>w</em>, a write that follows <em>wf</em>
+ *         in program order,
  *
  *     <li> <em>r</em>, a read that sees write <em>w</em>,
  *
- *     <li> <em>rf</em>, taking either of two forms:
- *
- *      <ul COMPACT>
- *
- *       <li> an invocation of {@code orderReads(ref)} or {@code
- *        orderAccesses(ref)} following <em>r</em> in program order, or
- *
- *       <li> a program point following the initial read obtaining
- *        value <em>ref</em> by some thread <em>t</em>,
- *        but prior to any other read by <em>t</em> using <em>ref</em>.
- *
- *      </ul>
+ *     <li> <em>rf</em>, an invocation of {@code orderReads(ref)} or
+ *       (for some reference <em>q</em>) {@code orderAccesses(q)},
+ *       following <em>r</em> in program order.
  *
  *   </ul>
  *
@@ -93,6 +88,36 @@ package java.util.concurrent.atomic;
  *     <li> <em>wf</em> precedes <em>rf</em> in the
  *          <em>synchronization order</em>.
  *
+ *   </ul>
+ *
+ *   <li>Given:
+ *
+ *   <ul COMPACT>
+ *
+ *     <li><em>ref</em>, a reference to an object,
+ *
+ *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or,
+ *       (for some reference <em>p</em>) {@code orderAccesses(p)},
+ *
+ *     <li><em>w</em>, a write of <em>ref</em> that follows <em>wf</em>
+ *         in program order,
+ *
+ *     <li> <em>r</em>, a read that sees write <em>w</em>, where
+ *         <em>r</em> is the first by some thread
+ *         <em>t</em> that sees value <em>ref</em>,
+ *
+ *
+ *     <li> <em>d</em>, a read using <em>r</em> to access a
+ *          field (or if array, an element) of the referenced object.
+ *
+ *   </ul>
+ *
+ *    then:
+ *
+ *   <ul COMPACT>
+ *
+ *     <li> the value seen by <em>d</em> is constrained
+ *          by the relation <em>wf happens-before d</em>.
  *   </ul>
  *
  * </ol>
@@ -327,38 +352,17 @@ package java.util.concurrent.atomic;
  *   }
  * </pre>
  *
- * <p>Further continuing this example, you might be able to avoid use
- * of {@code reachabilityFence} entirely if it were OK to skip
- * updates in ExternalResources for Resource objects that have become
- * reclaimed (hence have null slots) by the time operations on them
- * are invoked:
- *
- * <pre>
- *   public void action3() {
- *     // ...
- *     Resource.update3(externalResourceArray[myIndex]);
- *   }
- *   private static void update3(ExternalResource ext) {
- *     if (ext != null) ...
- *   }
- * </pre>
- *
- * However this sort of simplification may require added complexity in
- * methods that allocate and reallocate array slots for
- * ExternalResources, to cope with the fact that one associated with
- * an apparently null slot might still be in use, and vice versa.
- *
- * <p>Additionally, method {@code reachabilityFence} is not
- * required in constructions that themselves ensure reachability. For
- * example, because objects that are locked cannot in general be
- * reclaimed, it would suffice if all accesses of the object, in all
- * methods of class Resource (including {@code finalize}) were
- * enclosed in {@code synchronized(this)} blocks. (Further, such
- * blocks must not include infinite loops, or themselves be
- * unreachable, which fall into the corner case exceptions to the "in
- * general" disclaimer.) Method {@code reachabilityFence} remains
- * an option in cases where this approach is not desirable or
- * possible; for example because it would encounter deadlock.
+ * <p>Method {@code reachabilityFence} is not required in
+ * constructions that themselves ensure reachability. For example,
+ * because objects that are locked cannot in general be reclaimed, it
+ * would suffice if all accesses of the object, in all methods of
+ * class Resource (including {@code finalize}) were enclosed in {@code
+ * synchronized(this)} blocks. (Further, such blocks must not include
+ * infinite loops, or themselves be unreachable, which fall into the
+ * corner case exceptions to the "in general" disclaimer.) However,
+ * method {@code reachabilityFence} remains a better option in cases
+ * where this approach is not as efficient, desirable, or possible;
+ * for example because it would encounter deadlock.
  *
  * @since 1.7
  * @author Doug Lea

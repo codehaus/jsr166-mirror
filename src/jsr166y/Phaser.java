@@ -95,15 +95,15 @@ import java.util.concurrent.locks.LockSupport;
  * first register, then start the actions, then deregister, as in:
  *
  *  <pre> {@code
- * void runTasks(List<Runnable> list) {
+ * void runTasks(List<Runnable> tasks) {
  *   final Phaser phaser = new Phaser(1); // "1" to register self
  *   // create and start threads
- *   for (Runnable r : list) {
+ *   for (Runnable task : tasks) {
  *     phaser.register();
  *     new Thread() {
  *       public void run() {
  *         phaser.arriveAndAwaitAdvance(); // await all creation
- *         r.run();
+ *         task.run();
  *       }
  *     }.start();
  *   }
@@ -116,19 +116,19 @@ import java.util.concurrent.locks.LockSupport;
  * for a given number of iterations is to override {@code onAdvance}:
  *
  *  <pre> {@code
- * void startTasks(List<Runnable> list, final int iterations) {
+ * void startTasks(List<Runnable> tasks, final int iterations) {
  *   final Phaser phaser = new Phaser() {
  *     public boolean onAdvance(int phase, int registeredParties) {
  *       return phase >= iterations || registeredParties == 0;
  *     }
  *   };
  *   phaser.register();
- *   for (Runnable r : list) {
+ *   for (Runnable task : tasks) {
  *     phaser.register();
  *     new Thread() {
  *       public void run() {
  *         do {
- *           r.run();
+ *           task.run();
  *           phaser.arriveAndAwaitAdvance();
  *         } while(!phaser.isTerminated();
  *       }

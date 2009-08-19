@@ -535,9 +535,9 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given phase
-     * value, or returns immediately if the current phase of the barrier
-     * is not equal to the given phase value or this barrier is
-     * terminated.
+     * value, returning immediately if the current phase of the
+     * barrier is not equal to the given phase value or this barrier
+     * is terminated.
      *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
@@ -556,10 +556,11 @@ public class Phaser {
     }
 
     /**
-     * Awaits the phase of the barrier to advance from the given
-     * value, or returns immediately if argument is negative or this
-     * barrier is terminated, or throws InterruptedException if
-     * interrupted while waiting.
+     * Awaits the phase of the barrier to advance from the given phase
+     * value, throwing InterruptedException if interrupted while
+     * waiting, or returning immediately if the current phase of the
+     * barrier is not equal to the given phase value or this barrier
+     * is terminated
      *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
@@ -579,9 +580,11 @@ public class Phaser {
     }
 
     /**
-     * Awaits the phase of the barrier to advance from the given value
-     * or the given timeout elapses, or returns immediately if
-     * argument is negative or this barrier is terminated.
+     * Awaits the phase of the barrier to advance from the given phase
+     * value or the given timeout elapses, throwing
+     * InterruptedException if interrupted while waiting, or returning
+     * immediately if the current phase of the barrier is not equal to
+     * the given phase value or this barrier is terminated.
      *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method

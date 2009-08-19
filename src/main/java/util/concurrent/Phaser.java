@@ -93,15 +93,15 @@ import java.util.concurrent.locks.LockSupport;
  * first register, then start the actions, then deregister, as in:
  *
  *  <pre> {@code
- * void runTasks(List<Runnable> list) {
+ * void runTasks(List<Runnable> tasks) {
  *   final Phaser phaser = new Phaser(1); // "1" to register self
  *   // create and start threads
- *   for (Runnable r : list) {
+ *   for (Runnable task : tasks) {
  *     phaser.register();
  *     new Thread() {
  *       public void run() {
  *         phaser.arriveAndAwaitAdvance(); // await all creation
- *         r.run();
+ *         task.run();
  *       }
  *     }.start();
  *   }
@@ -114,19 +114,19 @@ import java.util.concurrent.locks.LockSupport;
  * for a given number of iterations is to override {@code onAdvance}:
  *
  *  <pre> {@code
- * void startTasks(List<Runnable> list, final int iterations) {
+ * void startTasks(List<Runnable> tasks, final int iterations) {
  *   final Phaser phaser = new Phaser() {
  *     public boolean onAdvance(int phase, int registeredParties) {
  *       return phase >= iterations || registeredParties == 0;
  *     }
  *   };
  *   phaser.register();
- *   for (Runnable r : list) {
+ *   for (Runnable task : tasks) {
  *     phaser.register();
  *     new Thread() {
  *       public void run() {
  *         do {
- *           r.run();
+ *           task.run();
  *           phaser.arriveAndAwaitAdvance();
  *         } while(!phaser.isTerminated();
  *       }
@@ -167,7 +167,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of parties to 65535. Attempts to register additional
- * parties result in IllegalStateExceptions. However, you can and
+ * parties result in {@code IllegalStateException}. However, you can and
  * should create tiered phasers to accommodate arbitrarily large sets
  * of participants.
  *
@@ -533,9 +533,9 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given phase
-     * value, or returns immediately if the current phase of the barrier
-     * is not equal to the given phase value or this barrier is
-     * terminated.
+     * value, returning immediately if the current phase of the
+     * barrier is not equal to the given phase value or this barrier
+     * is terminated.
      *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
@@ -554,10 +554,11 @@ public class Phaser {
     }
 
     /**
-     * Awaits the phase of the barrier to advance from the given
-     * value, or returns immediately if argument is negative or this
-     * barrier is terminated, or throws InterruptedException if
-     * interrupted while waiting.
+     * Awaits the phase of the barrier to advance from the given phase
+     * value, throwing {@code InterruptedException} if interrupted while
+     * waiting, or returning immediately if the current phase of the
+     * barrier is not equal to the given phase value or this barrier
+     * is terminated.
      *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
@@ -577,11 +578,17 @@ public class Phaser {
     }
 
     /**
-     * Awaits the phase of the barrier to advance from the given value
-     * or the given timeout elapses, or returns immediately if
-     * argument is negative or this barrier is terminated.
+     * Awaits the phase of the barrier to advance from the given phase
+     * value or the given timeout to elapse, throwing
+     * {@code InterruptedException} if interrupted while waiting, or
+     * returning immediately if the current phase of the barrier is not
+     * equal to the given phase value or this barrier is terminated.
      *
      * @param phase the phase on entry to this method
+     * @param timeout how long to wait before giving up, in units of
+     *        {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     *        {@code timeout} parameter
      * @return the phase on exit from this method
      * @throws InterruptedException if thread interrupted while waiting
      * @throws TimeoutException if timed out while waiting

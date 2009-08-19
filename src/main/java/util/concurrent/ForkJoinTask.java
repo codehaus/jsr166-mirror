@@ -54,9 +54,9 @@ import java.util.WeakHashMap;
  * exceptions such as {@code IOExceptions} to be thrown. However,
  * computations may still encounter unchecked exceptions, that are
  * rethrown to callers attempting to join them. These exceptions may
- * additionally include RejectedExecutionExceptions stemming from
- * internal resource exhaustion such as failure to allocate internal
- * task queues.
+ * additionally include {@link RejectedExecutionException} stemming
+ * from internal resource exhaustion, such as failure to allocate
+ * internal task queues.
  *
  * <p>The primary method for awaiting completion and extracting
  * results of a task is {@link #join}, but there are several variants:
@@ -509,6 +509,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * Arranges to asynchronously execute this task.  While it is not
      * necessarily enforced, it is a usage error to fork a task more
      * than once unless it has completed and been reinitialized.
+     * Subsequent modifications to the state of this task or any data
+     * it operates on are not necessarily consistently observable by
+     * any thread other than the one executing it unless preceded by a
+     * call to {@link #join} or related methods, or a call to {@link
+     * #isDone} returning {@code true}.
      *
      * <p>This method may be invoked only from within {@code
      * ForkJoinTask} computations (as may be determined using method
@@ -774,9 +779,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * overridable, but overridden versions must invoke {@code super}
      * implementation to maintain guarantees.
      *
-     * @param ex the exception to throw. If this exception is
-     * not a RuntimeException or Error, the actual exception thrown
-     * will be a RuntimeException with cause ex.
+     * @param ex the exception to throw. If this exception is not a
+     * {@code RuntimeException} or {@code Error}, the actual exception
+     * thrown will be a {@code RuntimeException} with cause {@code ex}.
      */
     public void completeExceptionally(Throwable ex) {
         setDoneExceptionally((ex instanceof RuntimeException) ||

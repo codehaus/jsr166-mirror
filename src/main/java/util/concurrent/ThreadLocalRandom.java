@@ -9,21 +9,22 @@ package java.util.concurrent;
 import java.util.Random;
 
 /**
- * A random number generator isolated to the current Thread.  Like the
+ * A random number generator isolated to the current thread.  Like the
  * global {@link java.util.Random} generator used by the {@link
- * java.lang.Math} class, a ThreadLocalRandom is initialized with an
- * internally generated seed that may not otherwise be modified. When
- * applicable, use of ThreadLocalRandom rather than shared Random
- * objects in concurrent programs will typically encounter much less
- * overhead and contention.  ThreadLocalRandoms are particularly
- * appropriate when multiple tasks (for example, each a {@link
- * ForkJoinTask}), use random numbers in parallel in thread pools.
+ * java.lang.Math} class, a {@code ThreadLocalRandom} is initialized
+ * with an internally generated seed that may not otherwise be
+ * modified. When applicable, use of {@code ThreadLocalRandom} rather
+ * than shared {@code Random} objects in concurrent programs will
+ * typically encounter much less overhead and contention.  Use of
+ * {@code ThreadLocalRandom} is particularly appropriate when multiple
+ * tasks (for example, each a {@link ForkJoinTask}) use random numbers
+ * in parallel in thread pools.
  *
  * <p>Usages of this class should typically be of the form:
  * {@code ThreadLocalRandom.current().nextX(...)} (where
  * {@code X} is {@code Int}, {@code Long}, etc).
  * When all usages are of this form, it is never possible to
- * accidently share ThreadLocalRandoms across multiple threads.
+ * accidently share a {@code ThreadLocalRandom} across multiple threads.
  *
  * <p>This class also provides additional commonly used bounded random
  * generation methods.
@@ -76,17 +77,17 @@ public class ThreadLocalRandom extends Random {
     }
 
     /**
-     * Returns the current Thread's ThreadLocalRandom.
+     * Returns the current thread's {@code ThreadLocalRandom}.
      *
-     * @return the current Thread's ThreadLocalRandom
+     * @return the current thread's {@code ThreadLocalRandom}
      */
     public static ThreadLocalRandom current() {
         return localRandom.get();
     }
 
     /**
-     * Throws UnsupportedOperationException. Setting seeds in this
-     * generator is unsupported.
+     * Throws {@code UnsupportedOperationException}.  Setting seeds in
+     * this generator is not supported.
      *
      * @throws UnsupportedOperationException always
      */

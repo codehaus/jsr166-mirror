@@ -65,17 +65,17 @@ package java.util.concurrent.atomic;
  *
  *     <li><em>ref</em>, a reference to an object,
  *
- *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or,
- *       (for some reference <em>p</em>) {@code orderAccesses(p)},
+ *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or
+ *       {@code orderAccesses(ref)},
  *
- *     <li><em>w</em>, a write that follows <em>wf</em>
+ *     <li><em>w</em>, a write of <em>ref</em> that follows <em>wf</em>
  *         in program order,
  *
  *     <li> <em>r</em>, a read that sees write <em>w</em>,
  *
  *     <li> <em>rf</em>, an invocation of {@code orderReads(ref)} or
- *       (for some reference <em>q</em>) {@code orderAccesses(q)},
- *       following <em>r</em> in program order.
+ *     {@code orderAccesses(ref)} following <em>r</em> in program
+ *     order.
  *
  *   </ul>
  *
@@ -87,6 +87,13 @@ package java.util.concurrent.atomic;
  *
  *     <li> <em>wf</em> precedes <em>rf</em> in the
  *          <em>synchronization order</em>.
+ *     <li> If (<em>r1</em>, <em>w1</em>) and
+ *          (<em>r2</em>, <em>w2</em>) are two
+ *          pairs of reads and and writes, both
+ *          respectively satisfying the above conditions
+ *          for <em>ref</em>, and <em>r1</em> precedes <em>r2</em>
+ *          in program order, then it is not the
+ *          case that <em>w2 happens-before w1</em>.
  *
  *   </ul>
  *
@@ -103,12 +110,13 @@ package java.util.concurrent.atomic;
  *         in program order,
  *
  *     <li> <em>r</em>, a read that sees write <em>w</em>, where
- *         <em>r</em> is the first by some thread
+ *         <em>r</em> is the first read by some thread
  *         <em>t</em> that sees value <em>ref</em>,
  *
  *
- *     <li> <em>d</em>, a read using <em>r</em> to access a
- *          field (or if array, an element) of the referenced object.
+ *     <li> <em>d</em>, a use of <em>r</em> with the effect
+ *          of reading or writing a field (or if array, an element) 
+ *          of the referenced object.
  *
  *   </ul>
  *
@@ -116,7 +124,7 @@ package java.util.concurrent.atomic;
  *
  *   <ul COMPACT>
  *
- *     <li> the value seen by <em>d</em> is constrained
+ *     <li> the effects of <em>d</em> are constrained
  *          by the relation <em>wf happens-before d</em>.
  *   </ul>
  *
@@ -128,20 +136,27 @@ package java.util.concurrent.atomic;
  * garbage collection.  Method {@code reachabilityFence} differs from
  * the others in that it controls relations that are otherwise only
  * implicit in a program -- the reachability conditions triggering
- * garbage collection. As illustrated in the sample usages below, this
- * method is applicable only when reclamation may have visible
+ * garbage collection.  As illustrated in the sample usages below,
+ * this method is applicable only when reclamation may have visible
  * effects, which is possible for objects with finalizers (see Section
  * 12.6 of the Java Language Specification) that are implemented in
- * ways that rely on ordering control for correctness.
+ * ways that rely on ordering control for correctness.  More formally,
+ * use of this method ensures: given <em>ref</em>, a reference to an
+ * object; <em>f</em>, an invocation of {@code
+ * reachabilityFence(ref)}; and <em>a</em>, an action (by the garbage
+ * collector) comprising either an invocation of {@code
+ * ref.finalize()} or the enqueing of any {@link
+ * java.lang.ref.Reference} constructed with argument <em>ref</em>,
+ * that <em>f happens-before a</em>.
  *
  * <p><b>Sample Usages</b>
  *
- * <p><b>Emulating {@code final}.</b> With care, method {@code
- * orderWrites} may be used to obtain the memory safety effects of
- * {@code final} for a field that cannot be declared as {@code final},
- * because its primary initialization cannot be performed in a
- * constructor, in turn because it is used in a framework requiring
- * that all classes have a no-argument constructor; as in:
+ * <p><b>Safe publication.</b> With care, method {@code orderWrites}
+ * may be used to obtain the memory safety effects of {@code final}
+ * for a field that cannot be declared as {@code final}, because its
+ * primary initialization cannot be performed in a constructor, in
+ * turn because it is used in a framework requiring that all classes
+ * have a no-argument constructor; as in:
  *
  * <pre>
  * class WidgetHolder {
@@ -198,11 +213,10 @@ package java.util.concurrent.atomic;
  * that itself guarantees the expected ordering relations. However, it
  * may come into play in the construction of such classes themselves.
  *
- * <p><b>Emulating {@code volatile} access.</b> Outside of the
- * initialization idioms illustrated above, Fence methods ordering
- * writes must be paired with those ordering reads.  Suppose there is
- * an accessible variable that should have been declared as {@code
- * volatile} but wasn't:
+ * <p><b>Safely updating fields.</b> Outside of the initialization idioms
+ * illustrated above, Fence methods ordering writes must be paired
+ * with those ordering reads.  Suppose there is an accessible variable
+ * that should have been declared as {@code volatile} but wasn't:
  *
  * <pre>
  * class C { Object data;  ...  }
@@ -220,22 +234,31 @@ package java.util.concurrent.atomic;
  * }
  * </pre>
  *
- * Method {@code getData} provides a faithful emulation of volatile
+ * Method {@code getData} provides an emulation of {@code volatile}
  * reads of (non-long/double) fields by ensuring that the read of
  * {@code c} obtained as an argument is ordered before subsequent
  * reads using this reference, and then performs the read of its
- * field. Method {@code setData} provides a similarly faithful
- * emulation of volatile writes, ensuring that all other relevant
- * writes have completed, then performing the assignment, and then
- * ensuring that the write is ordered before any other access.  These
- * techniques may apply even when fields are not directly accessible,
- * in which case calls to fence methods would surround calls to
- * methods such as {@code c.getData()}.  However, these techniques
- * cannot be applied to {@code long} or {@code double} fields because
- * reads and writes of fields of these types are not guaranteed to be
+ * field. Method {@code setData} provides an emulation of volatile
+ * writes, ensuring that all other relevant writes have completed,
+ * then performing the assignment, and then ensuring that the write is
+ * ordered before any other access.  These techniques may apply even
+ * when fields are not directly accessible, in which case calls to
+ * fence methods would surround calls to methods such as {@code
+ * c.getData()}.  However, these techniques cannot be applied to
+ * {@code long} or {@code double} fields because reads and writes of
+ * fields of these types are not guaranteed to be
  * atomic. Additionally, correctness may require that all accesses of
  * such data use these kinds of wrapper methods, which you would need
  * to manually ensure.
+ *
+ * <p>More generally, Fence methods can be used in this way to achieve
+ * the safety properties of {@code volatile}. However their use does
+ * not necessarily guarantee the full sequential consistency
+ * properties specified in the Java Language Specification chapter 17
+ * for programs using {@code volatile}. In particular, emulation using
+ * Fence methods is not guaranteed to maintain the property that
+ * {@code volatile} operations performed by different threads are
+ * observed in the same order by all observer threads.
  *
  * <p><b>Acquire/Release management of threadsafe objects</b>. It may
  * be possible to use weaker conventions for volatile-like variables
@@ -381,8 +404,11 @@ public class Fences {
     private static volatile int theVolatile;
 
     /**
-     * Informally: Ensures that reads prior to the invocation of this
-     * method occur before subsequent reads, relative to other
+     * Informally: Ensures that a read of the given reference prior to
+     * the invocation of this method occurs before a subsequent use of
+     * the given reference with the effect of reading or writing a
+     * field (or if an array, element) of the referenced object.  The
+     * use of this method is sensible only when paired with other
      * invocations of {@link #orderWrites} and/or {@link
      * #orderAccesses} for the given reference. For details, see the
      * class documentation for this class.
@@ -396,10 +422,11 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that, with respect to the given reference,
-     * accesses (reads or writes) prior to the invocation of this
-     * method occur before subsequent writes. For details, see the
-     * class documentation for this class.
+     * Informally: Ensures that a use of the given reference with the
+     * effect of reading or writing a field (or if an array, element)
+     * of the referenced object, prior to the invocation of this
+     * method occur before a subsequent write of the reference. For
+     * details, see the class documentation for this class.
      *
      * @param ref the (non-null) reference. If null, the effects
      * of the method are undefined.
@@ -411,10 +438,10 @@ public class Fences {
     }
 
     /**
-     * Informally: Ensures that, with respect to the given reference,
-     * accesses (reads or writes) prior to the invocation of this
-     * method occur before subsequent accesses.  For details, see the
-     * class documentation for this class.
+     * Informally: Ensures that accesses (reads or writes) using the
+     * given reference prior to the invocation of this method occur
+     * before subsequent accesses.  For details, see the class
+     * documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
      * @return the given ref, to simplify usage

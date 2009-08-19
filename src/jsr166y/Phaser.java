@@ -169,7 +169,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of parties to 65535. Attempts to register additional
- * parties result in IllegalStateExceptions. However, you can and
+ * parties result in {@code IllegalStateException}. However, you can and
  * should create tiered phasers to accommodate arbitrarily large sets
  * of participants.
  *
@@ -557,10 +557,10 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given phase
-     * value, throwing InterruptedException if interrupted while
+     * value, throwing {@code InterruptedException} if interrupted while
      * waiting, or returning immediately if the current phase of the
      * barrier is not equal to the given phase value or this barrier
-     * is terminated
+     * is terminated.
      *
      * @param phase the phase on entry to this method
      * @return the phase on exit from this method
@@ -581,10 +581,10 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given phase
-     * value or the given timeout elapses, throwing
-     * InterruptedException if interrupted while waiting, or returning
-     * immediately if the current phase of the barrier is not equal to
-     * the given phase value or this barrier is terminated.
+     * value or the given timeout to elapse, throwing
+     * {@code InterruptedException} if interrupted while waiting, or
+     * returning immediately if the current phase of the barrier is not
+     * equal to the given phase value or this barrier is terminated.
      *
      * @param phase the phase on entry to this method
      * @param timeout how long to wait before giving up, in units of

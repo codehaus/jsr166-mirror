@@ -85,8 +85,8 @@ public class ThreadLocalRandom extends Random {
     }
 
     /**
-     * Throws UnsupportedOperationException. Setting seeds in this
-     * generator is unsupported.
+     * Throws {@code UnsupportedOperationException}.  Setting seeds in
+     * this generator is not supported.
      *
      * @throws UnsupportedOperationException always
      */

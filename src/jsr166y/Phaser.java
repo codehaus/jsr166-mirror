@@ -587,6 +587,10 @@ public class Phaser {
      * the given phase value or this barrier is terminated.
      *
      * @param phase the phase on entry to this method
+     * @param timeout how long to wait before giving up, in units of
+     *        {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     *        {@code timeout} parameter
      * @return the phase on exit from this method
      * @throws InterruptedException if thread interrupted while waiting
      * @throws TimeoutException if timed out while waiting

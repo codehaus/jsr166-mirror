@@ -538,7 +538,9 @@ public class Phaser {
      * is terminated.
      *
      * @param phase the phase on entry to this method
-     * @return the phase on exit from this method
+     * @return the current barrier phase number upon exit of
+     * this method, or a negative value if terminated or
+     * argument is negative
      */
     public int awaitAdvance(int phase) {
         if (phase < 0)
@@ -561,7 +563,9 @@ public class Phaser {
      * is terminated.
      *
      * @param phase the phase on entry to this method
-     * @return the phase on exit from this method
+     * @return the current barrier phase number upon exit of
+     * this method, or a negative value if terminated or
+     * argument is negative
      * @throws InterruptedException if thread interrupted while waiting
      */
     public int awaitAdvanceInterruptibly(int phase)
@@ -589,7 +593,9 @@ public class Phaser {
      *        {@code unit}
      * @param unit a {@code TimeUnit} determining how to interpret the
      *        {@code timeout} parameter
-     * @return the phase on exit from this method
+     * @return the current barrier phase number upon exit of
+     * this method, or a negative value if terminated or
+     * argument is negative
      * @throws InterruptedException if thread interrupted while waiting
      * @throws TimeoutException if timed out while waiting
      */

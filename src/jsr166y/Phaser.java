@@ -31,9 +31,10 @@ import java.util.concurrent.locks.LockSupport;
  * registered. (However, you can introduce such bookkeeping by
  * subclassing this class.)
  *
- * <li> Each generation has an associated phase value, starting at
- * zero, and advancing when all parties arrive at the barrier
- * (wrapping around to zero after reaching {@code Integer.MAX_VALUE}).
+ * <li> Each generation has an associated phase number. The phase
+ * number starts at zero, amd advances when all parties arrive at the
+ * barrier, wrapping around to zero after reaching {@code
+ * Integer.MAX_VALUE}.
  *
  * <li> Like a {@code CyclicBarrier}, a phaser may be repeatedly
  * awaited.  Method {@link #arriveAndAwaitAdvance} has effect
@@ -53,7 +54,6 @@ import java.util.concurrent.locks.LockSupport;
  *       argument indicating an arrival phase number, and returns
  *       when the barrier advances to a new phase.
  * </ul>
- *
  *
  * <li> Barrier actions, performed by the task triggering a phase
  * advance, are arranged by overriding method {@link #onAdvance(int,
@@ -89,6 +89,14 @@ import java.util.concurrent.locks.LockSupport;
  * <li>Phasers may be used to coordinate tasks executing in a {@link
  * ForkJoinPool}, which will ensure sufficient parallelism to execute
  * tasks when others are blocked waiting for a phase to advance.
+ *
+ * <li>The current state of a phaser may be monitored.  At any given
+ * moment there are {@link #getRegisteredParties}, where {@link
+ * #getArrivedParties} have arrived at the current phase ({@link
+ * #getPhase}). When the remaining {@link #getUnarrivedParties})
+ * arrive, the phase advances. Method {@link #toString} returns
+ * snapshots of these state queries in a form convenient for
+ * informal monitoring.
  *
  * </ul>
  *
@@ -666,8 +674,8 @@ public class Phaser {
     }
 
     /**
-     * Returns the number of parties that have arrived at the current
-     * phase of this barrier.
+     * Returns the number of registered parties that have arrived at
+     * the current phase of this barrier.
      *
      * @return the number of arrived parties
      */

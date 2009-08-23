@@ -19,18 +19,21 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <ul>
  *
- * <li> The number of parties synchronizing on a phaser may vary over
- * time.  A task may register to be a party at any time, and may
- * deregister upon arriving at the barrier.  As is the case with most
- * basic synchronization constructs, registration and deregistration
- * affect only internal counts; they do not establish any further
- * internal bookkeeping, so tasks cannot query whether they are
+ * <li> The number of parties <em>registered</em> to synchronize on a
+ * phaser may vary over time.  Tasks may be registered at any time
+ * (using methods {@link #register}, {@link #bulkRegister}, or forms
+ * of constructors establishing initial numbers of parties), and may
+ * optionally be deregistered upon any arrival (using {@link
+ * #arriveAndDeregister}).  As is the case with most basic
+ * synchronization constructs, registration and deregistration affect
+ * only internal counts; they do not establish any further internal
+ * bookkeeping, so tasks cannot query whether they are
  * registered. (However, you can introduce such bookkeeping by
  * subclassing this class.)
  *
  * <li> Each generation has an associated phase value, starting at
- * zero, and advancing when all parties reach the barrier (wrapping
- * around to zero after reaching {@code Integer.MAX_VALUE}).
+ * zero, and advancing when all parties arrive at the barrier
+ * (wrapping around to zero after reaching {@code Integer.MAX_VALUE}).
  *
  * <li> Like a {@code CyclicBarrier}, a phaser may be repeatedly
  * awaited.  Method {@link #arriveAndAwaitAdvance} has effect
@@ -42,11 +45,13 @@ import java.util.concurrent.locks.LockSupport;
  *
  *   <li> Arriving at a barrier. Methods {@link #arrive} and
  *       {@link #arriveAndDeregister} do not block, but return
- *       the phase value current upon entry to the method.
+ *       an associated <em>arrival phase number</em>;
+ *       that is, the phase number of the barrier to which the
+ *       arrival applied.
  *
  *   <li> Awaiting others. Method {@link #awaitAdvance} requires an
- *       argument indicating the entry phase, and returns when the
- *       barrier advances to a new phase.
+ *       argument indicating an arrival phase number, and returns
+ *       when the barrier advances to a new phase.
  * </ul>
  *
  *
@@ -366,7 +371,7 @@ public class Phaser {
     /**
      * Adds a new unarrived party to this phaser.
      *
-     * @return the current barrier phase number upon registration
+     * @return the arrival phase number to which this registration applied
      * @throws IllegalStateException if attempting to register more
      * than the maximum supported number of parties
      */
@@ -378,7 +383,7 @@ public class Phaser {
      * Adds the given number of new unarrived parties to this phaser.
      *
      * @param parties the number of parties required to trip barrier
-     * @return the current barrier phase number upon registration
+     * @return the arrival phase number to which this registration applied
      * @throws IllegalStateException if attempting to register more
      * than the maximum supported number of parties
      */
@@ -415,8 +420,7 @@ public class Phaser {
      * Arrives at the barrier, but does not wait for others.  (You can
      * in turn wait for others via {@link #awaitAdvance}).
      *
-     * @return the barrier phase number upon entry to this method, or a
-     * negative value if terminated
+     * @return the arrival phase number, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
      * of unarrived parties would become negative
      */
@@ -468,8 +472,7 @@ public class Phaser {
      * zero parties, this phaser also arrives at and is deregistered
      * from its parent.
      *
-     * @return the current barrier phase number upon entry to
-     * this method, or a negative value if terminated
+     * @return the arrival phase number, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
      * of registered or unarrived parties would become negative
      */
@@ -525,7 +528,7 @@ public class Phaser {
      * method.  If instead you need to deregister upon arrival use
      * {@code arriveAndDeregister}.
      *
-     * @return the phase on entry to this method
+     * @return the arrival phase number, or a negative number if terminated
      * @throws IllegalStateException if not terminated and the number
      * of unarrived parties would become negative
      */
@@ -539,10 +542,11 @@ public class Phaser {
      * barrier is not equal to the given phase value or this barrier
      * is terminated.
      *
-     * @param phase the phase on entry to this method
-     * @return the current barrier phase number upon exit of
-     * this method, or a negative value if terminated or
-     * argument is negative
+     * @param phase an arrival phase number, or negative value if
+     * terminated; this argument is normally the value returned by a
+     * previous call to {@code arrive} or its variants
+     * @return the next arrival phase number, or a negative value
+     * if terminated or argument is negative
      */
     public int awaitAdvance(int phase) {
         if (phase < 0)
@@ -564,10 +568,11 @@ public class Phaser {
      * barrier is not equal to the given phase value or this barrier
      * is terminated.
      *
-     * @param phase the phase on entry to this method
-     * @return the current barrier phase number upon exit of
-     * this method, or a negative value if terminated or
-     * argument is negative
+     * @param phase an arrival phase number, or negative value if
+     * terminated; this argument is normally the value returned by a
+     * previous call to {@code arrive} or its variants
+     * @return the next arrival phase number, or a negative value
+     * if terminated or argument is negative
      * @throws InterruptedException if thread interrupted while waiting
      */
     public int awaitAdvanceInterruptibly(int phase)
@@ -590,14 +595,15 @@ public class Phaser {
      * returning immediately if the current phase of the barrier is not
      * equal to the given phase value or this barrier is terminated.
      *
-     * @param phase the phase on entry to this method
+     * @param phase an arrival phase number, or negative value if
+     * terminated; this argument is normally the value returned by a
+     * previous call to {@code arrive} or its variants
      * @param timeout how long to wait before giving up, in units of
      *        {@code unit}
      * @param unit a {@code TimeUnit} determining how to interpret the
      *        {@code timeout} parameter
-     * @return the current barrier phase number upon exit of
-     * this method, or a negative value if terminated or
-     * argument is negative
+     * @return the next arrival phase number, or a negative value
+     * if terminated or argument is negative
      * @throws InterruptedException if thread interrupted while waiting
      * @throws TimeoutException if timed out while waiting
      */

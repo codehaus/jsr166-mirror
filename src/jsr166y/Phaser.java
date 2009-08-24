@@ -17,13 +17,12 @@ import java.util.concurrent.locks.LockSupport;
  * {@link java.util.concurrent.CountDownLatch CountDownLatch}
  * but supporting more flexible usage.
  *
- * <ul>
- *
- * <li> The number of parties <em>registered</em> to synchronize on a
- * phaser may vary over time.  Tasks may be registered at any time
- * (using methods {@link #register}, {@link #bulkRegister}, or forms
- * of constructors establishing initial numbers of parties), and may
- * optionally be deregistered upon any arrival (using {@link
+ * <p> <b>Registration.</b> Unlike the case for other barriers, the
+ * number of parties <em>registered</em> to synchronize on a phaser
+ * may vary over time.  Tasks may be registered at any time (using
+ * methods {@link #register}, {@link #bulkRegister}, or forms of
+ * constructors establishing initial numbers of parties), and
+ * optionally deregistered upon any arrival (using {@link
  * #arriveAndDeregister}).  As is the case with most basic
  * synchronization constructs, registration and deregistration affect
  * only internal counts; they do not establish any further internal
@@ -31,74 +30,78 @@ import java.util.concurrent.locks.LockSupport;
  * (However, you can introduce such bookkeeping by subclassing this
  * class.)
  *
- * <li> Each generation has an associated phase number. The phase
- * number starts at zero, amd advances when all parties arrive at the
- * barrier, wrapping around to zero after reaching {@code
- * Integer.MAX_VALUE}.
- *
- * <li> Like a {@code CyclicBarrier}, a phaser may be repeatedly
- * awaited.  Method {@link #arriveAndAwaitAdvance} has effect
- * analogous to {@link java.util.concurrent.CyclicBarrier#await
- * CyclicBarrier.await}.  However, phasers separate two aspects of
- * coordination, which may also be invoked independently:
+ * <p> <b>Synchronization.</b> Like a {@code CyclicBarrier}, a {@code
+ * Phaser} may be repeatedly awaited.  Method {@link
+ * #arriveAndAwaitAdvance} has effect analogous to {@link
+ * java.util.concurrent.CyclicBarrier#await CyclicBarrier.await}. Each
+ * generation of a {@code Phaser} has an associated phase number. The
+ * phase number starts at zero, amd advances when all parties arrive
+ * at the barrier, wrapping around to zero after reaching {@code
+ * Integer.MAX_VALUE}. The use of phase numbers enables independent
+ * control of actions upon arrival at a barrier and upon awaiting
+ * others, via two kinds of methods that may be invoked by any
+ * registered party:
  *
  * <ul>
  *
- *   <li> Arriving at a barrier. Methods {@link #arrive} and
- *       {@link #arriveAndDeregister} do not block, but return
- *       an associated <em>arrival phase number</em>;
- *       that is, the phase number of the barrier to which the
- *       arrival applied.
+ *   <li> <b>Arrival.</b> Methods {@link #arrive} and
+ *       {@link #arriveAndDeregister} record arrival at a
+ *       barrier. These methods do not block, but return an associated
+ *       <em>arrival phase number</em>; that is, the phase number of
+ *       the barrier to which the arrival applied. When the final
+ *       party for a given phase arrives, an optional barrier action
+ *       is performed and the phase advances.  Barrier actions,
+ *       performed by the party triggering a phase advance, are
+ *       arranged by overriding method {@link #onAdvance(int, int)},
+ *       which also controls termination. Overriding this method is
+ *       similar to, but more flexible than, providing a barrier
+ *       action to a {@code CyclicBarrier}.
  *
- *   <li> Awaiting others. Method {@link #awaitAdvance} requires an
- *       argument indicating an arrival phase number, and returns
- *       when the barrier advances to a new phase.
+ *   <li> <b>Waiting.</b> Method {@link #awaitAdvance} requires an
+ *       argument indicating an arrival phase number, and returns when
+ *       the barrier advances to (or is already at) a different phase.
+ *       Unlike similar constructions using {@code CyclicBarrier},
+ *       method {@code awaitAdvance} continues to wait even if the
+ *       waiting thread is interrupted. (Interruptible and timeout
+ *       versions are also available.)  Exceptions encountered while
+ *       tasks wait interruptibly or with timeout do not change the
+ *       state of the barrier. If necessary, you can perform any
+ *       associated recovery within handlers of those exceptions,
+ *       often after invoking {@code forceTermination}.  Phasers may
+ *       also be used by tasks executing in a {@link ForkJoinPool},
+ *       which will ensure sufficient parallelism to execute tasks
+ *       when others are blocked waiting for a phase to advance.
+ *
  * </ul>
  *
- * <li> Barrier actions, performed by the task triggering a phase
- * advance, are arranged by overriding method {@link #onAdvance(int,
- * int)}, which also controls termination. Overriding this method is
- * similar to, but more flexible than, providing a barrier action to a
- * {@code CyclicBarrier}.
+ * <p> <b>Termination.</b> A {@code Phaser} may enter a
+ * <em>termination</em> state in which all actions immediately return
+ * without updating phaser state or waiting for advance, and
+ * indicating (via a negative phase value) that execution is complete.
+ * Termination is triggered when an invocation of {@code onAdvance}
+ * returns {@code true}.  As illustrated below, when phasers control
+ * actions with a fixed number of iterations, it is often convenient
+ * to override this method to cause termination when the current phase
+ * number reaches a threshold. Method {@link #forceTermination} is
+ * also available to abruptly release waiting threads and allow them
+ * to terminate.
  *
- * <li> Phasers may enter a <em>termination</em> state in which all
- * actions immediately return without updating phaser state or waiting
- * for advance, and indicating (via a negative phase value) that
- * execution is complete.  Termination is triggered when an invocation
- * of {@code onAdvance} returns {@code true}.  When a phaser is
- * controlling an action with a fixed number of iterations, it is
- * often convenient to override this method to cause termination when
- * the current phase number reaches a threshold. Method {@link
- * #forceTermination} is also available to abruptly release waiting
- * threads and allow them to terminate.
- *
- * <li> Phasers may be tiered to reduce contention. Phasers with large
+ * <p> <b>Tiering.</b> Phasers may be <em>tiered</em> (i.e., arranged
+ * in tree structures) to reduce contention. Phasers with large
  * numbers of parties that would otherwise experience heavy
- * synchronization contention costs may instead be arranged in trees.
- * This will typically greatly increase throughput even though it
- * incurs somewhat greater per-operation overhead.
+ * synchronization contention costs may instead be set up so that
+ * groups of sub-phasers share a common parent.  This may greatly
+ * increase throughput even though it incurs greater per-operation
+ * overhead.
  *
- * <li> By default, {@code awaitAdvance} continues to wait even if
- * the waiting thread is interrupted. And unlike the case in
- * {@code CyclicBarrier}, exceptions encountered while tasks wait
- * interruptibly or with timeout do not change the state of the
- * barrier. If necessary, you can perform any associated recovery
- * within handlers of those exceptions, often after invoking
- * {@code forceTermination}.
- *
- * <li>Phasers may be used to coordinate tasks executing in a {@link
- * ForkJoinPool}, which will ensure sufficient parallelism to execute
- * tasks when others are blocked waiting for a phase to advance.
- *
- * <li>The current state of a phaser may be monitored.  At any given
- * moment there are {@link #getRegisteredParties}, where {@link
- * #getArrivedParties} have arrived at the current phase ({@link
- * #getPhase}). When the remaining {@link #getUnarrivedParties})
- * arrive, the phase advances. Method {@link #toString} returns
- * snapshots of these state queries in a form convenient for
- * informal monitoring.
- *
- * </ul>
+ * <p><b>Monitoring.</b> While synchronization methods may be invoked
+ * only by registered parties, the current state of a phaser may be
+ * monitored by any caller.  At any given moment there are {@link
+ * #getRegisteredParties}, where {@link #getArrivedParties} have
+ * arrived at the current phase ({@link #getPhase}). When the
+ * remaining {@link #getUnarrivedParties}) arrive, the phase
+ * advances. Method {@link #toString} returns snapshots of these state
+ * queries in a form convenient for informal monitoring.
  *
  * <p><b>Sample usages:</b>
  *
@@ -131,7 +134,7 @@ import java.util.concurrent.locks.LockSupport;
  *  <pre> {@code
  * void startTasks(List<Runnable> tasks, final int iterations) {
  *   final Phaser phaser = new Phaser() {
- *     public boolean onAdvance(int phase, int registeredParties) {
+ *     protected boolean onAdvance(int phase, int registeredParties) {
  *       return phase >= iterations || registeredParties == 0;
  *     }
  *   };
@@ -149,6 +152,33 @@ import java.util.concurrent.locks.LockSupport;
  *   }
  *   phaser.arriveAndDeregister(); // deregister self, don't wait
  * }}</pre>
+ *
+ * If the main task must later await termination, it
+ * may re-register and then execute a similar loop:
+ * <pre> {@code
+ *   // ...
+ *   phaser.register();
+ *   while (!phaser.isTerminated())
+ *     phaser.arriveAndAwaitAdvance();
+ * }</pre>
+ *
+ * Related constructions may be used to await particular phase numbers
+ * in contexts where you are sure that the phase will never wrap around
+ * {@code Integer.MAX_VALUE}. For example:
+ *
+ * <pre> {@code
+ *   void awaitPhase(Phaser phaser, int phase) {
+ *     int p = phaser.register(); // assumes caller not already registered
+ *     while (p < phase) {
+ *       if (phaser.isTerminated())
+ *         // ... deal with unexpected termination
+ *       else
+ *         p = phaser.arriveAndAwaitAdvance();
+ *     }
+ *     phaser.arriveAndDeregister();
+ *   }
+ * }</pre>
+ *
  *
  * <p>To create a set of tasks using a tree of phasers,
  * you could use code of the following form, assuming a
@@ -426,7 +456,9 @@ public class Phaser {
 
     /**
      * Arrives at the barrier, but does not wait for others.  (You can
-     * in turn wait for others via {@link #awaitAdvance}).
+     * in turn wait for others via {@link #awaitAdvance}).  It is an
+     * unenforced usage error for an unregistered party to invoke this
+     * method.
      *
      * @return the arrival phase number, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
@@ -478,7 +510,8 @@ public class Phaser {
      * required to trip the barrier in future phases.  If this phaser
      * has a parent, and deregistration causes this phaser to have
      * zero parties, this phaser also arrives at and is deregistered
-     * from its parent.
+     * from its parent.  It is an unenforced usage error for an
+     * unregistered party to invoke this method.
      *
      * @return the arrival phase number, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
@@ -534,7 +567,8 @@ public class Phaser {
      * interruption or timeout, you can arrange this with an analogous
      * construction using one of the other forms of the awaitAdvance
      * method.  If instead you need to deregister upon arrival use
-     * {@code arriveAndDeregister}.
+     * {@code arriveAndDeregister}. It is an unenforced usage error
+     * for an unregistered party to invoke this method.
      *
      * @return the arrival phase number, or a negative number if terminated
      * @throws IllegalStateException if not terminated and the number
@@ -548,7 +582,8 @@ public class Phaser {
      * Awaits the phase of the barrier to advance from the given phase
      * value, returning immediately if the current phase of the
      * barrier is not equal to the given phase value or this barrier
-     * is terminated.
+     * is terminated.  It is an unenforced usage error for an
+     * unregistered party to invoke this method.
      *
      * @param phase an arrival phase number, or negative value if
      * terminated; this argument is normally the value returned by a
@@ -571,10 +606,11 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given phase
-     * value, throwing {@code InterruptedException} if interrupted while
-     * waiting, or returning immediately if the current phase of the
-     * barrier is not equal to the given phase value or this barrier
-     * is terminated.
+     * value, throwing {@code InterruptedException} if interrupted
+     * while waiting, or returning immediately if the current phase of
+     * the barrier is not equal to the given phase value or this
+     * barrier is terminated. It is an unenforced usage error for an
+     * unregistered party to invoke this method.
      *
      * @param phase an arrival phase number, or negative value if
      * terminated; this argument is normally the value returned by a
@@ -598,10 +634,12 @@ public class Phaser {
 
     /**
      * Awaits the phase of the barrier to advance from the given phase
-     * value or the given timeout to elapse, throwing
-     * {@code InterruptedException} if interrupted while waiting, or
-     * returning immediately if the current phase of the barrier is not
-     * equal to the given phase value or this barrier is terminated.
+     * value or the given timeout to elapse, throwing {@code
+     * InterruptedException} if interrupted while waiting, or
+     * returning immediately if the current phase of the barrier is
+     * not equal to the given phase value or this barrier is
+     * terminated.  It is an unenforced usage error for an
+     * unregistered party to invoke this method.
      *
      * @param phase an arrival phase number, or negative value if
      * terminated; this argument is normally the value returned by a

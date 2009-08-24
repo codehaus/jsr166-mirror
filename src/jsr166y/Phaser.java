@@ -762,16 +762,16 @@ public class Phaser {
     }
 
     /**
-     * Overridable method to perform an action upon phase advance, and
-     * to control termination. This method is invoked upon arrival of
-     * the party tripping the barrier (when all other waiting parties
-     * are dormant).  If this method returns {@code true}, then,
-     * rather than advance the phase number, this barrier will be set
-     * to a final termination state, and subsequent calls to {@link
-     * #isTerminated} will return true. Any (unchecked) Exception or
-     * Error thrown by an invocation of this method is propagated to
-     * the party attempting to trip the barrier, in which case no
-     * advance occurs.
+     * Overridable method to perform an action upon impending phase
+     * advance, and to control termination. This method is invoked
+     * upon arrival of the party tripping the barrier (when all other
+     * waiting parties are dormant).  If this method returns {@code
+     * true}, then, rather than advance the phase number, this barrier
+     * will be set to a final termination state, and subsequent calls
+     * to {@link #isTerminated} will return true. Any (unchecked)
+     * Exception or Error thrown by an invocation of this method is
+     * propagated to the party attempting to trip the barrier, in
+     * which case no advance occurs.
      *
      * <p>The arguments to this method provide the state of the phaser
      * prevailing for the current transition. (When called from within
@@ -785,11 +785,12 @@ public class Phaser {
      * property.
      *
      * <p>You may override this method to perform an action with side
-     * effects visible to participating tasks, but it is in general
-     * only sensible to do so in designs where all parties register
-     * before any arrive, and all {@link #awaitAdvance} at each phase.
-     * Otherwise, you cannot ensure lack of interference from other
-     * parties during the invocation of this method.
+     * effects visible to participating tasks, but doing so requires
+     * care: Method {@code onAdvance} may be invoked more than once
+     * per transition.  Further, unless all parties register before
+     * any arrive, and all {@link #awaitAdvance} at each phase, then
+     * you cannot ensure lack of interference from other parties
+     * during the invocation of this method.
      *
      * @param phase the phase number on entering the barrier
      * @param registeredParties the current number of registered parties

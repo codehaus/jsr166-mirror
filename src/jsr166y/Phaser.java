@@ -97,11 +97,15 @@ import java.util.concurrent.locks.LockSupport;
  * <p><b>Monitoring.</b> While synchronization methods may be invoked
  * only by registered parties, the current state of a phaser may be
  * monitored by any caller.  At any given moment there are {@link
- * #getRegisteredParties}, where {@link #getArrivedParties} have
- * arrived at the current phase ({@link #getPhase}). When the
- * remaining {@link #getUnarrivedParties}) arrive, the phase
- * advances. Method {@link #toString} returns snapshots of these state
- * queries in a form convenient for informal monitoring.
+ * #getRegisteredParties} parties in total, of which {@link
+ * #getArrivedParties} have arrived at the current phase ({@link
+ * #getPhase}).  When the remaining ({@link #getUnarrivedParties})
+ * parties arrive, the phase advances; thus, this value is always
+ * greater than zero if there are any registered parties.  The values
+ * returned by these methods may reflect transient states and so are
+ * not in general useful for synchronization control.  Method {@link
+ * #toString} returns snapshots of these state queries in a form
+ * convenient for informal monitoring.
  *
  * <p><b>Sample usages:</b>
  *

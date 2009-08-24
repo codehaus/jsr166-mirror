@@ -250,7 +250,6 @@ public class Phaser {
      */
     private volatile long state;
 
-    private static final int ushortBits = 16;
     private static final int ushortMask = 0xffff;
     private static final int phaseMask  = 0x7fffffff;
 

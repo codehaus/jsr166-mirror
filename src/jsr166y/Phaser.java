@@ -35,7 +35,7 @@ import java.util.concurrent.locks.LockSupport;
  * #arriveAndAwaitAdvance} has effect analogous to {@link
  * java.util.concurrent.CyclicBarrier#await CyclicBarrier.await}. Each
  * generation of a {@code Phaser} has an associated phase number. The
- * phase number starts at zero, amd advances when all parties arrive
+ * phase number starts at zero, and advances when all parties arrive
  * at the barrier, wrapping around to zero after reaching {@code
  * Integer.MAX_VALUE}. The use of phase numbers enables independent
  * control of actions upon arrival at a barrier and upon awaiting
@@ -62,8 +62,8 @@ import java.util.concurrent.locks.LockSupport;
  *       the barrier advances to (or is already at) a different phase.
  *       Unlike similar constructions using {@code CyclicBarrier},
  *       method {@code awaitAdvance} continues to wait even if the
- *       waiting thread is interrupted. (Interruptible and timeout
- *       versions are also available.)  Exceptions encountered while
+ *       waiting thread is interrupted. Interruptible and timeout
+ *       versions are also available, but exceptions encountered while
  *       tasks wait interruptibly or with timeout do not change the
  *       state of the barrier. If necessary, you can perform any
  *       associated recovery within handlers of those exceptions,
@@ -75,16 +75,16 @@ import java.util.concurrent.locks.LockSupport;
  * </ul>
  *
  * <p> <b>Termination.</b> A {@code Phaser} may enter a
- * <em>termination</em> state in which all actions immediately return
- * without updating phaser state or waiting for advance, and
- * indicating (via a negative phase value) that execution is complete.
- * Termination is triggered when an invocation of {@code onAdvance}
- * returns {@code true}.  As illustrated below, when phasers control
- * actions with a fixed number of iterations, it is often convenient
- * to override this method to cause termination when the current phase
- * number reaches a threshold. Method {@link #forceTermination} is
- * also available to abruptly release waiting threads and allow them
- * to terminate.
+ * <em>termination</em> state in which all synchronization methods
+ * immediately return without updating phaser state or waiting for
+ * advance, and indicating (via a negative phase value) that execution
+ * is complete.  Termination is triggered when an invocation of {@code
+ * onAdvance} returns {@code true}.  As illustrated below, when
+ * phasers control actions with a fixed number of iterations, it is
+ * often convenient to override this method to cause termination when
+ * the current phase number reaches a threshold. Method {@link
+ * #forceTermination} is also available to abruptly release waiting
+ * threads and allow them to terminate.
  *
  * <p> <b>Tiering.</b> Phasers may be <em>tiered</em> (i.e., arranged
  * in tree structures) to reduce contention. Phasers with large

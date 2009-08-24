@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * A reusable synchronization barrier, similar in functionality to a
+ * A reusable synchronization barrier, similar in functionality to
  * {@link java.util.concurrent.CyclicBarrier CyclicBarrier} and
  * {@link java.util.concurrent.CountDownLatch CountDownLatch}
  * but supporting more flexible usage.
@@ -27,9 +27,9 @@ import java.util.concurrent.locks.LockSupport;
  * #arriveAndDeregister}).  As is the case with most basic
  * synchronization constructs, registration and deregistration affect
  * only internal counts; they do not establish any further internal
- * bookkeeping, so tasks cannot query whether they are
- * registered. (However, you can introduce such bookkeeping by
- * subclassing this class.)
+ * bookkeeping, so tasks cannot query whether they are registered.
+ * (However, you can introduce such bookkeeping by subclassing this
+ * class.)
  *
  * <li> Each generation has an associated phase number. The phase
  * number starts at zero, amd advances when all parties arrive at the

@@ -100,12 +100,11 @@ import java.util.concurrent.locks.LockSupport;
  * #getRegisteredParties} parties in total, of which {@link
  * #getArrivedParties} have arrived at the current phase ({@link
  * #getPhase}).  When the remaining ({@link #getUnarrivedParties})
- * parties arrive, the phase advances; thus, this value is always
- * greater than zero if there are any registered parties.  The values
- * returned by these methods may reflect transient states and so are
- * not in general useful for synchronization control.  Method {@link
- * #toString} returns snapshots of these state queries in a form
- * convenient for informal monitoring.
+ * parties arrive, the phase advances.  The values returned by these
+ * methods may reflect transient states and so are not in general
+ * useful for synchronization control.  Method {@link #toString}
+ * returns snapshots of these state queries in a form convenient for
+ * informal monitoring.
  *
  * <p><b>Sample usages:</b>
  *
@@ -764,12 +763,21 @@ public class Phaser {
 
     /**
      * Overridable method to perform an action upon phase advance, and
-     * to control termination. This method is invoked whenever the
-     * barrier is tripped (and thus all other waiting parties are
-     * dormant). If it returns {@code true}, then, rather than advance
-     * the phase number, this barrier will be set to a final
-     * termination state, and subsequent calls to {@link #isTerminated}
-     * will return true.
+     * to control termination. This method is invoked upon arrival of
+     * the party tripping the barrier (when all other waiting parties
+     * are dormant).  If this method returns {@code true}, then,
+     * rather than advance the phase number, this barrier will be set
+     * to a final termination state, and subsequent calls to {@link
+     * #isTerminated} will return true. Any (unchecked) Exception or
+     * Error thrown by an invocation of this method is propagated to
+     * the party attempting to trip the barrier, in which case no
+     * advance occurs.
+     *
+     * <p>The arguments to this method provide the state of the phaser
+     * prevailing for the current transition. (When called from within
+     * an implementation of {@code onAdvance} the values returned by
+     * methods such as {@code getPhase} may or may not reliably
+     * indicate the state to which this transition applies.)
      *
      * <p>The default version returns {@code true} when the number of
      * registered parties is zero. Normally, overrides that arrange

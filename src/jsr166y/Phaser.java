@@ -188,19 +188,16 @@ import java.util.concurrent.locks.LockSupport;
  * Task class with a constructor accepting a phaser that
  * it registers for upon construction:
  *  <pre> {@code
- * void build(Task[] actions, int lo, int hi, Phaser b) {
- *   int step = (hi - lo) / TASKS_PER_PHASER;
- *   if (step > 1) {
- *     int i = lo;
- *     while (i < hi) {
- *       int r = Math.min(i + step, hi);
- *       build(actions, i, r, new Phaser(b));
- *       i = r;
+ * void build(Task[] actions, int lo, int hi, Phaser ph) {
+ *   if (hi - lo > TASKS_PER_PHASER) {
+ *     for (int i = lo; i < hi; i += TASKS_PER_PHASER) {
+ *       int j = Math.min(i + TASKS_PER_PHASER, hi);
+ *       build(actions, i, j, new Phaser(ph));
  *     }
  *   } else {
  *     for (int i = lo; i < hi; ++i)
- *       actions[i] = new Task(b);
- *       // assumes new Task(b) performs b.register()
+ *       actions[i] = new Task(ph);
+ *       // assumes new Task(ph) performs ph.register()
  *   }
  * }
  * // .. initially called, for n tasks via

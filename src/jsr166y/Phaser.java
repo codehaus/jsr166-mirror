@@ -142,14 +142,14 @@ import java.util.concurrent.locks.LockSupport;
  *     }
  *   };
  *   phaser.register();
- *   for (Runnable task : tasks) {
+ *   for (final Runnable task : tasks) {
  *     phaser.register();
  *     new Thread() {
  *       public void run() {
  *         do {
  *           task.run();
  *           phaser.arriveAndAwaitAdvance();
- *         } while(!phaser.isTerminated();
+ *         } while (!phaser.isTerminated());
  *       }
  *     }.start();
  *   }
@@ -158,35 +158,34 @@ import java.util.concurrent.locks.LockSupport;
  *
  * If the main task must later await termination, it
  * may re-register and then execute a similar loop:
- * <pre> {@code
+ *  <pre> {@code
  *   // ...
  *   phaser.register();
  *   while (!phaser.isTerminated())
- *     phaser.arriveAndAwaitAdvance();
- * }</pre>
+ *     phaser.arriveAndAwaitAdvance();}</pre>
  *
- * Related constructions may be used to await particular phase numbers
+ * <p>Related constructions may be used to await particular phase numbers
  * in contexts where you are sure that the phase will never wrap around
  * {@code Integer.MAX_VALUE}. For example:
  *
- * <pre> {@code
- *   void awaitPhase(Phaser phaser, int phase) {
- *     int p = phaser.register(); // assumes caller not already registered
- *     while (p < phase) {
- *       if (phaser.isTerminated())
- *         // ... deal with unexpected termination
- *       else
- *         p = phaser.arriveAndAwaitAdvance();
- *     }
- *     phaser.arriveAndDeregister();
+ *  <pre> {@code
+ * void awaitPhase(Phaser phaser, int phase) {
+ *   int p = phaser.register(); // assumes caller not already registered
+ *   while (p < phase) {
+ *     if (phaser.isTerminated())
+ *       // ... deal with unexpected termination
+ *     else
+ *       p = phaser.arriveAndAwaitAdvance();
  *   }
- * }</pre>
+ *   phaser.arriveAndDeregister();
+ * }}</pre>
  *
  *
  * <p>To create a set of tasks using a tree of phasers,
  * you could use code of the following form, assuming a
  * Task class with a constructor accepting a phaser that
  * it registers for upon construction:
+ *
  *  <pre> {@code
  * void build(Task[] actions, int lo, int hi, Phaser ph) {
  *   if (hi - lo > TASKS_PER_PHASER) {

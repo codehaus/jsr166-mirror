@@ -781,12 +781,13 @@ public class Phaser {
      * property.
      *
      * <p>You may override this method to perform an action with side
-     * effects visible to participating tasks, but doing so requires
-     * care: Method {@code onAdvance} may be invoked more than once
-     * per transition.  Further, unless all parties register before
-     * any arrive, and all {@link #awaitAdvance} at each phase, then
-     * you cannot ensure lack of interference from other parties
-     * during the invocation of this method.
+     * effects visible to participating tasks, but it is only sensible
+     * to do so in designs where all parties register before any
+     * arrive, and all {@link #awaitAdvance} at each phase.
+     * Otherwise, you cannot ensure lack of interference from other
+     * parties during the invocation of this method. Additionally,
+     * method {@code onAdvance} may be invoked more than once per
+     * transition if registrations are intermixed with arrivals.
      *
      * @param phase the phase number on entering the barrier
      * @param registeredParties the current number of registered parties

@@ -120,7 +120,7 @@ public class OfferRemoveLoops {
                         Thread.yield();
                     }
                 }
-                q.clear();              
+                q.clear();
                 approximateCount.set(0); // Releases waiting offerer thread
             }};
 

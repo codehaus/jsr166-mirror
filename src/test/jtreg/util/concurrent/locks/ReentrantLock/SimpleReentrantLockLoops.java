@@ -40,8 +40,8 @@ public final class SimpleReentrantLockLoops {
             }
         }
         pool.shutdown();
-	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
-	    throw new Error();
+        if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+            throw new Error();
     }
 
     static final class ReentrantLockLoop implements Runnable {

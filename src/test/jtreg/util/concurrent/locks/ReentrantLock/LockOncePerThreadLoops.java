@@ -39,8 +39,8 @@ public final class LockOncePerThreadLoops {
             Thread.sleep(100);
         }
         pool.shutdown();
-	if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
-	    throw new Error();
+        if (! pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+            throw new Error();
     }
 
     static final class ReentrantLockLoop implements Runnable {

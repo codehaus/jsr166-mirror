@@ -69,4 +69,3 @@ public class PriorityQueueSort {
             throw new RuntimeException("Iterator remove test failed.");
     }
 }
-

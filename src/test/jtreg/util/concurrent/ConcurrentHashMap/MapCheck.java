@@ -588,4 +588,3 @@ public class MapCheck {
     }
 
 }
-

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import java.util.*;
+package java.util;
 
 /**
  * A stable, adaptive, iterative mergesort that requires far fewer than
@@ -46,6 +46,8 @@ import java.util.*;
  * (privately) instantiable; a TimSort instance holds the state of an ongoing
  * sort, assuming the input array is large enough to warrant the full-blown
  * TimSort. Small arrays are sorted in place, using a binary insertion sort.
+ *
+ * @author Josh Bloch
  */
 class TimSort<T> {
     /**
@@ -175,7 +177,7 @@ class TimSort<T> {
 
         // If array is small, do a "mini-TimSort" with no merges
         if (nRemaining < MIN_MERGE) {
-            int initRunLen = countRunAndMakeAscending(a, lo, nRemaining, c);
+            int initRunLen = countRunAndMakeAscending(a, lo, hi, c);
             binarySort(a, lo, hi, lo + initRunLen, c);
             return;
         }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import java.util.*;
+package java.util;
 
 /**
  * This is a near duplicate of {@link TimSort}, modified for use with
@@ -26,6 +26,8 @@ import java.util.*;
  * comparator that simply returns {@code ((Comparable)first).compareTo(Second)}.
  * If this is the case, you are better off deleting ComparableTimSort to
  * eliminate the code duplication.  (See Arrays.java for details.)
+ *
+ * @author Josh Bloch
  */
 class ComparableTimSort {
     /**
@@ -143,7 +145,7 @@ class ComparableTimSort {
 
         // If array is small, do a "mini-TimSort" with no merges
         if (nRemaining < MIN_MERGE) {
-            int initRunLen = countRunAndMakeAscending(a, lo, nRemaining);
+            int initRunLen = countRunAndMakeAscending(a, lo, hi);
             binarySort(a, lo, hi, lo + initRunLen);
             return;
         }
@@ -668,7 +670,7 @@ class ComparableTimSort {
                     dest += count1;
                     cursor1 += count1;
                     len1 -= count1;
-                    if (len1 <= 1) // len1 == 1 || len1 == 0
+                    if (len1 <= 1)  // len1 == 1 || len1 == 0
                         break outer;
                 }
                 a[dest++] = a[cursor2++];

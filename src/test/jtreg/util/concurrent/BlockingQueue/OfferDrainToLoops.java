@@ -39,6 +39,10 @@ public class OfferDrainToLoops {
         test(new LinkedTransferQueue());
     }
 
+    Random getRandom() {
+        return ThreadLocalRandom.current();
+    }
+
     void test(final BlockingQueue q) throws Throwable {
         System.out.println(q.getClass().getSimpleName());
         final long testDurationNanos = testDurationMillis * 1000L * 1000L;
@@ -84,7 +88,7 @@ public class OfferDrainToLoops {
 
         Thread drainer = new CheckedThread("drainer") {
             protected void realRun() {
-                final ThreadLocalRandom rnd = ThreadLocalRandom.current();
+                final Random rnd = getRandom();
                 while (! quittingTime()) {
                     List list = new ArrayList();
                     int n = rnd.nextBoolean() ?
@@ -102,7 +106,7 @@ public class OfferDrainToLoops {
 
         Thread scanner = new CheckedThread("scanner") {
             protected void realRun() {
-                final ThreadLocalRandom rnd = ThreadLocalRandom.current();
+                final Random rnd = getRandom();
                 while (! quittingTime()) {
                     switch (rnd.nextInt(3)) {
                     case 0: checkNotContainsNull(q); break;

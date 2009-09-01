@@ -23,7 +23,7 @@
 
 /*
  * @test
- * @bug 6316155 6595669
+ * @bug 6316155 6595669 6871697 6868712
  * @summary Test concurrent offer vs. remove
  * @run main OfferRemoveLoops 300
  * @author Martin Buchholz
@@ -59,6 +59,10 @@ public class OfferRemoveLoops {
         testQueue(new LinkedTransferQueue());
     }
 
+    Random getRandom() {
+        return ThreadLocalRandom.current();
+    }
+
     void testQueue(final Queue q) throws Throwable {
         System.out.println(q.getClass().getSimpleName());
         final long testDurationNanos = testDurationMillis * 1000L * 1000L;
@@ -92,8 +96,7 @@ public class OfferRemoveLoops {
 
         Thread offerer = new CheckedThread("offerer") {
             protected void realRun() {
-                final ThreadLocalRandom rnd = ThreadLocalRandom.current();
-                final long chunkSize = rnd.nextInt(maxChunkSize) + 2;
+                final long chunkSize = getRandom().nextInt(maxChunkSize) + 2;
                 long c = 0;
                 for (long i = 0; ! quittingTime(i); i++) {
                     if (q.offer(Long.valueOf(c))) {
@@ -108,8 +111,7 @@ public class OfferRemoveLoops {
 
         Thread remover = new CheckedThread("remover") {
             protected void realRun() {
-                final ThreadLocalRandom rnd = ThreadLocalRandom.current();
-                final long chunkSize = rnd.nextInt(maxChunkSize) + 2;
+                final long chunkSize = getRandom().nextInt(maxChunkSize) + 2;
                 long c = 0;
                 for (long i = 0; ! quittingTime(i); i++) {
                     if (q.remove(Long.valueOf(c))) {
@@ -126,7 +128,7 @@ public class OfferRemoveLoops {
 
         Thread scanner = new CheckedThread("scanner") {
             protected void realRun() {
-                final ThreadLocalRandom rnd = ThreadLocalRandom.current();
+                final Random rnd = getRandom();
                 while (! quittingTime()) {
                     switch (rnd.nextInt(3)) {
                     case 0: checkNotContainsNull(q); break;

@@ -115,7 +115,7 @@ package java.util.concurrent.atomic;
  *
  *
  *     <li> <em>d</em>, a use of <em>r</em> with the effect
- *          of reading or writing a field (or if array, an element) 
+ *          of reading or writing a field (or if array, an element)
  *          of the referenced object.
  *
  *   </ul>

@@ -413,13 +413,17 @@ public class ForkJoinWorkerThread extends Thread {
 
     // Intrinsics-based support for queue operations.
 
+    private static long slotOffset(int i) {
+        return ((long) i << qShift) + qBase;
+    }
+
     /**
      * Adds in store-order the given task at given slot of q to null.
      * Caller must ensure q is non-null and index is in range.
      */
     private static void setSlot(ForkJoinTask<?>[] q, int i,
                                 ForkJoinTask<?> t) {
-        UNSAFE.putOrderedObject(q, (i << qShift) + qBase, t);
+        UNSAFE.putOrderedObject(q, slotOffset(i), t);
     }
 
     /**
@@ -428,7 +432,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private static boolean casSlotNull(ForkJoinTask<?>[] q, int i,
                                        ForkJoinTask<?> t) {
-        return UNSAFE.compareAndSwapObject(q, (i << qShift) + qBase, t, null);
+        return UNSAFE.compareAndSwapObject(q, slotOffset(i), t, null);
     }
 
     /**

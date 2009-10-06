@@ -3031,12 +3031,14 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     // Fenced store into segment table array. Unneeded when we have Fences
     static final  void storeNode(Node[] table,
                                  int i, Node r) {
-        _unsafe.putOrderedObject(table, (i << tableShift) + tableBase, r);
+        long nodeOffset = ((long) i << tableShift) + tableBase;
+        _unsafe.putOrderedObject(table, nodeOffset, r);
     }
 
     static final  void storeSegment(Segment[] segs,
                                     int i, Segment s) {
-        _unsafe.putOrderedObject(segs, (i << segmentsShift) + segmentsBase, s);
+        long segmentOffset = ((long) i << segmentsShift) + segmentsBase;
+        _unsafe.putOrderedObject(segs, segmentOffset, s);
     }
 
 

@@ -142,7 +142,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * that using very small constants in the range of 1-3 work best
      * over a range of platforms. Larger values introduce increasing
      * costs of cache misses and risks of long traversal chains, while
-     * smaller values increase CAS contentiona and overhead.
+     * smaller values increase CAS contention and overhead.
      *
      * Dual queues with slack differ from plain M&S dual queues by
      * virtue of only sometimes updating head or tail pointers when
@@ -252,8 +252,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * efficient explicit control paths instead of letting JVMs insert
      * implicit NullPointerExceptions when they are null.  While not
      * currently fully implemented, we also leave open the possibility
-     * of re-nulling these fields when empty (which is is complicated
-     * to arrange, for little benefit.)
+     * of re-nulling these fields when empty (which is complicated to
+     * arrange, for little benefit.)
      *
      * All enqueue/dequeue operations are handled by the single method
      * "xfer" with parameters indicating whether to act as some form

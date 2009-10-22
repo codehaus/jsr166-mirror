@@ -487,7 +487,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     }
                 }
                 Node n = p.next;
-                p = p != n ? n : (h = head);  // Use head if p offlist
+                p = (p != n) ? n : (h = head); // Use head if p offlist
             }
 
             if (how >= ASYNC) {               // No matches available
@@ -523,7 +523,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 return null;                  // lost race vs opposite mode
             else if ((n = p.next) != null)    // Not tail; keep traversing
                 p = p != t && t != (u = tail) ? (t = u) : // stale tail
-                    p != n ? n : null;        // restart if off list
+                    (p != n) ? n : null;      // restart if off list
             else if (!p.casNext(null, s))
                 p = p.next;                   // re-read on CAS failure
             else {
@@ -640,9 +640,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private Node firstOfMode(boolean data) {
         for (Node p = head; p != null; ) {
             if (!p.isMatched())
-                return p.isData == data? p : null;
+                return (p.isData == data) ? p : null;
             Node n = p.next;
-            p = n != p ? n : head;
+            p = (n != p) ? n : head;
         }
         return null;
     }
@@ -658,7 +658,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (item != p && (item != null) == isData)
                 return isData ? item : null;
             Node n = p.next;
-            p = n != p ? n : head;
+            p = (n != p) ? n : head;
         }
         return null;
     }
@@ -712,7 +712,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 else if (item == null)
                     break;
                 Node n = p.next;
-                p = n != p ? n : head;
+                p = (n != p) ? n : head;
             }
             nextNode = null;
         }
@@ -763,7 +763,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          */
         if (pred != null && pred != s) {
             while (pred.next == s) {
-                Node oldpred = cleanMe == null? null : reclean();
+                Node oldpred = (cleanMe == null) ? null : reclean();
                 Node n = s.next;
                 if (n != null) {
                     if (n != s)

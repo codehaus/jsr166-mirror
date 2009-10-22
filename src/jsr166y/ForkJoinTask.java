@@ -1219,7 +1219,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private static final long serialVersionUID = -7721805057305804111L;
 
     /**
-     * Save the state to a stream.
+     * Saves the state to a stream.
      *
      * @serialData the current run status and the exception thrown
      * during execution, or {@code null} if none
@@ -1232,7 +1232,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Reconstitute the instance from a stream.
+     * Reconstitutes the instance from a stream.
      *
      * @param s the stream
      */

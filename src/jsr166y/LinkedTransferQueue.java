@@ -124,7 +124,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *
      * We introduce here an approach that lies between the extremes of
      * never versus always updating queue (head and tail) pointers
-     * that reflects the tradeoff of sometimes require extra traversal
+     * that reflects the tradeoff of sometimes requiring extra traversal
      * steps to locate the first and/or last unmatched nodes, versus
      * the reduced overhead and contention of fewer updates to queue
      * pointers. For example, a possible snapshot of a queue is:
@@ -180,7 +180,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * (Similar issues arise in non-GC environments.)  To cope with
      * this in our implementation, upon CASing to advance the head
      * pointer, we set the "next" link of the previous head to point
-     * only to itself; thus limiting the length connected dead lists.
+     * only to itself; thus limiting the length of connected dead lists.
      * (We also take similar care to wipe out possibly garbage
      * retaining values held in other Node fields.)  However, doing so
      * adds some further complexity to traversal: If any "next"
@@ -270,7 +270,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *    safely jump to a node on the list by continuing the
      *    traversal at current head.
      *
-     *    On successful append, if the call was ASYNC, return
+     *    On successful append, if the call was ASYNC, return.
      *
      * 3. Await match or cancellation (method awaitMatch)
      *
@@ -322,15 +322,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private static final int CHAINED_SPINS = FRONT_SPINS >>> 2;
 
     /**
-     * Queue nodes. Uses Object, not E for items to allow forgetting
+     * Queue nodes. Uses Object, not E, for items to allow forgetting
      * them after use.  Relies heavily on Unsafe mechanics to minimize
-     * unecessary ordering constraints: Writes that intrinsically
+     * unnecessary ordering constraints: Writes that intrinsically
      * precede or follow CASes use simple relaxed forms.  Other
      * cleanups use releasing/lazy writes.
      */
     static final class Node {
         final boolean isData;   // false if this is a request node
-        volatile Object item;   // initially nonnull if isData; CASed to match
+        volatile Object item;   // initially non-null if isData; CASed to match
         volatile Node next;
         volatile Thread waiter; // null until waiting
 
@@ -344,8 +344,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Create a new node. Uses relaxed write because item can only
-         * be seen if followed by CAS
+         * Creates a new node. Uses relaxed write because item can only
+         * be seen if followed by CAS.
          */
         Node(Object item, boolean isData) {
             UNSAFE.putObject(this, itemOffset, item); // relaxed write
@@ -391,7 +391,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Tries to artifically match a data node -- used by remove.
+         * Tries to artificially match a data node -- used by remove.
          */
         final boolean tryMatchData() {
             Object x = item;
@@ -449,10 +449,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Implements all queuing methods. See above for explanation.
      *
      * @param e the item or null for take
-     * @param haveData true if this is a put else a take
+     * @param haveData true if this is a put, else a take
      * @param how NOW, ASYNC, SYNC, or TIMEOUT
      * @param nanos timeout in nanosecs, used only if mode is TIMEOUT
-     * @return an item if matched, else e;
+     * @return an item if matched, else e
      * @throws NullPointerException if haveData mode but e is null
      */
     private Object xfer(Object e, boolean haveData, int how, long nanos) {
@@ -504,7 +504,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Tries to append node s as tail
+     * Tries to append node s as tail.
+     *
      * @param haveData true if appending in data mode
      * @param s the node to append
      * @return null on failure due to losing race with append in
@@ -593,7 +594,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Return spin/yield value for a node with given predecessor and
+     * Returns spin/yield value for a node with given predecessor and
      * data mode. See above for explanation.
      */
     private static int spinsFor(Node pred, boolean haveData) {
@@ -633,7 +634,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /* -------------- Traversal methods -------------- */
 
     /**
-     * Return the first unmatched node of the given mode, or null if
+     * Returns the first unmatched node of the given mode, or null if
      * none.  Used by methods isEmpty, hasWaitingConsumer.
      */
     private Node firstOfMode(boolean data) {
@@ -663,8 +664,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Traverse and count nodes of the given mode.
-     * Used by methds size and getWaitingConsumerCount.
+     * Traverses and counts unmatched nodes of the given mode.
+     * Used by methods size and getWaitingConsumerCount.
      */
     private int countOfMode(boolean data) {
         int count = 0;
@@ -1124,7 +1125,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Save the state to a stream (that is, serialize it).
+     * Saves the state to a stream (that is, serializes it).
      *
      * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
@@ -1140,8 +1141,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Reconstitute the Queue instance from a stream (that is,
-     * deserialize it).
+     * Reconstitutes the Queue instance from a stream (that is,
+     * deserializes it).
      *
      * @param s the stream
      */

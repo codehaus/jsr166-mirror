@@ -105,29 +105,31 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * successful atomic operation per enq/deq pair. But it also
      * enables lower cost variants of queue maintenance mechanics. (A
      * variation of this idea applies even for non-dual queues that
-     * support deletion of embedded elements, such as
+     * support deletion of interior elements, such as
      * j.u.c.ConcurrentLinkedQueue.)
      *
-     * Once a node is matched, its item can never again change.  We
-     * may thus arrange that the linked list of them contains a prefix
-     * of zero or more matched nodes, followed by a suffix of zero or
-     * more unmatched nodes. (Note that we allow both the prefix and
-     * suffix to be zero length, which in turn means that we do not
-     * use a dummy header.)  If we were not concerned with either time
-     * or space efficiency, we could correctly perform enqueue and
-     * dequeue operations by traversing from a pointer to the initial
-     * node; CASing the item of the first unmatched node on match and
-     * CASing the next field of the trailing node on appends.  While
-     * this would be a terrible idea in itself, it does have the
-     * benefit of not requiring ANY atomic updates on head/tail
-     * fields.
+     * Once a node is matched, its match status can never again
+     * change.  We may thus arrange that the linked list of them
+     * contain a prefix of zero or more matched nodes, followed by a
+     * suffix of zero or more unmatched nodes. (Note that we allow
+     * both the prefix and suffix to be zero length, which in turn
+     * means that we do not use a dummy header.)  If we were not
+     * concerned with either time or space efficiency, we could
+     * correctly perform enqueue and dequeue operations by traversing
+     * from a pointer to the initial node; CASing the item of the
+     * first unmatched node on match and CASing the next field of the
+     * trailing node on appends. (Plus some special-casing when
+     * initially empty).  While this would be a terrible idea in
+     * itself, it does have the benefit of not requiring ANY atomic
+     * updates on head/tail fields.
      *
      * We introduce here an approach that lies between the extremes of
-     * never versus always updating queue (head and tail) pointers
-     * that reflects the tradeoff of sometimes requiring extra traversal
-     * steps to locate the first and/or last unmatched nodes, versus
-     * the reduced overhead and contention of fewer updates to queue
-     * pointers. For example, a possible snapshot of a queue is:
+     * never versus always updating queue (head and tail) pointers.
+     * This offers a tradeoff between sometimes requiring extra
+     * traversal steps to locate the first and/or last unmatched
+     * nodes, versus the reduced overhead and contention of fewer
+     * updates to queue pointers. For example, a possible snapshot of
+     * a queue is:
      *
      *  head           tail
      *    |              |
@@ -139,7 +141,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * similarly for "tail") is an empirical matter. We have found
      * that using very small constants in the range of 1-3 work best
      * over a range of platforms. Larger values introduce increasing
-     * costs of cache misses and risks of long traversal chains.
+     * costs of cache misses and risks of long traversal chains, while
+     * smaller values increase CAS contentiona and overhead.
      *
      * Dual queues with slack differ from plain M&S dual queues by
      * virtue of only sometimes updating head or tail pointers when
@@ -203,13 +206,22 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * additional GC bookkeeping ("write barriers") that are sometimes
      * more costly than the writes themselves because of contention).
      *
-     * Removal of internal nodes (due to timed out or interrupted
+     * Removal of interior nodes (due to timed out or interrupted
      * waits, or calls to remove or Iterator.remove) uses a scheme
-     * roughly similar to that in Scherer, Lea, and Scott
+     * roughly similar to that in Scherer, Lea, and Scott's
      * SynchronousQueue. Given a predecessor, we can unsplice any node
      * except the (actual) tail of the queue. To avoid build-up of
      * cancelled trailing nodes, upon a request to remove a trailing
-     * node, it is placed in field "cleanMe" to be unspliced later.
+     * node, it is placed in field "cleanMe" to be unspliced upon the
+     * next call to unsplice any other node.  Situations needing such
+     * mechanics are not common but do occur in practice; for example
+     * when an unbounded series of short timed calls to poll
+     * repeatedly time out but never otherwise fall off the list
+     * because of an untimed call to take at the front of the
+     * queue. (Note that maintaining field cleanMe does not otherwise
+     * much impact garbage retention even if never cleared by some
+     * other call because the held node will eventually either
+     * directly or indirectly lead to a self-link once off the list.)
      *
      * *** Overview of implementation ***
      *
@@ -217,19 +229,31 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * slack of two.  The slack value is hard-wired: a path greater
      * than one is naturally implemented by checking equality of
      * traversal pointers except when the list has only one element,
-     * in which case we keep max slack at one. Avoiding tracking
-     * explicit counts across situations slightly simplifies an
+     * in which case we keep target slack at one. Avoiding tracking
+     * explicit counts across method calls slightly simplifies an
      * already-messy implementation. Using randomization would
      * probably work better if there were a low-quality dirt-cheap
      * per-thread one available, but even ThreadLocalRandom is too
      * heavy for these purposes.
      *
-     * With such a small slack value, path short-circuiting is rarely
-     * worthwhile. However, it is used (in awaitMatch) immediately
-     * before a waiting thread starts to block, as a final bit of
-     * helping at a point when contention with others is extremely
-     * unlikely (since if other threads that could release it are
-     * operating, then the current thread wouldn't be blocking).
+     * With such a small target slack value, it is rarely worthwhile
+     * to augment this with path short-circuiting; i.e., unsplicing
+     * nodes between head and the first unmatched node, or similarly
+     * for tail, rather than advancing head or tail proper. However,
+     * it is used (in awaitMatch) immediately before a waiting thread
+     * starts to block, as a final bit of helping at a point when
+     * contention with others is extremely unlikely (since if other
+     * threads that could release it are operating, then the current
+     * thread wouldn't be blocking).
+     *
+     * We allow both the head and tail fields to be null before any
+     * nodes are enqueued; initializing upon first append.  This
+     * simplifies some other logic, as well as providing more
+     * efficient explicit control paths instead of letting JVMs insert
+     * implicit NullPointerExceptions when they are null.  While not
+     * currently fully implemented, we also leave open the possibility
+     * of re-nulling these fields when empty (which is is complicated
+     * to arrange, for little benefit.)
      *
      * All enqueue/dequeue operations are handled by the single method
      * "xfer" with parameters indicating whether to act as some form
@@ -249,9 +273,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *    case matching it and returning, also if necessary updating
      *    head to one past the matched node (or the node itself if the
      *    list has no other unmatched nodes). If the CAS misses, then
-     *    a retry loops until the slack is at most two. Traversals
-     *    also check if the initial head is now off-list, in which
-     *    case they start at the new head.
+     *    a loop retries advancing head by two steps until either
+     *    success or the slack is at most two. By requiring that each
+     *    attempt advances head by two (if applicable), we ensure that
+     *    the slack does not grow without bound. Traversals also check
+     *    if the initial head is now off-list, in which case they
+     *    start at the new head.
      *
      *    If no candidates are found and the call was untimed
      *    poll/offer, (argument "how" is NOW) return.
@@ -506,14 +533,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Tries to append node s as tail.
      *
-     * @param haveData true if appending in data mode
      * @param s the node to append
+     * @param haveData true if appending in data mode
      * @return null on failure due to losing race with append in
      * different mode, else s's predecessor, or s itself if no
      * predecessor
      */
     private Node tryAppend(Node s, boolean haveData) {
-        for (Node t = tail, p = t;;) { // move p to actual tail and append
+        for (Node t = tail, p = t;;) { // move p to last node and append
             Node n, u;                        // temps for reads of next & tail
             if (p == null && (p = head) == null) {
                 if (casHead(null, s))
@@ -521,13 +548,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
             else if (p.cannotPrecede(haveData))
                 return null;                  // lost race vs opposite mode
-            else if ((n = p.next) != null)    // Not tail; keep traversing
+            else if ((n = p.next) != null)    // not last; keep traversing
                 p = p != t && t != (u = tail) ? (t = u) : // stale tail
                     (p != n) ? n : null;      // restart if off list
             else if (!p.casNext(null, s))
                 p = p.next;                   // re-read on CAS failure
             else {
-                if (p != t) {                 // Update if slack now >= 2
+                if (p != t) {                 // update if slack now >= 2
                     while ((tail != t || !casTail(t, s)) &&
                            (t = tail)   != null &&
                            (s = t.next) != null && // advance and retry
@@ -541,7 +568,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Spins/yields/blocks until node s is matched or caller gives up.
      *
-     * @param pred the predecessor of s or s or null if none
+     * @param pred the predecessor of s, or s or null if none
      * @param s the waiting node
      * @param e the comparison value for checking match
      * @param how either SYNC or TIMEOUT
@@ -754,8 +781,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         s.forgetContents(); // clear unneeded fields
         /*
          * At any given time, exactly one node on list cannot be
-         * deleted -- the last inserted node. To accommodate this, if
-         * we cannot delete s, we save its predecessor as "cleanMe",
+         * unlinked -- the last inserted node. To accommodate this, if
+         * we cannot unlink s, we save its predecessor as "cleanMe",
          * processing the previously saved version first. Because only
          * one node in the list can have a null next, at least one of
          * node s or the node previously saved can always be

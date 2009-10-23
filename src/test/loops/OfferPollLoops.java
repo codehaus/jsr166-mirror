@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 //import jsr166y.*;
 
-public class ProducerConsumerLoops {
+public class OfferPollLoops {
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
     static final Random rng = new Random();
     static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -30,7 +30,7 @@ public class ProducerConsumerLoops {
 
     // Number of elements passed around -- must be power of two
     // Elements are reused from pool to minimize alloc impact
-    static final int POOL_SIZE = 1 << 7;
+    static final int POOL_SIZE = 1 << 8;
     static final int POOL_MASK = POOL_SIZE-1;
     static final Integer[] intPool = new Integer[POOL_SIZE];
     static {
@@ -47,15 +47,15 @@ public class ProducerConsumerLoops {
     static final int LAG_MASK = (1 << 12) - 1;
 
     public static void main(String[] args) throws Exception {
-        int maxPairs = NCPUS * 3 / 2;
+        int maxN = NCPUS * 3 / 2;
 
         if (args.length > 0) 
-            maxPairs = Integer.parseInt(args[0]);
+            maxN = Integer.parseInt(args[0]);
 
         warmup();
         print = true;
         int k = 1;
-        for (int i = 1; i <= maxPairs;) {
+        for (int i = 1; i <= maxN;) {
             System.out.println("Pairs:" + i);
             oneTest(i, ITERS);
             if (i == k) {
@@ -98,6 +98,11 @@ public class ProducerConsumerLoops {
 
         Thread.sleep(100); // System.gc();
         if (print)
+            System.out.print("ConcurrentLinkedQueue   ");
+        oneRun(new ConcurrentLinkedQueue<Integer>(), n, iters);
+
+        Thread.sleep(100); // System.gc();
+        if (print)
             System.out.print("LinkedBlockingQueue     ");
         oneRun(new LinkedBlockingQueue<Integer>(), n, iters);
 
@@ -116,27 +121,7 @@ public class ProducerConsumerLoops {
             System.out.print("ArrayBlockingQueue      ");
         oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE), n, iters);
 
-        Thread.sleep(100); // System.gc();
-        if (print)
-            System.out.print("SynchronousQueue        ");
-        oneRun(new SynchronousQueue<Integer>(), n, iters);
 
-        
-        Thread.sleep(100); // System.gc();
-        if (print)
-            System.out.print("SynchronousQueue(fair)  ");
-        oneRun(new SynchronousQueue<Integer>(true), n, iters);
-
-        Thread.sleep(100); // System.gc();
-        if (print)
-            System.out.print("LinkedTransferQueue(xfer)");
-        oneRun(new LTQasSQ<Integer>(), n, iters);
-
-        Thread.sleep(100); // System.gc();
-        if (print)
-            System.out.print("LinkedTransferQueue(half)");
-        oneRun(new HalfSyncLTQ<Integer>(), n, iters);
-        
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("PriorityBlockingQueue   ");
@@ -151,10 +136,10 @@ public class ProducerConsumerLoops {
     
     static abstract class Stage implements Runnable {
         final int iters;
-        final BlockingQueue<Integer> queue;
+        final Queue<Integer> queue;
         final CyclicBarrier barrier;
         final Phaser lagPhaser;
-        Stage (BlockingQueue<Integer> q, CyclicBarrier b, Phaser s,
+        Stage (Queue<Integer> q, CyclicBarrier b, Phaser s,
                int iters) {
             queue = q; 
             barrier = b;
@@ -164,7 +149,7 @@ public class ProducerConsumerLoops {
     }
 
     static class Producer extends Stage {
-        Producer(BlockingQueue<Integer> q, CyclicBarrier b, Phaser s,
+        Producer(Queue<Integer> q, CyclicBarrier b, Phaser s,
                  int iters) {
             super(q, b, s, iters);
         }
@@ -174,14 +159,19 @@ public class ProducerConsumerLoops {
                 barrier.await();
                 int ps = 0;
                 int r = hashCode();
-                for (int i = 0; i < iters; ++i) {
+                int i = 0;
+                for (;;) {
                     r = LoopHelpers.compute7(r);
                     Integer v = intPool[r & POOL_MASK];
                     int k = v.intValue();
-                    queue.put(v);
-                    ps += k;
-                    if ((i & LAG_MASK) == LAG_MASK)
-                        lagPhaser.arriveAndAwaitAdvance();
+                    if (queue.offer(v)) {
+                        ps += k;
+                        ++i;
+                        if (i >= iters)
+                            break;
+                        if ((i & LAG_MASK) == LAG_MASK)
+                            lagPhaser.arriveAndAwaitAdvance();
+                    }                        
                 }
                 addProducerSum(ps);
                 barrier.await();
@@ -194,7 +184,7 @@ public class ProducerConsumerLoops {
     }
 
     static class Consumer extends Stage {
-        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, Phaser s,
+        Consumer(Queue<Integer> q, CyclicBarrier b, Phaser s,
                  int iters) { 
             super(q, b, s, iters);
         }
@@ -203,12 +193,18 @@ public class ProducerConsumerLoops {
             try {
                 barrier.await();
                 int cs = 0;
-                for (int i = 0; i < iters; ++i) {
-                    Integer v = queue.take();
-                    int k = v.intValue();
-                    cs += k;
-                    if ((i & LAG_MASK) == LAG_MASK)
-                        lagPhaser.arriveAndAwaitAdvance();
+                int i = 0;
+                for (;;) {
+                    Integer v = queue.poll();
+                    if (v != null) {
+                        int k = v.intValue();
+                        cs += k;
+                        ++i;
+                        if (i >= iters)
+                            break;
+                        if ((i & LAG_MASK) == LAG_MASK)
+                            lagPhaser.arriveAndAwaitAdvance();
+                    }
                 }
                 addConsumerSum(cs);
                 barrier.await();
@@ -221,7 +217,7 @@ public class ProducerConsumerLoops {
 
     }
 
-    static void oneRun(BlockingQueue<Integer> q, int n, int iters) throws Exception {
+    static void oneRun(Queue<Integer> q, int n, int iters) throws Exception {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(n * 2 + 1, timer);
         for (int i = 0; i < n; ++i) {
@@ -237,26 +233,6 @@ public class ProducerConsumerLoops {
             System.out.println("\t: " + LoopHelpers.rightJustify(time / (iters * n)) + " ns per transfer");
     }
 
-    static final class LTQasSQ<T> extends LinkedTransferQueue<T> {
-        LTQasSQ() { super(); }
-        public void put(T x) {
-            try { super.transfer(x); 
-            } catch (InterruptedException ex) { throw new Error(); }
-        }
-    }
 
-    static final class HalfSyncLTQ<T> extends LinkedTransferQueue<T> {
-        int calls;
-        HalfSyncLTQ() { super(); }
-        public void put(T x) {
-            if ((++calls & 1) == 0)
-                super.put(x);
-            else {
-                try { super.transfer(x); 
-                } catch (InterruptedException ex) { 
-                    throw new Error(); 
-                }
-            }
-        }
-    }
 }
+

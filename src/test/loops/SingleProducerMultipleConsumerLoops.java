@@ -5,56 +5,130 @@
  */
 
 import java.util.concurrent.*;
+//import jsr166y.*;
 
 public class SingleProducerMultipleConsumerLoops {
-    static final int CAPACITY =      100;
+    static final int NCPUS = Runtime.getRuntime().availableProcessors();
+
+    // Number of puts by producers or takes by consumers
+    static final int ITERS = 1 << 20;
 
     static final ExecutorService pool = Executors.newCachedThreadPool();
     static boolean print = false;
 
+    // Number of elements passed around -- must be power of two
+    // Elements are reused from pool to minimize alloc impact
+    static final int POOL_SIZE = 1 << 8;
+    static final int POOL_MASK = POOL_SIZE-1;
+    static final Integer[] intPool = new Integer[POOL_SIZE];
+    static {
+        for (int i = 0; i < POOL_SIZE; ++i) 
+            intPool[i] = Integer.valueOf(i);
+    }
+
     public static void main(String[] args) throws Exception {
-        int maxConsumers = 100;
-        int iters = 10000;
+        int maxn = 12;
 
         if (args.length > 0) 
-            maxConsumers = Integer.parseInt(args[0]);
+            maxn = Integer.parseInt(args[0]);
 
         print = false;
-        System.out.println("Warmup...");
-        oneTest(1, 10000);
-        Thread.sleep(100);
-        oneTest(2, 10000);
-        Thread.sleep(100);
+        warmup();
         print = true;
-        
-        for (int i = 1; i <= maxConsumers; i += (i+1) >>> 1) {
+
+        int k = 1;
+        for (int i = 1; i <= maxn;) {
             System.out.println("Consumers:" + i);
-            oneTest(i, iters);
-            Thread.sleep(100);
+            oneTest(i, ITERS);
+            if (i == k) {
+                k = i << 1;
+                i = i + (i >>> 1);
+            } 
+            else 
+                i = k;
         }
+        
         pool.shutdown();
    }
 
-    static void oneTest(int consumers, int iters) throws Exception {
-        if (print)
-            System.out.print("ArrayBlockingQueue      ");
-        oneRun(new ArrayBlockingQueue<Integer>(CAPACITY), consumers, iters);
+    static void warmup() throws Exception {
+        print = false;
+        System.out.print("Warmup ");
+        int it = 2000;
+        for (int j = 5; j > 0; --j) {
+            oneTest(j, it); 
+            System.out.print(".");
+            it += 1000;
+        }
+        System.gc();
+        it = 20000;
+        for (int j = 5; j > 0; --j) {
+            oneTest(j, it); 
+            System.out.print(".");
+            it += 10000;
+        }
+        System.gc();
+        System.out.println();
+    }
 
+    static void oneTest(int n, int iters) throws Exception {
+        int fairIters = iters/16;
+
+        Thread.sleep(100); // System.gc();
+        if (print)
+            System.out.print("LinkedTransferQueue     ");
+        oneRun(new LinkedTransferQueue<Integer>(), n, iters);
+
+        Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("LinkedBlockingQueue     ");
-        oneRun(new LinkedBlockingQueue<Integer>(CAPACITY), consumers, iters);
+        oneRun(new LinkedBlockingQueue<Integer>(), n, iters);
 
+        Thread.sleep(100); // System.gc();
         if (print)
-            System.out.print("PriorityBlockingQueue   ");
-        oneRun(new PriorityBlockingQueue<Integer>(), consumers, iters/10);
+            System.out.print("LinkedBlockingQueue(cap)");
+        oneRun(new LinkedBlockingQueue<Integer>(POOL_SIZE), n, iters);
 
+        Thread.sleep(100); // System.gc();
+        if (print)
+            System.out.print("LinkedBlockingDeque     ");
+        oneRun(new LinkedBlockingDeque<Integer>(), n, iters);
+        
+        Thread.sleep(100); // System.gc();
+        if (print)
+            System.out.print("ArrayBlockingQueue      ");
+        oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE), n, iters);
+
+        Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("SynchronousQueue        ");
-        oneRun(new SynchronousQueue<Integer>(), consumers, iters);
+        oneRun(new SynchronousQueue<Integer>(), n, iters);
+        
+        Thread.sleep(100); // System.gc();
+        if (print)
+            System.out.print("SynchronousQueue(fair)  ");
+        oneRun(new SynchronousQueue<Integer>(true), n, iters);
 
+        Thread.sleep(100); // System.gc();
+        if (print)
+            System.out.print("LinkedTransferQueue(xfer)");
+        oneRun(new LTQasSQ<Integer>(), n, iters);
+
+        Thread.sleep(100); // System.gc();
+        if (print)
+            System.out.print("LinkedTransferQueue(half)");
+        oneRun(new HalfSyncLTQ<Integer>(), n, iters);
+        
+        Thread.sleep(100); // System.gc();
+        if (print)
+            System.out.print("PriorityBlockingQueue   ");
+        oneRun(new PriorityBlockingQueue<Integer>(), n, fairIters);
+
+        Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("ArrayBlockingQueue(fair)");
-        oneRun(new ArrayBlockingQueue<Integer>(CAPACITY, true), consumers, iters/10);
+        oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE, true), n, fairIters);
+
     }
     
     static abstract class Stage implements Runnable {
@@ -77,8 +151,11 @@ public class SingleProducerMultipleConsumerLoops {
         public void run() {
             try {
                 barrier.await();
+                int r = hashCode();
                 for (int i = 0; i < iters; ++i) {
-                    queue.put(new Integer(i));
+                    r = LoopHelpers.compute7(r);
+                    Integer v = intPool[r & POOL_MASK];
+                    queue.put(v);
                 }
                 barrier.await();
                 result = 432;
@@ -93,6 +170,7 @@ public class SingleProducerMultipleConsumerLoops {
     static class Consumer extends Stage {
         Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) { 
             super(q, b, iters);
+
         }
 
         public void run() {
@@ -100,18 +178,13 @@ public class SingleProducerMultipleConsumerLoops {
                 barrier.await();
                 int l = 0;
                 int s = 0;
-                int last = -1;
                 for (int i = 0; i < iters; ++i) {
                     Integer item = queue.take();
-                    int v = item.intValue();
-                    if (v < last)
-                        throw new Error("Out-of-Order transfer");
-                    last = v;
-                    l = LoopHelpers.compute1(v);
-                    s += l;
+                    s += item.intValue();
                 }
                 barrier.await();
                 result = s;
+                if (s == 0) System.out.print(" ");
             }
             catch (Exception ie) { 
                 ie.printStackTrace(); 
@@ -133,6 +206,29 @@ public class SingleProducerMultipleConsumerLoops {
         long time = timer.getTime();
         if (print)
             System.out.println("\t: " + LoopHelpers.rightJustify(time / (iters * nconsumers)) + " ns per transfer");
+    }
+
+    static final class LTQasSQ<T> extends LinkedTransferQueue<T> {
+        LTQasSQ() { super(); }
+        public void put(T x) {
+            try { super.transfer(x); 
+            } catch (InterruptedException ex) { throw new Error(); }
+        }
+    }
+
+    static final class HalfSyncLTQ<T> extends LinkedTransferQueue<T> {
+        int calls;
+        HalfSyncLTQ() { super(); }
+        public void put(T x) {
+            if ((++calls & 1) == 0)
+                super.put(x);
+            else {
+                try { super.transfer(x); 
+                } catch (InterruptedException ex) { 
+                    throw new Error(); 
+                }
+            }
+        }
     }
 
 }

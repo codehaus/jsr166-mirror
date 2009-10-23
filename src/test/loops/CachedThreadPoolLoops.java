@@ -4,21 +4,22 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 
+//import jsr166y.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 public class CachedThreadPoolLoops {
+    static final int NCPUS = Runtime.getRuntime().availableProcessors();
     static final AtomicInteger remaining = new AtomicInteger();
     static final int maxIters = 1000000;
 
     public static void main(String[] args) throws Exception {
-        int maxThreads = 100;
-
+        int maxThreads = NCPUS * 3 / 2; // 100;
         if (args.length > 0) 
             maxThreads = Integer.parseInt(args[0]);
 
         System.out.print("Warmup:");
-        for (int j = 0; j < 2; ++j) {
+        for (int j = 0; j < 1; ++j) {
             int k = 1;
             for (int i = 1; i <= maxThreads;) {
                 System.out.print(" " + i);
@@ -49,14 +50,34 @@ public class CachedThreadPoolLoops {
    }
 
     static void oneTest(int nThreads, int iters, boolean print) throws Exception {
-        //        if (print) System.out.print("LinkedBlockingQueue     ");
-        //        oneRun(new LinkedBlockingQueue<Runnable>(256), nThreads, iters, print);
-        //        if (print) System.out.print("ArrayBlockingQueue      ");
-        //        oneRun(new ArrayBlockingQueue<Runnable>(256), nThreads, iters, print);
-        if (print) System.out.print("SynchronousQueue        ");
+        Thread.sleep(100); // System.gc();
+        if (print) System.out.print("LinkedTransferQueue      ");
+        oneRun(new LinkedTransferQueue<Runnable>(), nThreads, iters, print);
+
+        Thread.sleep(100); // System.gc();
+        if (print) System.out.print("LinkedBlockingQueue      ");
+        oneRun(new LinkedBlockingQueue<Runnable>(), nThreads, iters, print);
+
+        Thread.sleep(100); // System.gc();
+        if (print) System.out.print("SynchronousQueue         ");
         oneRun(new SynchronousQueue<Runnable>(false), nThreads, iters, print);
-        if (print) System.out.print("SynchronousQueue(fair)  ");
+
+        Thread.sleep(100); // System.gc();
+        if (print) System.out.print("SynchronousQueue(fair)   ");
         oneRun(new SynchronousQueue<Runnable>(true), nThreads, iters, print);
+
+        Thread.sleep(100); // System.gc();
+        if (print) System.out.print("LinkedTransferQueue(xfer)");
+        oneRun(new LTQasSQ<Runnable>(), nThreads, iters, print);
+
+        Thread.sleep(100); // System.gc();
+        if (print) System.out.print("LinkedTransferQueue(half)");
+        oneRun(new HalfSyncLTQ<Runnable>(), nThreads, iters, print);
+
+        Thread.sleep(100); // System.gc();
+        if (print) System.out.print("ArrayBlockingQueue(256) ");
+        oneRun(new ArrayBlockingQueue<Runnable>(256), nThreads, iters, print);
+
     }
 
     static final class Task implements Runnable {
@@ -108,6 +129,29 @@ public class CachedThreadPoolLoops {
         pool.shutdown();
         Thread.sleep(100);
         pool.shutdownNow();
+    }
+
+    static final class LTQasSQ<T> extends LinkedTransferQueue<T> {
+        LTQasSQ() { super(); }
+        public void put(T x) {
+            try { super.transfer(x); 
+            } catch (InterruptedException ex) { throw new Error(); }
+        }
+    }
+
+    static final class HalfSyncLTQ<T> extends LinkedTransferQueue<T> {
+        int calls;
+        HalfSyncLTQ() { super(); }
+        public void put(T x) {
+            if ((++calls & 1) == 0)
+                super.put(x);
+            else {
+                try { super.transfer(x); 
+                } catch (InterruptedException ex) { 
+                    throw new Error(); 
+                }
+            }
+        }
     }
 
 }

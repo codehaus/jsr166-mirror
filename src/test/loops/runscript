@@ -50,6 +50,8 @@ echo LockOncePerThreadLoops
 $RUN LockOncePerThreadLoops 5 #$TRIALS
 echo ProducerConsumerLoops
 $RUN ProducerConsumerLoops $TRIALS
+echo OfferPollLoops
+$RUN OfferPollLoops $TRIALS
 echo MultipleProducersSingleConsumerLoops
 $RUN MultipleProducersSingleConsumerLoops $TRIALS
 echo SingleProducerMultipleConsumerLoops
@@ -66,8 +68,11 @@ echo ConcurrentQueueLoops ConcurrentLinkedQueue
 $RUN ConcurrentQueueLoops java.util.concurrent.ConcurrentLinkedQueue $TRIALS
 echo ConcurrentQueueLoops SynchronizedLinkedListQueue
 $RUN ConcurrentQueueLoops SynchronizedLinkedListQueue $TRIALS
+echo ConcurrentQueueLoops java.util.concurrent.LinkedTransferQueue
+$RUN ConcurrentQueueLoops java.util.concurrent.LinkedTransferQueue $TRIALS
 echo ConcurrentDequeLoops
 $RUN ConcurrentDequeLoops java.util.concurrent.LinkedBlockingDeque $TRIALS
+$RUN OfferDrainToLoops
 echo DequeBash ArrayDeque
 $RUN DequeBash java.util.ArrayDeque $TRIALS
 echo DequeBash LinkedList
@@ -177,3 +182,12 @@ $RUN IteratorLoops java.util.TreeSet
 $RUN IteratorLoops java.util.concurrent.ConcurrentSkipListSet
 $RUN IteratorLoops java.util.HashSet
 $RUN IteratorLoops ConcurrentHashSet
+$RUN IteratorLoops java.util.concurrent.LinkedTransferQueue
+$RUN DynamicLeftSpineFib
+$RUN NQueensCS
+$RUN Integrate
+$RUN FJJacobi
+$RUN FJPhaserJacobi
+$RUN ThreadPhaserJacobi
+
+

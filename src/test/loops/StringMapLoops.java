@@ -8,11 +8,11 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class StringMapLoops {
-    static int nkeys       = 1000; 
+    static int nkeys       = 75000; 
     static int pinsert     = 60;
-    static int premove     = 2;
+    static int premove     =  2;
     static int maxThreads  = 100;
-    static int nops        = 1000000;
+    static int nops        = 8000000;
     static int removesPerMaxRandom;
     static int insertsPerMaxRandom;
 
@@ -79,6 +79,11 @@ public class StringMapLoops {
             else 
                 i = k;
         }
+        for (int j = 0; j < 10; ++j) {
+            Thread.sleep(100);
+            test(1, nkeys, key, mapClass);
+            //            shuffleKeys(key);
+        }
         pool.shutdown();
     }
 
@@ -120,6 +125,7 @@ public class StringMapLoops {
         // Uncomment to start with a non-empty table
         //        for (int j = 0; j < nkeys; j += 4) // start 1/4 occupied
         //            map.put(key[j], key[j]);
+
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(i+1, timer);
         for (int t = 0; t < i; ++t) 

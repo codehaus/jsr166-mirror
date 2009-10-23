@@ -24,7 +24,7 @@ public class IntMapCheck {
     public static void main(String[] args) throws Exception {
         Class mapClass = java.util.concurrent.ConcurrentHashMap.class;
         int numTests = 50;
-        int size = 50000;
+        int size = 75000;
 
         if (args.length > 0) {
             try {
@@ -46,19 +46,24 @@ public class IntMapCheck {
         System.out.println("Testing " + mapClass.getName() + " trials: " + numTests + " size: " + size);
 
         absentSize = 4;
-        while (absentSize <= size) absentSize <<= 1;
+        while (absentSize < size) absentSize <<= 1;
         absentMask = absentSize-1;
         absent = new Integer[absentSize];
-        for (int i = 0; i < absentSize; ++i) 
-            absent[i] = new Integer(2 * (i - 1) + 1);
+        for (int i = 0; i < absentSize/2; ++i) 
+            absent[i] = Integer.valueOf(-i - 1);
+        for (int i = absentSize/2; i < absentSize; ++i) 
+            absent[i] = Integer.valueOf(size + i + 1);
 
         Integer[] key = new Integer[size];
         for (int i = 0; i < size; ++i) 
-            key[i] = new Integer(2 * i);
+            key[i] = Integer.valueOf(i);
 
         for (int rep = 0; rep < numTests; ++rep) {
-            shuffle(absent);
             runTest(newMap(mapClass), key);
+            if ((rep & 3) == 3 && rep < numTests - 1) {
+                shuffle(key);
+                //                Thread.sleep(50);
+            }
         }
 
         TestTimer.printStats();
@@ -79,17 +84,14 @@ public class IntMapCheck {
 
 
     static void runTest(Map<Integer,Integer> s, Integer[] key) {
-        shuffle(key);
         int size = key.length;
         long startTime = System.nanoTime();
         test(s, key);
         long time = System.nanoTime() - startTime;
     }
 
-
-    static void t1(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
+    static void t1(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect, int iters) {
         int sum = 0;
-        int iters = 4;
         timer.start(nm, n * iters);
         for (int j = 0; j < iters; ++j) {
             for (int i = 0; i < n; i++) {
@@ -99,6 +101,20 @@ public class IntMapCheck {
         timer.finish(); 
         reallyAssert (sum == expect * iters);
     }
+
+    static void t1Boxed(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
+        int sum = 0;
+        int iters = 8;
+        timer.start(nm, n * iters);
+        for (int j = 0; j < iters; ++j) {
+            for (int i = 0; i < n; i++) {
+                if ((Integer)(s.get(i)) != i) ++sum;
+            }
+        }
+        timer.finish(); 
+        reallyAssert (sum == expect * iters);
+    }
+
 
     static void t2(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
         int sum = 0;
@@ -207,6 +223,8 @@ public class IntMapCheck {
                 ++sum;
         }
         timer.finish(); 
+        //        if (sum != size) 
+        //            System.out.println("iters " + sum + " size " + size);
         reallyAssert (sum == size);
     }
 
@@ -218,6 +236,8 @@ public class IntMapCheck {
                 ++sum;
         }
         timer.finish(); 
+        //        if (sum != size) 
+        //            System.out.println("iters " + sum + " size " + size);
         reallyAssert (sum == size);
     }
     static void ittest3(Map<Integer,Integer> s, int size) {
@@ -268,9 +288,11 @@ public class IntMapCheck {
 
 
     static void ittest(Map<Integer,Integer> s, int size) {
-        ittest1(s, size);
-        ittest2(s, size);
-        ittest3(s, size);
+        for (int i = 0; i < 4; ++i) {
+            ittest1(s, size);
+            ittest2(s, size);
+            ittest3(s, size);
+        }
         //        for (int i = 0; i < size-1; ++i) 
         //            ittest4(s, size, i);
     }
@@ -344,84 +366,8 @@ public class IntMapCheck {
             it.next();
             it.remove();
         }
+        reallyAssert(s.isEmpty());
         timer.finish(); 
-    }
-
-    static void rvtest(Map<Integer,Integer> s, int size) {
-        timer.start("Remove (iterator)      ", size);
-        for (Iterator it = s.values().iterator(); it.hasNext(); ) {
-            it.next();
-            it.remove();
-        }
-        timer.finish(); 
-    }
-
-
-    static void dtest(Map<Integer,Integer> s, int size, Integer[] key) {
-        timer.start("Put (putAll)           ", size * 2);
-        Map<Integer,Integer> s2 = null;
-        try {
-            s2 = (Map<Integer,Integer>) (s.getClass().newInstance());
-            s2.putAll(s);
-        }
-        catch (Exception e) { e.printStackTrace(); return; }
-        timer.finish(); 
-    
-        timer.start("Iter Equals            ", size * 2);
-        boolean eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (eqt);
-        timer.finish(); 
-
-        timer.start("Iter HashCode          ", size * 2);
-        int shc = s.hashCode();
-        int s2hc = s2.hashCode();
-        reallyAssert (shc == s2hc);
-        timer.finish(); 
-
-        timer.start("Put (present)          ", size);
-        s2.putAll(s);
-        timer.finish(); 
-
-        timer.start("Iter EntrySet contains ", size * 2);
-        Set es2 = s2.entrySet();
-        int sum = 0;
-        for (Iterator i1 = s.entrySet().iterator(); i1.hasNext(); ) {
-            Object entry = i1.next();
-            if (es2.contains(entry)) ++sum;
-        }
-        timer.finish(); 
-        reallyAssert (sum == size);
-
-        t6("Get                    ", size, s2, key, absent);
-
-        Integer hold = s2.get(key[size-1]);
-        s2.put(key[size-1], absent[0]);
-        timer.start("Iter Equals            ", size * 2);
-        eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (!eqt);
-        timer.finish(); 
-
-        timer.start("Iter HashCode          ", size * 2);
-        int s1h = s.hashCode();
-        int s2h = s2.hashCode();
-        reallyAssert (s1h != s2h);
-        timer.finish(); 
-
-        s2.put(key[size-1], hold);
-        timer.start("Remove (iterator)      ", size * 2);
-        Iterator s2i = s2.entrySet().iterator();
-        Set es = s.entrySet();
-        while (s2i.hasNext())
-            reallyAssert(es.remove(s2i.next()));
-        timer.finish(); 
-
-        if (!s.isEmpty()) System.out.println(s);
-        reallyAssert (s.isEmpty());
-
-        timer.start("Clear                  ", size);
-        s2.clear();
-        timer.finish(); 
-        reallyAssert (s2.isEmpty() && s.isEmpty());
     }
 
     static void stest(Map<Integer,Integer> s, int size) throws Exception {
@@ -430,7 +376,7 @@ public class IntMapCheck {
         System.out.print("Serialize              : ");
       
         for (int i = 0; i < size; i++) {
-            s.put(new Integer(i), new Integer(1));
+            s.put(Integer.valueOf(i), Integer.valueOf(1));
         }
 
         long startTime = System.nanoTime();
@@ -458,27 +404,121 @@ public class IntMapCheck {
         int size = key.length;
 
         t3("Put (absent)           ", size, s, key, size);
+        reallyAssert(s.size() == size);
+        t1("Get (present)          ", size, s, key, size, 8);
+        t1Boxed("Get boxed (present)    ", size, s, key, size);
+        ittest1(s, size);
         t3("Put (present)          ", size, s, key, 0);
+        reallyAssert(s.size() == size);
         t7("ContainsKey            ", size, s, key, absent);
         t4("ContainsKey            ", size, s, key, size);
         ktest(s, size, key);
         t4("ContainsKey            ", absentSize, s, absent, 0);
         t6("Get                    ", size, s, key, absent);
-        t1("Get (present)          ", size, s, key, size);
-        t1("Get (absent)           ", absentSize, s, absent, 0);
+        t1("Get (present)          ", size, s, key, size, 8);
+        t1("Get (absent)           ", absentSize, s, absent, 0, 1);
+        reallyAssert(s.size() == size);
         t2("Remove (absent)        ", absentSize, s, absent, 0);
+        reallyAssert(s.size() == size);
         t5("Remove (present)       ", size, s, key, size / 2);
+        reallyAssert(s.size() == size / 2);
+        t1("Get                    ", size, s, key, size / 2, 8);
+        ittest1(s, size / 2);
         t3("Put (half present)     ", size, s, key, size / 2);
+        reallyAssert(s.size() == size);
+        t1("Get (present)          ", size, s, key, size, 4);
 
-        ittest(s, size);
         entest(s, size);
         t9(s);
-        rtest(s, size);
-
+        reallyAssert(s.size() == size);
+        timer.start("Clear                  ", size);
+        s.clear();
+        timer.finish(); 
+        t1("Get (absent)           ", size, s, key, 0, 1);
         t4("ContainsKey            ", size, s, key, 0);
         t2("Remove (absent)        ", size, s, key, 0);
         t3("Put (presized)         ", size, s, key, size);
-        dtest(s, size, key);
+        t1("Get (present)          ", size, s, key, size, 4);
+        reallyAssert(s.size() == size);
+        ittest(s, size);
+        rtest(s, size);
+        reallyAssert(s.size() == 0);
+        timer.start("Clear                  ", size);
+        s.clear();
+        timer.finish(); 
+        t3("Put (presized)         ", size, s, key, size);
+
+        timer.start("Put (putAll)           ", size * 2);
+        Map<Integer,Integer> s2 = null;
+        try {
+            s2 = (Map<Integer,Integer>) (s.getClass().newInstance());
+            s2.putAll(s);
+        }
+        catch (Exception e) { e.printStackTrace(); return; }
+        timer.finish(); 
+    
+        timer.start("Iter Equals            ", size * 2);
+        boolean eqt = s2.equals(s) && s.equals(s2);
+        reallyAssert (eqt);
+        timer.finish(); 
+
+        timer.start("Iter HashCode          ", size * 2);
+        int shc = s.hashCode();
+        int s2hc = s2.hashCode();
+        reallyAssert (shc == s2hc);
+        timer.finish(); 
+
+        timer.start("Put (present)          ", size * 2);
+        s2.putAll(s);
+        timer.finish(); 
+
+        timer.start("Put (present)          ", size);
+        int ipsum = 0;
+        for (Iterator i0 = s.entrySet().iterator(); i0.hasNext(); ) {
+            Map.Entry<Integer,Integer> me = (Map.Entry<Integer,Integer>)(i0.next());
+            if (s2.put(me.getKey(), me.getValue()) != null)
+                ++ipsum;
+        }
+        reallyAssert (ipsum == s.size());
+        timer.finish(); 
+
+        timer.start("Iter EntrySet contains ", size * 2);
+        Set es2 = s2.entrySet();
+        int sum = 0;
+        for (Iterator i1 = s.entrySet().iterator(); i1.hasNext(); ) {
+            Object entry = i1.next();
+            if (es2.contains(entry)) ++sum;
+        }
+        timer.finish(); 
+        reallyAssert (sum == size);
+
+        Integer hold = s2.get(key[size-1]);
+        s2.put(key[size-1], absent[0]);
+        timer.start("Iter Equals            ", size * 2);
+        eqt = s2.equals(s) && s.equals(s2);
+        reallyAssert (!eqt);
+        timer.finish(); 
+
+        timer.start("Iter HashCode          ", size * 2);
+        int s1h = s.hashCode();
+        int s2h = s2.hashCode();
+        reallyAssert (s1h != s2h);
+        timer.finish(); 
+
+        s2.put(key[size-1], hold);
+        timer.start("Remove (present)       ", size * 2);
+        Iterator s2i = s2.entrySet().iterator();
+        Set es = s.entrySet();
+        while (s2i.hasNext())
+            reallyAssert(es.remove(s2i.next()));
+        timer.finish(); 
+
+        reallyAssert (s.isEmpty());
+
+        timer.start("Clear                  ", size);
+        s2.clear();
+        timer.finish(); 
+        reallyAssert (s2.isEmpty() && s.isEmpty());
     }
 
     static class TestTimer {
@@ -499,7 +539,7 @@ public class IntMapCheck {
                     t = stats.sum / n;
                 else
                     t = stats.least;
-                long nano = Math.round(1000000.0 * t);
+                long nano = Math.round(t);
                 System.out.println(e.getKey() + ": " + nano);
             }
         }
@@ -528,7 +568,7 @@ public class IntMapCheck {
         void finish() {
             long endTime = System.nanoTime();
             long time = endTime - startTime;
-            double timePerOp = (((double)time)/numOps) / 1000000;
+            double timePerOp = ((double)time)/numOps;
 
             Object st = accum.get(name);
             if (st == null)
@@ -563,7 +603,7 @@ public class IntMapCheck {
         Stats(double t) { least = t; }
     }
 
-    static Random rng = new Random();
+    static Random rng = new Random(3152688);
 
     static void shuffle(Integer[] keys) {
         int size = keys.length;

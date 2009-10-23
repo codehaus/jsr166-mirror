@@ -100,7 +100,7 @@ public class ConcurrentQueueLoops {
                             l = LoopHelpers.compute6(l);
                     } else if ((misses++ & 255) == 0 &&
                                System.nanoTime() >= stopTime) {
-                        return new Integer(takes);
+                        return Integer.valueOf(takes);
                     } else {
                         for (int i = 0; i < BATCH_SIZE; ++i) {
                             queue.offer(((l & lmask)== 0)? zero : one);

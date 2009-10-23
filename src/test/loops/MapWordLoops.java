@@ -13,13 +13,15 @@ public class MapWordLoops {
         "class.txt",
         "dir.txt",
         "ids.txt", 
+        "testwords.txt",
         //        "/usr/dict/words", 
     };
 
     static final int MAX_WORDS = 500000;
     static final int pinsert   = 60;
-    static final int premove   = 1;
-    static final int NOPS      = 5000000;
+    static final int premove   = 2;
+    static final int NOPS      = 8000000;
+
     static final int numTests = 3;
 
     public static void main(String[] args) {

@@ -502,7 +502,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     if (isData == haveData)   // can't match
                         break;
                     if (p.casItem(item, e)) { // match
-                        Thread w = p.waiter;
+                        LockSupport.unpark(p.waiter);
                         while (p != h) {      // update head
                             Node n = p.next;  // by 2 unless singleton
                             if (n != null)
@@ -515,7 +515,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                                 (p = h.next) == null || !p.isMatched())
                                 break;        // unless slack < 2
                         }
-                        LockSupport.unpark(w);
                         return item;
                     }
                 }
@@ -613,7 +612,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     Thread.yield();           // occasionally yield
             }
             else if (s.waiter == null) {
-                s.waiter = w;                 // request unpark
+                s.waiter = w;                 // request unpark then recheck
             }
             else if (how == TIMEOUT) {
                 long now = System.nanoTime();
@@ -623,6 +622,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
             else {
                 LockSupport.park(this);
+                s.waiter = null;
                 spins = -1;                   // spin if front upon wakeup
             }
         }

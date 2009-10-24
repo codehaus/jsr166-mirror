@@ -502,19 +502,19 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     if (isData == haveData)   // can't match
                         break;
                     if (p.casItem(item, e)) { // match
-                        LockSupport.unpark(p.waiter);
-                        while (p != h) {      // update head
-                            Node n = p.next;  // by 2 unless singleton
-                            if (n != null)
-                                p = n;
-                            if (head == h && casHead(h, p)) {
+                        for (Node q = p; q != h;) {
+                            Node n = q.next;  // update head by 2
+                            if (n != null)    // unless singleton
+                                q = n;
+                            if (head == h && casHead(h, q)) {
                                 h.forgetNext();
                                 break;
                             }                 // advance and retry
                             if ((h = head)   == null ||
-                                (p = h.next) == null || !p.isMatched())
+                                (q = h.next) == null || !q.isMatched())
                                 break;        // unless slack < 2
                         }
+                        LockSupport.unpark(p.waiter);
                         return item;
                     }
                 }

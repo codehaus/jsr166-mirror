@@ -161,17 +161,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * targets.  Even when using very small slack values, this
      * approach works well for dual queues because it allows all
      * operations up to the point of matching or appending an item
-     * (hence potentially releasing another thread) to be read-only,
-     * thus not introducing any further contention. As described
-     * below, we implement this by performing slack maintenance
-     * retries only after these points.
+     * (hence potentially allowing progress by another thread) to be
+     * read-only, thus not introducing any further contention. As
+     * described below, we implement this by performing slack
+     * maintenance retries only after these points.
      *
      * As an accompaniment to such techniques, traversal overhead can
      * be further reduced without increasing contention of head
-     * pointer updates.  During traversals, threads may sometimes
-     * shortcut the "next" link path from the current "head" node to
-     * be closer to the currently known first unmatched node. Again,
-     * this may be triggered with using thresholds or randomization.
+     * pointer updates: Threads may sometimes shortcut the "next" link
+     * path from the current "head" node to be closer to the currently
+     * known first unmatched node, and similarly for tail. Again, this
+     * may be triggered with using thresholds or randomization.
      *
      * These ideas must be further extended to avoid unbounded amounts
      * of costly-to-reclaim garbage caused by the sequential "next"
@@ -199,7 +199,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * mechanics because an update may leave head at a detached node.
      * And while direct writes are possible for tail updates, they
      * increase the risk of long retraversals, and hence long garbage
-     * chains which can be much more costly than is worthwhile
+     * chains, which can be much more costly than is worthwhile
      * considering that the cost difference of performing a CAS vs
      * write is smaller when they are not triggered on each operation
      * (especially considering that writes and CASes equally require
@@ -207,44 +207,47 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * more costly than the writes themselves because of contention).
      *
      * Removal of interior nodes (due to timed out or interrupted
-     * waits, or calls to remove or Iterator.remove) uses a scheme
-     * roughly similar to that in Scherer, Lea, and Scott's
-     * SynchronousQueue. Given a predecessor, we can unsplice any node
-     * except the (actual) tail of the queue. To avoid build-up of
-     * cancelled trailing nodes, upon a request to remove a trailing
-     * node, it is placed in field "cleanMe" to be unspliced upon the
-     * next call to unsplice any other node.  Situations needing such
-     * mechanics are not common but do occur in practice; for example
-     * when an unbounded series of short timed calls to poll
-     * repeatedly time out but never otherwise fall off the list
-     * because of an untimed call to take at the front of the
-     * queue. (Note that maintaining field cleanMe does not otherwise
-     * much impact garbage retention even if never cleared by some
-     * other call because the held node will eventually either
-     * directly or indirectly lead to a self-link once off the list.)
+     * waits, or calls to remove(x) or Iterator.remove) can use a
+     * scheme roughly similar to that described in Scherer, Lea, and
+     * Scott's SynchronousQueue. Given a predecessor, we can unsplice
+     * any node except the (actual) tail of the queue. To avoid
+     * build-up of cancelled trailing nodes, upon a request to remove
+     * a trailing node, it is placed in field "cleanMe" to be
+     * unspliced upon the next call to unsplice any other node.
+     * Situations needing such mechanics are not common but do occur
+     * in practice; for example when an unbounded series of short
+     * timed calls to poll repeatedly time out but never otherwise
+     * fall off the list because of an untimed call to take at the
+     * front of the queue. Note that maintaining field cleanMe does
+     * not otherwise much impact garbage retention even if never
+     * cleared by some other call because the held node will
+     * eventually either directly or indirectly lead to a self-link
+     * once off the list.
      *
      * *** Overview of implementation ***
      *
-     * We use a threshold-based approach to updates, with a target
-     * slack of two.  The slack value is hard-wired: a path greater
+     * We use a threshold-based approach to updates, with a slack
+     * threshold of two -- that is, we update head/tail when the
+     * current pointer appears to be two or more steps away from the
+     * first/last node. The slack value is hard-wired: a path greater
      * than one is naturally implemented by checking equality of
      * traversal pointers except when the list has only one element,
-     * in which case we keep target slack at one. Avoiding tracking
+     * in which case we keep slack threshold at one. Avoiding tracking
      * explicit counts across method calls slightly simplifies an
      * already-messy implementation. Using randomization would
      * probably work better if there were a low-quality dirt-cheap
      * per-thread one available, but even ThreadLocalRandom is too
      * heavy for these purposes.
      *
-     * With such a small target slack value, it is rarely worthwhile
-     * to augment this with path short-circuiting; i.e., unsplicing
-     * nodes between head and the first unmatched node, or similarly
-     * for tail, rather than advancing head or tail proper. However,
-     * it is used (in awaitMatch) immediately before a waiting thread
-     * starts to block, as a final bit of helping at a point when
-     * contention with others is extremely unlikely (since if other
-     * threads that could release it are operating, then the current
-     * thread wouldn't be blocking).
+     * With such a small slack threshold value, it is rarely
+     * worthwhile to augment this with path short-circuiting; i.e.,
+     * unsplicing nodes between head and the first unmatched node, or
+     * similarly for tail, rather than advancing head or tail
+     * proper. However, it is used (in awaitMatch) immediately before
+     * a waiting thread starts to block, as a final bit of helping at
+     * a point when contention with others is extremely unlikely
+     * (since if other threads that could release it are operating,
+     * then the current thread wouldn't be blocking).
      *
      * We allow both the head and tail fields to be null before any
      * nodes are enqueued; initializing upon first append.  This
@@ -260,7 +263,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * of offer, put, poll, take, or transfer (each possibly with
      * timeout). The relative complexity of using one monolithic
      * method outweighs the code bulk and maintenance problems of
-     * using nine separate methods.
+     * using separate methods for each case.
      *
      * Operation consists of up to three phases. The first is
      * implemented within method xfer, the second in tryAppend, and
@@ -285,24 +288,24 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *
      * 2. Try to append a new node (method tryAppend)
      *
-     *    Starting at current tail pointer, try to append a new node
-     *    to the list (or if head was null, establish the first
-     *    node). Nodes can be appended only if their predecessors are
-     *    either already matched or are of the same mode. If we detect
-     *    otherwise, then a new node with opposite mode must have been
-     *    appended during traversal, so must restart at phase 1. The
-     *    traversal and update steps are otherwise similar to phase 1:
-     *    Retrying upon CAS misses and checking for staleness.  In
-     *    particular, if a self-link is encountered, then we can
-     *    safely jump to a node on the list by continuing the
-     *    traversal at current head.
+     *    Starting at current tail pointer, find the actual last node
+     *    and try to append a new node (or if head was null, establish
+     *    the first node). Nodes can be appended only if their
+     *    predecessors are either already matched or are of the same
+     *    mode. If we detect otherwise, then a new node with opposite
+     *    mode must have been appended during traversal, so we must
+     *    restart at phase 1. The traversal and update steps are
+     *    otherwise similar to phase 1: Retrying upon CAS misses and
+     *    checking for staleness.  In particular, if a self-link is
+     *    encountered, then we can safely jump to a node on the list
+     *    by continuing the traversal at current head.
      *
      *    On successful append, if the call was ASYNC, return.
      *
      * 3. Await match or cancellation (method awaitMatch)
      *
      *    Wait for another thread to match node; instead cancelling if
-     *    current thread was interrupted or the wait timed out. On
+     *    the current thread was interrupted or the wait timed out. On
      *    multiprocessors, we use front-of-queue spinning: If a node
      *    appears to be the first unmatched node in the queue, it
      *    spins a bit before blocking. In either case, before blocking
@@ -317,15 +320,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *    to decide to occasionally perform a Thread.yield. While
      *    yield has underdefined specs, we assume that might it help,
      *    and will not hurt in limiting impact of spinning on busy
-     *    systems.  We also use much smaller (1/4) spins for nodes
-     *    that are not known to be front but whose predecessors have
-     *    not blocked -- these "chained" spins avoid artifacts of
+     *    systems.  We also use smaller (1/2) spins for nodes that are
+     *    not known to be front but whose predecessors have not
+     *    blocked -- these "chained" spins avoid artifacts of
      *    front-of-queue rules which otherwise lead to alternating
      *    nodes spinning vs blocking. Further, front threads that
      *    represent phase changes (from data to request node or vice
      *    versa) compared to their predecessors receive additional
-     *    spins, reflecting the longer code path lengths necessary to
-     *    release them under contention.
+     *    chained spins, reflecting longer paths typically required to
+     *    unblock threads during phase changes.
      */
 
     /** True if on multiprocessor */
@@ -333,20 +336,23 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         Runtime.getRuntime().availableProcessors() > 1;
 
     /**
-     * The number of times to spin (with on average one randomly
-     * interspersed call to Thread.yield) on multiprocessor before
-     * blocking when a node is apparently the first waiter in the
-     * queue.  See above for explanation. Must be a power of two. The
-     * value is empirically derived -- it works pretty well across a
-     * variety of processors, numbers of CPUs, and OSes.
+     * The number of times to spin (with randomly interspersed calls
+     * to Thread.yield) on multiprocessor before blocking when a node
+     * is apparently the first waiter in the queue.  See above for
+     * explanation. Must be a power of two. The value is empirically
+     * derived -- it works pretty well across a variety of processors,
+     * numbers of CPUs, and OSes.
      */
     private static final int FRONT_SPINS   = 1 << 7;
 
     /**
      * The number of times to spin before blocking when a node is
-     * preceded by another node that is apparently spinning.
+     * preceded by another node that is apparently spinning.  Also
+     * serves as an increment to FRONT_SPINS on phase changes, and as
+     * base average frequency for yielding during spins. Must be a
+     * power of two.
      */
-    private static final int CHAINED_SPINS = FRONT_SPINS >>> 2;
+    private static final int CHAINED_SPINS = FRONT_SPINS >>> 1;
 
     /**
      * Queue nodes. Uses Object, not E, for items to allow forgetting
@@ -524,7 +530,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 if (pred == null)
                     continue retry;           // lost race vs opposite mode
                 if (how >= SYNC)
-                    return awaitMatch(pred, s, e, how, nanos);
+                    return awaitMatch(s, pred, e, how, nanos);
             }
             return e; // not waiting
         }
@@ -568,14 +574,16 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Spins/yields/blocks until node s is matched or caller gives up.
      *
-     * @param pred the predecessor of s, or s or null if none
      * @param s the waiting node
+     * @param pred the predecessor of s, or s itself if it has no
+     * predecessor, or null if unknown (the null case does not occur
+     * in any current calls but may in possible future extensions)
      * @param e the comparison value for checking match
      * @param how either SYNC or TIMEOUT
      * @param nanos timeout value
      * @return matched item, or e if unmatched on interrupt or timeout
      */
-    private Object awaitMatch(Node pred, Node s, Object e,
+    private Object awaitMatch(Node s, Node pred, Object e,
                               int how, long nanos) {
         long lastTime = (how == TIMEOUT) ? System.nanoTime() : 0L;
         Thread w = Thread.currentThread();
@@ -598,13 +606,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 if ((spins = spinsFor(pred, s.isData)) > 0)
                     randomYields = ThreadLocalRandom.current();
             }
-            else if (spins > 0) {             // spin, occasionally yield
-                if (randomYields.nextInt(FRONT_SPINS) == 0)
-                    Thread.yield();
-                --spins;
+            else if (spins > 0) {             // spin
+                if (--spins == 0)
+                    shortenHeadPath();        // reduce slack before blocking
+                else if (randomYields.nextInt(CHAINED_SPINS) == 0)
+                    Thread.yield();           // occasionally yield
             }
             else if (s.waiter == null) {
-                shortenHeadPath();            // reduce slack before blocking
                 s.waiter = w;                 // request unpark
             }
             else if (how == TIMEOUT) {
@@ -626,10 +634,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     private static int spinsFor(Node pred, boolean haveData) {
         if (MP && pred != null) {
-            boolean predData = pred.isData;
-            if (predData != haveData)         // front and phase change
-                return FRONT_SPINS + (FRONT_SPINS >>> 1);
-            if (predData != (pred.item != null)) // probably at front
+            if (pred.isData != haveData)      // phase change
+                return FRONT_SPINS + CHAINED_SPINS;
+            if (pred.isMatched())             // probably at front
                 return FRONT_SPINS;
             if (pred.waiter == null)          // pred apparently spinning
                 return CHAINED_SPINS;

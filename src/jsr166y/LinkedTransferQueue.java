@@ -1192,7 +1192,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
-
     // Unsafe mechanics
 
     private static final sun.misc.Unsafe UNSAFE = getUnsafe();
@@ -1215,6 +1214,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+     * Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a jdk.
+     *
+     * @return a sun.misc.Unsafe
+     */
     private static sun.misc.Unsafe getUnsafe() {
         try {
             return sun.misc.Unsafe.getUnsafe();

@@ -361,18 +361,19 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * precede or follow CASes use simple relaxed forms.  Other
      * cleanups use releasing/lazy writes.
      */
-    static final class Node {
+    static final class Node<E> {
         final boolean isData;   // false if this is a request node
         volatile Object item;   // initially non-null if isData; CASed to match
-        volatile Node next;
+        volatile Node<E> next;
         volatile Thread waiter; // null until waiting
 
         // CAS methods for fields
-        final boolean casNext(Node cmp, Node val) {
+        final boolean casNext(Node<E> cmp, Node<E> val) {
             return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
 
         final boolean casItem(Object cmp, Object val) {
+            assert cmp.getClass() != Node.class;
             return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
         }
 
@@ -380,7 +381,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * Creates a new node. Uses relaxed write because item can only
          * be seen if followed by CAS.
          */
-        Node(Object item, boolean isData) {
+        Node(E item, boolean isData) {
             UNSAFE.putObject(this, itemOffset, item); // relaxed write
             this.isData = isData;
         }
@@ -448,24 +449,24 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /** head of the queue; null until first enqueue */
-    private transient volatile Node head;
+    transient volatile Node<E> head;
 
     /** predecessor of dangling unspliceable node */
-    private transient volatile Node cleanMe; // decl here to reduce contention
+    private transient volatile Node<E> cleanMe; // decl here reduces contention
 
     /** tail of the queue; null until first append */
-    private transient volatile Node tail;
+    private transient volatile Node<E> tail;
 
     // CAS methods for fields
-    private boolean casTail(Node cmp, Node val) {
+    private boolean casTail(Node<E> cmp, Node<E> val) {
         return UNSAFE.compareAndSwapObject(this, tailOffset, cmp, val);
     }
 
-    private boolean casHead(Node cmp, Node val) {
+    private boolean casHead(Node<E> cmp, Node<E> val) {
         return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
     }
 
-    private boolean casCleanMe(Node cmp, Node val) {
+    private boolean casCleanMe(Node<E> cmp, Node<E> val) {
         return UNSAFE.compareAndSwapObject(this, cleanMeOffset, cmp, val);
     }
 
@@ -488,22 +489,23 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @return an item if matched, else e
      * @throws NullPointerException if haveData mode but e is null
      */
-    private Object xfer(Object e, boolean haveData, int how, long nanos) {
+    private E xfer(E e, boolean haveData, int how, long nanos) {
         if (haveData && (e == null))
             throw new NullPointerException();
-        Node s = null;                        // the node to append, if needed
+        Node<E> s = null;                     // the node to append, if needed
 
         retry: for (;;) {                     // restart on append race
 
-            for (Node h = head, p = h; p != null;) { // find & match first node
+            for (Node<E> h = head, p = h; p != null;) {
+                // find & match first node
                 boolean isData = p.isData;
                 Object item = p.item;
                 if (item != p && (item != null) == isData) { // unmatched
                     if (isData == haveData)   // can't match
                         break;
                     if (p.casItem(item, e)) { // match
-                        for (Node q = p; q != h;) {
-                            Node n = q.next;  // update head by 2
+                        for (Node<E> q = p; q != h;) {
+                            Node<E> n = q.next; // update head by 2
                             if (n != null)    // unless singleton
                                 q = n;
                             if (head == h && casHead(h, q)) {
@@ -515,17 +517,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                                 break;        // unless slack < 2
                         }
                         LockSupport.unpark(p.waiter);
-                        return item;
+                        return this.<E>cast(item);
                     }
                 }
-                Node n = p.next;
+                Node<E> n = p.next;
                 p = (p != n) ? n : (h = head); // Use head if p offlist
             }
 
             if (how >= ASYNC) {               // No matches available
                 if (s == null)
-                    s = new Node(e, haveData);
-                Node pred = tryAppend(s, haveData);
+                    s = new Node<E>(e, haveData);
+                Node<E> pred = tryAppend(s, haveData);
                 if (pred == null)
                     continue retry;           // lost race vs opposite mode
                 if (how >= SYNC)
@@ -544,9 +546,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * different mode, else s's predecessor, or s itself if no
      * predecessor
      */
-    private Node tryAppend(Node s, boolean haveData) {
-        for (Node t = tail, p = t;;) { // move p to last node and append
-            Node n, u;                        // temps for reads of next & tail
+    private Node<E> tryAppend(Node<E> s, boolean haveData) {
+        for (Node<E> t = tail, p = t;;) { // move p to last node and append
+            Node<E> n, u;                     // temps for reads of next & tail
             if (p == null && (p = head) == null) {
                 if (casHead(null, s))
                     return s;                 // initialize
@@ -582,8 +584,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param nanos timeout value
      * @return matched item, or e if unmatched on interrupt or timeout
      */
-    private Object awaitMatch(Node s, Node pred, Object e,
-                              int how, long nanos) {
+    private E awaitMatch(Node<E> s, Node<E> pred, E e, int how, long nanos) {
         long lastTime = (how == TIMEOUT) ? System.nanoTime() : 0L;
         Thread w = Thread.currentThread();
         int spins = -1; // initialized after first item and cancel checks
@@ -592,11 +593,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         for (;;) {
             Object item = s.item;
             if (item != e) {                  // matched
+                assert item != s;
                 s.forgetContents();           // avoid garbage
-                return item;
+                return this.<E>cast(item);
             }
             if ((w.isInterrupted() || (how == TIMEOUT && nanos <= 0)) &&
-                     s.casItem(e, s)) {       // cancel
+                    s.casItem(e, s)) {       // cancel
                 unsplice(pred, s);
                 return e;
             }
@@ -632,7 +634,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Returns spin/yield value for a node with given predecessor and
      * data mode. See above for explanation.
      */
-    private static int spinsFor(Node pred, boolean haveData) {
+    private static int spinsFor(Node<?> pred, boolean haveData) {
         if (MP && pred != null) {
             if (pred.isData != haveData)      // phase change
                 return FRONT_SPINS + CHAINED_SPINS;
@@ -649,10 +651,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * or trailing node; failing on contention.
      */
     private void shortenHeadPath() {
-        Node h, hn, p, q;
+        Node<E> h, hn, p, q;
         if ((p = h = head) != null && h.isMatched() &&
             (q = hn = h.next) != null) {
-            Node n;
+            Node<E> n;
             while ((n = q.next) != q) {
                 if (n == null || !q.isMatched()) {
                     if (hn != q && h.next == hn)
@@ -671,27 +673,33 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Returns the first unmatched node of the given mode, or null if
      * none.  Used by methods isEmpty, hasWaitingConsumer.
      */
-    private Node firstOfMode(boolean data) {
-        for (Node p = head; p != null; ) {
+    private Node<E> firstOfMode(boolean data) {
+        for (Node<E> p = head; p != null; ) {
             if (!p.isMatched())
                 return (p.isData == data) ? p : null;
-            Node n = p.next;
+            Node<E> n = p.next;
             p = (n != p) ? n : head;
         }
         return null;
     }
 
+    @SuppressWarnings("unchecked")
+    static <E> E cast(Object item) {
+        assert item.getClass() != Node.class;
+        return (E) item;
+    }
+
     /**
      * Returns the item in the first unmatched node with isData; or
-     * null if none. Used by peek.
+     * null if none.  Used by peek.
      */
-    private Object firstDataItem() {
-        for (Node p = head; p != null; ) {
+    private E firstDataItem() {
+        for (Node<E> p = head; p != null; ) {
             boolean isData = p.isData;
             Object item = p.item;
             if (item != p && (item != null) == isData)
-                return isData ? item : null;
-            Node n = p.next;
+                return isData ? this.<E>cast(item) : null;
+            Node<E> n = p.next;
             p = (n != p) ? n : head;
         }
         return null;
@@ -703,14 +711,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     private int countOfMode(boolean data) {
         int count = 0;
-        for (Node p = head; p != null; ) {
+        for (Node<E> p = head; p != null; ) {
             if (!p.isMatched()) {
                 if (p.isData != data)
                     return 0;
                 if (++count == Integer.MAX_VALUE) // saturated
                     break;
             }
-            Node n = p.next;
+            Node<E> n = p.next;
             if (n != p)
                 p = n;
             else {
@@ -722,30 +730,30 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     final class Itr implements Iterator<E> {
-        private Node nextNode;   // next node to return item for
-        private Object nextItem; // the corresponding item
-        private Node lastRet;    // last returned node, to support remove
+        private Node<E> nextNode;   // next node to return item for
+        private E nextItem;         // the corresponding item
+        private Node<E> lastRet;    // last returned node, to support remove
 
         /**
          * Moves to next node after prev, or first node if prev null.
          */
-        private void advance(Node prev) {
+        private void advance(Node<E> prev) {
             lastRet = prev;
-            Node p;
+            Node<E> p;
             if (prev == null || (p = prev.next) == prev)
                 p = head;
             while (p != null) {
                 Object item = p.item;
                 if (p.isData) {
                     if (item != null && item != p) {
-                        nextItem = item;
+                        nextItem = LinkedTransferQueue.this.<E>cast(item);
                         nextNode = p;
                         return;
                     }
                 }
                 else if (item == null)
                     break;
-                Node n = p.next;
+                Node<E> n = p.next;
                 p = (n != p) ? n : head;
             }
             nextNode = null;
@@ -760,15 +768,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         public final E next() {
-            Node p = nextNode;
+            Node<E> p = nextNode;
             if (p == null) throw new NoSuchElementException();
-            Object e = nextItem;
+            E e = nextItem;
             advance(p);
-            return (E) e;
+            return e;
         }
 
         public final void remove() {
-            Node p = lastRet;
+            Node<E> p = lastRet;
             if (p == null) throw new IllegalStateException();
             lastRet = null;
             findAndRemoveNode(p);
@@ -784,7 +792,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param pred predecessor of node to be unspliced
      * @param s the node to be unspliced
      */
-    private void unsplice(Node pred, Node s) {
+    private void unsplice(Node<E> pred, Node<E> s) {
         s.forgetContents(); // clear unneeded fields
         /*
          * At any given time, exactly one node on list cannot be
@@ -797,8 +805,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          */
         if (pred != null && pred != s) {
             while (pred.next == s) {
-                Node oldpred = (cleanMe == null) ? null : reclean();
-                Node n = s.next;
+                Node<E> oldpred = (cleanMe == null) ? null : reclean();
+                Node<E> n = s.next;
                 if (n != null) {
                     if (n != s)
                         pred.casNext(s, n);
@@ -817,7 +825,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *
      * @return current cleanMe node (or null)
      */
-    private Node reclean() {
+    private Node<E> reclean() {
         /*
          * cleanMe is, or at one time was, predecessor of a cancelled
          * node s that was the tail so could not be unspliced.  If it
@@ -828,10 +836,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * we can (must) clear cleanMe without unsplicing.  This can
          * loop only due to contention.
          */
-        Node pred;
+        Node<E> pred;
         while ((pred = cleanMe) != null) {
-            Node s = pred.next;
-            Node n;
+            Node<E> s = pred.next;
+            Node<E> n;
             if (s == null || s == pred || !s.isMatched())
                 casCleanMe(pred, null); // already gone
             else if ((n = s.next) != null) {
@@ -849,10 +857,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Main implementation of Iterator.remove(). Find
      * and unsplice the given node.
      */
-    final void findAndRemoveNode(Node s) {
+    final void findAndRemoveNode(Node<E> s) {
         if (s.tryMatchData()) {
-            Node pred = null;
-            Node p = head;
+            Node<E> pred = null;
+            Node<E> p = head;
             while (p != null) {
                 if (p == s) {
                     unsplice(pred, p);
@@ -874,8 +882,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     private boolean findAndRemove(Object e) {
         if (e != null) {
-            Node pred = null;
-            Node p = head;
+            Node<E> pred = null;
+            Node<E> p = head;
             while (p != null) {
                 Object item = p.item;
                 if (p.isData) {
@@ -1024,22 +1032,22 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     public E take() throws InterruptedException {
-        Object e = xfer(null, false, SYNC, 0);
+        E e = xfer(null, false, SYNC, 0);
         if (e != null)
-            return (E)e;
+            return e;
         Thread.interrupted();
         throw new InterruptedException();
     }
 
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        Object e = xfer(null, false, TIMEOUT, unit.toNanos(timeout));
+        E e = xfer(null, false, TIMEOUT, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
-            return (E)e;
+            return e;
         throw new InterruptedException();
     }
 
     public E poll() {
-        return (E)xfer(null, false, NOW, 0);
+        return xfer(null, false, NOW, 0);
     }
 
     /**
@@ -1096,7 +1104,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     public E peek() {
-        return (E) firstDataItem();
+        return firstDataItem();
     }
 
     /**
@@ -1221,7 +1229,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *
      * @return a sun.misc.Unsafe
      */
-    private static sun.misc.Unsafe getUnsafe() {
+    static sun.misc.Unsafe getUnsafe() {
         try {
             return sun.misc.Unsafe.getUnsafe();
         } catch (SecurityException se) {

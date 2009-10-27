@@ -373,7 +373,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         final boolean casItem(Object cmp, Object val) {
-            assert cmp.getClass() != Node.class;
+            assert cmp == null || cmp.getClass() != Node.class;
             return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
         }
 

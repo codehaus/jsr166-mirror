@@ -408,7 +408,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          */
         final boolean isMatched() {
             Object x = item;
-            return x == this || (x != null) != isData;
+            return (x == this) || ((x == null) == isData);
+        }
+
+        /**
+         * Returns true if this is an unmatched request node.
+         */
+        final boolean isUnmatchedRequest() {
+            return !isData && item == null;
         }
 
         /**
@@ -426,6 +433,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * Tries to artificially match a data node -- used by remove.
          */
         final boolean tryMatchData() {
+            assert isData;
             Object x = item;
             if (x != null && x != this && casItem(x, null)) {
                 LockSupport.unpark(waiter);
@@ -777,7 +785,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Node<E> p = lastRet;
             if (p == null) throw new IllegalStateException();
             lastRet = null;
-            findAndRemoveNode(p);
+            findAndRemoveDataNode(p);
         }
     }
 
@@ -853,18 +861,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Main implementation of Iterator.remove(). Find
-     * and unsplice the given node.
+     * and unsplice the given data node.
      */
-    final void findAndRemoveNode(Node<E> s) {
+    final void findAndRemoveDataNode(Node<E> s) {
+        assert s.isData;
         if (s.tryMatchData()) {
-            Node<E> pred = null;
-            Node<E> p = head;
-            while (p != null) {
+            for (Node<E> pred = null, p = head; p != null; ) {
                 if (p == s) {
                     unsplice(pred, p);
                     break;
                 }
-                if (!p.isData && !p.isMatched())
+                if (p.isUnmatchedRequest())
                     break;
                 pred = p;
                 if ((p = p.next) == pred) { // stale
@@ -880,9 +887,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     private boolean findAndRemove(Object e) {
         if (e != null) {
-            Node<E> pred = null;
-            Node<E> p = head;
-            while (p != null) {
+            for (Node<E> pred = null, p = head; p != null; ) {
                 Object item = p.item;
                 if (p.isData) {
                     if (item != null && item != p && e.equals(item) &&
@@ -894,7 +899,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 else if (item == null)
                     break;
                 pred = p;
-                if ((p = p.next) == pred) {
+                if ((p = p.next) == pred) { // stale
                     pred = null;
                     p = head;
                 }

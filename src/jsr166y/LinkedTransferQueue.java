@@ -410,7 +410,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          */
         final boolean isMatched() {
             Object x = item;
-            return x == this || (x != null) != isData;
+            return (x == this) || ((x == null) == isData);
         }
 
         /**

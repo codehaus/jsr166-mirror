@@ -479,6 +479,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private static final int SYNC    = 2; // for transfer, take
     private static final int TIMEOUT = 3; // for timed poll, tryTransfer
 
+    @SuppressWarnings("unchecked")
+    static <E> E cast(Object item) {
+        assert item == null || item.getClass() != Node.class;
+        return (E) item;
+    }
+
     /**
      * Implements all queuing methods. See above for explanation.
      *
@@ -681,12 +687,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             p = (n != p) ? n : head;
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    static <E> E cast(Object item) {
-        assert item.getClass() != Node.class;
-        return (E) item;
     }
 
     /**

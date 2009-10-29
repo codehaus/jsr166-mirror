@@ -821,8 +821,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     break;
                 }
                 if (oldpred == pred ||      // Already saved
-                    (oldpred == null && casCleanMe(null, pred)))
-                    break;                  // Postpone cleaning
+                    ((oldpred == null || oldpred.next == s) &&
+                     casCleanMe(oldpred, pred))) {
+                    break;
+                }
             }
         }
     }

@@ -55,7 +55,7 @@ public final class Integrate {
             }
         }
         catch (Exception e) {
-            System.out.println("Usage: java Integrate3 threads <s[erial] | d[ynamic] | f[ork] - default d>");
+            System.out.println("Usage: java Integrate threads <s[erial] | d[ynamic] | f[ork] - default d>");
             return;
         }
 

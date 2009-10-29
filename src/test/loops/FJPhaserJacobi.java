@@ -20,7 +20,7 @@ public class FJPhaserJacobi {
         }
 
         catch (Exception e) {
-            System.out.println("Usage: java ThreadPhaserJacobi <matrix size> <max steps>");
+            System.out.println("Usage: java FJPhaserJacobi <matrix size> <max steps>");
             return;
         }
 

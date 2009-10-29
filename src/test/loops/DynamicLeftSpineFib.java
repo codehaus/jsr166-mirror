@@ -17,7 +17,7 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
                 num = Integer.parseInt(args[1]);
         }
         catch (Exception e) {
-            System.out.println("Usage: java DynamicLeftSpineFib <threads> <number> [<sequntialThreshold>]");
+            System.out.println("Usage: java DynamicLeftSpineFib <threads> <number> [<sequentialThreshold>]");
             return;
         }
 

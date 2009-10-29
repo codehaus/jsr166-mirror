@@ -31,7 +31,7 @@ import java.math.*;
  *
  * For String keys, the program tries to use file "testwords.txt", which
  * is best used with real words.  We can't check in this file, but you
- * can create one from a real dictonary (1 line per word) and then run
+ * can create one from a real dictionary (1 line per word) and then run
  * linux "shuf" to randomize entries. If no file exists, it uses
  * String.valueOf(i) for element i.
  */

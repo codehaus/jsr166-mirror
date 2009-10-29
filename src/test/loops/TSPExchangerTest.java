@@ -88,7 +88,7 @@ public class TSPExchangerTest {
     /**
      * The probability mask value for creating random strands,
      * that have lengths at least MIN_STRAND_LENGTH, and grow
-     * with exposnential decay 2^(-(1/(RANDOM_STRAND_MASK + 1)
+     * with exponential decay 2^(-(1/(RANDOM_STRAND_MASK + 1)
      * Must be 1 less than a power of two.
      */
     static final int RANDOM_STRAND_MASK = 7;

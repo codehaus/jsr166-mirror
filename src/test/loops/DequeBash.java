@@ -22,15 +22,15 @@ public class DequeBash {
     static int nextHead = -1;
     static int size() { return nextTail - nextHead - 1; }
 
-    
-    static int random(int bound) { 
+
+    static int random(int bound) {
         int x = seed;
         int t = (x % 127773) * 16807 - (x / 127773) * 2836;
         seed = (t > 0)? t : t + 0x7fffffff;
         return (t & 0x7fffffff) % bound;
     }
 
-    static int random() { 
+    static int random() {
         int x = seed;
         int t = (x % 127773) * 16807 - (x / 127773) * 2836;
         seed = (t > 0)? t : t + 0x7fffffff;
@@ -75,11 +75,11 @@ public class DequeBash {
                 testEqual(deque, (Deque<Integer>) deque.getClass().
                           getConstructor(Collection.class).newInstance(deque));
             }
-            
+
             // Test fancy removal stuff once in a blue moon
             if ((i & 8191) == 0)
                 testRemove(deque);
-            
+
          }
 
         // Stupid tests for clear, toString
@@ -91,7 +91,7 @@ public class DequeBash {
             throw new Exception("Deque.toString():  " + deque.toString());
     }
 
-    static void testIter(Deque<Integer> deque) throws Exception {                
+    static void testIter(Deque<Integer> deque) throws Exception {
         int next = nextHead + 1;
         int count = 0;
         for (int j : deque) {
@@ -103,7 +103,7 @@ public class DequeBash {
             throw new Exception("Count " + count + " != " + size());
     }
 
-    static void testDescendingIter(Deque<Integer> deque) throws Exception {                
+    static void testDescendingIter(Deque<Integer> deque) throws Exception {
         int next = deque.size() + nextHead;
         int count = 0;
         for (Iterator<Integer> it = deque.descendingIterator(); it.hasNext();) {
@@ -124,16 +124,16 @@ public class DequeBash {
             throw new Exception(
                                 "IsEmpty " + deque.isEmpty() + ", size " + size());
         // Check head and tail
-        if (size() == 0) 
+        if (size() == 0)
             testEmpty(deque);
-        else 
+        else
             nonEmptyTest(deque);
 
     }
 
-    static void nonEmptyTest(Deque<Integer> deque) throws Exception {            
+    static void nonEmptyTest(Deque<Integer> deque) throws Exception {
         if (deque.getFirst() != nextHead + 1)
-            throw new Exception("getFirst got: " + 
+            throw new Exception("getFirst got: " +
                                 deque.getFirst() + " expecting " + (nextHead + 1));
         if (deque.element() != nextHead + 1)
             throw new Exception("element got: " + deque.element() +
@@ -144,18 +144,18 @@ public class DequeBash {
         if (deque.peek() != nextHead + 1)
             throw new Exception("peek got: " +  deque.peek() +
                                 " expecting " + (nextHead + 1));
-        
+
         if (deque.peekLast() != nextTail - 1)
             throw new Exception("peekLast got: " + deque.peekLast() +
                                 " expecting " + (nextTail - 1));
         if (deque.getLast() != nextTail - 1)
-            throw new Exception("getLast got: " + 
+            throw new Exception("getLast got: " +
                                 deque.getLast() + " expecting " + (nextTail - 1));
-    }        
-    
+    }
+
 
     static void randomOp(Deque<Integer> deque) throws Exception {
-        
+
         // Perform a random operation
         switch(random() & 3) {
         case 0:
@@ -324,7 +324,7 @@ public class DequeBash {
                 case 0:  removed = copy.remove(e);                break;
                 case 1:  removed = copy.removeFirstOccurrence(e); break;
                 case 2:  removed = copy.removeLastOccurrence(e);  break;
-                default: throw new Exception("How'd we get here");            
+                default: throw new Exception("How'd we get here");
             }
             if (!removed)
                 throw new Exception(e + " not removed.");

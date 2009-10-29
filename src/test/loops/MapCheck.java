@@ -36,14 +36,14 @@ public class MapCheck {
 
         if (args.length == 0)
             System.out.println("Usage: MapCheck mapclass [int|float|string|object] [trials] [size] [serialtest]");
-        
+
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
             } catch(ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
-        } 
+        }
 
         if (args.length > 1) {
             String et = args[1].toLowerCase();
@@ -59,10 +59,10 @@ public class MapCheck {
         if (eclass == null)
             eclass = Object.class;
 
-        if (args.length > 2) 
+        if (args.length > 2)
             numTests = Integer.parseInt(args[2]);
 
-        if (args.length > 3) 
+        if (args.length > 3)
             size = Integer.parseInt(args[3]);
 
         boolean doSerializeTest = args.length > 4;
@@ -152,7 +152,7 @@ public class MapCheck {
             if (v != null && v.getClass() == eclass)
                 ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == expect);
         checkSum += sum;
     }
@@ -166,7 +166,7 @@ public class MapCheck {
         for (int i = 0; i < n; i++) {
             if ((Integer)(intMap.get(i)) != i) ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == expect);
     }
 
@@ -176,7 +176,7 @@ public class MapCheck {
         for (int i = 0; i < n; i++) {
             if (s.remove(key[i]) != null) ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == expect);
         checkSum += sum;
     }
@@ -185,7 +185,7 @@ public class MapCheck {
         String nm = "Remove Present         ";
         timer.start(nm, n);
         s.clear();
-        timer.finish(); 
+        timer.finish();
         reallyAssert (s.isEmpty());
     }
 
@@ -197,7 +197,7 @@ public class MapCheck {
             Object v = s.put(k, k);
             if (v == null) ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == expect);
         checkSum += sum;
     }
@@ -208,7 +208,7 @@ public class MapCheck {
         for (int i = 0; i < n; i++) {
             if (s.containsKey(key[i])) ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == expect);
         checkSum += sum;
     }
@@ -229,7 +229,7 @@ public class MapCheck {
         for (int i = n-2; i >= 0; i-=2) {
             if (s.remove(key[i]) != null) ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == expect);
         checkSum += sum;
     }
@@ -239,7 +239,7 @@ public class MapCheck {
         int sum = 0;
         timer.start("Traverse key or value  ", size);
         if (s.containsValue(MISSING)) ++sum;
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == 0);
         checkSum += sum;
     }
@@ -255,7 +255,7 @@ public class MapCheck {
                 ++sum;
             last = x;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == size);
         checkSum += sum;
         return last;
@@ -271,7 +271,7 @@ public class MapCheck {
                 ++sum;
             last = x;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == size);
         checkSum += sum;
         return last;
@@ -288,7 +288,7 @@ public class MapCheck {
                 v != null && v.getClass() == eclass)
                 ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == size);
         checkSum += sum;
     }
@@ -303,7 +303,7 @@ public class MapCheck {
             it.remove();
             ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == sz);
         checkSum += sum;
     }
@@ -320,7 +320,7 @@ public class MapCheck {
                 it.next();
             ++sum;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == sz / 2);
         checkSum += sum;
     }
@@ -328,15 +328,15 @@ public class MapCheck {
     static void putAllTest(String nm, int n, Map src, Map dst) {
         timer.start(nm, n);
         dst.putAll(src);
-        timer.finish(); 
+        timer.finish();
         reallyAssert (src.size() == dst.size());
     }
 
     static void serTest(Map s, int size) throws Exception {
-        if (!(s instanceof Serializable)) 
+        if (!(s instanceof Serializable))
             return;
         System.out.print("Serialize              : ");
-      
+
         for (int i = 0; i < size; i++) {
             s.put(new Integer(i), Boolean.TRUE);
         }
@@ -393,7 +393,7 @@ public class MapCheck {
         kitTest(s, size);
         vitTest(s, size);
         eitTest(s, size);
-        twoMapTest1(s, key, absent); 
+        twoMapTest1(s, key, absent);
         twoMapTest2(s, key, absent);
     }
 
@@ -410,7 +410,7 @@ public class MapCheck {
         putTest("Add    Absent          ", size, s2, key, size * 3 / 4);
         reallyAssert(s2.size() == size * 2);
         clrTest(size, s2);
-    }        
+    }
 
     static void twoMapTest2(Map s, Object[] key, Object[] absent) {
         int size = key.length;
@@ -459,7 +459,7 @@ public class MapCheck {
             e.setValue(s.get(e.getKey()));
         }
 
-        timer.finish(); 
+        timer.finish();
 
         int rmiss = 0;
         timer.start("Remove Present         ", size * 2);
@@ -469,7 +469,7 @@ public class MapCheck {
             if (!es.remove(s2i.next()))
                 ++rmiss;
         }
-        timer.finish(); 
+        timer.finish();
         reallyAssert(rmiss == 0);
 
         clrTest(size, s2);
@@ -481,7 +481,7 @@ public class MapCheck {
         reallyAssert (s.size() == size);
         int sum = 0;
         timer.start("Iter XEntry            ", size);
-        Iterator it = s.entrySet().iterator(); 
+        Iterator it = s.entrySet().iterator();
         Object k = null;
         Object v = null;
         for (int i = 0; i < size-pos; ++i) {
@@ -506,7 +506,7 @@ public class MapCheck {
         reallyAssert (s.size() == size-1);
         s.put(k, v);
         reallyAssert (seen.size() == size);
-        timer.finish(); 
+        timer.finish();
         reallyAssert (sum == size);
         reallyAssert (s.size() == size);
     }
@@ -530,12 +530,12 @@ public class MapCheck {
         else if (eclass == String.class) {
             initWords(size, key, absent);
         }
-        else 
+        else
             throw new Error("unknown type");
     }
 
     static void initInts(Object[] key, Object[] absent, int size) {
-        for (int i = 0; i < size; ++i) 
+        for (int i = 0; i < size; ++i)
             key[i] = Integer.valueOf(i);
         Map m = newMap();
         int k = 0;
@@ -595,7 +595,7 @@ public class MapCheck {
                 for (;;) {
                     int c = in.read();
                     if (c < 0) {
-                        if (ki < size) 
+                        if (ki < size)
                             randomWords(key, ki, size);
                         if (ai < size)
                             randomWords(abs, ai, size);
@@ -637,7 +637,7 @@ public class MapCheck {
                 r >>>= 8;
                 c[k++] = (char)(' ' + (r & 0x7f));
             }
-            c[k++] = (char)((i & 31) | 1); // never == to any testword 
+            c[k++] = (char)((i & 31) | 1); // never == to any testword
             ws[i] = new String(c);
         }
     }
@@ -648,7 +648,7 @@ public class MapCheck {
         private long startTime;
 
         static final java.util.TreeMap accum = new java.util.TreeMap();
-    
+
         static void printStats() {
             for (Iterator it = accum.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry e = (Map.Entry)(it.next());
@@ -660,16 +660,16 @@ public class MapCheck {
                     n = stats.firstn;
                     s = stats.first;
                 }
-                else 
+                else
                     s = stats.sum;
-                
+
                 double t = ((double)s) / n;
                 long nano = Math.round(t);
                 System.out.printf("%6d", + nano);
                 System.out.println();
             }
         }
-    
+
         void start(String name, long numOps) {
             this.name = name;
             this.numOps = numOps;
@@ -681,7 +681,7 @@ public class MapCheck {
             Object st = accum.get(name);
             if (st == null)
                 accum.put(name, new Stats(elapsed, numOps));
-            else 
+            else
                 ((Stats)st).addTime(elapsed, numOps);
         }
 
@@ -692,8 +692,8 @@ public class MapCheck {
         long number;
         long first;
         long firstn;
-        Stats(long t, long n) { 
-            first = t; 
+        Stats(long t, long n) {
+            first = t;
             firstn = n;
         }
         void addTime(long t, long n) {
@@ -724,4 +724,3 @@ public class MapCheck {
     }
 
 }
-

@@ -94,7 +94,7 @@ public class ListBash {
             sum -= (s2.get(k)).intValue();
         }
         if (sum == 0) System.out.print(" ");
-    }    
+    }
 
     static void sets(List<Integer> s1, List<Integer> s2) {
         List<Integer> intersection = clone(s1, cl,synch);intersection.retainAll(s2);
@@ -159,7 +159,7 @@ public class ListBash {
             while(it.hasNext())
                 if((it.next()).intValue() % 2 == 1)
                     fail("Failed to remove all odd nubmers.");
-            
+
             for (int i=0; i<(listSize/2); i++)
                 odd.remove(i);
             for (int i=0; i<(listSize/2); i++) {
@@ -173,7 +173,7 @@ public class ListBash {
                 all.add(2*i, even.get(i));
             if (!all.equals(s))
                 fail("Failed to reconstruct ints from odds and evens.");
-            
+
             all = clone(odd,  cl, synch);
             ListIterator<Integer> itAll = all.listIterator(all.size());
             ListIterator<Integer> itEven = even.listIterator(even.size());

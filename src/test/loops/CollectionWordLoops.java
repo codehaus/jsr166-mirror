@@ -9,11 +9,11 @@ import java.io.*;
 public class CollectionWordLoops {
 
     static final String[] WORDS_FILES = {
-        "kw.txt", 
+        "kw.txt",
         "class.txt",
         //        "dir.txt",
-        //        "ids.txt", 
-        //        "/usr/dict/words", 
+        //        "ids.txt",
+        //        "/usr/dict/words",
     };
 
     static final int MAX_WORDS = 500000;
@@ -32,22 +32,22 @@ public class CollectionWordLoops {
 
         System.out.println("Testing " + collectionClass.getName());
 
-        for (int s = 0; s < WORDS_FILES.length; ++s) 
+        for (int s = 0; s < WORDS_FILES.length; ++s)
             tests(collectionClass, numTests, s);
 
-        for (int s = WORDS_FILES.length-1; s >= 0; --s) 
+        for (int s = WORDS_FILES.length-1; s >= 0; --s)
             tests(collectionClass, numTests, s);
 
     }
 
     static void tests(Class collectionClass, int numTests, int sizeIndex) {
-        try { 
+        try {
             String[] key = readWords(sizeIndex);
             int size = key.length;
-            
+
             System.out.print("n = " +LoopHelpers.rightJustify(size) +" : ");
             long least = Long.MAX_VALUE;
-            
+
             for (int i = 0; i < numTests; ++i) {
                 Collection<String> m = newCollection(collectionClass);
                 long t = doTest(collectionClass.getName(), m, key);
@@ -55,7 +55,7 @@ public class CollectionWordLoops {
                 m.clear();
                 m = null;
             }
-            
+
             long nano = Math.round(1000000.0 * (least) / NOPS);
             System.out.println(LoopHelpers.rightJustify(nano) + " ns per op");
         } catch (IOException ignore) {
@@ -105,7 +105,7 @@ public class CollectionWordLoops {
     }
 
     static long doTest(String name,
-                       final Collection<String> m, 
+                       final Collection<String> m,
                        final String[] key) {
 
         //    System.out.print(name + "\t");
@@ -115,10 +115,10 @@ public class CollectionWordLoops {
         long afterRun = System.currentTimeMillis();
         long runTime =  (afterRun - startTime);
         int np = runner.total;
-        if (runner.total == runner.hashCode()) 
+        if (runner.total == runner.hashCode())
             System.out.println("Useless Number" + runner.total);
         int sz = runner.maxsz;
-        if (sz == runner.hashCode()) 
+        if (sz == runner.hashCode())
             System.out.println("Useless Number" + sz);
         //        System.out.print(" m = " + sz);
         return runTime;
@@ -139,7 +139,7 @@ public class CollectionWordLoops {
         int maxsz;
 
         Runner(Collection<String> m, String[] k) {
-            collection = m; key = k; 
+            collection = m; key = k;
             pctrem = (int)(((long)premove * (long)(Integer.MAX_VALUE/2)) / 50);
             pctins = (int)(((long)pinsert * (long)(Integer.MAX_VALUE/2)) / 50);
         }
@@ -150,14 +150,14 @@ public class CollectionWordLoops {
             int r = rng.next() & 0x7FFFFFFF;
             int jinc = (r & 7);
             j += jinc - 3;
-            if (j >= n) j -= n;  
+            if (j >= n) j -= n;
             if (j < 0) j += n;
 
             int l = n / 4 + j;
-            if (l >= n) l -= n;  
-      
+            if (l >= n) l -= n;
+
             String k = key[j];
-      
+
             if (!collection.contains(k)) {
                 ++nagets;
                 if (r < pctins) {

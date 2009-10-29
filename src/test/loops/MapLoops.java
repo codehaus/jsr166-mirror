@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class MapLoops {
-    static int nkeys       = 1000; 
+    static int nkeys       = 1000;
     static int pinsert     = 60;
     static int premove     = 2;
     static int maxThreads  = 100;
@@ -28,28 +28,28 @@ public class MapLoops {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
-        else 
+        else
             mapClass = java.util.concurrent.ConcurrentHashMap.class;
 
-        if (args.length > 1) 
+        if (args.length > 1)
             maxThreads = Integer.parseInt(args[1]);
 
-        if (args.length > 2) 
+        if (args.length > 2)
             nkeys = Integer.parseInt(args[2]);
 
-        if (args.length > 3) 
+        if (args.length > 3)
             pinsert = Integer.parseInt(args[3]);
 
-        if (args.length > 4) 
+        if (args.length > 4)
             premove = Integer.parseInt(args[4]);
 
-        if (args.length > 5) 
+        if (args.length > 5)
             nops = Integer.parseInt(args[5]);
 
         // normalize probabilities wrt random number generator
         removesPerMaxRandom = (int)(((double)premove/100.0 * 0x7FFFFFFFL));
         insertsPerMaxRandom = (int)(((double)pinsert/100.0 * 0x7FFFFFFFL));
-        
+
         System.out.print("Class: " + mapClass.getName());
         System.out.print(" threads: " + maxThreads);
         System.out.print(" size: " + nkeys);
@@ -68,12 +68,12 @@ public class MapLoops {
             else if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
+            }
             else if (i == 1 && k == 2) {
                 i = k;
                 warmups = 1;
             }
-            else 
+            else
                 i = k;
         }
         pool.shutdown();
@@ -82,7 +82,7 @@ public class MapLoops {
     static Integer[] makeKeys(int n) {
         LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
         Integer[] key = new Integer[n];
-        for (int i = 0; i < key.length; ++i) 
+        for (int i = 0; i < key.length; ++i)
             key[i] = new Integer(rng.next());
         return key;
     }
@@ -107,7 +107,7 @@ public class MapLoops {
         shuffleKeys(key);
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(i+1, timer);
-        for (int t = 0; t < i; ++t) 
+        for (int t = 0; t < i; ++t)
             pool.execute(new Runner(t, map, key, barrier));
         barrier.await();
         barrier.await();
@@ -128,10 +128,10 @@ public class MapLoops {
         int total;
 
         Runner(int id, Map<Integer,Integer> map, Integer[] key,  CyclicBarrier barrier) {
-            this.map = map; 
-            this.key = key; 
+            this.map = map;
+            this.key = key;
             this.barrier = barrier;
-            position = key.length / 2; 
+            position = key.length / 2;
             rng = new LoopHelpers.SimpleRandom((id + 1) * 8862213513L);
             rng.next();
         }
@@ -140,14 +140,14 @@ public class MapLoops {
             // random-walk around key positions,  bunching accesses
             int r = rng.next();
             position += (r & 7) - 3;
-            while (position >= key.length) position -= key.length;  
+            while (position >= key.length) position -= key.length;
             while (position < 0) position += key.length;
 
             Integer k = key[position];
             Integer x = map.get(k);
 
             if (x != null) {
-                if (x.intValue() != k.intValue()) 
+                if (x.intValue() != k.intValue())
                     throw new Error("bad mapping: " + x + " to " + k);
 
                 if (r < removesPerMaxRandom) {
@@ -161,7 +161,7 @@ public class MapLoops {
                 ++position;
                 map.put(k, k);
                 return 2;
-            } 
+            }
 
             // Uncomment to add a little computation between accesses
             //            total += LoopHelpers.compute1(k.intValue());
@@ -173,7 +173,7 @@ public class MapLoops {
             try {
                 barrier.await();
                 int ops = nops;
-                while (ops > 0) 
+                while (ops > 0)
                     ops -= step();
                 barrier.await();
             }
@@ -183,4 +183,3 @@ public class MapLoops {
         }
     }
 }
-

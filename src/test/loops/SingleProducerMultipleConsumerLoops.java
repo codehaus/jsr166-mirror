@@ -22,14 +22,14 @@ public class SingleProducerMultipleConsumerLoops {
     static final int POOL_MASK = POOL_SIZE-1;
     static final Integer[] intPool = new Integer[POOL_SIZE];
     static {
-        for (int i = 0; i < POOL_SIZE; ++i) 
+        for (int i = 0; i < POOL_SIZE; ++i)
             intPool[i] = Integer.valueOf(i);
     }
 
     public static void main(String[] args) throws Exception {
         int maxn = 12;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxn = Integer.parseInt(args[0]);
 
         print = false;
@@ -43,11 +43,11 @@ public class SingleProducerMultipleConsumerLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
-        
+
         pool.shutdown();
    }
 
@@ -56,14 +56,14 @@ public class SingleProducerMultipleConsumerLoops {
         System.out.print("Warmup ");
         int it = 2000;
         for (int j = 5; j > 0; --j) {
-            oneTest(j, it); 
+            oneTest(j, it);
             System.out.print(".");
             it += 1000;
         }
         System.gc();
         it = 20000;
         for (int j = 5; j > 0; --j) {
-            oneTest(j, it); 
+            oneTest(j, it);
             System.out.print(".");
             it += 10000;
         }
@@ -93,7 +93,7 @@ public class SingleProducerMultipleConsumerLoops {
         if (print)
             System.out.print("LinkedBlockingDeque     ");
         oneRun(new LinkedBlockingDeque<Integer>(), n, iters);
-        
+
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("ArrayBlockingQueue      ");
@@ -103,7 +103,7 @@ public class SingleProducerMultipleConsumerLoops {
         if (print)
             System.out.print("SynchronousQueue        ");
         oneRun(new SynchronousQueue<Integer>(), n, iters);
-        
+
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("SynchronousQueue(fair)  ");
@@ -118,7 +118,7 @@ public class SingleProducerMultipleConsumerLoops {
         if (print)
             System.out.print("LinkedTransferQueue(half)");
         oneRun(new HalfSyncLTQ<Integer>(), n, iters);
-        
+
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("PriorityBlockingQueue   ");
@@ -130,14 +130,14 @@ public class SingleProducerMultipleConsumerLoops {
         oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE, true), n, fairIters);
 
     }
-    
+
     static abstract class Stage implements Runnable {
         final int iters;
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         volatile int result;
         Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.iters = iters;
         }
@@ -160,15 +160,15 @@ public class SingleProducerMultipleConsumerLoops {
                 barrier.await();
                 result = 432;
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
     }
 
     static class Consumer extends Stage {
-        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) { 
+        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             super(q, b, iters);
 
         }
@@ -186,9 +186,9 @@ public class SingleProducerMultipleConsumerLoops {
                 result = s;
                 if (s == 0) System.out.print(" ");
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
 
@@ -211,7 +211,7 @@ public class SingleProducerMultipleConsumerLoops {
     static final class LTQasSQ<T> extends LinkedTransferQueue<T> {
         LTQasSQ() { super(); }
         public void put(T x) {
-            try { super.transfer(x); 
+            try { super.transfer(x);
             } catch (InterruptedException ex) { throw new Error(); }
         }
     }
@@ -223,9 +223,9 @@ public class SingleProducerMultipleConsumerLoops {
             if ((++calls & 1) == 0)
                 super.put(x);
             else {
-                try { super.transfer(x); 
-                } catch (InterruptedException ex) { 
-                    throw new Error(); 
+                try { super.transfer(x);
+                } catch (InterruptedException ex) {
+                    throw new Error();
                 }
             }
         }

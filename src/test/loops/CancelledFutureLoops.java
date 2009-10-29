@@ -6,7 +6,7 @@
 
 /*
  * @test
- * @summary Checks for responsiveness of futures to cancellation. 
+ * @summary Checks for responsiveness of futures to cancellation.
  * Runs under
  * the assumption that ITERS computations require more than TIMEOUT
  * msecs to complete.
@@ -27,11 +27,11 @@ public final class CancelledFutureLoops {
     static final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
     static boolean print = false;
     static final int ITERS = 10000000;
-    static final long TIMEOUT = 100; 
+    static final long TIMEOUT = 100;
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         print = true;
@@ -57,7 +57,7 @@ public final class CancelledFutureLoops {
 
         final void test() throws Exception {
             Future[] futures = new Future[nthreads];
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 futures[i] = pool.submit(this);
 
             barrier.await();
@@ -67,7 +67,7 @@ public final class CancelledFutureLoops {
                 if (!futures[i].cancel(true))
                     tooLate = true;
                 // Unbunch some of the cancels
-                if ( (i & 3) == 0) 
+                if ( (i & 3) == 0)
                     Thread.sleep(1 + rng.next() % 10);
             }
 
@@ -80,7 +80,7 @@ public final class CancelledFutureLoops {
             }
             else
                 System.out.print("(cancelled too late) ");
-            
+
             long endTime = System.nanoTime();
             long time = endTime - timer.startTime;
             if (print) {
@@ -91,7 +91,7 @@ public final class CancelledFutureLoops {
         }
 
         public final Object call() throws Exception {
-            barrier.await(); 
+            barrier.await();
             int sum = v;
             int x = 0;
             int n = ITERS;
@@ -104,7 +104,7 @@ public final class CancelledFutureLoops {
                     lock.unlock();
                 }
                 sum += LoopHelpers.compute2(LoopHelpers.compute2(x));
-            } 
+            }
             return new Integer(sum);
         }
     }

@@ -14,15 +14,15 @@ import java.util.concurrent.locks.*;
  * genetic algorithm using an Exchanger.  A population of chromosomes is
  * distributed among "subpops".  Each chromosomes represents a tour,
  * and its fitness is the total tour length.
- * 
+ *
  * A set of worker threads perform updates on subpops. The basic
  * update step is:
  * <ol>
  *   <li> Select a breeder b from the subpop
  *   <li> Create a strand of its tour with a random starting point and length
- *   <li> Offer the strand to the exchanger, receiving a strand from 
+ *   <li> Offer the strand to the exchanger, receiving a strand from
  *        another subpop
- *   <li> Combine b and the received strand using crossing function to 
+ *   <li> Combine b and the received strand using crossing function to
  *        create new chromosome c.
  *   <li> Replace a chromosome in the subpop with c.
  * </ol>
@@ -54,7 +54,7 @@ public class TSPExchangerTest {
      */
     static final int DEFAULT_CITIES = 144;
 
-    // Tuning parameters. 
+    // Tuning parameters.
 
     /**
      * The number of chromosomes per subpop. Must be a power of two.
@@ -62,7 +62,7 @@ public class TSPExchangerTest {
      * Smaller values lead to faster iterations but poorer quality
      * results
      */
-    static final int DEFAULT_SUBPOP_SIZE = 32; 
+    static final int DEFAULT_SUBPOP_SIZE = 32;
 
     /**
      * The number of iterations per subpop. Convergence appears
@@ -97,7 +97,7 @@ public class TSPExchangerTest {
      * Probability control for selecting breeders.
      * Breeders are selected starting at the best-fitness chromosome,
      * with exponentially decaying probability
-     * 1 / (subpopSize >>> BREEDER_DECAY). 
+     * 1 / (subpopSize >>> BREEDER_DECAY).
      *
      * Larger values usually cause faster convergence but poorer
      * quality results
@@ -119,7 +119,7 @@ public class TSPExchangerTest {
      * The set of cities. Created once per program run, to
      * make it easier to compare solutions across different runs.
      */
-    static CitySet cities; 
+    static CitySet cities;
 
     public static void main(String[] args) throws Exception {
         int maxThreads = DEFAULT_MAX_THREADS;
@@ -206,7 +206,7 @@ public class TSPExchangerTest {
      * only one remaining thread, it will have no one to exchange
      * with, so it is terminated (via interrupt).
      */
-    static void oneRun(int nThreads, int nSubpops, int subpopSize, int nGen) 
+    static void oneRun(int nThreads, int nSubpops, int subpopSize, int nGen)
         throws InterruptedException {
         Population p = new Population(nThreads, nSubpops, subpopSize, nGen);
         ProgressMonitor mon = null;
@@ -264,7 +264,7 @@ public class TSPExchangerTest {
 
         void start() {
             for (int i = 0; i < nThreads; ++i) {
-                threads[i].start();                
+                threads[i].start();
             }
         }
 
@@ -285,7 +285,7 @@ public class TSPExchangerTest {
 
         int totalExchanges() {
             int xs = 0;
-            for (int i = 0; i < threads.length; ++i) 
+            for (int i = 0; i < threads.length; ++i)
                 xs += threads[i].exchanges;
             return xs;
         }
@@ -362,7 +362,7 @@ public class TSPExchangerTest {
     }
 
     /**
-     * A Subpop maintains a set of chromosomes.. 
+     * A Subpop maintains a set of chromosomes..
      */
     static final class Subpop {
         /** The chromosomes, kept in sorted order */
@@ -406,7 +406,7 @@ public class TSPExchangerTest {
          * other.  It is hardwired because small variations of it
          * don't matter much.
          *
-         * @param g the first generation to run. 
+         * @param g the first generation to run.
          */
         int runUpdates() throws InterruptedException {
             int n = 1 + (rng.next() & ((subpopSize << 1) - 1));
@@ -463,7 +463,7 @@ public class TSPExchangerTest {
             return d;
         }
 
-        /** 
+        /**
          * Select a random strand of b's.
          * @param breeder the breeder
          */
@@ -508,7 +508,7 @@ public class TSPExchangerTest {
             int first = cs[0];
             int j = 0;
             int[] bs = breeder.alleles;
-            while (bs[j] != first) 
+            while (bs[j] != first)
                 ++j;
 
             // Append remaining b's that aren't already in tour
@@ -517,14 +517,14 @@ public class TSPExchangerTest {
                 int x = bs[j];
                 if ((inTour[x >>> 5] & (1 << (x & 31))) == 0)
                     cs[i++] = x;
-            } 
+            }
 
         }
 
         /**
          * Fix the sort order of a changed Chromosome c at position k
          * @param c the chromosome
-         * @param k the index 
+         * @param k the index
          */
         void fixOrder(Chromosome c, int k) {
             Chromosome[] cs = chromosomes;
@@ -560,7 +560,7 @@ public class TSPExchangerTest {
         /** Total tour length */
         int fitness;
 
-        /** 
+        /**
          * Initialize to random tour
          */
         Chromosome(int length, RNG random) {
@@ -614,12 +614,12 @@ public class TSPExchangerTest {
         /**
          * Check that this tour visits each city
          */
-        void validate() { 
+        void validate() {
             int len = alleles.length;
             boolean[] used = new boolean[len];
-            for (int i = 0; i < len; ++i) 
+            for (int i = 0; i < len; ++i)
                 used[alleles[i]] = true;
-            for (int i = 0; i < len; ++i) 
+            for (int i = 0; i < len; ++i)
                 if (!used[i])
                     throw new Error("Bad tour");
         }
@@ -638,7 +638,7 @@ public class TSPExchangerTest {
     }
 
     /**
-     * A collection of (x,y) points that represent cities. 
+     * A collection of (x,y) points that represent cities.
      */
     static final class CitySet {
 
@@ -665,7 +665,7 @@ public class TSPExchangerTest {
                     double dy = (double)yPts[i] - (double)yPts[j];
                     double dd = Math.hypot(dx, dy) / 2.0;
                     long ld = Math.round(dd);
-                    distances[i][j] = (ld >= Integer.MAX_VALUE)? 
+                    distances[i][j] = (ld >= Integer.MAX_VALUE)?
                         Integer.MAX_VALUE : (int)ld;
                 }
             }
@@ -693,7 +693,7 @@ public class TSPExchangerTest {
             double dy = ((double)yPts[i] - (double)yPts[j]) / PSCALE;
             return Math.hypot(dx, dy);
         }
-            
+
     }
 
     /**

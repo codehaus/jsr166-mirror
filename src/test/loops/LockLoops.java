@@ -25,13 +25,13 @@ public final class LockLoops {
         int iters = 1000000;
         int replications = 1;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
-        if (args.length > 1) 
+        if (args.length > 1)
             iters = Integer.parseInt(args[1]);
 
-        if (args.length > 2) 
+        if (args.length > 2)
             replications = Integer.parseInt(args[2]);
 
         rng.setSeed(3122688L);
@@ -142,7 +142,7 @@ public final class LockLoops {
             v = initialValue;
             this.iters = iters;
             barrier = new CyclicBarrier(nthreads+1, timer);
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -161,12 +161,12 @@ public final class LockLoops {
         abstract int loop(int n);
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 result += loop(iters);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
 

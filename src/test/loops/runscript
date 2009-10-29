@@ -139,7 +139,7 @@ echo CollectionWordLoops CopyOnWriteArrayList
 $RUN CollectionWordLoops java.util.concurrent.CopyOnWriteArrayList
 echo CollectionWordLoops ArrayDeque
 $RUN CollectionWordLoops java.util.ArrayDeque
-echo ListBash CopyOnWriteArrayList 
+echo ListBash CopyOnWriteArrayList
 $RUN ListBash java.util.concurrent.CopyOnWriteArrayList 100 100
 echo ListBash LinkedList
 $RUN ListBash java.util.LinkedList 100 100
@@ -152,14 +152,14 @@ $RUN Finals
 echo FinalLongTest
 $RUN FinalLongTest
 echo RLJBar
-$RUN RLJBar 
-echo RLJBar -b 
-$RUN RLJBar -b 
+$RUN RLJBar
+echo RLJBar -b
+$RUN RLJBar -b
 echo RLIBar
 $RUN RLIBar -np $TRIALS
-echo RLIBar -batch 10 
+echo RLIBar -batch 10
 $RUN RLIBar -batch 10 -np $TRIALS
-echo UnboundedQueueFillEmptyLoops 
+echo UnboundedQueueFillEmptyLoops
 $RUN UnboundedQueueFillEmptyLoops java.util.ArrayDeque
 $RUN UnboundedQueueFillEmptyLoops java.util.PriorityQueue
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.PriorityBlockingQueue
@@ -167,7 +167,7 @@ $RUN UnboundedQueueFillEmptyLoops java.util.LinkedList
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.ConcurrentLinkedQueue
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingQueue
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingDeque
-echo IteratorLoops 
+echo IteratorLoops
 $RUN IteratorLoops java.util.ArrayList
 $RUN IteratorLoops java.util.Vector
 $RUN IteratorLoops java.util.concurrent.CopyOnWriteArrayList
@@ -189,5 +189,3 @@ $RUN Integrate
 $RUN FJJacobi
 $RUN FJPhaserJacobi
 $RUN ThreadPhaserJacobi
-
-

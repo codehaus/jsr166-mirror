@@ -31,7 +31,7 @@ public class TimeoutExchangerLoops {
                 patienceNanos = Long.parseLong(args[argc]);
             else if (option.equals("-r"))
                 nReps = Integer.parseInt(args[argc]);
-            else 
+            else
                 maxThreads = Integer.parseInt(option);
             argc++;
         }
@@ -73,7 +73,7 @@ public class TimeoutExchangerLoops {
         }
     }
 
-    static void oneRun(int nThreads, long trialMillis, long patienceNanos) 
+    static void oneRun(int nThreads, long trialMillis, long patienceNanos)
         throws Exception {
         System.out.printf("%4d threads", nThreads);
         System.out.printf("%9dms", trialMillis);
@@ -89,10 +89,10 @@ public class TimeoutExchangerLoops {
         long startTime = System.nanoTime();
         start.countDown();
         Thread.sleep(trialMillis);
-        for (int i = 0; i < nThreads; ++i) 
+        for (int i = 0; i < nThreads; ++i)
             threads[i].interrupt();
         long elapsed = System.nanoTime() - startTime;
-        for (int i = 0; i < nThreads; ++i) 
+        for (int i = 0; i < nThreads; ++i)
             threads[i].join();
         int iters = 0;
         long fails = 0;
@@ -153,4 +153,3 @@ public class TimeoutExchangerLoops {
         }
     }
 }
-        

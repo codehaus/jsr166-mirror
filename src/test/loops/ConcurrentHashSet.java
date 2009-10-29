@@ -15,8 +15,8 @@ public class ConcurrentHashSet<E> extends AbstractSet<E>
 
     private final ConcurrentHashMap<E, Boolean> m;  // The backing map
     private transient Set<E> keySet;  // Its keySet
-    
-    public ConcurrentHashSet() { 
+
+    public ConcurrentHashSet() {
         m = new ConcurrentHashMap<E, Boolean>();
         keySet = m.keySet();
     }
@@ -24,9 +24,9 @@ public class ConcurrentHashSet<E> extends AbstractSet<E>
         m = new ConcurrentHashMap<E, Boolean>(initialCapacity);
         keySet = m.keySet();
     }
-    public ConcurrentHashSet(int initialCapacity, float loadFactor, 
+    public ConcurrentHashSet(int initialCapacity, float loadFactor,
                              int concurrencyLevel) {
-        m = new ConcurrentHashMap<E, Boolean>(initialCapacity, loadFactor, 
+        m = new ConcurrentHashMap<E, Boolean>(initialCapacity, loadFactor,
                                               concurrencyLevel);
         keySet = m.keySet();
     }
@@ -61,4 +61,3 @@ public class ConcurrentHashSet<E> extends AbstractSet<E>
         keySet = m.keySet();
     }
 }
-

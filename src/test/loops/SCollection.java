@@ -17,15 +17,15 @@ import java.util.concurrent.locks.*;
 public final class SCollection<E> implements Collection<E> {
     private final Collection c;
     private final ReentrantLock l = new ReentrantLock();
-    
+
     public SCollection(Collection<E> c) {
         if (c == null)
             throw new NullPointerException();
         this.c = c;
     }
 
-    public SCollection() { 
-        this(new ArrayList<E>()); 
+    public SCollection() {
+        this(new ArrayList<E>());
     }
 
     public final int size() {

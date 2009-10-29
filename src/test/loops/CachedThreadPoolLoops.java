@@ -15,7 +15,7 @@ public class CachedThreadPoolLoops {
 
     public static void main(String[] args) throws Exception {
         int maxThreads = NCPUS * 3 / 2; // 100;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         System.out.print("Warmup:");
@@ -28,8 +28,8 @@ public class CachedThreadPoolLoops {
                 if (i == k) {
                     k = i << 1;
                     i = i + (i >>> 1);
-                } 
-                else 
+                }
+                else
                     i = k;
             }
         }
@@ -43,8 +43,8 @@ public class CachedThreadPoolLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
    }
@@ -83,8 +83,8 @@ public class CachedThreadPoolLoops {
     static final class Task implements Runnable {
         final ThreadPoolExecutor pool;
         final CountDownLatch done;
-        Task(ThreadPoolExecutor p, CountDownLatch d) { 
-            pool = p; 
+        Task(ThreadPoolExecutor p, CountDownLatch d) {
+            pool = p;
             done = d;
         }
         public void run() {
@@ -92,7 +92,7 @@ public class CachedThreadPoolLoops {
             remaining.incrementAndGet();
             int n;
             while (!Thread.interrupted() &&
-                   (n = remaining.get()) > 0 && 
+                   (n = remaining.get()) > 0 &&
                    done.getCount() > 0) {
                 if (remaining.compareAndSet(n, n-1)) {
                     try {
@@ -107,10 +107,10 @@ public class CachedThreadPoolLoops {
             }
         }
     }
-    
+
     static void oneRun(BlockingQueue<Runnable> q, int nThreads, int iters, boolean print) throws Exception {
-       
-        ThreadPoolExecutor pool = 
+
+        ThreadPoolExecutor pool =
             new ThreadPoolExecutor(nThreads+1, Integer.MAX_VALUE,
                                    1L, TimeUnit.SECONDS, q);
 
@@ -134,7 +134,7 @@ public class CachedThreadPoolLoops {
     static final class LTQasSQ<T> extends LinkedTransferQueue<T> {
         LTQasSQ() { super(); }
         public void put(T x) {
-            try { super.transfer(x); 
+            try { super.transfer(x);
             } catch (InterruptedException ex) { throw new Error(); }
         }
     }
@@ -146,9 +146,9 @@ public class CachedThreadPoolLoops {
             if ((++calls & 1) == 0)
                 super.put(x);
             else {
-                try { super.transfer(x); 
-                } catch (InterruptedException ex) { 
-                    throw new Error(); 
+                try { super.transfer(x);
+                } catch (InterruptedException ex) {
+                    throw new Error();
                 }
             }
         }

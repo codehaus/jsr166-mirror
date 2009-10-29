@@ -22,7 +22,7 @@ public class SMap implements Map {
         this.m = m;
     }
 
-    public SMap() { 
+    public SMap() {
         this(new TreeMap()); // use TreeMap by default
     }
 
@@ -48,15 +48,15 @@ public class SMap implements Map {
     public synchronized Set keySet() { // Not implemented
         return m.keySet();
     }
-    
+
     public synchronized Set entrySet() { // Not implemented
         return m.entrySet();
     }
-    
+
     public synchronized Collection values() { // Not implemented
         return m.values();
     }
-    
+
     public synchronized boolean equals(Object o) {
         return m.equals(o);
     }
@@ -81,5 +81,5 @@ public class SMap implements Map {
     public synchronized void clear() {
         m.clear();
     }
-    
+
 }

@@ -21,7 +21,7 @@ public final class CheckedLockLoops {
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;
         int iters = 2000000;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
         rng.setSeed(3122688L);
         warmup(iters);
@@ -38,11 +38,11 @@ public final class CheckedLockLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
-    }    
+    }
 
     static void warmup(int iters) throws Exception {
         print = false;
@@ -59,7 +59,7 @@ public final class CheckedLockLoops {
             System.out.print("NoLock (1 thread)     ");
         new NoLockLoop().test(v, 1, iters * nthreads);
         Thread.sleep(10);
- 
+
         if (print)
             System.out.print("ReentrantLock         ");
         new ReentrantLockLoop().test(v, nthreads, iters);
@@ -91,7 +91,7 @@ public final class CheckedLockLoops {
             System.out.print("Semaphore             ");
         new SemaphoreLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("FairSemaphore         ");
         new FairSemaphoreLoop().test(v, nthreads, fairIters);
@@ -106,12 +106,12 @@ public final class CheckedLockLoops {
             System.out.print("FairRWriteLock         ");
         new FairReentrantWriteLockLoop().test(v, nthreads, fairIters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("ReentrantReadWriteLock");
         new ReentrantReadWriteLockLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("FairRReadWriteLock     ");
         new FairReentrantReadWriteLockLoop().test(v, nthreads, fairIters);
@@ -135,7 +135,7 @@ public final class CheckedLockLoops {
 
         final int getValue() {
             int v = value;
-            if (checkValue != ~(v ^ 0xAAAAAAAA)) 
+            if (checkValue != ~(v ^ 0xAAAAAAAA))
                 ++failures;
             return v;
         }
@@ -144,7 +144,7 @@ public final class CheckedLockLoops {
             setValue(initialValue);
             this.iters = iters;
             barrier = new CyclicBarrier(nthreads+1, timer);
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -164,12 +164,12 @@ public final class CheckedLockLoops {
         abstract int loop(int n);
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 result += loop(iters);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
 

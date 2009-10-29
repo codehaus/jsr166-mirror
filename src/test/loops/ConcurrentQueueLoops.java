@@ -30,10 +30,10 @@ public class ConcurrentQueueLoops {
             }
         }
 
-        if (args.length > 1) 
+        if (args.length > 1)
             maxStages = Integer.parseInt(args[1]);
 
-        if (args.length > 2) 
+        if (args.length > 2)
             work = Integer.parseInt(args[2]);
 
         workMask = work - 1;
@@ -56,8 +56,8 @@ public class ConcurrentQueueLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
         pool.shutdown();
@@ -68,16 +68,16 @@ public class ConcurrentQueueLoops {
         final CyclicBarrier barrier;
         final int nthreads;
         Stage (Queue<Integer> q, CyclicBarrier b, int nthreads) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.nthreads = nthreads;
         }
 
         static int compute(int l) {
-            if (l == 0) 
+            if (l == 0)
                 return (int)System.nanoTime();
             int nn =  (l >>> 7) & workMask;
-            while (nn-- > 0) 
+            while (nn-- > 0)
                 l = LoopHelpers.compute6(l);
             return l;
         }
@@ -110,7 +110,7 @@ public class ConcurrentQueueLoops {
                     }
                 }
             }
-            catch (Exception ie) { 
+            catch (Exception ie) {
                 ie.printStackTrace();
                 throw new Error("Call loop failed");
             }
@@ -122,7 +122,7 @@ public class ConcurrentQueueLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);
         ArrayList<Future<Integer>> results = new ArrayList<Future<Integer>>(n);
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             results.add(pool.submit(new Stage(q, barrier, n)));
 
         if (print)
@@ -137,8 +137,8 @@ public class ConcurrentQueueLoops {
         long endTime = System.nanoTime();
         long time = endTime - timer.startTime;
         long ips = 1000000000L * total / time;
-        
-        if (print) 
+
+        if (print)
             System.out.print(LoopHelpers.rightJustify(ips) + " items per sec");
         if (print)
             System.out.println();

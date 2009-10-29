@@ -11,7 +11,7 @@ import java.math.*;
 /**
  * A micro-benchmark with key types and operation mixes roughly
  * corresponding to some real programs.
- * 
+ *
  * The main results are a table of approximate nanoseconds per
  * element-operation (averaged across get, put etc) for each type,
  * across a range of map sizes. It also includes category "Mixed"
@@ -24,7 +24,7 @@ import java.math.*;
  * dynamic type specialization.  Some test classes, like Float and
  * BigDecimal are included not because they are commonly used as keys,
  * but because they can be problematic for some map implementations.
- * 
+ *
  * By default, it creates and inserts in order dense numerical keys
  * and searches for keys in scrambled order. Use "s" as second arg to
  * instead insert and search in unscrambled order.
@@ -61,7 +61,7 @@ public class MapMicroBenchmark {
             System.out.println("Usage: java MapMicroBenchmark className [r|s]keys [r|s]searches");
             return;
         }
-            
+
         mapClass = Class.forName(args[0]);
 
         if (args.length > 1) {
@@ -261,7 +261,7 @@ public class MapMicroBenchmark {
                 sum += len - half;
                 for (int i = 0; i < len; ++i) {
                     Object x = keys[i];
-                    Object v = m.get(x); 
+                    Object v = m.get(x);
                     if (elementClass.isInstance(v)) // touch v
                         ++sum;
                 }
@@ -273,12 +273,12 @@ public class MapMicroBenchmark {
                 }
                 checkSum += sum ^ (sum << 3);
                 for (Object e : m.keySet()) {
-                    if (elementClass.isInstance(e)) 
+                    if (elementClass.isInstance(e))
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 4);
                 for (Object e : m.values()) {
-                    if (elementClass.isInstance(e)) 
+                    if (elementClass.isInstance(e))
                         ++sum;
                 }
                 checkSum += sum ^ (sum << 5);
@@ -340,14 +340,14 @@ public class MapMicroBenchmark {
 
                 if (j == 0 && sum != lastSum + len * OPS_PER_ITER)
                     throw new Error(name);
-                
+
                 elapsed = System.nanoTime() - startTime;
                 ++j;
                 if (j >= minIters &&
                     (j >= maxIters || elapsed >= timeLimit))
                     break;
                 // non-warmup - swap some keys for next insert
-                if (minIters != 1 && randomSearches) 
+                if (minIters != 1 && randomSearches)
                     shuffleSome(ins, len, len >>> 3);
             }
             long ops = ((long)j) * len * OPS_PER_ITER;
@@ -373,7 +373,7 @@ public class MapMicroBenchmark {
                 a[r] = t;
             }
         }
-    }            
+    }
 
     // plain array shuffle
     static void shuffle(Object[] a, int size) {
@@ -425,7 +425,7 @@ public class MapMicroBenchmark {
     }
 
     // Read in String keys from file if possible
-    static void initStringKeys(Object[] keys, int n) throws Exception { 
+    static void initStringKeys(Object[] keys, int n) throws Exception {
         FileInputStream fr = null;
         try {
             fr = new FileInputStream(wordFile);
@@ -442,7 +442,7 @@ public class MapMicroBenchmark {
             StringBuffer sb = new StringBuffer();
             for (;;) {
                 int c = in.read();
-                if (c < 0) 
+                if (c < 0)
                     break outer;
                 char ch = (char)c;
                 if (ch == '\n') {
@@ -462,4 +462,3 @@ public class MapMicroBenchmark {
     }
 
 }
-

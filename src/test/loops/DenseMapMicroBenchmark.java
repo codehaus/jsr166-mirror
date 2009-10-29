@@ -34,9 +34,9 @@ public class DenseMapMicroBenchmark {
 	    long t0 = System.nanoTime();
 	    long t;
 	    int j = 0;
-	    do { 
-                j++; 
-                jobs[i].work(); 
+	    do {
+                j++;
+                jobs[i].work();
             } while ((t = System.nanoTime() - t0) < nanos);
             jobs[i].nanos = t / j;
             jobs[i].runs = j;
@@ -197,4 +197,3 @@ public class DenseMapMicroBenchmark {
     }
 
 }
-

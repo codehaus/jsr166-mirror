@@ -34,14 +34,14 @@ public class OfferPollLoops {
     static final int POOL_MASK = POOL_SIZE-1;
     static final Integer[] intPool = new Integer[POOL_SIZE];
     static {
-        for (int i = 0; i < POOL_SIZE; ++i) 
+        for (int i = 0; i < POOL_SIZE; ++i)
             intPool[i] = Integer.valueOf(i);
     }
 
     // Number of puts by producers or takes by consumers
     static final int ITERS = 1 << 20;
 
-    // max lag between a producer and consumer to avoid 
+    // max lag between a producer and consumer to avoid
     // this becoming a GC test rather than queue test.
     // Used only per-pair to lessen impact on queue sync
     static final int LAG_MASK = (1 << 12) - 1;
@@ -49,7 +49,7 @@ public class OfferPollLoops {
     public static void main(String[] args) throws Exception {
         int maxN = NCPUS * 3 / 2;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxN = Integer.parseInt(args[0]);
 
         warmup();
@@ -61,8 +61,8 @@ public class OfferPollLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
         pool.shutdown();
@@ -73,14 +73,14 @@ public class OfferPollLoops {
         System.out.print("Warmup ");
         int it = 2000;
         for (int j = 5; j > 0; --j) {
-            oneTest(j, it); 
+            oneTest(j, it);
             System.out.print(".");
             it += 1000;
         }
         System.gc();
         it = 20000;
         for (int j = 5; j > 0; --j) {
-            oneTest(j, it); 
+            oneTest(j, it);
             System.out.print(".");
             it += 10000;
         }
@@ -115,7 +115,7 @@ public class OfferPollLoops {
         if (print)
             System.out.print("LinkedBlockingDeque     ");
         oneRun(new LinkedBlockingDeque<Integer>(), n, iters);
-        
+
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("ArrayBlockingQueue      ");
@@ -133,7 +133,7 @@ public class OfferPollLoops {
         oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE, true), n, fairIters);
 
     }
-    
+
     static abstract class Stage implements Runnable {
         final int iters;
         final Queue<Integer> queue;
@@ -141,7 +141,7 @@ public class OfferPollLoops {
         final Phaser lagPhaser;
         Stage (Queue<Integer> q, CyclicBarrier b, Phaser s,
                int iters) {
-            queue = q; 
+            queue = q;
             barrier = b;
             lagPhaser = s;
             this.iters = iters;
@@ -171,21 +171,21 @@ public class OfferPollLoops {
                             break;
                         if ((i & LAG_MASK) == LAG_MASK)
                             lagPhaser.arriveAndAwaitAdvance();
-                    }                        
+                    }
                 }
                 addProducerSum(ps);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
     }
 
     static class Consumer extends Stage {
         Consumer(Queue<Integer> q, CyclicBarrier b, Phaser s,
-                 int iters) { 
+                 int iters) {
             super(q, b, s, iters);
         }
 
@@ -209,9 +209,9 @@ public class OfferPollLoops {
                 addConsumerSum(cs);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                ie.printStackTrace(); 
-                return; 
+            catch (Exception ie) {
+                ie.printStackTrace();
+                return;
             }
         }
 
@@ -235,4 +235,3 @@ public class OfferPollLoops {
 
 
 }
-

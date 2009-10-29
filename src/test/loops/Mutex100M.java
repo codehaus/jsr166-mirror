@@ -29,7 +29,7 @@ class Mutex100M {
     }
 
     static final Mutex100M.Mutex lock = new Mutex100M.Mutex();
-    
+
     static int loop(int x, int iters) {
         final Mutex100M.Mutex l = lock;
         for (int i = iters; i > 0; --i) {
@@ -43,25 +43,25 @@ class Mutex100M {
 
     static final class Mutex extends AbstractQueuedSynchronizer {
         public boolean isHeldExclusively() { return getState() == 1; }
-        
+
         public boolean tryAcquire(int acquires) {
             return getState() == 0 && compareAndSetState(0, 1);
         }
-        
+
         public boolean tryRelease(int releases) {
             setState(0);
             return true;
         }
         public Condition newCondition() { return new ConditionObject(); }
-        
-        public void lock() { 
+
+        public void lock() {
             if (!compareAndSetState(0, 1))
-                acquire(1);  
+                acquire(1);
         }
-        public boolean tryLock() { 
+        public boolean tryLock() {
             return tryAcquire(1);
         }
-        public void lockInterruptibly() throws InterruptedException { 
+        public void lockInterruptibly() throws InterruptedException {
             acquireInterruptibly(1);
         }
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
@@ -69,5 +69,5 @@ class Mutex100M {
         }
         public void unlock() { release(1); }
     }
- 
+
 }

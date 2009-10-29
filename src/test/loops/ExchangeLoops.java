@@ -27,7 +27,7 @@ public class ExchangeLoops {
                 trialMillis = Integer.parseInt(args[argc]);
             else if (option.equals("-r"))
                 nReps = Integer.parseInt(args[argc]);
-            else 
+            else
                 maxThreads = Integer.parseInt(option);
             argc++;
         }
@@ -96,10 +96,10 @@ public class ExchangeLoops {
             threads[i].start();
         }
         Thread.sleep(trialMillis);
-        for (int i = 0; i < nThreads; ++i) 
+        for (int i = 0; i < nThreads; ++i)
             threads[i].interrupt();
         long elapsed = System.nanoTime() - startTime;
-        for (int i = 0; i < nThreads; ++i) 
+        for (int i = 0; i < nThreads; ++i)
             threads[i].join();
         int iters = 1;
         //        System.out.println();
@@ -116,7 +116,7 @@ public class ExchangeLoops {
         System.out.println();
         //        x.printStats();
     }
-       
+
     static final class Runner implements Runnable {
         final Exchanger exchanger;
         final Object mine = new Integer(2688);
@@ -141,4 +141,3 @@ public class ExchangeLoops {
         }
     }
 }
-        

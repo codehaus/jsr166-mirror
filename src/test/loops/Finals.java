@@ -27,7 +27,7 @@ public class Finals {
         }
     }
 
-    static long nextRandom(long seed) { 
+    static long nextRandom(long seed) {
         return (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
     }
 
@@ -58,7 +58,7 @@ public class Finals {
             long s = initialSeed(this);
             while (s != 0 && n > 0) {
                 long nexts = nums[(int)(s & (LEN-1))].longValue();
-                if (nexts != s) 
+                if (nexts != s)
                     --n;
                 else if (done)
                     break;
@@ -66,7 +66,7 @@ public class Finals {
             }
             done = true;
             total += s;
-            if (s == 0) 
+            if (s == 0)
                 throw new Error("Saw uninitialized value");
         }
     }

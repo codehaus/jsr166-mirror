@@ -11,7 +11,7 @@ import java.util.concurrent.locks.*;
 public class SynchronizedLinkedListQueue<E>
     extends AbstractCollection<E> implements Queue<E> {
     private final Queue<E> q = new LinkedList<E>();
-    
+
     public synchronized Iterator<E> iterator() {
         return q.iterator();
     }
@@ -74,4 +74,3 @@ public class SynchronizedLinkedListQueue<E>
     }
 
 }
-

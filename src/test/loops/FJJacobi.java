@@ -13,8 +13,8 @@ public class FJJacobi {
 
     static final int DEFAULT_GRANULARITY = 4096; // 1024;
 
-    /** 
-     * The maximum number of matrix cells 
+    /**
+     * The maximum number of matrix cells
      * at which to stop recursing down and instead directly update.
      **/
 
@@ -24,16 +24,16 @@ public class FJJacobi {
         int n = 2048;
         int steps = 1000;
         int granularity = DEFAULT_GRANULARITY;
-      
+
         try {
             if (args.length > 0)
                 n = Integer.parseInt(args[0]);
             if (args.length > 1)
                 steps = Integer.parseInt(args[1]);
-            if (args.length > 2) 
+            if (args.length > 2)
                 granularity = Integer.parseInt(args[2]);
         }
-      
+
         catch (Exception e) {
             System.out.println("Usage: java FJJacobi <matrix size> <max steps> [<leafcells>]");
             return;
@@ -47,12 +47,12 @@ public class FJJacobi {
         double[][] a = new double[dim][dim];
         double[][] b = new double[dim][dim];
         // Initialize interiors to small value
-        double smallVal = 1.0/dim; 
+        double smallVal = 1.0/dim;
         for (int i = 1; i < dim-1; ++i) {
             for (int j = 1; j < dim-1; ++j)
                 a[i][j] = smallVal;
         }
-        
+
         int nreps = 3;
         for (int rep = 0; rep < nreps; ++rep) {
             // Fill all edges with 1's.
@@ -63,13 +63,13 @@ public class FJJacobi {
                 a[n+1][k] += 1.0;
             }
             Driver driver = new Driver(a, b, 1, n, 1, n, steps, granularity);
-      
+
             long startTime = System.currentTimeMillis();
             fjp.invoke(driver);
-            
+
             long time = System.currentTimeMillis() - startTime;
             double secs = ((double)time) / 1000.0;
-            
+
             System.out.println("Compute Time: " + secs);
             System.out.println("Workers: " + fjp.getPoolSize());
             System.out.println(fjp);
@@ -79,14 +79,14 @@ public class FJJacobi {
 
     abstract static class MatrixTree extends RecursiveAction {
         // maximum difference between old and new values
-        double maxDiff; 
-        public final double directCompute() { 
-            compute(); 
+        double maxDiff;
+        public final double directCompute() {
+            compute();
             return maxDiff;
         }
         public final double joinAndReinitialize(double md) {
             if (tryUnfork())
-                compute(); 
+                compute();
             else {
                 //                quietlyJoin();
                 quietlyHelpJoin();
@@ -109,7 +109,7 @@ public class FJJacobi {
 
         int steps = 0; // track even/odd steps
 
-        LeafNode(double[][] A, double[][] B, 
+        LeafNode(double[][] A, double[][] B,
                  int loRow, int hiRow,
                  int loCol, int hiCol) {
             this.A = A;   this.B = B;
@@ -117,7 +117,7 @@ public class FJJacobi {
             this.loCol = loCol; this.hiCol = hiCol;
         }
 
-        public void compute() { 
+        public void compute() {
             boolean AtoB = (steps++ & 1) == 0;
             double[][] a = (AtoB)? A : B;
             double[][] b = (AtoB)? B : A;
@@ -145,12 +145,12 @@ public class FJJacobi {
         final MatrixTree q2;
         final MatrixTree q3;
         final MatrixTree q4;
-        FourNode(MatrixTree q1, MatrixTree q2, 
+        FourNode(MatrixTree q1, MatrixTree q2,
                  MatrixTree q3, MatrixTree q4) {
             this.q1 = q1; this.q2 = q2; this.q3 = q3; this.q4 = q4;
         }
 
-        public void compute() { 
+        public void compute() {
             q4.fork();
             q3.fork();
             q2.fork();
@@ -161,7 +161,7 @@ public class FJJacobi {
             maxDiff = md;
         }
     }
-        
+
 
     static final class TwoNode extends MatrixTree {
         final MatrixTree q1;
@@ -171,13 +171,13 @@ public class FJJacobi {
             this.q1 = q1; this.q2 = q2;
         }
 
-        public void compute() { 
+        public void compute() {
             q2.fork();
             maxDiff = q2.joinAndReinitialize(q1.directCompute());
         }
-       
+
     }
-        
+
 
     static final class Driver extends RecursiveAction {
         MatrixTree mat;
@@ -188,7 +188,7 @@ public class FJJacobi {
         final int leafs;
         int nleaf;
 
-        Driver(double[][] A, double[][] B, 
+        Driver(double[][] A, double[][] B,
                int firstRow, int lastRow,
                int firstCol, int lastCol,
                int steps, int leafs) {
@@ -212,7 +212,7 @@ public class FJJacobi {
 
             int mr = (lr + hr) >>> 1; // midpoints
             int mc = (lc + hc) >>> 1;
-      
+
             int hrows = (mr - lr + 1);
             int hcols = (mc - lc + 1);
 
@@ -233,7 +233,7 @@ public class FJJacobi {
             else {
                 return new TwoNode(build(a, b, lr,   mr, lc, hc, leafs),
                                    build(a, b, mr+1, hr, lc, hc, leafs));
-        
+
             }
         }
 

@@ -32,25 +32,25 @@ public class CollectionLoops {
             }
         }
 
-        if (args.length > 1) 
+        if (args.length > 1)
             maxThreads = Integer.parseInt(args[1]);
 
-        if (args.length > 2) 
+        if (args.length > 2)
             nkeys = Integer.parseInt(args[2]);
 
-        if (args.length > 3) 
+        if (args.length > 3)
             pinsert = Integer.parseInt(args[3]);
 
-        if (args.length > 4) 
+        if (args.length > 4)
             premove = Integer.parseInt(args[4]);
 
-        if (args.length > 5) 
+        if (args.length > 5)
             nops = Integer.parseInt(args[5]);
 
         // normalize probabilities wrt random number generator
         removesPerMaxRandom = (int)(((double)premove/100.0 * 0x7FFFFFFFL));
         insertsPerMaxRandom = (int)(((double)pinsert/100.0 * 0x7FFFFFFFL));
-        
+
         System.out.print("Class: " + collectionClass.getName());
         System.out.print(" threads: " + maxThreads);
         System.out.print(" size: " + nkeys);
@@ -75,12 +75,12 @@ public class CollectionLoops {
             else if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
+            }
             else if (i == 1 && k == 2) {
                 i = k;
                 warmups = 1;
             }
-            else 
+            else
                 i = k;
         }
         pool.shutdown();
@@ -89,7 +89,7 @@ public class CollectionLoops {
     static Integer[] makeKeys(int n) {
         LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
         Integer[] key = new Integer[n];
-        for (int i = 0; i < key.length; ++i) 
+        for (int i = 0; i < key.length; ++i)
             key[i] = new Integer(rng.next());
         return key;
     }
@@ -110,12 +110,12 @@ public class CollectionLoops {
         Collection<Integer> collection = (Collection<Integer>)collectionClass.newInstance();
         Integer[] key = makeKeys(nk);
         // Uncomment to start with a non-empty table
-        for (int j = 0; j < nk; j += 2) 
+        for (int j = 0; j < nk; j += 2)
             collection.add(key[j]);
         shuffleKeys(key);
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(i+1, timer);
-        for (int t = 0; t < i; ++t) 
+        for (int t = 0; t < i; ++t)
             pool.execute(new Runner(t, collection, key, barrier, nops));
         barrier.await();
         barrier.await();
@@ -142,11 +142,11 @@ public class CollectionLoops {
         int nops;
 
         Runner(int id, Collection<Integer> collection, Integer[] key,  CyclicBarrier barrier, int nops) {
-            this.collection = collection; 
-            this.key = key; 
+            this.collection = collection;
+            this.key = key;
             this.barrier = barrier;
             this.nops = nops;
-            position = key.length / (id + 1); 
+            position = key.length / (id + 1);
             rng = new LoopHelpers.SimpleRandom((id + 1) * 8862213513L);
             rng.next();
         }
@@ -160,14 +160,14 @@ public class CollectionLoops {
                 while (ops > 0) {
                     int r = rng.next();
                     p += (r & 7) - 3;
-                    while (p >= key.length) p -= key.length;  
+                    while (p >= key.length) p -= key.length;
                     while (p < 0) p += key.length;
 
                     Integer k = key[p];
                     if (c.contains(k)) {
                         if (r < removesPerMaxRandom) {
                             if (c.remove(k)) {
-                                p = Math.abs(total % key.length); 
+                                p = Math.abs(total % key.length);
                                 ops -= 2;
                                 continue;
                             }
@@ -178,8 +178,8 @@ public class CollectionLoops {
                         ops -= 2;
                         c.add(k);
                         continue;
-                    } 
-                    
+                    }
+
                     total += LoopHelpers.compute6(k.intValue());
                     --ops;
                 }
@@ -192,4 +192,3 @@ public class CollectionLoops {
         }
     }
 }
-

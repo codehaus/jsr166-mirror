@@ -8,7 +8,7 @@ public class ThreadPhaserJacobi {
 
     static final int nprocs = Runtime.getRuntime().availableProcessors();
 
-    /** 
+    /**
      * The maximum submatrix length (both row-wise and column-wise)
      * for any Segment
      **/
@@ -26,7 +26,7 @@ public class ThreadPhaserJacobi {
             if (args.length > 1)
                 steps = Integer.parseInt(args[1]);
         }
-      
+
         catch (Exception e) {
             System.out.println("Usage: java ThreadPhaserJacobi <matrix size> <max steps>");
             return;
@@ -41,12 +41,12 @@ public class ThreadPhaserJacobi {
         double[][] a = new double[dim][dim];
         double[][] b = new double[dim][dim];
         // Initialize interiors to small value
-        double smallVal = 1.0/dim; 
+        double smallVal = 1.0/dim;
         for (int i = 1; i < dim-1; ++i) {
             for (int j = 1; j < dim-1; ++j)
                 a[i][j] = smallVal;
         }
-      
+
         int nreps = 3;
         for (int rep = 0; rep < nreps; ++rep) {
             // Fill all edges with 1's.
@@ -59,10 +59,10 @@ public class ThreadPhaserJacobi {
             Driver driver = new Driver(a, b, 1, n, 1, n, steps);
             long startTime = System.currentTimeMillis();
             driver.compute();
-          
+
             long time = System.currentTimeMillis() - startTime;
             double secs = ((double)time) / 1000.0;
-          
+
             System.out.println("Compute Time: " + secs);
         }
     }
@@ -73,7 +73,7 @@ public class ThreadPhaserJacobi {
         double[][] B; // matrix to put new values into
 
         // indices of current submatrix
-        final int loRow;   
+        final int loRow;
         final int hiRow;
         final int loCol;
         final int hiCol;
@@ -81,7 +81,7 @@ public class ThreadPhaserJacobi {
         final Phaser barrier;
         double maxDiff; // maximum difference between old and new values
 
-        Segment(double[][] A, double[][] B, 
+        Segment(double[][] A, double[][] B,
                 int loRow, int hiRow,
                 int loCol, int hiCol,
                 int steps,
@@ -99,7 +99,7 @@ public class ThreadPhaserJacobi {
             try {
                 double[][] a = A;
                 double[][] b = B;
-        
+
                 for (int i = 0; i < steps; ++i) {
                     maxDiff = update(a, b);
                     if (barrier.awaitAdvance(barrier.arrive()) < 0)
@@ -107,7 +107,7 @@ public class ThreadPhaserJacobi {
                     double[][] tmp = a; a = b; b = tmp;
                 }
             }
-            catch(Exception ex) { 
+            catch(Exception ex) {
                 ex.printStackTrace();
                 return;
             }
@@ -130,11 +130,11 @@ public class ThreadPhaserJacobi {
 
             return md;
         }
-        
-    }
-        
 
-    static class Driver { 
+    }
+
+
+    static class Driver {
         double[][] A; // matrix to get old values from
         double[][] B; // matrix to put new values into
 
@@ -145,11 +145,11 @@ public class ThreadPhaserJacobi {
         final int steps;
         Segment[] allSegments;
 
-        Driver(double[][] mat1, double[][] mat2, 
+        Driver(double[][] mat1, double[][] mat2,
                int firstRow, int lastRow,
                int firstCol, int lastCol,
                int steps) {
-      
+
             this.A = mat1;   this.B = mat2;
             this.loRow = firstRow; this.hiRow = lastRow;
             this.loCol = firstCol; this.hiCol = lastCol;
@@ -159,9 +159,9 @@ public class ThreadPhaserJacobi {
             int cols = hiCol - loCol + 1;
             int rblocks = (int)(Math.round((float)rows / dimGran));
             int cblocks = (int)(Math.round((float)cols / dimGran));
-            
+
             int n = rblocks * cblocks;
-            
+
             Segment[] segs = new Segment[n];
             Phaser barrier = new Phaser();
             int k = 0;
@@ -169,12 +169,12 @@ public class ThreadPhaserJacobi {
                 int lr = loRow + i * dimGran;
                 int hr = lr + dimGran;
                 if (i == rblocks-1) hr = hiRow;
-                
+
                 for (int j = 0; j < cblocks; ++j) {
                     int lc = loCol + j * dimGran;
                     int hc = lc + dimGran;
                     if (j == cblocks-1) hc = hiCol;
-                    
+
                     segs[k] = new Segment(A, B, lr, hr, lc, hc, steps, barrier);
                     ++k;
                 }

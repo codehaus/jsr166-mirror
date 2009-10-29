@@ -12,7 +12,7 @@ import java.util.*;
 
 public class PriorityQueueSort {
 
-    static class MyComparator implements Comparator<Integer> { 
+    static class MyComparator implements Comparator<Integer> {
         public int compare(Integer x, Integer y) {
             int i = ((Integer)x).intValue();
             int j = ((Integer)y).intValue();
@@ -26,7 +26,7 @@ public class PriorityQueueSort {
         int n = 100000;
         if (args.length > 0)
             n = Integer.parseInt(args[0]);
-        
+
         List<Integer> sorted = new ArrayList<Integer>(n);
         for (int i = 0; i < n; i++)
             sorted.add(new Integer(i));
@@ -67,4 +67,3 @@ public class PriorityQueueSort {
             throw new RuntimeException("Iterator remove test failed.");
     }
 }
-

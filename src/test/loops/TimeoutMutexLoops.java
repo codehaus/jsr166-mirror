@@ -20,11 +20,11 @@ public final class TimeoutMutexLoops {
     static final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
     static boolean print = false;
     static final int ITERS = Integer.MAX_VALUE;
-    static final long TIMEOUT = 100; 
+    static final long TIMEOUT = 100;
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         print = true;
@@ -51,7 +51,7 @@ public final class TimeoutMutexLoops {
         }
 
         final void test() throws Exception {
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             Thread.sleep(TIMEOUT);
@@ -72,7 +72,7 @@ public final class TimeoutMutexLoops {
 
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v;
                 int x = 0;
                 int n = ITERS;
@@ -92,8 +92,8 @@ public final class TimeoutMutexLoops {
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }

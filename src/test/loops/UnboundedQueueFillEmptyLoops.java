@@ -25,7 +25,7 @@ public class UnboundedQueueFillEmptyLoops {
             }
         }
 
-        if (args.length > 2) 
+        if (args.length > 2)
             maxSize = Integer.parseInt(args[2]);
 
         System.out.print("Class: " + klass.getName());

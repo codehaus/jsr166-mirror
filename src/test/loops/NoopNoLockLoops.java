@@ -17,7 +17,7 @@ public final class NoopNoLockLoops {
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         new ReentrantLockLoop(1).test();
@@ -32,8 +32,8 @@ public final class NoopNoLockLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
         pool.shutdown();
@@ -52,7 +52,7 @@ public final class NoopNoLockLoops {
         }
 
         final void test() throws Exception {
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -71,7 +71,7 @@ public final class NoopNoLockLoops {
 
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v + 1;
                 int x = sum + 1;
                 int n = iters;
@@ -85,11 +85,10 @@ public final class NoopNoLockLoops {
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
 
 }
-

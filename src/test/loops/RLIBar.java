@@ -6,7 +6,7 @@
 // Adapted from code that was in turn
 // Derived from SocketPerformanceTest.java - BugID: 4763450
 //
-// 
+//
 
 import java.io.*;
 import java.net.*;
@@ -15,47 +15,47 @@ import java.util.concurrent.locks.*;
 
 public class RLIBar {
 
-    static int batchLimit ; 
-    static int mseq ; 
-    static int nReady ; 
-    static int ExThreads ; 
-    static int ASum ; 
-    static final ReentrantLock Gate = new ReentrantLock () ; 
-    static final Condition GateCond = Gate.newCondition () ; 
+    static int batchLimit ;
+    static int mseq ;
+    static int nReady ;
+    static int ExThreads ;
+    static int ASum ;
+    static final ReentrantLock Gate = new ReentrantLock () ;
+    static final Condition GateCond = Gate.newCondition () ;
 
     static final ReentrantLock HoldQ = new ReentrantLock () ;
     static final Condition HoldQCond = HoldQ.newCondition() ;
-    static boolean Hold = false ; 
-    static int HoldPop ; 
-    static int HoldLimit ; 
+    static boolean Hold = false ;
+    static int HoldPop ;
+    static int HoldLimit ;
 
-    static private boolean HoldCheck () { 
-        try {  
-            HoldQ.lock(); 
-            try { 
+    static private boolean HoldCheck () {
+        try {
+            HoldQ.lock();
+            try {
                 if (!Hold) return false;
                 else {
-                    ++HoldPop ; 
-                    if (HoldPop >= HoldLimit) { 
-                        System.out.print ("Holding ") ; 
-                        Thread.sleep (1000) ; 
-                        System.out.println () ; 
-                        Hold = false ; 
-                        HoldQCond.signalAll () ; 
-                    } 
+                    ++HoldPop ;
+                    if (HoldPop >= HoldLimit) {
+                        System.out.print ("Holding ") ;
+                        Thread.sleep (1000) ;
+                        System.out.println () ;
+                        Hold = false ;
+                        HoldQCond.signalAll () ;
+                    }
                     else
-                        while (Hold) 
-                            HoldQCond.await() ; 
-                    
-                    if (--HoldPop == 0) HoldQCond.signalAll () ; 
+                        while (Hold)
+                            HoldQCond.await() ;
+
+                    if (--HoldPop == 0) HoldQCond.signalAll () ;
                     return true;
                 }
             }
-            finally { 
-                HoldQ.unlock(); 
+            finally {
+                HoldQ.unlock();
             }
-        } catch (Exception Ex) { 
-            System.out.println ("Unexpected exception in Hold: " + Ex) ; 
+        } catch (Exception Ex) {
+            System.out.println ("Unexpected exception in Hold: " + Ex) ;
             return false;
         }
     }
@@ -63,17 +63,17 @@ public class RLIBar {
     private static class Server {
         private int nClients;
         final ReentrantLock thisLock = new ReentrantLock();
-        final Condition thisCond = thisLock.newCondition(); 
-		
+        final Condition thisCond = thisLock.newCondition();
+
         Server (int nClients) {
             this.nClients = nClients;
             try {
                 for (int i = 0; i < nClients; ++i) {
-                    final int fix = i ; 
+                    final int fix = i ;
                     new Thread() { public void run () { runServer(fix); }}.start();
                 }
             } catch (Exception e) {
-                System.err.println(e) ; 
+                System.err.println(e) ;
             }
         }
 
@@ -89,32 +89,32 @@ public class RLIBar {
         private int currentBatchSize = 0;
 
         private void runServer (int id) {
-            int msg ; 
+            int msg ;
             boolean held = false;
             final ReentrantLock thisLock = this.thisLock;
-            final Condition thisCond = this.thisCond; 
+            final Condition thisCond = this.thisCond;
 
             try {
 
-                // Startup barrier - rendezvous - wait for all threads. 
+                // Startup barrier - rendezvous - wait for all threads.
                 // Forces all threads to park on their LWPs, ensuring
-                // proper provisioning on T1.  
-                // Alternately, use THR_BOUND threads 
-                Gate.lock(); try {  
-                    ++nReady ; 
-                    if (nReady == ExThreads ) { 
-                        GateCond.signalAll () ; 
+                // proper provisioning on T1.
+                // Alternately, use THR_BOUND threads
+                Gate.lock(); try {
+                    ++nReady ;
+                    if (nReady == ExThreads ) {
+                        GateCond.signalAll () ;
                     }
-                    while (nReady != ExThreads ) 
-                        GateCond.await() ; 
+                    while (nReady != ExThreads )
+                        GateCond.await() ;
                 } finally { Gate.unlock(); }
 
                 for (;;) {
                     //                    if (!held && currentBatchSize == 0) held = HoldCheck () ;
                     msg = (++ mseq) ^ id ;
-                    thisLock.lock(); 
+                    thisLock.lock();
                     try {
-                        ASum += msg ; 
+                        ASum += msg ;
                         ++msgsReceived;
                         int myBatch = currentBatch;
                         if (++currentBatchSize >= batchLimit) {
@@ -122,14 +122,14 @@ public class RLIBar {
                             ++currentBatch;
                             currentBatchSize = 0;
                             // and wake up everyone in this one
-                            thisCond.signalAll () ; 
+                            thisCond.signalAll () ;
                         }
                         // Wait until our batch is complete
                         while (myBatch == currentBatch)
-                            thisCond.await(); 
-                    } 
-                    finally { 
-                        thisLock.unlock(); 
+                            thisCond.await();
+                    }
+                    finally {
+                        thisLock.unlock();
                     }
                 }
             } catch (Exception e) {
@@ -160,14 +160,14 @@ public class RLIBar {
                 samplePeriod = Integer.parseInt(args[nextArg++]);
             else if (arg.equals("-np"))
                 nSamples = Integer.parseInt(args[nextArg++]);
-            else { 
-                System.err.println ("Argument error:" + arg) ; 
-                System.exit (1) ; 
-            }	
+            else {
+                System.err.println ("Argument error:" + arg) ;
+                System.exit (1) ;
+            }
         }
         if (nClients <= 0 || nServers <= 0 || samplePeriod <= 0 || batchLimit > nClients) {
-            System.err.println ("Argument error") ; 
-            System.exit (1) ; 
+            System.err.println ("Argument error") ;
+            System.exit (1) ;
         }
 
         // default batch size is 2/3 the number of clients
@@ -176,7 +176,7 @@ public class RLIBar {
             batchLimit = (2 * nClients + 1) / 3;
 
         ExThreads = nServers * nClients ; 	// expected # of threads
-        HoldLimit = ExThreads ; 
+        HoldLimit = ExThreads ;
 
         // start up all threads
         Server[] servers = new Server[nServers];
@@ -184,24 +184,24 @@ public class RLIBar {
             servers[i] = new Server(nClients);
         }
 
-        // Wait for consensus 
+        // Wait for consensus
         try {
-            Gate.lock(); try { 
-                while (nReady != ExThreads ) GateCond.await() ; 
+            Gate.lock(); try {
+                while (nReady != ExThreads ) GateCond.await() ;
             } finally { Gate.unlock(); }
-        } catch (Exception ex) { 
-            System.out.println (ex); 
+        } catch (Exception ex) {
+            System.out.println (ex);
         }
         System.out.println (
-                            nReady + " Ready: nc=" + nClients + " ns=" + nServers + " batch=" + batchLimit) ; 
+                            nReady + " Ready: nc=" + nClients + " ns=" + nServers + " batch=" + batchLimit) ;
 
         // Start sampling ...
         // Methodological problem: all the mutator threads
         // can starve the compiler threads, resulting in skewed scores.
         // In theory, over time, the scores will improve as the compiler
         // threads are granted CPU cycles, but in practice a "warm up" phase
-        // might be good idea to help C2.  For this reason I've implemented 
-        // the "Hold" facility.  
+        // might be good idea to help C2.  For this reason I've implemented
+        // the "Hold" facility.
 
         long lastNumMsgs = 0;
         long sampleStart = System.currentTimeMillis();
@@ -218,15 +218,15 @@ public class RLIBar {
                 Thread.sleep(sampleEnd - now);
             }
 
-            if (false && j == 2) { 
-                System.out.print ("Hold activated ...") ; 
-                HoldQ.lock(); 
-                try  { 
-                    Hold = true ; 
-                    while (Hold) HoldQCond.await() ; 
-                } 
-                finally { 
-                    HoldQ.unlock(); 
+            if (false && j == 2) {
+                System.out.print ("Hold activated ...") ;
+                HoldQ.lock();
+                try  {
+                    Hold = true ;
+                    while (Hold) HoldQCond.await() ;
+                }
+                finally {
+                    HoldQ.unlock();
                 }
             }
 
@@ -255,5 +255,3 @@ public class RLIBar {
         System.exit(0);
     }
 }
-
-

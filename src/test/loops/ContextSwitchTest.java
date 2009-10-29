@@ -31,7 +31,7 @@ public final class ContextSwitchTest {
         b.join();
         long endTime = System.nanoTime();
         int np = a.nparks + b.nparks;
-        System.out.println("Average time: " + 
+        System.out.println("Average time: " +
                            ((endTime - startTime) / np) +
                            "ns");
     }
@@ -43,7 +43,7 @@ public final class ContextSwitchTest {
         public void run() {
             final AtomicReference t = turn;
             final Thread other = this.other;
-            if (turn == null || other == null) 
+            if (turn == null || other == null)
                 throw new NullPointerException();
             int p = 0;
             for (int i = 0; i < iters; ++i) {
@@ -56,9 +56,7 @@ public final class ContextSwitchTest {
             LockSupport.unpark(other);
             nparks = p;
             System.out.println("parks: " + p);
-            
+
         }
     }
 }
-
-

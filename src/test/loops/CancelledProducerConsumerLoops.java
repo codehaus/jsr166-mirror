@@ -7,7 +7,7 @@ import java.util.concurrent.*;
 
 public class CancelledProducerConsumerLoops {
     static final int CAPACITY =      100;
-    static final long TIMEOUT = 100; 
+    static final long TIMEOUT = 100;
 
     static final ExecutorService pool = Executors.newCachedThreadPool();
     static boolean print = false;
@@ -16,11 +16,11 @@ public class CancelledProducerConsumerLoops {
         int maxPairs = 8;
         int iters = 1000000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxPairs = Integer.parseInt(args[0]);
 
         print = true;
-        
+
         for (int i = 1; i <= maxPairs; i += (i+1) >>> 1) {
             System.out.println("Pairs:" + i);
             try {
@@ -39,7 +39,7 @@ public class CancelledProducerConsumerLoops {
         CyclicBarrier barrier = new CyclicBarrier(npairs * 2 + 1, timer);
         Future[] prods = new Future[npairs];
         Future[] cons = new Future[npairs];
-        
+
         for (int i = 0; i < npairs; ++i) {
             prods[i] = pool.submit(new Producer(q, barrier, iters));
             cons[i] = pool.submit(new Consumer(q, barrier, iters));
@@ -103,13 +103,13 @@ public class CancelledProducerConsumerLoops {
         oneRun(new PriorityBlockingQueue<Integer>(ITERS / 2 * pairs), pairs, iters / 4);
         */
     }
-    
+
     static abstract class Stage implements Callable {
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         final int iters;
         Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.iters = iters;
         }
@@ -135,7 +135,7 @@ public class CancelledProducerConsumerLoops {
     }
 
     static class Consumer extends Stage {
-        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) { 
+        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             super(q, b, iters);
         }
 

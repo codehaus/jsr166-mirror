@@ -15,7 +15,7 @@ public final class SimpleLoops {
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         print = true;
@@ -28,8 +28,8 @@ public final class SimpleLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
         pool.shutdown();
@@ -48,7 +48,7 @@ public final class SimpleLoops {
         }
 
         final void test() throws Exception {
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -67,7 +67,7 @@ public final class SimpleLoops {
 
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v + 1;
                 int x = 0;
                 int n = iters;
@@ -84,12 +84,12 @@ public final class SimpleLoops {
                         ++readBarrier;
                     for (int l = x & 7; l > 0; --l)
                         sum += LoopHelpers.compute1(sum);
-                } 
+                }
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }

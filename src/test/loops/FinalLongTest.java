@@ -15,7 +15,7 @@ public class FinalLongTest {
     static Long n1 = new Long(22);
     static Long n2 = new Long(23);
     static Long n3 = new Long(23);
-    
+
 
     public static void main(String[] args) {
         for (int i = 0; i < LEN; ++i)
@@ -32,7 +32,7 @@ public class FinalLongTest {
         }
     }
 
-    static long nextRandom(long seed) { 
+    static long nextRandom(long seed) {
         return (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
     }
 
@@ -90,7 +90,7 @@ public class FinalLongTest {
                         nexts = n3.longValue();
                 }
 
-                if (nexts != s) 
+                if (nexts != s)
                     --n;
                 else if (done)
                     break;
@@ -98,7 +98,7 @@ public class FinalLongTest {
             }
             done = true;
             total += s;
-            if (s == 0) 
+            if (s == 0)
                 throw new Error("Saw uninitialized value");
         }
     }

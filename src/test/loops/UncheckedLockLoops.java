@@ -21,7 +21,7 @@ public final class UncheckedLockLoops {
         int maxThreads = 100;
         int iters = 10000000;
 
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         rng.setSeed(3122688L);
@@ -60,7 +60,7 @@ public final class UncheckedLockLoops {
             System.out.print("NoLock (1 thread)     ");
         new NoLockLoop().test(v, 1, iters * nthreads);
         Thread.sleep(10);
- 
+
         if (print)
             System.out.print("ReentrantLock         ");
         new ReentrantLockLoop().test(v, nthreads, iters);
@@ -93,7 +93,7 @@ public final class UncheckedLockLoops {
             System.out.print("Semaphore             ");
         new SemaphoreLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("FairSemaphore         ");
         new FairSemaphoreLoop().test(v, nthreads, fairIters);
@@ -108,12 +108,12 @@ public final class UncheckedLockLoops {
             System.out.print("FairRWriteLock         ");
         new FairReentrantWriteLockLoop().test(v, nthreads, fairIters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("ReentrantReadWriteLock");
         new ReentrantReadWriteLockLoop().test(v, nthreads, iters);
         Thread.sleep(10);
-        
+
         if (print)
             System.out.print("FairRReadWriteLock     ");
         new FairReentrantReadWriteLockLoop().test(v, nthreads, fairIters);
@@ -138,7 +138,7 @@ public final class UncheckedLockLoops {
 
         final int getValue() {
             int v = value;
-            if (checkValue != ~(v ^ 0xAAAAAAAA)) 
+            if (checkValue != ~(v ^ 0xAAAAAAAA))
                 ++failures;
             return v;
         }
@@ -147,7 +147,7 @@ public final class UncheckedLockLoops {
             setValue(initialValue);
             this.iters = iters;
             barrier = new CyclicBarrier(nthreads+1, timer);
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 new Thread(this).start();
             barrier.await();
             barrier.await();
@@ -168,12 +168,12 @@ public final class UncheckedLockLoops {
         abstract int loop(int n);
         public final void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 result += loop(iters);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
 

@@ -17,10 +17,10 @@ class LoopHelpers {
     // Some mindless computation to do between synchronizations...
 
     /**
-     * generates 32 bit pseudo-random numbers. 
+     * generates 32 bit pseudo-random numbers.
      * Adapted from http://www.snippets.org
      */
-    public static int compute1(int x) { 
+    public static int compute1(int x) {
         int lo = 16807 * (x & 0xFFFF);
         int hi = 16807 * (x >>> 16);
         lo += (hi & 0x7FFF) << 16;
@@ -40,7 +40,7 @@ class LoopHelpers {
      *  Computes a linear congruential random number a random number
      *  of times.
      */
-    public static int compute2(int x) { 
+    public static int compute2(int x) {
         int loops = (x >>> 4) & 7;
         while (loops-- > 0) {
             x = (x * 2147483647) % 16807;
@@ -51,7 +51,7 @@ class LoopHelpers {
     /**
      * Yet another random number generator
      */
-    public static int compute3(int x) { 
+    public static int compute3(int x) {
         int t = (x % 127773) * 16807 - (x / 127773) * 2836;
         return (t > 0)? t : t + 0x7fffffff;
     }
@@ -59,7 +59,7 @@ class LoopHelpers {
     /**
      * Yet another random number generator
      */
-    public static int compute4(int x) { 
+    public static int compute4(int x) {
         return x * 134775813 + 1;
     }
 
@@ -67,16 +67,16 @@ class LoopHelpers {
     /**
      * Yet another random number generator
      */
-    public static int compute5(int x) { 
+    public static int compute5(int x) {
         return 36969 * (x & 65535) + (x >> 16);
     }
 
     /**
      * Marsaglia xorshift (1, 3, 10)
      */
-    public static int compute6(int seed) { 
-        seed ^= seed << 1; 
-        seed ^= seed >>> 3; 
+    public static int compute6(int seed) {
+        seed ^= seed << 1;
+        seed ^= seed >>> 3;
         seed ^= (seed << 10);
         return seed;
     }
@@ -85,8 +85,8 @@ class LoopHelpers {
      * Marsaglia xorshift (6, 21, 7)
      */
     public static int compute7(int y) {
-        y ^= y << 6; 
-        y ^= y >>> 21; 
+        y ^= y << 6;
+        y ^= y >>> 21;
         y ^= (y << 7);
         return y;
     }
@@ -96,9 +96,9 @@ class LoopHelpers {
     /**
      * Marsaglia xorshift for longs
      */
-    public static long compute8(long x) { 
-        x ^= x << 13; 
-        x ^= x >>> 7; 
+    public static long compute8(long x) {
+        x ^= x << 13;
+        x ^= x >>> 7;
         x ^= (x << 17);
         return x;
     }
@@ -107,12 +107,12 @@ class LoopHelpers {
         static final AtomicInteger seq = new AtomicInteger(8862213);
         int x = -1831433054;
         public XorShift32Random(int seed) { x = seed;  }
-        public XorShift32Random() { 
-            this((int)System.nanoTime() + seq.getAndAdd(129)); 
+        public XorShift32Random() {
+            this((int)System.nanoTime() + seq.getAndAdd(129));
         }
         public int next() {
-            x ^= x << 6; 
-            x ^= x >>> 21; 
+            x ^= x << 6;
+            x ^= x >>> 21;
             x ^= (x << 7);
             return x;
         }
@@ -127,13 +127,13 @@ class LoopHelpers {
         int z = -715159705;
         int w = 273326509;
         public MarsagliaRandom(int seed) { x = seed; }
-        public MarsagliaRandom() { 
-            this((int)System.nanoTime() + seq.getAndAdd(129)); 
+        public MarsagliaRandom() {
+            this((int)System.nanoTime() + seq.getAndAdd(129));
         }
         public int next() {
             int t = x ^ (x << 11);
-            x = y; 
-            y = z; 
+            x = y;
+            y = z;
             z = w;
             return w = (w ^ (w >>> 19) ^ (t ^ (t >>> 8)));
         }
@@ -198,5 +198,5 @@ class LoopHelpers {
         b.replace(b.length()-num.length(), b.length(), num);
         return b.toString();
     }
-   
+
 }

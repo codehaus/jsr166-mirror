@@ -25,7 +25,7 @@ class Sync100M {
     }
 
     static final Object obj = new Object();
-    
+
     static int loop(int x, int iters) {
         for (int i = iters; i > 0; --i) {
             synchronized(obj) {
@@ -34,5 +34,5 @@ class Sync100M {
         }
         return x;
     }
-    
+
 }

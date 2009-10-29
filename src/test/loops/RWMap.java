@@ -17,16 +17,16 @@ import java.util.concurrent.locks.*;
 public class RWMap implements Map {
     private final Map m;
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
-    
+
     public RWMap(Map m) {
         if (m == null)
             throw new NullPointerException();
         this.m = m;
     }
 
-    public RWMap() { 
+    public RWMap() {
         this(new TreeMap()); // use TreeMap by default
-        //        this(new IdentityHashMap()); 
+        //        this(new IdentityHashMap());
     }
 
     public int size() {
@@ -56,15 +56,15 @@ public class RWMap implements Map {
     public Set keySet() { // Not implemented
         return m.keySet();
     }
-    
+
     public Set entrySet() { // Not implemented
         return m.entrySet();
     }
-    
+
     public Collection values() { // Not implemented
         return m.values();
     }
-    
+
     public boolean equals(Object o) {
         ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
         l.lock(); try {return m.equals(o);} finally { l.unlock(); }
@@ -96,5 +96,5 @@ public class RWMap implements Map {
         ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
         l.lock(); try {m.clear();} finally { l.unlock(); }
     }
-    
+
 }

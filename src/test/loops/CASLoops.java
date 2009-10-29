@@ -43,7 +43,7 @@ public class CASLoops {
     static boolean includeLocks = false;
 
     public static void main(String[] args) throws Exception {
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
 	loopIters = new long[maxThreads+1];
@@ -58,7 +58,7 @@ public class CASLoops {
             System.out.print(".");
         }
 
-        for (int i = 1; i <= maxThreads; ++i) 
+        for (int i = 1; i <= maxThreads; ++i)
             loopIters[i] = 0;
 
         for (int j = 0; j < 2; ++j) {
@@ -69,7 +69,7 @@ public class CASLoops {
             }
         }
 
-        for (int i = 1; i <= maxThreads; ++i) 
+        for (int i = 1; i <= maxThreads; ++i)
             loopIters[i] = 0;
 
         for (int j = 0; j < TRIALS; ++j) {
@@ -111,7 +111,7 @@ public class CASLoops {
     static final class UpdaterAtomicInteger {
         volatile int value;
 
-        static final AtomicIntegerFieldUpdater<UpdaterAtomicInteger> 
+        static final AtomicIntegerFieldUpdater<UpdaterAtomicInteger>
                 valueUpdater = AtomicIntegerFieldUpdater.newUpdater
                 (UpdaterAtomicInteger.class, "value");
 
@@ -191,17 +191,17 @@ public class CASLoops {
                 unlock();
             }
         }
-        void set(int val) { 
-            lock(); 
+        void set(int val) {
+            lock();
             try {
-                value = val; 
+                value = val;
             } finally {
                 unlock();
             }
         }
     }
 
-    // All these versions are copy-paste-hacked to avoid 
+    // All these versions are copy-paste-hacked to avoid
     // contamination with virtual call resolution etc.
 
     // Use fixed-length unrollable inner loops to reduce safepoint checks
@@ -220,7 +220,7 @@ public class CASLoops {
 
         public void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 long i = iters;
                 int y = 0;
                 int succ = 0;
@@ -238,8 +238,8 @@ public class CASLoops {
                 successes.getAndAdd(succ);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
@@ -257,7 +257,7 @@ public class CASLoops {
 
         public void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 long i = iters;
                 int y = 0;
                 int succ = 0;
@@ -275,8 +275,8 @@ public class CASLoops {
                 successes.getAndAdd(succ);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
@@ -294,7 +294,7 @@ public class CASLoops {
 
         public void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 long i = iters;
                 int y = 0;
                 int succ = 0;
@@ -312,8 +312,8 @@ public class CASLoops {
                 successes.getAndAdd(succ);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
@@ -331,7 +331,7 @@ public class CASLoops {
 
         public void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 long i = iters;
                 int y = 0;
                 int succ = 0;
@@ -349,8 +349,8 @@ public class CASLoops {
                 successes.getAndAdd(succ);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
@@ -368,7 +368,7 @@ public class CASLoops {
 
         public void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 long i = iters;
                 int y = 0;
                 int succ = 0;
@@ -386,8 +386,8 @@ public class CASLoops {
                 successes.getAndAdd(succ);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
@@ -405,7 +405,7 @@ public class CASLoops {
 
         public void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 long i = iters;
                 int y = 0;
                 int succ = 0;
@@ -423,8 +423,8 @@ public class CASLoops {
                 successes.getAndAdd(succ);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
@@ -444,7 +444,7 @@ public class CASLoops {
 
         public void run() {
             try {
-                barrier.await(); 
+                barrier.await();
                 long iters = 0;
                 int y = 0;
                 int succ = 0;
@@ -467,8 +467,8 @@ public class CASLoops {
                 successes.getAndAdd(succ);
                 barrier.await();
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }
@@ -479,7 +479,7 @@ public class CASLoops {
         CyclicBarrier b = new CyclicBarrier(n+1);
         totalIters.set(0);
         NonAtomicInteger a = new NonAtomicInteger();
-        for (int j = 0; j < n; ++j) 
+        for (int j = 0; j < n; ++j)
             new Thread(new NACalibrationLoop(endTime, a, b)).start();
         b.await();
         b.await();
@@ -493,7 +493,7 @@ public class CASLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
         NonAtomicInteger a = new NonAtomicInteger();
-        for (int j = 0; j < n; ++j) 
+        for (int j = 0; j < n; ++j)
             new Thread(new NonAtomicLoop(iters, a, b)).start();
         b.await();
         b.await();
@@ -505,7 +505,7 @@ public class CASLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
         UpdaterAtomicInteger a = new UpdaterAtomicInteger();
-        for (int j = 0; j < n; ++j) 
+        for (int j = 0; j < n; ++j)
             new Thread(new UpdaterAtomicLoop(iters, a, b)).start();
         b.await();
         b.await();
@@ -517,7 +517,7 @@ public class CASLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
         AtomicInteger a = new AtomicInteger();
-        for (int j = 0; j < n; ++j) 
+        for (int j = 0; j < n; ++j)
             new Thread(new AtomicLoop(iters, a, b)).start();
         b.await();
         b.await();
@@ -529,7 +529,7 @@ public class CASLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
         VolatileInteger a = new VolatileInteger();
-        for (int j = 0; j < n; ++j) 
+        for (int j = 0; j < n; ++j)
             new Thread(new VolatileLoop(iters, a, b)).start();
         b.await();
         b.await();
@@ -542,7 +542,7 @@ public class CASLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
         SynchedInteger a = new SynchedInteger();
-        for (int j = 0; j < n; ++j) 
+        for (int j = 0; j < n; ++j)
             new Thread(new SynchedLoop(iters, a, b)).start();
         b.await();
         b.await();
@@ -554,7 +554,7 @@ public class CASLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
         LockedInteger a = new LockedInteger();
-        for (int j = 0; j < n; ++j) 
+        for (int j = 0; j < n; ++j)
             new Thread(new LockedLoop(iters, a, b)).start();
         b.await();
         b.await();
@@ -562,7 +562,7 @@ public class CASLoops {
         return timer.getTime();
     }
 
-    static void report(String tag, long runtime, long basetime, 
+    static void report(String tag, long runtime, long basetime,
                        int nthreads, long iters) {
         System.out.print(tag);
         long t = (runtime - basetime) / iters;
@@ -572,12 +572,12 @@ public class CASLoops {
         double secs = (double)(runtime) / 1000000000.0;
         System.out.println("\t " + secs + "s run time");
     }
-        
+
 
     static void oneRun(int i, long iters, boolean print) throws Exception {
-        if (print) 
-            System.out.println("threads : " + i + 
-                               " base iters per thread per run : " + 
+        if (print)
+            System.out.println("threads : " + i +
+                               " base iters per thread per run : " +
                                LoopHelpers.rightJustify(loopIters[i]));
         long ntime = runNonAtomic(i,  iters);
         if (print)
@@ -602,7 +602,7 @@ public class CASLoops {
             report("Mutex       : ", mtime, ntime, i, iters);
         Thread.sleep(100L);
         long stime = runSynched(i, iters);
-        if (print) 
+        if (print)
             report("Synchronized: ", stime, ntime, i, iters);
         Thread.sleep(100L);
     }

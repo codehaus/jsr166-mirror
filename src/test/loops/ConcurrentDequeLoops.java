@@ -26,10 +26,10 @@ public class ConcurrentDequeLoops {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
-        else 
+        else
             throw new Error();
 
-        if (args.length > 1) 
+        if (args.length > 1)
             maxStages = Integer.parseInt(args[1]);
 
         System.out.print("Class: " + klass.getName());
@@ -49,8 +49,8 @@ public class ConcurrentDequeLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            } 
-            else 
+            }
+            else
                 i = k;
         }
         pool.shutdown();
@@ -62,7 +62,7 @@ public class ConcurrentDequeLoops {
         final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
         int items;
         Stage (Deque<Integer> q, CyclicBarrier b, int items) {
-            queue = q; 
+            queue = q;
             barrier = b;
             this.items = items;
         }
@@ -100,7 +100,7 @@ public class ConcurrentDequeLoops {
                         else
                             queue.addLast(res);
                     }
-                    else { // spinwait 
+                    else { // spinwait
                         for (int k = 1 + (l & 15); k != 0; --k)
                             l = LoopHelpers.compute1(LoopHelpers.compute2(l));
                         if ((l & 3) == 3) {
@@ -110,7 +110,7 @@ public class ConcurrentDequeLoops {
                 }
                 return new Integer(l);
             }
-            catch (Exception ie) { 
+            catch (Exception ie) {
                 ie.printStackTrace();
                 throw new Error("Call loop failed");
             }
@@ -123,7 +123,7 @@ public class ConcurrentDequeLoops {
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);
         totalItems = new AtomicInteger(n * items);
         ArrayList<Future<Integer>> results = new ArrayList<Future<Integer>>(n);
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             results.add(pool.submit(new Stage(q, barrier, items)));
 
         if (print)
@@ -141,6 +141,6 @@ public class ConcurrentDequeLoops {
             System.out.println(LoopHelpers.rightJustify(time / (items * n)) + " ns per item");
         if (total == 0) // avoid overoptimization
             System.out.println("useless result: " + total);
-        
+
     }
 }

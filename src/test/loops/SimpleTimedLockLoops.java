@@ -16,7 +16,7 @@ public final class SimpleTimedLockLoops {
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;
-        if (args.length > 0) 
+        if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
         print = true;
@@ -48,7 +48,7 @@ public final class SimpleTimedLockLoops {
         }
 
         final void test() throws Exception {
-            for (int i = 0; i < nthreads; ++i) 
+            for (int i = 0; i < nthreads; ++i)
                 pool.execute(this);
             barrier.await();
             barrier.await();
@@ -68,7 +68,7 @@ public final class SimpleTimedLockLoops {
         public final void run() {
             final ReentrantLock lock = this.lock;
             try {
-                barrier.await(); 
+                barrier.await();
                 int sum = v + 1;
                 int x = 0;
                 int n = iters;
@@ -89,12 +89,12 @@ public final class SimpleTimedLockLoops {
                         ++readBarrier;
                     for (int l = x & 7; l > 0; --l)
                         sum += LoopHelpers.compute6(sum);
-                } 
+                }
                 barrier.await();
                 result += sum;
             }
-            catch (Exception ie) { 
-                return; 
+            catch (Exception ie) {
+                return;
             }
         }
     }

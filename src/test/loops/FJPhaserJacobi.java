@@ -1,3 +1,9 @@
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/licenses/publicdomain
+ */
+
 // Barrier version of Jacobi iteration
 
 import java.util.concurrent.*;

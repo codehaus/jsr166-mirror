@@ -87,6 +87,9 @@ public class CancelledProducerConsumerLoops {
             System.out.print("LinkedBlockingQueue     ");
         oneRun(new LinkedBlockingQueue<Integer>(CAPACITY), pairs, iters);
 
+        if (print)
+            System.out.print("LinkedTransferQueue     ");
+        oneRun(new LinkedTransferQueue<Integer>(), pairs, iters);
 
         if (print)
             System.out.print("SynchronousQueue        ");

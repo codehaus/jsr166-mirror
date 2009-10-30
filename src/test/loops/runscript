@@ -167,7 +167,8 @@ $RUN UnboundedQueueFillEmptyLoops java.util.LinkedList
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.ConcurrentLinkedQueue
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingQueue
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingDeque
-echo IteratorLoops
+$RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedTransferQueue
+echo IteratorLoops 
 $RUN IteratorLoops java.util.ArrayList
 $RUN IteratorLoops java.util.Vector
 $RUN IteratorLoops java.util.concurrent.CopyOnWriteArrayList

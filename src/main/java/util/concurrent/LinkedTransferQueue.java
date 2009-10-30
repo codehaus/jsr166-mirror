@@ -739,11 +739,13 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         private Node<E> nextNode;   // next node to return item for
         private E nextItem;         // the corresponding item
         private Node<E> lastRet;    // last returned node, to support remove
+        private Node<E> lastPred;   // predecessor to unlink lastRet
 
         /**
          * Moves to next node after prev, or first node if prev null.
          */
         private void advance(Node<E> prev) {
+            lastPred = lastRet;
             lastRet = prev;
             Node<E> p;
             if (prev == null || (p = prev.next) == prev)
@@ -784,8 +786,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         public final void remove() {
             Node<E> p = lastRet;
             if (p == null) throw new IllegalStateException();
-            lastRet = null;
-            findAndRemoveDataNode(p);
+            findAndRemoveDataNode(lastPred, p);
         }
     }
 
@@ -864,21 +865,27 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Main implementation of Iterator.remove(). Find
      * and unsplice the given data node.
+     * @param possiblePred possible predecessor of s
+     * @param s the node to remove
      */
-    final void findAndRemoveDataNode(Node<E> s) {
+    final void findAndRemoveDataNode(Node<E> possiblePred, Node<E> s) {
         assert s.isData;
         if (s.tryMatchData()) {
-            for (Node<E> pred = null, p = head; p != null; ) {
-                if (p == s) {
-                    unsplice(pred, p);
-                    break;
-                }
-                if (p.isUnmatchedRequest())
-                    break;
-                pred = p;
-                if ((p = p.next) == pred) { // stale
-                    pred = null;
-                    p = head;
+            if (possiblePred != null && possiblePred.next == s)
+                unsplice(possiblePred, s); // was actual predecessor
+            else {
+                for (Node<E> pred = null, p = head; p != null; ) {
+                    if (p == s) {
+                        unsplice(pred, p);
+                        break;
+                    }
+                    if (p.isUnmatchedRequest())
+                        break;
+                    pred = p;
+                    if ((p = p.next) == pred) { // stale
+                        pred = null;
+                        p = head;
+                    }
                 }
             }
         }

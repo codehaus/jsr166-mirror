@@ -72,23 +72,22 @@ package jsr166y;
  *  <pre> {@code
  * double sumOfSquares(ForkJoinPool pool, double[] array) {
  *   int n = array.length;
- *   int seqSize = 1 + n / (8 * pool.getParallelism());
- *   Applyer a = new Applyer(array, 0, n, seqSize, null);
+ *   Applyer a = new Applyer(array, 0, n, null);
  *   pool.invoke(a);
  *   return a.result;
  * }
  *
  * class Applyer extends RecursiveAction {
  *   final double[] array;
- *   final int lo, hi, seqSize;
+ *   final int lo, hi;
  *   double result;
  *   Applyer next; // keeps track of right-hand-side tasks
- *   Applyer(double[] array, int lo, int hi, int seqSize, Applyer next) {
+ *   Applyer(double[] array, int lo, int hi, Applyer next) {
  *     this.array = array; this.lo = lo; this.hi = hi;
- *     this.seqSize = seqSize; this.next = next;
+ *     this.next = next;
  *   }
  *
- *   double atLeaf(int l, int r) {
+ *   double atLeaf(int l, int h) {
  *     double sum = 0;
  *     for (int i = l; i < h; ++i) // perform leftmost base step
  *       sum += array[i] * array[i];
@@ -101,7 +100,7 @@ package jsr166y;
  *     Applyer right = null;
  *     while (h - l > 1 && getSurplusQueuedTaskCount() <= 3) {
  *        int mid = (l + h) >>> 1;
- *        right = new Applyer(array, mid, h, seqSize, right);
+ *        right = new Applyer(array, mid, h, right);
  *        right.fork();
  *        h = mid;
  *     }

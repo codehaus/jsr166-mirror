@@ -956,15 +956,15 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     while (p != null) {
                         Node n = p.getLinkage();
                         if (p.get() != null && p.getValue() != null) {
+                            pred = p;
+                            p = n;
+                        }
+                        else {
                             if (pred == null)
                                 tab[i] = n;
                             else
                                 pred.setLinkage(n);
                             seg.decrementCount();
-                            p = n;
-                        }
-                        else {
-                            pred = p;
                             p = n;
                         }
                     }

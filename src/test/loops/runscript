@@ -190,3 +190,8 @@ $RUN Integrate
 $RUN FJJacobi
 $RUN FJPhaserJacobi
 $RUN ThreadPhaserJacobi
+$RUN TieredPhaserLoops
+$RUN PhaserLoops 
+$RUN CyclicBarrierLoops 
+$RUN FJPhaserLoops 
+$RUN SpinningTieredPhaserLoops

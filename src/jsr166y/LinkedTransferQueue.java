@@ -537,7 +537,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 p = (p != n) ? n : (h = head); // Use head if p offlist
             }
 
-            if (how >= ASYNC) {               // No matches available
+            if (how != NOW) {                  // No matches available
                 if (s == null)
                     s = new Node(e, haveData);
                 Node pred = tryAppend(s, haveData);

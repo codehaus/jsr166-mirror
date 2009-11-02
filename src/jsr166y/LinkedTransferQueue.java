@@ -481,10 +481,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /*
      * Possible values for "how" argument in xfer method.
      */
-    private static final int NOW     = 0; // for untimed poll, tryTransfer
-    private static final int ASYNC   = 1; // for offer, put, add
-    private static final int SYNC    = 2; // for transfer, take
-    private static final int TIMEOUT = 3; // for timed poll, tryTransfer
+    private static final int NOW   = 0; // for untimed poll, tryTransfer
+    private static final int ASYNC = 1; // for offer, put, add
+    private static final int SYNC  = 2; // for transfer, take
+    private static final int TIMED = 3; // for timed poll, tryTransfer
 
     @SuppressWarnings("unchecked")
     static <E> E cast(Object item) {
@@ -497,8 +497,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *
      * @param e the item or null for take
      * @param haveData true if this is a put, else a take
-     * @param how NOW, ASYNC, SYNC, or TIMEOUT
-     * @param nanos timeout in nanosecs, used only if mode is TIMEOUT
+     * @param how NOW, ASYNC, SYNC, or TIMED
+     * @param nanos timeout in nanosecs, used only if mode is TIMED
      * @return an item if matched, else e
      * @throws NullPointerException if haveData mode but e is null
      */
@@ -543,7 +543,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 if (pred == null)
                     continue retry;           // lost race vs opposite mode
                 if (how != ASYNC)
-                    return awaitMatch(s, pred, e, (how == TIMEOUT), nanos);
+                    return awaitMatch(s, pred, e, (how == TIMED), nanos);
             }
             return e; // not waiting
         }
@@ -593,7 +593,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * in any current calls but may in possible future extensions)
      * @param e the comparison value for checking match
      * @param timed if true, wait only until timeout elapses
-     * @param nanos timeout value
+     * @param nanos timeout in nanosecs, used only if timed is true
      * @return matched item, or e if unmatched on interrupt or timeout
      */
     private E awaitMatch(Node s, Node pred, E e, boolean timed, long nanos) {
@@ -1041,7 +1041,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     public boolean tryTransfer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
-        if (xfer(e, true, TIMEOUT, unit.toNanos(timeout)) == null)
+        if (xfer(e, true, TIMED, unit.toNanos(timeout)) == null)
             return true;
         if (!Thread.interrupted())
             return false;
@@ -1057,7 +1057,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        E e = xfer(null, false, TIMEOUT, unit.toNanos(timeout));
+        E e = xfer(null, false, TIMED, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
             return e;
         throw new InterruptedException();

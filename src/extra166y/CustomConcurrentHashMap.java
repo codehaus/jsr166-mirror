@@ -533,9 +533,12 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
             int sc = (int)((1L + (4L * es) / 3) >>> SEGMENT_BITS);
             if (sc < MIN_SEGMENT_CAPACITY)
                 sc = MIN_SEGMENT_CAPACITY;
-            else if (sc > MAX_SEGMENT_CAPACITY)
-                sc = MAX_SEGMENT_CAPACITY;
-            this.initialSegmentCapacity = sc;
+            int capacity = MIN_SEGMENT_CAPACITY; // ensure power of two
+            while (capacity < sc)
+                capacity <<= 1;
+            if (capacity > MAX_SEGMENT_CAPACITY)
+            	capacity = MAX_SEGMENT_CAPACITY;
+            this.initialSegmentCapacity = capacity;
         }
         this.segments = (Segment[])new Segment[NSEGMENTS];
     }

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.*;
  * paper: Guojing Cong, Sreedhar Kodali, Sriram Krishnamoorty, Doug
  * Lea, Vijay Saraswat and Tong Wen, "Solving irregular graph problems
  * using adaptive work-stealing", ICPP, 2008.
- * 
+ *
  * It runs the main batching algorithm discussed there for spanning
  * trees, for a simple regular torus graph, where each node is
  * connected to its left. right, up, and down neighbors.
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.*;
 public class TorusSpanningTree {
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
 
-    // Dimensions for test runs. 
+    // Dimensions for test runs.
     // graphs have side*side nodes, each with 4 neighbors
     static final int MIN_SIDE = 1000;
     static final int MAX_SIDE = 3000;
@@ -42,7 +42,7 @@ public class TorusSpanningTree {
         System.out.println("Number of threads: " + procs);
         System.out.println("Printing nanosec per edge across replications");
         System.out.print("for Toruses with side lengths");
-        System.out.printf(" from %5d to %5d step %5d\n", 
+        System.out.printf(" from %5d to %5d step %5d\n",
                           MIN_SIDE, MAX_SIDE, SIDE_STEP);
         ForkJoinPool pool = new ForkJoinPool(procs);
 
@@ -62,16 +62,16 @@ public class TorusSpanningTree {
                 resetAll(graph);
             }
             System.out.println();
-        }   
-        pool.shutdown(); 
+        }
+        pool.shutdown();
     }
 
     static final class Node extends ForkJoinTask<Void> {
-        final Node[] neighbors; 
+        final Node[] neighbors;
         Node parent;
         Node next;
         volatile int mark;
-        
+
         Node(Node[] nbrs) {
             neighbors = nbrs;
             parent = this;
@@ -119,7 +119,7 @@ public class TorusSpanningTree {
                         newList = e;
                         if (batchSize == 0) {
                             int s = getQueuedTaskCount();
-                            batchSize = ((s >= LOG_MAX_BATCH_SIZE)? 
+                            batchSize = ((s >= LOG_MAX_BATCH_SIZE)?
                                          (1 << LOG_MAX_BATCH_SIZE) :
                                          (1 << s));
                         }
@@ -158,7 +158,7 @@ public class TorusSpanningTree {
 
     static final class Driver extends RecursiveAction {
         final Node root;
-        Driver(Node root) { 
+        Driver(Node root) {
             this.root = root;
         }
         public void compute() {
@@ -212,6 +212,5 @@ public class TorusSpanningTree {
             v.parent = root;
         }
     }
-    
-}
 
+}

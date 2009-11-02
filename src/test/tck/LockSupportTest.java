@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -13,7 +13,7 @@ import java.util.concurrent.locks.*;
 
 public class LockSupportTest extends JSR166TestCase{
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(LockSupportTest.class);
@@ -22,7 +22,7 @@ public class LockSupportTest extends JSR166TestCase{
     /**
      * park is released by unpark occurring after park
      */
-    public void testPark() { 
+    public void testPark() {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -46,7 +46,7 @@ public class LockSupportTest extends JSR166TestCase{
     /**
      * park is released by unpark occurring before park
      */
-    public void testPark2() { 
+    public void testPark2() {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -68,9 +68,9 @@ public class LockSupportTest extends JSR166TestCase{
     }
 
     /**
-     * park is released by interrupt 
+     * park is released by interrupt
      */
-    public void testPark3() { 
+    public void testPark3() {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -94,7 +94,7 @@ public class LockSupportTest extends JSR166TestCase{
     /**
      * park returns if interrupted before park
      */
-    public void testPark4() { 
+    public void testPark4() {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
 	Thread t = new Thread(new Runnable() {
@@ -121,7 +121,7 @@ public class LockSupportTest extends JSR166TestCase{
     /**
      * parkNanos times out if not unparked
      */
-    public void testParkNanos() { 
+    public void testParkNanos() {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -144,7 +144,7 @@ public class LockSupportTest extends JSR166TestCase{
     /**
      * parkUntil times out if not unparked
      */
-    public void testParkUntil() { 
+    public void testParkUntil() {
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {

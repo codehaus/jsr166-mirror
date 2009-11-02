@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -96,7 +96,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet(){
         AtomicReference ai = new AtomicReference(one);
@@ -141,13 +141,12 @@ public class AtomicReferenceTest extends JSR166TestCase {
 
     /**
      * toString returns current value.
-     */ 
+     */
     public void testToString() {
-        AtomicReference<Integer> ai = new AtomicReference<Integer>(one); 
+        AtomicReference<Integer> ai = new AtomicReference<Integer>(one);
         assertEquals(ai.toString(), one.toString());
         ai.set(two);
         assertEquals(ai.toString(), two.toString());
     }
 
 }
-

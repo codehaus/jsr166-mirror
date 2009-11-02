@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import java.util.concurrent.atomic.*;
@@ -27,7 +27,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor(){
         try{
-            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
+            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "y");
             shouldThrow();
@@ -40,7 +40,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor2(){
         try{
-            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
+            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "z");
             shouldThrow();
@@ -53,7 +53,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor3(){
         try{
-            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
+            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "w");
             shouldThrow();
@@ -151,7 +151,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a;

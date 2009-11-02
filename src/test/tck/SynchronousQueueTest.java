@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -14,7 +14,7 @@ import java.io.*;
 public class SynchronousQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
 
     public static Test suite() {
@@ -51,7 +51,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -62,7 +62,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -83,7 +83,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             q.add(one);
             shouldThrow();
         } catch (IllegalStateException success){
-	}   
+	}
     }
 
     /**
@@ -145,9 +145,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
             q.put(null);
             shouldThrow();
-        } 
+        }
         catch (NullPointerException success){
-	}   
+	}
         catch (InterruptedException ie) {
 	    unexpectedException();
         }
@@ -164,11 +164,11 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         q.put(zero);
                         threadShouldThrow();
                     } catch (InterruptedException ie){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -178,7 +178,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * put blocks waiting for take 
+     * put blocks waiting for take
      */
     public void testPutWithTake() {
         final SynchronousQueue q = new SynchronousQueue();
@@ -227,7 +227,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     } catch (InterruptedException success){}
                 }
             });
-        
+
         try {
             t.start();
             Thread.sleep(SMALL_DELAY_MS);
@@ -249,7 +249,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     try {
                         q.take();
 			threadShouldThrow();
-                    } catch (InterruptedException success){ }                
+                    } catch (InterruptedException success){ }
                 }
             });
         try {
@@ -274,11 +274,11 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         q.put(zero);
                         threadShouldThrow();
                     } catch (InterruptedException ie){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -288,7 +288,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * put blocks waiting for take 
+     * put blocks waiting for take
      */
     public void testFairPutWithTake() {
         final SynchronousQueue q = new SynchronousQueue(true);
@@ -337,7 +337,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     } catch (InterruptedException success){}
                 }
             });
-        
+
         try {
             t.start();
             Thread.sleep(SMALL_DELAY_MS);
@@ -359,7 +359,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     try {
                         q.take();
 			threadShouldThrow();
-                    } catch (InterruptedException success){ }                
+                    } catch (InterruptedException success){ }
                 }
             });
         try {
@@ -389,7 +389,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -401,7 +401,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -415,11 +415,11 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         SynchronousQueue q = new SynchronousQueue();
                         assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -441,7 +441,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-                    } catch (InterruptedException success) { }                
+                    } catch (InterruptedException success) { }
                 }
             });
         try {
@@ -453,7 +453,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         } catch (Exception e){
             unexpectedException();
         }
-    }  
+    }
 
     /**
      * Interrupted timed poll throws InterruptedException instead of
@@ -466,11 +466,11 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         SynchronousQueue q = new SynchronousQueue(true);
                         assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -492,7 +492,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-                    } catch (InterruptedException success) { }                
+                    } catch (InterruptedException success) { }
                 }
             });
         try {
@@ -504,7 +504,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         } catch (Exception e){
             unexpectedException();
         }
-    }  
+    }
 
 
     /**
@@ -536,7 +536,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success){
-	}   
+	}
     }
 
     /**
@@ -547,7 +547,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         assertFalse(q.remove(zero));
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains returns false
      */
@@ -616,7 +616,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 	Integer[] ints = new Integer[1];
         assertNull(ints[0]);
     }
-    
+
     /**
      * toArray(null) throws NPE
      */
@@ -663,7 +663,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         SynchronousQueue q = new SynchronousQueue();
         String s = q.toString();
         assertNotNull(s);
-    }        
+    }
 
 
     /**
@@ -698,7 +698,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
+
         joinPool(executor);
 
     }
@@ -733,7 +733,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
+
         joinPool(executor);
     }
 
@@ -752,7 +752,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             SynchronousQueue r = (SynchronousQueue)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
             e.printStackTrace();
@@ -762,7 +762,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null) throws NPE
-     */ 
+     */
     public void testDrainToNull() {
         SynchronousQueue q = new SynchronousQueue();
         try {
@@ -774,7 +774,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this) throws IAE
-     */ 
+     */
     public void testDrainToSelf() {
         SynchronousQueue q = new SynchronousQueue();
         try {
@@ -786,7 +786,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c) of empty queue doesn't transfer elements
-     */ 
+     */
     public void testDrainTo() {
         SynchronousQueue q = new SynchronousQueue();
         ArrayList l = new ArrayList();
@@ -797,14 +797,14 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo empties queue, unblocking a waiting put.
-     */ 
+     */
     public void testDrainToWithActivePut() {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
                         q.put(new Integer(1));
-                    } catch (InterruptedException ie){ 
+                    } catch (InterruptedException ie){
                         threadUnexpectedException();
                     }
                 }
@@ -826,7 +826,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null, n) throws NPE
-     */ 
+     */
     public void testDrainToNullN() {
         SynchronousQueue q = new SynchronousQueue();
         try {
@@ -838,7 +838,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this, n) throws IAE
-     */ 
+     */
     public void testDrainToSelfN() {
         SynchronousQueue q = new SynchronousQueue();
         try {
@@ -850,14 +850,14 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c, n) empties up to n elements of queue into c
-     */ 
+     */
     public void testDrainToN() {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
                         q.put(one);
-                    } catch (InterruptedException ie){ 
+                    } catch (InterruptedException ie){
                         threadUnexpectedException();
                     }
                 }
@@ -866,7 +866,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 public void run() {
                     try {
                         q.put(two);
-                    } catch (InterruptedException ie){ 
+                    } catch (InterruptedException ie){
                         threadUnexpectedException();
                     }
                 }

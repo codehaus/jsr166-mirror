@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 
 public class CountDownLatchTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(CountDownLatchTest.class);
@@ -80,7 +80,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
 
     /**
      * timed await returns after countDown to zero
@@ -111,7 +111,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
     /**
      * await throws IE if interrupted before counted down
      */
@@ -146,7 +146,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                     try {
                         threadAssertTrue(l.getCount() > 0);
                         l.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();                        
+                        threadShouldThrow();
                     } catch(InterruptedException success){}
                 }
             });

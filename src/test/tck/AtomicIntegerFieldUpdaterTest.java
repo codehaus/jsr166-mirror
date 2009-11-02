@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import java.util.concurrent.atomic.*;
@@ -26,7 +26,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor() {
         try{
-            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
+            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "y");
             shouldThrow();
@@ -39,7 +39,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         try{
-            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
+            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "z");
             shouldThrow();
@@ -52,7 +52,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try{
-            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
+            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "w");
             shouldThrow();
@@ -76,7 +76,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(2,a.get(this));
 	a.set(this,-3);
 	assertEquals(-3,a.get(this));
-	
+
     }
 
     /**
@@ -95,7 +95,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 	assertEquals(2,a.get(this));
 	a.lazySet(this,-3);
 	assertEquals(-3,a.get(this));
-	
+
     }
 
     /**
@@ -150,7 +150,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;

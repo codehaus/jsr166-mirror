@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 
@@ -14,7 +14,7 @@ import java.io.*;
 
 public class ArrayBlockingQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ArrayBlockingQueueTest.class);
@@ -34,7 +34,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	assertEquals(n, q.size());
         return q;
     }
- 
+
     /**
      * A new queue has the indicated capacity
      */
@@ -159,7 +159,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ArrayBlockingQueue q = new ArrayBlockingQueue(1);
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -170,7 +170,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ArrayBlockingQueue q = new ArrayBlockingQueue(1);
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -194,7 +194,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             assertEquals(0, q.remainingCapacity());
             q.add(new Integer(SIZE));
         } catch (IllegalStateException success){
-	}   
+	}
     }
 
     /**
@@ -289,9 +289,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
             q.put(null);
             shouldThrow();
-        } 
+        }
         catch (NullPointerException success){
-	}   
+	}
         catch (InterruptedException ie) {
 	    unexpectedException();
         }
@@ -332,11 +332,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                         threadShouldThrow();
                     } catch (InterruptedException ie){
                         threadAssertEquals(added, SIZE);
-                    }   
+                    }
                 }});
-        try { 
+        try {
             t.start();
-           Thread.sleep(MEDIUM_DELAY_MS); 
+           Thread.sleep(MEDIUM_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -395,7 +395,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     } catch (InterruptedException success){}
                 }
             });
-        
+
         try {
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
@@ -417,7 +417,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             }
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -430,7 +430,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     try {
                         q.take();
 			threadShouldThrow();
-                    } catch (InterruptedException success){ }                
+                    } catch (InterruptedException success){ }
                 }
             });
         try {
@@ -457,11 +457,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                         q.take();
                         threadShouldThrow();
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
-        try { 
+        try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS); 
+            Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         }
@@ -494,7 +494,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -509,7 +509,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -526,11 +526,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                         }
                         threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
-        try { 
+        try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS); 
+            Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
         }
@@ -552,7 +552,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-                    } catch (InterruptedException success) { }                
+                    } catch (InterruptedException success) { }
                 }
             });
         try {
@@ -564,7 +564,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         } catch (Exception e){
             unexpectedException();
         }
-    }  
+    }
 
 
     /**
@@ -609,7 +609,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success){
-	}   
+	}
     }
 
     /**
@@ -626,7 +626,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -715,7 +715,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	    assertEquals(o[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
-	}    
+	}
     }
 
     /**
@@ -730,7 +730,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 		assertEquals(ints[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
-	}    
+	}
     }
 
     /**
@@ -755,7 +755,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	} catch(ArrayStoreException  success){}
     }
 
-    
+
     /**
      * iterator iterates through all elements
      */
@@ -768,7 +768,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	    }
 	} catch (InterruptedException e){
 	    unexpectedException();
-	}    
+	}
     }
 
     /**
@@ -783,7 +783,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         Iterator it = q.iterator();
         it.next();
         it.remove();
-        
+
         it = q.iterator();
         assertEquals(it.next(), one);
         assertEquals(it.next(), three);
@@ -839,7 +839,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
 
     /**
@@ -874,7 +874,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
+
         joinPool(executor);
 
     }
@@ -909,7 +909,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
+
         joinPool(executor);
     }
 
@@ -929,7 +929,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             ArrayBlockingQueue r = (ArrayBlockingQueue)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
             unexpectedException();
@@ -938,7 +938,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null) throws NPE
-     */ 
+     */
     public void testDrainToNull() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -950,7 +950,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this) throws IAE
-     */ 
+     */
     public void testDrainToSelf() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -962,14 +962,14 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c) empties queue into another collection c
-     */ 
+     */
     public void testDrainTo() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         ArrayList l = new ArrayList();
         q.drainTo(l);
         assertEquals(q.size(), 0);
         assertEquals(l.size(), SIZE);
-        for (int i = 0; i < SIZE; ++i) 
+        for (int i = 0; i < SIZE; ++i)
             assertEquals(l.get(i), new Integer(i));
         q.add(zero);
         q.add(one);
@@ -980,20 +980,20 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         q.drainTo(l);
         assertEquals(q.size(), 0);
         assertEquals(l.size(), 2);
-        for (int i = 0; i < 2; ++i) 
+        for (int i = 0; i < 2; ++i)
             assertEquals(l.get(i), new Integer(i));
     }
 
     /**
      * drainTo empties full queue, unblocking a waiting put.
-     */ 
+     */
     public void testDrainToWithActivePut() {
         final ArrayBlockingQueue q = populatedQueue(SIZE);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
                         q.put(new Integer(SIZE+1));
-                    } catch (InterruptedException ie){ 
+                    } catch (InterruptedException ie){
                         threadUnexpectedException();
                     }
                 }
@@ -1003,7 +1003,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ArrayList l = new ArrayList();
             q.drainTo(l);
             assertTrue(l.size() >= SIZE);
-            for (int i = 0; i < SIZE; ++i) 
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(l.get(i), new Integer(i));
             t.join();
             assertTrue(q.size() + l.size() >= SIZE);
@@ -1014,7 +1014,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null, n) throws NPE
-     */ 
+     */
     public void testDrainToNullN() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -1026,7 +1026,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this, n) throws IAE
-     */ 
+     */
     public void testDrainToSelfN() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -1038,7 +1038,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c, n) empties first max {n, size} elements of queue into c
-     */ 
+     */
     public void testDrainToN() {
         ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE*2);
         for (int i = 0; i < SIZE + 2; ++i) {
@@ -1049,7 +1049,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             int k = (i < SIZE)? i : SIZE;
             assertEquals(l.size(), k);
             assertEquals(q.size(), SIZE-k);
-            for (int j = 0; j < k; ++j) 
+            for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
             while (q.poll() != null) ;
         }

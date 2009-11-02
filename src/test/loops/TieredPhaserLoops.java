@@ -21,7 +21,7 @@ public class TieredPhaserLoops {
     static final long NPS = (1000L * 1000 * 1000);
 
     static int tasksPerPhaser = Math.max(NCPUS / 8, 4);
-    
+
     static void build(Runnable[] actions, int sz, int lo, int hi, Phaser b) {
         int step = (hi - lo) / tasksPerPhaser;
         if (step > 1) {
@@ -33,7 +33,7 @@ public class TieredPhaserLoops {
             }
         }
         else {
-            for (int i = lo; i < hi; ++i) 
+            for (int i = lo; i < hi; ++i)
                 actions[i] = new PhaserAction(i, b, sz);
         }
     }
@@ -64,13 +64,13 @@ public class TieredPhaserLoops {
             nthreads = Integer.parseInt(args[0]);
         if (args.length > 1)
             tasksPerPhaser = Integer.parseInt(args[1]);
-            
+
         System.out.printf("Max %d Threads, %d tasks per phaser\n", nthreads, tasksPerPhaser);
 
         for (int k = 2; k <= nthreads; k *= 2) {
             for (int size = FIRST_SIZE; size <= LAST_SIZE; size *= 10) {
                 long startTime = System.nanoTime();
-                
+
                 Runnable[] actions = new Runnable [k];
                 build(actions, size, 0, k, new Phaser());
                 Future[] futures = new Future[k];
@@ -88,7 +88,5 @@ public class TieredPhaserLoops {
         }
         pool.shutdown();
     }
-    
+
 }
-
-

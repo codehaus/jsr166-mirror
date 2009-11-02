@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 
@@ -16,7 +16,7 @@ import java.security.*;
 
 public class ExecutorCompletionServiceTest extends JSR166TestCase{
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());  
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
         return new TestSuite(ExecutorCompletionServiceTest.class);
@@ -25,7 +25,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * Creating a new ECS with null Executor throw NPE
-     */ 
+     */
     public void testConstructorNPE() {
         try {
             ExecutorCompletionService ecs = new ExecutorCompletionService(null);
@@ -36,7 +36,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * Creating a new ECS with null queue throw NPE
-     */ 
+     */
     public void testConstructorNPE2() {
         try {
             ExecutorService e = Executors.newCachedThreadPool();
@@ -48,7 +48,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * Submitting a null callable throws NPE
-     */ 
+     */
     public void testSubmitNPE() {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
@@ -64,7 +64,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * Submitting a null runnable throws NPE
-     */ 
+     */
     public void testSubmitNPE2() {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
@@ -80,7 +80,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * A taken submitted task is completed
-     */ 
+     */
     public void testTake() {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
@@ -98,7 +98,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * Take returns the same future object returned by submit
-     */ 
+     */
     public void testTake2() {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
@@ -116,7 +116,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * If poll returns non-null, the returned task is completed
-     */ 
+     */
     public void testPoll1() {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
@@ -141,7 +141,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
 
     /**
      * If timed poll returns non-null, the returned task is completed
-     */ 
+     */
     public void testPoll2() {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
@@ -150,7 +150,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
             Callable c = new StringTask();
             ecs.submit(c);
             Future f = ecs.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-            if (f != null) 
+            if (f != null)
                 assertTrue(f.isDone());
         } catch (Exception ex) {
             unexpectedException();

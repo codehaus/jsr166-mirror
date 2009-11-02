@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 
@@ -22,9 +22,9 @@ public class AbstractQueueTest extends JSR166TestCase {
     }
 
     static class Succeed extends AbstractQueue<Integer> {
-        public boolean offer(Integer x) { 
+        public boolean offer(Integer x) {
             if (x == null) throw new NullPointerException();
-            return true; 
+            return true;
         }
         public Integer peek() { return one; }
         public Integer poll() { return one; }
@@ -33,9 +33,9 @@ public class AbstractQueueTest extends JSR166TestCase {
     }
 
     static class Fail extends AbstractQueue<Integer> {
-        public boolean offer(Integer x) { 
+        public boolean offer(Integer x) {
             if (x == null) throw new NullPointerException();
-            return false; 
+            return false;
         }
         public Integer peek() { return null; }
         public Integer poll() { return null; }

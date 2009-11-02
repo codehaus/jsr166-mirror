@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -13,7 +13,7 @@ import java.util.*;
 public class FutureTaskTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(FutureTaskTest.class);
@@ -167,7 +167,7 @@ public class FutureTaskTest extends JSR166TestCase {
                 } });
         Thread t = new  Thread(task);
         t.start();
-        
+
         try {
             Thread.sleep(SHORT_DELAY_MS);
             assertTrue(task.cancel(true));
@@ -196,7 +196,7 @@ public class FutureTaskTest extends JSR166TestCase {
                 } });
         Thread t = new  Thread(task);
         t.start();
-        
+
         try {
             Thread.sleep(SHORT_DELAY_MS);
             assertTrue(task.cancel(false));
@@ -243,7 +243,7 @@ public class FutureTaskTest extends JSR166TestCase {
 	} catch(InterruptedException e){
             unexpectedException();
 
-        }	
+        }
     }
 
     /**
@@ -280,8 +280,8 @@ public class FutureTaskTest extends JSR166TestCase {
             assertFalse(ft.isCancelled());
 	} catch(InterruptedException e){
             unexpectedException();
-            
-        }	
+
+        }
     }
 
     /**
@@ -311,7 +311,7 @@ public class FutureTaskTest extends JSR166TestCase {
 		    }
 		});
             Thread t2 = new Thread(ft);
-            t1.start(); 
+            t1.start();
             t2.start();
             Thread.sleep(SHORT_DELAY_MS);
 	    ft.cancel(true);
@@ -350,7 +350,7 @@ public class FutureTaskTest extends JSR166TestCase {
 		    }
 		});
             Thread t2 = new Thread(ft);
-            t1.start(); 
+            t1.start();
             t2.start();
             Thread.sleep(SHORT_DELAY_MS);
 	    ft.cancel(true);
@@ -360,7 +360,7 @@ public class FutureTaskTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
 
     /**
      * A runtime exception in task causes get to throw ExecutionException
@@ -382,7 +382,7 @@ public class FutureTaskTest extends JSR166TestCase {
             unexpectedException();
 	}
     }
-  
+
     /**
      *  A runtime exception in task causes timed get to throw ExecutionException
      */
@@ -397,13 +397,13 @@ public class FutureTaskTest extends JSR166TestCase {
 	    ft.run();
 	    ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    shouldThrow();
-	} catch(ExecutionException success) { 
+	} catch(ExecutionException success) {
         } catch(TimeoutException success) { } // unlikely but OK
 	catch(Exception e){
             unexpectedException();
 	}
     }
-      
+
 
     /**
      * Interrupting a waiting get causes it to throw InterruptedException
@@ -411,7 +411,7 @@ public class FutureTaskTest extends JSR166TestCase {
     public void testGet_InterruptedException() {
 	final FutureTask ft = new FutureTask(new NoOpCallable());
 	Thread t = new Thread(new Runnable() {
-		public void run() {		    
+		public void run() {
 		    try {
 			ft.get();
 			threadShouldThrow();
@@ -437,7 +437,7 @@ public class FutureTaskTest extends JSR166TestCase {
     public void testTimedGet_InterruptedException2() {
 	final FutureTask ft = new FutureTask(new NoOpCallable());
 	Thread t = new Thread(new Runnable() {
-	 	public void run() {		    
+	 	public void run() {
 		    try {
 			ft.get(LONG_DELAY_MS,TimeUnit.MILLISECONDS);
 			threadShouldThrow();
@@ -456,7 +456,7 @@ public class FutureTaskTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
     /**
      * A timed out timed get throws TimeoutException
      */
@@ -470,5 +470,5 @@ public class FutureTaskTest extends JSR166TestCase {
 	    unexpectedException();
 	}
     }
-    
+
 }

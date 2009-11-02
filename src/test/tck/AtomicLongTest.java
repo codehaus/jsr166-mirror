@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -44,7 +44,7 @@ public class AtomicLongTest extends JSR166TestCase {
 	assertEquals(2,ai.get());
 	ai.set(-3);
 	assertEquals(-3,ai.get());
-	
+
     }
 
     /**
@@ -57,7 +57,7 @@ public class AtomicLongTest extends JSR166TestCase {
 	assertEquals(2,ai.get());
 	ai.lazySet(-3);
 	assertEquals(-3,ai.get());
-	
+
     }
 
     /**
@@ -98,7 +98,7 @@ public class AtomicLongTest extends JSR166TestCase {
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet(){
         AtomicLong ai = new AtomicLong(1);
@@ -214,7 +214,7 @@ public class AtomicLongTest extends JSR166TestCase {
 
     /**
      * toString returns current value.
-     */ 
+     */
     public void testToString() {
         AtomicLong ai = new AtomicLong();
         for (long i = -12; i < 6; ++i) {
@@ -225,7 +225,7 @@ public class AtomicLongTest extends JSR166TestCase {
 
     /**
      * longValue returns current value.
-     */ 
+     */
     public void testLongValue() {
         AtomicLong ai = new AtomicLong();
         for (int i = -12; i < 6; ++i) {
@@ -236,7 +236,7 @@ public class AtomicLongTest extends JSR166TestCase {
 
     /**
      * floatValue returns current value.
-     */ 
+     */
     public void testFloatValue() {
         AtomicLong ai = new AtomicLong();
         for (int i = -12; i < 6; ++i) {
@@ -247,7 +247,7 @@ public class AtomicLongTest extends JSR166TestCase {
 
     /**
      * doubleValue returns current value.
-     */ 
+     */
     public void testDoubleValue() {
         AtomicLong ai = new AtomicLong();
         for (int i = -12; i < 6; ++i) {

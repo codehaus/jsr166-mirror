@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 import java.io.*;
 import java.util.*;
 
-public class AtomicReferenceArrayTest extends JSR166TestCase 
+public class AtomicReferenceArrayTest extends JSR166TestCase
 {
     public static void main (String[] args) {
         junit.textui.TestRunner.run (suite());
@@ -50,7 +50,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         Integer[] a = { two, one, three, four, seven};
         AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
         assertEquals(a.length, ai.length());
-        for (int i = 0; i < a.length; ++i) 
+        for (int i = 0; i < a.length; ++i)
             assertEquals(a[i], ai.get(i));
     }
 
@@ -82,7 +82,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
      * get returns the last value set at index
      */
     public void testGetSet(){
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
+        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, one);
             assertEquals(one,ai.get(i));
@@ -97,7 +97,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
      * get returns the last value lazySet at index by same thread
      */
     public void testGetLazySet(){
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
+        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.lazySet(i, one);
             assertEquals(one,ai.get(i));
@@ -112,7 +112,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet(){
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
+        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, one);
             assertTrue(ai.compareAndSet(i, one,two));
@@ -150,10 +150,10 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet(){
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
+        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, one);
             while(!ai.weakCompareAndSet(i, one,two));
@@ -168,7 +168,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
      * getAndSet returns previous value and sets to given value at given index
      */
     public void testGetAndSet(){
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE); 
+        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, one);
             assertEquals(one,ai.getAndSet(i,zero));
@@ -181,7 +181,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
      * a deserialized serialized array holds same values
      */
     public void testSerialization() {
-        AtomicReferenceArray l = new AtomicReferenceArray(SIZE); 
+        AtomicReferenceArray l = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             l.set(i, new Integer(-i));
         }
@@ -207,7 +207,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
 
     /**
      * toString returns current value.
-     */ 
+     */
     public void testToString() {
         Integer[] a = { two, one, three, four, seven};
         AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);

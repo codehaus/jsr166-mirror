@@ -51,17 +51,17 @@ public class CyclicBarrierLoops {
             nthreads = Integer.parseInt(args[0]);
 
         System.out.printf("max %d Threads\n", nthreads);
-        
+
         for (int k = 2; k <= nthreads; k *= 2) {
             for (int size = FIRST_SIZE; size <= LAST_SIZE; size *= 10) {
                 long startTime = System.nanoTime();
-                
+
                 CyclicBarrier barrier = new CyclicBarrier(k);
                 CyclicBarrierAction[] actions = new CyclicBarrierAction[k];
                 for (int i = 0; i < k; ++i) {
                     actions[i] = new CyclicBarrierAction(i, barrier, size);
                 }
-                
+
                 Future[] futures = new Future[k];
                 for (int i = 0; i < k; ++i) {
                     futures[i] = pool.submit(actions[i]);
@@ -77,7 +77,5 @@ public class CyclicBarrierLoops {
         }
         pool.shutdown();
     }
-    
+
 }
-
-

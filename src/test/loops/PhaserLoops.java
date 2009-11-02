@@ -44,19 +44,19 @@ public class PhaserLoops {
         int nthreads = NCPUS;
         if (args.length > 0)
             nthreads = Integer.parseInt(args[0]);
-        
+
         System.out.printf("max %d Threads\n", nthreads);
-        
+
         for (int k = 2; k <= nthreads; k *= 2) {
             for (int size = FIRST_SIZE; size <= LAST_SIZE; size *= 10) {
                 long startTime = System.nanoTime();
-                
+
                 Phaser phaser = new Phaser();
                 PhaserAction[] actions = new PhaserAction[nthreads];
                 for (int i = 0; i < k; ++i) {
                     actions[i] = new PhaserAction(i, phaser, size);
                 }
-                
+
                 Future[] futures = new Future[k];
                 for (int i = 0; i < k; ++i) {
                     futures[i] = pool.submit(actions[i]);
@@ -72,7 +72,5 @@ public class PhaserLoops {
         }
         pool.shutdown();
     }
-    
+
 }
-
-

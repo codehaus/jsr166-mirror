@@ -11,13 +11,13 @@ import java.io.*;
 
 public class ConcurrentSkipListSetTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ConcurrentSkipListSetTest.class);
     }
 
-    static class MyReverseComparator implements Comparator { 
+    static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
             int i = ((Integer)x).intValue();
             int j = ((Integer)y).intValue();
@@ -57,7 +57,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
 	assertEquals(5, q.size());
         return q;
     }
- 
+
     /**
      * A new set has unbounded capacity
      */
@@ -172,7 +172,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
             ConcurrentSkipListSet q = new ConcurrentSkipListSet();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -301,7 +301,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -377,7 +377,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         }
     }
 
-    
+
 
     /**
      * lower returns preceding element
@@ -477,7 +477,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         for(int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
     }
-    
+
     /**
      * iterator iterates through all elements
      */
@@ -535,10 +535,10 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     /**
-     * A deserialized serialized set has same elements 
+     * A deserialized serialized set has same elements
      */
     public void testSerialization() {
         ConcurrentSkipListSet q = populatedSet(SIZE);
@@ -552,7 +552,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             ConcurrentSkipListSet r = (ConcurrentSkipListSet)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
         } catch(Exception e){
             e.printStackTrace();

@@ -11,7 +11,7 @@ import java.io.*;
 
 public class TreeSubMapTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(TreeSubMapTest.class);
@@ -20,7 +20,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     /**
      * Create a map from Integers 1-5 to Strings "A"-"E".
      */
-    private static NavigableMap map5() {   
+    private static NavigableMap map5() {
 	TreeMap map = new TreeMap();
         assertTrue(map.isEmpty());
 	map.put(zero, "Z");
@@ -35,7 +35,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         return map.subMap(one, true, seven, false);
     }
 
-    private static NavigableMap map0() {   
+    private static NavigableMap map0() {
 	TreeMap map = new TreeMap();
         assertTrue(map.isEmpty());
         return map.tailMap(one, true);
@@ -44,7 +44,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     /**
      * Create a map from Integers -5 to -1 to Strings "A"-"E".
      */
-    private static NavigableMap dmap5() {   
+    private static NavigableMap dmap5() {
 	TreeMap map = new TreeMap();
         assertTrue(map.isEmpty());
 	map.put(m1, "A");
@@ -57,7 +57,7 @@ public class TreeSubMapTest extends JSR166TestCase {
 	return map.descendingMap();
     }
 
-    private static NavigableMap dmap0() {   
+    private static NavigableMap dmap0() {
 	TreeMap map = new TreeMap();
         assertTrue(map.isEmpty());
         return map;
@@ -196,7 +196,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(one) && e.getValue().equals("A")) ||
                        (e.getKey().equals(two) && e.getValue().equals("B")) ||
                        (e.getKey().equals(three) && e.getValue().equals("C")) ||
@@ -384,7 +384,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         for (int i = 1; i <= 5; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     // Exception tests
 
@@ -770,7 +770,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(m1) && e.getValue().equals("A")) ||
                        (e.getKey().equals(m2) && e.getValue().equals("B")) ||
                        (e.getKey().equals(m3) && e.getValue().equals("C")) ||
@@ -956,7 +956,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         for (int i = 1; i <= 5; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     // Exception testDescendings
 
@@ -987,7 +987,7 @@ public class TreeSubMapTest extends JSR166TestCase {
      */
     public void testDescendingSerialization() {
         NavigableMap q = dmap5();
-        
+
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
             ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
@@ -1142,5 +1142,5 @@ public class TreeSubMapTest extends JSR166TestCase {
         assertEquals(3, sm.size());
         assertEquals(4, map.size());
     }
-    
+
 }

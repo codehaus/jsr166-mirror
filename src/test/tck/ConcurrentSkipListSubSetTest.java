@@ -11,13 +11,13 @@ import java.io.*;
 
 public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ConcurrentSkipListSubSetTest.class);
     }
 
-    static class MyReverseComparator implements Comparator { 
+    static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
             int i = ((Integer)x).intValue();
             int j = ((Integer)y).intValue();
@@ -81,18 +81,18 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         return s;
     }
 
-    private static NavigableSet set0() {   
+    private static NavigableSet set0() {
 	ConcurrentSkipListSet set = new ConcurrentSkipListSet();
         assertTrue(set.isEmpty());
         return set.tailSet(m1, true);
     }
 
-    private static NavigableSet dset0() {   
+    private static NavigableSet dset0() {
 	ConcurrentSkipListSet set = new ConcurrentSkipListSet();
         assertTrue(set.isEmpty());
         return set;
     }
- 
+
     /**
      * A new set has unbounded capacity
      */
@@ -138,7 +138,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = set0();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -255,7 +255,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -331,7 +331,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         }
     }
 
-    
+
 
     /**
      * lower returns preceding element
@@ -431,7 +431,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         for(int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
     }
-    
+
     /**
      * iterator iterates through all elements
      */
@@ -489,10 +489,10 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     /**
-     * A deserialized serialized set has same elements 
+     * A deserialized serialized set has same elements
      */
     public void testSerialization() {
         NavigableSet q = populatedSet(SIZE);
@@ -506,7 +506,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             NavigableSet r = (NavigableSet)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
         } catch(Exception e){
             e.printStackTrace();
@@ -656,7 +656,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = dset0();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -773,7 +773,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -849,7 +849,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         }
     }
 
-    
+
 
     /**
      * lower returns preceding element
@@ -949,7 +949,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         for(int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
     }
-    
+
     /**
      * iterator iterates through all elements
      */
@@ -1007,10 +1007,10 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     /**
-     * A deserialized serialized set has same elements 
+     * A deserialized serialized set has same elements
      */
     public void testDescendingSerialization() {
         NavigableSet q = populatedSet(SIZE);
@@ -1024,7 +1024,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             NavigableSet r = (NavigableSet)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
         } catch(Exception e){
             e.printStackTrace();

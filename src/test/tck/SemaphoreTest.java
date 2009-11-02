@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -13,7 +13,7 @@ import java.io.*;
 
 public class SemaphoreTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(SemaphoreTest.class);
@@ -24,10 +24,10 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     static class PublicSemaphore extends Semaphore {
         PublicSemaphore(int p, boolean f) { super(p, f); }
-        public Collection<Thread> getQueuedThreads() { 
-            return super.getQueuedThreads(); 
+        public Collection<Thread> getQueuedThreads() {
+            return super.getQueuedThreads();
         }
-        public void reducePermits(int p) { 
+        public void reducePermits(int p) {
             super.reducePermits(p);
         }
     }
@@ -282,7 +282,7 @@ public class SemaphoreTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
     /**
      *  A waiting timed acquire blocks interruptibly
      */
@@ -310,7 +310,7 @@ public class SemaphoreTest extends JSR166TestCase {
     /**
      * hasQueuedThreads reports whether there are waiting threads
      */
-    public void testHasQueuedThreads() { 
+    public void testHasQueuedThreads() {
 	final Semaphore lock = new Semaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
@@ -334,12 +334,12 @@ public class SemaphoreTest extends JSR166TestCase {
         } catch(Exception e){
             unexpectedException();
         }
-    } 
+    }
 
     /**
      * getQueueLength reports number of waiting threads
      */
-    public void testGetQueueLength() { 
+    public void testGetQueueLength() {
 	final Semaphore lock = new Semaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
@@ -363,12 +363,12 @@ public class SemaphoreTest extends JSR166TestCase {
         } catch(Exception e){
             unexpectedException();
         }
-    } 
+    }
 
     /**
      * getQueuedThreads includes waiting threads
      */
-    public void testGetQueuedThreads() { 
+    public void testGetQueuedThreads() {
 	final PublicSemaphore lock = new PublicSemaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
@@ -395,7 +395,7 @@ public class SemaphoreTest extends JSR166TestCase {
         } catch(Exception e){
             unexpectedException();
         }
-    } 
+    }
 
     /**
      * drainPermits reports and removes given number of permits
@@ -794,7 +794,7 @@ public class SemaphoreTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
     /**
      *  A waiting tryAcquire blocks interruptibly
      */
@@ -846,7 +846,7 @@ public class SemaphoreTest extends JSR166TestCase {
     /**
      * getQueueLength reports number of waiting threads
      */
-    public void testGetQueueLength_fair() { 
+    public void testGetQueueLength_fair() {
 	final Semaphore lock = new Semaphore(1, true);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
@@ -870,7 +870,7 @@ public class SemaphoreTest extends JSR166TestCase {
         } catch(Exception e){
             unexpectedException();
         }
-    } 
+    }
 
 
     /**

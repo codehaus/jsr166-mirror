@@ -168,7 +168,7 @@ $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.ConcurrentLinkedQueue
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingQueue
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedBlockingDeque
 $RUN UnboundedQueueFillEmptyLoops java.util.concurrent.LinkedTransferQueue
-echo IteratorLoops 
+echo IteratorLoops
 $RUN IteratorLoops java.util.ArrayList
 $RUN IteratorLoops java.util.Vector
 $RUN IteratorLoops java.util.concurrent.CopyOnWriteArrayList
@@ -191,8 +191,8 @@ $RUN FJJacobi
 $RUN FJPhaserJacobi
 $RUN ThreadPhaserJacobi
 $RUN TieredPhaserLoops
-$RUN PhaserLoops 
-$RUN CyclicBarrierLoops 
-$RUN FJPhaserLoops 
+$RUN PhaserLoops
+$RUN CyclicBarrierLoops
+$RUN FJPhaserLoops
 $RUN SpinningTieredPhaserLoops
 $RUN TorusSpanningTree

@@ -2,17 +2,17 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
 
 public class ThreadTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run(suite());	
+	junit.textui.TestRunner.run(suite());
     }
-    
+
     public static Test suite() {
 	return new TestSuite(ThreadTest.class);
     }
@@ -22,7 +22,7 @@ public class ThreadTest extends JSR166TestCase {
             e.printStackTrace();
         }
     }
-    
+
     /**
      * getUncaughtExceptionHandler returns ThreadGroup unless set,
      * otherwise returning value of last setUncaughtExceptionHandler.
@@ -42,7 +42,7 @@ public class ThreadTest extends JSR166TestCase {
 
     /**
      * getDefaultUncaughtExceptionHandler returns value of last
-     * setDefaultUncaughtExceptionHandler. 
+     * setDefaultUncaughtExceptionHandler.
      */
     public void testGetAndSetDefaultUncaughtExceptionHandler() {
         assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
@@ -61,8 +61,7 @@ public class ThreadTest extends JSR166TestCase {
         assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
     }
 
-    
+
     // How to test actually using UEH within junit?
 
 }
-

@@ -11,7 +11,7 @@ import java.io.*;
 
 public class TreeMapTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(TreeMapTest.class);
@@ -20,7 +20,7 @@ public class TreeMapTest extends JSR166TestCase {
     /**
      * Create a map from Integers 1-5 to Strings "A"-"E".
      */
-    private static TreeMap map5() {   
+    private static TreeMap map5() {
 	TreeMap map = new TreeMap();
         assertTrue(map.isEmpty());
 	map.put(one, "A");
@@ -43,7 +43,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  
+     *
      */
     public void testConstructFromSorted() {
         TreeMap map = map5();
@@ -260,7 +260,7 @@ public class TreeMapTest extends JSR166TestCase {
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(one) && e.getValue().equals("A")) ||
                        (e.getKey().equals(two) && e.getValue().equals("B")) ||
                        (e.getKey().equals(three) && e.getValue().equals("C")) ||
@@ -279,7 +279,7 @@ public class TreeMapTest extends JSR166TestCase {
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(one) && e.getValue().equals("A")) ||
                        (e.getKey().equals(two) && e.getValue().equals("B")) ||
                        (e.getKey().equals(three) && e.getValue().equals("C")) ||
@@ -569,7 +569,7 @@ public class TreeMapTest extends JSR166TestCase {
         for (int i = 1; i <= 5; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     // Exception tests
 
@@ -658,7 +658,7 @@ public class TreeMapTest extends JSR166TestCase {
         k = (Integer)(r.next());
         assertEquals(two, k);
         assertFalse(r.hasNext());
-        
+
         Iterator j = sm.keySet().iterator();
         j.next();
         j.remove();
@@ -692,7 +692,7 @@ public class TreeMapTest extends JSR166TestCase {
         k = (Integer)(r.next());
         assertEquals(two, k);
         assertFalse(r.hasNext());
-        
+
         Iterator j = sm.keySet().iterator();
         j.next();
         j.remove();
@@ -1102,5 +1102,5 @@ public class TreeMapTest extends JSR166TestCase {
     static boolean eq(Integer i, int j) {
         return i == null ? j == -1 : i == j;
     }
-    
+
 }

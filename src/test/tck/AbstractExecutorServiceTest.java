@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 
@@ -21,7 +21,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         return new TestSuite(AbstractExecutorServiceTest.class);
     }
 
-    /** 
+    /**
      * A no-frills implementation of AbstractExecutorService, designed
      * to test the submit methods only.
      */
@@ -536,7 +536,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
         } catch(ExecutionException success) {
         } catch(Exception ex) {
@@ -557,7 +557,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch(Exception ex) {
@@ -745,7 +745,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
         } catch(ExecutionException success) {
         } catch(Exception ex) {
@@ -766,7 +766,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch(Exception ex) {
@@ -788,7 +788,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(3, result.size());
-            Iterator<Future<String>> it = result.iterator(); 
+            Iterator<Future<String>> it = result.iterator();
             Future<String> f1 = it.next();
             Future<String> f2 = it.next();
             Future<String> f3 = it.next();

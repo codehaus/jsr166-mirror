@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -16,7 +16,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     public static Test suite() {
         return new TestSuite(AtomicMarkableReferenceTest.class);
     }
-    
+
     /**
      *  constructor initializes to given reference and mark
      */
@@ -137,7 +137,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
 
     /**
      * repeated weakCompareAndSet succeeds in changing values when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet(){
         boolean[] mark = new boolean[1];

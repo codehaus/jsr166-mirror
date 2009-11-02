@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -44,7 +44,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
 	assertEquals(false,ai.get());
 	ai.set(true);
 	assertEquals(true,ai.get());
-	
+
     }
 
     /**
@@ -57,7 +57,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
 	assertEquals(false,ai.get());
 	ai.lazySet(true);
 	assertEquals(true,ai.get());
-	
+
     }
 
     /**
@@ -98,7 +98,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
@@ -146,9 +146,9 @@ public class AtomicBooleanTest extends JSR166TestCase {
 
     /**
      * toString returns current value.
-     */ 
+     */
     public void testToString() {
-        AtomicBoolean ai = new AtomicBoolean(); 
+        AtomicBoolean ai = new AtomicBoolean();
         assertEquals(ai.toString(), Boolean.toString(false));
         ai.set(true);
         assertEquals(ai.toString(), Boolean.toString(true));

@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -14,7 +14,7 @@ import java.io.*;
 public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
 
     public static Test suite() {
@@ -34,7 +34,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 	assertEquals(n, q.size());
         return q;
     }
- 
+
     /**
      * new queue is empty
      */
@@ -131,7 +131,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -142,7 +142,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
 
@@ -289,7 +289,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success){
-	}   
+	}
     }
 
     /**
@@ -306,7 +306,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -426,7 +426,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 	    shouldThrow();
 	} catch(ArrayStoreException  success){}
     }
-    
+
     /**
      *  iterator iterates through all elements
      */
@@ -508,7 +508,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     /**
      * A deserialized serialized queue has same elements in same order
@@ -525,7 +525,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             ConcurrentLinkedQueue r = (ConcurrentLinkedQueue)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
             unexpectedException();

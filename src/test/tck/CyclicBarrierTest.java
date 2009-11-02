@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.*;
 
 public class CyclicBarrierTest extends JSR166TestCase{
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(CyclicBarrierTest.class);
@@ -24,7 +24,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
     private class MyAction implements Runnable {
         public void run() { ++countAction; }
     }
-    
+
     /**
      * Creating with negative parties throws IAE
      */
@@ -70,7 +70,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             unexpectedException();
         }
     }
-    
+
     /**
      * The supplied barrier action is run at barrier
      */
@@ -130,7 +130,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await();
                         threadShouldThrow();
-                    } catch(InterruptedException success){}                
+                    } catch(InterruptedException success){}
                     catch(Exception b){
                         threadUnexpectedException();
                     }
@@ -140,7 +140,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.await();
-                        threadShouldThrow();                        
+                        threadShouldThrow();
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
                         threadUnexpectedException();
@@ -152,7 +152,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t2.start();
             Thread.sleep(SHORT_DELAY_MS);
             t1.interrupt();
-            t1.join(); 
+            t1.join();
             t2.join();
         } catch(InterruptedException e){
             unexpectedException();
@@ -180,7 +180,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.await(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();                        
+                        threadShouldThrow();
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
                         threadUnexpectedException();
@@ -192,13 +192,13 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t2.start();
             Thread.sleep(SHORT_DELAY_MS);
             t1.interrupt();
-            t1.join(); 
+            t1.join();
             t2.join();
         } catch(InterruptedException e){
             unexpectedException();
         }
     }
-    
+
     /**
      * A timeout in timed await throws TimeoutException
      */
@@ -212,13 +212,13 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     } catch(TimeoutException success){
                     } catch(Exception b){
                         threadUnexpectedException();
-                        
+
                     }
                 }
             });
         try {
             t.start();
-            t.join(); 
+            t.join();
         } catch(InterruptedException e){
             unexpectedException();
         }
@@ -245,7 +245,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();                        
+                        threadShouldThrow();
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
                         threadUnexpectedException();
@@ -255,7 +255,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
         try {
             t1.start();
             t2.start();
-            t1.join(); 
+            t1.join();
             t2.join();
         } catch(InterruptedException e){
             unexpectedException();
@@ -283,7 +283,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.await();
-                        threadShouldThrow();                        
+                        threadShouldThrow();
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
                         threadUnexpectedException();
@@ -293,13 +293,13 @@ public class CyclicBarrierTest extends JSR166TestCase{
         try {
             t1.start();
             t2.start();
-            t1.join(); 
+            t1.join();
             t2.join();
         } catch(InterruptedException e){
             unexpectedException();
         }
     }
-    
+
     /**
      * A reset of an active barrier causes waiting threads to throw
      * BrokenBarrierException
@@ -311,7 +311,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await();
                         threadShouldThrow();
-                    } catch(BrokenBarrierException success){}                
+                    } catch(BrokenBarrierException success){}
                     catch(Exception b){
                         threadUnexpectedException();
                     }
@@ -321,7 +321,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.await();
-                        threadShouldThrow();                        
+                        threadShouldThrow();
                     } catch(BrokenBarrierException success){
                     } catch(Exception i){
                         threadUnexpectedException();
@@ -333,7 +333,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t2.start();
             Thread.sleep(SHORT_DELAY_MS);
             c.reset();
-            t1.join(); 
+            t1.join();
             t2.join();
         } catch(InterruptedException e){
             unexpectedException();
@@ -369,7 +369,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t1.start();
             t2.start();
             c.await();
-            t1.join(); 
+            t1.join();
             t2.join();
         } catch(Exception e){
             unexpectedException();
@@ -389,7 +389,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                             try {
                                 while (c.isBroken())
                                     c.reset();
-                                
+
                                 c.await();
                                 threadFail("await should not return");
                             }
@@ -400,7 +400,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                         }
                     }
                 };
-            
+
             t.start();
             for( int i = 0; i < 4; i++) {
                 Thread.sleep(SHORT_DELAY_MS);
@@ -425,26 +425,26 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 Thread t1 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(); }
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
+
                 Thread t2 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(); }
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
-                
+
+
                 t1.start();
                 t2.start();
                 try { start.await(); }
@@ -463,7 +463,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             unexpectedException();
         }
     }
-        
+
     /**
      * Reset of a barrier after interruption reinitializes it.
      */
@@ -475,27 +475,27 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 Thread t1 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(); }
                             catch(InterruptedException ok) {}
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
+
                 Thread t2 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(); }
                             catch(BrokenBarrierException ok) {}
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
+
                 t1.start();
                 t2.start();
                 try { start.await(); }
@@ -514,7 +514,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             unexpectedException();
         }
     }
-        
+
     /**
      * Reset of a barrier after timeout reinitializes it.
      */
@@ -526,27 +526,27 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 Thread t1 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS); }
                             catch(TimeoutException ok) {}
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
+
                 Thread t2 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(); }
                             catch(BrokenBarrierException ok) {}
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
+
                 t1.start();
                 t2.start();
                 try { start.await(); }
@@ -565,42 +565,42 @@ public class CyclicBarrierTest extends JSR166TestCase{
         }
     }
 
-    
+
     /**
      * Reset of a barrier after a failed command reinitializes it.
      */
     public void testResetAfterCommandException() {
         try {
             final CyclicBarrier start = new CyclicBarrier(3);
-            final CyclicBarrier barrier = 
+            final CyclicBarrier barrier =
                 new CyclicBarrier(3, new Runnable() {
-                        public void run() { 
+                        public void run() {
                             throw new NullPointerException(); }});
             for (int i = 0; i < 2; i++) {
                 Thread t1 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(); }
                             catch(BrokenBarrierException ok) {}
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
+
                 Thread t2 = new Thread(new Runnable() {
                         public void run() {
                             try { start.await(); }
-                            catch (Exception ie) { 
-                                threadFail("start barrier"); 
+                            catch (Exception ie) {
+                                threadFail("start barrier");
                             }
                             try { barrier.await(); }
                             catch(BrokenBarrierException ok) {}
-                            catch (Throwable thrown) { 
-                                unexpectedException(); 
+                            catch (Throwable thrown) {
+                                unexpectedException();
                             }}});
-                
+
                 t1.start();
                 t2.start();
                 try { start.await(); }

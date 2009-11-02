@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -13,7 +13,7 @@ import java.io.*;
 
 public class CopyOnWriteArraySetTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(CopyOnWriteArraySetTest.class);
@@ -22,7 +22,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     static CopyOnWriteArraySet populatedSet(int n){
 	CopyOnWriteArraySet a = new CopyOnWriteArraySet();
         assertTrue(a.isEmpty());
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             a.add(new Integer(i));
         assertFalse(a.isEmpty());
         assertEquals(n, a.size());
@@ -45,10 +45,10 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE-1; ++i)
             ints[i] = new Integer(i);
 	CopyOnWriteArraySet a = new CopyOnWriteArraySet(Arrays.asList(ints));
-        for (int i = 0; i < SIZE; ++i) 
+        for (int i = 0; i < SIZE; ++i)
             assertTrue(a.contains(ints[i]));
     }
-        
+
 
     /**
      *   addAll  adds each element from the given collection
@@ -132,7 +132,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         assertEquals(a.hashCode(), b.hashCode());
     }
 
-    
+
     /**
      *   containsAll returns true for collections with subset of elements
      */
@@ -157,7 +157,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   iterator() returns an iterator containing the elements of the set 
+     *   iterator() returns an iterator containing the elements of the set
      */
     public void testIterator() {
 	CopyOnWriteArraySet full = populatedSet(3);
@@ -191,7 +191,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         for (int i = 0; i < 3; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
 
     /**

@@ -11,24 +11,24 @@ import java.util.concurrent.atomic.*;
 
 public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ScheduledExecutorTest.class);
     }
 
-    static class CustomTask<V> implements RunnableScheduledFuture<V> { 
+    static class CustomTask<V> implements RunnableScheduledFuture<V> {
         RunnableScheduledFuture<V> task;
         volatile boolean ran;
         CustomTask(RunnableScheduledFuture<V> t) { task = t; }
         public boolean isPeriodic() { return task.isPeriodic(); }
-        public void run() { 
+        public void run() {
             ran = true;
-            task.run(); 
+            task.run();
         }
         public long getDelay(TimeUnit unit) { return task.getDelay(unit); }
         public int compareTo(Delayed t) {
-            return task.compareTo(((CustomTask)t).task); 
+            return task.compareTo(((CustomTask)t).task);
         }
         public boolean cancel(boolean mayInterruptIfRunning) {
             return task.cancel(mayInterruptIfRunning);
@@ -46,7 +46,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             return v;
         }
     }
-    
+
 
     public class CustomExecutor extends ScheduledThreadPoolExecutor {
 
@@ -65,13 +65,13 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         CustomExecutor(int corePoolSize, ThreadFactory threadFactory) {
             super(corePoolSize, threadFactory);
         }
-        CustomExecutor(int corePoolSize, ThreadFactory threadFactory, 
+        CustomExecutor(int corePoolSize, ThreadFactory threadFactory,
                        RejectedExecutionHandler handler) {
             super(corePoolSize, threadFactory, handler);
         }
-        
+
     }
- 
+
 
 
     /**
@@ -97,7 +97,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
 	catch(Exception e){
             unexpectedException();
         }
-        
+
     }
 
 
@@ -140,7 +140,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
     /**
      * scheduleAtFixedRate executes runnable after given initial delay
      */
@@ -181,7 +181,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             unexpectedException();
         }
     }
-    
+
     /**
      * scheduleAtFixedRate executes series of tasks at given rate
      */
@@ -189,7 +189,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
 	try {
             CustomExecutor p1 = new CustomExecutor(1);
             RunnableCounter counter = new RunnableCounter();
-	    ScheduledFuture h = 
+	    ScheduledFuture h =
                 p1.scheduleAtFixedRate(counter, 0, 1, TimeUnit.MILLISECONDS);
 	    Thread.sleep(SMALL_DELAY_MS);
             h.cancel(true);
@@ -211,7 +211,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
 	try {
             CustomExecutor p1 = new CustomExecutor(1);
             RunnableCounter counter = new RunnableCounter();
-	    ScheduledFuture h = 
+	    ScheduledFuture h =
                 p1.scheduleWithFixedDelay(counter, 0, 1, TimeUnit.MILLISECONDS);
 	    Thread.sleep(SMALL_DELAY_MS);
             h.cancel(true);
@@ -238,7 +238,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
 	catch(Exception e){
             unexpectedException();
         }
-	
+
 	joinPool(se);
     }
 
@@ -257,7 +257,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         }
 	joinPool(se);
     }
-   
+
     /**
      * execute throws RejectedExecutionException if shutdown
      */
@@ -271,7 +271,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         } catch(RejectedExecutionException success){
         } catch (SecurityException ok) {
         }
-        
+
         joinPool(se);
 
     }
@@ -320,10 +320,10 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             shouldThrow();
         } catch(RejectedExecutionException success){
         } catch (SecurityException ok) {
-        } 
+        }
         joinPool(se);
     }
-    
+
     /**
      * scheduleWithFixedDelay throws RejectedExecutionException if shutdown
      */
@@ -336,7 +336,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             shouldThrow();
         } catch(RejectedExecutionException success){
         } catch (SecurityException ok) {
-        } 
+        }
         joinPool(se);
     }
 
@@ -356,7 +356,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         assertEquals(1, p2.getActiveCount());
         joinPool(p2);
     }
-    
+
     /**
      *    getCompletedTaskCount increases, but doesn't overestimate,
      *   when tasks complete
@@ -373,16 +373,16 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         assertEquals(1, p2.getCompletedTaskCount());
         joinPool(p2);
     }
-    
+
     /**
-     *  getCorePoolSize returns size given in constructor if not otherwise set 
+     *  getCorePoolSize returns size given in constructor if not otherwise set
      */
     public void testGetCorePoolSize() {
         CustomExecutor p1 = new CustomExecutor(1);
         assertEquals(1, p1.getCorePoolSize());
         joinPool(p1);
     }
-    
+
     /**
      *    getLargestPoolSize increases, but doesn't overestimate, when
      *   multiple threads active
@@ -400,7 +400,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         assertEquals(2, p2.getLargestPoolSize());
         joinPool(p2);
     }
-    
+
     /**
      *   getPoolSize increases, but doesn't overestimate, when threads
      *   become active
@@ -412,7 +412,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         assertEquals(1, p1.getPoolSize());
         joinPool(p1);
     }
-    
+
     /**
      *    getTaskCount increases, but doesn't overestimate, when tasks
      *    submitted
@@ -431,7 +431,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         joinPool(p1);
     }
 
-    /** 
+    /**
      * getThreadFactory returns factory in constructor if not set
      */
     public void testGetThreadFactory() {
@@ -441,7 +441,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         joinPool(p);
     }
 
-    /** 
+    /**
      * setThreadFactory sets the thread factory returned by getThreadFactory
      */
     public void testSetThreadFactory() {
@@ -452,7 +452,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         joinPool(p);
     }
 
-    /** 
+    /**
      * setThreadFactory(null) throws NPE
      */
     public void testSetThreadFactoryNull() {
@@ -465,12 +465,12 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             joinPool(p);
         }
     }
-    
+
     /**
      *   is isShutDown is false before shutdown, true after
      */
     public void testIsShutdown() {
-        
+
 	CustomExecutor p1 = new CustomExecutor(1);
         try {
             assertFalse(p1.isShutdown());
@@ -481,7 +481,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
 	assertTrue(p1.isShutdown());
     }
 
-        
+
     /**
      *   isTerminated is false before termination, true after
      */
@@ -497,7 +497,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             assertTrue(p1.isTerminated());
 	} catch(Exception e){
             unexpectedException();
-        }	
+        }
     }
 
     /**
@@ -518,7 +518,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             assertFalse(p1.isTerminating());
 	} catch(Exception e){
             unexpectedException();
-        }	
+        }
     }
 
     /**
@@ -611,7 +611,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         List l;
         try {
             l = p1.shutdownNow();
-        } catch (SecurityException ok) { 
+        } catch (SecurityException ok) {
             return;
         }
 	assertTrue(p1.isShutdown());
@@ -644,7 +644,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                 assertTrue(tasks[i].isDone());
                 assertFalse(tasks[i].isCancelled());
             }
-            
+
         }
         catch(Exception ex) {
             unexpectedException();
@@ -723,7 +723,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         catch(Exception ex) {
             unexpectedException();
         }
-        finally { 
+        finally {
             joinPool(p1);
         }
     }
@@ -930,7 +930,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
         } catch(ExecutionException success) {
         } catch(Exception ex) {
@@ -951,7 +951,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch(Exception ex) {
@@ -1138,7 +1138,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
         } catch(ExecutionException success) {
         } catch(Exception ex) {
@@ -1159,7 +1159,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch(Exception ex) {
@@ -1181,7 +1181,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(3, result.size());
-            Iterator<Future<String>> it = result.iterator(); 
+            Iterator<Future<String>> it = result.iterator();
             Future<String> f1 = it.next();
             Future<String> f2 = it.next();
             Future<String> f3 = it.next();

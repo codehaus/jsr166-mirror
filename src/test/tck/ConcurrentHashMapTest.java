@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -14,7 +14,7 @@ import java.io.*;
 
 public class ConcurrentHashMapTest extends JSR166TestCase{
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ConcurrentHashMapTest.class);
@@ -23,7 +23,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
     /**
      * Create a map from Integers 1-5 to Strings "A"-"E".
      */
-    private static ConcurrentHashMap map5() {   
+    private static ConcurrentHashMap map5() {
 	ConcurrentHashMap map = new ConcurrentHashMap(5);
         assertTrue(map.isEmpty());
 	map.put(one, "A");
@@ -66,7 +66,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
 	assertTrue(map.contains("A"));
         assertFalse(map.contains("Z"));
     }
-    
+
     /**
      *  containsKey returns true for contained key
      */
@@ -216,7 +216,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(one) && e.getValue().equals("A")) ||
                        (e.getKey().equals(two) && e.getValue().equals("B")) ||
                        (e.getKey().equals(three) && e.getValue().equals("C")) ||
@@ -340,12 +340,12 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         for (int i = 1; i <= 5; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     // Exception tests
-    
+
     /**
-     * Cannot create with negative capacity 
+     * Cannot create with negative capacity
      */
     public void testConstructor1() {
         try {
@@ -585,23 +585,23 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
      * SetValue of an EntrySet entry sets value in the map.
      */
     public void testSetValueWriteThrough() {
-        // Adapted from a bug report by Eric Zoerner 
+        // Adapted from a bug report by Eric Zoerner
         ConcurrentHashMap map = new ConcurrentHashMap(2, 5.0f, 1);
         assertTrue(map.isEmpty());
         for (int i = 0; i < 20; i++)
             map.put(new Integer(i), new Integer(i));
         assertFalse(map.isEmpty());
         Map.Entry entry1 = (Map.Entry)map.entrySet().iterator().next();
-        
+
         // assert that entry1 is not 16
         assertTrue("entry is 16, test not valid",
                    !entry1.getKey().equals(new Integer(16)));
-        
-        // remove 16 (a different key) from map 
+
+        // remove 16 (a different key) from map
         // which just happens to cause entry1 to be cloned in map
         map.remove(new Integer(16));
         entry1.setValue("XYZ");
         assertTrue(map.containsValue("XYZ")); // fails
     }
-    
+
 }

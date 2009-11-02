@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import java.util.concurrent.*;
@@ -13,12 +13,12 @@ import java.util.*;
 
 public class ThreadPoolExecutorTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
         return new TestSuite(ThreadPoolExecutorTest.class);
     }
-    
+
     static class ExtendedTPE extends ThreadPoolExecutor {
         volatile boolean beforeCalled = false;
         volatile boolean afterCalled = false;
@@ -42,9 +42,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         public Thread newThread(Runnable r){
             if (++calls > 1) return null;
             return new Thread(r);
-        }   
+        }
     }
-    
+
 
     /**
      *  execute successfully executes a runnable
@@ -64,7 +64,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 	    Thread.sleep(SMALL_DELAY_MS);
         } catch(InterruptedException e){
             unexpectedException();
-        } 
+        }
         joinPool(p1);
     }
 
@@ -112,7 +112,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         assertEquals(2, p2.getPoolSize());
         joinPool(p2);
     }
-    
+
     /**
      *   getCompletedTaskCount increases, but doesn't overestimate,
      *   when tasks complete
@@ -130,7 +130,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         try { p2.shutdown(); } catch(SecurityException ok) { return; }
         joinPool(p2);
     }
-    
+
     /**
      *   getCorePoolSize returns size given in constructor if not otherwise set
      */
@@ -139,7 +139,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         assertEquals(1, p1.getCorePoolSize());
         joinPool(p1);
     }
-    
+
     /**
      *   getKeepAliveTime returns value given in constructor if not otherwise set
      */
@@ -150,7 +150,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * getThreadFactory returns factory in constructor if not set
      */
     public void testGetThreadFactory() {
@@ -160,7 +160,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         joinPool(p);
     }
 
-    /** 
+    /**
      * setThreadFactory sets the thread factory returned by getThreadFactory
      */
     public void testSetThreadFactory() {
@@ -172,7 +172,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * setThreadFactory(null) throws NPE
      */
     public void testSetThreadFactoryNull() {
@@ -186,7 +186,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
-    /** 
+    /**
      * getRejectedExecutionHandler returns handler in constructor if not set
      */
     public void testGetRejectedExecutionHandler() {
@@ -196,7 +196,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         joinPool(p);
     }
 
-    /** 
+    /**
      * setRejectedExecutionHandler sets the handler returned by
      * getRejectedExecutionHandler
      */
@@ -209,7 +209,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
 
-    /** 
+    /**
      * setRejectedExecutionHandler(null) throws NPE
      */
     public void testSetRejectedExecutionHandlerNull() {
@@ -223,7 +223,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
-    
+
     /**
      *   getLargestPoolSize increases, but doesn't overestimate, when
      *   multiple threads active
@@ -238,10 +238,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertEquals(2, p2.getLargestPoolSize());
         } catch(Exception e){
             unexpectedException();
-        } 
+        }
         joinPool(p2);
     }
-    
+
     /**
      *   getMaximumPoolSize returns value given in constructor if not
      *   otherwise set
@@ -251,7 +251,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         assertEquals(2, p2.getMaximumPoolSize());
         joinPool(p2);
     }
-    
+
     /**
      *   getPoolSize increases, but doesn't overestimate, when threads
      *   become active
@@ -263,7 +263,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         assertEquals(1, p1.getPoolSize());
         joinPool(p1);
     }
-    
+
     /**
      *  getTaskCount increases, but doesn't overestimate, when tasks submitted
      */
@@ -276,15 +276,15 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertEquals(1, p1.getTaskCount());
         } catch(Exception e){
             unexpectedException();
-        } 
+        }
         joinPool(p1);
     }
-    
+
     /**
      *   isShutDown is false before shutdown, true after
      */
     public void testIsShutdown() {
-        
+
 	ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         assertFalse(p1.isShutdown());
         try { p1.shutdown(); } catch(SecurityException ok) { return; }
@@ -292,7 +292,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         joinPool(p1);
     }
 
-        
+
     /**
      *  isTerminated is false before termination, true after
      */
@@ -309,7 +309,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertTrue(p1.isTerminated());
 	} catch(Exception e){
             unexpectedException();
-        }	
+        }
     }
 
     /**
@@ -330,7 +330,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertFalse(p1.isTerminating());
 	} catch(Exception e){
             unexpectedException();
-        }	
+        }
     }
 
     /**
@@ -421,17 +421,17 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             try {
                 l = p1.shutdownNow();
             } catch (SecurityException ok) { return; }
-            
+
         }
 	assertTrue(p1.isShutdown());
 	assertTrue(l.size() <= 4);
     }
 
     // Exception Tests
-    
 
-    /** 
-     * Constructor throws if corePoolSize argument is less than zero 
+
+    /**
+     * Constructor throws if corePoolSize argument is less than zero
      */
     public void testConstructor1() {
         try {
@@ -440,9 +440,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
         catch (IllegalArgumentException success){}
     }
-    
-    /** 
-     * Constructor throws if maximumPoolSize is less than zero 
+
+    /**
+     * Constructor throws if maximumPoolSize is less than zero
      */
     public void testConstructor2() {
         try {
@@ -451,9 +451,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
         catch (IllegalArgumentException success){}
     }
-    
-    /** 
-     * Constructor throws if maximumPoolSize is equal to zero 
+
+    /**
+     * Constructor throws if maximumPoolSize is equal to zero
      */
     public void testConstructor3() {
         try {
@@ -463,8 +463,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if keepAliveTime is less than zero 
+    /**
+     * Constructor throws if keepAliveTime is less than zero
      */
     public void testConstructor4() {
         try {
@@ -474,8 +474,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if corePoolSize is greater than the maximumPoolSize 
+    /**
+     * Constructor throws if corePoolSize is greater than the maximumPoolSize
      */
     public void testConstructor5() {
         try {
@@ -484,22 +484,22 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
         catch (IllegalArgumentException success){}
     }
-	
-    /** 
-     * Constructor throws if workQueue is set to null 
+
+    /**
+     * Constructor throws if workQueue is set to null
      */
     public void testConstructorNullPointerException() {
         try {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null);
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success){}
     }
-    
 
-    
-    /** 
-     * Constructor throws if corePoolSize argument is less than zero 
+
+
+    /**
+     * Constructor throws if corePoolSize argument is less than zero
      */
     public void testConstructor6() {
         try {
@@ -507,9 +507,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             shouldThrow();
         } catch (IllegalArgumentException success){}
     }
-    
-    /** 
-     * Constructor throws if maximumPoolSize is less than zero 
+
+    /**
+     * Constructor throws if maximumPoolSize is less than zero
      */
     public void testConstructor7() {
         try {
@@ -519,8 +519,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if maximumPoolSize is equal to zero 
+    /**
+     * Constructor throws if maximumPoolSize is equal to zero
      */
     public void testConstructor8() {
         try {
@@ -530,8 +530,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if keepAliveTime is less than zero 
+    /**
+     * Constructor throws if keepAliveTime is less than zero
      */
     public void testConstructor9() {
         try {
@@ -541,8 +541,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if corePoolSize is greater than the maximumPoolSize 
+    /**
+     * Constructor throws if corePoolSize is greater than the maximumPoolSize
      */
     public void testConstructor10() {
         try {
@@ -552,19 +552,19 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if workQueue is set to null 
+    /**
+     * Constructor throws if workQueue is set to null
      */
     public void testConstructorNullPointerException2() {
         try {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory());
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success){}
     }
 
-    /** 
-     * Constructor throws if threadFactory is set to null 
+    /**
+     * Constructor throws if threadFactory is set to null
      */
     public void testConstructorNullPointerException3() {
         try {
@@ -572,12 +572,12 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f);
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success){}
     }
- 
-    
-    /** 
-     * Constructor throws if corePoolSize argument is less than zero 
+
+
+    /**
+     * Constructor throws if corePoolSize argument is less than zero
      */
     public void testConstructor11() {
         try {
@@ -587,8 +587,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if maximumPoolSize is less than zero 
+    /**
+     * Constructor throws if maximumPoolSize is less than zero
      */
     public void testConstructor12() {
         try {
@@ -598,8 +598,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if maximumPoolSize is equal to zero 
+    /**
+     * Constructor throws if maximumPoolSize is equal to zero
      */
     public void testConstructor13() {
         try {
@@ -609,8 +609,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if keepAliveTime is less than zero 
+    /**
+     * Constructor throws if keepAliveTime is less than zero
      */
     public void testConstructor14() {
         try {
@@ -620,8 +620,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if corePoolSize is greater than the maximumPoolSize 
+    /**
+     * Constructor throws if corePoolSize is greater than the maximumPoolSize
      */
     public void testConstructor15() {
         try {
@@ -631,19 +631,19 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if workQueue is set to null 
+    /**
+     * Constructor throws if workQueue is set to null
      */
     public void testConstructorNullPointerException4() {
         try {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null,new NoOpREHandler());
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success){}
     }
 
-    /** 
-     * Constructor throws if handler is set to null 
+    /**
+     * Constructor throws if handler is set to null
      */
     public void testConstructorNullPointerException5() {
         try {
@@ -651,12 +651,12 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),r);
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success){}
     }
 
-    
-    /** 
-     * Constructor throws if corePoolSize argument is less than zero 
+
+    /**
+     * Constructor throws if corePoolSize argument is less than zero
      */
     public void testConstructor16() {
         try {
@@ -666,8 +666,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if maximumPoolSize is less than zero 
+    /**
+     * Constructor throws if maximumPoolSize is less than zero
      */
     public void testConstructor17() {
         try {
@@ -677,8 +677,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if maximumPoolSize is equal to zero 
+    /**
+     * Constructor throws if maximumPoolSize is equal to zero
      */
     public void testConstructor18() {
         try {
@@ -688,8 +688,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if keepAliveTime is less than zero 
+    /**
+     * Constructor throws if keepAliveTime is less than zero
      */
     public void testConstructor19() {
         try {
@@ -699,8 +699,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if corePoolSize is greater than the maximumPoolSize 
+    /**
+     * Constructor throws if corePoolSize is greater than the maximumPoolSize
      */
     public void testConstructor20() {
         try {
@@ -710,19 +710,19 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         catch (IllegalArgumentException success){}
     }
 
-    /** 
-     * Constructor throws if workQueue is set to null 
+    /**
+     * Constructor throws if workQueue is set to null
      */
     public void testConstructorNullPointerException6() {
         try {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,null,new SimpleThreadFactory(),new NoOpREHandler());
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success){}
     }
 
-    /** 
-     * Constructor throws if handler is set to null 
+    /**
+     * Constructor throws if handler is set to null
      */
     public void testConstructorNullPointerException7() {
         try {
@@ -730,11 +730,11 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),r);
             shouldThrow();
         }
-        catch (NullPointerException success){}  
+        catch (NullPointerException success){}
     }
 
-    /** 
-     * Constructor throws if ThreadFactory is set top null 
+    /**
+     * Constructor throws if ThreadFactory is set top null
      */
     public void testConstructorNullPointerException8() {
         try {
@@ -742,9 +742,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             new ThreadPoolExecutor(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f,new NoOpREHandler());
             shouldThrow();
         }
-        catch (NullPointerException successdn8){}  
+        catch (NullPointerException successdn8){}
     }
-    
+
 
     /**
      *  execute throws RejectedExecutionException
@@ -753,7 +753,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     public void testSaturatedExecute() {
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1));
         try {
-            
+
             for(int i = 0; i < 5; ++i){
                 p.execute(new MediumRunnable());
             }
@@ -769,7 +769,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         RejectedExecutionHandler h = new ThreadPoolExecutor.CallerRunsPolicy();
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
         try {
-            
+
             TrackedNoOpRunnable[] tasks = new TrackedNoOpRunnable[5];
             for(int i = 0; i < 5; ++i){
                 tasks[i] = new TrackedNoOpRunnable();
@@ -797,7 +797,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardPolicy();
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(1), h);
         try {
-            
+
             TrackedNoOpRunnable[] tasks = new TrackedNoOpRunnable[5];
             for(int i = 0; i < 5; ++i){
                 tasks[i] = new TrackedNoOpRunnable();
@@ -844,14 +844,14 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      *  execute throws RejectedExecutionException if shutdown
      */
     public void testRejectedExecutionExceptionOnShutdown() {
-        ThreadPoolExecutor tpe = 
+        ThreadPoolExecutor tpe =
             new ThreadPoolExecutor(1,1,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(1));
         try { tpe.shutdown(); } catch(SecurityException ok) { return; }
 	try {
 	    tpe.execute(new NoOpRunnable());
 	    shouldThrow();
 	} catch(RejectedExecutionException success){}
-	
+
 	joinPool(tpe);
     }
 
@@ -924,10 +924,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 	    tpe.execute(null);
             shouldThrow();
 	} catch(NullPointerException success){}
-	
+
 	joinPool(tpe);
     }
-    
+
     /**
      *  setCorePoolSize of negative value throws IllegalArgumentException
      */
@@ -944,12 +944,12 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             try { tpe.shutdown(); } catch(SecurityException ok) { return; }
         }
         joinPool(tpe);
-    }   
+    }
 
     /**
      *  setMaximumPoolSize(int) throws IllegalArgumentException if
      *  given a value less the core pool size
-     */  
+     */
     public void testMaximumPoolSizeIllegalArgumentException() {
         ThreadPoolExecutor tpe = null;
         try {
@@ -964,7 +964,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
         joinPool(tpe);
     }
-    
+
     /**
      *  setMaximumPoolSize throws IllegalArgumentException
      *  if given a negative value
@@ -983,7 +983,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
         joinPool(tpe);
     }
-    
+
 
     /**
      *  setKeepAliveTime  throws IllegalArgumentException
@@ -994,7 +994,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         try {
             tpe = new ThreadPoolExecutor(2,3,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
         } catch(Exception e){}
-        
+
 	try {
             tpe.setKeepAliveTime(-1,TimeUnit.MILLISECONDS);
             shouldThrow();
@@ -1242,7 +1242,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
         } catch(ExecutionException success) {
         } catch(Exception ex) {
@@ -1263,7 +1263,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch(Exception ex) {
@@ -1452,7 +1452,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 it.next().get();
         } catch(ExecutionException success) {
         } catch(Exception ex) {
@@ -1473,7 +1473,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
+            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
                 assertSame(TEST_STRING, it.next().get());
         } catch (ExecutionException success) {
         } catch(Exception ex) {
@@ -1495,7 +1495,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(3, result.size());
-            Iterator<Future<String>> it = result.iterator(); 
+            Iterator<Future<String>> it = result.iterator();
             Future<String> f1 = it.next();
             Future<String> f2 = it.next();
             Future<String> f3 = it.next();
@@ -1584,8 +1584,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
                 public void run() {
                     nRun.getAndIncrement();
                 } };
-        final ThreadPoolExecutor p = 
-            new ThreadPoolExecutor(1, 30, 60, TimeUnit.SECONDS, 
+        final ThreadPoolExecutor p =
+            new ThreadPoolExecutor(1, 30, 60, TimeUnit.SECONDS,
                                    new ArrayBlockingQueue(30));
         try {
             for (int i = 0; i < nTasks; ++i) {
@@ -1607,5 +1607,5 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             p.shutdown();
         }
     }
-            
+
 }

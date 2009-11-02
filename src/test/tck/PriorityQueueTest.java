@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -13,13 +13,13 @@ import java.io.*;
 
 public class PriorityQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(PriorityQueueTest.class);
     }
 
-    static class MyReverseComparator implements Comparator { 
+    static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
             int i = ((Integer)x).intValue();
             int j = ((Integer)y).intValue();
@@ -44,7 +44,7 @@ public class PriorityQueueTest extends JSR166TestCase {
 	assertEquals(n, q.size());
         return q;
     }
- 
+
     /**
      * A new queue has unbounded capacity
      */
@@ -170,7 +170,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             PriorityQueue q = new PriorityQueue(1);
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -181,7 +181,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             PriorityQueue q = new PriorityQueue(1);
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -328,7 +328,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success){
-	}   
+	}
     }
 
     /**
@@ -345,7 +345,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -443,7 +443,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         for(int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.poll());
     }
-    
+
     /**
      * iterator iterates through all elements
      */
@@ -487,10 +487,10 @@ public class PriorityQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     /**
-     * A deserialized serialized queue has same elements 
+     * A deserialized serialized queue has same elements
      */
     public void testSerialization() {
         PriorityQueue q = populatedQueue(SIZE);
@@ -504,7 +504,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             PriorityQueue r = (PriorityQueue)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
             unexpectedException();

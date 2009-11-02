@@ -50,16 +50,16 @@ public class FJPhaserLoops {
 
             for (int size = FIRST_SIZE; size <= LAST_SIZE; size *= 10) {
                 long startTime = System.nanoTime();
-                
+
                 Phaser phaser = new Phaser();
                 final PhaserAction[] actions = new PhaserAction[k];
                 for (int i = 0; i < k; ++i) {
                     actions[i] = new PhaserAction(i, phaser, size);
                 }
-                
+
                 pool.invoke(new RecursiveAction() {
                         public void compute() { invokeAll(actions); }});
-                
+
                 long elapsed = System.nanoTime() - startTime;
                 long bs = (NPS * size) / elapsed;
                 System.out.printf("%4d Threads %8d iters: %11d barriers/sec\n",
@@ -68,7 +68,5 @@ public class FJPhaserLoops {
             pool.shutdown();
         }
     }
-    
+
 }
-
-

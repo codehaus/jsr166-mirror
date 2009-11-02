@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -13,7 +13,7 @@ import java.io.*;
 
 public class PriorityBlockingQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(PriorityBlockingQueueTest.class);
@@ -22,7 +22,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     private static final int NOCAP = Integer.MAX_VALUE;
 
     /** Sample Comparator */
-    static class MyReverseComparator implements Comparator { 
+    static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
             int i = ((Integer)x).intValue();
             int j = ((Integer)y).intValue();
@@ -48,7 +48,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 	assertEquals(n, q.size());
         return q;
     }
- 
+
     /**
      * A new queue has unbounded capacity
      */
@@ -178,7 +178,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             PriorityBlockingQueue q = new PriorityBlockingQueue(1);
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -189,7 +189,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             PriorityBlockingQueue q = new PriorityBlockingQueue(1);
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -304,9 +304,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
             q.put(null);
             shouldThrow();
-        } 
+        }
         catch (NullPointerException success){
-	}   
+	}
      }
 
     /**
@@ -374,7 +374,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                     } finally { }
                 }
             });
-        
+
         try {
             t.start();
             Thread.sleep(SMALL_DELAY_MS);
@@ -396,7 +396,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             }
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -409,7 +409,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                     try {
                         q.take();
 			threadShouldThrow();
-                    } catch (InterruptedException success){ }                
+                    } catch (InterruptedException success){ }
                 }
             });
         try {
@@ -436,11 +436,11 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                         q.take();
                         threadShouldThrow();
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -473,7 +473,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -488,7 +488,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
 	    unexpectedException();
-	}   
+	}
     }
 
     /**
@@ -505,11 +505,11 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                         }
                         threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -531,7 +531,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-                    } catch (InterruptedException success) { }                
+                    } catch (InterruptedException success) { }
                 }
             });
         try {
@@ -543,7 +543,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         } catch (Exception e){
             unexpectedException();
         }
-    }  
+    }
 
 
     /**
@@ -588,7 +588,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success){
-	}   
+	}
     }
 
     /**
@@ -605,7 +605,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-	
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -694,7 +694,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 	    assertEquals(o[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
-	}    
+	}
     }
 
     /**
@@ -710,7 +710,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 		assertEquals(ints[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
-	}    
+	}
     }
 
     /**
@@ -734,7 +734,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 	    shouldThrow();
 	} catch(ArrayStoreException  success){}
     }
-    
+
     /**
      * iterator iterates through all elements
      */
@@ -778,7 +778,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     /**
      * offer transfers elements across Executor tasks
@@ -810,12 +810,12 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
+
         joinPool(executor);
     }
 
     /**
-     * A deserialized serialized queue has same elements 
+     * A deserialized serialized queue has same elements
      */
     public void testSerialization() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
@@ -829,7 +829,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             PriorityBlockingQueue r = (PriorityBlockingQueue)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
             unexpectedException();
@@ -838,7 +838,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null) throws NPE
-     */ 
+     */
     public void testDrainToNull() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -850,7 +850,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this) throws IAE
-     */ 
+     */
     public void testDrainToSelf() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -862,14 +862,14 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c) empties queue into another collection c
-     */ 
+     */
     public void testDrainTo() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         ArrayList l = new ArrayList();
         q.drainTo(l);
         assertEquals(q.size(), 0);
         assertEquals(l.size(), SIZE);
-        for (int i = 0; i < SIZE; ++i) 
+        for (int i = 0; i < SIZE; ++i)
             assertEquals(l.get(i), new Integer(i));
         q.add(zero);
         q.add(one);
@@ -880,13 +880,13 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         q.drainTo(l);
         assertEquals(q.size(), 0);
         assertEquals(l.size(), 2);
-        for (int i = 0; i < 2; ++i) 
+        for (int i = 0; i < 2; ++i)
             assertEquals(l.get(i), new Integer(i));
     }
 
     /**
      * drainTo empties queue
-     */ 
+     */
     public void testDrainToWithActivePut() {
         final PriorityBlockingQueue q = populatedQueue(SIZE);
         Thread t = new Thread(new Runnable() {
@@ -899,7 +899,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             ArrayList l = new ArrayList();
             q.drainTo(l);
             assertTrue(l.size() >= SIZE);
-            for (int i = 0; i < SIZE; ++i) 
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(l.get(i), new Integer(i));
             t.join();
             assertTrue(q.size() + l.size() >= SIZE);
@@ -910,7 +910,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null, n) throws NPE
-     */ 
+     */
     public void testDrainToNullN() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -922,7 +922,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this, n) throws IAE
-     */ 
+     */
     public void testDrainToSelfN() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -934,7 +934,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c, n) empties first max {n, size} elements of queue into c
-     */ 
+     */
     public void testDrainToN() {
         PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE*2);
         for (int i = 0; i < SIZE + 2; ++i) {
@@ -945,7 +945,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             int k = (i < SIZE)? i : SIZE;
             assertEquals(l.size(), k);
             assertEquals(q.size(), SIZE-k);
-            for (int j = 0; j < k; ++j) 
+            for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
             while (q.poll() != null) ;
         }

@@ -11,7 +11,7 @@ import java.io.*;
 
 public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
 	return new TestSuite(ConcurrentSkipListSubMapTest.class);
@@ -20,7 +20,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     /**
      * Create a map from Integers 1-5 to Strings "A"-"E".
      */
-    private static ConcurrentNavigableMap map5() {   
+    private static ConcurrentNavigableMap map5() {
 	ConcurrentSkipListMap map = new ConcurrentSkipListMap();
         assertTrue(map.isEmpty());
 	map.put(zero, "Z");
@@ -38,7 +38,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     /**
      * Create a map from Integers -5 to -1 to Strings "A"-"E".
      */
-    private static ConcurrentNavigableMap dmap5() {   
+    private static ConcurrentNavigableMap dmap5() {
 	ConcurrentSkipListMap map = new ConcurrentSkipListMap();
         assertTrue(map.isEmpty());
 	map.put(m1, "A");
@@ -51,13 +51,13 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 	return map.descendingMap();
     }
 
-    private static ConcurrentNavigableMap map0() {   
+    private static ConcurrentNavigableMap map0() {
 	ConcurrentSkipListMap map = new ConcurrentSkipListMap();
         assertTrue(map.isEmpty());
         return map.tailMap(one, true);
     }
 
-    private static ConcurrentNavigableMap dmap0() {   
+    private static ConcurrentNavigableMap dmap0() {
 	ConcurrentSkipListMap map = new ConcurrentSkipListMap();
         assertTrue(map.isEmpty());
         return map;
@@ -239,7 +239,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(one) && e.getValue().equals("A")) ||
                        (e.getKey().equals(two) && e.getValue().equals("B")) ||
                        (e.getKey().equals(three) && e.getValue().equals("C")) ||
@@ -497,7 +497,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         for (int i = 1; i <= 5; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     // Exception tests
 
@@ -938,7 +938,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(m1) && e.getValue().equals("A")) ||
                        (e.getKey().equals(m2) && e.getValue().equals("B")) ||
                        (e.getKey().equals(m3) && e.getValue().equals("C")) ||
@@ -1196,7 +1196,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         for (int i = 1; i <= 5; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     // Exception testDescendings
 
@@ -1460,5 +1460,5 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         assertEquals(3, sm.size());
         assertEquals(4, map.size());
     }
-    
+
 }

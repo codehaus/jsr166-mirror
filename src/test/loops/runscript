@@ -195,3 +195,4 @@ $RUN PhaserLoops
 $RUN CyclicBarrierLoops 
 $RUN FJPhaserLoops 
 $RUN SpinningTieredPhaserLoops
+$RUN TorusSpanningTree

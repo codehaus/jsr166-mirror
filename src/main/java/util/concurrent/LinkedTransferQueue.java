@@ -866,8 +866,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Main implementation of Iterator.remove(). Find
-     * and unsplice the given data node.
+     * Main implementation of Iterator.remove(). Finds
+     * and unsplices the given data node.
+     *
      * @param possiblePred possible predecessor of s
      * @param s the node to remove
      */

@@ -683,15 +683,23 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /* -------------- Traversal methods -------------- */
 
     /**
+     * Returns the successor of p, or the head node if p.next has been
+     * linked to self, which will only be true if traversing with a
+     * stale pointer that is now off the list.
+     */
+    final Node succ(Node p) {
+        Node next = p.next;
+        return (p == next) ? head : next;
+    }
+
+    /**
      * Returns the first unmatched node of the given mode, or null if
      * none.  Used by methods isEmpty, hasWaitingConsumer.
      */
-    private Node firstOfMode(boolean data) {
-        for (Node p = head; p != null; ) {
+    private Node firstOfMode(boolean isData) {
+        for (Node p = head; p != null; p = succ(p)) {
             if (!p.isMatched())
-                return (p.isData == data) ? p : null;
-            Node n = p.next;
-            p = (n != p) ? n : head;
+                return (p.isData == isData) ? p : null;
         }
         return null;
     }
@@ -701,13 +709,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * null if none.  Used by peek.
      */
     private E firstDataItem() {
-        for (Node p = head; p != null; ) {
-            boolean isData = p.isData;
+        for (Node p = head; p != null; p = succ(p)) {
             Object item = p.item;
-            if (item != p && (item != null) == isData)
-                return isData ? this.<E>cast(item) : null;
-            Node n = p.next;
-            p = (n != p) ? n : head;
+            if (p.isData) {
+                if (item != null && item != p)
+                    return this.<E>cast(item);
+            }
+            else if (item == null)
+                return null;
         }
         return null;
     }
@@ -748,10 +757,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         private void advance(Node prev) {
             lastPred = lastRet;
             lastRet = prev;
-            Node p;
-            if (prev == null || (p = prev.next) == prev)
-                p = head;
-            while (p != null) {
+            for (Node p = (prev == null) ? head : succ(prev);
+                 p != null; p = succ(p)) {
                 Object item = p.item;
                 if (p.isData) {
                     if (item != null && item != p) {
@@ -762,8 +769,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 }
                 else if (item == null)
                     break;
-                Node n = p.next;
-                p = (n != p) ? n : head;
             }
             nextNode = null;
         }

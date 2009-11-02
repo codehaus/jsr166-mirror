@@ -479,8 +479,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /*
-     * Possible values for "how" argument in xfer method. Beware that
-     * the order of assigned numerical values matters.
+     * Possible values for "how" argument in xfer method.
      */
     private static final int NOW     = 0; // for untimed poll, tryTransfer
     private static final int ASYNC   = 1; // for offer, put, add
@@ -537,14 +536,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 p = (p != n) ? n : (h = head); // Use head if p offlist
             }
 
-            if (how != NOW) {                  // No matches available
+            if (how != NOW) {                 // No matches available
                 if (s == null)
                     s = new Node(e, haveData);
                 Node pred = tryAppend(s, haveData);
                 if (pred == null)
                     continue retry;           // lost race vs opposite mode
-                if (how >= SYNC)
-                    return awaitMatch(s, pred, e, how, nanos);
+                if (how != ASYNC)
+                    return awaitMatch(s, pred, e, (how == TIMEOUT), nanos);
             }
             return e; // not waiting
         }
@@ -593,12 +592,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * predecessor, or null if unknown (the null case does not occur
      * in any current calls but may in possible future extensions)
      * @param e the comparison value for checking match
-     * @param how either SYNC or TIMEOUT
+     * @param timed if true, wait only until timeout elapses
      * @param nanos timeout value
      * @return matched item, or e if unmatched on interrupt or timeout
      */
-    private E awaitMatch(Node s, Node pred, E e, int how, long nanos) {
-        long lastTime = (how == TIMEOUT) ? System.nanoTime() : 0L;
+    private E awaitMatch(Node s, Node pred, E e, boolean timed, long nanos) {
+        long lastTime = timed ? System.nanoTime() : 0L;
         Thread w = Thread.currentThread();
         int spins = -1; // initialized after first item and cancel checks
         ThreadLocalRandom randomYields = null; // bound if needed
@@ -610,7 +609,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 s.forgetContents();           // avoid garbage
                 return this.<E>cast(item);
             }
-            if ((w.isInterrupted() || (how == TIMEOUT && nanos <= 0)) &&
+            if ((w.isInterrupted() || (timed && nanos <= 0)) &&
                     s.casItem(e, s)) {       // cancel
                 unsplice(pred, s);
                 return e;
@@ -629,7 +628,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             else if (s.waiter == null) {
                 s.waiter = w;                 // request unpark then recheck
             }
-            else if (how == TIMEOUT) {
+            else if (timed) {
                 long now = System.nanoTime();
                 if ((nanos -= now - lastTime) > 0)
                     LockSupport.parkNanos(this, nanos);

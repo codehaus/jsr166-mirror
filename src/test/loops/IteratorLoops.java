@@ -24,8 +24,8 @@ public final class IteratorLoops {
 
     public static void main(String[] args) throws Exception {
         Class klass = Class.forName(args[0]);
-        int n = (args.length <= 1)? DEFAULT_SIZE : Integer.parseInt(args[1]);
-        int t = (args.length <= 2)? DEFAULT_TRIALS : Integer.parseInt(args[2]);
+        int n = (args.length <= 1) ? DEFAULT_SIZE : Integer.parseInt(args[1]);
+        int t = (args.length <= 2) ? DEFAULT_TRIALS : Integer.parseInt(args[2]);
 
         System.out.print("Class: " + klass.getName());
         System.out.print(" ~iters: " + (long)n * (long)n);
@@ -119,7 +119,8 @@ public final class IteratorLoops {
             k >>>= 1;
         }
         // let GC settle down
-        try { Thread.sleep(500); } catch(Exception ex) { return; }
+        try { Thread.sleep(500); }
+        catch (Exception ex) { return; }
     }
 
 

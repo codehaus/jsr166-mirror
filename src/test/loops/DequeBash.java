@@ -26,14 +26,14 @@ public class DequeBash {
     static int random(int bound) {
         int x = seed;
         int t = (x % 127773) * 16807 - (x / 127773) * 2836;
-        seed = (t > 0)? t : t + 0x7fffffff;
+        seed = (t > 0) ? t : t + 0x7fffffff;
         return (t & 0x7fffffff) % bound;
     }
 
     static int random() {
         int x = seed;
         int t = (x % 127773) * 16807 - (x / 127773) * 2836;
-        seed = (t > 0)? t : t + 0x7fffffff;
+        seed = (t > 0) ? t : t + 0x7fffffff;
         return (t & 0x7fffffff);
     }
 
@@ -178,7 +178,7 @@ public class DequeBash {
                     case 2: result = deque.pop();         break;
                     default: throw new Exception("How'd we get here");
                     }
-                } catch(NoSuchElementException e) {
+                } catch (NoSuchElementException e) {
                     threw = true;
                 }
                 if (!threw)
@@ -212,17 +212,17 @@ public class DequeBash {
                 boolean threw = false;
                 try {
                     result = deque.removeLast();
-                } catch(NoSuchElementException e) {
+                } catch (NoSuchElementException e) {
                     threw = true;
                 }
                 if (!threw)
                     throw new Exception("Remove-no exception: " + result);
             } else { // deque nonempty
-                int result = ((random() & 1) == 0?
+                int result = ((random() & 1) == 0 ?
                               deque.removeLast() : deque.pollLast());
                 if (result != --nextTail)
                     throw new Exception(
-                                        "Removed "+ result + " expecting "+(nextTail + 1));
+                        "Removed "+ result + " expecting "+(nextTail + 1));
             }
             break;
         default:
@@ -237,16 +237,16 @@ public class DequeBash {
         if (d1.size() != d2.size())
             throw new Exception("Size " + d1.size() + " != " + d2.size());
         Iterator<Integer> it = d2.iterator();
-        for(int i : d1) {
+        for (int i : d1) {
             int j = it.next();
             if (j != i)
                 throw new Exception("Element " + j + " != " + i);
         }
 
-        for(int i : d1)
+        for (int i : d1)
             if (!d2.contains(i))
                 throw new Exception("d2 doesn't contain " + i);
-        for(int i : d2)
+        for (int i : d2)
             if (!d1.contains(i))
                 throw new Exception("d2 doesn't contain " + i);
 
@@ -280,7 +280,7 @@ public class DequeBash {
                 bos.toByteArray());
             ObjectInputStream ois = new ObjectInputStream(bin);
             return (T) ois.readObject();
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -368,9 +368,9 @@ public class DequeBash {
             boolean threw = false;
             int result = 666;
             try {
-                result = ((random() & 1) == 0?
+                result = ((random() & 1) == 0 ?
                           deque.getFirst() : deque.element());
-            } catch(NoSuchElementException e) {
+            } catch (NoSuchElementException e) {
                 threw = true;
             }
             if (!threw)
@@ -378,7 +378,7 @@ public class DequeBash {
             threw = false;
             try {
                 result = deque.getLast();
-            } catch(NoSuchElementException e) {
+            } catch (NoSuchElementException e) {
                 threw = true;
             }
             if (!threw)

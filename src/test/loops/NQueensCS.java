@@ -35,7 +35,8 @@ public final class NQueensCS extends RecursiveAction {
             return;
         }
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() :
+            ForkJoinPool g = (procs == 0) ?
+                new ForkJoinPool() :
                 new ForkJoinPool(procs);
             lastStealCount = g.getStealCount();
             for (int i = FIRST_SIZE; i <= LAST_SIZE; i++)

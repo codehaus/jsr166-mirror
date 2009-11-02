@@ -52,7 +52,7 @@ public final class CheckedLockLoops {
     }
 
     static void oneTest(int nthreads, int iters) throws Exception {
-        int fairIters = (nthreads <= 1)? iters : iters/20;
+        int fairIters = (nthreads <= 1) ? iters : iters/20;
         int v = rng.next();
 
         if (print)

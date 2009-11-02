@@ -113,7 +113,7 @@ public class ThreadPhaserJacobi {
                     double[][] tmp = a; a = b; b = tmp;
                 }
             }
-            catch(Exception ex) {
+            catch (Exception ex) {
                 ex.printStackTrace();
                 return;
             }

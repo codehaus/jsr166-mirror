@@ -21,7 +21,7 @@ public class ListBash {
 
 	try {
 	    cl = Class.forName(args[0]);
-	} catch(ClassNotFoundException e) {
+	} catch (ClassNotFoundException e) {
 	    fail("Class " + args[0] + " not found.");
 	}
 
@@ -152,19 +152,19 @@ public class ListBash {
             all = clone(s, cl, synch);
         else {
             it = even.iterator();
-            while(it.hasNext())
-                if((it.next()).intValue() % 2 == 1)
+            while (it.hasNext())
+                if ((it.next()).intValue() % 2 == 1)
                     it.remove();
             it = even.iterator();
-            while(it.hasNext())
-                if((it.next()).intValue() % 2 == 1)
+            while (it.hasNext())
+                if ((it.next()).intValue() % 2 == 1)
                     fail("Failed to remove all odd nubmers.");
 
             for (int i=0; i<(listSize/2); i++)
                 odd.remove(i);
             for (int i=0; i<(listSize/2); i++) {
                 int ii = (odd.get(i)).intValue();
-                if(ii % 2 != 1)
+                if (ii % 2 != 1)
                     fail("Failed to remove all even nubmers. " + ii);
             }
 
@@ -189,8 +189,8 @@ public class ListBash {
             }
             itAll = all.listIterator();
             it = s.iterator();
-            while(it.hasNext())
-                if(it.next()==itAll.next())
+            while (it.hasNext())
+                if (it.next()==itAll.next())
                     fail("Iterator.set failed to change value.");
         }
         if (!all.equals(s))
@@ -265,7 +265,7 @@ public class ListBash {
 	    if (!s.isEmpty())
 		fail("New instance non empty.");
 	    return s;
-	} catch(Throwable t) {
+	} catch (Throwable t) {
 	    fail("Can't instantiate " + cl + ": " + t);
 	}
 	return null; //Shut up compiler.

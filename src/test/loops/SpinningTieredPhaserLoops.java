@@ -53,7 +53,7 @@ public class SpinningTieredPhaserLoops {
         public void run() {
             int n = size;
             Phaser b = phaser;
-            for(int i = 0; i < n; ++i) {
+            for (int i = 0; i < n; ++i) {
                 int p = b.arrive();
                 while (b.getPhase() == p) {
                     if ((ThreadLocalRandom.current().nextInt() & 127) == 0)

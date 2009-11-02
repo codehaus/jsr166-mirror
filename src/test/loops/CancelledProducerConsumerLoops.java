@@ -26,7 +26,7 @@ public class CancelledProducerConsumerLoops {
             try {
                 oneTest(i, iters);
             }
-            catch(BrokenBarrierException bb) {
+            catch (BrokenBarrierException bb) {
                 // OK, ignore
             }
             Thread.sleep(100);

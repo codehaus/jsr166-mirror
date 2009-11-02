@@ -119,7 +119,7 @@ public class TorusSpanningTree {
                         newList = e;
                         if (batchSize == 0) {
                             int s = getQueuedTaskCount();
-                            batchSize = ((s >= LOG_MAX_BATCH_SIZE)?
+                            batchSize = ((s >= LOG_MAX_BATCH_SIZE) ?
                                          (1 << LOG_MAX_BATCH_SIZE) :
                                          (1 << s));
                         }
@@ -177,13 +177,13 @@ public class TorusSpanningTree {
         // connect each node to left, right, up, down neighbors
         int maxcol = n - sideLength;
         int col = 0;
-        for(int i = 0; i < sideLength; ++i) {
-            for(int j = 0; j < sideLength; ++j) {
+        for (int i = 0; i < sideLength; ++i) {
+            for (int j = 0; j < sideLength; ++j) {
                 Node[] a = vs[col + j].neighbors;
-                a[0] = vs[col + ((j < sideLength-1)? (j+1) : 0)];
-                a[1] = vs[col + ((j != 0)? (j-1) : (sideLength-1))];
-                a[2] = vs[j + ((i < sideLength-1)? (col + sideLength) : 0)];
-                a[3] = vs[j + ((i != 0)? (col - sideLength) : maxcol)];
+                a[0] = vs[col + ((j < sideLength-1) ? (j+1) : 0)];
+                a[1] = vs[col + ((j != 0) ? (j-1) : (sideLength-1))];
+                a[2] = vs[j + ((i < sideLength-1) ? (col + sideLength) : 0)];
+                a[3] = vs[j + ((i != 0) ? (col - sideLength) : maxcol)];
             }
             col += sideLength;
         }

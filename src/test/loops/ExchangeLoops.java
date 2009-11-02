@@ -40,7 +40,7 @@ public class ExchangeLoops {
 	System.out.println();
         long warmupTime = 2000;
         long sleepTime = 100;
-        int nw = maxThreads >= 3? 3 : 2;
+        int nw = (maxThreads >= 3) ? 3 : 2;
 
         System.out.println("Warmups..");
         oneRun(3, warmupTime);

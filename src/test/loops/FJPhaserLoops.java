@@ -33,7 +33,7 @@ public class FJPhaserLoops {
         public void compute() {
             int n = size;
             Phaser b = phaser;
-            for(int i = 0; i < n; ++i)
+            for (int i = 0; i < n; ++i)
                 b.arriveAndAwaitAdvance();
         }
     }

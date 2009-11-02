@@ -29,7 +29,7 @@ public class IntMapCheck {
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
-            } catch(ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
@@ -77,7 +77,7 @@ public class IntMapCheck {
         try {
             Map m = (Map<Integer,Integer>)cl.newInstance();
             return m;
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Can't instantiate " + cl + ": " + e);
         }
     }
@@ -219,7 +219,7 @@ public class IntMapCheck {
         int sum = 0;
         timer.start("Iter Key               ", size);
         for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
-            if(it.next() != MISSING)
+            if (it.next() != MISSING)
                 ++sum;
         }
         timer.finish();
@@ -232,7 +232,7 @@ public class IntMapCheck {
         int sum = 0;
         timer.start("Iter Value             ", size);
         for (Iterator it = s.values().iterator(); it.hasNext(); ) {
-            if(it.next() != MISSING)
+            if (it.next() != MISSING)
                 ++sum;
         }
         timer.finish();
@@ -244,7 +244,7 @@ public class IntMapCheck {
         int sum = 0;
         timer.start("Iter Entry             ", size);
         for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
-            if(it.next() != MISSING)
+            if (it.next() != MISSING)
                 ++sum;
         }
         timer.finish();

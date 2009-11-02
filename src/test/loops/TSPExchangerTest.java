@@ -300,7 +300,7 @@ public class TSPExchangerTest {
          */
         void printSnapshot(double secs) {
             int xs = totalExchanges();
-            long rate = (xs == 0)? 0L : (long)((secs * 1000000000.0) / xs);
+            long rate = (xs == 0) ? 0L : (long)((secs * 1000000000.0) / xs);
             Chromosome bestc = subpops[0].chromosomes[0];
             Chromosome worstc = bestc;
             for (int k = 0; k < subpops.length; ++k) {
@@ -579,7 +579,7 @@ public class TSPExchangerTest {
         public int compareTo(Object x) { // to enable sorting
             int xf = ((Chromosome)x).fitness;
             int f = fitness;
-            return ((f == xf)? 0 :((f < xf)? -1 : 1));
+            return ((f == xf) ? 0 :((f < xf) ? -1 : 1));
         }
 
         void recalcFitness() {
@@ -665,7 +665,7 @@ public class TSPExchangerTest {
                     double dy = (double)yPts[i] - (double)yPts[j];
                     double dd = Math.hypot(dx, dy) / 2.0;
                     long ld = Math.round(dd);
-                    distances[i][j] = (ld >= Integer.MAX_VALUE)?
+                    distances[i][j] = (ld >= Integer.MAX_VALUE) ?
                         Integer.MAX_VALUE : (int)ld;
                 }
             }

@@ -236,8 +236,8 @@ public class MapMicroBenchmark {
         public long work(int len, int minIters, int maxIters, long timeLimit) {
             Map m;
             try {
-                m = (Map)mapClass.newInstance();
-            } catch(Exception e) {
+                m = (Map) mapClass.newInstance();
+            } catch (Exception e) {
                 throw new RuntimeException("Can't instantiate " + mapClass + ": " + e);
             }
             Object[] ins = items;
@@ -365,7 +365,7 @@ public class MapMicroBenchmark {
     // more realistic
     static void scramble(Object[] a) {
         for (int k = 0; k < sizes.length; ++k) {
-            int origin = k == 0? 0 : sizes[k-1];
+            int origin = (k == 0) ? 0 : sizes[k-1];
             for (int i = sizes[k]; i > origin + 1; i--) {
                 Object t = a[i-1];
                 int r = rng.nextInt(i - origin) + origin;

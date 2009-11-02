@@ -113,8 +113,8 @@ public class DenseMapMicroBenchmark {
         public void work() {
             Map m = null;
             try {
-                m = (Map)mapClass.newInstance();
-            } catch(Exception e) {
+                m = (Map) mapClass.newInstance();
+            } catch (Exception e) {
                 throw new RuntimeException("Can't instantiate " + mapClass + ": " + e);
             }
             final int len = elts.length;

@@ -29,7 +29,8 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
 
 
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() :
+            ForkJoinPool g = (procs == 0) ?
+                new ForkJoinPool() :
                 new ForkJoinPool(procs);
             lastStealCount = g.getStealCount();
             for (int i = 0; i < 10; ++i) {

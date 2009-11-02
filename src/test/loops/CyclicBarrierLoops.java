@@ -35,10 +35,10 @@ public class CyclicBarrierLoops {
             try {
                 int n = size;
                 CyclicBarrier b = barrier;
-                for(int i = 0; i < n; ++i)
+                for (int i = 0; i < n; ++i)
                     b.await();
             }
-            catch(Exception ex) {
+            catch (Exception ex) {
                 throw new Error(ex);
             }
         }

@@ -40,7 +40,7 @@ public class MapCheck {
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
-            } catch(ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
@@ -99,8 +99,8 @@ public class MapCheck {
 
     static Map newMap() {
         try {
-            return (Map)mapClass.newInstance();
-        } catch(Exception e) {
+            return (Map) mapClass.newInstance();
+        } catch (Exception e) {
             throw new RuntimeException("Can't instantiate " + mapClass + ": " + e);
         }
     }
@@ -134,7 +134,7 @@ public class MapCheck {
         try {
             m.put(null, x);
             v = m.get(null);
-        } catch(NullPointerException npe) {
+        } catch (NullPointerException npe) {
             System.out.println("Map does not allow null keys");
             return;
         }

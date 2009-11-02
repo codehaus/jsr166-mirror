@@ -53,7 +53,7 @@ public class TieredPhaserLoops {
         public void run() {
             int n = size;
             Phaser b = phaser;
-            for(int i = 0; i < n; ++i)
+            for (int i = 0; i < n; ++i)
                 b.arriveAndAwaitAdvance();
         }
     }

@@ -28,7 +28,7 @@ public class MapWordLoops {
         Class mapClass = null;
         try {
             mapClass = Class.forName(args[0]);
-        } catch(ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException("Class " + args[0] + " not found.");
         }
 
@@ -70,13 +70,14 @@ public class MapWordLoops {
         try {
             Map m = (Map<String,String>)cl.newInstance();
             return m;
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Can't instantiate " + cl + ": " + e);
         }
     }
 
     static void pause() {
-        try { Thread.sleep(100); } catch(InterruptedException ie) { return; }
+        try { Thread.sleep(100); }
+        catch (InterruptedException ie) { return; }
     }
 
     static String[] readWords(int sizeIndex) throws IOException {

@@ -26,7 +26,7 @@ public final class CancelledLockLoops {
             try {
                 new ReentrantLockLoop(i).test();
             }
-            catch(BrokenBarrierException bb) {
+            catch (BrokenBarrierException bb) {
                 // OK, ignore
             }
         }

@@ -27,7 +27,7 @@ public class CollectionLoops {
         if (args.length > 0) {
             try {
                 collectionClass = Class.forName(args[0]);
-            } catch(ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }

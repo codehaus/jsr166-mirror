@@ -15,7 +15,7 @@ public class SetBash {
 
 	try {
 	    cl = Class.forName(args[0]);
-	} catch(ClassNotFoundException e) {
+	} catch (ClassNotFoundException e) {
 	    fail("Class " + args[0] + " not found.");
 	}
 
@@ -98,7 +98,7 @@ public class SetBash {
 	    if (!s.isEmpty())
 		fail("New instance non empty.");
 	    return s;
-	} catch(Throwable t) {
+	} catch (Throwable t) {
 	    fail("Can't instantiate " + cl + ": " + t);
 	}
 	return null; //Shut up compiler.

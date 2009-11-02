@@ -25,7 +25,7 @@ public class ConcurrentQueueLoops {
         if (args.length > 0) {
             try {
                 klass = Class.forName(args[0]);
-            } catch(ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }
@@ -103,7 +103,7 @@ public class ConcurrentQueueLoops {
                         return Integer.valueOf(takes);
                     } else {
                         for (int i = 0; i < BATCH_SIZE; ++i) {
-                            queue.offer(((l & lmask)== 0)? zero : one);
+                            queue.offer(((l & lmask)== 0) ? zero : one);
                             if ((lmask <<= 1) == 0) lmask = 1;
                             if (i != 0) l = compute(l);
                         }

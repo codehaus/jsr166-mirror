@@ -66,7 +66,7 @@ public class CollectionWordLoops {
 
     static Collection<String> newCollection(Class cl) {
         try {
-            Collection m = (Collection<String>)cl.newInstance();
+            Collection m = (Collection<String>) cl.newInstance();
             return m;
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate " + cl + ": " + e);

@@ -434,8 +434,8 @@ public class NavigableMapCheck {
 
         static void printStats() {
             for (Iterator it = accum.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry e = (Map.Entry)(it.next());
-                Stats stats = ((Stats)(e.getValue()));
+                Map.Entry e = (Map.Entry) it.next();
+                Stats stats = (Stats) e.getValue();
                 int n = stats.number;
                 double t;
                 if (n > 0)

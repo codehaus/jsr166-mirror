@@ -38,9 +38,10 @@ public final class IteratorLoops {
         for (int k = 0; k < colls.length; ++k) {
             Object x = klass.newInstance();
             if (x instanceof Collection)
-                colls[k] = (Collection<Integer>)x;
+                colls[k] = (Collection<Integer>) x;
             else if (x instanceof Map)
-                colls[k] = (Collection<Integer>)Collections.newSetFromMap((Map)x);
+                colls[k] = (Collection<Integer>)
+                    Collections.newSetFromMap((Map) x);
             else
                 throw new Error("bad class");
         }

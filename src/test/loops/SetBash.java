@@ -92,7 +92,7 @@ public class SetBash {
 
     static Set newSet(Class cl, boolean synch) {
 	try {
-	    Set s = (Set)cl.newInstance();
+	    Set s = (Set) cl.newInstance();
             if (synch)
                 s = Collections.synchronizedSet(s);
 	    if (!s.isEmpty())

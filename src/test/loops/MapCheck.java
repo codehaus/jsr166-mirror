@@ -164,7 +164,7 @@ public class MapCheck {
         Map<Integer,Integer> intMap = (Map<Integer,Integer>)s;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
-            if ((Integer)(intMap.get(i)) != i) ++sum;
+            if ((Integer) (intMap.get(i)) != i) ++sum;
         }
         timer.finish();
         reallyAssert (sum == expect);
@@ -350,7 +350,7 @@ public class MapCheck {
 
         FileInputStream is = new FileInputStream("MapCheck.dat");
         ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(is));
-        Map m = (Map)in.readObject();
+        Map m = (Map) in.readObject();
 
         long endTime = System.currentTimeMillis();
         long time = endTime - startTime;
@@ -651,8 +651,8 @@ public class MapCheck {
 
         static void printStats() {
             for (Iterator it = accum.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry e = (Map.Entry)(it.next());
-                Stats stats = ((Stats)(e.getValue()));
+                Map.Entry e = (Map.Entry) it.next();
+                Stats stats = (Stats) e.getValue();
                 System.out.print(e.getKey() + ": ");
                 long s;
                 long n = stats.number;
@@ -682,7 +682,7 @@ public class MapCheck {
             if (st == null)
                 accum.put(name, new Stats(elapsed, numOps));
             else
-                ((Stats)st).addTime(elapsed, numOps);
+                ((Stats) st).addTime(elapsed, numOps);
         }
 
     }

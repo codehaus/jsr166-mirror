@@ -108,7 +108,7 @@ public class IntMapCheck {
         timer.start(nm, n * iters);
         for (int j = 0; j < iters; ++j) {
             for (int i = 0; i < n; i++) {
-                if ((Integer)(s.get(i)) != i) ++sum;
+                if ((Integer) (s.get(i)) != i) ++sum;
             }
         }
         timer.finish();
@@ -272,7 +272,7 @@ public class IntMapCheck {
         reallyAssert (!s.containsKey(k));
         while (it.hasNext()) {
             Map.Entry<Integer,Integer> x = (Map.Entry<Integer,Integer>)(it.next());
-            Integer k2 = (Integer)x.getKey();
+            Integer k2 = (Integer) x.getKey();
             seen.put(k2, k2);
             if (k2 != MISSING)
                 ++sum;
@@ -348,7 +348,7 @@ public class IntMapCheck {
 
     static void entest(Map<Integer,Integer> s, int size) {
         if (s instanceof Hashtable) {
-            Hashtable ht = (Hashtable)s;
+            Hashtable ht = (Hashtable) s;
             //            entest3(ht, size);
             //            entest4(ht, size);
             entest1(ht, size);
@@ -532,7 +532,7 @@ public class IntMapCheck {
         static void printStats() {
             for (Iterator it = accum.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry e = (Map.Entry)(it.next());
-                Stats stats = ((Stats)(e.getValue()));
+                Stats stats = ((Stats) (e.getValue()));
                 long n = stats.number;
                 double t;
                 if (n > 0)

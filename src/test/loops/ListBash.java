@@ -254,12 +254,12 @@ public class ListBash {
 	if (!clone.containsAll(s))
 	    fail("Copy does not contain list.");
 
-	return (List<Integer>)clone;
+	return (List<Integer>) clone;
     }
 
     static List<Integer> newList(Class cl, boolean synch) {
 	try {
-	    List<Integer> s = (List<Integer>)cl.newInstance();
+	    List<Integer> s = (List<Integer>) cl.newInstance();
             if (synch)
                 s = Collections.synchronizedList(s);
 	    if (!s.isEmpty())

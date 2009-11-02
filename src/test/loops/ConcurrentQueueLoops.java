@@ -118,7 +118,7 @@ public class ConcurrentQueueLoops {
     }
 
     static void oneRun(Class klass, int n) throws Exception {
-        Queue<Integer> q = (Queue<Integer>)klass.newInstance();
+        Queue<Integer> q = (Queue<Integer>) klass.newInstance();
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);
         ArrayList<Future<Integer>> results = new ArrayList<Future<Integer>>(n);

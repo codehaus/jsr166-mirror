@@ -14,8 +14,8 @@ public class PriorityQueueSort {
 
     static class MyComparator implements Comparator<Integer> {
         public int compare(Integer x, Integer y) {
-            int i = ((Integer)x).intValue();
-            int j = ((Integer)y).intValue();
+            int i = x;
+            int j = y;
             if (i < j) return -1;
             if (i > j) return 1;
             return 0;

@@ -577,7 +577,7 @@ public class TSPExchangerTest {
         }
 
         public int compareTo(Object x) { // to enable sorting
-            int xf = ((Chromosome)x).fitness;
+            int xf = ((Chromosome) x).fitness;
             int f = fitness;
             return ((f == xf) ? 0 :((f < xf) ? -1 : 1));
         }

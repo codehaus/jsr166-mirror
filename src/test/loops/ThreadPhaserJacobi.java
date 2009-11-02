@@ -163,8 +163,8 @@ public class ThreadPhaserJacobi {
 
             int rows = hiRow - loRow + 1;
             int cols = hiCol - loCol + 1;
-            int rblocks = (int)(Math.round((float)rows / dimGran));
-            int cblocks = (int)(Math.round((float)cols / dimGran));
+            int rblocks = Math.round((float)rows / dimGran);
+            int cblocks = Math.round((float)cols / dimGran);
 
             int n = rblocks * cblocks;
 

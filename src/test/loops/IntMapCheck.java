@@ -108,7 +108,7 @@ public class IntMapCheck {
         timer.start(nm, n * iters);
         for (int j = 0; j < iters; ++j) {
             for (int i = 0; i < n; i++) {
-                if ((Integer) (s.get(i)) != i) ++sum;
+                if (s.get(i) != i) ++sum;
             }
         }
         timer.finish();
@@ -272,7 +272,7 @@ public class IntMapCheck {
         reallyAssert (!s.containsKey(k));
         while (it.hasNext()) {
             Map.Entry<Integer,Integer> x = (Map.Entry<Integer,Integer>)(it.next());
-            Integer k2 = (Integer) x.getKey();
+            Integer k2 = x.getKey();
             seen.put(k2, k2);
             if (k2 != MISSING)
                 ++sum;

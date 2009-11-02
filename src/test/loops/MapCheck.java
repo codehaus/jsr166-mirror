@@ -164,7 +164,7 @@ public class MapCheck {
         Map<Integer,Integer> intMap = (Map<Integer,Integer>)s;
         timer.start(nm, n);
         for (int i = 0; i < n; i++) {
-            if ((Integer) (intMap.get(i)) != i) ++sum;
+            if (intMap.get(i) != i) ++sum;
         }
         timer.finish();
         reallyAssert (sum == expect);

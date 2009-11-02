@@ -224,16 +224,16 @@ public class ListBash {
     static void arrays() {
         List<Integer> l = newList(cl, synch);
         AddRandoms(l, listSize);
-        Integer[] ia = (Integer[]) l.toArray(new Integer[0]);
+        Integer[] ia = l.toArray(new Integer[0]);
         if (!l.equals(Arrays.asList(ia)))
             fail("toArray(Object[]) is hosed (1)");
         ia = new Integer[listSize];
-        Integer[] ib = (Integer[]) l.toArray(ia);
+        Integer[] ib = l.toArray(ia);
         if (ia != ib || !l.equals(Arrays.asList(ia)))
             fail("toArray(Object[]) is hosed (2)");
         ia = new Integer[listSize+1];
         ia[listSize] = new Integer(69);
-        ib = (Integer[]) l.toArray(ia);
+        ib = l.toArray(ia);
         if (ia != ib || ia[listSize] != null
             || !l.equals(Arrays.asList(ia).subList(0, listSize)))
             fail("toArray(Object[]) is hosed (3)");

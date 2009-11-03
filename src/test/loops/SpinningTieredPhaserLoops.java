@@ -23,16 +23,12 @@ public class SpinningTieredPhaserLoops {
     static int tasksPerPhaser = Math.max(NCPUS / 4, 4);
 
     static void build(Runnable[] actions, int sz, int lo, int hi, Phaser b) {
-        int step = (hi - lo) / tasksPerPhaser;
-        if (step > 1) {
-            int i = lo;
-            while (i < hi) {
-                int r = Math.min(i + step, hi);
-                build(actions, sz, i, r, new Phaser(b));
-                i = r;
+        if (hi - lo > tasksPerPhaser) {
+            for (int i = lo; i < hi; i += tasksPerPhaser) {
+                int j = Math.min(i + tasksPerPhaser, hi);
+                build(actions, sz, i, j, new Phaser(b));
             }
-        }
-        else {
+        } else {
             for (int i = lo; i < hi; ++i)
                 actions[i] = new PhaserAction(i, b, sz);
         }

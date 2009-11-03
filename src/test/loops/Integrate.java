@@ -12,7 +12,6 @@ import java.util.concurrent.*;
  * This version uses a simplified hardwired function.  Inspired by a
  * <A href="http://www.cs.uga.edu/~dkl/filaments/dist.html">
  * Filaments</A> demo program.
- *
  */
 public final class Integrate {
 

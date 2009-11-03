@@ -47,7 +47,7 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
         DynamicLeftSpineFib f = new DynamicLeftSpineFib(num, null);
         g.invoke(f);
         long time = System.currentTimeMillis() - start;
-        double secs = ((double)time) / 1000.0;
+        double secs = (double) time / 1000.0;
         long result = f.getAnswer();
         System.out.print("DynamicLeftSpineFib " + num + " = " + result);
         System.out.printf("\tTime: %7.3f", secs);

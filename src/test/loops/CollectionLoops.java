@@ -120,10 +120,10 @@ public class CollectionLoops {
         barrier.await();
         barrier.await();
         long time = timer.getTime();
-        long tpo = time / (i * (long)nops);
+        long tpo = time / (i * (long) nops);
         if (print)
             System.out.print(LoopHelpers.rightJustify(tpo) + " ns per op");
-        double secs = (double)(time) / 1000000000.0;
+        double secs = (double) time / 1000000000.0;
         if (print)
             System.out.print("\t " + secs + "s run time");
         if (checkSum == 0) System.out.print(" ");

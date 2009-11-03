@@ -54,7 +54,7 @@ public final class NQueensCS extends RecursiveAction {
         g.invoke(task);
         int solutions = task.solutions;
         long time = System.nanoTime() - start;
-        double secs = ((double)time) / NPS;
+        double secs = (double) time / NPS;
         if (solutions != expectedSolutions[i])
             throw new Error();
         System.out.printf("NQueensCS %3d", i);

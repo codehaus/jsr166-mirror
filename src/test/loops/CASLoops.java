@@ -569,7 +569,7 @@ public class CASLoops {
         if (nthreads > NCPUS)
             t = t * NCPUS / nthreads;
         System.out.print(LoopHelpers.rightJustify(t));
-        double secs = (double)(runtime) / 1000000000.0;
+        double secs = (double) runtime / 1000000000.0;
         System.out.println("\t " + secs + "s run time");
     }
 

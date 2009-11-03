@@ -71,7 +71,7 @@ public final class Integrate {
             else
                 a = DQuad.computeArea(g, start, end);
             long now = System.nanoTime();
-            double s = ((double)(now - lastTime))/NPS;
+            double s = ((double) (now - lastTime)) / NPS;
             lastTime = now;
             System.out.printf("Calls/sec: %12d", (long) (calls / s));
             System.out.printf(" Time: %7.3f", s);

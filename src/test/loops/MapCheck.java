@@ -610,7 +610,7 @@ public class MapCheck {
                             abs[ai++] = s;
                         break;
                     }
-                    sb.append((char)c);
+                    sb.append((char) c);
                 }
             }
             in.close();
@@ -629,15 +629,15 @@ public class MapCheck {
             char[] c = new char[len * 4 + 1];
             for (int j = 1; j < len; ++j) {
                 int r = srng.next();
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
                 r >>>= 8;
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
                 r >>>= 8;
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
                 r >>>= 8;
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
             }
-            c[k++] = (char)((i & 31) | 1); // never == to any testword
+            c[k++] = (char) ((i & 31) | 1); // never == to any testword
             ws[i] = new String(c);
         }
     }
@@ -663,7 +663,7 @@ public class MapCheck {
                 else
                     s = stats.sum;
 
-                double t = ((double)s) / n;
+                double t = ((double) s) / n;
                 long nano = Math.round(t);
                 System.out.printf("%6d", + nano);
                 System.out.println();

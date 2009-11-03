@@ -471,7 +471,7 @@ public class NavigableMapCheck {
         void finish() {
             long endTime = System.currentTimeMillis();
             long time = endTime - startTime;
-            double timePerOp = ((double)time)/numOps;
+            double timePerOp = (double) time /numOps;
 
             Object st = accum.get(name);
             if (st == null)

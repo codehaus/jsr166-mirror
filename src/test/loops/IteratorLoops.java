@@ -28,7 +28,7 @@ public final class IteratorLoops {
         int t = (args.length <= 2) ? DEFAULT_TRIALS : Integer.parseInt(args[2]);
 
         System.out.print("Class: " + klass.getName());
-        System.out.print(" ~iters: " + (long)n * (long)n);
+        System.out.print(" ~iters: " + (long) n * (long) n);
         System.out.print(" trials: " + t);
         System.out.println();
 
@@ -65,7 +65,7 @@ public final class IteratorLoops {
         preload(n);
         long startTime = System.nanoTime();
         long count = traversals(n);
-        double elapsed = (double)(System.nanoTime() - startTime);
+        double elapsed = (double) (System.nanoTime() - startTime);
         double npi = elapsed / count;
         double secs = elapsed / 1000000000;
         System.out.printf("%7.1f ns/iter  %8.3fs run time\n", npi, secs);

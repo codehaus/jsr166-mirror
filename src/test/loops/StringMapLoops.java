@@ -96,13 +96,13 @@ public class StringMapLoops {
             char[] c = new char[len * 4];
             for (int j = 0; j < len; ++j) {
                 int r = rng.next();
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
                 r >>>= 8;
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
                 r >>>= 8;
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
                 r >>>= 8;
-                c[k++] = (char)(' ' + (r & 0x7f));
+                c[k++] = (char) (' ' + (r & 0x7f));
             }
             key[i] = new String(c);
         }
@@ -133,9 +133,9 @@ public class StringMapLoops {
         barrier.await();
         barrier.await();
         long time = timer.getTime();
-        long tpo = time / (i * (long)nops);
+        long tpo = time / (i * (long) nops);
         System.out.print(LoopHelpers.rightJustify(tpo) + " ns per op");
-        double secs = (double)(time) / 1000000000.0;
+        double secs = (double) time / 1000000000.0;
         System.out.println("\t " + secs + "s run time");
         map.clear();
     }

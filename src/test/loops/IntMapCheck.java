@@ -568,7 +568,7 @@ public class IntMapCheck {
         void finish() {
             long endTime = System.nanoTime();
             long time = endTime - startTime;
-            double timePerOp = ((double)time)/numOps;
+            double timePerOp = ((double) time)/numOps;
 
             Object st = accum.get(name);
             if (st == null)

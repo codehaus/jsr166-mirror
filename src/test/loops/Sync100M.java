@@ -6,20 +6,20 @@
 
 class Sync100M {
     public static void main(String[] args) throws Exception {
-        int x = loop((int)System.nanoTime(), 100000);
+        int x = loop((int) System.nanoTime(), 100000);
         x = loop(x, 100000);
         x = loop(x, 100000);
         long start = System.nanoTime();
         x = loop(x, 100000000);
         if (x == 0) System.out.print(" ");
         long time = System.nanoTime() - start;
-        double secs = (double)time / 1000000000.0;
+        double secs = (double) time / 1000000000.0;
         System.out.println("time: " + secs);
         start = System.nanoTime();
         x = loop(x, 100000000);
         if (x == 0) System.out.print(" ");
         time = System.nanoTime() - start;
-        secs = (double)time / 1000000000.0;
+        secs = (double) time / 1000000000.0;
         System.out.println("time: " + secs);
 
     }

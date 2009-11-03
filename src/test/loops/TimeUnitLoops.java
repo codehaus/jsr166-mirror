@@ -42,7 +42,7 @@ public class TimeUnitLoops {
         long sum = 0;
         int x = rng.next();
         for (int i = 0; i < 1000000; ++i) {
-            long l = (long)x + (long)x;
+            long l = (long) x + (long) x;
             sum += cvt(l, TimeUnit.SECONDS);
             sum += TimeUnit.MILLISECONDS.toMicros(l+2);
             sum += cvt(l+17, TimeUnit.NANOSECONDS);

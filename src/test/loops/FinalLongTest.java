@@ -47,7 +47,7 @@ public class FinalLongTest {
             Long[] ns = nums;
 
             while (n-- > 0) {
-                //                int k = (int)(s & (LEN-1));
+                //                int k = (int) (s & (LEN-1));
                 //                if (k < 0 || k >= LEN) k = 1;
                 //                int l = (k+1) & (LEN-1);
                 //                if (l < 0 || l >= LEN) l = 0;
@@ -78,7 +78,7 @@ public class FinalLongTest {
             int n = iters;
             long s = initialSeed(this);
             while (s != 0 && n > 0) {
-                long nexts; // = nums[(int)(s & (LEN-1))].longValue();
+                long nexts; // = nums[(int) (s & (LEN-1))].longValue();
                 if ((s & (LEN-1)) == 0)
                     nexts = n0.longValue();
                 else

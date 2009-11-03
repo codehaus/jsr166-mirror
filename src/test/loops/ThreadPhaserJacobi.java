@@ -39,7 +39,7 @@ public class ThreadPhaserJacobi {
         }
 
         int granularity = n * n / nprocs;
-        dimGran = (int)(Math.sqrt(granularity));
+        dimGran = (int) Math.sqrt(granularity);
 
         // allocate enough space for edges
         int dim = n+2;
@@ -67,7 +67,7 @@ public class ThreadPhaserJacobi {
             driver.compute();
 
             long time = System.currentTimeMillis() - startTime;
-            double secs = ((double)time) / 1000.0;
+            double secs = (double) time / 1000.0;
 
             System.out.println("Compute Time: " + secs);
         }
@@ -163,8 +163,8 @@ public class ThreadPhaserJacobi {
 
             int rows = hiRow - loRow + 1;
             int cols = hiCol - loCol + 1;
-            int rblocks = Math.round((float)rows / dimGran);
-            int cblocks = Math.round((float)cols / dimGran);
+            int rblocks = Math.round((float) rows / dimGran);
+            int cblocks = Math.round((float) cols / dimGran);
 
             int n = rblocks * cblocks;
 

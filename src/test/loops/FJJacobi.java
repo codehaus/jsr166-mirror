@@ -68,7 +68,7 @@ public class FJJacobi {
             fjp.invoke(driver);
 
             long time = System.currentTimeMillis() - startTime;
-            double secs = ((double)time) / 1000.0;
+            double secs = (double) time / 1000.0;
 
             System.out.println("Compute Time: " + secs);
             System.out.println("Workers: " + fjp.getPoolSize());

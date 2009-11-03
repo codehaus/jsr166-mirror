@@ -62,7 +62,7 @@ public class UnboundedQueueFillEmptyLoops {
         total += sum;
         long endTime = System.nanoTime();
         long time = endTime - startTime;
-        double secs = (double)(time) / 1000000000.0;
+        double secs = (double) time / 1000000000.0;
         System.out.println("Time: " + secs);
     }
 

@@ -225,7 +225,7 @@ public class TSPExchangerTest {
         //        Thread.sleep(100);
 
         long elapsed = stopTime - startTime;
-        double secs = (double)elapsed / 1000000000.0;
+        double secs = (double) elapsed / 1000000000.0;
         p.printSnapshot(secs);
     }
 
@@ -300,7 +300,7 @@ public class TSPExchangerTest {
          */
         void printSnapshot(double secs) {
             int xs = totalExchanges();
-            long rate = (xs == 0) ? 0L : (long)((secs * 1000000000.0) / xs);
+            long rate = (xs == 0) ? 0L : (long) ((secs * 1000000000.0) / xs);
             Chromosome bestc = subpops[0].chromosomes[0];
             Chromosome worstc = bestc;
             for (int k = 0; k < subpops.length; ++k) {
@@ -592,7 +592,7 @@ public class TSPExchangerTest {
                 f += cities.distanceBetween(p, n);
                 p = n;
             }
-            fitness = (int)(f / len);
+            fitness = (int) (f / len);
         }
 
         /**
@@ -661,12 +661,12 @@ public class TSPExchangerTest {
 
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    double dx = (double)xPts[i] - (double)xPts[j];
-                    double dy = (double)yPts[i] - (double)yPts[j];
+                    double dx = (double) xPts[i] - (double) xPts[j];
+                    double dy = (double) yPts[i] - (double) yPts[j];
                     double dd = Math.hypot(dx, dy) / 2.0;
                     long ld = Math.round(dd);
                     distances[i][j] = (ld >= Integer.MAX_VALUE) ?
-                        Integer.MAX_VALUE : (int)ld;
+                        Integer.MAX_VALUE : (int) ld;
                 }
             }
         }
@@ -679,7 +679,7 @@ public class TSPExchangerTest {
         }
 
         // Scale ints to doubles in [0,1)
-        static final double PSCALE = (double)0x80000000L;
+        static final double PSCALE = (double) 0x80000000L;
 
         /**
          * Return distance for points scaled in [0,1). This simplifies
@@ -689,8 +689,8 @@ public class TSPExchangerTest {
          * http://www.densis.fee.unicamp.br/~moscato/TSPBIB_home.html
          */
         double unitDistanceBetween(int i, int j) {
-            double dx = ((double)xPts[i] - (double)xPts[j]) / PSCALE;
-            double dy = ((double)yPts[i] - (double)yPts[j]) / PSCALE;
+            double dx = ((double) xPts[i] - (double) xPts[j]) / PSCALE;
+            double dy = ((double) yPts[i] - (double) yPts[j]) / PSCALE;
             return Math.hypot(dx, dy);
         }
 

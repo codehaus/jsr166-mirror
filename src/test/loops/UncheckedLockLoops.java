@@ -155,7 +155,7 @@ public final class UncheckedLockLoops {
             if (print) {
                 long tpi = time / (iters * nthreads);
                 System.out.print("\t" + LoopHelpers.rightJustify(tpi) + " ns per update");
-                //                double secs = (double)(time) / 1000000000.0;
+                //                double secs = (double) time / 1000000000.0;
                 //                System.out.print("\t " + secs + "s run time");
                 System.out.println();
             }

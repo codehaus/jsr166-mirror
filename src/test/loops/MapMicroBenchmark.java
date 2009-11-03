@@ -102,15 +102,15 @@ public class MapMicroBenchmark {
         jobs[2] = new Job("Integer   ", is, Integer.class);
 
         Object[] ls = new Object[n];
-        for (int i = 0; i < n; i++) ls[i] = Long.valueOf((long)i);
+        for (int i = 0; i < n; i++) ls[i] = Long.valueOf((long) i);
         jobs[3] = new Job("Long      ", ls, Long.class);
 
         Object[] fs = new Object[n];
-        for (int i = 0; i < n; i++) fs[i] = Float.valueOf((float)i);
+        for (int i = 0; i < n; i++) fs[i] = Float.valueOf((float) i);
         jobs[4] = new Job("Float     ", fs, Float.class);
 
         Object[] ds = new Object[n];
-        for (int i = 0; i < n; i++) ds[i] = Double.valueOf((double)i);
+        for (int i = 0; i < n; i++) ds[i] = Double.valueOf((double) i);
         jobs[5] = new Job("Double    ", ds, Double.class);
 
         Object[] bs = new Object[n];
@@ -350,7 +350,7 @@ public class MapMicroBenchmark {
                 if (minIters != 1 && randomSearches)
                     shuffleSome(ins, len, len >>> 3);
             }
-            long ops = ((long)j) * len * OPS_PER_ITER;
+            long ops = ((long) j) * len * OPS_PER_ITER;
             lastSum = sum;
             return elapsed / ops;
         }
@@ -444,7 +444,7 @@ public class MapMicroBenchmark {
                 int c = in.read();
                 if (c < 0)
                     break outer;
-                char ch = (char)c;
+                char ch = (char) c;
                 if (ch == '\n') {
                     keys[k++] = sb.toString();
                     break;

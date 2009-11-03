@@ -103,7 +103,7 @@ public class TimeoutExchangerLoops {
         if (iters <= 0) iters = 1;
         long rate = iters * 1000L * 1000L * 1000L / elapsed;
         long npt = elapsed / iters;
-        double failRate = (fails * 100.0) / (double)iters;
+        double failRate = (fails * 100.0) / (double) iters;
         System.out.printf("%9d it/s ", rate);
         System.out.printf("%9d ns/it", npt);
         System.out.printf("%9.5f%% fails", failRate);

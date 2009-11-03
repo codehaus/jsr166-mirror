@@ -40,7 +40,7 @@ public class Finals {
             long s = initialSeed(this);
             int n = iters;
             while (!done && n-- > 0) {
-                int k = (int)(s & (LEN-1));
+                int k = (int) (s & (LEN-1));
                 int l = (k+1) & (LEN-1);
                 nums[k] = new Long(s);
                 nums[l] = new Long(s);
@@ -57,7 +57,7 @@ public class Finals {
             int n = iters;
             long s = initialSeed(this);
             while (s != 0 && n > 0) {
-                long nexts = nums[(int)(s & (LEN-1))].longValue();
+                long nexts = nums[(int) (s & (LEN-1))].longValue();
                 if (nexts != s)
                     --n;
                 else if (done)

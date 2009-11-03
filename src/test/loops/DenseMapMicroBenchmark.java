@@ -65,7 +65,7 @@ public class DenseMapMicroBenchmark {
 	// Print out absolute and relative times, calibrated against first job
 	for (int i = 0; i < jobs.length; i++) {
 	    long time = jobs[i].nanos/itemsPerTest;
-	    double ratio = (double)jobs[i].nanos / (double)jobs[0].nanos;
+	    double ratio = (double) jobs[i].nanos / (double) jobs[0].nanos;
 	    System.out.printf(format, jobs[i].name(), time, ratio);
 	}
     }

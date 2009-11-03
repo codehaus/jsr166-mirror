@@ -72,7 +72,7 @@ public class ConcurrentDequeLoops {
             // transform it, and put back in.
             try {
                 barrier.await();
-                int l = (int)System.nanoTime();
+                int l = (int) System.nanoTime();
                 int takes = 0;
                 for (;;) {
                     Integer item;

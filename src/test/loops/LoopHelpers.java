@@ -108,7 +108,7 @@ class LoopHelpers {
         int x = -1831433054;
         public XorShift32Random(int seed) { x = seed;  }
         public XorShift32Random() {
-            this((int)System.nanoTime() + seq.getAndAdd(129));
+            this((int) System.nanoTime() + seq.getAndAdd(129));
         }
         public int next() {
             x ^= x << 6;
@@ -128,7 +128,7 @@ class LoopHelpers {
         int w = 273326509;
         public MarsagliaRandom(int seed) { x = seed; }
         public MarsagliaRandom() {
-            this((int)System.nanoTime() + seq.getAndAdd(129));
+            this((int) System.nanoTime() + seq.getAndAdd(129));
         }
         public int next() {
             int t = x ^ (x << 11);
@@ -164,7 +164,7 @@ class LoopHelpers {
         public int next() {
             long nextseed = (seed * multiplier + addend) & mask;
             seed = nextseed;
-            return ((int)(nextseed >>> 17)) & 0x7FFFFFFF;
+            return ((int) (nextseed >>> 17)) & 0x7FFFFFFF;
         }
     }
 

@@ -10,10 +10,10 @@ import java.util.*;
 /**
  * A computation that is broken into a series of task executions, each
  * separated by a Phaser arrival.  Concrete subclasses must
- * define method <tt>compute</tt>, that performs the action occurring
+ * define method {@code compute}, that performs the action occurring
  * at each step of the barrier.  Upon invocation of this task, the
- * <tt>compute</tt> method is repeatedly invoked until the barrier
- * <tt>isTerminated</tt> or until its execution throws an exception.
+ * {@code compute} method is repeatedly invoked until the barrier
+ * {@code isTerminated} or until its execution throws an exception.
  *
  * <p> <b>Sample Usage.</b> Here is a sketch of a set of CyclicActions
  * that each perform 500 iterations of an imagined image smoothing

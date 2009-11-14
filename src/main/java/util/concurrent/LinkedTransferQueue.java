@@ -204,24 +204,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * additional GC bookkeeping ("write barriers") that are sometimes
      * more costly than the writes themselves because of contention).
      *
-     * Removal of interior nodes (due to timed out or interrupted
-     * waits, or calls to remove(x) or Iterator.remove) can use a
-     * scheme roughly similar to that described in Scherer, Lea, and
-     * Scott's SynchronousQueue. Given a predecessor, we can unsplice
-     * any node except the (actual) tail of the queue. To avoid
-     * build-up of cancelled trailing nodes, upon a request to remove
-     * a trailing node, it is placed in field "cleanMe" to be
-     * unspliced upon the next call to unsplice any other node.
-     * Situations needing such mechanics are not common but do occur
-     * in practice; for example when an unbounded series of short
-     * timed calls to poll repeatedly time out but never otherwise
-     * fall off the list because of an untimed call to take at the
-     * front of the queue. Note that maintaining field cleanMe does
-     * not otherwise much impact garbage retention even if never
-     * cleared by some other call because the held node will
-     * eventually either directly or indirectly lead to a self-link
-     * once off the list.
-     *
      * *** Overview of implementation ***
      *
      * We use a threshold-based approach to updates, with a slack
@@ -237,15 +219,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * per-thread one available, but even ThreadLocalRandom is too
      * heavy for these purposes.
      *
-     * With such a small slack threshold value, it is rarely
-     * worthwhile to augment this with path short-circuiting; i.e.,
-     * unsplicing nodes between head and the first unmatched node, or
-     * similarly for tail, rather than advancing head or tail
-     * proper. However, it is used (in awaitMatch) immediately before
-     * a waiting thread starts to block, as a final bit of helping at
-     * a point when contention with others is extremely unlikely
-     * (since if other threads that could release it are operating,
-     * then the current thread wouldn't be blocking).
+     * With such a small slack threshold value, it is not worthwhile
+     * to augment this with path short-circuiting (i.e., unsplicing
+     * interior nodes) except in the case of cancellation/removal (see
+     * below).
      *
      * We allow both the head and tail fields to be null before any
      * nodes are enqueued; initializing upon first append.  This
@@ -327,6 +304,70 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *    versa) compared to their predecessors receive additional
      *    chained spins, reflecting longer paths typically required to
      *    unblock threads during phase changes.
+     *
+     *
+     * ** Unlinking removed interior nodes **
+     *
+     * In addition to minimizing garbage retention via self-linking
+     * described above, we also unlink removed interior nodes. These
+     * may arise due to timed out or interrupted waits, or calls to
+     * remove(x) or Iterator.remove.  Normally, given a node that was
+     * at one time known to be the predecessor of some node s that is
+     * to be removed, we can unsplice s by CASing the next field of
+     * its predecessor if it still points to s (otherwise s must
+     * already have been removed or is now offlist). But there are two
+     * situations in which we cannot guarantee to make node s
+     * unreachable in this way: (1) If s is the trailing node of list
+     * (i.e., with null next), then it is pinned as the target node
+     * for appends, so can only be removed later when other nodes are
+     * appended. (2) We cannot necessarily unlink s given a
+     * predecessor node that is matched (including the case of being
+     * cancelled): the predecessor may already be already unspliced,
+     * in which case some previous reachable node may still point to
+     * s.  (For further explanation see Herlihy & Shavit "The Art of
+     * Multiprocessor Programming" chapter 9).  Although, in both
+     * cases, we can rule out the need for further action if either s
+     * or its predecessor are (or can be made to be) at, or fall off
+     * from, the head of list.
+     *
+     * Without taking these into account, it would be possible for an
+     * unbounded number of supposedly removed nodes to remain
+     * reachable.  Situations leading to such buildup are uncommon but
+     * can occur in practice; for example when a series of short timed
+     * calls to poll repeatedly time out but never otherwise fall off
+     * the list because of an untimed call to take at the front of the
+     * queue.
+     *
+     * When these cases arise, rather than always retraversing the
+     * entire list to find an actual predecessor to unlink (which
+     * won't help for case (1) anyway), we record a conservative
+     * estimate of possible unsplice failures (in "sweepVotes).  We
+     * trigger a full sweep when the estimate exceeds a threshold
+     * indicating the maximum number of estimated removal failures to
+     * tolerate before sweeping through, unlinking cancelled nodes
+     * that were not unlinked upon initial removal. We perform sweeps
+     * by the thread hitting threshold (rather than background threads
+     * or by spreading work to other threads) because in the main
+     * contexts in which removal occurs, the caller is already
+     * timed-out, cancelled, or performing a potentially O(n)
+     * operation (i.e., remove(x)), none of which are time-critical
+     * enough to warrant the overhead that alternatives would impose
+     * on other threads.
+     *
+     * Because the sweepVotes estimate is conservative, and because
+     * nodes become unlinked "naturally" as they fall off the head of
+     * the queue, and because we allow votes to accumulate even while
+     * sweeps are in progress, there are typically signficantly fewer
+     * such nodes than estimated.  Choice of a threshold value
+     * balances the likelihood of wasted effort and contention, versus
+     * providing a worst-case bound on retention of interior nodes in
+     * quiescent queues. The value defined below was chosen
+     * empirically to balance these under various timeout scenarios.
+     *
+     * Note that we cannot self-link unlinked interior nodes during
+     * sweeps. However, the associated garbage chains terminate when
+     * some successor ultimately falls off the head of the list and is
+     * self-linked.
      */
 
     /** True if on multiprocessor */
@@ -353,11 +394,19 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private static final int CHAINED_SPINS = FRONT_SPINS >>> 1;
 
     /**
+     * The maximum number of estimated removal failures (sweepVotes)
+     * to tolerate before sweeping through the queue unlinking
+     * cancelled nodes that were not unlinked upon initial
+     * removal. See above for explanation. The value must be at least
+     * two to avoid useless sweeps when removing trailing nodes.
+     */
+    static final int SWEEP_THRESHOLD = 32;
+
+    /**
      * Queue nodes. Uses Object, not E, for items to allow forgetting
      * them after use.  Relies heavily on Unsafe mechanics to minimize
-     * unnecessary ordering constraints: Writes that intrinsically
-     * precede or follow CASes use simple relaxed forms.  Other
-     * cleanups use releasing/lazy writes.
+     * unnecessary ordering constraints: Writes that are intrinsically
+     * ordered wrt other accesses or CASes use simple relaxed forms.
      */
     static final class Node {
         final boolean isData;   // false if this is a request node
@@ -393,13 +442,17 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Sets item to self (using a releasing/lazy write) and waiter
-         * to null, to avoid garbage retention after extracting or
-         * cancelling.
+         * Sets item to self and waiter to null, to avoid garbage
+         * retention after matching or cancelling. Uses relaxed writes
+         * bacause order is already constrained in the only calling
+         * contexts: item is forgotten only after volatile/atomic
+         * mechanics that extract items.  Similarly, clearing waiter
+         * follows either CAS or return from park (if ever parked;
+         * else we don't care).
          */
         final void forgetContents() {
-            UNSAFE.putOrderedObject(this, itemOffset, this);
-            UNSAFE.putOrderedObject(this, waiterOffset, null);
+            UNSAFE.putObject(this, itemOffset, this);
+            UNSAFE.putObject(this, waiterOffset, null);
         }
 
         /**
@@ -457,11 +510,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /** head of the queue; null until first enqueue */
     transient volatile Node head;
 
-    /** predecessor of dangling unspliceable node */
-    private transient volatile Node cleanMe; // decl here reduces contention
-
     /** tail of the queue; null until first append */
     private transient volatile Node tail;
+
+    /** The number of apparent failures to unsplice removed nodes */
+    private transient volatile int sweepVotes;
 
     // CAS methods for fields
     private boolean casTail(Node cmp, Node val) {
@@ -472,8 +525,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
     }
 
-    private boolean casCleanMe(Node cmp, Node val) {
-        return UNSAFE.compareAndSwapObject(this, cleanMeOffset, cmp, val);
+    private boolean casSweepVotes(int cmp, int val) {
+        return UNSAFE.compareAndSwapInt(this, sweepVotesOffset, cmp, val);
     }
 
     /*
@@ -515,10 +568,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                         break;
                     if (p.casItem(item, e)) { // match
                         for (Node q = p; q != h;) {
-                            Node n = q.next;  // update head by 2
-                            if (n != null)    // unless singleton
-                                q = n;
-                            if (head == h && casHead(h, q)) {
+                            Node n = q.next;  // update by 2 unless singleton
+                            if (head == h && casHead(h, n == null? q : n)) {
                                 h.forgetNext();
                                 break;
                             }                 // advance and retry
@@ -608,7 +659,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 return this.<E>cast(item);
             }
             if ((w.isInterrupted() || (timed && nanos <= 0)) &&
-                    s.casItem(e, s)) {       // cancel
+                    s.casItem(e, s)) {        // cancel
                 unsplice(pred, s);
                 return e;
             }
@@ -618,9 +669,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     randomYields = ThreadLocalRandom.current();
             }
             else if (spins > 0) {             // spin
-                if (--spins == 0)
-                    shortenHeadPath();        // reduce slack before blocking
-                else if (randomYields.nextInt(CHAINED_SPINS) == 0)
+                --spins;
+                if (randomYields.nextInt(CHAINED_SPINS) == 0)
                     Thread.yield();           // occasionally yield
             }
             else if (s.waiter == null) {
@@ -634,8 +684,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
             else {
                 LockSupport.park(this);
-                s.waiter = null;
-                spins = -1;                   // spin if front upon wakeup
             }
         }
     }
@@ -654,27 +702,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 return CHAINED_SPINS;
         }
         return 0;
-    }
-
-    /**
-     * Tries (once) to unsplice nodes between head and first unmatched
-     * or trailing node; failing on contention.
-     */
-    private void shortenHeadPath() {
-        Node h, hn, p, q;
-        if ((p = h = head) != null && h.isMatched() &&
-            (q = hn = h.next) != null) {
-            Node n;
-            while ((n = q.next) != q) {
-                if (n == null || !q.isMatched()) {
-                    if (hn != q && h.next == hn)
-                        h.casNext(hn, q);
-                    break;
-                }
-                p = q;
-                q = n;
-            }
-        }
     }
 
     /* -------------- Traversal methods -------------- */
@@ -789,7 +816,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         public final void remove() {
             Node p = lastRet;
             if (p == null) throw new IllegalStateException();
-            findAndRemoveDataNode(lastPred, p);
+            if (p.tryMatchData())
+                unsplice(lastPred, p);
         }
     }
 
@@ -799,99 +827,64 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Unsplices (now or later) the given deleted/cancelled node with
      * the given predecessor.
      *
-     * @param pred predecessor of node to be unspliced
+     * @param pred a node that was at one time known to be the
+     * predecessor of s, or null or s itself if s is/was at head
      * @param s the node to be unspliced
      */
-    private void unsplice(Node pred, Node s) {
-        s.forgetContents(); // clear unneeded fields
+    final void unsplice(Node pred, Node s) {
+        s.forgetContents(); // forget unneeded fields
         /*
-         * At any given time, exactly one node on list cannot be
-         * unlinked -- the last inserted node. To accommodate this, if
-         * we cannot unlink s, we save its predecessor as "cleanMe",
-         * processing the previously saved version first. Because only
-         * one node in the list can have a null next, at least one of
-         * node s or the node previously saved can always be
-         * processed, so this always terminates.
+         * See above for rationale. Briefly: if pred still points to
+         * s, try to unlink s.  If s cannot be unlinked, because it is
+         * trailing node or pred might be unlinked, and neither pred
+         * nor s are head or offlist, add to sweepVotes, and if enough
+         * votes have accumulated, sweep.
          */
-        if (pred != null && pred != s) {
-            while (pred.next == s) {
-                Node oldpred = (cleanMe == null) ? null : reclean();
-                Node n = s.next;
-                if (n != null) {
-                    if (n != s)
-                        pred.casNext(s, n);
-                    break;
+        if (pred != null && pred != s && pred.next == s) {
+            Node n = s.next;
+            if (n == null ||
+                (n != s && pred.casNext(s, n) && pred.isMatched())) {
+                for (;;) {               // check if at, or could be, head
+                    Node h = head;
+                    if (h == pred || h == s || h == null)
+                        return;          // at head or list empty
+                    if (!h.isMatched())
+                        break;
+                    Node hn = h.next;
+                    if (hn == null)
+                        return;          // now empty
+                    if (hn != h && casHead(h, hn))
+                        h.forgetNext();  // advance head
                 }
-                if (oldpred == pred ||      // Already saved
-                    ((oldpred == null || oldpred.next == s) &&
-                     casCleanMe(oldpred, pred))) {
-                    break;
+                if (pred.next != pred && s.next != s) { // recheck if offlist
+                    for (;;) {           // sweep now if enough votes
+                        int v = sweepVotes;
+                        if (v < SWEEP_THRESHOLD) {
+                            if (casSweepVotes(v, v + 1))
+                                break;
+                        }
+                        else if (casSweepVotes(v, 0)) {
+                            sweep();
+                            break;
+                        }
+                    }
                 }
             }
         }
     }
 
     /**
-     * Tries to unsplice the deleted/cancelled node held in cleanMe
-     * that was previously uncleanable because it was at tail.
-     *
-     * @return current cleanMe node (or null)
+     * Unlink matched nodes encountered in a traversal from head
      */
-    private Node reclean() {
-        /*
-         * cleanMe is, or at one time was, predecessor of a cancelled
-         * node s that was the tail so could not be unspliced.  If it
-         * is no longer the tail, try to unsplice if necessary and
-         * make cleanMe slot available.  This differs from similar
-         * code in unsplice() because we must check that pred still
-         * points to a matched node that can be unspliced -- if not,
-         * we can (must) clear cleanMe without unsplicing.  This can
-         * loop only due to contention.
-         */
-        Node pred;
-        while ((pred = cleanMe) != null) {
-            Node s = pred.next;
-            Node n;
-            if (s == null || s == pred || !s.isMatched())
-                casCleanMe(pred, null); // already gone
-            else if ((n = s.next) != null) {
-                if (n != s)
-                    pred.casNext(s, n);
-                casCleanMe(pred, null);
-            }
+    private void sweep() {
+        Node p = head, s, n;
+        while (p != null && (s = p.next) != null && (n = s.next) != null) {
+            if (p == s || s == n)
+                p = head; // stale
+            else if (s.isMatched())
+                p.casNext(s, n);
             else
-                break;
-        }
-        return pred;
-    }
-
-    /**
-     * Main implementation of Iterator.remove(). Finds
-     * and unsplices the given data node.
-     *
-     * @param possiblePred possible predecessor of s
-     * @param s the node to remove
-     */
-    final void findAndRemoveDataNode(Node possiblePred, Node s) {
-        assert s.isData;
-        if (s.tryMatchData()) {
-            if (possiblePred != null && possiblePred.next == s)
-                unsplice(possiblePred, s); // was actual predecessor
-            else {
-                for (Node pred = null, p = head; p != null; ) {
-                    if (p == s) {
-                        unsplice(pred, p);
-                        break;
-                    }
-                    if (p.isUnmatchedRequest())
-                        break;
-                    pred = p;
-                    if ((p = p.next) == pred) { // stale
-                        pred = null;
-                        p = head;
-                    }
-                }
-            }
+                p = s;
         }
     }
 
@@ -1223,8 +1216,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         objectFieldOffset(UNSAFE, "head", LinkedTransferQueue.class);
     private static final long tailOffset =
         objectFieldOffset(UNSAFE, "tail", LinkedTransferQueue.class);
-    private static final long cleanMeOffset =
-        objectFieldOffset(UNSAFE, "cleanMe", LinkedTransferQueue.class);
+    private static final long sweepVotesOffset =
+        objectFieldOffset(UNSAFE, "sweepVotes", LinkedTransferQueue.class);
 
     static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
                                   String field, Class<?> klazz) {
@@ -1237,5 +1230,4 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             throw error;
         }
     }
-
 }

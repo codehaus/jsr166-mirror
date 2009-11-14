@@ -5,7 +5,7 @@
  */
 
 import java.util.concurrent.*;
-//import jsr166y.*;
+
 
 public class TimeoutProducerConsumerLoops {
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
@@ -17,10 +17,14 @@ public class TimeoutProducerConsumerLoops {
     static final int POOL_MASK = POOL_SIZE-1;
     static final Integer[] intPool = new Integer[POOL_SIZE];
     static {
-        for (int i = 0; i < POOL_SIZE; ++i)
+        for (int i = 0; i < POOL_SIZE; ++i) 
             intPool[i] = Integer.valueOf(i);
     }
 
+    // max lag between a producer and consumer to avoid 
+    // this becoming a GC test rather than queue test.
+    // Used only per-pair to lessen impact on queue sync
+    static final int LAG_MASK = (1 << 12) - 1;
 
     static boolean print = false;
     static int producerSum;
@@ -43,7 +47,7 @@ public class TimeoutProducerConsumerLoops {
         int maxPairs = NCPUS * 3 / 2;
         int iters = 1000000;
 
-        if (args.length > 0)
+        if (args.length > 0) 
             maxPairs = Integer.parseInt(args[0]);
 
         print = true;
@@ -55,8 +59,8 @@ public class TimeoutProducerConsumerLoops {
             if (i == k) {
                 k = i << 1;
                 i = i + (i >>> 1);
-            }
-            else
+            } 
+            else 
                 i = k;
         }
         pool.shutdown();
@@ -104,21 +108,23 @@ public class TimeoutProducerConsumerLoops {
         oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE, true), n, iters/16);
 
     }
-
+    
     static abstract class Stage implements Runnable {
         final int iters;
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
-        Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            queue = q;
+        final Phaser lagPhaser;
+        Stage (BlockingQueue<Integer> q, CyclicBarrier b, Phaser s, int iters) {
+            queue = q; 
             barrier = b;
+            lagPhaser = s;
             this.iters = iters;
         }
     }
 
     static class Producer extends Stage {
-        Producer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            super(q, b, iters);
+        Producer(BlockingQueue<Integer> q, CyclicBarrier b, Phaser s, int iters) {
+            super(q, b, s, iters);
         }
 
         public void run() {
@@ -136,6 +142,8 @@ public class TimeoutProducerConsumerLoops {
                         ++i;
                         if (timeout > 1)
                             timeout--;
+                        if ((i & LAG_MASK) == LAG_MASK)
+                            lagPhaser.arriveAndAwaitAdvance();
                     }
                     else
                         timeout++;
@@ -143,16 +151,16 @@ public class TimeoutProducerConsumerLoops {
                 addProducerSum(s);
                 barrier.await();
             }
-            catch (Exception ie) {
-                ie.printStackTrace();
-                return;
+            catch (Exception ie) { 
+                ie.printStackTrace(); 
+                return; 
             }
         }
     }
 
     static class Consumer extends Stage {
-        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
-            super(q, b, iters);
+        Consumer(BlockingQueue<Integer> q, CyclicBarrier b, Phaser s, int iters) { 
+            super(q, b, s, iters);
         }
 
         public void run() {
@@ -163,7 +171,7 @@ public class TimeoutProducerConsumerLoops {
                 int i = 0;
                 long timeout = 1000;
                 while (i < iters) {
-                    Integer e = queue.poll(timeout,
+                    Integer e = queue.poll(timeout, 
                                            TimeUnit.NANOSECONDS);
                     if (e != null) {
                         l = LoopHelpers.compute4(e.intValue());
@@ -171,6 +179,8 @@ public class TimeoutProducerConsumerLoops {
                         ++i;
                         if (timeout > 1)
                             --timeout;
+                        if ((i & LAG_MASK) == LAG_MASK)
+                            lagPhaser.arriveAndAwaitAdvance();
                     }
                     else
                         ++timeout;
@@ -178,9 +188,9 @@ public class TimeoutProducerConsumerLoops {
                 addConsumerSum(s);
                 barrier.await();
             }
-            catch (Exception ie) {
-                ie.printStackTrace();
-                return;
+            catch (Exception ie) { 
+                ie.printStackTrace(); 
+                return; 
             }
         }
 
@@ -190,8 +200,9 @@ public class TimeoutProducerConsumerLoops {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(npairs * 2 + 1, timer);
         for (int i = 0; i < npairs; ++i) {
-            pool.execute(new Producer(q, barrier, iters));
-            pool.execute(new Consumer(q, barrier, iters));
+            Phaser s = new Phaser(2);
+            pool.execute(new Producer(q, barrier, s, iters));
+            pool.execute(new Consumer(q, barrier, s, iters));
         }
         barrier.await();
         barrier.await();
@@ -205,12 +216,12 @@ public class TimeoutProducerConsumerLoops {
     static final class LTQasSQ<T> extends LinkedTransferQueue<T> {
         LTQasSQ() { super(); }
         public void put(T x) {
-            try { super.transfer(x);
+            try { super.transfer(x); 
             } catch (InterruptedException ex) { throw new Error(); }
         }
 
         public boolean offer(T x, long timeout, TimeUnit unit) {
-            return super.offer(x, timeout, unit);
+            return super.offer(x, timeout, unit); 
         }
 
     }

@@ -324,9 +324,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * for appends, so can only be removed later when other nodes are
      * appended. (2) We cannot necessarily unlink s given a
      * predecessor node that is matched (including the case of being
-     * cancelled): the predecessor may already be already unspliced,
-     * in which case some previous reachable node may still point to
-     * s.  (For further explanation see Herlihy & Shavit "The Art of
+     * cancelled): the predecessor may already be unspliced, in which
+     * case some previous reachable node may still point to s.
+     * (For further explanation see Herlihy & Shavit "The Art of
      * Multiprocessor Programming" chapter 9).  Although, in both
      * cases, we can rule out the need for further action if either s
      * or its predecessor are (or can be made to be) at, or fall off
@@ -359,7 +359,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Because the sweepVotes estimate is conservative, and because
      * nodes become unlinked "naturally" as they fall off the head of
      * the queue, and because we allow votes to accumulate even while
-     * sweeps are in progress, there are typically signficantly fewer
+     * sweeps are in progress, there are typically significantly fewer
      * such nodes than estimated.  Choice of a threshold value
      * balances the likelihood of wasted effort and contention, versus
      * providing a worst-case bound on retention of interior nodes in

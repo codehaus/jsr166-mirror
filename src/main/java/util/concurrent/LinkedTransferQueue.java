@@ -341,7 +341,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * When these cases arise, rather than always retraversing the
      * entire list to find an actual predecessor to unlink (which
      * won't help for case (1) anyway), we record a conservative
-     * estimate of possible unsplice failures (in "sweepVotes).  We
+     * estimate of possible unsplice failures (in "sweepVotes").  We
      * trigger a full sweep when the estimate exceeds a threshold
      * indicating the maximum number of estimated removal failures to
      * tolerate before sweeping through, unlinking cancelled nodes

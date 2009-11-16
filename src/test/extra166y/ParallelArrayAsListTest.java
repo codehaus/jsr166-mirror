@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 import junit.framework.*;
@@ -14,9 +14,9 @@ import extra166y.*;
 import java.io.*;
 
 public class ParallelArrayAsListTest extends JSR166TestCase{
-    
+
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());	
+	junit.textui.TestRunner.run (suite());
     }
 
     public static Test suite() {
@@ -26,7 +26,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     static List populatedArray(int n){
 	List a = ParallelArray.createEmpty(n, Object.class, ParallelArray.defaultExecutor()).asList();
         assertTrue(a.isEmpty());
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             a.add(new Integer(i));
         assertFalse(a.isEmpty());
         assertEquals(n, a.size());
@@ -56,10 +56,10 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
         for (int i = 0; i < SIZE-1; ++i)
             ints[i] = new Integer(i);
 	List a = ParallelArray.createUsingHandoff(ints, ParallelArray.defaultExecutor()).asList();
-        for (int i = 0; i < SIZE; ++i) 
+        for (int i = 0; i < SIZE; ++i)
             assertEquals(ints[i], a.get(i));
     }
-        
+
 
     /**
      *   addAll  adds each element from the given collection
@@ -128,7 +128,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
         assertEquals(a.hashCode(), b.hashCode());
     }
 
-    
+
     /**
      *   containsAll returns true for collection with subset of elements
      */
@@ -170,7 +170,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   iterator() returns an iterator containing the elements of the list 
+     *   iterator() returns an iterator containing the elements of the list
      */
     public void testIterator() {
 	List full = populatedArray(SIZE);
@@ -202,7 +202,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
         for (int i = 0; i < 3; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     /**
      *   lastIndexOf returns the index for the given object
@@ -355,7 +355,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             shouldThrow();
         } catch(IndexOutOfBoundsException e){}
     }
-    
+
     /**
      *   get throws an IndexOutOfBoundsException on a too high index
      */
@@ -379,7 +379,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             shouldThrow();
         } catch(IndexOutOfBoundsException e){}
     }
-    
+
     /**
      *   set throws an IndexOutOfBoundsException on a too high index
      */
@@ -403,7 +403,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             shouldThrow();
         } catch(IndexOutOfBoundsException e){}
     }
-    
+
     /**
      *   add throws an IndexOutOfBoundsException on a too high index
      */
@@ -440,7 +440,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             shouldThrow();
         } catch(IndexOutOfBoundsException e){}
     }
-    
+
     /**
      *   addAll throws an IndexOutOfBoundsException on a negative index
      */
@@ -451,7 +451,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             shouldThrow();
         } catch(IndexOutOfBoundsException e){}
     }
-    
+
     /**
      *   addAll throws an IndexOutOfBoundsException on a too high index
      */
@@ -515,7 +515,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 
     /**
      *   subList throws IndexOutOfBoundsException when the second index
-     *  is lower then the first 
+     *  is lower then the first
      */
     public void testSubList3_IndexOutOfBoundsException() {
         try {
@@ -526,5 +526,5 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
         } catch(IndexOutOfBoundsException e){}
     }
 
-    
+
 }

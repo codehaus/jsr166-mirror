@@ -16,7 +16,7 @@ public class FilterDemo {
     /**
      * Sequential version, for performance comparison
      */
-    static<T> List<T> seqFilter(T[] list, 
+    static<T> List<T> seqFilter(T[] list,
                                 Ops.Predicate<T> pred) {
         ArrayList<T> result = new ArrayList<T>();
         int n = list.length;
@@ -56,7 +56,7 @@ public class FilterDemo {
     public static void main(String[] args) throws Exception {
         int n = 1 << 9;
         Rand[] array = new Rand[n];
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             array[i] = new Rand(i);
         final IsPrime pred = new IsPrime();
         final NextRand nextRand = new NextRand();
@@ -78,7 +78,7 @@ public class FilterDemo {
             elapsed = (double)(now - last) / NPS;
             last = now;
             System.out.printf("seq:    %7.3f\n", elapsed);
-            //            for (Rand r : array) r.next(); 
+            //            for (Rand r : array) r.next();
         }
         int pass = 0;
         int ps = 2;
@@ -99,7 +99,7 @@ public class FilterDemo {
                 System.out.printf("ps %2d:  %7.3f\n", ps, elapsed);
             }
             if (pass == 0) {
-                if (ps >= NCPU) 
+                if (ps >= NCPU)
                     pass = 1;
                 else
                     ps <<= 1;
@@ -138,7 +138,7 @@ public class FilterDemo {
         }
 
         public String toString() {
-            return String.valueOf(seed); 
+            return String.valueOf(seed);
         }
     }
 

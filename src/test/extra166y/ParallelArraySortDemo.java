@@ -52,12 +52,12 @@ class ParallelArraySortDemo {
             }
         }
     }
-    
+
     static void randomFill(Long[] a) {
         for (int i = 0; i < a.length; ++i)
             a[i] = new Long(rng.nextLong());
     }
-    
+
     static void shuffle(Long[] a) {
         int n = a.length;
         for (int i = n; i > 1; --i) {

@@ -44,7 +44,7 @@ class LongSetOpsDemo {
     }
 
     static class Evens implements Ops.IntToLong {
-        public long op(int i) { 
+        public long op(int i) {
             return ((long)(i << 1));
         }
     }
@@ -249,7 +249,7 @@ class LongSetOpsDemo {
         System.out.printf("Seq index time :      %7.3f\n", de);
     }
 
-    static void seqRemoveAll(ParallelLongArray pa, 
+    static void seqRemoveAll(ParallelLongArray pa,
                              Ops.LongPredicate selector) {
         long[] a = pa.getArray();
         int n = pa.size();
@@ -262,7 +262,7 @@ class LongSetOpsDemo {
         pa.setLimit(k);
     }
 
-    static ArrayList<Long> seqSelectAll(ParallelLongArray pa, 
+    static ArrayList<Long> seqSelectAll(ParallelLongArray pa,
                                         Ops.LongPredicate selector) {
         ArrayList<Long> al = new ArrayList<Long>();
         long[] a = pa.getArray();
@@ -278,7 +278,7 @@ class LongSetOpsDemo {
     static long[] seqUnique(long[] a) {
         int n = a.length;
         HashSet<Long> m = new HashSet<Long>(n);
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             m.add(Long.valueOf(a[i]));
         int ul = m.size();
         long[] u = new long[ul];
@@ -287,7 +287,7 @@ class LongSetOpsDemo {
             u[k++] = e;
         return u;
     }
-    
+
     static void checkSorted (ParallelLongArray pa)  {
         int n = pa.size();
         for (int i = 0; i < n - 1; i++) {
@@ -296,6 +296,6 @@ class LongSetOpsDemo {
             }
         }
     }
-    
+
 
 }

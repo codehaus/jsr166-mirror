@@ -6,7 +6,7 @@
 
 package jsr166x;     // XXX This belongs in java.util!!! XXX
 import java.util.concurrent.*;  // XXX This import goes away        XXX
-import java.util.*;  
+import java.util.*;
 
 /**
  * A {@link Deque} that additionally supports operations that wait for
@@ -32,7 +32,7 @@ import java.util.*;
  *    <td>{@link #putFirst putFirst(e)}</td>
  *    <td>{@link #offerFirst(Object, long, TimeUnit) offerFirst(e, time, unit)}</td>
  *    <td>{@link #putLast putLast(e)}</td>
- *    <td>{@link #offerLast(Object, long, TimeUnit) offerLast(e, time, unit)}</td> 
+ *    <td>{@link #offerLast(Object, long, TimeUnit) offerLast(e, time, unit)}</td>
  *  </tr>
  *  <tr>
  *    <td><b>Remove</b></td>
@@ -194,7 +194,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      */
     void put(E o) throws InterruptedException;
 
-    /** 
+    /**
      * Inserts the specified element as the lest element of this
      * deque, if possible.  When using deques that may impose
      * insertion restrictions (for example capacity bounds), method
@@ -214,7 +214,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
     /**
      * Retrieves and removes the first element of this deque, waiting
      * if no elements are present on this deque.
-     * This method is equivalent to to takeFirst 
+     * This method is equivalent to to takeFirst
      * @return the head of this deque
      * @throws InterruptedException if interrupted while waiting.
      */

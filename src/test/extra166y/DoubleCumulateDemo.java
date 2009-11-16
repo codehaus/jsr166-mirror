@@ -52,8 +52,8 @@ public class DoubleCumulateDemo {
         fjp.shutdown();
     }
 
-    static void oneRun(ForkJoinPool fjp, 
-                       double[] array, int nthreads, 
+    static void oneRun(ForkJoinPool fjp,
+                       double[] array, int nthreads,
                        int reps, int tests) throws Exception {
         ParallelDoubleArray pa = ParallelDoubleArray.createUsingHandoff(array, fjp);
         long last, now;

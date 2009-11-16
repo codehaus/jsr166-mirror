@@ -38,13 +38,13 @@ public interface NavigableSet<E> extends SortedSet<E> {
     /**
      * Returns an element greater than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param o the value to match
      * @return an element greater than or equal to given element, or
      * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt> 
+     * @throws NullPointerException if o is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */
     public E ceiling(E o);
@@ -52,7 +52,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
     /**
      * Returns an element strictly less than the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param o the value to match
      * @return the greatest element less than the given element, or
      * <tt>null</tt> if there is no such element.
@@ -66,7 +66,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
     /**
      * Returns an element less than or equal to the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param o the value to match
      * @return the greatest element less than or equal to given
      * element, or <tt>null</tt> if there is no such element.
@@ -80,7 +80,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
     /**
      * Returns an element strictly greater than the given element, or
      * <tt>null</tt> if there is no such element.
-     * 
+     *
      * @param o the value to match
      * @return the least element greater than the given element, or
      * <tt>null</tt> if there is no such element.
@@ -107,8 +107,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
 
     /**
      * Returns an iterator over the elements in this collection, in
-     * descending order.  
-     * 
+     * descending order.
+     *
      * @return an <tt>Iterator</tt> over the elements in this collection
      */
     Iterator<E> descendingIterator();
@@ -119,7 +119,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * <tt>fromElement</tt> and <tt>toElement</tt> are equal, the returned
      * sorted set is empty.)  The returned sorted set is backed by this set,
      * so changes in the returned sorted set are reflected in this set, and
-     * vice-versa. 
+     * vice-versa.
      * @param fromElement low endpoint (inclusive) of the subSet.
      * @param toElement high endpoint (exclusive) of the subSet.
      * @return a view of the portion of this set whose elements range from
@@ -132,7 +132,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws IllegalArgumentException if <tt>fromElement</tt> is
      * greater than <tt>toElement</tt>.
      * @throws NullPointerException if <tt>fromElement</tt> or
-     *	       <tt>toElement</tt> is <tt>null</tt> 
+     *	       <tt>toElement</tt> is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */
     public NavigableSet<E> subSet(E fromElement, E toElement);
@@ -141,7 +141,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * Returns a view of the portion of this set whose elements are strictly
      * less than <tt>toElement</tt>.  The returned sorted set is backed by
      * this set, so changes in the returned sorted set are reflected in this
-     * set, and vice-versa.  
+     * set, and vice-versa.
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
      * 	       less than toElement.

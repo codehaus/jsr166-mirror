@@ -50,7 +50,7 @@ public class LinkedBlockingDeque<E>
 
     /** Doubly-linked list node class */
     static final class Node<E> {
-	E item; 
+	E item;
         Node<E> prev;
         Node<E> next;
         Node(E x, Node<E> p, Node<E> n) {
@@ -157,9 +157,9 @@ public class LinkedBlockingDeque<E>
             return null;
         Node<E> n = f.next;
         first = n;
-        if (n == null) 
+        if (n == null)
             last = null;
-        else 
+        else
             n.prev = null;
         --count;
         notFull.signal();
@@ -175,9 +175,9 @@ public class LinkedBlockingDeque<E>
             return null;
         Node<E> p = l.prev;
         last = p;
-        if (p == null) 
+        if (p == null)
             first = null;
-        else 
+        else
             p.next = null;
         --count;
         notFull.signal();
@@ -191,7 +191,7 @@ public class LinkedBlockingDeque<E>
         Node<E> p = x.prev;
         Node<E> n = x.next;
         if (p == null) {
-            if (n == null) 
+            if (n == null)
                 first = last = null;
             else {
                 n.prev = null;
@@ -230,12 +230,12 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public void addFirst(E e) { 
+    public void addFirst(E e) {
         if (!offerFirst(e))
             throw new IllegalStateException("Deque full");
     }
 
-    public void addLast(E e) { 
+    public void addLast(E e) {
         if (!offerLast(e))
             throw new IllegalStateException("Deque full");
     }
@@ -365,7 +365,7 @@ public class LinkedBlockingDeque<E>
             lock.unlock();
         }
     }
-        
+
     public boolean offerLast(E o, long timeout, TimeUnit unit)
         throws InterruptedException {
         if (o == null) throw new NullPointerException();
@@ -384,7 +384,7 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public E pollFirst(long timeout, TimeUnit unit) 
+    public E pollFirst(long timeout, TimeUnit unit)
         throws InterruptedException {
         lock.lockInterruptibly();
         try {
@@ -402,7 +402,7 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    public E pollLast(long timeout, TimeUnit unit) 
+    public E pollLast(long timeout, TimeUnit unit)
         throws InterruptedException {
         lock.lockInterruptibly();
         try {
@@ -479,7 +479,7 @@ public class LinkedBlockingDeque<E>
         if (o == null) return false;
         lock.lock();
         try {
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 if (o.equals(p.item))
                     return true;
             return false;
@@ -544,7 +544,7 @@ public class LinkedBlockingDeque<E>
         try {
             Object[] a = new Object[count];
             int k = 0;
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 a[k++] = p.item;
             return a;
         } finally {
@@ -562,7 +562,7 @@ public class LinkedBlockingDeque<E>
                     );
 
             int k = 0;
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 a[k++] = (T)p.item;
             if (a.length > k)
                 a[k] = null;
@@ -603,7 +603,7 @@ public class LinkedBlockingDeque<E>
             throw new IllegalArgumentException();
         lock.lock();
         try {
-            for (Node<E> p = first; p != null; p = p.next) 
+            for (Node<E> p = first; p != null; p = p.next)
                 c.add(p.item);
             int n = count;
             count = 0;
@@ -680,7 +680,7 @@ public class LinkedBlockingDeque<E>
         /**
          * Advance next, or if not yet initialized, set to first node.
          */
-        private void advance() { 
+        private void advance() {
             final ReentrantLock lock = LinkedBlockingDeque.this.lock;
             lock.lock();
             try {
@@ -758,5 +758,5 @@ public class LinkedBlockingDeque<E>
             add(item);
         }
     }
-    
+
 }

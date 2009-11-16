@@ -34,7 +34,7 @@ import java.io.*;
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification.  Fail-fast iterators
- * throw <tt>ConcurrentModificationException</tt> on a best-effort basis. 
+ * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
  * exception for its correctness: <i>the fail-fast behavior of iterators
  * should be used only to detect bugs.</i>
@@ -90,7 +90,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      *
      * @param numElements  the number of elements to hold.
      */
-    private void allocateElements(int numElements) {   
+    private void allocateElements(int numElements) {
         int initialCapacity = MIN_INITIAL_CAPACITY;
         // Find the best power of two to hold elements.
         // Tests "<=" because arrays aren't kept full.
@@ -114,7 +114,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * when head and tail have wrapped around to become equal.
      */
     private void doubleCapacity() {
-        assert head == tail; 
+        assert head == tail;
         int p = head;
         int n = elements.length;
         int r = n - p; // number of elements to the right of p
@@ -194,7 +194,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         if (e == null)
             throw new NullPointerException();
         elements[head = (head - 1) & (elements.length - 1)] = e;
-        if (head == tail) 
+        if (head == tail)
             doubleCapacity();
     }
 
@@ -243,7 +243,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         E result = elements[t];
         if (result == null)
             return null;
-        elements[t] = null; 
+        elements[t] = null;
         tail = t;
         return result;
     }
@@ -523,7 +523,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      *
      * <p>This method is called delete rather than remove to emphasize the
      * that that its semantics differ from those of List.remove(int).
-     * 
+     *
      * @return true if elements moved backwards
      */
     private boolean delete(int i) {
@@ -568,7 +568,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * will be ordered from first (head) to last (tail).  This is the same
      * order that elements would be dequeued (via successive calls to
      * {@link #remove} or popped (via successive calls to {@link #pop}).
-     * 
+     *
      * @return an <tt>Iterator</tt> over the elements in this deque
      */
     public Iterator<E> iterator() {
@@ -719,14 +719,14 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return a copy of this deque
      */
     public ArrayDeque<E> clone() {
-        try { 
+        try {
             ArrayDeque<E> result = (ArrayDeque<E>) super.clone();
             // These two lines are currently faster than cloning the array:
             result.elements = (E[]) new Object[elements.length];
             System.arraycopy(elements, 0, result.elements, 0, elements.length);
             return result;
 
-        } catch (CloneNotSupportedException e) { 
+        } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
     }

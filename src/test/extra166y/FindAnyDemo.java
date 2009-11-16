@@ -16,7 +16,7 @@ public class FindAnyDemo {
     /**
      * Sequential version, for performance comparison
      */
-    static<T> int seqIndexOf(T[] array, 
+    static<T> int seqIndexOf(T[] array,
                              Ops.Predicate<T> pred) {
         int n = array.length;
         for (int i = 0; i < n; ++i) {
@@ -56,10 +56,10 @@ public class FindAnyDemo {
         int n = 1 << 20;
         ArrayList<Rand> list = new ArrayList<Rand>(n);
         long rs = 256203225;
-        for (int i = 0; i < n >>> 1; ++i) 
+        for (int i = 0; i < n >>> 1; ++i)
             list.add(new Rand(rs+=3));
         list.add(new Rand(256203221));
-        for (int i = n >>> 1; i < n >>> 1; ++i) 
+        for (int i = n >>> 1; i < n >>> 1; ++i)
             list.add(new Rand(rs+=3));
         Rand[] array = list.toArray(new Rand[0]);
         final IsPrime pred = new IsPrime();
@@ -123,7 +123,7 @@ public class FindAnyDemo {
         }
 
         public String toString() {
-            return String.valueOf(seed); 
+            return String.valueOf(seed);
         }
     }
 

@@ -17,13 +17,13 @@ public class LongMapReduceDemo {
     /**
      * Sequential version, for performance comparison
      */
-    static long seqMapReduce(long[] array, 
+    static long seqMapReduce(long[] array,
                             LongOp mapper,
                             LongReducer reducer,
                             long base) {
         long n = array.length;
         long x = base;
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             x = reducer.op(x, mapper.op(array[i]));
         return x;
     }
@@ -32,8 +32,8 @@ public class LongMapReduceDemo {
     static final class GetNext implements LongOp {
         public long op(long seed) {
             long x = seed;
-            x ^= x << 13; 
-            x ^= x >>> 7; 
+            x ^= x << 13;
+            x ^= x >>> 7;
             x ^= (x << 17);
             return x;
         }
@@ -52,7 +52,7 @@ public class LongMapReduceDemo {
         int n = 1 << 18;
         int reps = 1 << 8;
         long[] array = new long[n];
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             array[i] = i + 1L;
         ForkJoinPool fjp = new ForkJoinPool(1);
         ParallelLongArray pa = ParallelLongArray.createUsingHandoff(array, fjp);
@@ -120,5 +120,5 @@ public class LongMapReduceDemo {
         for (int i = 0; i < array.length; ++i)
             array[i] = s++;
     }
-    
+
 }

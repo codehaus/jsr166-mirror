@@ -749,7 +749,7 @@ public class ForkJoinWorkerThread extends Thread {
          * each thread makes available for stealing enough tasks for
          * other threads to remain active. Inductively, if all threads
          * play by the same rules, each thread should make available
-         * only a constant number of tasks. 
+         * only a constant number of tasks.
          *
          * The minimum useful constant is just 1. But using a value of
          * 1 would require immediate replenishment upon each steal to
@@ -767,7 +767,7 @@ public class ForkJoinWorkerThread extends Thread {
          * hedge against uneven progress; as traded off against the
          * cost of extra task overhead. We leave the user to pick a
          * threshold value to compare with the results of this call to
-         * guide decisions, but recommend values such as 3. 
+         * guide decisions, but recommend values such as 3.
          *
          * When all threads are active, it is on average OK to
          * estimate surplus strictly locally. In steady-state, if one

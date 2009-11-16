@@ -16,7 +16,7 @@ public class ApplyDemo {
      */
     static <T> void seqApply(T[] array, Ops.Procedure<T> f) {
         int n = array.length;
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             f.op(array[i]);
     }
 
@@ -24,7 +24,7 @@ public class ApplyDemo {
      * A sample procedure to apply
      */
     static final class Proc implements Ops.Procedure<Rand> {
-        public void op(Rand x) { 
+        public void op(Rand x) {
             for (int k = 0; k < (1 << 10); ++k)
                 x.next();
         }
@@ -41,7 +41,7 @@ public class ApplyDemo {
     public static void test() throws Exception {
         int n = 1 << 18;
         Rand[] array = new Rand[n];
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             array[i] = new Rand(i);
         final Proc proc = new Proc();
         long last, now;

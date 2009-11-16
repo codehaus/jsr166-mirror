@@ -14,7 +14,7 @@ import java.util.concurrent.*;
  *
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
- * @param <V> the type of mapped values 
+ * @param <V> the type of mapped values
  */
 public interface ConcurrentNavigableMap<K,V> extends ConcurrentMap<K,V>, NavigableMap<K,V> {
     /**
@@ -46,7 +46,7 @@ public interface ConcurrentNavigableMap<K,V> extends ConcurrentMap<K,V>, Navigab
      * Returns a view of the portion of this map whose keys are strictly less
      * than <tt>toKey</tt>.  The returned sorted map is backed by this map, so
      * changes in the returned sorted map are reflected in this map, and
-     * vice-versa.  
+     * vice-versa.
      * @param toKey high endpoint (exclusive) of the headMap.
      * @return a view of the portion of this map whose keys are strictly
      *                less than <tt>toKey</tt>.

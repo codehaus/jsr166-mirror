@@ -45,7 +45,7 @@ class CombineDemo {
     }
 
     static class Evens implements Ops.IntToObject<Long> {
-        public Long op(int i) { 
+        public Long op(int i) {
             return Long.valueOf((long)(i << 1));
         }
     }
@@ -250,7 +250,7 @@ class CombineDemo {
 
     // ............
 
-    static void seqRemoveAll(ParallelArray<Long> pa, 
+    static void seqRemoveAll(ParallelArray<Long> pa,
                              Ops.Predicate<Long> selector) {
         Long[] a = pa.getArray();
         int n = pa.size();
@@ -265,7 +265,7 @@ class CombineDemo {
         pa.setLimit(k);
     }
 
-    static ArrayList<Long> seqSelectAll(ParallelArray<Long> pa, 
+    static ArrayList<Long> seqSelectAll(ParallelArray<Long> pa,
                                         Ops.Predicate<Long> selector) {
         ArrayList<Long> al = new ArrayList<Long>();
         Long[] a = pa.getArray();
@@ -281,7 +281,7 @@ class CombineDemo {
     static Long[] seqUnique(Long[] a) {
         int n = a.length;
         HashSet<Long> m = new HashSet<Long>(n);
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             m.add(a[i]);
         int ul = m.size();
         Long[] u = new Long[ul];
@@ -290,7 +290,7 @@ class CombineDemo {
             u[k++] = e;
         return u;
     }
-    
+
     static void checkSorted (ParallelArray<Long> pa)  {
         int n = pa.size();
         for (int i = 0; i < n - 1; i++) {
@@ -299,7 +299,7 @@ class CombineDemo {
             }
         }
     }
-    
+
     static final class RandomLongGenerator implements Ops.Generator<Long> {
         public Long op() {
             return new Long(ThreadLocalRandom.current().nextLong(maxValue));

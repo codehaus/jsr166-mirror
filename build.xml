@@ -152,7 +152,7 @@
                 link="http://java.sun.com/javase/6/docs/api/"
             overview="${src.dir}/intro.html"
             sourcepath="${src.dir}:${jdksrc.dir}"
-    >           
+    >
 
       <packageset dir="${src.dir}"/>
 
@@ -666,7 +666,7 @@
                 link="http://java.sun.com/javase/6/docs/api/"
               source="${build.sourcelevel}"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
-            >           
+            >
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">
       <include name="jsr166y/*.java"/>
             </fileset>

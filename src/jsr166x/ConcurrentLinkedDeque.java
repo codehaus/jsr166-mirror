@@ -75,20 +75,20 @@ public class ConcurrentLinkedDeque<E>
      *    (3.1) backward pointers are correct when pointing to any
      *        node which points forward to them, but since more than
      *	      one forward pointer may point to them, the live one is best.
-     *    (4) backward pointers that are out of date due to deletion 
+     *    (4) backward pointers that are out of date due to deletion
      *        point to a deleted node, and need to point further back until
      *	      they point to the live node that points to their source.
-     *    (5) backward pointers that are out of date due to insertion 
+     *    (5) backward pointers that are out of date due to insertion
      *        point too far backwards, so shortening their scope (by searching
      *	      forward) fixes them.
      *    (6) backward pointers from a dead node cannot be "improved" since
      *        there may be no live node pointing forward to their origin.
      *        (However, it does no harm to try to improve them while
      *        racing with a deletion.)
-     * 
+     *
      *
      * Notation guide for local variables
-     *   n, b, f :  a node, its predecessor, and successor 
+     *   n, b, f :  a node, its predecessor, and successor
      *   s       :  some other successor
      */
 
@@ -128,7 +128,7 @@ public class ConcurrentLinkedDeque<E>
 	}
 
         /** Creates a marker node with given successor */
-	Node(Node<E> next) { 
+	Node(Node<E> next) {
             super(next);
 	    this.prev = this;
 	    this.element = null;
@@ -156,7 +156,7 @@ public class ConcurrentLinkedDeque<E>
         private boolean casNext(Node<E> cmp, Node<E> val) {
             return compareAndSet(cmp, val);
         }
-        
+
         /**
          * Gets prev link
          */
@@ -172,32 +172,32 @@ public class ConcurrentLinkedDeque<E>
             prev = b;
         }
 
-        /** 
-         * Returns true if this is a header, trailer, or marker node 
+        /**
+         * Returns true if this is a header, trailer, or marker node
          */
-        boolean isSpecial() { 
-            return element == null; 
+        boolean isSpecial() {
+            return element == null;
         }
 
-        /** 
-         * Returns true if this is a trailer node 
+        /**
+         * Returns true if this is a trailer node
          */
-        boolean isTrailer() { 
-            return getNext() == null; 
+        boolean isTrailer() {
+            return getNext() == null;
         }
 
-        /** 
-         * Returns true if this is a header node 
+        /**
+         * Returns true if this is a header node
          */
-        boolean isHeader()  { 
-            return getPrev() == null; 
+        boolean isHeader()  {
+            return getPrev() == null;
         }
 
-        /** 
-         * Returns true if this is a marker node 
+        /**
+         * Returns true if this is a marker node
          */
-        boolean isMarker()  { 
-            return getPrev() == this; 
+        boolean isMarker()  {
+            return getPrev() == this;
         }
 
         /**
@@ -230,7 +230,7 @@ public class ConcurrentLinkedDeque<E>
             for (;;) {
                 if (f == null)
                     return null;
-                if (!f.isDeleted()) {      
+                if (!f.isDeleted()) {
                     if (f.getPrev() != this && !isDeleted())
                         f.setPrev(this);       // relink f's prev
                     return f;
@@ -257,7 +257,7 @@ public class ConcurrentLinkedDeque<E>
                 if (f == null)
                     return null;
                 n = f;
-            } 
+            }
         }
 
         /**
@@ -271,14 +271,14 @@ public class ConcurrentLinkedDeque<E>
             Node<E> n = this;
             for (;;) {
                 Node<E> b = n.getPrev();
-                if (b == null) 
+                if (b == null)
                     return n.findPredecessorOf(this);
                 Node<E> s = b.getNext();
                 if (s == this)
                     return b;
                 if (s == null || !s.isMarker()) {
                     Node<E> p = b.findPredecessorOf(this);
-                    if (p != null) 
+                    if (p != null)
                         return p;
                 }
                 n = b;
@@ -310,7 +310,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Tries to insert a node holding element as successor, failing
          * if this node is deleted.
-         * @param element the element 
+         * @param element the element
          * @return the new node, or null on failure.
          */
         Node<E> append(E element) {
@@ -329,7 +329,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Tries to insert a node holding element as predecessor, failing
          * if no live predecessor can be found to link to.
-         * @param element the element 
+         * @param element the element
          * @return the new node, or null on failure.
          */
         Node<E> prepend(E element) {
@@ -353,7 +353,7 @@ public class ConcurrentLinkedDeque<E>
         boolean delete() {
             Node<E> b = getPrev();
             Node<E> f = getNext();
-            if (b != null && f != null && !f.isMarker() && 
+            if (b != null && f != null && !f.isMarker() &&
                 casNext(f, new Node(f))) {
                 if (b.casNext(this, f))
                     f.setPrev(b);
@@ -365,7 +365,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Tries to insert a node holding element to replace this node.
          * failing if already deleted.
-         * @param newElement the new element 
+         * @param newElement the new element
          * @return the new node, or null on failure.
          */
         Node<E> replace(E newElement) {
@@ -383,7 +383,7 @@ public class ConcurrentLinkedDeque<E>
             }
         }
     }
-        
+
     // Minor convenience utilities
 
     /**
@@ -424,22 +424,22 @@ public class ConcurrentLinkedDeque<E>
      */
     private ArrayList<E> toArrayList() {
         ArrayList<E> c = new ArrayList<E>();
-        for (Node<E> n = header.forward(); n != null; n = n.forward()) 
+        for (Node<E> n = header.forward(); n != null; n = n.forward())
             c.add(n.element);
         return c;
     }
 
     // Fields and constructors
-   
+
     private static final long serialVersionUID = 876323262645176354L;
 
-    /** 
-     * List header. First usable node is at header.forward(). 
+    /**
+     * List header. First usable node is at header.forward().
      */
     private final Node<E> header;
 
-    /** 
-     * List trailer. Last usable node is at trailer.back(). 
+    /**
+     * List trailer. Last usable node is at trailer.back().
      */
     private final Node<E> trailer;
 
@@ -477,7 +477,7 @@ public class ConcurrentLinkedDeque<E>
      */
     public void addFirst(E o) {
         checkNullArg(o);
-	while (header.append(o) == null) 
+	while (header.append(o) == null)
             ;
     }
 
@@ -490,7 +490,7 @@ public class ConcurrentLinkedDeque<E>
      */
     public void addLast(E o) {
         checkNullArg(o);
-        while (trailer.prepend(o) == null) 
+        while (trailer.prepend(o) == null)
             ;
     }
 
@@ -632,7 +632,7 @@ public class ConcurrentLinkedDeque<E>
     public boolean removeFirstOccurrence(Object o) {
         checkNullArg(o);
         for (;;) {
-            Node<E> n = header.forward(); 
+            Node<E> n = header.forward();
             for (;;) {
                 if (n == null)
                     return false;
@@ -661,7 +661,7 @@ public class ConcurrentLinkedDeque<E>
         for (;;) {
             Node<E> s = trailer;
             for (;;) {
-                Node<E> n = s.back(); 
+                Node<E> n = s.back();
                 if (s.isDeleted() || (n != null && n.successor() != s))
                     break; // restart if pred link is suspect.
                 if (n == null)
@@ -686,7 +686,7 @@ public class ConcurrentLinkedDeque<E>
      */
     public boolean contains(Object o) {
         if (o == null) return false;
-        for (Node<E> n = header.forward(); n != null; n = n.forward()) 
+        for (Node<E> n = header.forward(); n != null; n = n.forward())
             if (o.equals(n.element))
                 return true;
         return false;
@@ -719,7 +719,7 @@ public class ConcurrentLinkedDeque<E>
      */
     public int size() {
         long count = 0;
-        for (Node<E> n = header.forward(); n != null; n = n.forward()) 
+        for (Node<E> n = header.forward(); n != null; n = n.forward())
             ++count;
         return (count >= Integer.MAX_VALUE)? Integer.MAX_VALUE : (int)count;
     }
@@ -751,7 +751,7 @@ public class ConcurrentLinkedDeque<E>
      * is <tt>null</tt>
      */
     public boolean addAll(Collection<? extends E> c) {
-	Iterator<? extends E> it = c.iterator(); 
+	Iterator<? extends E> it = c.iterator();
         if (!it.hasNext())
             return false;
         do {
@@ -764,7 +764,7 @@ public class ConcurrentLinkedDeque<E>
      * Removes all of the elements from this deque.
      */
     public void clear() {
-        while (pollFirst() != null) 
+        while (pollFirst() != null)
             ;
     }
 
@@ -813,7 +813,7 @@ public class ConcurrentLinkedDeque<E>
      * <em>not</em> throw {@link ConcurrentModificationException}, and
      * may proceed concurrently with other operations.
      *
-     * @return an iterator over the elements in this deque 
+     * @return an iterator over the elements in this deque
      */
     public Iterator<E> iterator() {
         return new CLDIterator();

@@ -11,7 +11,7 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
 
     // Performance-tuning constant:
     static long lastStealCount;
-  
+
     public static void main(String[] args) throws Exception {
         int procs = 0;
         int num = 43;
@@ -26,7 +26,7 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
             return;
         }
 
-        
+
         for (int reps = 0; reps < 2; ++reps) {
             ForkJoinPool g = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
@@ -62,8 +62,8 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
     int number;
     DynamicLeftSpineFib next;
 
-    DynamicLeftSpineFib(int n, DynamicLeftSpineFib nxt) { 
-        number = n; next = nxt; 
+    DynamicLeftSpineFib(int n, DynamicLeftSpineFib nxt) {
+        number = n; next = nxt;
     }
 
     int getAnswer() {
@@ -100,11 +100,11 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
 
     // Sequential version for arguments less than threshold
     static int seqFib(int n) {
-        if (n <= 1) 
+        if (n <= 1)
             return n;
-        else 
+        else
             return seqFib(n-1) + seqFib(n-2);
     }
-    
+
 }
 

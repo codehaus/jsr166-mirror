@@ -25,9 +25,9 @@ import java.util.*;    // XXX This import goes away        XXX
  * <tt>Deque</tt> implementations; in most implementations, insert
  * operations cannot fail.
  *
- * <p>The twelve methods described above are are summarized in the 
+ * <p>The twelve methods described above are are summarized in the
  * follwoing table:<p>
- * 
+ *
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
  *    <td></td>
@@ -145,7 +145,7 @@ import java.util.*;    // XXX This import goes away        XXX
  * take advantage of the ability to insert nulls.  This is so because
  * <tt>null</tt> is used as a special return value by various methods
  * to indicated that the deque is empty.
- * 
+ *
  * <p><tt>Deque</tt> implementations generally do not define
  * element-based versions of the <tt>equals</tt> and <tt>hashCode</tt>
  * methods, but instead inherit the identity-based versions from class
@@ -339,7 +339,7 @@ public interface Deque<E> extends Queue<E> {
     /**
      * Inserts the specified element into the queue represented by this
      * deque unless it would violate capacity restrictions.  In other words,
-     * inserts the specified element as the last element of this deque. 
+     * inserts the specified element as the last element of this deque.
      *
      * <p>This method is equivalent to {@link #addLast}.
      *
@@ -435,7 +435,7 @@ public interface Deque<E> extends Queue<E> {
     /**
      * Returns an iterator over the elements in this deque.  The elements
      * will be ordered from first (head) to last (tail).
-     * 
+     *
      * @return an <tt>Iterator</tt> over the elements in this deque
      */
     Iterator<E> iterator();

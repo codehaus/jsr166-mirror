@@ -33,7 +33,7 @@ public class TieredPhaserLoops {
                 actions[i] = new PhaserAction(i, b, sz);
         }
     }
-    
+
 
     static final class PhaserAction implements Runnable {
         final int id;

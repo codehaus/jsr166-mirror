@@ -120,7 +120,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.acquire();
             s.release();
             assertEquals(1, s.availablePermits());
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -165,7 +165,7 @@ public class SemaphoreTest extends JSR166TestCase {
             assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             s.release();
             assertEquals(1, s.availablePermits());
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -196,7 +196,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.acquire();
             s.release();
             t.join();
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -223,7 +223,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.acquireUninterruptibly();
             s.release();
             t.join();
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -255,7 +255,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release();
             s.release();
             t.join();
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -524,7 +524,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release(5);
             s.acquire(5);
             assertEquals(1, s.availablePermits());
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -567,7 +567,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release(5);
             assertTrue(s.tryAcquire(5, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             assertEquals(1, s.availablePermits());
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -589,7 +589,7 @@ public class SemaphoreTest extends JSR166TestCase {
             assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             s.release();
             assertEquals(1, s.availablePermits());
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -622,7 +622,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release();
             t.join();
             assertEquals(2, s.availablePermits());
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -650,7 +650,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.acquire(2);
             s.release(1);
             t.join();
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -679,7 +679,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.acquire(2);
             s.release(2);
             t.join();
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -715,7 +715,7 @@ public class SemaphoreTest extends JSR166TestCase {
             s.release();
             s.release();
             t.join();
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -744,7 +744,7 @@ public class SemaphoreTest extends JSR166TestCase {
             assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             s.release(2);
             t.join();
-	} catch ( InterruptedException e) {
+	} catch (InterruptedException e) {
             unexpectedException();
         }
     }

@@ -105,7 +105,7 @@ public final class ALoops {
             System.out.println("useless result: " + r);
         try {
             Thread.sleep(100);
-        } catch(InterruptedException ex) {}
+        } catch (InterruptedException ex) {}
 
     }
 

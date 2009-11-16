@@ -176,7 +176,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 	List full = populatedArray(SIZE);
 	Iterator i = full.iterator();
 	int j;
-	for(j = 0; i.hasNext(); j++)
+	for (j = 0; i.hasNext(); j++)
 	    assertEquals(j, ((Integer)i.next()).intValue());
 	assertEquals(SIZE, j);
     }
@@ -222,7 +222,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 	List full = populatedArray(SIZE);
 	ListIterator i = full.listIterator();
 	int j;
-	for(j = 0; i.hasNext(); j++)
+	for (j = 0; i.hasNext(); j++)
 	    assertEquals(j, ((Integer)i.next()).intValue());
 	assertEquals(SIZE, j);
     }
@@ -234,7 +234,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 	List full = populatedArray(3);
 	ListIterator i = full.listIterator(1);
 	int j;
-	for(j = 0; i.hasNext(); j++)
+	for (j = 0; i.hasNext(); j++)
 	    assertEquals(j+1, ((Integer)i.next()).intValue());
 	assertEquals(2, j);
     }
@@ -312,10 +312,10 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     public void testSubList() {
 	List a = populatedArray(10);
         assertTrue(a.subList(1,1).isEmpty());
-	for(int j = 0; j < 9; ++j) {
-	    for(int i = j ; i < 10; ++i) {
+	for (int j = 0; j < 9; ++j) {
+	    for (int i = j ; i < 10; ++i) {
 		List b = a.subList(j,i);
-		for(int k = j; k < i; ++k) {
+		for (int k = j; k < i; ++k) {
 		    assertEquals(new Integer(k), b.get(k-j));
 		}
 	    }
@@ -342,7 +342,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdadasd");
             c.toArray(new Long[5]);
 	    shouldThrow();
-        } catch(ArrayStoreException e){}
+        } catch (ArrayStoreException e){}
     }
 
     /**
@@ -353,7 +353,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             List c = emptyArray();
             c.get(-1);
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -366,7 +366,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdad");
             c.get(100);
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -377,7 +377,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             List c = emptyArray();
             c.set(-1,"qwerty");
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -390,7 +390,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdad");
             c.set(100, "qwerty");
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -401,7 +401,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             List c = emptyArray();
             c.add(-1,"qwerty");
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -414,7 +414,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasdasd");
             c.add(100, "qwerty");
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -425,7 +425,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             List c = emptyArray();
             c.remove(-1);
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -438,7 +438,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("adasdasd");
             c.remove(100);
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -449,7 +449,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             List c = emptyArray();
             c.addAll(-1,new LinkedList());
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -462,7 +462,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasdasd");
             c.addAll(100, new LinkedList());
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -473,7 +473,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             List c = emptyArray();
             c.listIterator(-1);
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -486,7 +486,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasdas");
             c.listIterator(100);
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -498,7 +498,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.subList(-1,100);
 
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -510,7 +510,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasd");
             c.subList(1,100);
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
     /**
@@ -523,7 +523,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.subList(3,1);
 
             shouldThrow();
-        } catch(IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e){}
     }
 
 

@@ -56,7 +56,7 @@ public class ThreadTest extends JSR166TestCase {
             assertEquals(eh, Thread.getDefaultUncaughtExceptionHandler());
             Thread.setDefaultUncaughtExceptionHandler(null);
         }
-        catch(SecurityException ok) {
+        catch (SecurityException ok) {
         }
         assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
     }

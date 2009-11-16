@@ -26,7 +26,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      * Construction with non-existent field throws RuntimeException
      */
     public void testConstructor(){
-        try{
+        try {
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "y");
@@ -40,7 +40,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      * construction with field not of given type throws RuntimeException
      */
     public void testConstructor2(){
-        try{
+        try {
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "z");
@@ -53,7 +53,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
      * Constructor with non-volatile field throws exception
      */
     public void testConstructor3(){
-        try{
+        try {
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "w");
@@ -133,7 +133,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
 
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three)) Thread.yield();
+                    while (!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three)) Thread.yield();
                 }});
         try {
             t.start();
@@ -142,7 +142,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
             assertFalse(t.isAlive());
             assertEquals(a.get(this), three);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -159,10 +159,10 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
             return;
         }
         x = one;
-	while(!a.weakCompareAndSet(this,one,two));
-	while(!a.weakCompareAndSet(this,two,m4));
+	while (!a.weakCompareAndSet(this,one,two));
+	while (!a.weakCompareAndSet(this,two,m4));
 	assertEquals(m4,a.get(this));
-	while(!a.weakCompareAndSet(this,m4,seven));
+	while (!a.weakCompareAndSet(this,m4,seven));
 	assertEquals(seven,a.get(this));
     }
 

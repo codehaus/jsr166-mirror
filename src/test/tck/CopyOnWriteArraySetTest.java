@@ -163,7 +163,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
 	CopyOnWriteArraySet full = populatedSet(3);
 	Iterator i = full.iterator();
 	int j;
-	for(j = 0; i.hasNext(); j++)
+	for (j = 0; i.hasNext(); j++)
 	    assertEquals(j, ((Integer)i.next()).intValue());
 	assertEquals(3, j);
     }
@@ -265,7 +265,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             c.add("asdadasd");
             c.toArray(new Long[5]);
 	    shouldThrow();
-        } catch(ArrayStoreException e){}
+        } catch (ArrayStoreException e){}
     }
 
     /**
@@ -286,7 +286,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }

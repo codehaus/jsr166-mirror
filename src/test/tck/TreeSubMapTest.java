@@ -396,7 +396,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.get(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -407,7 +407,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.containsKey(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -418,7 +418,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -429,7 +429,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.remove(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -451,7 +451,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -968,7 +968,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = dmap5();
             c.get(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -979,7 +979,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = dmap5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1000,7 +1000,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }

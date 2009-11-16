@@ -37,7 +37,7 @@ public class FutureTaskTest extends JSR166TestCase {
             FutureTask task = new FutureTask(null);
             shouldThrow();
         }
-        catch(NullPointerException success) {
+        catch (NullPointerException success) {
         }
     }
 
@@ -49,7 +49,7 @@ public class FutureTaskTest extends JSR166TestCase {
             FutureTask task = new FutureTask(null, Boolean.TRUE);
             shouldThrow();
         }
-        catch(NullPointerException success) {
+        catch (NullPointerException success) {
         }
     }
 
@@ -94,7 +94,7 @@ public class FutureTaskTest extends JSR166TestCase {
         try {
             assertEquals(task.get(), one);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -110,11 +110,11 @@ public class FutureTaskTest extends JSR166TestCase {
             Object x = task.get();
             shouldThrow();
         }
-        catch(ExecutionException ee) {
+        catch (ExecutionException ee) {
             Throwable cause = ee.getCause();
             assertEquals(cause, nse);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -174,7 +174,7 @@ public class FutureTaskTest extends JSR166TestCase {
             t.join();
             assertTrue(task.isDone());
             assertTrue(task.isCancelled());
-        } catch(InterruptedException e){
+        } catch (InterruptedException e){
             unexpectedException();
         }
     }
@@ -203,7 +203,7 @@ public class FutureTaskTest extends JSR166TestCase {
             t.join();
             assertTrue(task.isDone());
             assertTrue(task.isCancelled());
-        } catch(InterruptedException e){
+        } catch (InterruptedException e){
             unexpectedException();
         }
     }
@@ -216,7 +216,7 @@ public class FutureTaskTest extends JSR166TestCase {
 		public Object call() {
 		    try {
 			Thread.sleep(MEDIUM_DELAY_MS);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
                     }
                     return Boolean.TRUE;
@@ -226,7 +226,7 @@ public class FutureTaskTest extends JSR166TestCase {
 		public void run() {
 		    try {
 			ft.get();
-		    } catch(Exception e){
+		    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -240,7 +240,7 @@ public class FutureTaskTest extends JSR166TestCase {
 	    t.join();
 	    assertTrue(ft.isDone());
             assertFalse(ft.isCancelled());
-	} catch(InterruptedException e){
+	} catch (InterruptedException e){
             unexpectedException();
 
         }
@@ -254,7 +254,7 @@ public class FutureTaskTest extends JSR166TestCase {
 		public Object call() {
 		    try {
 			Thread.sleep(MEDIUM_DELAY_MS);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
                     }
                     return Boolean.TRUE;
@@ -264,8 +264,8 @@ public class FutureTaskTest extends JSR166TestCase {
 		public void run() {
 		    try {
 			ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-		    } catch(TimeoutException success) {
-                    } catch(Exception e){
+		    } catch (TimeoutException success) {
+                    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -278,7 +278,7 @@ public class FutureTaskTest extends JSR166TestCase {
 	    t.join();
 	    assertTrue(ft.isDone());
             assertFalse(ft.isCancelled());
-	} catch(InterruptedException e){
+	} catch (InterruptedException e){
             unexpectedException();
 
         }
@@ -293,7 +293,7 @@ public class FutureTaskTest extends JSR166TestCase {
 		    try {
 			Thread.sleep(SMALL_DELAY_MS);
                         threadShouldThrow();
-		    } catch(InterruptedException e) {
+		    } catch (InterruptedException e) {
                     }
 		    return Boolean.TRUE;
 		}
@@ -304,8 +304,8 @@ public class FutureTaskTest extends JSR166TestCase {
 			try {
 			    ft.get(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
 			    threadShouldThrow();
-			} catch(CancellationException success) {}
-			catch(Exception e){
+			} catch (CancellationException success) {}
+			catch (Exception e){
                             threadUnexpectedException();
 			}
 		    }
@@ -317,7 +317,7 @@ public class FutureTaskTest extends JSR166TestCase {
 	    ft.cancel(true);
 	    t1.join();
 	    t2.join();
-	} catch(InterruptedException ie){
+	} catch (InterruptedException ie){
             unexpectedException();
         }
     }
@@ -331,7 +331,7 @@ public class FutureTaskTest extends JSR166TestCase {
 		    try {
 			Thread.sleep(MEDIUM_DELAY_MS);
                         threadShouldThrow();
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                     }
                     return Boolean.TRUE;
 		}
@@ -342,9 +342,9 @@ public class FutureTaskTest extends JSR166TestCase {
 			try {
 			    ft.get();
 			    threadShouldThrow();
-			} catch(CancellationException success){
+			} catch (CancellationException success){
                         }
-			catch(Exception e){
+			catch (Exception e){
                             threadUnexpectedException();
                         }
 		    }
@@ -356,7 +356,7 @@ public class FutureTaskTest extends JSR166TestCase {
 	    ft.cancel(true);
 	    t1.join();
 	    t2.join();
-	} catch(InterruptedException success){
+	} catch (InterruptedException success){
             unexpectedException();
         }
     }
@@ -376,9 +376,9 @@ public class FutureTaskTest extends JSR166TestCase {
 	    ft.run();
 	    ft.get();
 	    shouldThrow();
-	} catch(ExecutionException success){
+	} catch (ExecutionException success){
         }
-	catch(Exception e){
+	catch (Exception e){
             unexpectedException();
 	}
     }
@@ -397,9 +397,9 @@ public class FutureTaskTest extends JSR166TestCase {
 	    ft.run();
 	    ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
 	    shouldThrow();
-	} catch(ExecutionException success) {
-        } catch(TimeoutException success) { } // unlikely but OK
-	catch(Exception e){
+	} catch (ExecutionException success) {
+        } catch (TimeoutException success) { } // unlikely but OK
+	catch (Exception e){
             unexpectedException();
 	}
     }
@@ -415,8 +415,8 @@ public class FutureTaskTest extends JSR166TestCase {
 		    try {
 			ft.get();
 			threadShouldThrow();
-		    } catch(InterruptedException success){
-                    } catch(Exception e){
+		    } catch (InterruptedException success){
+                    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -426,7 +426,7 @@ public class FutureTaskTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -441,8 +441,8 @@ public class FutureTaskTest extends JSR166TestCase {
 		    try {
 			ft.get(LONG_DELAY_MS,TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-		    } catch(InterruptedException success){}
-		    catch(Exception e){
+		    } catch (InterruptedException success){}
+		    catch (Exception e){
                         threadUnexpectedException();
 		    }
 		}
@@ -452,7 +452,7 @@ public class FutureTaskTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -465,8 +465,8 @@ public class FutureTaskTest extends JSR166TestCase {
             FutureTask ft = new FutureTask(new NoOpCallable());
 	    ft.get(1,TimeUnit.MILLISECONDS);
 	    shouldThrow();
-	} catch(TimeoutException success){}
-	catch(Exception success){
+	} catch (TimeoutException success){}
+	catch (Exception success){
 	    unexpectedException();
 	}
     }

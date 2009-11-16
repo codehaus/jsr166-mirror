@@ -24,7 +24,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     private ArrayDeque populatedDeque(int n) {
         ArrayDeque q = new ArrayDeque();
         assertTrue(q.isEmpty());
-	for(int i = 0; i < n; ++i)
+	for (int i = 0; i < n; ++i)
 	    assertTrue(q.offerLast(new Integer(i)));
         assertFalse(q.isEmpty());
 	assertEquals(n, q.size());
@@ -452,7 +452,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         ArrayDeque q = populatedDeque(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.pollFirst());
     }
 
@@ -464,7 +464,7 @@ public class ArrayDequeTest extends JSR166TestCase {
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
-        for(int i = 0; i < ints.length; i++)
+        for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
     }
 
@@ -477,7 +477,7 @@ public class ArrayDequeTest extends JSR166TestCase {
 	    l.add(new Object());
 	    Object o[] = l.toArray(null);
 	    shouldThrow();
-	} catch(NullPointerException success){}
+	} catch (NullPointerException success){}
     }
 
     /**
@@ -489,7 +489,7 @@ public class ArrayDequeTest extends JSR166TestCase {
 	    l.add(new Integer(5));
 	    Object o[] = l.toArray(new String[10] );
 	    shouldThrow();
-	} catch(ArrayStoreException  success){}
+	} catch (ArrayStoreException  success){}
     }
 
     /**
@@ -499,7 +499,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         ArrayDeque q = populatedDeque(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -558,7 +558,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         ArrayDeque q = populatedDeque(SIZE);
         int i = 0;
 	Iterator it = q.descendingIterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -566,7 +566,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         assertFalse(it.hasNext());
         try {
             it.next();
-        } catch(NoSuchElementException success) {
+        } catch (NoSuchElementException success) {
         }
     }
 

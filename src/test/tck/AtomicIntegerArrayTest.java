@@ -61,19 +61,19 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         try {
             ai.get(SIZE);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
         try {
             ai.get(-1);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
         try {
             ai.set(SIZE, 0);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
         try {
             ai.set(-1, 0);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
     }
 
@@ -133,7 +133,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         a.set(0, 1);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!a.compareAndSet(0, 2, 3)) Thread.yield();
+                    while (!a.compareAndSet(0, 2, 3)) Thread.yield();
                 }});
         try {
             t.start();
@@ -142,7 +142,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             assertFalse(t.isAlive());
             assertEquals(a.get(0), 3);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -155,10 +155,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            while(!ai.weakCompareAndSet(i, 1,2));
-            while(!ai.weakCompareAndSet(i, 2,-4));
+            while (!ai.weakCompareAndSet(i, 1,2));
+            while (!ai.weakCompareAndSet(i, 2,-4));
             assertEquals(-4,ai.get(i));
-            while(!ai.weakCompareAndSet(i, -4,7));
+            while (!ai.weakCompareAndSet(i, -4,7));
             assertEquals(7,ai.get(i));
         }
     }
@@ -308,7 +308,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             t2.join();
             assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
         }
-        catch(InterruptedException ie) {
+        catch (InterruptedException ie) {
             unexpectedException();
         }
     }
@@ -334,7 +334,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             for (int i = 0; i < SIZE; ++i) {
                 assertEquals(l.get(i), r.get(i));
             }
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }

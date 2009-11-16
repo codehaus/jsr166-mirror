@@ -25,7 +25,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      * Construction with non-existent field throws RuntimeException
      */
     public void testConstructor() {
-        try{
+        try {
             AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "y");
@@ -38,7 +38,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      * construction with field not of given type throws RuntimeException
      */
     public void testConstructor2() {
-        try{
+        try {
             AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "z");
@@ -51,7 +51,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      * construction with non-volatile field throws RuntimeException
      */
     public void testConstructor3() {
-        try{
+        try {
             AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "w");
@@ -134,7 +134,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
 
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!a.compareAndSet(AtomicIntegerFieldUpdaterTest.this, 2, 3)) Thread.yield();
+                    while (!a.compareAndSet(AtomicIntegerFieldUpdaterTest.this, 2, 3)) Thread.yield();
                 }});
         try {
             t.start();
@@ -143,7 +143,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
             assertFalse(t.isAlive());
             assertEquals(a.get(this), 3);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -160,10 +160,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = 1;
-	while(!a.weakCompareAndSet(this,1,2));
-	while(!a.weakCompareAndSet(this,2,-4));
+	while (!a.weakCompareAndSet(this,1,2));
+	while (!a.weakCompareAndSet(this,2,-4));
 	assertEquals(-4,a.get(this));
-	while(!a.weakCompareAndSet(this,-4,7));
+	while (!a.weakCompareAndSet(this,-4,7));
 	assertEquals(7,a.get(this));
     }
 

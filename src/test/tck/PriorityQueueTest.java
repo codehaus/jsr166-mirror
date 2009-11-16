@@ -36,9 +36,9 @@ public class PriorityQueueTest extends JSR166TestCase {
     private PriorityQueue populatedQueue(int n) {
         PriorityQueue q = new PriorityQueue(n);
         assertTrue(q.isEmpty());
-	for(int i = n-1; i >= 0; i-=2)
+	for (int i = n-1; i >= 0; i-=2)
 	    assertTrue(q.offer(new Integer(i)));
-	for(int i = (n & 1); i < n; i+=2)
+	for (int i = (n & 1); i < n; i+=2)
 	    assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
 	assertEquals(n, q.size());
@@ -204,7 +204,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             q.offer(new Object());
             shouldThrow();
         }
-        catch(ClassCastException success) {}
+        catch (ClassCastException success) {}
     }
 
     /**
@@ -428,7 +428,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         PriorityQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.poll());
     }
 
@@ -440,7 +440,7 @@ public class PriorityQueueTest extends JSR166TestCase {
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
-        for(int i = 0; i < ints.length; i++)
+        for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.poll());
     }
 
@@ -451,7 +451,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         PriorityQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -506,7 +506,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }

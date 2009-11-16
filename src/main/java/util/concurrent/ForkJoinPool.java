@@ -1104,7 +1104,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     private static String runStateToString(int rs) {
-        switch(rs) {
+        switch (rs) {
         case RUNNING: return "Running";
         case SHUTDOWN: return "Shutting down";
         case TERMINATING: return "Terminating";

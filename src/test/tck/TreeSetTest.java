@@ -39,9 +39,9 @@ public class TreeSetTest extends JSR166TestCase {
     private TreeSet populatedSet(int n) {
         TreeSet q = new TreeSet();
         assertTrue(q.isEmpty());
-	for(int i = n-1; i >= 0; i-=2)
+	for (int i = n-1; i >= 0; i-=2)
 	    assertTrue(q.add(new Integer(i)));
-	for(int i = (n & 1); i < n; i+=2)
+	for (int i = (n & 1); i < n; i+=2)
 	    assertTrue(q.add(new Integer(i)));
         assertFalse(q.isEmpty());
 	assertEquals(n, q.size());
@@ -209,7 +209,7 @@ public class TreeSetTest extends JSR166TestCase {
             q.add(new Object());
             shouldThrow();
         }
-        catch(ClassCastException success) {}
+        catch (ClassCastException success) {}
     }
 
     /**
@@ -467,7 +467,7 @@ public class TreeSetTest extends JSR166TestCase {
         TreeSet q = populatedSet(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.pollFirst());
     }
 
@@ -479,7 +479,7 @@ public class TreeSetTest extends JSR166TestCase {
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
-        for(int i = 0; i < ints.length; i++)
+        for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
     }
 
@@ -490,7 +490,7 @@ public class TreeSetTest extends JSR166TestCase {
         TreeSet q = populatedSet(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -504,7 +504,7 @@ public class TreeSetTest extends JSR166TestCase {
         TreeSet q = new TreeSet();
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -559,7 +559,7 @@ public class TreeSetTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -713,7 +713,7 @@ public class TreeSetTest extends JSR166TestCase {
         NavigableSet<Integer> result = null;
 	try {
             result = (NavigableSet<Integer>) cl.newInstance();
-	} catch(Exception e) {
+	} catch (Exception e) {
             fail();
 	}
         assertEquals(result.size(), 0);
@@ -738,7 +738,7 @@ public class TreeSetTest extends JSR166TestCase {
         }
 
         // Remove a bunch of entries with iterator
-        for(Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
+        for (Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
             if (rnd.nextBoolean()) {
                 bs.clear(it.next());
                 it.remove();
@@ -763,7 +763,7 @@ public class TreeSetTest extends JSR166TestCase {
         }
 
         // Remove a bunch of entries with iterator
-        for(Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
+        for (Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
             if (rnd.nextBoolean()) {
                 bs.clear(it.next());
                 it.remove();
@@ -779,7 +779,7 @@ public class TreeSetTest extends JSR166TestCase {
                 try {
                     set.add(element);
                     fail();
-                } catch(IllegalArgumentException e) {
+                } catch (IllegalArgumentException e) {
                     // expected
                 }
             }
@@ -981,13 +981,13 @@ public class TreeSetTest extends JSR166TestCase {
             try {
                 set.first();
                 fail();
-            } catch(NoSuchElementException e) {
+            } catch (NoSuchElementException e) {
                 // expected
             }
             try {
                 set.last();
                 fail();
-            } catch(NoSuchElementException e) {
+            } catch (NoSuchElementException e) {
                 // expected
             }
         }

@@ -35,9 +35,9 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         ConcurrentSkipListSet q = new ConcurrentSkipListSet();
         assertTrue(q.isEmpty());
 
-	for(int i = n-1; i >= 0; i-=2)
+	for (int i = n-1; i >= 0; i-=2)
 	    assertTrue(q.add(new Integer(i)));
-	for(int i = (n & 1); i < n; i+=2)
+	for (int i = (n & 1); i < n; i+=2)
 	    assertTrue(q.add(new Integer(i)));
         assertTrue(q.add(new Integer(-n)));
         assertTrue(q.add(new Integer(n)));
@@ -169,7 +169,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             q.add(new Object());
             shouldThrow();
         }
-        catch(ClassCastException success) {}
+        catch (ClassCastException success) {}
     }
 
 
@@ -416,7 +416,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = populatedSet(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.pollFirst());
     }
 
@@ -428,7 +428,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
-        for(int i = 0; i < ints.length; i++)
+        for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
     }
 
@@ -439,7 +439,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = populatedSet(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -453,7 +453,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = set0();
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -508,7 +508,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -687,7 +687,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             q.add(new Object());
             shouldThrow();
         }
-        catch(ClassCastException success) {}
+        catch (ClassCastException success) {}
     }
 
 
@@ -934,7 +934,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = populatedSet(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.pollFirst());
     }
 
@@ -946,7 +946,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
-        for(int i = 0; i < ints.length; i++)
+        for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
     }
 
@@ -957,7 +957,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = populatedSet(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -971,7 +971,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = dset0();
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -1026,7 +1026,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }

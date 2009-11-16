@@ -351,7 +351,7 @@ public class TimeUnitTest extends JSR166TestCase {
                     catch (InterruptedException ie) {
                         threadUnexpectedException();
                     }
-                    catch(IllegalMonitorStateException success) {
+                    catch (IllegalMonitorStateException success) {
                     }
 
                 }
@@ -361,7 +361,7 @@ public class TimeUnitTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch(Exception e) {
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -381,8 +381,8 @@ public class TimeUnitTest extends JSR166TestCase {
 			}
                         threadShouldThrow();
 		    }
-		    catch(InterruptedException success) {}
-		    catch(IllegalMonitorStateException failure) {
+		    catch (InterruptedException success) {}
+		    catch (IllegalMonitorStateException failure) {
 			threadUnexpectedException();
 		    }
 		}
@@ -392,7 +392,7 @@ public class TimeUnitTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch(Exception e) {
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -410,14 +410,14 @@ public class TimeUnitTest extends JSR166TestCase {
                                 public void run() {
                                     try {
                                         Thread.sleep(MEDIUM_DELAY_MS);
-                                    } catch(InterruptedException success){}
+                                    } catch (InterruptedException success){}
                                 }
                             });
 			s.start();
 			tu.timedJoin(s,MEDIUM_DELAY_MS);
                         threadShouldThrow();
 		    }
-		    catch(Exception e) {}
+		    catch (Exception e) {}
 		}
 	    });
 	t.start();
@@ -425,7 +425,7 @@ public class TimeUnitTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch(Exception e) {
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -443,7 +443,7 @@ public class TimeUnitTest extends JSR166TestCase {
 			tu.sleep(MEDIUM_DELAY_MS);
                         threadShouldThrow();
 		    }
-		    catch(InterruptedException success) {}
+		    catch (InterruptedException success) {}
 		}
 	    });
 	t.start();
@@ -451,7 +451,7 @@ public class TimeUnitTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch(Exception e) {
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -473,7 +473,7 @@ public class TimeUnitTest extends JSR166TestCase {
             TimeUnit r = (TimeUnit)in.readObject();
 
             assertEquals(q.toString(), r.toString());
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }

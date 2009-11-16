@@ -44,7 +44,7 @@ public class SystemTest extends JSR166TestCase {
             long nanosAsMillis = nanos / 1000000;
             assertTrue(nanosAsMillis <= millis + MILLIS_ROUND);
         }
-        catch(InterruptedException ie) {
+        catch (InterruptedException ie) {
             unexpectedException();
         }
     }
@@ -70,7 +70,7 @@ public class SystemTest extends JSR166TestCase {
             long nanosAsMillis = nanos / 1000000;
             assertTrue(millis <= nanosAsMillis + MILLIS_ROUND);
         }
-        catch(InterruptedException ie) {
+        catch (InterruptedException ie) {
             unexpectedException();
         }
     }

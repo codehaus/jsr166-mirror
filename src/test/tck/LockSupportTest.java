@@ -27,7 +27,7 @@ public class LockSupportTest extends JSR166TestCase{
 		public void run() {
 		    try {
 			LockSupport.park();
-		    } catch(Exception e){
+		    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -38,7 +38,7 @@ public class LockSupportTest extends JSR166TestCase{
             LockSupport.unpark(t);
             t.join();
 	}
-	catch(Exception e) {
+	catch (Exception e) {
             unexpectedException();
         }
     }
@@ -52,7 +52,7 @@ public class LockSupportTest extends JSR166TestCase{
 		    try {
                         Thread.sleep(SHORT_DELAY_MS);
 			LockSupport.park();
-		    } catch(Exception e){
+		    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -62,7 +62,7 @@ public class LockSupportTest extends JSR166TestCase{
             LockSupport.unpark(t);
             t.join();
 	}
-	catch(Exception e) {
+	catch (Exception e) {
             unexpectedException();
         }
     }
@@ -75,7 +75,7 @@ public class LockSupportTest extends JSR166TestCase{
 		public void run() {
 		    try {
 			LockSupport.park();
-		    } catch(Exception e){
+		    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -86,7 +86,7 @@ public class LockSupportTest extends JSR166TestCase{
             t.interrupt();
             t.join();
 	}
-	catch(Exception e) {
+	catch (Exception e) {
             unexpectedException();
         }
     }
@@ -102,7 +102,7 @@ public class LockSupportTest extends JSR166TestCase{
 		    try {
                         lock.lock();
 			LockSupport.park();
-		    } catch(Exception e){
+		    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -113,7 +113,7 @@ public class LockSupportTest extends JSR166TestCase{
             lock.unlock();
             t.join();
 	}
-	catch(Exception e) {
+	catch (Exception e) {
             unexpectedException();
         }
     }
@@ -126,7 +126,7 @@ public class LockSupportTest extends JSR166TestCase{
 		public void run() {
 		    try {
 			LockSupport.parkNanos(1000);
-		    } catch(Exception e){
+		    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -135,7 +135,7 @@ public class LockSupportTest extends JSR166TestCase{
             t.start();
             t.join();
 	}
-	catch(Exception e) {
+	catch (Exception e) {
             unexpectedException();
         }
     }
@@ -150,7 +150,7 @@ public class LockSupportTest extends JSR166TestCase{
 		    try {
                         long d = new Date().getTime() + 100;
 			LockSupport.parkUntil(d);
-		    } catch(Exception e){
+		    } catch (Exception e){
                         threadUnexpectedException();
                     }
 		}
@@ -159,7 +159,7 @@ public class LockSupportTest extends JSR166TestCase{
             t.start();
             t.join();
 	}
-	catch(Exception e) {
+	catch (Exception e) {
             unexpectedException();
         }
     }

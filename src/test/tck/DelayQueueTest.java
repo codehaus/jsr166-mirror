@@ -119,9 +119,9 @@ public class DelayQueueTest extends JSR166TestCase {
     private DelayQueue populatedQueue(int n) {
         DelayQueue q = new DelayQueue();
         assertTrue(q.isEmpty());
-	for(int i = n-1; i >= 0; i-=2)
+	for (int i = n-1; i >= 0; i-=2)
 	    assertTrue(q.offer(new PDelay(i)));
-	for(int i = (n & 1); i < n; i+=2)
+	for (int i = (n & 1); i < n; i+=2)
 	    assertTrue(q.offer(new PDelay(i)));
         assertFalse(q.isEmpty());
         assertEquals(NOCAP, q.remainingCapacity());
@@ -732,7 +732,7 @@ public class DelayQueueTest extends JSR166TestCase {
 	Object[] o = q.toArray();
         Arrays.sort(o);
 	try {
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
@@ -748,7 +748,7 @@ public class DelayQueueTest extends JSR166TestCase {
 	ints = (PDelay[])q.toArray(ints);
         Arrays.sort(ints);
 	try {
-	    for(int i = 0; i < ints.length; i++)
+	    for (int i = 0; i < ints.length; i++)
 		assertEquals(ints[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
@@ -764,7 +764,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(null);
 	    shouldThrow();
-	} catch(NullPointerException success){}
+	} catch (NullPointerException success){}
     }
 
     /**
@@ -775,7 +775,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(new String[10] );
 	    shouldThrow();
-	} catch(ArrayStoreException  success){}
+	} catch (ArrayStoreException  success){}
     }
 
     /**
@@ -785,7 +785,7 @@ public class DelayQueueTest extends JSR166TestCase {
         DelayQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -880,7 +880,7 @@ public class DelayQueueTest extends JSR166TestCase {
                 last = tt;
             }
         }
-        catch(InterruptedException ie) {
+        catch (InterruptedException ie) {
             unexpectedException();
         }
     }
@@ -925,7 +925,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -937,7 +937,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -986,7 +986,7 @@ public class DelayQueueTest extends JSR166TestCase {
             assertTrue(l.size() >= SIZE);
             t.join();
             assertTrue(q.size() + l.size() >= SIZE);
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -999,7 +999,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null, 0);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -1011,7 +1011,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q, 0);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 

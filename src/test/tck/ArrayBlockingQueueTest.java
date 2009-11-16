@@ -27,7 +27,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     private ArrayBlockingQueue populatedQueue(int n) {
         ArrayBlockingQueue q = new ArrayBlockingQueue(n);
         assertTrue(q.isEmpty());
-	for(int i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	    assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
         assertEquals(0, q.remainingCapacity());
@@ -711,7 +711,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         ArrayBlockingQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
 	try {
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
@@ -726,7 +726,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
 	try {
-	    for(int i = 0; i < ints.length; i++)
+	    for (int i = 0; i < ints.length; i++)
 		assertEquals(ints[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
@@ -741,7 +741,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ArrayBlockingQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(null);
 	    shouldThrow();
-	} catch(NullPointerException success){}
+	} catch (NullPointerException success){}
     }
 
     /**
@@ -752,7 +752,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ArrayBlockingQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(new String[10] );
 	    shouldThrow();
-	} catch(ArrayStoreException  success){}
+	} catch (ArrayStoreException  success){}
     }
 
 
@@ -763,7 +763,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         ArrayBlockingQueue q = populatedQueue(SIZE);
 	Iterator it = q.iterator();
 	try {
-	    while(it.hasNext()){
+	    while (it.hasNext()){
 		assertEquals(it.next(), q.take());
 	    }
 	} catch (InterruptedException e){
@@ -931,7 +931,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -944,7 +944,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -956,7 +956,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -1007,7 +1007,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                 assertEquals(l.get(i), new Integer(i));
             t.join();
             assertTrue(q.size() + l.size() >= SIZE);
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -1020,7 +1020,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null, 0);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -1032,7 +1032,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q, 0);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -1042,7 +1042,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testDrainToN() {
         ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE*2);
         for (int i = 0; i < SIZE + 2; ++i) {
-            for(int j = 0; j < SIZE; j++)
+            for (int j = 0; j < SIZE; j++)
                 assertTrue(q.offer(new Integer(j)));
             ArrayList l = new ArrayList();
             q.drainTo(l, i);

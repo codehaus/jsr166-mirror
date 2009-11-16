@@ -509,7 +509,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.get(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -520,7 +520,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.containsKey(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -531,7 +531,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map0();
             c.containsValue(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
 
@@ -543,7 +543,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -554,7 +554,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.putIfAbsent(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -565,7 +565,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.replace(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -576,7 +576,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.replace(null, one, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -587,7 +587,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.remove(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -598,7 +598,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.remove(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -619,7 +619,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -1208,7 +1208,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.get(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1219,7 +1219,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.containsKey(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1230,7 +1230,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap0();
             c.containsValue(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
 
@@ -1242,7 +1242,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1253,7 +1253,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.putIfAbsent(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1264,7 +1264,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.replace(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1275,7 +1275,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.replace(null, m1, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1286,7 +1286,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.remove(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1297,7 +1297,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.remove(null, "whatever");
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -1318,7 +1318,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }

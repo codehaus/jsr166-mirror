@@ -581,7 +581,7 @@ public class TreeMapTest extends JSR166TestCase {
             TreeMap c = map5();
             c.get(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -592,7 +592,7 @@ public class TreeMapTest extends JSR166TestCase {
             TreeMap c = map5();
             c.containsKey(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -604,7 +604,7 @@ public class TreeMapTest extends JSR166TestCase {
             c.put("sadsdf", "asdads");
             c.remove(null);
             shouldThrow();
-        } catch(NullPointerException e){}
+        } catch (NullPointerException e){}
     }
 
     /**
@@ -625,7 +625,7 @@ public class TreeMapTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -816,7 +816,7 @@ public class TreeMapTest extends JSR166TestCase {
         NavigableMap<Integer, Integer> result = null;
 	try {
             result = (NavigableMap<Integer, Integer>) cl.newInstance();
-	} catch(Exception e) {
+	} catch (Exception e) {
             fail();
 	}
         assertEquals(result.size(), 0);
@@ -841,7 +841,7 @@ public class TreeMapTest extends JSR166TestCase {
         }
 
         // Remove a bunch of entries with iterator
-        for(Iterator<Integer> it = map.keySet().iterator(); it.hasNext(); ) {
+        for (Iterator<Integer> it = map.keySet().iterator(); it.hasNext(); ) {
             if (rnd.nextBoolean()) {
                 bs.clear(it.next());
                 it.remove();
@@ -866,7 +866,7 @@ public class TreeMapTest extends JSR166TestCase {
         }
 
         // Remove a bunch of entries with iterator
-        for(Iterator<Integer> it = map.keySet().iterator(); it.hasNext(); ) {
+        for (Iterator<Integer> it = map.keySet().iterator(); it.hasNext(); ) {
             if (rnd.nextBoolean()) {
                 bs.clear(it.next());
                 it.remove();
@@ -882,7 +882,7 @@ public class TreeMapTest extends JSR166TestCase {
                 try {
                     map.put(key, 2 * key);
                     fail();
-                } catch(IllegalArgumentException e) {
+                } catch (IllegalArgumentException e) {
                     // expected
                 }
             }
@@ -1080,13 +1080,13 @@ public class TreeMapTest extends JSR166TestCase {
             try {
                 map.firstKey();
                 fail();
-            } catch(NoSuchElementException e) {
+            } catch (NoSuchElementException e) {
                 // expected
             }
             try {
                 map.lastKey();
                 fail();
-            } catch(NoSuchElementException e) {
+            } catch (NoSuchElementException e) {
                 // expected
             }
         }

@@ -81,7 +81,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
         final AtomicInteger ai = new AtomicInteger(1);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!ai.compareAndSet(2, 3)) Thread.yield();
+                    while (!ai.compareAndSet(2, 3)) Thread.yield();
                 }});
         try {
             t.start();
@@ -90,7 +90,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
             assertFalse(t.isAlive());
             assertEquals(ai.get(), 3);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -101,10 +101,10 @@ public class AtomicIntegerTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet(){
         AtomicInteger ai = new AtomicInteger(1);
-	while(!ai.weakCompareAndSet(1,2));
-	while(!ai.weakCompareAndSet(2,-4));
+	while (!ai.weakCompareAndSet(1,2));
+	while (!ai.weakCompareAndSet(2,-4));
 	assertEquals(-4,ai.get());
-        while(!ai.weakCompareAndSet(-4,7));
+        while (!ai.weakCompareAndSet(-4,7));
 	assertEquals(7,ai.get());
     }
 
@@ -206,7 +206,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             AtomicInteger r = (AtomicInteger) in.readObject();
             assertEquals(l.get(), r.get());
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }

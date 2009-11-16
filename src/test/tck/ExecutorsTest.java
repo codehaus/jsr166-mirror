@@ -91,7 +91,7 @@ public class ExecutorsTest extends JSR166TestCase{
             ExecutorService e = Executors.newCachedThreadPool(null);
             shouldThrow();
         }
-        catch(NullPointerException success) {
+        catch (NullPointerException success) {
         }
     }
 
@@ -126,7 +126,7 @@ public class ExecutorsTest extends JSR166TestCase{
             ExecutorService e = Executors.newSingleThreadExecutor(null);
             shouldThrow();
         }
-        catch(NullPointerException success) {
+        catch (NullPointerException success) {
         }
     }
 
@@ -174,7 +174,7 @@ public class ExecutorsTest extends JSR166TestCase{
             ExecutorService e = Executors.newFixedThreadPool(2, null);
             shouldThrow();
         }
-        catch(NullPointerException success) {
+        catch (NullPointerException success) {
         }
     }
 
@@ -186,7 +186,7 @@ public class ExecutorsTest extends JSR166TestCase{
             ExecutorService e = Executors.newFixedThreadPool(0);
             shouldThrow();
         }
-        catch(IllegalArgumentException success) {
+        catch (IllegalArgumentException success) {
         }
     }
 
@@ -238,8 +238,8 @@ public class ExecutorsTest extends JSR166TestCase{
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
             joinPool(p1);
-	} catch(RejectedExecutionException e){}
-	catch(Exception e){
+	} catch (RejectedExecutionException e){}
+	catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -258,8 +258,8 @@ public class ExecutorsTest extends JSR166TestCase{
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
             joinPool(p1);
-	} catch(RejectedExecutionException e){}
-	catch(Exception e){
+	} catch (RejectedExecutionException e){}
+	catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -278,8 +278,8 @@ public class ExecutorsTest extends JSR166TestCase{
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
             joinPool(p1);
-	} catch(RejectedExecutionException e){}
-	catch(Exception e){
+	} catch (RejectedExecutionException e){}
+	catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -356,7 +356,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(r);
         try {
             e.shutdown();
-        } catch(SecurityException ok) {
+        } catch (SecurityException ok) {
         }
 
         try {
@@ -403,7 +403,7 @@ public class ExecutorsTest extends JSR166TestCase{
 			threadAssertTrue(name.endsWith("thread-1"));
 			threadAssertTrue(thisccl == current.getContextClassLoader());
 			threadAssertTrue(thisacc.equals(AccessController.getContext()));
-		    } catch(SecurityException ok) {
+		    } catch (SecurityException ok) {
 			// Also pass if not allowed to change settings
 		    }
                 }
@@ -414,7 +414,7 @@ public class ExecutorsTest extends JSR166TestCase{
         e.execute(r);
         try {
             e.shutdown();
-        } catch(SecurityException ok) {
+        } catch (SecurityException ok) {
         }
         try {
             Thread.sleep(SHORT_DELAY_MS);
@@ -462,14 +462,14 @@ public class ExecutorsTest extends JSR166TestCase{
             // too many privileges to test; so return
             Policy.setPolicy(savedPolicy);
             return;
-        } catch(AccessControlException ok) {
+        } catch (AccessControlException ok) {
         }
 
         try {
             Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
             shouldThrow();
-        } catch(AccessControlException success) {
-        } catch(Exception ex) {
+        } catch (AccessControlException success) {
+        } catch (Exception ex) {
             unexpectedException();
         }
         finally {
@@ -496,7 +496,7 @@ public class ExecutorsTest extends JSR166TestCase{
         try {
             Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
             task.call();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         }
         finally {
@@ -532,14 +532,14 @@ public class ExecutorsTest extends JSR166TestCase{
                     }}, noprivAcc);
             // too many permssions; skip test
             return;
-        } catch(AccessControlException ok) {
+        } catch (AccessControlException ok) {
         }
 
         try {
             task.call();
             shouldThrow();
-        } catch(AccessControlException success) {
-        } catch(Exception ex) {
+        } catch (AccessControlException success) {
+        } catch (Exception ex) {
             unexpectedException();
         }
     }
@@ -562,7 +562,7 @@ public class ExecutorsTest extends JSR166TestCase{
         Callable task = Executors.privilegedCallable(new CheckCCL());
         try {
             task.call();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         } finally {
             Policy.setPolicy(savedPolicy);
@@ -576,7 +576,7 @@ public class ExecutorsTest extends JSR166TestCase{
         try {
             Callable c = Executors.callable(new NoOpRunnable());
             assertNull(c.call());
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         }
 
@@ -589,7 +589,7 @@ public class ExecutorsTest extends JSR166TestCase{
         try {
             Callable c = Executors.callable(new NoOpRunnable(), one);
             assertEquals(one, c.call());
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         }
     }
@@ -602,7 +602,7 @@ public class ExecutorsTest extends JSR166TestCase{
             Callable c = Executors.callable(new PrivilegedAction() {
                     public Object run() { return one; }});
         assertEquals(one, c.call());
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         }
     }
@@ -615,7 +615,7 @@ public class ExecutorsTest extends JSR166TestCase{
             Callable c = Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() { return one; }});
             assertEquals(one, c.call());
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             unexpectedException();
         }
     }

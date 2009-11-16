@@ -62,19 +62,19 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(SIZE);
         try {
             ai.get(SIZE);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
         try {
             ai.get(-1);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
         try {
             ai.set(SIZE, null);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
         try {
             ai.set(-1, null);
-        } catch(IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success){
         }
     }
 
@@ -134,7 +134,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         a.set(0, one);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!a.compareAndSet(0, two, three)) Thread.yield();
+                    while (!a.compareAndSet(0, two, three)) Thread.yield();
                 }});
         try {
             t.start();
@@ -143,7 +143,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
             assertFalse(t.isAlive());
             assertEquals(a.get(0), three);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -156,10 +156,10 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
         AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, one);
-            while(!ai.weakCompareAndSet(i, one,two));
-            while(!ai.weakCompareAndSet(i, two,m4));
+            while (!ai.weakCompareAndSet(i, one,two));
+            while (!ai.weakCompareAndSet(i, two,m4));
             assertEquals(m4,ai.get(i));
-            while(!ai.weakCompareAndSet(i, m4,seven));
+            while (!ai.weakCompareAndSet(i, m4,seven));
             assertEquals(seven,ai.get(i));
         }
     }
@@ -199,7 +199,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase
             for (int i = 0; i < SIZE; ++i) {
                 assertEquals(r.get(i), l.get(i));
             }
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }

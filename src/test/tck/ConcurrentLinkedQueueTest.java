@@ -28,7 +28,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     private ConcurrentLinkedQueue populatedQueue(int n) {
         ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         assertTrue(q.isEmpty());
-	for(int i = 0; i < n; ++i)
+	for (int i = 0; i < n; ++i)
 	    assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
 	assertEquals(n, q.size());
@@ -389,7 +389,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	Object[] o = q.toArray();
         Arrays.sort(o);
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.poll());
     }
 
@@ -401,7 +401,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 	Integer[] ints = new Integer[SIZE];
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
-        for(int i = 0; i < ints.length; i++)
+        for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.poll());
     }
 
@@ -413,7 +413,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(null);
 	    shouldThrow();
-	} catch(NullPointerException success){}
+	} catch (NullPointerException success){}
     }
 
     /**
@@ -424,7 +424,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(new String[10] );
 	    shouldThrow();
-	} catch(ArrayStoreException  success){}
+	} catch (ArrayStoreException  success){}
     }
 
     /**
@@ -434,7 +434,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -527,7 +527,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }

@@ -97,7 +97,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
         final AtomicStampedReference ai = new AtomicStampedReference(one, 0);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!ai.compareAndSet(two, three, 0, 0)) Thread.yield();
+                    while (!ai.compareAndSet(two, three, 0, 0)) Thread.yield();
                 }});
         try {
             t.start();
@@ -107,7 +107,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
             assertEquals(ai.getReference(), three);
             assertEquals(ai.getStamp(), 0);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -120,7 +120,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
         final AtomicStampedReference ai = new AtomicStampedReference(one, 0);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!ai.compareAndSet(one, one, 1, 2)) Thread.yield();
+                    while (!ai.compareAndSet(one, one, 1, 2)) Thread.yield();
                 }});
         try {
             t.start();
@@ -130,7 +130,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
             assertEquals(ai.getReference(), one);
             assertEquals(ai.getStamp(), 2);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -146,11 +146,11 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
         assertEquals(0, ai.getStamp ());
 	assertEquals(0, mark[0]);
 
-        while(!ai.weakCompareAndSet(one, two, 0, 0));
+        while (!ai.weakCompareAndSet(one, two, 0, 0));
 	assertEquals(two, ai.get(mark));
 	assertEquals(0, mark[0]);
 
-        while(!ai.weakCompareAndSet(two, m3, 0, 1));
+        while (!ai.weakCompareAndSet(two, m3, 0, 1));
 	assertEquals(m3, ai.get(mark));
 	assertEquals(1, mark[0]);
     }

@@ -157,9 +157,9 @@ public class DequeBash {
     static void randomOp(Deque<Integer> deque) throws Exception {
 
         // Perform a random operation
-        switch(random() & 3) {
+        switch (random() & 3) {
         case 0:
-            switch(random() & 3) {
+            switch (random() & 3) {
             case 0: deque.addLast(nextTail++);   break;
             case 1: deque.offerLast(nextTail++); break;
             case 2: deque.offer(nextTail++);     break;
@@ -172,7 +172,7 @@ public class DequeBash {
                 int result = 666;
                 boolean threw = false;
                 try {
-                    switch(random(3)) {
+                    switch (random(3)) {
                     case 0: result = deque.removeFirst(); break;
                     case 1: result = deque.remove();      break;
                     case 2: result = deque.pop();         break;
@@ -185,7 +185,7 @@ public class DequeBash {
                     throw new Exception("Remove-no exception: " + result);
             } else { // deque nonempty
                 int result = -1;
-                switch(random(5)) {
+                switch (random(5)) {
                 case 0: result = deque.removeFirst(); break;
                 case 1: result = deque.remove();      break;
                 case 2: result = deque.pop();         break;
@@ -199,7 +199,7 @@ public class DequeBash {
             }
             break;
         case 2:
-            switch(random(3)) {
+            switch (random(3)) {
             case 0: deque.addFirst(nextHead--);   break;
             case 1: deque.offerFirst(nextHead--); break;
             case 2: deque.push(nextHead--);       break;
@@ -287,7 +287,7 @@ public class DequeBash {
 
     private static void testRemove(Deque<Integer> deque) throws Exception {
         Deque<Integer> copy = null;
-        switch(random() & 1) {
+        switch (random() & 1) {
           case 0:
             copy = (Deque<Integer>) deque.getClass().
                 getConstructor(Collection.class).newInstance(deque);
@@ -320,7 +320,7 @@ public class DequeBash {
                 throw new Exception(e + " missing.");
 
             boolean removed = false;
-            switch(random(3)) {
+            switch (random(3)) {
                 case 0:  removed = copy.remove(e);                break;
                 case 1:  removed = copy.removeFirstOccurrence(e); break;
                 case 2:  removed = copy.removeLastOccurrence(e);  break;

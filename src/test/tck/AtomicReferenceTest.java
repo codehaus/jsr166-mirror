@@ -80,7 +80,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
         final AtomicReference ai = new AtomicReference(one);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!ai.compareAndSet(two, three)) Thread.yield();
+                    while (!ai.compareAndSet(two, three)) Thread.yield();
                 }});
         try {
             t.start();
@@ -89,7 +89,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
             assertFalse(t.isAlive());
             assertEquals(ai.get(), three);
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -100,10 +100,10 @@ public class AtomicReferenceTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet(){
         AtomicReference ai = new AtomicReference(one);
-	while(!ai.weakCompareAndSet(one,two));
-	while(!ai.weakCompareAndSet(two,m4));
+	while (!ai.weakCompareAndSet(one,two));
+	while (!ai.weakCompareAndSet(two,m4));
 	assertEquals(m4,ai.get());
-        while(!ai.weakCompareAndSet(m4,seven));
+        while (!ai.weakCompareAndSet(m4,seven));
 	assertEquals(seven,ai.get());
     }
 
@@ -134,7 +134,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             AtomicReference r = (AtomicReference) in.readObject();
             assertEquals(l.get(), r.get());
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }

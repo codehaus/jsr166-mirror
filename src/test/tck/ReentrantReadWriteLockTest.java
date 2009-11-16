@@ -29,7 +29,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         public void run() {
             try {
                 lock.writeLock().lockInterruptibly();
-            } catch(InterruptedException success){}
+            } catch (InterruptedException success){}
         }
     }
 
@@ -45,7 +45,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             try {
                 lock.writeLock().lockInterruptibly();
                 threadShouldThrow();
-            } catch(InterruptedException success){}
+            } catch (InterruptedException success){}
         }
     }
 
@@ -132,11 +132,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWriteHoldCount() {
 	ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	for(int i = 1; i <= SIZE; i++) {
+	for (int i = 1; i <= SIZE; i++) {
 	    lock.writeLock().lock();
 	    assertEquals(i,lock.getWriteHoldCount());
 	}
-	for(int i = SIZE; i > 0; i--) {
+	for (int i = SIZE; i > 0; i--) {
 	    lock.writeLock().unlock();
 	    assertEquals(i-1,lock.getWriteHoldCount());
 	}
@@ -147,11 +147,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetHoldCount() {
 	ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	for(int i = 1; i <= SIZE; i++) {
+	for (int i = 1; i <= SIZE; i++) {
 	    lock.writeLock().lock();
 	    assertEquals(i,lock.writeLock().getHoldCount());
 	}
-	for(int i = SIZE; i > 0; i--) {
+	for (int i = SIZE; i > 0; i--) {
 	    lock.writeLock().unlock();
 	    assertEquals(i-1,lock.writeLock().getHoldCount());
 	}
@@ -162,11 +162,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetReadHoldCount() {
 	ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	for(int i = 1; i <= SIZE; i++) {
+	for (int i = 1; i <= SIZE; i++) {
 	    lock.readLock().lock();
 	    assertEquals(i,lock.getReadHoldCount());
 	}
-	for(int i = SIZE; i > 0; i--) {
+	for (int i = SIZE; i > 0; i--) {
 	    lock.readLock().unlock();
 	    assertEquals(i-1,lock.getReadHoldCount());
 	}
@@ -181,7 +181,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 	try {
 	    rl.writeLock().unlock();
 	    shouldThrow();
-	} catch(IllegalMonitorStateException success){}
+	} catch (IllegalMonitorStateException success){}
     }
 
 
@@ -197,7 +197,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         lock.writeLock().unlock();
 			lock.writeLock().lockInterruptibly();
                         lock.writeLock().unlock();
-		    } catch(InterruptedException success){}
+		    } catch (InterruptedException success){}
 		}
 	    });
         try {
@@ -208,7 +208,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             lock.writeLock().unlock();
             t.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -223,7 +223,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                 public void run() {
                     try {
 			lock.writeLock().tryLock(1000,TimeUnit.MILLISECONDS);
-		    } catch(InterruptedException success){}
+		    } catch (InterruptedException success){}
 		}
 	    });
         try {
@@ -231,7 +231,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.interrupt();
             lock.writeLock().unlock();
             t.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -246,7 +246,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                 public void run() {
                     try {
 			lock.readLock().lockInterruptibly();
-		    } catch(InterruptedException success){}
+		    } catch (InterruptedException success){}
 		}
 	    });
         try {
@@ -256,7 +256,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             lock.writeLock().unlock();
             t.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -272,14 +272,14 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     try {
 			lock.readLock().tryLock(1000,TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-		    } catch(InterruptedException success){}
+		    } catch (InterruptedException success){}
 		}
 	    });
         try {
             t.start();
             t.interrupt();
             t.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -300,7 +300,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.writeLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -320,7 +320,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.writeLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -341,7 +341,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.readLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -375,7 +375,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -409,7 +409,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -459,7 +459,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -498,7 +498,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -538,7 +538,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -589,7 +589,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -629,7 +629,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -672,7 +672,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(!t1.isAlive());
             assertTrue(!t2.isAlive());
 
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -694,7 +694,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.readLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -716,7 +716,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.readLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -738,7 +738,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.readLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -760,7 +760,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.readLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -786,7 +786,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.writeLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -810,7 +810,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.start();
             t.join();
             lock.writeLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -823,7 +823,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	try {
             lock.writeLock().lockInterruptibly();
-        } catch(Exception e) {
+        } catch (Exception e) {
             unexpectedException();
         }
 	Thread t = new Thread(new Runnable() {
@@ -832,7 +832,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 			lock.writeLock().lockInterruptibly();
 			threadShouldThrow();
 		    }
-		    catch(InterruptedException success) {
+		    catch (InterruptedException success) {
                     }
 		}
 	    });
@@ -843,7 +843,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.join();
             lock.writeLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -855,7 +855,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	try {
             lock.writeLock().lockInterruptibly();
-        } catch(Exception e) {
+        } catch (Exception e) {
             unexpectedException();
         }
 	Thread t = new Thread(new Runnable() {
@@ -864,7 +864,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 			lock.readLock().lockInterruptibly();
 			threadShouldThrow();
 		    }
-		    catch(InterruptedException success) {
+		    catch (InterruptedException success) {
                     }
 		}
 	    });
@@ -874,7 +874,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             t.interrupt();
             t.join();
             lock.writeLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -975,7 +975,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         c.await();
                         lock.writeLock().unlock();
 		    }
-		    catch(InterruptedException e) {
+		    catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1068,7 +1068,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         lock.writeLock().unlock();
                         threadShouldThrow();
 		    }
-		    catch(InterruptedException success) {
+		    catch (InterruptedException success) {
                     }
 		}
 	    });
@@ -1099,7 +1099,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         lock.writeLock().unlock();
                         threadShouldThrow();
 		    }
-		    catch(InterruptedException success) {
+		    catch (InterruptedException success) {
                     }
 		}
 	    });
@@ -1131,7 +1131,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         lock.writeLock().unlock();
                         threadShouldThrow();
 		    }
-		    catch(InterruptedException success) {
+		    catch (InterruptedException success) {
                     }
 		}
 	    });
@@ -1161,7 +1161,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         c.await();
                         lock.writeLock().unlock();
 		    }
-		    catch(InterruptedException e) {
+		    catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1174,7 +1174,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         c.await();
                         lock.writeLock().unlock();
 		    }
-		    catch(InterruptedException e) {
+		    catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1216,7 +1216,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             ReentrantReadWriteLock r = (ReentrantReadWriteLock) in.readObject();
             r.readLock().lock();
             r.readLock().unlock();
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -1246,7 +1246,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertFalse(lock.hasQueuedThreads());
             t1.join();
             t2.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -1292,7 +1292,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertFalse(sync.hasQueuedThread(t2));
             t1.join();
             t2.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -1322,7 +1322,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertEquals(0, lock.getQueueLength());
             t1.join();
             t2.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -1354,7 +1354,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(lock.getQueuedThreads().isEmpty());
             t1.join();
             t2.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -1513,7 +1513,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         c.await();
                         lock.writeLock().unlock();
 		    }
-		    catch(InterruptedException e) {
+		    catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1555,7 +1555,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         c.await();
                         lock.writeLock().unlock();
 		    }
-		    catch(InterruptedException e) {
+		    catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1597,7 +1597,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         c.await();
                         lock.writeLock().unlock();
 		    }
-		    catch(InterruptedException e) {
+		    catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1611,7 +1611,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                         c.await();
                         lock.writeLock().unlock();
 		    }
-		    catch(InterruptedException e) {
+		    catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}

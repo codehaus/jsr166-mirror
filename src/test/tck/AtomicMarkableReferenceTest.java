@@ -97,7 +97,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
         final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!ai.compareAndSet(two, three, false, false)) Thread.yield();
+                    while (!ai.compareAndSet(two, three, false, false)) Thread.yield();
                 }});
         try {
             t.start();
@@ -107,7 +107,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
             assertEquals(ai.getReference(), three);
             assertFalse(ai.isMarked());
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -120,7 +120,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
         final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!ai.compareAndSet(one, one, true, false)) Thread.yield();
+                    while (!ai.compareAndSet(one, one, true, false)) Thread.yield();
                 }});
         try {
             t.start();
@@ -130,7 +130,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
             assertEquals(ai.getReference(), one);
             assertFalse(ai.isMarked());
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -146,11 +146,11 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
         assertFalse(ai.isMarked());
 	assertFalse(mark[0]);
 
-        while(!ai.weakCompareAndSet(one, two, false, false));
+        while (!ai.weakCompareAndSet(one, two, false, false));
 	assertEquals(two, ai.get(mark));
 	assertFalse(mark[0]);
 
-        while(!ai.weakCompareAndSet(two, m3, false, true));
+        while (!ai.weakCompareAndSet(two, m3, false, true));
 	assertEquals(m3, ai.get(mark));
 	assertTrue(mark[0]);
     }

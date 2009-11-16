@@ -39,9 +39,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     private PriorityBlockingQueue populatedQueue(int n) {
         PriorityBlockingQueue q = new PriorityBlockingQueue(n);
         assertTrue(q.isEmpty());
-	for(int i = n-1; i >= 0; i-=2)
+	for (int i = n-1; i >= 0; i-=2)
 	    assertTrue(q.offer(new Integer(i)));
-	for(int i = (n & 1); i < n; i+=2)
+	for (int i = (n & 1); i < n; i+=2)
 	    assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
         assertEquals(NOCAP, q.remainingCapacity());
@@ -212,7 +212,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             q.offer(new Object());
             shouldThrow();
         }
-        catch(ClassCastException success) {}
+        catch (ClassCastException success) {}
     }
 
     /**
@@ -690,7 +690,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 	Object[] o = q.toArray();
         Arrays.sort(o);
 	try {
-	for(int i = 0; i < o.length; i++)
+	for (int i = 0; i < o.length; i++)
 	    assertEquals(o[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
@@ -706,7 +706,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 	ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
 	try {
-	    for(int i = 0; i < ints.length; i++)
+	    for (int i = 0; i < ints.length; i++)
 		assertEquals(ints[i], q.take());
 	} catch (InterruptedException e){
 	    unexpectedException();
@@ -721,7 +721,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             PriorityBlockingQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(null);
 	    shouldThrow();
-	} catch(NullPointerException success){}
+	} catch (NullPointerException success){}
     }
 
     /**
@@ -732,7 +732,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             PriorityBlockingQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(new String[10] );
 	    shouldThrow();
-	} catch(ArrayStoreException  success){}
+	} catch (ArrayStoreException  success){}
     }
 
     /**
@@ -742,7 +742,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         int i = 0;
 	Iterator it = q.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
         }
@@ -831,7 +831,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -844,7 +844,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -856,7 +856,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -903,7 +903,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                 assertEquals(l.get(i), new Integer(i));
             t.join();
             assertTrue(q.size() + l.size() >= SIZE);
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -916,7 +916,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null, 0);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -928,7 +928,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q, 0);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -938,7 +938,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testDrainToN() {
         PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE*2);
         for (int i = 0; i < SIZE + 2; ++i) {
-            for(int j = 0; j < SIZE; j++)
+            for (int j = 0; j < SIZE; j++)
                 assertTrue(q.offer(new Integer(j)));
             ArrayList l = new ArrayList();
             q.drainTo(l, i);

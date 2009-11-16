@@ -83,7 +83,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
         final AtomicBoolean ai = new AtomicBoolean(true);
         Thread t = new Thread(new Runnable() {
                 public void run() {
-                    while(!ai.compareAndSet(false, true)) Thread.yield();
+                    while (!ai.compareAndSet(false, true)) Thread.yield();
                 }});
         try {
             t.start();
@@ -91,7 +91,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
             t.join(LONG_DELAY_MS);
             assertFalse(t.isAlive());
         }
-        catch(Exception e) {
+        catch (Exception e) {
             unexpectedException();
         }
     }
@@ -102,11 +102,11 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
-	while(!ai.weakCompareAndSet(true,false));
+	while (!ai.weakCompareAndSet(true,false));
 	assertEquals(false,ai.get());
-	while(!ai.weakCompareAndSet(false,false));
+	while (!ai.weakCompareAndSet(false,false));
         assertEquals(false,ai.get());
-        while(!ai.weakCompareAndSet(false,true));
+        while (!ai.weakCompareAndSet(false,true));
 	assertEquals(true,ai.get());
     }
 
@@ -138,7 +138,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             AtomicBoolean r = (AtomicBoolean) in.readObject();
             assertEquals(l.get(), r.get());
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }

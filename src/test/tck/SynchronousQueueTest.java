@@ -625,7 +625,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
 	    Object o[] = q.toArray(null);
 	    shouldThrow();
-	} catch(NullPointerException success){}
+	} catch (NullPointerException success){}
     }
 
 
@@ -754,7 +754,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
             unexpectedException();
         }
@@ -768,7 +768,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -780,7 +780,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -819,7 +819,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 assertEquals(l.get(0), new Integer(1));
             t.join();
             assertTrue(l.size() <= 1);
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }
@@ -832,7 +832,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null, 0);
             shouldThrow();
-        } catch(NullPointerException success) {
+        } catch (NullPointerException success) {
         }
     }
 
@@ -844,7 +844,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q, 0);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
+        } catch (IllegalArgumentException success) {
         }
     }
 
@@ -885,7 +885,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertTrue(l.contains(two));
             t1.join();
             t2.join();
-        } catch(Exception e){
+        } catch (Exception e){
             unexpectedException();
         }
     }

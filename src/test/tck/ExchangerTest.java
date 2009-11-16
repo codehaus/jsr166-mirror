@@ -31,7 +31,7 @@ public class ExchangerTest extends JSR166TestCase {
                         threadAssertEquals(v, two);
                         Object w = e.exchange(v);
                         threadAssertEquals(w, one);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
                     }
 		}
@@ -43,7 +43,7 @@ public class ExchangerTest extends JSR166TestCase {
                         threadAssertEquals(v, one);
                         Object w = e.exchange(v);
                         threadAssertEquals(w, two);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
                     }
 		}
@@ -53,7 +53,7 @@ public class ExchangerTest extends JSR166TestCase {
             t2.start();
             t1.join();
             t2.join();
-        } catch(InterruptedException ex) {
+        } catch (InterruptedException ex) {
             unexpectedException();
         }
     }
@@ -70,9 +70,9 @@ public class ExchangerTest extends JSR166TestCase {
                         threadAssertEquals(v, two);
                         Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(w, one);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
-                    } catch(TimeoutException toe) {
+                    } catch (TimeoutException toe) {
                         threadUnexpectedException();
                     }
 		}
@@ -84,9 +84,9 @@ public class ExchangerTest extends JSR166TestCase {
                         threadAssertEquals(v, one);
                         Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(w, two);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
-                    } catch(TimeoutException toe) {
+                    } catch (TimeoutException toe) {
                         threadUnexpectedException();
                     }
 		}
@@ -96,7 +96,7 @@ public class ExchangerTest extends JSR166TestCase {
             t2.start();
             t1.join();
             t2.join();
-        } catch(InterruptedException ex) {
+        } catch (InterruptedException ex) {
             unexpectedException();
         }
     }
@@ -111,7 +111,7 @@ public class ExchangerTest extends JSR166TestCase {
                     try {
                         e.exchange(one);
                         threadShouldThrow();
-                    } catch(InterruptedException success){
+                    } catch (InterruptedException success){
                     }
                 }
             });
@@ -120,7 +120,7 @@ public class ExchangerTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch(InterruptedException ex) {
+        } catch (InterruptedException ex) {
             unexpectedException();
         }
     }
@@ -135,8 +135,8 @@ public class ExchangerTest extends JSR166TestCase {
                     try {
                         e.exchange(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch(InterruptedException success){
-                    } catch(Exception e2){
+                    } catch (InterruptedException success){
+                    } catch (Exception e2){
                         threadFail("should throw IE");
                     }
                 }
@@ -145,7 +145,7 @@ public class ExchangerTest extends JSR166TestCase {
             t.start();
             t.interrupt();
             t.join();
-        } catch(InterruptedException ex){
+        } catch (InterruptedException ex){
             unexpectedException();
         }
     }
@@ -160,8 +160,8 @@ public class ExchangerTest extends JSR166TestCase {
                     try {
                         e.exchange(null, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch(TimeoutException success){
-                    } catch(InterruptedException e2){
+                    } catch (TimeoutException success){
+                    } catch (InterruptedException e2){
                         threadFail("should throw TOE");
                     }
                 }
@@ -169,7 +169,7 @@ public class ExchangerTest extends JSR166TestCase {
         try {
             t.start();
             t.join();
-        } catch(InterruptedException ex){
+        } catch (InterruptedException ex){
             unexpectedException();
         }
     }
@@ -186,7 +186,7 @@ public class ExchangerTest extends JSR166TestCase {
                         threadAssertEquals(v, two);
                         Object w = e.exchange(v);
                         threadShouldThrow();
-		    } catch(InterruptedException success){
+		    } catch (InterruptedException success){
                     }
 		}
 	    });
@@ -198,7 +198,7 @@ public class ExchangerTest extends JSR166TestCase {
                         Thread.sleep(SMALL_DELAY_MS);
                         Object w = e.exchange(v);
                         threadAssertEquals(w, three);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
                     }
 		}
@@ -209,7 +209,7 @@ public class ExchangerTest extends JSR166TestCase {
                         Thread.sleep(SMALL_DELAY_MS);
                         Object w = e.exchange(three);
                         threadAssertEquals(w, one);
-		    } catch(InterruptedException e){
+		    } catch (InterruptedException e){
                         threadUnexpectedException();
                     }
 		}
@@ -224,7 +224,7 @@ public class ExchangerTest extends JSR166TestCase {
             t1.join();
             t2.join();
             t3.join();
-        } catch(InterruptedException ex) {
+        } catch (InterruptedException ex) {
             unexpectedException();
         }
     }

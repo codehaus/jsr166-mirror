@@ -24,26 +24,26 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testExchange() {
         final Exchanger e = new Exchanger();
-	Thread t1 = new Thread(new Runnable(){
-		public void run(){
+	Thread t1 = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			Object v = e.exchange(one);
                         threadAssertEquals(v, two);
                         Object w = e.exchange(v);
                         threadAssertEquals(w, one);
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
 	    });
-	Thread t2 = new Thread(new Runnable(){
-		public void run(){
+	Thread t2 = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			Object v = e.exchange(two);
                         threadAssertEquals(v, one);
                         Object w = e.exchange(v);
                         threadAssertEquals(w, two);
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -63,28 +63,28 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testTimedExchange() {
         final Exchanger e = new Exchanger();
-	Thread t1 = new Thread(new Runnable(){
-		public void run(){
+	Thread t1 = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			Object v = e.exchange(one, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(v, two);
                         Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(w, one);
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     } catch (TimeoutException toe) {
                         threadUnexpectedException();
                     }
 		}
 	    });
-	Thread t2 = new Thread(new Runnable(){
-		public void run(){
+	Thread t2 = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			Object v = e.exchange(two, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(v, one);
                         Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertEquals(w, two);
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     } catch (TimeoutException toe) {
                         threadUnexpectedException();
@@ -104,14 +104,14 @@ public class ExchangerTest extends JSR166TestCase {
     /**
      * interrupt during wait for exchange throws IE
      */
-    public void testExchange_InterruptedException(){
+    public void testExchange_InterruptedException() {
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         e.exchange(one);
                         threadShouldThrow();
-                    } catch (InterruptedException success){
+                    } catch (InterruptedException success) {
                     }
                 }
             });
@@ -128,15 +128,15 @@ public class ExchangerTest extends JSR166TestCase {
     /**
      * interrupt during wait for timed exchange throws IE
      */
-    public void testTimedExchange_InterruptedException(){
+    public void testTimedExchange_InterruptedException() {
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         e.exchange(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (InterruptedException success){
-                    } catch (Exception e2){
+                    } catch (InterruptedException success) {
+                    } catch (Exception e2) {
                         threadFail("should throw IE");
                     }
                 }
@@ -145,7 +145,7 @@ public class ExchangerTest extends JSR166TestCase {
             t.start();
             t.interrupt();
             t.join();
-        } catch (InterruptedException ex){
+        } catch (InterruptedException ex) {
             unexpectedException();
         }
     }
@@ -153,15 +153,15 @@ public class ExchangerTest extends JSR166TestCase {
     /**
      * timeout during wait for timed exchange throws TOE
      */
-    public void testExchange_TimeOutException(){
+    public void testExchange_TimeOutException() {
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new Runnable() {
-                public void run(){
+                public void run() {
                     try {
                         e.exchange(null, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (TimeoutException success){
-                    } catch (InterruptedException e2){
+                    } catch (TimeoutException success) {
+                    } catch (InterruptedException e2) {
                         threadFail("should throw TOE");
                     }
                 }
@@ -169,7 +169,7 @@ public class ExchangerTest extends JSR166TestCase {
         try {
             t.start();
             t.join();
-        } catch (InterruptedException ex){
+        } catch (InterruptedException ex) {
             unexpectedException();
         }
     }
@@ -179,37 +179,37 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testReplacementAfterExchange() {
         final Exchanger e = new Exchanger();
-	Thread t1 = new Thread(new Runnable(){
-		public void run(){
+	Thread t1 = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			Object v = e.exchange(one);
                         threadAssertEquals(v, two);
                         Object w = e.exchange(v);
                         threadShouldThrow();
-		    } catch (InterruptedException success){
+		    } catch (InterruptedException success) {
                     }
 		}
 	    });
-	Thread t2 = new Thread(new Runnable(){
-		public void run(){
+	Thread t2 = new Thread(new Runnable() {
+		public void run() {
 		    try {
 			Object v = e.exchange(two);
                         threadAssertEquals(v, one);
                         Thread.sleep(SMALL_DELAY_MS);
                         Object w = e.exchange(v);
                         threadAssertEquals(w, three);
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
 	    });
-	Thread t3 = new Thread(new Runnable(){
-		public void run(){
+	Thread t3 = new Thread(new Runnable() {
+		public void run() {
 		    try {
                         Thread.sleep(SMALL_DELAY_MS);
                         Object w = e.exchange(three);
                         threadAssertEquals(w, one);
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}

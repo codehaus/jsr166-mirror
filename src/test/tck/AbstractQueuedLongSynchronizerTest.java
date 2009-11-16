@@ -76,7 +76,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         public void run() {
             try {
                 sync.acquireInterruptibly(1);
-            } catch (InterruptedException success){}
+            } catch (InterruptedException success) {}
         }
     }
 
@@ -92,7 +92,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             try {
                 sync.acquireInterruptibly(1);
                 threadShouldThrow();
-            } catch (InterruptedException success){}
+            } catch (InterruptedException success) {}
         }
     }
 
@@ -149,7 +149,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertFalse(sync.hasQueuedThreads());
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -195,7 +195,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertFalse(sync.isQueued(t2));
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -225,7 +225,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertNull(sync.getFirstQueuedThread());
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -255,7 +255,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertTrue(sync.hasContended());
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -287,7 +287,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertTrue(sync.getQueuedThreads().isEmpty());
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -319,7 +319,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -349,7 +349,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertTrue(sync.getSharedQueuedThreads().isEmpty());
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -365,13 +365,13 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     try {
 			sync.tryAcquireNanos(1, MEDIUM_DELAY_MS * 1000 * 1000);
 			threadShouldThrow();
-		    } catch (InterruptedException success){}
+		    } catch (InterruptedException success) {}
 		}
 	    });
         try {
             t.start();
             t.interrupt();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -392,7 +392,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             t.start();
             t.join();
             sync.release(1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -416,7 +416,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             t.start();
             t.join();
             sync.release(1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -449,7 +449,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertTrue(sync.isHeldExclusively());
             t.join();
             assertFalse(sync.isHeldExclusively());
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -469,7 +469,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             sync.release(1);
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -490,7 +490,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             t.interrupt();
             assertTrue(sync.isHeldExclusively());
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -1137,7 +1137,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             Mutex r = (Mutex) in.readObject();
             assertTrue(r.isHeldExclusively());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }
@@ -1178,7 +1178,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         threadAssertFalse(l.isSignalled());
 			l.acquireSharedInterruptibly(0);
                         threadAssertTrue(l.isSignalled());
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1190,7 +1190,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             l.releaseShared(0);
             assertTrue(l.isSignalled());
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -1209,7 +1209,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 			threadAssertTrue(l.tryAcquireSharedNanos(0, MEDIUM_DELAY_MS* 1000 * 1000));
                         threadAssertTrue(l.isSignalled());
 
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -1221,7 +1221,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             l.releaseShared(0);
             assertTrue(l.isSignalled());
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -1237,7 +1237,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         threadAssertFalse(l.isSignalled());
                         l.acquireSharedInterruptibly(0);
                         threadShouldThrow();
-                    } catch (InterruptedException success){}
+                    } catch (InterruptedException success) {}
                 }
             });
 	t.start();
@@ -1245,7 +1245,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertFalse(l.isSignalled());
             t.interrupt();
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -1261,7 +1261,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         threadAssertFalse(l.isSignalled());
                         l.tryAcquireSharedNanos(0, SMALL_DELAY_MS* 1000 * 1000);
                         threadShouldThrow();
-                    } catch (InterruptedException success){}
+                    } catch (InterruptedException success) {}
                 }
             });
         t.start();
@@ -1270,7 +1270,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             assertFalse(l.isSignalled());
             t.interrupt();
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -1285,7 +1285,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     try {
                         threadAssertFalse(l.isSignalled());
                         threadAssertFalse(l.tryAcquireSharedNanos(0, SMALL_DELAY_MS* 1000 * 1000));
-                    } catch (InterruptedException ie){
+                    } catch (InterruptedException ie) {
                         threadUnexpectedException();
                     }
                 }
@@ -1295,7 +1295,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             assertFalse(l.isSignalled());
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }

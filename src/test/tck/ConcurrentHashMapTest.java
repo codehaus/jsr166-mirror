@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 import java.util.Enumeration;
 import java.io.*;
 
-public class ConcurrentHashMapTest extends JSR166TestCase{
+public class ConcurrentHashMapTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());
     }
@@ -93,7 +93,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         ConcurrentHashMap map = map5();
 	Enumeration e = map.elements();
 	int count = 0;
-	while (e.hasMoreElements()){
+	while (e.hasMoreElements()) {
 	    count++;
 	    e.nextElement();
 	}
@@ -128,7 +128,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         ConcurrentHashMap map = map5();
 	Enumeration e = map.keys();
 	int count = 0;
-	while (e.hasMoreElements()){
+	while (e.hasMoreElements()) {
 	    count++;
 	    e.nextElement();
 	}
@@ -351,7 +351,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         try {
             new ConcurrentHashMap(-1,0,1);
             shouldThrow();
-        } catch (IllegalArgumentException e){}
+        } catch (IllegalArgumentException e) {}
     }
 
     /**
@@ -361,7 +361,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         try {
             new ConcurrentHashMap(1,0,-1);
             shouldThrow();
-        } catch (IllegalArgumentException e){}
+        } catch (IllegalArgumentException e) {}
     }
 
     /**
@@ -371,7 +371,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         try {
             new ConcurrentHashMap(-1);
             shouldThrow();
-        } catch (IllegalArgumentException e){}
+        } catch (IllegalArgumentException e) {}
     }
 
     /**
@@ -382,7 +382,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.get(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -393,7 +393,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.containsKey(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -404,7 +404,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.containsValue(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -415,7 +415,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.contains(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -426,7 +426,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.put(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -437,7 +437,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.put("whatever", null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -448,7 +448,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.putIfAbsent(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -459,7 +459,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -470,7 +470,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace(null, one, "whatever");
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -481,7 +481,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.putIfAbsent("whatever", null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
 
@@ -493,7 +493,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace("whatever", null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -504,7 +504,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace("whatever", null, "A");
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -515,7 +515,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace("whatever", one, null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
 
@@ -528,7 +528,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             c.put("sadsdf", "asdads");
             c.remove(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -540,7 +540,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             c.put("sadsdf", "asdads");
             c.remove(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -551,7 +551,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.put("sadsdf", "asdads");
             assertFalse(c.remove("sadsdf", null));
-        } catch (NullPointerException e){
+        } catch (NullPointerException e) {
             fail();
         }
     }
@@ -574,7 +574,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }

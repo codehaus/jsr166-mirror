@@ -581,7 +581,7 @@ public class TreeMapTest extends JSR166TestCase {
             TreeMap c = map5();
             c.get(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -592,7 +592,7 @@ public class TreeMapTest extends JSR166TestCase {
             TreeMap c = map5();
             c.containsKey(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -604,7 +604,7 @@ public class TreeMapTest extends JSR166TestCase {
             c.put("sadsdf", "asdads");
             c.remove(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException e) {}
     }
 
     /**
@@ -625,7 +625,7 @@ public class TreeMapTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }

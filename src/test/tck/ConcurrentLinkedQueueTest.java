@@ -288,7 +288,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success){
+        } catch (NoSuchElementException success) {
 	}
     }
 
@@ -413,7 +413,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(null);
 	    shouldThrow();
-	} catch (NullPointerException success){}
+	} catch (NullPointerException success) {}
     }
 
     /**
@@ -424,7 +424,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(new String[10] );
 	    shouldThrow();
-	} catch (ArrayStoreException  success){}
+	} catch (ArrayStoreException  success) {}
     }
 
     /**
@@ -527,7 +527,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }

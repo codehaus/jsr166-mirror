@@ -9,7 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
 
-public class AtomicMarkableReferenceTest extends JSR166TestCase{
+public class AtomicMarkableReferenceTest extends JSR166TestCase {
     public static void main (String[] args) {
         junit.textui.TestRunner.run (suite());
     }
@@ -20,7 +20,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     /**
      *  constructor initializes to given reference and mark
      */
-    public void testConstructor(){
+    public void testConstructor() {
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
 	assertEquals(one,ai.getReference());
 	assertFalse(ai.isMarked());
@@ -33,7 +33,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     /**
      *  get returns the last values of reference and mark set
      */
-    public void testGetSet(){
+    public void testGetSet() {
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
 	assertEquals(one,ai.getReference());
@@ -55,7 +55,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
     /**
      * attemptMark succeeds in single thread
      */
-    public void testAttemptMark(){
+    public void testAttemptMark() {
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
         assertFalse(ai.isMarked());
@@ -69,7 +69,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
      * compareAndSet succeeds in changing values if equal to expected reference
      * and mark else fails
      */
-    public void testCompareAndSet(){
+    public void testCompareAndSet() {
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
 	assertEquals(one, ai.get(mark));
@@ -139,7 +139,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase{
      * repeated weakCompareAndSet succeeds in changing values when equal
      * to expected
      */
-    public void testWeakCompareAndSet(){
+    public void testWeakCompareAndSet() {
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
 	assertEquals(one, ai.get(mark));

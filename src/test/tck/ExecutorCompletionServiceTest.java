@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.*;
 import java.math.BigInteger;
 import java.security.*;
 
-public class ExecutorCompletionServiceTest extends JSR166TestCase{
+public class ExecutorCompletionServiceTest extends JSR166TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run (suite());
     }

@@ -82,7 +82,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertEquals(0, q.remainingCapacity());
             q.add(one);
             shouldThrow();
-        } catch (IllegalStateException success){
+        } catch (IllegalStateException success) {
 	}
     }
 
@@ -146,7 +146,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             q.put(null);
             shouldThrow();
         }
-        catch (NullPointerException success){
+        catch (NullPointerException success) {
 	}
         catch (InterruptedException ie) {
 	    unexpectedException();
@@ -163,7 +163,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         SynchronousQueue q = new SynchronousQueue();
                         q.put(zero);
                         threadShouldThrow();
-                    } catch (InterruptedException ie){
+                    } catch (InterruptedException ie) {
                     }
                 }});
         t.start();
@@ -195,7 +195,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         q.put(new Object());
                         ++added;
 			threadShouldThrow();
-                    } catch (InterruptedException e){
+                    } catch (InterruptedException e) {
                         assertTrue(added >= 1);
                     }
                 }
@@ -207,7 +207,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -224,7 +224,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-                    } catch (InterruptedException success){}
+                    } catch (InterruptedException success) {}
                 }
             });
 
@@ -233,7 +233,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             Thread.sleep(SMALL_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -249,7 +249,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     try {
                         q.take();
 			threadShouldThrow();
-                    } catch (InterruptedException success){ }
+                    } catch (InterruptedException success) { }
                 }
             });
         try {
@@ -257,7 +257,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -273,7 +273,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         SynchronousQueue q = new SynchronousQueue(true);
                         q.put(zero);
                         threadShouldThrow();
-                    } catch (InterruptedException ie){
+                    } catch (InterruptedException ie) {
                     }
                 }});
         t.start();
@@ -305,7 +305,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         q.put(new Object());
                         ++added;
 			threadShouldThrow();
-                    } catch (InterruptedException e){
+                    } catch (InterruptedException e) {
                         assertTrue(added >= 1);
                     }
                 }
@@ -317,7 +317,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -334,7 +334,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
 			threadShouldThrow();
-                    } catch (InterruptedException success){}
+                    } catch (InterruptedException success) {}
                 }
             });
 
@@ -343,7 +343,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             Thread.sleep(SMALL_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -359,7 +359,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     try {
                         q.take();
 			threadShouldThrow();
-                    } catch (InterruptedException success){ }
+                    } catch (InterruptedException success) { }
                 }
             });
         try {
@@ -367,7 +367,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -387,7 +387,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             SynchronousQueue q = new SynchronousQueue();
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
 	    unexpectedException();
 	}
     }
@@ -399,7 +399,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             SynchronousQueue q = new SynchronousQueue();
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
 	    unexpectedException();
 	}
     }
@@ -414,7 +414,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     try {
                         SynchronousQueue q = new SynchronousQueue();
                         assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                    } catch (InterruptedException success){
+                    } catch (InterruptedException success) {
                     }
                 }});
         t.start();
@@ -450,7 +450,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertTrue(q.offer(zero, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -465,7 +465,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                     try {
                         SynchronousQueue q = new SynchronousQueue(true);
                         assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                    } catch (InterruptedException success){
+                    } catch (InterruptedException success) {
                     }
                 }});
         t.start();
@@ -501,7 +501,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertTrue(q.offer(zero, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
             t.interrupt();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -535,7 +535,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success){
+        } catch (NoSuchElementException success) {
 	}
     }
 
@@ -625,7 +625,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
 	    Object o[] = q.toArray(null);
 	    shouldThrow();
-	} catch (NullPointerException success){}
+	} catch (NullPointerException success) {}
     }
 
 
@@ -754,7 +754,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }
@@ -804,7 +804,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 public void run() {
                     try {
                         q.put(new Integer(1));
-                    } catch (InterruptedException ie){
+                    } catch (InterruptedException ie) {
                         threadUnexpectedException();
                     }
                 }
@@ -819,7 +819,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 assertEquals(l.get(0), new Integer(1));
             t.join();
             assertTrue(l.size() <= 1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -857,7 +857,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 public void run() {
                     try {
                         q.put(one);
-                    } catch (InterruptedException ie){
+                    } catch (InterruptedException ie) {
                         threadUnexpectedException();
                     }
                 }
@@ -866,7 +866,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 public void run() {
                     try {
                         q.put(two);
-                    } catch (InterruptedException ie){
+                    } catch (InterruptedException ie) {
                         threadUnexpectedException();
                     }
                 }
@@ -885,7 +885,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertTrue(l.contains(two));
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }

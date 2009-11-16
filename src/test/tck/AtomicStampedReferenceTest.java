@@ -9,7 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
 
-public class AtomicStampedReferenceTest extends JSR166TestCase{
+public class AtomicStampedReferenceTest extends JSR166TestCase {
     public static void main (String[] args) {
         junit.textui.TestRunner.run (suite());
     }
@@ -20,7 +20,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
     /**
      * constructor initializes to given reference and stamp
      */
-    public void testConstructor(){
+    public void testConstructor() {
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
 	assertEquals(one,ai.getReference());
 	assertEquals(0, ai.getStamp());
@@ -33,7 +33,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
     /**
      *  get returns the last values of reference and stamp set
      */
-    public void testGetSet(){
+    public void testGetSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
 	assertEquals(one,ai.getReference());
@@ -55,7 +55,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
     /**
      *  attemptStamp succeeds in single thread
      */
-    public void testAttemptStamp(){
+    public void testAttemptStamp() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
         assertEquals(0, ai.getStamp());
@@ -69,7 +69,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
      * compareAndSet succeeds in changing values if equal to expected reference
      * and stamp else fails
      */
-    public void testCompareAndSet(){
+    public void testCompareAndSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
 	assertEquals(one, ai.get(mark));
@@ -139,7 +139,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase{
      * repeated weakCompareAndSet succeeds in changing values when equal
      * to expected
      */
-    public void testWeakCompareAndSet(){
+    public void testWeakCompareAndSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
 	assertEquals(one, ai.get(mark));

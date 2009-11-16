@@ -138,7 +138,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             AtomicBoolean r = (AtomicBoolean) in.readObject();
             assertEquals(l.get(), r.get());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }

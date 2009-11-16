@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 import java.math.BigInteger;
 import java.security.*;
 
-public class AbstractExecutorServiceTest extends JSR166TestCase{
+public class AbstractExecutorServiceTest extends JSR166TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run (suite());
     }
@@ -265,11 +265,11 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1));
         try {
 
-            for (int i = 0; i < 5; ++i){
+            for (int i = 0; i < 5; ++i) {
                 p.submit(new MediumRunnable());
             }
             shouldThrow();
-        } catch (RejectedExecutionException success){}
+        } catch (RejectedExecutionException success) {}
         joinPool(p);
     }
 
@@ -284,7 +284,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
                 p.submit(new SmallCallable());
             }
             shouldThrow();
-        } catch (RejectedExecutionException e){}
+        } catch (RejectedExecutionException e) {}
         joinPool(p);
     }
 
@@ -303,12 +303,12 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
                                     try {
                                         Thread.sleep(MEDIUM_DELAY_MS);
                                         shouldThrow();
-                                    } catch (InterruptedException e){
+                                    } catch (InterruptedException e) {
                                     }
                                     return null;
                                 }
                             }).get();
-                    } catch (InterruptedException success){
+                    } catch (InterruptedException success) {
                     } catch (Exception e) {
                         unexpectedException();
                     }
@@ -319,7 +319,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             t.start();
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
         joinPool(p);
@@ -337,9 +337,9 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
                     try {
                         p.submit(new SmallCallable()).get();
                         shouldThrow();
-                    } catch (InterruptedException e){}
-                    catch (RejectedExecutionException e2){}
-                    catch (ExecutionException e3){}
+                    } catch (InterruptedException e) {}
+                    catch (RejectedExecutionException e2) {}
+                    catch (ExecutionException e3) {}
                     return Boolean.TRUE;
                 }
             };
@@ -350,7 +350,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.call();
-                    } catch (Exception e){}
+                    } catch (Exception e) {}
                 }
           });
         try {
@@ -358,7 +358,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             Thread.sleep(SHORT_DELAY_MS);
             t.interrupt();
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
 
@@ -380,13 +380,13 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
                     }
                 };
 
-            for (int i =0; i < 5; i++){
+            for (int i =0; i < 5; i++) {
                 p.submit(c).get();
             }
 
             shouldThrow();
         }
-        catch (ExecutionException success){
+        catch (ExecutionException success) {
         } catch (Exception e) {
             unexpectedException();
         }

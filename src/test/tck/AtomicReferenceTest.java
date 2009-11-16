@@ -21,7 +21,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     /**
      * constructor initializes to given value
      */
-    public void testConstructor(){
+    public void testConstructor() {
         AtomicReference ai = new AtomicReference(one);
 	assertEquals(one,ai.get());
     }
@@ -29,7 +29,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     /**
      * default constructed initializes to null
      */
-    public void testConstructor2(){
+    public void testConstructor2() {
         AtomicReference ai = new AtomicReference();
 	assertNull(ai.get());
     }
@@ -37,7 +37,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     /**
      * get returns the last value set
      */
-    public void testGetSet(){
+    public void testGetSet() {
         AtomicReference ai = new AtomicReference(one);
 	assertEquals(one,ai.get());
 	ai.set(two);
@@ -49,7 +49,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     /**
      * get returns the last value lazySet in same thread
      */
-    public void testGetLazySet(){
+    public void testGetLazySet() {
         AtomicReference ai = new AtomicReference(one);
 	assertEquals(one,ai.get());
 	ai.lazySet(two);
@@ -61,7 +61,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
-    public void testCompareAndSet(){
+    public void testCompareAndSet() {
         AtomicReference ai = new AtomicReference(one);
 	assertTrue(ai.compareAndSet(one,two));
 	assertTrue(ai.compareAndSet(two,m4));
@@ -98,7 +98,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
      * repeated weakCompareAndSet succeeds in changing value when equal
      * to expected
      */
-    public void testWeakCompareAndSet(){
+    public void testWeakCompareAndSet() {
         AtomicReference ai = new AtomicReference(one);
 	while (!ai.weakCompareAndSet(one,two));
 	while (!ai.weakCompareAndSet(two,m4));
@@ -110,7 +110,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
     /**
      * getAndSet returns previous value and sets to given value
      */
-    public void testGetAndSet(){
+    public void testGetAndSet() {
         AtomicReference ai = new AtomicReference(one);
 	assertEquals(one,ai.getAndSet(zero));
 	assertEquals(zero,ai.getAndSet(m10));
@@ -134,7 +134,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             AtomicReference r = (AtomicReference) in.readObject();
             assertEquals(l.get(), r.get());
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }

@@ -327,7 +327,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success){
+        } catch (NoSuchElementException success) {
 	}
     }
 
@@ -506,7 +506,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }

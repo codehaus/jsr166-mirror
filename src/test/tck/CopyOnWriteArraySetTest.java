@@ -19,7 +19,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
 	return new TestSuite(CopyOnWriteArraySetTest.class);
     }
 
-    static CopyOnWriteArraySet populatedSet(int n){
+    static CopyOnWriteArraySet populatedSet(int n) {
 	CopyOnWriteArraySet a = new CopyOnWriteArraySet();
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; ++i)
@@ -265,7 +265,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             c.add("asdadasd");
             c.toArray(new Long[5]);
 	    shouldThrow();
-        } catch (ArrayStoreException e){}
+        } catch (ArrayStoreException e) {}
     }
 
     /**
@@ -286,7 +286,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             assertTrue(q.equals(r));
             assertTrue(r.equals(q));
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }

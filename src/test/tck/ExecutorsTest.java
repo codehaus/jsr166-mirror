@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 import java.math.BigInteger;
 import java.security.*;
 
-public class ExecutorsTest extends JSR166TestCase{
+public class ExecutorsTest extends JSR166TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run (suite());
     }
@@ -238,8 +238,8 @@ public class ExecutorsTest extends JSR166TestCase{
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
             joinPool(p1);
-	} catch (RejectedExecutionException e){}
-	catch (Exception e){
+	} catch (RejectedExecutionException e) {}
+	catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }
@@ -258,8 +258,8 @@ public class ExecutorsTest extends JSR166TestCase{
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
             joinPool(p1);
-	} catch (RejectedExecutionException e){}
-	catch (Exception e){
+	} catch (RejectedExecutionException e) {}
+	catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }
@@ -278,8 +278,8 @@ public class ExecutorsTest extends JSR166TestCase{
 	    assertTrue(callable.done);
 	    assertEquals(Boolean.TRUE, f.get());
             joinPool(p1);
-	} catch (RejectedExecutionException e){}
-	catch (Exception e){
+	} catch (RejectedExecutionException e) {}
+	catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }

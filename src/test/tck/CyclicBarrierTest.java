@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 
-public class CyclicBarrierTest extends JSR166TestCase{
+public class CyclicBarrierTest extends JSR166TestCase {
     public static void main(String[] args) {
 	junit.textui.TestRunner.run (suite());
     }
@@ -32,7 +32,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
         try {
             new CyclicBarrier(-1, (Runnable)null);
             shouldThrow();
-        } catch (IllegalArgumentException e){}
+        } catch (IllegalArgumentException e) {}
     }
 
     /**
@@ -42,7 +42,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
         try {
             new CyclicBarrier(-1);
             shouldThrow();
-        } catch (IllegalArgumentException e){}
+        } catch (IllegalArgumentException e) {}
     }
 
     /**
@@ -102,7 +102,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                         b.await();
                         b.await();
                         b.await();
-                    } catch (Exception e){
+                    } catch (Exception e) {
                         threadUnexpectedException();
                     }}});
 
@@ -113,7 +113,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             b.await();
             b.await();
             t.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -130,8 +130,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await();
                         threadShouldThrow();
-                    } catch (InterruptedException success){}
-                    catch (Exception b){
+                    } catch (InterruptedException success) {}
+                    catch (Exception b) {
                         threadUnexpectedException();
                     }
                 }
@@ -141,8 +141,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await();
                         threadShouldThrow();
-                    } catch (BrokenBarrierException success){
-                    } catch (Exception i){
+                    } catch (BrokenBarrierException success) {
+                    } catch (Exception i) {
                         threadUnexpectedException();
                     }
                 }
@@ -154,7 +154,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t1.interrupt();
             t1.join();
             t2.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -170,8 +170,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (InterruptedException success){
-                    } catch (Exception b){
+                    } catch (InterruptedException success) {
+                    } catch (Exception b) {
                         threadUnexpectedException();
                     }
                 }
@@ -181,8 +181,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (BrokenBarrierException success){
-                    } catch (Exception i){
+                    } catch (BrokenBarrierException success) {
+                    } catch (Exception i) {
                         threadUnexpectedException();
                     }
                 }
@@ -194,7 +194,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t1.interrupt();
             t1.join();
             t2.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -209,8 +209,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (TimeoutException success){
-                    } catch (Exception b){
+                    } catch (TimeoutException success) {
+                    } catch (Exception b) {
                         threadUnexpectedException();
 
                     }
@@ -219,7 +219,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
         try {
             t.start();
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -235,8 +235,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (TimeoutException success){
-                    } catch (Exception b){
+                    } catch (TimeoutException success) {
+                    } catch (Exception b) {
                         threadUnexpectedException();
                     }
                 }
@@ -246,8 +246,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (BrokenBarrierException success){
-                    } catch (Exception i){
+                    } catch (BrokenBarrierException success) {
+                    } catch (Exception i) {
                         threadUnexpectedException();
                     }
                 }
@@ -257,7 +257,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t2.start();
             t1.join();
             t2.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -273,8 +273,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (TimeoutException success){
-                    } catch (Exception b){
+                    } catch (TimeoutException success) {
+                    } catch (Exception b) {
                         threadUnexpectedException();
                     }
                 }
@@ -284,8 +284,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await();
                         threadShouldThrow();
-                    } catch (BrokenBarrierException success){
-                    } catch (Exception i){
+                    } catch (BrokenBarrierException success) {
+                    } catch (Exception i) {
                         threadUnexpectedException();
                     }
                 }
@@ -295,7 +295,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             t2.start();
             t1.join();
             t2.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -311,8 +311,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await();
                         threadShouldThrow();
-                    } catch (BrokenBarrierException success){}
-                    catch (Exception b){
+                    } catch (BrokenBarrierException success) {}
+                    catch (Exception b) {
                         threadUnexpectedException();
                     }
                 }
@@ -322,8 +322,8 @@ public class CyclicBarrierTest extends JSR166TestCase{
                     try {
                         c.await();
                         threadShouldThrow();
-                    } catch (BrokenBarrierException success){
-                    } catch (Exception i){
+                    } catch (BrokenBarrierException success) {
+                    } catch (Exception i) {
                         threadUnexpectedException();
                     }
                 }
@@ -335,7 +335,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             c.reset();
             t1.join();
             t2.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -350,7 +350,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.await();
-                    } catch (Exception b){
+                    } catch (Exception b) {
                         threadUnexpectedException();
                     }
                 }
@@ -359,7 +359,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
                 public void run() {
                     try {
                         c.await();
-                    } catch (Exception i){
+                    } catch (Exception i) {
                         threadUnexpectedException();
                     }
                 }
@@ -371,7 +371,7 @@ public class CyclicBarrierTest extends JSR166TestCase{
             c.await();
             t1.join();
             t2.join();
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }

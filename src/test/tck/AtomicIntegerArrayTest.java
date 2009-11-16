@@ -57,23 +57,23 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     /**
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
-    public void testIndexing(){
+    public void testIndexing() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         try {
             ai.get(SIZE);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.get(-1);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.set(SIZE, 0);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.set(-1, 0);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
     }
 
@@ -334,7 +334,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             for (int i = 0; i < SIZE; ++i) {
                 assertEquals(l.get(i), r.get(i));
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }

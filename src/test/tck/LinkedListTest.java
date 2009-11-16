@@ -183,7 +183,7 @@ public class LinkedListTest extends JSR166TestCase {
 	    m.add(new Object());
 	    l.addAll(-1,m);
 	    shouldThrow();
-	} catch (IndexOutOfBoundsException  success){}
+	} catch (IndexOutOfBoundsException  success) {}
     }
 
     /**
@@ -238,7 +238,7 @@ public class LinkedListTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success){
+        } catch (NoSuchElementException success) {
 	}
     }
 
@@ -364,7 +364,7 @@ public class LinkedListTest extends JSR166TestCase {
 	    l.add(new Object());
 	    Object o[] = l.toArray(null);
 	    shouldThrow();
-	} catch (NullPointerException success){}
+	} catch (NullPointerException success) {}
     }
 
     /**
@@ -376,7 +376,7 @@ public class LinkedListTest extends JSR166TestCase {
 	    l.add(new Integer(5));
 	    Object o[] = l.toArray(new String[10] );
 	    shouldThrow();
-	} catch (ArrayStoreException  success){}
+	} catch (ArrayStoreException  success) {}
     }
 
     /**
@@ -522,7 +522,7 @@ public class LinkedListTest extends JSR166TestCase {
         try {
             q.pop();
             shouldThrow();
-        } catch (NoSuchElementException success){
+        } catch (NoSuchElementException success) {
 	}
     }
 

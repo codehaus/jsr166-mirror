@@ -22,7 +22,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      * constructor creates array of given size with all elements zero
      */
-    public void testConstructor(){
+    public void testConstructor() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i)
             assertEquals(0,ai.get(i));
@@ -55,30 +55,30 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
-    public void testIndexing(){
+    public void testIndexing() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         try {
             ai.get(SIZE);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.get(-1);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.set(SIZE, 0);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.set(-1, 0);
-        } catch (IndexOutOfBoundsException success){
+        } catch (IndexOutOfBoundsException success) {
         }
     }
 
     /**
      * get returns the last value set at index
      */
-    public void testGetSet(){
+    public void testGetSet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -93,7 +93,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      * get returns the last value lazySet at index by same thread
      */
-    public void testGetLazySet(){
+    public void testGetLazySet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.lazySet(i, 1);
@@ -108,7 +108,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
-    public void testCompareAndSet(){
+    public void testCompareAndSet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -149,7 +149,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
      * repeated weakCompareAndSet succeeds in changing value when equal
      * to expected
      */
-    public void testWeakCompareAndSet(){
+    public void testWeakCompareAndSet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -164,7 +164,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      *  getAndSet returns previous value and sets to given value at given index
      */
-    public void testGetAndSet(){
+    public void testGetAndSet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -177,7 +177,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      *  getAndAdd returns previous value and adds given value
      */
-    public void testGetAndAdd(){
+    public void testGetAndAdd() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -191,7 +191,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      * getAndDecrement returns previous value and decrements
      */
-    public void testGetAndDecrement(){
+    public void testGetAndDecrement() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -204,7 +204,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      * getAndIncrement returns previous value and increments
      */
-    public void testGetAndIncrement(){
+    public void testGetAndIncrement() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -235,7 +235,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     /**
      * decrementAndGet decrements and returns current value
      */
-    public void testDecrementAndGet(){
+    public void testDecrementAndGet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
@@ -331,7 +331,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
             for (int i = 0; i < SIZE; ++i) {
                 assertEquals(l.get(i), r.get(i));
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }

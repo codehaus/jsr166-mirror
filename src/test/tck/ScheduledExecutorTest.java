@@ -33,14 +33,14 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    try { p1.shutdown(); } catch (SecurityException ok) { return; }
 	    try {
                 Thread.sleep(MEDIUM_DELAY_MS);
-            } catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 unexpectedException();
             }
 	    assertTrue(runnable.done);
             try { p1.shutdown(); } catch (SecurityException ok) { return; }
             joinPool(p1);
         }
-	catch (Exception e){
+	catch (Exception e) {
             unexpectedException();
         }
 
@@ -61,8 +61,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    assertEquals(Boolean.TRUE, f.get());
             try { p1.shutdown(); } catch (SecurityException ok) { return; }
             joinPool(p1);
-	} catch (RejectedExecutionException e){}
-	catch (Exception e){
+	} catch (RejectedExecutionException e) {}
+	catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }
@@ -82,7 +82,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    assertTrue(runnable.done);
             try { p1.shutdown(); } catch (SecurityException ok) { return; }
             joinPool(p1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -100,7 +100,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    assertTrue(runnable.done);
             h.cancel(true);
             joinPool(p1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -123,7 +123,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    assertTrue(runnable.done);
             h.cancel(true);
             joinPool(p1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -145,7 +145,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
             assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
             joinPool(p1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -165,7 +165,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
             assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
             joinPool(p1);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
     }
@@ -180,8 +180,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    se = new ScheduledThreadPoolExecutor(1);
 	    se.execute(null);
             shouldThrow();
-	} catch (NullPointerException success){}
-	catch (Exception e){
+	} catch (NullPointerException success) {}
+	catch (Exception e) {
             unexpectedException();
         }
 
@@ -197,8 +197,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             TrackedCallable callable = null;
 	    Future f = se.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
-	} catch (NullPointerException success){}
-	catch (Exception e){
+	} catch (NullPointerException success) {}
+	catch (Exception e) {
             unexpectedException();
         }
 	joinPool(se);
@@ -214,7 +214,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             se.schedule(new NoOpRunnable(),
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
-        } catch (RejectedExecutionException success){
+        } catch (RejectedExecutionException success) {
         } catch (SecurityException ok) {
         }
 
@@ -232,7 +232,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             se.schedule(new NoOpCallable(),
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
-        } catch (RejectedExecutionException success){
+        } catch (RejectedExecutionException success) {
         } catch (SecurityException ok) {
         }
         joinPool(se);
@@ -248,7 +248,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             se.schedule(new NoOpCallable(),
                         MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
-        } catch (RejectedExecutionException success){
+        } catch (RejectedExecutionException success) {
         } catch (SecurityException ok) {
         }
          joinPool(se);
@@ -264,7 +264,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             se.scheduleAtFixedRate(new NoOpRunnable(),
                                    MEDIUM_DELAY_MS, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
-        } catch (RejectedExecutionException success){
+        } catch (RejectedExecutionException success) {
         } catch (SecurityException ok) {
         }
         joinPool(se);
@@ -280,7 +280,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             se.scheduleWithFixedDelay(new NoOpRunnable(),
                                       MEDIUM_DELAY_MS, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             shouldThrow();
-        } catch (RejectedExecutionException success){
+        } catch (RejectedExecutionException success) {
         } catch (SecurityException ok) {
         }
         joinPool(se);
@@ -296,7 +296,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         p2.execute(new SmallRunnable());
         try {
             Thread.sleep(SHORT_DELAY_MS);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
         assertEquals(1, p2.getActiveCount());
@@ -313,7 +313,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         p2.execute(new SmallRunnable());
         try {
             Thread.sleep(MEDIUM_DELAY_MS);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
         assertEquals(1, p2.getCompletedTaskCount());
@@ -340,7 +340,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         p2.execute(new SmallRunnable());
         try {
             Thread.sleep(SHORT_DELAY_MS);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
         assertEquals(2, p2.getLargestPoolSize());
@@ -370,7 +370,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             p1.execute(new SmallRunnable());
         try {
             Thread.sleep(SHORT_DELAY_MS);
-        } catch (Exception e){
+        } catch (Exception e) {
             unexpectedException();
         }
         assertEquals(5, p1.getTaskCount());
@@ -441,7 +441,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         try {
 	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
             assertTrue(p1.isTerminated());
-	} catch (Exception e){
+	} catch (Exception e) {
             unexpectedException();
         }
     }
@@ -462,7 +462,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 	    assertTrue(p1.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
             assertTrue(p1.isTerminated());
             assertFalse(p1.isTerminating());
-	} catch (Exception e){
+	} catch (Exception e) {
             unexpectedException();
         }
     }
@@ -473,7 +473,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     public void testGetQueue() {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
         }
         try {
@@ -494,7 +494,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     public void testRemove() {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, TimeUnit.MILLISECONDS);
         }
         try {
@@ -522,7 +522,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     public void testPurge() {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
         }
         try {

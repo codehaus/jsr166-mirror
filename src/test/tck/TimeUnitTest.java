@@ -410,7 +410,7 @@ public class TimeUnitTest extends JSR166TestCase {
                                 public void run() {
                                     try {
                                         Thread.sleep(MEDIUM_DELAY_MS);
-                                    } catch (InterruptedException success){}
+                                    } catch (InterruptedException success) {}
                                 }
                             });
 			s.start();
@@ -473,7 +473,7 @@ public class TimeUnitTest extends JSR166TestCase {
             TimeUnit r = (TimeUnit)in.readObject();
 
             assertEquals(q.toString(), r.toString());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }

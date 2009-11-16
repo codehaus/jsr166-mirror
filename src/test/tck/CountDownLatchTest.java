@@ -25,7 +25,7 @@ public class CountDownLatchTest extends JSR166TestCase {
         try {
             new CountDownLatch(-1);
             shouldThrow();
-        } catch (IllegalArgumentException success){}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -62,7 +62,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                         threadAssertTrue(l.getCount() > 0);
 			l.await();
                         threadAssertTrue(l.getCount() == 0);
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -76,7 +76,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             l.countDown();
             assertEquals(l.getCount(), 0);
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -93,7 +93,7 @@ public class CountDownLatchTest extends JSR166TestCase {
 		    try {
                         threadAssertTrue(l.getCount() > 0);
 			threadAssertTrue(l.await(SMALL_DELAY_MS, TimeUnit.MILLISECONDS));
-		    } catch (InterruptedException e){
+		    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
 		}
@@ -107,7 +107,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             l.countDown();
             assertEquals(l.getCount(), 0);
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -123,7 +123,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                         threadAssertTrue(l.getCount() > 0);
                         l.await();
                         threadShouldThrow();
-                    } catch (InterruptedException success){}
+                    } catch (InterruptedException success) {}
                 }
             });
 	t.start();
@@ -131,7 +131,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             assertEquals(l.getCount(), 1);
             t.interrupt();
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -147,7 +147,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                         threadAssertTrue(l.getCount() > 0);
                         l.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (InterruptedException success){}
+                    } catch (InterruptedException success) {}
                 }
             });
         t.start();
@@ -156,7 +156,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             assertEquals(l.getCount(), 1);
             t.interrupt();
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }
@@ -172,7 +172,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                         threadAssertTrue(l.getCount() > 0);
                         threadAssertFalse(l.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                         threadAssertTrue(l.getCount() > 0);
-                    } catch (InterruptedException ie){
+                    } catch (InterruptedException ie) {
                         threadUnexpectedException();
                     }
                 }
@@ -181,7 +181,7 @@ public class CountDownLatchTest extends JSR166TestCase {
         try {
             assertEquals(l.getCount(), 1);
             t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             unexpectedException();
         }
     }

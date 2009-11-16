@@ -508,7 +508,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }
@@ -1026,7 +1026,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             assertEquals(q.size(), r.size());
             while (!q.isEmpty())
                 assertEquals(q.pollFirst(), r.pollFirst());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             unexpectedException();
         }

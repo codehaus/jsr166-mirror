@@ -787,7 +787,7 @@ public class ForkJoinWorkerThread extends Thread {
          * apply transiently, so cheapen this by (a) not bothering to
          * weight at all unless there is more than one queued task (b)
          * rather than compensating by a factor of (#idle/#active)
-         * threads, we just substract out a function of #idle that is
+         * threads, we just subtract out a function of #idle that is
          * a good enough approximation for conditions near the
          * borderlines for threshold testing.  This errs in the
          * direction of reporting more extreme lack of surplus (as in

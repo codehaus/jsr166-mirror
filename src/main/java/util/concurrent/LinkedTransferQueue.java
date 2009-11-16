@@ -877,14 +877,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Unlinks matched nodes encountered in a traversal from head.
      */
     private void sweep() {
-        Node p = head, s, n;
-        while (p != null && (s = p.next) != null && (n = s.next) != null) {
-            if (p == s || s == n)
-                p = head; // stale
-            else if (s.isMatched())
-                p.casNext(s, n);
-            else
+        for (Node p = head, s, n; p != null && (s = p.next) != null; ) {
+            if (p == s)                    // stale
+                p = head;
+            else if (!s.isMatched())
                 p = s;
+            else if ((n = s.next) == null) // trailing node is pinned
+                break;
+            else
+                p.casNext(s, n);
         }
     }
 

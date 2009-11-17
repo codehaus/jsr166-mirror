@@ -162,18 +162,17 @@ public class RecursiveActionTest extends JSR166TestCase {
      */
     public void testForkTimedGetNPE() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FibAction f = new FibAction(8);
-                        f.fork();
-                        f.get(5L, null);
-                        shouldThrow();
-                    } catch (NullPointerException success) {
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    FibAction f = new FibAction(8);
+                    f.fork();
+                    f.get(5L, null);
+                    shouldThrow();
+                } catch (NullPointerException success) {
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 

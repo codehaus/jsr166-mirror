@@ -1407,7 +1407,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testHasWaitersIAE() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
 	final ReentrantReadWriteLock lock2 = new ReentrantReadWriteLock();
         try {
             lock2.hasWaiters(c);
@@ -1423,7 +1423,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testHasWaitersIMSE() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
         try {
             lock.hasWaiters(c);
             shouldThrow();
@@ -1439,7 +1439,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIAE() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
 	final ReentrantReadWriteLock lock2 = new ReentrantReadWriteLock();
         try {
             lock2.getWaitQueueLength(c);
@@ -1455,7 +1455,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIMSE() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
         try {
             lock.getWaitQueueLength(c);
             shouldThrow();
@@ -1471,7 +1471,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIAE() {
 	final PublicReentrantReadWriteLock lock = new PublicReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
 	final PublicReentrantReadWriteLock lock2 = new PublicReentrantReadWriteLock();
         try {
             lock2.getWaitingThreads(c);
@@ -1487,7 +1487,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIMSE() {
 	final PublicReentrantReadWriteLock lock = new PublicReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
         try {
             lock.getWaitingThreads(c);
             shouldThrow();
@@ -1503,7 +1503,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testHasWaiters() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -1545,7 +1545,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLength() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        final Condition c = (lock.writeLock().newCondition());
+        final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {

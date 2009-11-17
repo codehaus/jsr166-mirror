@@ -408,7 +408,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		    try {
                         threadAssertFalse(sync.tryAcquireNanos(1, 1000 * 1000));
                     } catch (Exception ex) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(ex);
                     }
 		}
 	    });
@@ -438,7 +438,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 			Thread.sleep(SMALL_DELAY_MS);
 		    }
 		    catch (Exception e) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(e);
                     }
 		    sync.release(1);
 		}
@@ -604,7 +604,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         sync.release(1);
 		    }
 		    catch (InterruptedException e) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(e);
                     }
 		}
 	    });
@@ -674,7 +674,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
      */
     public void testHasWaitersIAE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedLongSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	final Mutex sync2 = new Mutex();
         try {
             sync2.hasWaiters(c);
@@ -690,7 +690,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
      */
     public void testHasWaitersIMSE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedLongSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
         try {
             sync.hasWaiters(c);
             shouldThrow();
@@ -706,7 +706,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIAE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedLongSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	final Mutex sync2 = new Mutex();
         try {
             sync2.getWaitQueueLength(c);
@@ -722,7 +722,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIMSE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedLongSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
         try {
             sync.getWaitQueueLength(c);
             shouldThrow();
@@ -738,7 +738,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIAE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedLongSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	final Mutex sync2 = new Mutex();
         try {
             sync2.getWaitingThreads(c);
@@ -754,7 +754,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIMSE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedLongSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
         try {
             sync.getWaitingThreads(c);
             shouldThrow();
@@ -782,7 +782,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         sync.release(1);
 		    }
 		    catch (InterruptedException e) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(e);
                     }
 		}
 	    });
@@ -824,7 +824,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         sync.release(1);
 		    }
 		    catch (InterruptedException e) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(e);
                     }
 		}
 	    });
@@ -839,7 +839,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         sync.release(1);
 		    }
 		    catch (InterruptedException e) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(e);
                     }
 		}
 	    });
@@ -884,7 +884,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         sync.release(1);
 		    }
 		    catch (InterruptedException e) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(e);
                     }
 		}
 	    });
@@ -898,7 +898,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                         sync.release(1);
 		    }
 		    catch (InterruptedException e) {
-                        threadUnexpectedException();
+                        threadUnexpectedException(e);
                     }
 		}
 	    });

@@ -671,7 +671,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
      */
     public void testHasWaitersIAE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = sync.newCondition();
 	final Mutex sync2 = new Mutex();
         try {
             sync2.hasWaiters(c);
@@ -687,7 +687,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
      */
     public void testHasWaitersIMSE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = sync.newCondition();
         try {
             sync.hasWaiters(c);
             shouldThrow();
@@ -703,7 +703,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIAE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = sync.newCondition();
 	final Mutex sync2 = new Mutex();
         try {
             sync2.getWaitQueueLength(c);
@@ -719,7 +719,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIMSE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = sync.newCondition();
         try {
             sync.getWaitQueueLength(c);
             shouldThrow();
@@ -735,7 +735,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIAE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = sync.newCondition();
 	final Mutex sync2 = new Mutex();
         try {
             sync2.getWaitingThreads(c);
@@ -751,7 +751,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIMSE() {
 	final Mutex sync = new Mutex();
-        final AbstractQueuedSynchronizer.ConditionObject c = (sync.newCondition());
+        final AbstractQueuedSynchronizer.ConditionObject c = sync.newCondition();
         try {
             sync.getWaitingThreads(c);
             shouldThrow();

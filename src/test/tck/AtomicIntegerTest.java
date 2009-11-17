@@ -77,22 +77,18 @@ public class AtomicIntegerTest extends JSR166TestCase {
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicInteger ai = new AtomicInteger(1);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     while (!ai.compareAndSet(2, 3)) Thread.yield();
                 }});
-        try {
-            t.start();
-            assertTrue(ai.compareAndSet(1, 2));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(ai.get(), 3);
-        }
-        catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertTrue(ai.compareAndSet(1, 2));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertEquals(ai.get(), 3);
     }
 
     /**
@@ -192,23 +188,19 @@ public class AtomicIntegerTest extends JSR166TestCase {
     /**
      * a deserialized serialized atomic holds same value
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         AtomicInteger l = new AtomicInteger();
 
-        try {
-            l.set(22);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        l.set(22);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            AtomicInteger r = (AtomicInteger) in.readObject();
-            assertEquals(l.get(), r.get());
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        AtomicInteger r = (AtomicInteger) in.readObject();
+        assertEquals(l.get(), r.get());
     }
 
     /**

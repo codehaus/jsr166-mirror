@@ -76,22 +76,18 @@ public class AtomicReferenceTest extends JSR166TestCase {
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicReference ai = new AtomicReference(one);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     while (!ai.compareAndSet(two, three)) Thread.yield();
                 }});
-        try {
-            t.start();
-            assertTrue(ai.compareAndSet(one, two));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(ai.get(), three);
-        }
-        catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertTrue(ai.compareAndSet(one, two));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertEquals(ai.get(), three);
     }
 
     /**
@@ -120,23 +116,19 @@ public class AtomicReferenceTest extends JSR166TestCase {
     /**
      * a deserialized serialized atomic holds same value
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         AtomicReference l = new AtomicReference();
 
-        try {
-            l.set(one);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        l.set(one);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            AtomicReference r = (AtomicReference) in.readObject();
-            assertEquals(l.get(), r.get());
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        AtomicReference r = (AtomicReference) in.readObject();
+        assertEquals(l.get(), r.get());
     }
 
     /**

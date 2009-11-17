@@ -93,46 +93,38 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
      * compareAndSet in one thread enables another waiting for reference value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     while (!ai.compareAndSet(two, three, false, false)) Thread.yield();
                 }});
-        try {
-            t.start();
-            assertTrue(ai.compareAndSet(one, two, false, false));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(ai.getReference(), three);
-            assertFalse(ai.isMarked());
-        }
-        catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertTrue(ai.compareAndSet(one, two, false, false));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertEquals(ai.getReference(), three);
+        assertFalse(ai.isMarked());
     }
 
     /**
      * compareAndSet in one thread enables another waiting for mark value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads2() {
+    public void testCompareAndSetInMultipleThreads2() throws Exception {
         final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     while (!ai.compareAndSet(one, one, true, false)) Thread.yield();
                 }});
-        try {
-            t.start();
-            assertTrue(ai.compareAndSet(one, one, false, true));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(ai.getReference(), one);
-            assertFalse(ai.isMarked());
-        }
-        catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertTrue(ai.compareAndSet(one, one, false, true));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertEquals(ai.getReference(), one);
+        assertFalse(ai.isMarked());
     }
 
     /**

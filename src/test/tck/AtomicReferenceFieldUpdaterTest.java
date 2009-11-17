@@ -122,7 +122,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws Exception {
         x = one;
         final AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
         try {
@@ -135,16 +135,12 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
                 public void run() {
                     while (!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three)) Thread.yield();
                 }});
-        try {
-            t.start();
-            assertTrue(a.compareAndSet(this, one, two));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(a.get(this), three);
-        }
-        catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertTrue(a.compareAndSet(this, one, two));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertEquals(a.get(this), three);
     }
 
     /**

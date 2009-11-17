@@ -693,6 +693,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 
         t.start();
         t.join();
+        assertTrue(lock.writeLock().isHeldByCurrentThread());
         lock.writeLock().unlock();
     }
 
@@ -709,6 +710,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 
         t.start();
         t.join();
+        assertTrue(lock.writeLock().isHeldByCurrentThread());
         lock.writeLock().unlock();
     }
 
@@ -791,21 +793,23 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      *  timed await without a signal times out
      */
-    public void testAwait_Timeout() {
+    public void testAwait_Timeout() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
         lock.writeLock().lock();
+        assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         lock.writeLock().unlock();
     }
 
     /**
      * awaitUntil without a signal times out
      */
-    public void testAwaitUntil_Timeout() {
+    public void testAwaitUntil_Timeout() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
         lock.writeLock().lock();
         java.util.Date d = new java.util.Date();
+        assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + 10)));
         lock.writeLock().unlock();
     }
 

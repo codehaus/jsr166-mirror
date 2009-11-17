@@ -37,7 +37,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
             Integer[] a = null;
             AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
             shouldThrow();
-        } catch (NullPointerException success) {}
+        } catch (NullPointerException success) {
     }
 
     /**
@@ -130,19 +130,23 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() throws InterruptedException {
+    public void testCompareAndSetInMultipleThreads() {
         final AtomicReferenceArray a = new AtomicReferenceArray(1);
         a.set(0, one);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     while (!a.compareAndSet(0, two, three)) Thread.yield();
                 }});
-
-        t.start();
-        assertTrue(a.compareAndSet(0, one, two));
-        t.join(LONG_DELAY_MS);
-        assertFalse(t.isAlive());
-        assertEquals(a.get(0), three);
+        try {
+            t.start();
+            assertTrue(a.compareAndSet(0, one, two));
+            t.join(LONG_DELAY_MS);
+            assertFalse(t.isAlive());
+            assertEquals(a.get(0), three);
+        }
+        catch (Exception e) {
+            unexpectedException();
+        }
     }
 
     /**
@@ -177,23 +181,27 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
     /**
      * a deserialized serialized array holds same values
      */
-    public void testSerialization() throws Exception {
+    public void testSerialization() {
         AtomicReferenceArray l = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             l.set(i, new Integer(-i));
         }
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(l);
-        out.close();
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+            out.writeObject(l);
+            out.close();
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        AtomicReferenceArray r = (AtomicReferenceArray) in.readObject();
-        assertEquals(l.length(), r.length());
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(r.get(i), l.get(i));
+            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+            AtomicReferenceArray r = (AtomicReferenceArray) in.readObject();
+            assertEquals(l.length(), r.length());
+            for (int i = 0; i < SIZE; ++i) {
+                assertEquals(r.get(i), l.get(i));
+            }
+        } catch (Exception e) {
+            unexpectedException();
         }
     }
 

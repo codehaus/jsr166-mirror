@@ -417,14 +417,14 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatible array type throws CCE
+     * toArray with incompatible array type throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
 	try {
             ConcurrentLinkedQueue q = populatedQueue(SIZE);
 	    Object o[] = q.toArray(new String[10] );
 	    shouldThrow();
-	} catch (ArrayStoreException  success) {}
+	} catch (ArrayStoreException success) {}
     }
 
     /**

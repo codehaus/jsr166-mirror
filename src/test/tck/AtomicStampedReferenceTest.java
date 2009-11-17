@@ -95,10 +95,11 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!ai.compareAndSet(two, three, 0, 0)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(two, three, 0, 0))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(ai.compareAndSet(one, two, 0, 0));
@@ -114,10 +115,11 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads2() throws Exception {
         final AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!ai.compareAndSet(one, one, 1, 2)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(one, one, 1, 2))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(ai.compareAndSet(one, one, 0, 1));

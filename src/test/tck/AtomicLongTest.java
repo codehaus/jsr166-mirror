@@ -80,10 +80,11 @@ public class AtomicLongTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicLong ai = new AtomicLong(1);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!ai.compareAndSet(2, 3)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(2, 3))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(ai.compareAndSet(1, 2));

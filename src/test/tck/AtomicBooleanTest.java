@@ -81,10 +81,10 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicBoolean ai = new AtomicBoolean(true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!ai.compareAndSet(false, true)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(false, true)) Thread.yield();
+            }});
 
         t.start();
         assertTrue(ai.compareAndSet(true, false));

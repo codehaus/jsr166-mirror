@@ -131,10 +131,11 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(a.compareAndSet(this, one, two));

@@ -78,10 +78,11 @@ public class AtomicReferenceTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicReference ai = new AtomicReference(one);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!ai.compareAndSet(two, three)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(two, three))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(ai.compareAndSet(one, two));

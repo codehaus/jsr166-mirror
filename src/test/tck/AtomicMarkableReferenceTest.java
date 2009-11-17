@@ -95,10 +95,11 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!ai.compareAndSet(two, three, false, false)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(two, three, false, false))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(ai.compareAndSet(one, two, false, false));
@@ -114,10 +115,11 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads2() throws Exception {
         final AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!ai.compareAndSet(one, one, true, false)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(one, one, true, false))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(ai.compareAndSet(one, one, false, true));

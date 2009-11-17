@@ -132,10 +132,11 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
             return;
         }
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!a.compareAndSet(AtomicIntegerFieldUpdaterTest.this, 2, 3)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!a.compareAndSet(AtomicIntegerFieldUpdaterTest.this, 2, 3))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(a.compareAndSet(this, 1, 2));

@@ -133,10 +133,11 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicIntegerArray a = new AtomicIntegerArray(1);
         a.set(0, 1);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while (!a.compareAndSet(0, 2, 3)) Thread.yield();
-                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!a.compareAndSet(0, 2, 3))
+                    Thread.yield();
+            }});
 
         t.start();
         assertTrue(a.compareAndSet(0, 1, 2));

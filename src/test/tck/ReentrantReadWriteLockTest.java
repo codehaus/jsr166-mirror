@@ -23,13 +23,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      * A runnable calling lockInterruptibly
      */
-    class InterruptibleLockRunnable implements Runnable {
+    class InterruptibleLockRunnable extends CheckedRunnable {
         final ReentrantReadWriteLock lock;
         InterruptibleLockRunnable(ReentrantReadWriteLock l) { lock = l; }
-        public void run() {
-            try {
-                lock.writeLock().lockInterruptibly();
-            } catch (InterruptedException success) {}
+        public void realRun() throws InterruptedException {
+            lock.writeLock().lockInterruptibly();
         }
     }
 
@@ -38,14 +36,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      * A runnable calling lockInterruptibly that expects to be
      * interrupted
      */
-    class InterruptedLockRunnable implements Runnable {
+    class InterruptedLockRunnable extends CheckedInterruptedRunnable {
         final ReentrantReadWriteLock lock;
         InterruptedLockRunnable(ReentrantReadWriteLock l) { lock = l; }
-        public void run() {
-            try {
-                lock.writeLock().lockInterruptibly();
-                threadShouldThrow();
-            } catch (InterruptedException success) {}
+        public void realRun() throws InterruptedException {
+            lock.writeLock().lockInterruptibly();
         }
     }
 
@@ -74,6 +69,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         assertTrue(r2.isFair());
         assertFalse(r2.isWriteLocked());
         assertEquals(0, r2.getReadLockCount());
+	ReentrantReadWriteLock r3 = new ReentrantReadWriteLock(false);
+        assertFalse(r3.isFair());
+        assertFalse(r3.isWriteLocked());
+        assertEquals(0, r3.getReadLockCount());
     }
 
     /**
@@ -188,7 +187,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      * write-lockInterruptibly is interruptible
      */
-    public void testWriteLockInterruptibly_Interrupted() {
+    public void testWriteLockInterruptibly_Interrupted() throws Exception {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -200,23 +199,20 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		    } catch (InterruptedException success) {}
 		}
 	    });
-        try {
-            lock.writeLock().lock();
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().unlock();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        lock.writeLock().lock();
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().unlock();
+        t.join();
     }
 
     /**
      * timed write-tryLock is interruptible
      */
-    public void testWriteTryLock_Interrupted() {
+    public void testWriteTryLock_Interrupted() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -226,20 +222,17 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		    } catch (InterruptedException success) {}
 		}
 	    });
-        try {
-            t.start();
-            t.interrupt();
-            lock.writeLock().unlock();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.interrupt();
+        lock.writeLock().unlock();
+        t.join();
     }
 
     /**
      * read-lockInterruptibly is interruptible
      */
-    public void testReadLockInterruptibly_Interrupted() {
+    public void testReadLockInterruptibly_Interrupted() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -249,22 +242,19 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		    } catch (InterruptedException success) {}
 		}
 	    });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().unlock();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().unlock();
+        t.join();
     }
 
     /**
      * timed read-tryLock is interruptible
      */
-    public void testReadTryLock_Interrupted() {
+    public void testReadTryLock_Interrupted() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -275,20 +265,17 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		    } catch (InterruptedException success) {}
 		}
 	    });
-        try {
-            t.start();
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.interrupt();
+        t.join();
     }
 
 
     /**
      * write-tryLock fails if locked
      */
-    public void testWriteTryLockWhenLocked() {
+    public void testWriteTryLockWhenLocked() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -296,19 +283,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     threadAssertFalse(lock.writeLock().tryLock());
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.writeLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.writeLock().unlock();
     }
 
     /**
      * read-tryLock fails if locked
      */
-    public void testReadTryLockWhenLocked() {
+    public void testReadTryLockWhenLocked() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -316,19 +300,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     threadAssertFalse(lock.readLock().tryLock());
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.writeLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.writeLock().unlock();
     }
 
     /**
      * Multiple threads can hold a read lock when not write-locked
      */
-    public void testMultipleReadLocks() {
+    public void testMultipleReadLocks() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.readLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -337,19 +318,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     lock.readLock().unlock();
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.readLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.readLock().unlock();
     }
 
     /**
      * A writelock succeeds after reading threads unlock
      */
-    public void testWriteAfterMultipleReadLocks() {
+    public void testWriteAfterMultipleReadLocks() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.readLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -365,25 +343,20 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.readLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.readLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
     /**
      * Readlocks succeed after a writing thread unlocks
      */
-    public void testReadAfterWriteLock() {
+    public void testReadAfterWriteLock() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -399,19 +372,14 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
     /**
@@ -429,7 +397,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      * Read lock succeeds if write locked by current thread even if
      * other threads are waiting for readlock
      */
-    public void testReadHoldingWriteLock2() {
+    public void testReadHoldingWriteLock2() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -445,30 +413,25 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            lock.writeLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        lock.writeLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
     /**
      *  Read lock succeeds if write locked by current thread even if
      * other threads are waiting for writelock
      */
-    public void testReadHoldingWriteLock3() {
+    public void testReadHoldingWriteLock3() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -484,23 +447,18 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            lock.writeLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        lock.writeLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
 
@@ -508,7 +466,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      *  Write lock succeeds if write locked by current thread even if
      * other threads are waiting for writelock
      */
-    public void testWriteHoldingWriteLock4() {
+    public void testWriteHoldingWriteLock4() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -524,23 +482,18 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            lock.writeLock().lock();
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            lock.writeLock().unlock();
-            lock.writeLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        lock.writeLock().lock();
+        lock.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        lock.writeLock().unlock();
+        lock.writeLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
 
@@ -559,7 +512,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      * Fair Read lock succeeds if write locked by current thread even if
      * other threads are waiting for readlock
      */
-    public void testReadHoldingWriteLockFair2() {
+    public void testReadHoldingWriteLockFair2() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	lock.writeLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -575,23 +528,18 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            lock.writeLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        lock.writeLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
 
@@ -599,7 +547,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      * Fair Read lock succeeds if write locked by current thread even if
      * other threads are waiting for writelock
      */
-    public void testReadHoldingWriteLockFair3() {
+    public void testReadHoldingWriteLockFair3() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	lock.writeLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -615,23 +563,18 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.readLock().lock();
-            lock.readLock().unlock();
-            lock.writeLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        lock.writeLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
 
@@ -639,7 +582,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      * Fair Write lock succeeds if write locked by current thread even if
      * other threads are waiting for writelock
      */
-    public void testWriteHoldingWriteLockFair4() {
+    public void testWriteHoldingWriteLockFair4() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	lock.writeLock().lock();
 	Thread t1 = new Thread(new Runnable() {
@@ -655,33 +598,28 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.isWriteLockedByCurrentThread());
-            assertTrue(lock.getWriteHoldCount() == 1);
-            lock.writeLock().lock();
-            assertTrue(lock.getWriteHoldCount() == 2);
-            lock.writeLock().unlock();
-            lock.writeLock().lock();
-            lock.writeLock().unlock();
-            lock.writeLock().unlock();
-            t1.join(MEDIUM_DELAY_MS);
-            t2.join(MEDIUM_DELAY_MS);
-            assertTrue(!t1.isAlive());
-            assertTrue(!t2.isAlive());
-
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.isWriteLockedByCurrentThread());
+        assertTrue(lock.getWriteHoldCount() == 1);
+        lock.writeLock().lock();
+        assertTrue(lock.getWriteHoldCount() == 2);
+        lock.writeLock().unlock();
+        lock.writeLock().lock();
+        lock.writeLock().unlock();
+        lock.writeLock().unlock();
+        t1.join(MEDIUM_DELAY_MS);
+        t2.join(MEDIUM_DELAY_MS);
+        assertTrue(!t1.isAlive());
+        assertTrue(!t2.isAlive());
     }
 
 
     /**
      * Read tryLock succeeds if readlocked but not writelocked
      */
-    public void testTryLockWhenReadLocked() {
+    public void testTryLockWhenReadLocked() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.readLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -690,13 +628,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     lock.readLock().unlock();
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.readLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.readLock().unlock();
     }
 
 
@@ -704,7 +639,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      * write tryLock fails when readlocked
      */
-    public void testWriteTryLockWhenReadLocked() {
+    public void testWriteTryLockWhenReadLocked() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.readLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -712,20 +647,17 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     threadAssertFalse(lock.writeLock().tryLock());
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.readLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.readLock().unlock();
     }
 
 
     /**
      * Fair Read tryLock succeeds if readlocked but not writelocked
      */
-    public void testTryLockWhenReadLockedFair() {
+    public void testTryLockWhenReadLockedFair() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	lock.readLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -734,13 +666,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     lock.readLock().unlock();
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.readLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.readLock().unlock();
     }
 
 
@@ -748,7 +677,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      * Fair write tryLock fails when readlocked
      */
-    public void testWriteTryLockWhenReadLockedFair() {
+    public void testWriteTryLockWhenReadLockedFair() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	lock.readLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -756,13 +685,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     threadAssertFalse(lock.writeLock().tryLock());
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.readLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.readLock().unlock();
     }
 
 
@@ -770,7 +696,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      * write timed tryLock times out if locked
      */
-    public void testWriteTryLock_Timeout() {
+    public void testWriteTryLock_Timeout() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -782,19 +708,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     }
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.writeLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.writeLock().unlock();
     }
 
     /**
      * read timed tryLock times out if write-locked
      */
-    public void testReadTryLock_Timeout() {
+    public void testReadTryLock_Timeout() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	lock.writeLock().lock();
 	Thread t = new Thread(new Runnable() {
@@ -806,26 +729,19 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     }
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            lock.writeLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        lock.writeLock().unlock();
     }
 
 
     /**
      * write lockInterruptibly succeeds if lock free else is interruptible
      */
-    public void testWriteLockInterruptibly() {
+    public void testWriteLockInterruptibly() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	try {
-            lock.writeLock().lockInterruptibly();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        lock.writeLock().lockInterruptibly();
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -836,28 +752,21 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     }
 		}
 	    });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.join();
-            lock.writeLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.join();
+        lock.writeLock().unlock();
     }
 
     /**
      *  read lockInterruptibly succeeds if lock free else is interruptible
      */
-    public void testReadLockInterruptibly() {
+    public void testReadLockInterruptibly() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	try {
-            lock.writeLock().lockInterruptibly();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        lock.writeLock().lockInterruptibly();
 	Thread t = new Thread(new Runnable() {
 		public void run() {
 		    try {
@@ -868,32 +777,24 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                     }
 		}
 	    });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-            lock.writeLock().unlock();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
+        lock.writeLock().unlock();
     }
 
     /**
      * Calling await without holding lock throws IllegalMonitorStateException
      */
-    public void testAwait_IllegalMonitor() {
+    public void testAwait_IllegalMonitor() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
         try {
             c.await();
             shouldThrow();
-        }
-        catch (IllegalMonitorStateException success) {
-        }
-        catch (Exception ex) {
-            shouldThrow();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
     /**
@@ -905,29 +806,20 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             c.signal();
             shouldThrow();
-        }
-        catch (IllegalMonitorStateException success) {
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
     /**
      * awaitNanos without a signal times out
      */
-    public void testAwaitNanos_Timeout() {
+    public void testAwaitNanos_Timeout() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
-        try {
-            lock.writeLock().lock();
-            long t = c.awaitNanos(100);
-            assertTrue(t <= 0);
-            lock.writeLock().unlock();
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+
+        lock.writeLock().lock();
+        long t = c.awaitNanos(100);
+        assertTrue(t <= 0);
+        lock.writeLock().unlock();
     }
 
 
@@ -937,13 +829,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testAwait_Timeout() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
-        try {
-            lock.writeLock().lock();
-            lock.writeLock().unlock();
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        lock.writeLock().lock();
+        lock.writeLock().unlock();
     }
 
     /**
@@ -952,20 +839,15 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testAwaitUntil_Timeout() {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
-        try {
-            lock.writeLock().lock();
-            java.util.Date d = new java.util.Date();
-            lock.writeLock().unlock();
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        lock.writeLock().lock();
+        java.util.Date d = new java.util.Date();
+        lock.writeLock().unlock();
     }
 
     /**
      * await returns when signalled
      */
-    public void testAwait() {
+    public void testAwait() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -981,18 +863,13 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            c.signal();
-            lock.writeLock().unlock();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        c.signal();
+        lock.writeLock().unlock();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /** A helper class for uninterruptible wait tests */
@@ -1025,39 +902,35 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      * awaitUninterruptibly doesn't abort on interrupt
      */
-    public void testAwaitUninterruptibly() {
+    public void testAwaitUninterruptibly() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
         UninterruptableThread thread = new UninterruptableThread(lock.writeLock(), c);
 
-        try {
-            thread.start();
+        thread.start();
 
-            while (!thread.lockStarted) {
-                Thread.sleep(100);
-            }
-
-            lock.writeLock().lock();
-            try {
-                thread.interrupt();
-                thread.canAwake = true;
-                c.signal();
-            } finally {
-                lock.writeLock().unlock();
-            }
-
-            thread.join();
-            assertTrue(thread.interrupted);
-            assertFalse(thread.isAlive());
-        } catch (Exception ex) {
-            unexpectedException();
+        while (!thread.lockStarted) {
+            Thread.sleep(100);
         }
+
+        lock.writeLock().lock();
+        try {
+            thread.interrupt();
+            thread.canAwake = true;
+            c.signal();
+        } finally {
+            lock.writeLock().unlock();
+        }
+
+        thread.join();
+        assertTrue(thread.interrupted);
+        assertFalse(thread.isAlive());
     }
 
     /**
      * await is interruptible
      */
-    public void testAwait_Interrupt() {
+    public void testAwait_Interrupt() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -1073,22 +946,17 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * awaitNanos is interruptible
      */
-    public void testAwaitNanos_Interrupt() {
+    public void testAwaitNanos_Interrupt() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -1104,22 +972,17 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * awaitUntil is interruptible
      */
-    public void testAwaitUntil_Interrupt() {
+    public void testAwaitUntil_Interrupt() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -1136,22 +999,17 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * signalAll wakes up all threads
      */
-    public void testSignalAll() {
+    public void testSignalAll() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t1 = new Thread(new Runnable() {
@@ -1180,75 +1038,61 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            c.signalAll();
-            lock.writeLock().unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        c.signalAll();
+        lock.writeLock().unlock();
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
     /**
      * A serialized lock deserializes as unlocked
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         ReentrantReadWriteLock l = new ReentrantReadWriteLock();
         l.readLock().lock();
         l.readLock().unlock();
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            ReentrantReadWriteLock r = (ReentrantReadWriteLock) in.readObject();
-            r.readLock().lock();
-            r.readLock().unlock();
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        ReentrantReadWriteLock r = (ReentrantReadWriteLock) in.readObject();
+        r.readLock().lock();
+        r.readLock().unlock();
     }
 
     /**
      * hasQueuedThreads reports whether there are waiting threads
      */
-    public void testhasQueuedThreads() {
+    public void testhasQueuedThreads() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertFalse(lock.hasQueuedThreads());
-            lock.writeLock().lock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(lock.hasQueuedThreads());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertFalse(lock.hasQueuedThreads());
+        lock.writeLock().lock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        lock.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(lock.hasQueuedThreads());
+        t1.join();
+        t2.join();
     }
 
     /**
@@ -1266,97 +1110,85 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     /**
      * hasQueuedThread reports whether a thread is queued.
      */
-    public void testHasQueuedThread() {
+    public void testHasQueuedThread() throws InterruptedException {
 	final ReentrantReadWriteLock sync = new ReentrantReadWriteLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(sync));
         Thread t2 = new Thread(new InterruptibleLockRunnable(sync));
-        try {
-            assertFalse(sync.hasQueuedThread(t1));
-            assertFalse(sync.hasQueuedThread(t2));
-            sync.writeLock().lock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasQueuedThread(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasQueuedThread(t1));
-            assertTrue(sync.hasQueuedThread(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.hasQueuedThread(t1));
-            assertTrue(sync.hasQueuedThread(t2));
-            sync.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.hasQueuedThread(t1));
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.hasQueuedThread(t2));
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertFalse(sync.hasQueuedThread(t1));
+        assertFalse(sync.hasQueuedThread(t2));
+        sync.writeLock().lock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasQueuedThread(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasQueuedThread(t1));
+        assertTrue(sync.hasQueuedThread(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.hasQueuedThread(t1));
+        assertTrue(sync.hasQueuedThread(t2));
+        sync.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.hasQueuedThread(t1));
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.hasQueuedThread(t2));
+        t1.join();
+        t2.join();
     }
 
 
     /**
      * getQueueLength reports number of waiting threads
      */
-    public void testGetQueueLength() {
+    public void testGetQueueLength() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertEquals(0, lock.getQueueLength());
-            lock.writeLock().lock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(2, lock.getQueueLength());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(0, lock.getQueueLength());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertEquals(0, lock.getQueueLength());
+        lock.writeLock().lock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(2, lock.getQueueLength());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        lock.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(0, lock.getQueueLength());
+        t1.join();
+        t2.join();
     }
 
     /**
      * getQueuedThreads includes waiting threads
      */
-    public void testGetQueuedThreads() {
+    public void testGetQueuedThreads() throws InterruptedException {
 	final PublicReentrantReadWriteLock lock = new PublicReentrantReadWriteLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            lock.writeLock().lock();
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().contains(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().contains(t1));
-            assertTrue(lock.getQueuedThreads().contains(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(lock.getQueuedThreads().contains(t1));
-            assertTrue(lock.getQueuedThreads().contains(t2));
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        lock.writeLock().lock();
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().contains(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().contains(t1));
+        assertTrue(lock.getQueuedThreads().contains(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(lock.getQueuedThreads().contains(t1));
+        assertTrue(lock.getQueuedThreads().contains(t2));
+        lock.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        t1.join();
+        t2.join();
     }
 
     /**
@@ -1367,10 +1199,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock.hasWaiters(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1381,10 +1210,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock.getWaitQueueLength(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -1396,10 +1222,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock.getWaitingThreads(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1412,10 +1235,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock2.hasWaiters(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -1427,10 +1247,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock.hasWaiters(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
@@ -1444,10 +1261,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock2.getWaitQueueLength(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -1459,10 +1273,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock.getWaitQueueLength(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
@@ -1476,10 +1287,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock2.getWaitingThreads(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -1491,17 +1299,14 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         try {
             lock.getWaitingThreads(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
     /**
      * hasWaiters returns true when a thread is waiting, else false
      */
-    public void testHasWaiters() {
+    public void testHasWaiters() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -1519,31 +1324,26 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertTrue(lock.hasWaiters(c));
-            assertEquals(1, lock.getWaitQueueLength(c));
-            c.signal();
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertFalse(lock.hasWaiters(c));
-            assertEquals(0, lock.getWaitQueueLength(c));
-            lock.writeLock().unlock();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        assertTrue(lock.hasWaiters(c));
+        assertEquals(1, lock.getWaitQueueLength(c));
+        c.signal();
+        lock.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        assertFalse(lock.hasWaiters(c));
+        assertEquals(0, lock.getWaitQueueLength(c));
+        lock.writeLock().unlock();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * getWaitQueueLength returns number of waiting threads
      */
-    public void testGetWaitQueueLength() {
+    public void testGetWaitQueueLength() throws InterruptedException {
 	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -1561,32 +1361,27 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertTrue(lock.hasWaiters(c));
-            assertEquals(1, lock.getWaitQueueLength(c));
-            c.signal();
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertFalse(lock.hasWaiters(c));
-            assertEquals(0, lock.getWaitQueueLength(c));
-            lock.writeLock().unlock();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        assertTrue(lock.hasWaiters(c));
+        assertEquals(1, lock.getWaitQueueLength(c));
+        c.signal();
+        lock.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        assertFalse(lock.hasWaiters(c));
+        assertEquals(0, lock.getWaitQueueLength(c));
+        lock.writeLock().unlock();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
 
     /**
      * getWaitingThreads returns only and all waiting threads
      */
-    public void testGetWaitingThreads() {
+    public void testGetWaitingThreads() throws InterruptedException {
 	final PublicReentrantReadWriteLock lock = new PublicReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
 	Thread t1 = new Thread(new Runnable() {
@@ -1617,33 +1412,28 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            lock.writeLock().lock();
-            assertTrue(lock.getWaitingThreads(c).isEmpty());
-            lock.writeLock().unlock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertTrue(lock.hasWaiters(c));
-            assertTrue(lock.getWaitingThreads(c).contains(t1));
-            assertTrue(lock.getWaitingThreads(c).contains(t2));
-            c.signalAll();
-            lock.writeLock().unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.writeLock().lock();
-            assertFalse(lock.hasWaiters(c));
-            assertTrue(lock.getWaitingThreads(c).isEmpty());
-            lock.writeLock().unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        lock.writeLock().lock();
+        assertTrue(lock.getWaitingThreads(c).isEmpty());
+        lock.writeLock().unlock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        assertTrue(lock.hasWaiters(c));
+        assertTrue(lock.getWaitingThreads(c).contains(t1));
+        assertTrue(lock.getWaitingThreads(c).contains(t2));
+        c.signalAll();
+        lock.writeLock().unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.writeLock().lock();
+        assertFalse(lock.hasWaiters(c));
+        assertTrue(lock.getWaitingThreads(c).isEmpty());
+        lock.writeLock().unlock();
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
     /**

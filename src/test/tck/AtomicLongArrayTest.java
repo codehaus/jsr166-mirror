@@ -35,10 +35,8 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         try {
             long[] a = null;
             AtomicLongArray ai = new AtomicLongArray(a);
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+            shouldThrow();
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -59,18 +57,22 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
         try {
             ai.get(SIZE);
+            shouldThrow();
         } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.get(-1);
+            shouldThrow();
         } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.set(SIZE, 0);
+            shouldThrow();
         } catch (IndexOutOfBoundsException success) {
         }
         try {
             ai.set(-1, 0);
+            shouldThrow();
         } catch (IndexOutOfBoundsException success) {
         }
     }
@@ -126,23 +128,19 @@ public class AtomicLongArrayTest extends JSR166TestCase {
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws InterruptedException {
         final AtomicLongArray a = new AtomicLongArray(1);
         a.set(0, 1);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     while (!a.compareAndSet(0, 2, 3)) Thread.yield();
                 }});
-        try {
-            t.start();
-            assertTrue(a.compareAndSet(0, 1, 2));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(a.get(0), 3);
-        }
-        catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertTrue(a.compareAndSet(0, 1, 2));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertEquals(a.get(0), 3);
     }
 
     /**
@@ -291,48 +289,39 @@ public class AtomicLongArrayTest extends JSR166TestCase {
      * Multiple threads using same array of counters successfully
      * update a number of times equal to total count
      */
-    public void testCountingInMultipleThreads() {
-        try {
-            final AtomicLongArray ai = new AtomicLongArray(SIZE);
-            for (int i = 0; i < SIZE; ++i)
-                ai.set(i, COUNTDOWN);
-            Counter c1 = new Counter(ai);
-            Counter c2 = new Counter(ai);
-            Thread t1 = new Thread(c1);
-            Thread t2 = new Thread(c2);
-            t1.start();
-            t2.start();
-            t1.join();
-            t2.join();
-            assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+    public void testCountingInMultipleThreads() throws InterruptedException {
+        final AtomicLongArray ai = new AtomicLongArray(SIZE);
+        for (int i = 0; i < SIZE; ++i)
+            ai.set(i, COUNTDOWN);
+        Counter c1 = new Counter(ai);
+        Counter c2 = new Counter(ai);
+        Thread t1 = new Thread(c1);
+        Thread t2 = new Thread(c2);
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
     }
 
     /**
      * a deserialized serialized array holds same values
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         AtomicLongArray l = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i)
             l.set(i, -i);
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            AtomicLongArray r = (AtomicLongArray) in.readObject();
-            for (int i = 0; i < SIZE; ++i) {
-                assertEquals(l.get(i), r.get(i));
-            }
-        } catch (Exception e) {
-            unexpectedException();
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        AtomicLongArray r = (AtomicLongArray) in.readObject();
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(l.get(i), r.get(i));
         }
     }
 

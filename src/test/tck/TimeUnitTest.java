@@ -317,10 +317,10 @@ public class TimeUnitTest extends JSR166TestCase {
      * and negative to LONG.MIN_VALUE
      */
     public void testToNanosSaturate() {
-            assertEquals(Long.MAX_VALUE,
-                         TimeUnit.MILLISECONDS.toNanos(Long.MAX_VALUE / 2));
-            assertEquals(Long.MIN_VALUE,
-                         TimeUnit.MILLISECONDS.toNanos(-Long.MAX_VALUE / 3));
+        assertEquals(Long.MAX_VALUE,
+                     TimeUnit.MILLISECONDS.toNanos(Long.MAX_VALUE / 2));
+        assertEquals(Long.MIN_VALUE,
+                     TimeUnit.MILLISECONDS.toNanos(-Long.MAX_VALUE / 3));
     }
 
 
@@ -337,146 +337,95 @@ public class TimeUnitTest extends JSR166TestCase {
      *  Timed wait without holding lock throws
      *  IllegalMonitorStateException
      */
-    public void testTimedWait_IllegalMonitorException() {
-	//created a new thread with anonymous runnable
+    public void testTimedWait_IllegalMonitorException() throws Exception {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                Object o = new Object();
+                TimeUnit tu = TimeUnit.MILLISECONDS;
+                try {
+                    tu.timedWait(o,LONG_DELAY_MS);
+                    threadShouldThrow();
+                } catch (IllegalMonitorStateException success) {}}});
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    Object o = new Object();
-                    TimeUnit tu = TimeUnit.MILLISECONDS;
-                    try {
-                        tu.timedWait(o,LONG_DELAY_MS);
-                        threadShouldThrow();
-                    }
-                    catch (InterruptedException ie) {
-                        threadUnexpectedException();
-                    }
-                    catch (IllegalMonitorStateException success) {
-                    }
-
-                }
-            });
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * timedWait throws InterruptedException when interrupted
      */
-    public void testTimedWait() {
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    Object o = new Object();
+    public void testTimedWait() throws InterruptedException {
+	Thread t = new Thread(new CheckedInterruptedRunnable() {
+	    public void realRun() throws InterruptedException {
+                Object o = new Object();
 
-		    TimeUnit tu = TimeUnit.MILLISECONDS;
-		    try {
-			synchronized(o) {
-			    tu.timedWait(o,MEDIUM_DELAY_MS);
-			}
-                        threadShouldThrow();
-		    }
-		    catch (InterruptedException success) {}
-		    catch (IllegalMonitorStateException failure) {
-			threadUnexpectedException();
-		    }
-		}
-	    });
+                TimeUnit tu = TimeUnit.MILLISECONDS;
+                synchronized(o) {
+                    tu.timedWait(o,MEDIUM_DELAY_MS);
+                }
+            }});
 	t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
 
     /**
      * timedJoin throws InterruptedException when interrupted
      */
-    public void testTimedJoin() {
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    TimeUnit tu = TimeUnit.MILLISECONDS;
-		    try {
-			Thread s = new Thread(new Runnable() {
-                                public void run() {
-                                    try {
-                                        Thread.sleep(MEDIUM_DELAY_MS);
-                                    } catch (InterruptedException success) {}
-                                }
-                            });
-			s.start();
-			tu.timedJoin(s,MEDIUM_DELAY_MS);
-                        threadShouldThrow();
-		    }
-		    catch (Exception e) {}
-		}
-	    });
+    public void testTimedJoin() throws InterruptedException {
+        final Thread s = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                Thread.sleep(MEDIUM_DELAY_MS);
+            }});
+	final Thread t = new Thread(new CheckedInterruptedRunnable() {
+	    public void realRun() throws InterruptedException {
+                TimeUnit tu = TimeUnit.MILLISECONDS;
+                tu.timedJoin(s, MEDIUM_DELAY_MS);
+            }});;
+        s.start();
 	t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
+        s.interrupt();
+        s.join();
     }
 
     /**
      *  timedSleep throws InterruptedException when interrupted
      */
-    public void testTimedSleep() {
-	//created a new thread with anonymous runnable
+    public void testTimedSleep() throws InterruptedException {
+	Thread t = new Thread(new CheckedInterruptedRunnable() {
+	    public void realRun() throws InterruptedException {
+                TimeUnit tu = TimeUnit.MILLISECONDS;
+                tu.sleep(MEDIUM_DELAY_MS);
+            }});
 
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    TimeUnit tu = TimeUnit.MILLISECONDS;
-		    try {
-			tu.sleep(MEDIUM_DELAY_MS);
-                        threadShouldThrow();
-		    }
-		    catch (InterruptedException success) {}
-		}
-	    });
 	t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
-     * a deserialized serialized unit is equal
+     * a deserialized serialized unit is the same instance
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         TimeUnit q = TimeUnit.MILLISECONDS;
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            TimeUnit r = (TimeUnit)in.readObject();
-
-            assertEquals(q.toString(), r.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        TimeUnit r = (TimeUnit)in.readObject();
+        assertSame(q, r);
     }
 
 }

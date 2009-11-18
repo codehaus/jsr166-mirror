@@ -128,30 +128,26 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     /**
      * hasQueuedThreads reports whether there are waiting threads
      */
-    public void testhasQueuedThreads() {
+    public void testhasQueuedThreads() throws InterruptedException {
 	final Mutex sync = new Mutex();
         Thread t1 = new Thread(new InterruptedSyncRunnable(sync));
         Thread t2 = new Thread(new InterruptibleSyncRunnable(sync));
-        try {
-            assertFalse(sync.hasQueuedThreads());
-            sync.acquire(1);
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasQueuedThreads());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasQueuedThreads());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasQueuedThreads());
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.hasQueuedThreads());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertFalse(sync.hasQueuedThreads());
+        sync.acquire(1);
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasQueuedThreads());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasQueuedThreads());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasQueuedThreads());
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.hasQueuedThreads());
+        t1.join();
+        t2.join();
     }
 
     /**
@@ -162,202 +158,177 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync.isQueued(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
      * isQueued reports whether a thread is queued.
      */
-    public void testIsQueued() {
+    public void testIsQueued() throws InterruptedException {
 	final Mutex sync = new Mutex();
         Thread t1 = new Thread(new InterruptedSyncRunnable(sync));
         Thread t2 = new Thread(new InterruptibleSyncRunnable(sync));
-        try {
-            assertFalse(sync.isQueued(t1));
-            assertFalse(sync.isQueued(t2));
-            sync.acquire(1);
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.isQueued(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.isQueued(t1));
-            assertTrue(sync.isQueued(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.isQueued(t1));
-            assertTrue(sync.isQueued(t2));
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.isQueued(t1));
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.isQueued(t2));
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertFalse(sync.isQueued(t1));
+        assertFalse(sync.isQueued(t2));
+        sync.acquire(1);
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.isQueued(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.isQueued(t1));
+        assertTrue(sync.isQueued(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.isQueued(t1));
+        assertTrue(sync.isQueued(t2));
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.isQueued(t1));
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.isQueued(t2));
+        t1.join();
+        t2.join();
     }
 
     /**
      * getFirstQueuedThread returns first waiting thread or null if none
      */
-    public void testGetFirstQueuedThread() {
+    public void testGetFirstQueuedThread() throws InterruptedException {
 	final Mutex sync = new Mutex();
         Thread t1 = new Thread(new InterruptedSyncRunnable(sync));
         Thread t2 = new Thread(new InterruptibleSyncRunnable(sync));
-        try {
-            assertNull(sync.getFirstQueuedThread());
-            sync.acquire(1);
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(t1, sync.getFirstQueuedThread());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(t1, sync.getFirstQueuedThread());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(t2, sync.getFirstQueuedThread());
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertNull(sync.getFirstQueuedThread());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertNull(sync.getFirstQueuedThread());
+        sync.acquire(1);
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(t1, sync.getFirstQueuedThread());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(t1, sync.getFirstQueuedThread());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(t2, sync.getFirstQueuedThread());
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertNull(sync.getFirstQueuedThread());
+        t1.join();
+        t2.join();
     }
 
 
     /**
      * hasContended reports false if no thread has ever blocked, else true
      */
-    public void testHasContended() {
+    public void testHasContended() throws InterruptedException {
 	final Mutex sync = new Mutex();
         Thread t1 = new Thread(new InterruptedSyncRunnable(sync));
         Thread t2 = new Thread(new InterruptibleSyncRunnable(sync));
-        try {
-            assertFalse(sync.hasContended());
-            sync.acquire(1);
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasContended());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasContended());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasContended());
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasContended());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertFalse(sync.hasContended());
+        sync.acquire(1);
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasContended());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasContended());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasContended());
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasContended());
+        t1.join();
+        t2.join();
     }
 
     /**
      * getQueuedThreads includes waiting threads
      */
-    public void testGetQueuedThreads() {
+    public void testGetQueuedThreads() throws InterruptedException {
 	final Mutex sync = new Mutex();
         Thread t1 = new Thread(new InterruptedSyncRunnable(sync));
         Thread t2 = new Thread(new InterruptibleSyncRunnable(sync));
-        try {
-            assertTrue(sync.getQueuedThreads().isEmpty());
-            sync.acquire(1);
-            assertTrue(sync.getQueuedThreads().isEmpty());
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getQueuedThreads().contains(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getQueuedThreads().contains(t1));
-            assertTrue(sync.getQueuedThreads().contains(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.getQueuedThreads().contains(t1));
-            assertTrue(sync.getQueuedThreads().contains(t2));
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getQueuedThreads().isEmpty());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertTrue(sync.getQueuedThreads().isEmpty());
+        sync.acquire(1);
+        assertTrue(sync.getQueuedThreads().isEmpty());
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getQueuedThreads().contains(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getQueuedThreads().contains(t1));
+        assertTrue(sync.getQueuedThreads().contains(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.getQueuedThreads().contains(t1));
+        assertTrue(sync.getQueuedThreads().contains(t2));
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getQueuedThreads().isEmpty());
+        t1.join();
+        t2.join();
     }
 
     /**
      * getExclusiveQueuedThreads includes waiting threads
      */
-    public void testGetExclusiveQueuedThreads() {
+    public void testGetExclusiveQueuedThreads() throws InterruptedException {
 	final Mutex sync = new Mutex();
         Thread t1 = new Thread(new InterruptedSyncRunnable(sync));
         Thread t2 = new Thread(new InterruptibleSyncRunnable(sync));
-        try {
-            assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
-            sync.acquire(1);
-            assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getExclusiveQueuedThreads().contains(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getExclusiveQueuedThreads().contains(t1));
-            assertTrue(sync.getExclusiveQueuedThreads().contains(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.getExclusiveQueuedThreads().contains(t1));
-            assertTrue(sync.getExclusiveQueuedThreads().contains(t2));
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
+        sync.acquire(1);
+        assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getExclusiveQueuedThreads().contains(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getExclusiveQueuedThreads().contains(t1));
+        assertTrue(sync.getExclusiveQueuedThreads().contains(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.getExclusiveQueuedThreads().contains(t1));
+        assertTrue(sync.getExclusiveQueuedThreads().contains(t2));
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
+        t1.join();
+        t2.join();
     }
 
     /**
      * getSharedQueuedThreads does not include exclusively waiting threads
      */
-    public void testGetSharedQueuedThreads() {
+    public void testGetSharedQueuedThreads() throws InterruptedException {
 	final Mutex sync = new Mutex();
         Thread t1 = new Thread(new InterruptedSyncRunnable(sync));
         Thread t2 = new Thread(new InterruptibleSyncRunnable(sync));
-        try {
-            assertTrue(sync.getSharedQueuedThreads().isEmpty());
-            sync.acquire(1);
-            assertTrue(sync.getSharedQueuedThreads().isEmpty());
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getSharedQueuedThreads().isEmpty());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getSharedQueuedThreads().isEmpty());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getSharedQueuedThreads().isEmpty());
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.getSharedQueuedThreads().isEmpty());
-            t1.join();
-            t2.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        assertTrue(sync.getSharedQueuedThreads().isEmpty());
+        sync.acquire(1);
+        assertTrue(sync.getSharedQueuedThreads().isEmpty());
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getSharedQueuedThreads().isEmpty());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getSharedQueuedThreads().isEmpty());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getSharedQueuedThreads().isEmpty());
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.getSharedQueuedThreads().isEmpty());
+        t1.join();
+        t2.join();
     }
 
     /**
      * tryAcquireNanos is interruptible.
      */
-    public void testInterruptedException2() {
+    public void testInterruptedException2() throws InterruptedException {
 	final Mutex sync = new Mutex();
 	sync.acquire(1);
 	Thread t = new Thread(new Runnable() {
@@ -368,19 +339,17 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		    } catch (InterruptedException success) {}
 		}
 	    });
-        try {
-            t.start();
-            t.interrupt();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.interrupt();
+        t.join();
     }
 
 
     /**
      * TryAcquire on exclusively held sync fails
      */
-    public void testTryAcquireWhenSynced() {
+    public void testTryAcquireWhenSynced() throws InterruptedException {
 	final Mutex sync = new Mutex();
 	sync.acquire(1);
 	Thread t = new Thread(new Runnable() {
@@ -388,19 +357,16 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     threadAssertFalse(sync.tryAcquire(1));
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            sync.release(1);
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        sync.release(1);
     }
 
     /**
      * tryAcquireNanos on an exclusively held sync times out
      */
-    public void testAcquireNanos_Timeout() {
+    public void testAcquireNanos_Timeout() throws InterruptedException {
 	final Mutex sync = new Mutex();
 	sync.acquire(1);
 	Thread t = new Thread(new Runnable() {
@@ -412,20 +378,17 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     }
 		}
 	    });
-        try {
-            t.start();
-            t.join();
-            sync.release(1);
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        t.join();
+        sync.release(1);
     }
 
 
     /**
      * getState is true when acquired and false when not
      */
-    public void testGetState() {
+    public void testGetState() throws InterruptedException {
 	final Mutex sync = new Mutex();
 	sync.acquire(1);
 	assertTrue(sync.isHeldExclusively());
@@ -443,56 +406,41 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		    sync.release(1);
 		}
 	    });
-	try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.isHeldExclusively());
-            t.join();
-            assertFalse(sync.isHeldExclusively());
-        } catch (Exception e) {
-            unexpectedException();
-        }
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.isHeldExclusively());
+        t.join();
+        assertFalse(sync.isHeldExclusively());
     }
 
 
     /**
      * acquireInterruptibly is interruptible.
      */
-    public void testAcquireInterruptibly1() {
+    public void testAcquireInterruptibly1() throws InterruptedException {
 	final Mutex sync = new Mutex();
 	sync.acquire(1);
 	Thread t = new Thread(new InterruptedSyncRunnable(sync));
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            sync.release(1);
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        sync.release(1);
+        t.join();
     }
 
     /**
      * acquireInterruptibly succeeds when released, else is interruptible
      */
-    public void testAcquireInterruptibly2() {
+    public void testAcquireInterruptibly2() throws InterruptedException {
 	final Mutex sync = new Mutex();
-	try {
-            sync.acquireInterruptibly(1);
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        sync.acquireInterruptibly(1);
 	Thread t = new Thread(new InterruptedSyncRunnable(sync));
-        try {
-            t.start();
-            t.interrupt();
-            assertTrue(sync.isHeldExclusively());
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t.start();
+        t.interrupt();
+        assertTrue(sync.isHeldExclusively());
+        t.join();
     }
 
     /**
@@ -509,7 +457,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     /**
      * Calling await without holding sync throws IllegalMonitorStateException
      */
-    public void testAwait_IllegalMonitor() {
+    public void testAwait_IllegalMonitor() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
         try {
@@ -518,82 +466,60 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         }
         catch (IllegalMonitorStateException success) {
         }
-        catch (Exception ex) {
-            unexpectedException();
-        }
     }
 
     /**
      * Calling signal without holding sync throws IllegalMonitorStateException
      */
-    public void testSignal_IllegalMonitor() {
+    public void testSignal_IllegalMonitor() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
         try {
             c.signal();
             shouldThrow();
         }
-        catch (IllegalMonitorStateException success) {
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        catch (IllegalMonitorStateException success) {}
     }
 
     /**
      * awaitNanos without a signal times out
      */
-    public void testAwaitNanos_Timeout() {
+    public void testAwaitNanos_Timeout() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
-        try {
-            sync.acquire(1);
-            long t = c.awaitNanos(100);
-            assertTrue(t <= 0);
-            sync.release(1);
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        sync.acquire(1);
+        long t = c.awaitNanos(100);
+        assertTrue(t <= 0);
+        sync.release(1);
     }
 
     /**
      *  Timed await without a signal times out
      */
-    public void testAwait_Timeout() {
+    public void testAwait_Timeout() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
-        try {
-            sync.acquire(1);
-            assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            sync.release(1);
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        sync.acquire(1);
+        assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        sync.release(1);
     }
 
     /**
      * awaitUntil without a signal times out
      */
-    public void testAwaitUntil_Timeout() {
+    public void testAwaitUntil_Timeout() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
-        try {
-            sync.acquire(1);
-            java.util.Date d = new java.util.Date();
-            assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + 10)));
-            sync.release(1);
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        sync.acquire(1);
+        java.util.Date d = new java.util.Date();
+        assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + 10)));
+        sync.release(1);
     }
 
     /**
      * await returns when signalled
      */
-    public void testAwait() {
+    public void testAwait() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -609,18 +535,13 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            sync.acquire(1);
-            c.signal();
-            sync.release(1);
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        sync.acquire(1);
+        c.signal();
+        sync.release(1);
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
 
@@ -633,10 +554,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync.hasWaiters(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -647,10 +565,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync.getWaitQueueLength(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -662,10 +577,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync.getWaitingThreads(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -679,10 +591,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync2.hasWaiters(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -694,10 +603,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync.hasWaiters(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
@@ -711,10 +617,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync2.getWaitQueueLength(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -726,10 +629,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync.getWaitQueueLength(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
@@ -743,10 +643,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync2.getWaitingThreads(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -758,10 +655,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         try {
             sync.getWaitingThreads(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
@@ -769,7 +663,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     /**
      * hasWaiters returns true when a thread is waiting, else false
      */
-    public void testHasWaiters() {
+    public void testHasWaiters() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -787,31 +681,26 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            sync.acquire(1);
-            assertTrue(sync.hasWaiters(c));
-            assertEquals(1, sync.getWaitQueueLength(c));
-            c.signal();
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            sync.acquire(1);
-            assertFalse(sync.hasWaiters(c));
-            assertEquals(0, sync.getWaitQueueLength(c));
-            sync.release(1);
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        sync.acquire(1);
+        assertTrue(sync.hasWaiters(c));
+        assertEquals(1, sync.getWaitQueueLength(c));
+        c.signal();
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        sync.acquire(1);
+        assertFalse(sync.hasWaiters(c));
+        assertEquals(0, sync.getWaitQueueLength(c));
+        sync.release(1);
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * getWaitQueueLength returns number of waiting threads
      */
-    public void testGetWaitQueueLength() {
+    public void testGetWaitQueueLength() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t1 = new Thread(new Runnable() {
@@ -844,35 +733,30 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            sync.acquire(1);
-            assertTrue(sync.hasWaiters(c));
-            assertEquals(2, sync.getWaitQueueLength(c));
-            c.signalAll();
-            sync.release(1);
-            Thread.sleep(SHORT_DELAY_MS);
-            sync.acquire(1);
-            assertFalse(sync.hasWaiters(c));
-            assertEquals(0, sync.getWaitQueueLength(c));
-            sync.release(1);
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        sync.acquire(1);
+        assertTrue(sync.hasWaiters(c));
+        assertEquals(2, sync.getWaitQueueLength(c));
+        c.signalAll();
+        sync.release(1);
+        Thread.sleep(SHORT_DELAY_MS);
+        sync.acquire(1);
+        assertFalse(sync.hasWaiters(c));
+        assertEquals(0, sync.getWaitQueueLength(c));
+        sync.release(1);
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
     /**
      * getWaitingThreads returns only and all waiting threads
      */
-    public void testGetWaitingThreads() {
+    public void testGetWaitingThreads() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t1 = new Thread(new Runnable() {
@@ -903,7 +787,6 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
             sync.acquire(1);
             assertTrue(sync.getWaitingThreads(c).isEmpty());
             sync.release(1);
@@ -926,10 +809,6 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
             t2.join(SHORT_DELAY_MS);
             assertFalse(t1.isAlive());
             assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
     }
 
 
@@ -937,7 +816,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     /**
      * awaitUninterruptibly doesn't abort on interrupt
      */
-    public void testAwaitUninterruptibly() {
+    public void testAwaitUninterruptibly() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -948,25 +827,20 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            sync.acquire(1);
-            c.signal();
-            sync.release(1);
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        sync.acquire(1);
+        c.signal();
+        sync.release(1);
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * await is interruptible
      */
-    public void testAwait_Interrupt() {
+    public void testAwait_Interrupt() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -982,22 +856,17 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * awaitNanos is interruptible
      */
-    public void testAwaitNanos_Interrupt() {
+    public void testAwaitNanos_Interrupt() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -1013,22 +882,17 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * awaitUntil is interruptible
      */
-    public void testAwaitUntil_Interrupt() {
+    public void testAwaitUntil_Interrupt() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t = new Thread(new Runnable() {
@@ -1045,22 +909,17 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * signalAll wakes up all threads
      */
-    public void testSignalAll() {
+    public void testSignalAll() throws InterruptedException {
 	final Mutex sync = new Mutex();
         final AbstractQueuedLongSynchronizer.ConditionObject c = sync.newCondition();
 	Thread t1 = new Thread(new Runnable() {
@@ -1089,21 +948,16 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
 		}
 	    });
 
-        try {
-            t1.start();
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            sync.acquire(1);
-            c.signalAll();
-            sync.release(1);
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        sync.acquire(1);
+        c.signalAll();
+        sync.release(1);
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
 
@@ -1122,25 +976,20 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     /**
      * A serialized AQS deserializes with current state
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         Mutex l = new Mutex();
         l.acquire(1);
         assertTrue(l.isHeldExclusively());
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            Mutex r = (Mutex) in.readObject();
-            assertTrue(r.isHeldExclusively());
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        Mutex r = (Mutex) in.readObject();
+        assertTrue(r.isHeldExclusively());
     }
 
 
@@ -1169,7 +1018,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     /**
      * acquireSharedInterruptibly returns after release, but not before
      */
-    public void testAcquireSharedInterruptibly() {
+    public void testAcquireSharedInterruptibly() throws InterruptedException {
 	final BooleanLatch l = new BooleanLatch();
 
 	Thread t = new Thread(new Runnable() {
@@ -1183,23 +1032,20 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     }
 		}
 	    });
-	try {
-            t.start();
-            assertFalse(l.isSignalled());
-            Thread.sleep(SHORT_DELAY_MS);
-            l.releaseShared(0);
-            assertTrue(l.isSignalled());
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertFalse(l.isSignalled());
+        Thread.sleep(SHORT_DELAY_MS);
+        l.releaseShared(0);
+        assertTrue(l.isSignalled());
+        t.join();
     }
 
 
     /**
      * acquireSharedTimed returns after release
      */
-    public void testAsquireSharedTimed() {
+    public void testAsquireSharedTimed() throws InterruptedException {
 	final BooleanLatch l = new BooleanLatch();
 
 	Thread t = new Thread(new Runnable() {
@@ -1214,22 +1060,19 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     }
 		}
 	    });
-	try {
-            t.start();
-            assertFalse(l.isSignalled());
-            Thread.sleep(SHORT_DELAY_MS);
-            l.releaseShared(0);
-            assertTrue(l.isSignalled());
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+
+        t.start();
+        assertFalse(l.isSignalled());
+        Thread.sleep(SHORT_DELAY_MS);
+        l.releaseShared(0);
+        assertTrue(l.isSignalled());
+        t.join();
     }
 
     /**
      * acquireSharedInterruptibly throws IE if interrupted before released
      */
-    public void testAcquireSharedInterruptibly_InterruptedException() {
+    public void testAcquireSharedInterruptibly_InterruptedException() throws InterruptedException {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -1240,20 +1083,17 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     } catch (InterruptedException success) {}
                 }
             });
+
 	t.start();
-	try {
-            assertFalse(l.isSignalled());
-            t.interrupt();
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        assertFalse(l.isSignalled());
+        t.interrupt();
+        t.join();
     }
 
     /**
      * acquireSharedTimed throws IE if interrupted before released
      */
-    public void testAcquireSharedNanos_InterruptedException() {
+    public void testAcquireSharedNanos_InterruptedException() throws InterruptedException {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -1264,21 +1104,18 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     } catch (InterruptedException success) {}
                 }
             });
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(l.isSignalled());
-            t.interrupt();
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(l.isSignalled());
+        t.interrupt();
+        t.join();
     }
 
     /**
      * acquireSharedTimed times out if not released before timeout
      */
-    public void testAcquireSharedNanos_Timeout() {
+    public void testAcquireSharedNanos_Timeout() throws InterruptedException {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new Runnable() {
                 public void run() {
@@ -1290,14 +1127,11 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
                     }
                 }
             });
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(l.isSignalled());
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(l.isSignalled());
+        t.join();
     }
 
 

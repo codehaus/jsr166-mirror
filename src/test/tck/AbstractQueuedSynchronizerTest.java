@@ -325,7 +325,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * tryAcquireNanos is interruptible.
      */
-    public void testInterruptedException2() {
+    public void testInterruptedException2() throws InterruptedException {
 	final Mutex sync = new Mutex();
 	sync.acquire(1);
 	Thread t = new Thread(new Runnable() {
@@ -339,6 +339,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
         t.start();
         t.interrupt();
+        t.join();
     }
 
 

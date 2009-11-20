@@ -1178,9 +1178,11 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         ExecutorService e = new CustomTPE(2, 2, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new CheckedCallable<String>() {
-                      public String realCall() throws InterruptedException {
-                          latch.await();
+            l.add(new Callable<String>() {
+                      public String call() {
+                          try {
+                              latch.await();
+                          } catch (InterruptedException ok) {}
                           return TEST_STRING;
                       }});
             l.add(null);

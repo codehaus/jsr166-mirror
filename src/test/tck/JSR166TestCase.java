@@ -294,6 +294,14 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * threadFail with message "should throw" + exceptionName
+     */
+    public void threadShouldThrow(String exceptionName) {
+        threadFailed = true;
+        fail("should throw " + exceptionName);
+    }
+
+    /**
      * threadFail with message "Unexpected exception"
      */
     public void threadUnexpectedException() {
@@ -330,6 +338,13 @@ public class JSR166TestCase extends TestCase {
      */
     public void shouldThrow() {
         fail("Should throw exception");
+    }
+
+    /**
+     * fail with message "should throw " + exceptionName
+     */
+    public void shouldThrow(String exceptionName) {
+        fail("Should throw " + exceptionName);
     }
 
     /**
@@ -429,13 +444,55 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    abstract class RunnableShouldThrow implements Runnable {
+        abstract void realRun() throws Throwable;
+
+        final Class<?> exceptionClass;
+
+        <T extends Throwable> RunnableShouldThrow(Class<T> exceptionClass) {
+            this.exceptionClass = exceptionClass;
+        }
+
+        public final void run() {
+            try {
+                realRun();
+                threadShouldThrow(exceptionClass.getSimpleName());
+            } catch (InterruptedException success) {
+            } catch (Throwable t) {
+                if (! exceptionClass.isInstance(t))
+                    threadUnexpectedException(t);
+            }
+        }
+    }
+
+    abstract class ThreadShouldThrow extends Thread {
+        abstract void realRun() throws Throwable;
+
+        final Class<?> exceptionClass;
+
+        <T extends Throwable> ThreadShouldThrow(Class<T> exceptionClass) {
+            this.exceptionClass = exceptionClass;
+        }
+
+        public final void run() {
+            try {
+                realRun();
+                threadShouldThrow(exceptionClass.getSimpleName());
+            } catch (InterruptedException success) {
+            } catch (Throwable t) {
+                if (! exceptionClass.isInstance(t))
+                    threadUnexpectedException(t);
+            }
+        }
+    }
+
     abstract class CheckedInterruptedRunnable implements Runnable {
         abstract void realRun() throws Throwable;
 
         public final void run() {
             try {
                 realRun();
-                threadShouldThrow();
+                threadShouldThrow("InterruptedException");
             } catch (InterruptedException success) {
             } catch (Throwable t) {
                 threadUnexpectedException(t);
@@ -451,8 +508,24 @@ public class JSR166TestCase extends TestCase {
                 return realCall();
             } catch (Throwable t) {
                 threadUnexpectedException(t);
-                return null;
             }
+            return null;
+        }
+    }
+
+    abstract class CheckedInterruptedCallable<T> implements Callable<T> {
+        abstract T realCall() throws Throwable;
+
+        public final T call() {
+            try {
+                T result = realCall();
+                threadShouldThrow("InterruptedException");
+                return result;
+            } catch (InterruptedException success) {
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+            return null;
         }
     }
 

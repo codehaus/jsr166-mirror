@@ -14,10 +14,10 @@ import java.util.*;
 
 public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+	junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
-        return new TestSuite(ThreadPoolExecutorTest.class);
+        return new TestSuite(ThreadPoolExecutorSubclassTest.class);
     }
 
     static class CustomTask<V> implements RunnableFuture<V> {
@@ -29,8 +29,13 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         V result;
         Thread thread;
         Exception exception;
-        CustomTask(Callable<V> c) { callable = c; }
-        CustomTask(final Runnable r, final V res) { callable = new Callable<V>() {
+        CustomTask(Callable<V> c) {
+            if (c == null) throw new NullPointerException();
+            callable = c;
+        }
+        CustomTask(final Runnable r, final V res) {
+            if (r == null) throw new NullPointerException();
+            callable = new Callable<V>() {
             public V call() throws Exception { r.run(); return res; }};
         }
         public boolean isDone() {
@@ -995,10 +1000,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      *  setCorePoolSize of negative value throws IllegalArgumentException
      */
     public void testCorePoolSizeIllegalArgumentException() {
-	ThreadPoolExecutor tpe = null;
-	try {
-	    tpe = new CustomTPE(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-	} catch (Exception e) {}
+	ThreadPoolExecutor tpe =
+            new CustomTPE(1,2,LONG_DELAY_MS, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
 	try {
 	    tpe.setCorePoolSize(-1);
 	    shouldThrow();
@@ -1276,8 +1279,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
-                it.next().get();
+            for (Future<String> future : result)
+                future.get();
             shouldThrow();
         } catch (ExecutionException success) {
         } finally {
@@ -1296,10 +1299,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
-                assertSame(TEST_STRING, it.next().get());
-            shouldThrow();
-        } catch (ExecutionException success) {
+            for (Future<String> future : result)
+                assertSame(TEST_STRING, future.get());
         } finally {
             joinPool(e);
         }
@@ -1395,8 +1396,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             String result = e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertSame(TEST_STRING, result);
-            shouldThrow();
-        } catch (ExecutionException success) {
         } finally {
             joinPool(e);
         }
@@ -1472,10 +1471,11 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             l.add(new NPETask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
-                it.next().get();
+            for (Future<String> future : result)
+                future.get();
             shouldThrow();
         } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }
@@ -1492,9 +1492,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();)
-                assertSame(TEST_STRING, it.next().get());
-            shouldThrow();
+            for (Future<String> future : result)
+                assertSame(TEST_STRING, future.get());
         } catch (ExecutionException success) {
         } finally {
             joinPool(e);
@@ -1534,7 +1533,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
     public void testFailingThreadFactory() throws InterruptedException {
         ExecutorService e = new CustomTPE(100, 100, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new FailingThreadFactory());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             for (int k = 0; k < 100; ++k) {
                 e.execute(new NoOpRunnable());
             }

@@ -14,7 +14,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
 	junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(ScheduledExecutorTest.class);
+	return new TestSuite(ScheduledExecutorSubclassTest.class);
     }
 
     static class CustomTask<V> implements RunnableScheduledFuture<V> {

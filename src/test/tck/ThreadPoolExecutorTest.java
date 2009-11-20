@@ -1228,15 +1228,23 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      * timed invokeAny(c) throws NPE if c has null elements
      */
     public void testTimedInvokeAny3() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
         ExecutorService e = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
+            l.add(new Callable<String>() {
+                      public String call() {
+                          try {
+                              latch.await();
+                          } catch (InterruptedException ok) {}
+                          return TEST_STRING;
+                      }});
             l.add(null);
             e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (NullPointerException success) {
         } finally {
+            latch.countDown();
             joinPool(e);
         }
     }

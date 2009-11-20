@@ -220,48 +220,42 @@ public class ExecutorsTest extends JSR166TestCase {
      * a newSingleThreadScheduledExecutor successfully runs delayed task
      */
     public void testNewSingleThreadScheduledExecutor() throws Exception {
-	try {
-            TrackedCallable callable = new TrackedCallable();
-            ScheduledExecutorService p1 = Executors.newSingleThreadScheduledExecutor();
-	    Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-	    assertFalse(callable.done);
-	    Thread.sleep(MEDIUM_DELAY_MS);
-	    assertTrue(callable.done);
-	    assertEquals(Boolean.TRUE, f.get());
-            joinPool(p1);
-	} catch (RejectedExecutionException e) {}
+        TrackedCallable callable = new TrackedCallable();
+        ScheduledExecutorService p1 = Executors.newSingleThreadScheduledExecutor();
+        Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+        assertFalse(callable.done);
+        Thread.sleep(MEDIUM_DELAY_MS);
+        assertTrue(callable.done);
+        assertEquals(Boolean.TRUE, f.get());
+        joinPool(p1);
     }
 
     /**
      * a newScheduledThreadPool successfully runs delayed task
      */
     public void testnewScheduledThreadPool() throws Exception {
-	try {
-            TrackedCallable callable = new TrackedCallable();
-            ScheduledExecutorService p1 = Executors.newScheduledThreadPool(2);
-	    Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-	    assertFalse(callable.done);
-	    Thread.sleep(MEDIUM_DELAY_MS);
-	    assertTrue(callable.done);
-	    assertEquals(Boolean.TRUE, f.get());
-            joinPool(p1);
-	} catch (RejectedExecutionException e) {}
+        TrackedCallable callable = new TrackedCallable();
+        ScheduledExecutorService p1 = Executors.newScheduledThreadPool(2);
+        Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+        assertFalse(callable.done);
+        Thread.sleep(MEDIUM_DELAY_MS);
+        assertTrue(callable.done);
+        assertEquals(Boolean.TRUE, f.get());
+        joinPool(p1);
     }
 
     /**
-     * an unconfigurable  newScheduledThreadPool successfully runs delayed task
+     * an unconfigurable newScheduledThreadPool successfully runs delayed task
      */
     public void testunconfigurableScheduledExecutorService() throws Exception {
-	try {
-            TrackedCallable callable = new TrackedCallable();
-            ScheduledExecutorService p1 = Executors.unconfigurableScheduledExecutorService(Executors.newScheduledThreadPool(2));
-	    Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-	    assertFalse(callable.done);
-	    Thread.sleep(MEDIUM_DELAY_MS);
-	    assertTrue(callable.done);
-	    assertEquals(Boolean.TRUE, f.get());
-            joinPool(p1);
-	} catch (RejectedExecutionException e) {}
+        TrackedCallable callable = new TrackedCallable();
+        ScheduledExecutorService p1 = Executors.unconfigurableScheduledExecutorService(Executors.newScheduledThreadPool(2));
+        Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+        assertFalse(callable.done);
+        Thread.sleep(MEDIUM_DELAY_MS);
+        assertTrue(callable.done);
+        assertEquals(Boolean.TRUE, f.get());
+        joinPool(p1);
     }
 
     /**

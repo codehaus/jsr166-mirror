@@ -786,7 +786,6 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
                 c.await();
-                sync.release(1);
             }});
 
         t.start();
@@ -806,7 +805,6 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
                 c.awaitNanos(1000 * 1000 * 1000); // 1 sec
-                sync.release(1);
             }});
 
         t.start();
@@ -827,7 +825,6 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
                 sync.acquire(1);
                 java.util.Date d = new java.util.Date();
                 c.awaitUntil(new java.util.Date(d.getTime() + 10000));
-                sync.release(1);
             }});
 
         t.start();

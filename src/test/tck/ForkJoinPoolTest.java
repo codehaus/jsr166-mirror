@@ -922,6 +922,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }

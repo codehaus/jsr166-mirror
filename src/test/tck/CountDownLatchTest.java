@@ -12,10 +12,10 @@ import java.util.concurrent.*;
 
 public class CountDownLatchTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(CountDownLatchTest.class);
+        return new TestSuite(CountDownLatchTest.class);
     }
 
     /**
@@ -32,43 +32,43 @@ public class CountDownLatchTest extends JSR166TestCase {
      * getCount returns initial count and decreases after countDown
      */
     public void testGetCount() {
-	final CountDownLatch l = new CountDownLatch(2);
-	assertEquals(2, l.getCount());
-	l.countDown();
-	assertEquals(1, l.getCount());
+        final CountDownLatch l = new CountDownLatch(2);
+        assertEquals(2, l.getCount());
+        l.countDown();
+        assertEquals(1, l.getCount());
     }
 
     /**
      * countDown decrements count when positive and has no effect when zero
      */
     public void testCountDown() {
-	final CountDownLatch l = new CountDownLatch(1);
-	assertEquals(1, l.getCount());
-	l.countDown();
-	assertEquals(0, l.getCount());
-	l.countDown();
-	assertEquals(0, l.getCount());
+        final CountDownLatch l = new CountDownLatch(1);
+        assertEquals(1, l.getCount());
+        l.countDown();
+        assertEquals(0, l.getCount());
+        l.countDown();
+        assertEquals(0, l.getCount());
     }
 
     /**
      * await returns after countDown to zero, but not before
      */
     public void testAwait() {
-	final CountDownLatch l = new CountDownLatch(2);
+        final CountDownLatch l = new CountDownLatch(2);
 
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    try {
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
                         threadAssertTrue(l.getCount() > 0);
-			l.await();
+                        l.await();
                         threadAssertTrue(l.getCount() == 0);
-		    } catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
-		}
-	    });
-	t.start();
-	try {
+                }
+            });
+        t.start();
+        try {
             assertEquals(l.getCount(), 2);
             Thread.sleep(SHORT_DELAY_MS);
             l.countDown();
@@ -86,20 +86,20 @@ public class CountDownLatchTest extends JSR166TestCase {
      * timed await returns after countDown to zero
      */
     public void testTimedAwait() {
-	final CountDownLatch l = new CountDownLatch(2);
+        final CountDownLatch l = new CountDownLatch(2);
 
-	Thread t = new Thread(new Runnable() {
-		public void run() {
-		    try {
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
                         threadAssertTrue(l.getCount() > 0);
-			threadAssertTrue(l.await(SMALL_DELAY_MS, TimeUnit.MILLISECONDS));
-		    } catch (InterruptedException e) {
+                        threadAssertTrue(l.await(SMALL_DELAY_MS, TimeUnit.MILLISECONDS));
+                    } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
-		}
-	    });
-	t.start();
-	try {
+                }
+            });
+        t.start();
+        try {
             assertEquals(l.getCount(), 2);
             Thread.sleep(SHORT_DELAY_MS);
             l.countDown();
@@ -126,8 +126,8 @@ public class CountDownLatchTest extends JSR166TestCase {
                     } catch (InterruptedException success) {}
                 }
             });
-	t.start();
-	try {
+        t.start();
+        try {
             assertEquals(l.getCount(), 1);
             t.interrupt();
             t.join();

@@ -13,18 +13,18 @@ import java.util.concurrent.locks.*;
 
 public class LockSupportTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(LockSupportTest.class);
+        return new TestSuite(LockSupportTest.class);
     }
 
     /**
      * park is released by unpark occurring after park
      */
     public void testPark() throws InterruptedException {
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
                 LockSupport.park();
             }});
 
@@ -38,8 +38,8 @@ public class LockSupportTest extends JSR166TestCase {
      * park is released by unpark occurring before park
      */
     public void testPark2() throws InterruptedException {
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 Thread.sleep(SHORT_DELAY_MS);
                 LockSupport.park();
             }});
@@ -53,8 +53,8 @@ public class LockSupportTest extends JSR166TestCase {
      * park is released by interrupt
      */
     public void testPark3() throws InterruptedException {
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
                 LockSupport.park();
             }});
 
@@ -70,8 +70,8 @@ public class LockSupportTest extends JSR166TestCase {
     public void testPark4() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
                 lock.lock();
                 LockSupport.park();
             }});
@@ -86,8 +86,8 @@ public class LockSupportTest extends JSR166TestCase {
      * parkNanos times out if not unparked
      */
     public void testParkNanos() throws InterruptedException {
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
                 LockSupport.parkNanos(1000);
             }});
 
@@ -100,8 +100,8 @@ public class LockSupportTest extends JSR166TestCase {
      * parkUntil times out if not unparked
      */
     public void testParkUntil() throws InterruptedException {
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
                 long d = new Date().getTime() + 100;
                 LockSupport.parkUntil(d);
             }});

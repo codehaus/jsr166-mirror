@@ -15,11 +15,11 @@ import java.io.*;
 public class SynchronousQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
 
     public static Test suite() {
-	return new TestSuite(SynchronousQueueTest.class);
+        return new TestSuite(SynchronousQueueTest.class);
     }
 
     /**
@@ -28,7 +28,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testEmptyFull() {
         SynchronousQueue q = new SynchronousQueue();
         assertTrue(q.isEmpty());
-	assertEquals(0, q.size());
+        assertEquals(0, q.size());
         assertEquals(0, q.remainingCapacity());
         assertFalse(q.offer(zero));
     }
@@ -39,7 +39,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testFairEmptyFull() {
         SynchronousQueue q = new SynchronousQueue(true);
         assertTrue(q.isEmpty());
-	assertEquals(0, q.size());
+        assertEquals(0, q.size());
         assertEquals(0, q.remainingCapacity());
         assertFalse(q.offer(zero));
     }
@@ -48,7 +48,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * offer(null) throws NPE
      */
     public void testOfferNull() {
-	try {
+        try {
             SynchronousQueue q = new SynchronousQueue();
             q.offer(null);
             shouldThrow();
@@ -59,7 +59,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * add(null) throws NPE
      */
     public void testAddNull() {
-	try {
+        try {
             SynchronousQueue q = new SynchronousQueue();
             q.add(null);
             shouldThrow();
@@ -78,7 +78,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * add throws ISE if no active taker
      */
     public void testAdd() {
-	try {
+        try {
             SynchronousQueue q = new SynchronousQueue();
             assertEquals(0, q.remainingCapacity());
             q.add(one);
@@ -137,7 +137,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * put(null) throws NPE
      */
     public void testPutNull() throws InterruptedException {
-	try {
+        try {
             SynchronousQueue q = new SynchronousQueue();
             q.put(null);
             shouldThrow();
@@ -148,8 +148,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * put blocks interruptibly if no active taker
      */
     public void testBlockingPut() throws InterruptedException {
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 SynchronousQueue q = new SynchronousQueue();
                 q.put(zero);
             }});
@@ -165,8 +165,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testPutWithTake() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 int added = 0;
                 try {
                     q.put(new Object());
@@ -196,8 +196,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testTimedOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
                 q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
             }});
@@ -214,8 +214,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testTakeFromEmpty() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 q.take();
             }});
 
@@ -230,8 +230,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * put blocks interruptibly if no active taker
      */
     public void testFairBlockingPut() throws InterruptedException {
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 SynchronousQueue q = new SynchronousQueue(true);
                 q.put(zero);
             }});
@@ -247,8 +247,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testFairPutWithTake() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 int added = 0;
                 try {
                     q.put(new Object());
@@ -278,8 +278,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testFairTimedOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
                 q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
             }});
@@ -296,8 +296,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testFairTakeFromEmpty() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 q.take();
             }});
 
@@ -312,7 +312,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testPoll() {
         SynchronousQueue q = new SynchronousQueue();
-	assertNull(q.poll());
+        assertNull(q.poll());
     }
 
     /**
@@ -336,8 +336,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testInterruptedTimedPoll() throws InterruptedException {
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 SynchronousQueue q = new SynchronousQueue();
                 q.poll(SMALL_DELAY_MS, MILLISECONDS);
             }});
@@ -354,8 +354,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testTimedPollWithOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
                 assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 try {
@@ -376,8 +376,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testFairInterruptedTimedPoll() throws InterruptedException {
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 SynchronousQueue q = new SynchronousQueue(true);
                 q.poll(SMALL_DELAY_MS, MILLISECONDS);
             }});
@@ -394,8 +394,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testFairTimedPollWithOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
                 assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 try {
@@ -417,7 +417,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testPeek() {
         SynchronousQueue q = new SynchronousQueue();
-	assertNull(q.peek());
+        assertNull(q.peek());
     }
 
     /**
@@ -440,7 +440,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success) {
-	}
+        }
     }
 
     /**
@@ -508,7 +508,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testToArray() {
         SynchronousQueue q = new SynchronousQueue();
-	Object[] o = q.toArray();
+        Object[] o = q.toArray();
         assertEquals(o.length, 0);
     }
 
@@ -517,7 +517,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testToArray2() {
         SynchronousQueue q = new SynchronousQueue();
-	Integer[] ints = new Integer[1];
+        Integer[] ints = new Integer[1];
         assertNull(ints[0]);
     }
 
@@ -525,11 +525,11 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
-	try {
+        try {
             SynchronousQueue q = new SynchronousQueue();
-	    Object o[] = q.toArray(null);
-	    shouldThrow();
-	} catch (NullPointerException success) {}
+            Object o[] = q.toArray(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
     }
 
 
@@ -538,7 +538,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testIterator() {
         SynchronousQueue q = new SynchronousQueue();
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         assertFalse(it.hasNext());
         try {
             Object x = it.next();
@@ -551,7 +551,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testIteratorRemove() {
         SynchronousQueue q = new SynchronousQueue();
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         try {
             it.remove();
             shouldThrow();
@@ -577,14 +577,14 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final Integer one = new Integer(1);
 
         executor.execute(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+            public void realRun() throws InterruptedException {
                 threadAssertFalse(q.offer(one));
                 threadAssertTrue(q.offer(one, MEDIUM_DELAY_MS, MILLISECONDS));
                 threadAssertEquals(0, q.remainingCapacity());
             }});
 
         executor.execute(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+            public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
                 threadAssertEquals(one, q.take());
             }});
@@ -600,14 +600,14 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final SynchronousQueue q = new SynchronousQueue();
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+            public void realRun() throws InterruptedException {
                 threadAssertNull(q.poll());
                 threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                 threadAssertTrue(q.isEmpty());
             }});
 
         executor.execute(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+            public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
                 q.put(new Integer(1));
             }});
@@ -671,8 +671,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testDrainToWithActivePut() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 q.put(new Integer(1));
             }});
 
@@ -715,13 +715,13 @@ public class SynchronousQueueTest extends JSR166TestCase {
      */
     public void testDrainToN() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-	Thread t1 = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 q.put(one);
             }});
 
-	Thread t2 = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 q.put(two);
             }});
 

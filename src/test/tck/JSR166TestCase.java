@@ -398,16 +398,16 @@ public class JSR166TestCase extends TestCase {
         AdjustablePolicy() { }
         void addPermission(Permission perm) { perms.add(perm); }
         void clearPermissions() { perms = new Permissions(); }
-	public PermissionCollection getPermissions(CodeSource cs) {
-	    return perms;
-	}
-	public PermissionCollection getPermissions(ProtectionDomain pd) {
-	    return perms;
-	}
-	public boolean implies(ProtectionDomain pd, Permission p) {
-	    return perms.implies(p);
-	}
-	public void refresh() {}
+        public PermissionCollection getPermissions(CodeSource cs) {
+            return perms;
+        }
+        public PermissionCollection getPermissions(ProtectionDomain pd) {
+            return perms;
+        }
+        public boolean implies(ProtectionDomain pd, Permission p) {
+            return perms.implies(p);
+        }
+        public void refresh() {}
     }
 
     /**

@@ -11,10 +11,10 @@ import java.io.*;
 
 public class TreeSubSetTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(TreeSubSetTest.class);
+        return new TestSuite(TreeSubSetTest.class);
     }
 
     static class MyReverseComparator implements Comparator {
@@ -35,15 +35,15 @@ public class TreeSubSetTest extends JSR166TestCase {
         TreeSet q = new TreeSet();
         assertTrue(q.isEmpty());
 
-	for (int i = n-1; i >= 0; i-=2)
-	    assertTrue(q.add(new Integer(i)));
-	for (int i = (n & 1); i < n; i+=2)
-	    assertTrue(q.add(new Integer(i)));
+        for (int i = n-1; i >= 0; i-=2)
+            assertTrue(q.add(new Integer(i)));
+        for (int i = (n & 1); i < n; i+=2)
+            assertTrue(q.add(new Integer(i)));
         assertTrue(q.add(new Integer(-n)));
         assertTrue(q.add(new Integer(n)));
         NavigableSet s = q.subSet(new Integer(0), true, new Integer(n), false);
         assertFalse(s.isEmpty());
-	assertEquals(n, s.size());
+        assertEquals(n, s.size());
         return s;
     }
 
@@ -61,7 +61,7 @@ public class TreeSubSetTest extends JSR166TestCase {
         q.add(zero);
         q.add(seven);
         NavigableSet s = q.subSet(one, true, seven, false);
-	assertEquals(5, s.size());
+        assertEquals(5, s.size());
         return s;
     }
 
@@ -74,18 +74,18 @@ public class TreeSubSetTest extends JSR166TestCase {
         q.add(m4);
         q.add(m5);
         NavigableSet s = q.descendingSet();
-	assertEquals(5, s.size());
+        assertEquals(5, s.size());
         return s;
     }
 
     private static NavigableSet set0() {
-	TreeSet set = new TreeSet();
+        TreeSet set = new TreeSet();
         assertTrue(set.isEmpty());
         return set.tailSet(m1, false);
     }
 
     private static NavigableSet dset0() {
-	TreeSet set = new TreeSet();
+        TreeSet set = new TreeSet();
         assertTrue(set.isEmpty());
         return set;
     }
@@ -131,7 +131,7 @@ public class TreeSubSetTest extends JSR166TestCase {
      * add(null) throws NPE
      */
     public void testAddNull() {
-	try {
+        try {
             NavigableSet q = set0();
             q.add(null);
             shouldThrow();
@@ -231,7 +231,7 @@ public class TreeSubSetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.pollFirst()).intValue());
         }
-	assertNull(q.pollFirst());
+        assertNull(q.pollFirst());
     }
 
     /**
@@ -407,10 +407,10 @@ public class TreeSubSetTest extends JSR166TestCase {
      */
     public void testToArray() {
         NavigableSet q = populatedSet(SIZE);
-	Object[] o = q.toArray();
+        Object[] o = q.toArray();
         Arrays.sort(o);
-	for (int i = 0; i < o.length; i++)
-	    assertEquals(o[i], q.pollFirst());
+        for (int i = 0; i < o.length; i++)
+            assertEquals(o[i], q.pollFirst());
     }
 
     /**
@@ -418,8 +418,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      */
     public void testToArray2() {
         NavigableSet q = populatedSet(SIZE);
-	Integer[] ints = new Integer[SIZE];
-	ints = (Integer[])q.toArray(ints);
+        Integer[] ints = new Integer[SIZE];
+        ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
@@ -431,7 +431,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     public void testIterator() {
         NavigableSet q = populatedSet(SIZE);
         int i = 0;
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
@@ -445,7 +445,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     public void testEmptyIterator() {
         NavigableSet q = set0();
         int i = 0;
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
@@ -726,7 +726,7 @@ public class TreeSubSetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.pollFirst()).intValue());
         }
-	assertNull(q.pollFirst());
+        assertNull(q.pollFirst());
     }
 
     /**
@@ -902,10 +902,10 @@ public class TreeSubSetTest extends JSR166TestCase {
      */
     public void testDescendingToArray() {
         NavigableSet q = populatedSet(SIZE);
-	Object[] o = q.toArray();
+        Object[] o = q.toArray();
         Arrays.sort(o);
-	for (int i = 0; i < o.length; i++)
-	    assertEquals(o[i], q.pollFirst());
+        for (int i = 0; i < o.length; i++)
+            assertEquals(o[i], q.pollFirst());
     }
 
     /**
@@ -913,8 +913,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      */
     public void testDescendingToArray2() {
         NavigableSet q = populatedSet(SIZE);
-	Integer[] ints = new Integer[SIZE];
-	ints = (Integer[])q.toArray(ints);
+        Integer[] ints = new Integer[SIZE];
+        ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
@@ -926,7 +926,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     public void testDescendingIterator() {
         NavigableSet q = populatedSet(SIZE);
         int i = 0;
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
@@ -940,7 +940,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     public void testDescendingEmptyIterator() {
         NavigableSet q = dset0();
         int i = 0;
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;

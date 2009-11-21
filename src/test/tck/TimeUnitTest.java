@@ -13,11 +13,11 @@ import java.io.*;
 
 public class TimeUnitTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run(suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
-	return new TestSuite(TimeUnitTest.class);
+        return new TestSuite(TimeUnitTest.class);
     }
 
     // (loops to 88888 check increments at all time divisions.)
@@ -357,8 +357,8 @@ public class TimeUnitTest extends JSR166TestCase {
      * timedWait throws InterruptedException when interrupted
      */
     public void testTimedWait() throws InterruptedException {
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 Object o = new Object();
 
                 TimeUnit tu = TimeUnit.MILLISECONDS;
@@ -366,7 +366,7 @@ public class TimeUnitTest extends JSR166TestCase {
                     tu.timedWait(o,MEDIUM_DELAY_MS);
                 }
             }});
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -381,13 +381,13 @@ public class TimeUnitTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 Thread.sleep(MEDIUM_DELAY_MS);
             }});
-	final Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        final Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 TimeUnit tu = TimeUnit.MILLISECONDS;
                 tu.timedJoin(s, MEDIUM_DELAY_MS);
             }});;
         s.start();
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -399,13 +399,13 @@ public class TimeUnitTest extends JSR166TestCase {
      *  timedSleep throws InterruptedException when interrupted
      */
     public void testTimedSleep() throws InterruptedException {
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 TimeUnit tu = TimeUnit.MILLISECONDS;
                 tu.sleep(MEDIUM_DELAY_MS);
             }});
 
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();

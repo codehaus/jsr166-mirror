@@ -11,26 +11,26 @@ import java.io.*;
 
 public class TreeMapTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(TreeMapTest.class);
+        return new TestSuite(TreeMapTest.class);
     }
 
     /**
      * Create a map from Integers 1-5 to Strings "A"-"E".
      */
     private static TreeMap map5() {
-	TreeMap map = new TreeMap();
+        TreeMap map = new TreeMap();
         assertTrue(map.isEmpty());
-	map.put(one, "A");
-	map.put(five, "E");
-	map.put(three, "C");
-	map.put(two, "B");
-	map.put(four, "D");
+        map.put(one, "A");
+        map.put(five, "E");
+        map.put(three, "C");
+        map.put(two, "B");
+        map.put(four, "D");
         assertFalse(map.isEmpty());
         assertEquals(5, map.size());
-	return map;
+        return map;
     }
 
     /**
@@ -38,8 +38,8 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testClear() {
         TreeMap map = map5();
-	map.clear();
-	assertEquals(map.size(), 0);
+        map.clear();
+        assertEquals(map.size(), 0);
     }
 
     /**
@@ -59,7 +59,7 @@ public class TreeMapTest extends JSR166TestCase {
         TreeMap map2 = map5();
         assertEquals(map1, map2);
         assertEquals(map2, map1);
-	map1.clear();
+        map1.clear();
         assertFalse(map1.equals(map2));
         assertFalse(map2.equals(map1));
     }
@@ -69,7 +69,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testContainsKey() {
         TreeMap map = map5();
-	assertTrue(map.containsKey(one));
+        assertTrue(map.containsKey(one));
         assertFalse(map.containsKey(zero));
     }
 
@@ -78,7 +78,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testContainsValue() {
         TreeMap map = map5();
-	assertTrue(map.containsValue("A"));
+        assertTrue(map.containsValue("A"));
         assertFalse(map.containsValue("Z"));
     }
 
@@ -88,7 +88,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testGet() {
         TreeMap map = map5();
-	assertEquals("A", (String)map.get(one));
+        assertEquals("A", (String)map.get(one));
         TreeMap empty = new TreeMap();
         assertNull(empty.get(one));
     }
@@ -99,7 +99,7 @@ public class TreeMapTest extends JSR166TestCase {
     public void testIsEmpty() {
         TreeMap empty = new TreeMap();
         TreeMap map = map5();
-	assertTrue(empty.isEmpty());
+        assertTrue(empty.isEmpty());
         assertFalse(map.isEmpty());
     }
 
@@ -108,7 +108,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testFirstKey() {
         TreeMap map = map5();
-	assertEquals(one, map.firstKey());
+        assertEquals(one, map.firstKey());
     }
 
     /**
@@ -116,7 +116,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testLastKey() {
         TreeMap map = map5();
-	assertEquals(five, map.lastKey());
+        assertEquals(five, map.lastKey());
     }
 
 
@@ -125,10 +125,10 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testKeySetToArray() {
         TreeMap map = map5();
-	Set s = map.keySet();
+        Set s = map.keySet();
         Object[] ar = s.toArray();
         assertTrue(s.containsAll(Arrays.asList(ar)));
-	assertEquals(5, ar.length);
+        assertEquals(5, ar.length);
         ar[0] = m10;
         assertFalse(s.containsAll(Arrays.asList(ar)));
     }
@@ -138,9 +138,9 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testDescendingKeySetToArray() {
         TreeMap map = map5();
-	Set s = map.descendingKeySet();
+        Set s = map.descendingKeySet();
         Object[] ar = s.toArray();
-	assertEquals(5, ar.length);
+        assertEquals(5, ar.length);
         assertTrue(s.containsAll(Arrays.asList(ar)));
         ar[0] = m10;
         assertFalse(s.containsAll(Arrays.asList(ar)));
@@ -151,13 +151,13 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testKeySet() {
         TreeMap map = map5();
-	Set s = map.keySet();
-	assertEquals(5, s.size());
-	assertTrue(s.contains(one));
-	assertTrue(s.contains(two));
-	assertTrue(s.contains(three));
-	assertTrue(s.contains(four));
-	assertTrue(s.contains(five));
+        Set s = map.keySet();
+        assertEquals(5, s.size());
+        assertTrue(s.contains(one));
+        assertTrue(s.contains(two));
+        assertTrue(s.contains(three));
+        assertTrue(s.contains(four));
+        assertTrue(s.contains(five));
     }
 
     /**
@@ -165,7 +165,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testKeySetOrder() {
         TreeMap map = map5();
-	Set s = map.keySet();
+        Set s = map.keySet();
         Iterator i = s.iterator();
         Integer last = (Integer)i.next();
         assertEquals(last, one);
@@ -184,7 +184,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testKeySetDescendingIteratorOrder() {
         TreeMap map = map5();
-	NavigableSet s = map.navigableKeySet();
+        NavigableSet s = map.navigableKeySet();
         Iterator i = s.descendingIterator();
         Integer last = (Integer)i.next();
         assertEquals(last, five);
@@ -203,7 +203,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testDescendingKeySetOrder() {
         TreeMap map = map5();
-	Set s = map.descendingKeySet();
+        Set s = map.descendingKeySet();
         Iterator i = s.iterator();
         Integer last = (Integer)i.next();
         assertEquals(last, five);
@@ -222,7 +222,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testDescendingKeySetDescendingIteratorOrder() {
         TreeMap map = map5();
-	NavigableSet s = map.descendingKeySet();
+        NavigableSet s = map.descendingKeySet();
         Iterator i = s.descendingIterator();
         Integer last = (Integer)i.next();
         assertEquals(last, one);
@@ -241,13 +241,13 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testValues() {
         TreeMap map = map5();
-	Collection s = map.values();
-	assertEquals(5, s.size());
-	assertTrue(s.contains("A"));
-	assertTrue(s.contains("B"));
-	assertTrue(s.contains("C"));
-	assertTrue(s.contains("D"));
-	assertTrue(s.contains("E"));
+        Collection s = map.values();
+        assertEquals(5, s.size());
+        assertTrue(s.contains("A"));
+        assertTrue(s.contains("B"));
+        assertTrue(s.contains("C"));
+        assertTrue(s.contains("D"));
+        assertTrue(s.contains("E"));
     }
 
     /**
@@ -255,8 +255,8 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testEntrySet() {
         TreeMap map = map5();
-	Set s = map.entrySet();
-	assertEquals(5, s.size());
+        Set s = map.entrySet();
+        assertEquals(5, s.size());
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
@@ -274,8 +274,8 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testDescendingEntrySet() {
         TreeMap map = map5();
-	Set s = map.descendingMap().entrySet();
-	assertEquals(5, s.size());
+        Set s = map.descendingMap().entrySet();
+        assertEquals(5, s.size());
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
@@ -293,7 +293,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testEntrySetToArray() {
         TreeMap map = map5();
-	Set s = map.entrySet();
+        Set s = map.entrySet();
         Object[] ar = s.toArray();
         assertEquals(5, ar.length);
         for (int i = 0; i < 5; ++i) {
@@ -307,7 +307,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testDescendingEntrySetToArray() {
         TreeMap map = map5();
-	Set s = map.descendingMap().entrySet();
+        Set s = map.descendingMap().entrySet();
         Object[] ar = s.toArray();
         assertEquals(5, ar.length);
         for (int i = 0; i < 5; ++i) {
@@ -322,13 +322,13 @@ public class TreeMapTest extends JSR166TestCase {
     public void testPutAll() {
         TreeMap empty = new TreeMap();
         TreeMap map = map5();
-	empty.putAll(map);
-	assertEquals(5, empty.size());
-	assertTrue(empty.containsKey(one));
-	assertTrue(empty.containsKey(two));
-	assertTrue(empty.containsKey(three));
-	assertTrue(empty.containsKey(four));
-	assertTrue(empty.containsKey(five));
+        empty.putAll(map);
+        assertEquals(5, empty.size());
+        assertTrue(empty.containsKey(one));
+        assertTrue(empty.containsKey(two));
+        assertTrue(empty.containsKey(three));
+        assertTrue(empty.containsKey(four));
+        assertTrue(empty.containsKey(five));
     }
 
     /**
@@ -336,9 +336,9 @@ public class TreeMapTest extends JSR166TestCase {
      */
     public void testRemove() {
         TreeMap map = map5();
-	map.remove(five);
-	assertEquals(4, map.size());
-	assertFalse(map.containsKey(five));
+        map.remove(five);
+        assertEquals(4, map.size());
+        assertFalse(map.containsKey(five));
     }
 
     /**
@@ -556,8 +556,8 @@ public class TreeMapTest extends JSR166TestCase {
     public void testSize() {
         TreeMap map = map5();
         TreeMap empty = new TreeMap();
-	assertEquals(0, empty.size());
-	assertEquals(5, map.size());
+        assertEquals(0, empty.size());
+        assertEquals(5, map.size());
     }
 
     /**
@@ -795,8 +795,8 @@ public class TreeMapTest extends JSR166TestCase {
      * Submaps of submaps subdivide correctly
      */
     public void testRecursiveSubMaps() {
-	int mapSize = 1000;
-	Class cl = TreeMap.class;
+        int mapSize = 1000;
+        Class cl = TreeMap.class;
         NavigableMap<Integer, Integer> map = newMap(cl);
         bs = new BitSet(mapSize);
 
@@ -814,11 +814,11 @@ public class TreeMapTest extends JSR166TestCase {
 
     static NavigableMap<Integer, Integer> newMap(Class cl) {
         NavigableMap<Integer, Integer> result = null;
-	try {
+        try {
             result = (NavigableMap<Integer, Integer>) cl.newInstance();
-	} catch (Exception e) {
+        } catch (Exception e) {
             fail();
-	}
+        }
         assertEquals(result.size(), 0);
         assertFalse(result.keySet().iterator().hasNext());
         return result;

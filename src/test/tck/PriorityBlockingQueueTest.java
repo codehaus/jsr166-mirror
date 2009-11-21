@@ -13,10 +13,10 @@ import java.io.*;
 
 public class PriorityBlockingQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(PriorityBlockingQueueTest.class);
+        return new TestSuite(PriorityBlockingQueueTest.class);
     }
 
     private static final int NOCAP = Integer.MAX_VALUE;
@@ -39,13 +39,13 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     private PriorityBlockingQueue populatedQueue(int n) {
         PriorityBlockingQueue q = new PriorityBlockingQueue(n);
         assertTrue(q.isEmpty());
-	for (int i = n-1; i >= 0; i-=2)
-	    assertTrue(q.offer(new Integer(i)));
-	for (int i = (n & 1); i < n; i+=2)
-	    assertTrue(q.offer(new Integer(i)));
+        for (int i = n-1; i >= 0; i-=2)
+            assertTrue(q.offer(new Integer(i)));
+        for (int i = (n & 1); i < n; i+=2)
+            assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
         assertEquals(NOCAP, q.remainingCapacity());
-	assertEquals(n, q.size());
+        assertEquals(n, q.size());
         return q;
     }
 
@@ -164,7 +164,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * offer(null) throws NPE
      */
     public void testOfferNull() {
-	try {
+        try {
             PriorityBlockingQueue q = new PriorityBlockingQueue(1);
             q.offer(null);
             shouldThrow();
@@ -175,7 +175,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * add(null) throws NPE
      */
     public void testAddNull() {
-	try {
+        try {
             PriorityBlockingQueue q = new PriorityBlockingQueue(1);
             q.add(null);
             shouldThrow();
@@ -282,7 +282,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * put(null) throws NPE
      */
      public void testPutNull() {
-	try {
+        try {
             PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
             q.put(null);
             shouldThrow();
@@ -398,7 +398,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.poll()).intValue());
         }
-	assertNull(q.poll());
+        assertNull(q.poll());
     }
 
     /**
@@ -481,7 +481,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             assertTrue(q.peek() == null ||
                        i != ((Integer)q.peek()).intValue());
         }
-	assertNull(q.peek());
+        assertNull(q.peek());
     }
 
     /**
@@ -609,10 +609,10 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      */
     public void testToArray() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);
-	Object[] o = q.toArray();
+        Object[] o = q.toArray();
         Arrays.sort(o);
-	for (int i = 0; i < o.length; i++)
-	    assertEquals(o[i], q.take());
+        for (int i = 0; i < o.length; i++)
+            assertEquals(o[i], q.take());
     }
 
     /**
@@ -620,8 +620,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      */
     public void testToArray2() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);
-	Integer[] ints = new Integer[SIZE];
-	ints = (Integer[])q.toArray(ints);
+        Integer[] ints = new Integer[SIZE];
+        ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.take());
@@ -631,22 +631,22 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
-	try {
+        try {
             PriorityBlockingQueue q = populatedQueue(SIZE);
-	    Object o[] = q.toArray(null);
-	    shouldThrow();
-	} catch (NullPointerException success) {}
+            Object o[] = q.toArray(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
     }
 
     /**
      * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
-	try {
+        try {
             PriorityBlockingQueue q = populatedQueue(SIZE);
-	    Object o[] = q.toArray(new String[10] );
-	    shouldThrow();
-	} catch (ArrayStoreException  success) {}
+            Object o[] = q.toArray(new String[10] );
+            shouldThrow();
+        } catch (ArrayStoreException  success) {}
     }
 
     /**
@@ -655,7 +655,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testIterator() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         int i = 0;
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;

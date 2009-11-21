@@ -22,11 +22,11 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
      */
     public void testConstructor() {
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-	assertEquals(one,ai.getReference());
-	assertEquals(0, ai.getStamp());
+        assertEquals(one,ai.getReference());
+        assertEquals(0, ai.getStamp());
         AtomicStampedReference a2 = new AtomicStampedReference(null, 1);
-	assertNull(a2.getReference());
-	assertEquals(1, a2.getStamp());
+        assertNull(a2.getReference());
+        assertEquals(1, a2.getStamp());
 
     }
 
@@ -36,18 +36,18 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     public void testGetSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-	assertEquals(one,ai.getReference());
-	assertEquals(0, ai.getStamp());
+        assertEquals(one,ai.getReference());
+        assertEquals(0, ai.getStamp());
         assertEquals(one, ai.get(mark));
         assertEquals(0, mark[0]);
-	ai.set(two, 0);
-	assertEquals(two,ai.getReference());
-	assertEquals(0, ai.getStamp());
+        ai.set(two, 0);
+        assertEquals(two,ai.getReference());
+        assertEquals(0, ai.getStamp());
         assertEquals(two, ai.get(mark));
         assertEquals(0, mark[0]);
-	ai.set(one, 1);
-	assertEquals(one,ai.getReference());
-	assertEquals(1, ai.getStamp());
+        ai.set(one, 1);
+        assertEquals(one,ai.getReference());
+        assertEquals(1, ai.getStamp());
         assertEquals(one, ai.get(mark));
         assertEquals(1,mark[0]);
     }
@@ -60,7 +60,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
         assertEquals(0, ai.getStamp());
         assertTrue(ai.attemptStamp(one, 1));
-	assertEquals(1, ai.getStamp());
+        assertEquals(1, ai.getStamp());
         assertEquals(one, ai.get(mark));
         assertEquals(1, mark[0]);
     }
@@ -72,21 +72,21 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     public void testCompareAndSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-	assertEquals(one, ai.get(mark));
+        assertEquals(one, ai.get(mark));
         assertEquals(0, ai.getStamp());
-	assertEquals(0, mark[0]);
+        assertEquals(0, mark[0]);
 
         assertTrue(ai.compareAndSet(one, two, 0, 0));
-	assertEquals(two, ai.get(mark));
-	assertEquals(0, mark[0]);
+        assertEquals(two, ai.get(mark));
+        assertEquals(0, mark[0]);
 
         assertTrue(ai.compareAndSet(two, m3, 0, 1));
-	assertEquals(m3, ai.get(mark));
-	assertEquals(1, mark[0]);
+        assertEquals(m3, ai.get(mark));
+        assertEquals(1, mark[0]);
 
         assertFalse(ai.compareAndSet(two, m3, 1, 1));
-	assertEquals(m3, ai.get(mark));
-	assertEquals(1, mark[0]);
+        assertEquals(m3, ai.get(mark));
+        assertEquals(1, mark[0]);
     }
 
     /**
@@ -136,17 +136,17 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     public void testWeakCompareAndSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-	assertEquals(one, ai.get(mark));
+        assertEquals(one, ai.get(mark));
         assertEquals(0, ai.getStamp ());
-	assertEquals(0, mark[0]);
+        assertEquals(0, mark[0]);
 
         while (!ai.weakCompareAndSet(one, two, 0, 0));
-	assertEquals(two, ai.get(mark));
-	assertEquals(0, mark[0]);
+        assertEquals(two, ai.get(mark));
+        assertEquals(0, mark[0]);
 
         while (!ai.weakCompareAndSet(two, m3, 0, 1));
-	assertEquals(m3, ai.get(mark));
-	assertEquals(1, mark[0]);
+        assertEquals(m3, ai.get(mark));
+        assertEquals(1, mark[0]);
     }
 
 }

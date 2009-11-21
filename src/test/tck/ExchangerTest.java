@@ -13,10 +13,10 @@ import java.util.concurrent.*;
 public class ExchangerTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(ExchangerTest.class);
+        return new TestSuite(ExchangerTest.class);
     }
 
     /**
@@ -24,14 +24,14 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testExchange() throws InterruptedException {
         final Exchanger e = new Exchanger();
-	Thread t1 = new Thread(new CheckedRunnable() {
+        Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Object v = e.exchange(one);
                 threadAssertEquals(v, two);
                 Object w = e.exchange(v);
                 threadAssertEquals(w, one);
             }});
-	Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Object v = e.exchange(two);
                 threadAssertEquals(v, one);
@@ -50,14 +50,14 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testTimedExchange() throws InterruptedException {
         final Exchanger e = new Exchanger();
-	Thread t1 = new Thread(new CheckedRunnable() {
+        Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 Object v = e.exchange(one, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                 threadAssertEquals(v, two);
                 Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                 threadAssertEquals(w, one);
             }});
-	Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 Object v = e.exchange(two, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
                 threadAssertEquals(v, one);
@@ -76,7 +76,7 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testExchange_InterruptedException() throws InterruptedException {
         final Exchanger e = new Exchanger();
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 e.exchange(one);
             }});
@@ -92,7 +92,7 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testTimedExchange_InterruptedException() throws InterruptedException {
         final Exchanger e = new Exchanger();
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws Exception {
                 e.exchange(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
             }});
@@ -107,7 +107,7 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testExchange_TimeOutException() throws InterruptedException {
         final Exchanger e = new Exchanger();
-	Thread t = new Thread(new CheckedRunnable() {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 try {
                     e.exchange(null, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
@@ -124,13 +124,13 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testReplacementAfterExchange() throws InterruptedException {
         final Exchanger e = new Exchanger();
-	Thread t1 = new Thread(new CheckedInterruptedRunnable() {
+        Thread t1 = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 Object v = e.exchange(one);
                 threadAssertEquals(v, two);
                 Object w = e.exchange(v);
             }});
-	Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Object v = e.exchange(two);
                 threadAssertEquals(v, one);
@@ -138,7 +138,7 @@ public class ExchangerTest extends JSR166TestCase {
                 Object w = e.exchange(v);
                 threadAssertEquals(w, three);
             }});
-	Thread t3 = new Thread(new CheckedRunnable() {
+        Thread t3 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
                 Object w = e.exchange(three);

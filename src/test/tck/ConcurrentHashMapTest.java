@@ -14,26 +14,26 @@ import java.io.*;
 
 public class ConcurrentHashMapTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(ConcurrentHashMapTest.class);
+        return new TestSuite(ConcurrentHashMapTest.class);
     }
 
     /**
      * Create a map from Integers 1-5 to Strings "A"-"E".
      */
     private static ConcurrentHashMap map5() {
-	ConcurrentHashMap map = new ConcurrentHashMap(5);
+        ConcurrentHashMap map = new ConcurrentHashMap(5);
         assertTrue(map.isEmpty());
-	map.put(one, "A");
-	map.put(two, "B");
-	map.put(three, "C");
-	map.put(four, "D");
-	map.put(five, "E");
+        map.put(one, "A");
+        map.put(two, "B");
+        map.put(three, "C");
+        map.put(four, "D");
+        map.put(five, "E");
         assertFalse(map.isEmpty());
         assertEquals(5, map.size());
-	return map;
+        return map;
     }
 
     /**
@@ -41,8 +41,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testClear() {
         ConcurrentHashMap map = map5();
-	map.clear();
-	assertEquals(map.size(), 0);
+        map.clear();
+        assertEquals(map.size(), 0);
     }
 
     /**
@@ -53,7 +53,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         ConcurrentHashMap map2 = map5();
         assertEquals(map1, map2);
         assertEquals(map2, map1);
-	map1.clear();
+        map1.clear();
         assertFalse(map1.equals(map2));
         assertFalse(map2.equals(map1));
     }
@@ -63,7 +63,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testContains() {
         ConcurrentHashMap map = map5();
-	assertTrue(map.contains("A"));
+        assertTrue(map.contains("A"));
         assertFalse(map.contains("Z"));
     }
 
@@ -72,7 +72,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testContainsKey() {
         ConcurrentHashMap map = map5();
-	assertTrue(map.containsKey(one));
+        assertTrue(map.containsKey(one));
         assertFalse(map.containsKey(zero));
     }
 
@@ -81,7 +81,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testContainsValue() {
         ConcurrentHashMap map = map5();
-	assertTrue(map.containsValue("A"));
+        assertTrue(map.containsValue("A"));
         assertFalse(map.containsValue("Z"));
     }
 
@@ -91,13 +91,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testEnumeration() {
         ConcurrentHashMap map = map5();
-	Enumeration e = map.elements();
-	int count = 0;
-	while (e.hasMoreElements()) {
-	    count++;
-	    e.nextElement();
-	}
-	assertEquals(5, count);
+        Enumeration e = map.elements();
+        int count = 0;
+        while (e.hasMoreElements()) {
+            count++;
+            e.nextElement();
+        }
+        assertEquals(5, count);
     }
 
     /**
@@ -106,7 +106,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testGet() {
         ConcurrentHashMap map = map5();
-	assertEquals("A", (String)map.get(one));
+        assertEquals("A", (String)map.get(one));
         ConcurrentHashMap empty = new ConcurrentHashMap();
         assertNull(map.get("anything"));
     }
@@ -117,7 +117,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     public void testIsEmpty() {
         ConcurrentHashMap empty = new ConcurrentHashMap();
         ConcurrentHashMap map = map5();
-	assertTrue(empty.isEmpty());
+        assertTrue(empty.isEmpty());
         assertFalse(map.isEmpty());
     }
 
@@ -126,13 +126,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testKeys() {
         ConcurrentHashMap map = map5();
-	Enumeration e = map.keys();
-	int count = 0;
-	while (e.hasMoreElements()) {
-	    count++;
-	    e.nextElement();
-	}
-	assertEquals(5, count);
+        Enumeration e = map.keys();
+        int count = 0;
+        while (e.hasMoreElements()) {
+            count++;
+            e.nextElement();
+        }
+        assertEquals(5, count);
     }
 
     /**
@@ -140,13 +140,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testKeySet() {
         ConcurrentHashMap map = map5();
-	Set s = map.keySet();
-	assertEquals(5, s.size());
-	assertTrue(s.contains(one));
-	assertTrue(s.contains(two));
-	assertTrue(s.contains(three));
-	assertTrue(s.contains(four));
-	assertTrue(s.contains(five));
+        Set s = map.keySet();
+        assertEquals(5, s.size());
+        assertTrue(s.contains(one));
+        assertTrue(s.contains(two));
+        assertTrue(s.contains(three));
+        assertTrue(s.contains(four));
+        assertTrue(s.contains(five));
     }
 
     /**
@@ -154,10 +154,10 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testKeySetToArray() {
         ConcurrentHashMap map = map5();
-	Set s = map.keySet();
+        Set s = map.keySet();
         Object[] ar = s.toArray();
         assertTrue(s.containsAll(Arrays.asList(ar)));
-	assertEquals(5, ar.length);
+        assertEquals(5, ar.length);
         ar[0] = m10;
         assertFalse(s.containsAll(Arrays.asList(ar)));
     }
@@ -167,15 +167,15 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testValuesToArray() {
         ConcurrentHashMap map = map5();
-	Collection v = map.values();
+        Collection v = map.values();
         Object[] ar = v.toArray();
         ArrayList s = new ArrayList(Arrays.asList(ar));
-	assertEquals(5, ar.length);
-	assertTrue(s.contains("A"));
-	assertTrue(s.contains("B"));
-	assertTrue(s.contains("C"));
-	assertTrue(s.contains("D"));
-	assertTrue(s.contains("E"));
+        assertEquals(5, ar.length);
+        assertTrue(s.contains("A"));
+        assertTrue(s.contains("B"));
+        assertTrue(s.contains("C"));
+        assertTrue(s.contains("D"));
+        assertTrue(s.contains("E"));
     }
 
     /**
@@ -183,7 +183,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testEntrySetToArray() {
         ConcurrentHashMap map = map5();
-	Set s = map.entrySet();
+        Set s = map.entrySet();
         Object[] ar = s.toArray();
         assertEquals(5, ar.length);
         for (int i = 0; i < 5; ++i) {
@@ -197,13 +197,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testValues() {
         ConcurrentHashMap map = map5();
-	Collection s = map.values();
-	assertEquals(5, s.size());
-	assertTrue(s.contains("A"));
-	assertTrue(s.contains("B"));
-	assertTrue(s.contains("C"));
-	assertTrue(s.contains("D"));
-	assertTrue(s.contains("E"));
+        Collection s = map.values();
+        assertEquals(5, s.size());
+        assertTrue(s.contains("A"));
+        assertTrue(s.contains("B"));
+        assertTrue(s.contains("C"));
+        assertTrue(s.contains("D"));
+        assertTrue(s.contains("E"));
     }
 
     /**
@@ -211,8 +211,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testEntrySet() {
         ConcurrentHashMap map = map5();
-	Set s = map.entrySet();
-	assertEquals(5, s.size());
+        Set s = map.entrySet();
+        assertEquals(5, s.size());
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
@@ -231,13 +231,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     public void testPutAll() {
         ConcurrentHashMap empty = new ConcurrentHashMap();
         ConcurrentHashMap map = map5();
-	empty.putAll(map);
-	assertEquals(5, empty.size());
-	assertTrue(empty.containsKey(one));
-	assertTrue(empty.containsKey(two));
-	assertTrue(empty.containsKey(three));
-	assertTrue(empty.containsKey(four));
-	assertTrue(empty.containsKey(five));
+        empty.putAll(map);
+        assertEquals(5, empty.size());
+        assertTrue(empty.containsKey(one));
+        assertTrue(empty.containsKey(two));
+        assertTrue(empty.containsKey(three));
+        assertTrue(empty.containsKey(four));
+        assertTrue(empty.containsKey(five));
     }
 
     /**
@@ -245,7 +245,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testPutIfAbsent() {
         ConcurrentHashMap map = map5();
-	map.putIfAbsent(six, "Z");
+        map.putIfAbsent(six, "Z");
         assertTrue(map.containsKey(six));
     }
 
@@ -262,7 +262,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testReplace() {
         ConcurrentHashMap map = map5();
-	assertNull(map.replace(six, "Z"));
+        assertNull(map.replace(six, "Z"));
         assertFalse(map.containsKey(six));
     }
 
@@ -282,7 +282,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     public void testReplaceValue() {
         ConcurrentHashMap map = map5();
         assertEquals("A", map.get(one));
-	assertFalse(map.replace(one, "Z", "Z"));
+        assertFalse(map.replace(one, "Z", "Z"));
         assertEquals("A", map.get(one));
     }
 
@@ -292,7 +292,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     public void testReplaceValue2() {
         ConcurrentHashMap map = map5();
         assertEquals("A", map.get(one));
-	assertTrue(map.replace(one, "A", "Z"));
+        assertTrue(map.replace(one, "A", "Z"));
         assertEquals("Z", map.get(one));
     }
 
@@ -302,9 +302,9 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testRemove() {
         ConcurrentHashMap map = map5();
-	map.remove(five);
-	assertEquals(4, map.size());
-	assertFalse(map.containsKey(five));
+        map.remove(five);
+        assertEquals(4, map.size());
+        assertFalse(map.containsKey(five));
     }
 
     /**
@@ -312,12 +312,12 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      */
     public void testRemove2() {
         ConcurrentHashMap map = map5();
-	map.remove(five, "E");
-	assertEquals(4, map.size());
-	assertFalse(map.containsKey(five));
-	map.remove(four, "A");
-	assertEquals(4, map.size());
-	assertTrue(map.containsKey(four));
+        map.remove(five, "E");
+        assertEquals(4, map.size());
+        assertFalse(map.containsKey(five));
+        map.remove(four, "A");
+        assertEquals(4, map.size());
+        assertTrue(map.containsKey(four));
 
     }
 
@@ -327,8 +327,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     public void testSize() {
         ConcurrentHashMap map = map5();
         ConcurrentHashMap empty = new ConcurrentHashMap();
-	assertEquals(0, empty.size());
-	assertEquals(5, map.size());
+        assertEquals(0, empty.size());
+        assertEquals(5, map.size());
     }
 
     /**

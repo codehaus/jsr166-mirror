@@ -11,10 +11,10 @@ import java.util.*;
 public class RecursiveActionTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(RecursiveActionTest.class);
+        return new TestSuite(RecursiveActionTest.class);
     }
 
     static final ForkJoinPool mainPool = new ForkJoinPool();

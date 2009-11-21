@@ -11,10 +11,10 @@ import java.util.*;
 public class ForkJoinTaskTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(ForkJoinTaskTest.class);
+        return new TestSuite(ForkJoinTaskTest.class);
     }
 
     /**

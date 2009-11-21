@@ -14,10 +14,10 @@ import java.util.concurrent.atomic.*;
 
 public class CyclicBarrierTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(CyclicBarrierTest.class);
+        return new TestSuite(CyclicBarrierTest.class);
     }
 
     private volatile int countAction;
@@ -50,7 +50,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
      */
     public void testGetParties() {
         CyclicBarrier b = new CyclicBarrier(2);
-	assertEquals(2, b.getParties());
+        assertEquals(2, b.getParties());
         assertEquals(0, b.getNumberWaiting());
     }
 
@@ -95,8 +95,8 @@ public class CyclicBarrierTest extends JSR166TestCase {
      */
     public void testTwoParties() {
         final CyclicBarrier b = new CyclicBarrier(2);
-	Thread t = new Thread(new Runnable() {
-		public void run() {
+        Thread t = new Thread(new Runnable() {
+                public void run() {
                     try {
                         b.await();
                         b.await();

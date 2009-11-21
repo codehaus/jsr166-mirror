@@ -11,10 +11,10 @@ import java.io.*;
 
 public class TreeSetTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(TreeSetTest.class);
+        return new TestSuite(TreeSetTest.class);
     }
 
     static class MyReverseComparator implements Comparator {
@@ -39,12 +39,12 @@ public class TreeSetTest extends JSR166TestCase {
     private TreeSet populatedSet(int n) {
         TreeSet q = new TreeSet();
         assertTrue(q.isEmpty());
-	for (int i = n-1; i >= 0; i-=2)
-	    assertTrue(q.add(new Integer(i)));
-	for (int i = (n & 1); i < n; i+=2)
-	    assertTrue(q.add(new Integer(i)));
+        for (int i = n-1; i >= 0; i-=2)
+            assertTrue(q.add(new Integer(i)));
+        for (int i = (n & 1); i < n; i+=2)
+            assertTrue(q.add(new Integer(i)));
         assertFalse(q.isEmpty());
-	assertEquals(n, q.size());
+        assertEquals(n, q.size());
         return q;
     }
 
@@ -59,7 +59,7 @@ public class TreeSetTest extends JSR166TestCase {
         q.add(three);
         q.add(four);
         q.add(five);
-	assertEquals(5, q.size());
+        assertEquals(5, q.size());
         return q;
     }
 
@@ -173,7 +173,7 @@ public class TreeSetTest extends JSR166TestCase {
      * add(null) throws NPE if nonempty
      */
     public void testAddNull() {
-	try {
+        try {
             TreeSet q = populatedSet(SIZE);
             q.add(null);
             shouldThrow();
@@ -277,7 +277,7 @@ public class TreeSetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, ((Integer)q.pollFirst()).intValue());
         }
-	assertNull(q.pollFirst());
+        assertNull(q.pollFirst());
     }
 
     /**
@@ -288,7 +288,7 @@ public class TreeSetTest extends JSR166TestCase {
         for (int i = SIZE-1; i >= 0; --i) {
             assertEquals(i, ((Integer)q.pollLast()).intValue());
         }
-	assertNull(q.pollFirst());
+        assertNull(q.pollFirst());
     }
 
 
@@ -465,10 +465,10 @@ public class TreeSetTest extends JSR166TestCase {
      */
     public void testToArray() {
         TreeSet q = populatedSet(SIZE);
-	Object[] o = q.toArray();
+        Object[] o = q.toArray();
         Arrays.sort(o);
-	for (int i = 0; i < o.length; i++)
-	    assertEquals(o[i], q.pollFirst());
+        for (int i = 0; i < o.length; i++)
+            assertEquals(o[i], q.pollFirst());
     }
 
     /**
@@ -476,8 +476,8 @@ public class TreeSetTest extends JSR166TestCase {
      */
     public void testToArray2() {
         TreeSet q = populatedSet(SIZE);
-	Integer[] ints = new Integer[SIZE];
-	ints = (Integer[])q.toArray(ints);
+        Integer[] ints = new Integer[SIZE];
+        ints = (Integer[])q.toArray(ints);
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());
@@ -489,7 +489,7 @@ public class TreeSetTest extends JSR166TestCase {
     public void testIterator() {
         TreeSet q = populatedSet(SIZE);
         int i = 0;
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
@@ -503,7 +503,7 @@ public class TreeSetTest extends JSR166TestCase {
     public void testEmptyIterator() {
         TreeSet q = new TreeSet();
         int i = 0;
-	Iterator it = q.iterator();
+        Iterator it = q.iterator();
         while (it.hasNext()) {
             assertTrue(q.contains(it.next()));
             ++i;
@@ -691,8 +691,8 @@ public class TreeSetTest extends JSR166TestCase {
      * Subsets of subsets subdivide correctly
      */
     public void testRecursiveSubSets() {
-	int setSize = 1000;
-	Class cl = TreeSet.class;
+        int setSize = 1000;
+        Class cl = TreeSet.class;
 
         NavigableSet<Integer> set = newSet(cl);
         bs = new BitSet(setSize);
@@ -711,11 +711,11 @@ public class TreeSetTest extends JSR166TestCase {
 
     static NavigableSet<Integer> newSet(Class cl) {
         NavigableSet<Integer> result = null;
-	try {
+        try {
             result = (NavigableSet<Integer>) cl.newInstance();
-	} catch (Exception e) {
+        } catch (Exception e) {
             fail();
-	}
+        }
         assertEquals(result.size(), 0);
         assertFalse(result.iterator().hasNext());
         return result;

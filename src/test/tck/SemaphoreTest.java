@@ -14,10 +14,10 @@ import java.io.*;
 
 public class SemaphoreTest extends JSR166TestCase {
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
-	return new TestSuite(SemaphoreTest.class);
+        return new TestSuite(SemaphoreTest.class);
     }
 
     /**
@@ -161,8 +161,8 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testAcquireReleaseInDifferentThreads()
         throws InterruptedException {
         final Semaphore s = new Semaphore(0, false);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.acquire();
                 s.release();
                 s.release();
@@ -185,7 +185,7 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testUninterruptibleAcquireReleaseInDifferentThreads()
         throws InterruptedException {
         final Semaphore s = new Semaphore(0, false);
-	Thread t = new Thread(new CheckedRunnable() {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 s.acquireUninterruptibly();
                 s.release();
@@ -210,7 +210,7 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testTimedAcquireReleaseInDifferentThreads()
         throws InterruptedException {
         final Semaphore s = new Semaphore(1, false);
-	Thread t = new Thread(new CheckedRunnable() {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 s.release();
                 threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
@@ -232,13 +232,13 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     public void testAcquire_InterruptedException()
         throws InterruptedException {
-	final Semaphore s = new Semaphore(0, false);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        final Semaphore s = new Semaphore(0, false);
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.acquire();
             }});
 
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -249,13 +249,13 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     public void testTryAcquire_InterruptedException()
         throws InterruptedException {
-	final Semaphore s = new Semaphore(0, false);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        final Semaphore s = new Semaphore(0, false);
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.tryAcquire(MEDIUM_DELAY_MS, MILLISECONDS);
             }});
 
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -265,7 +265,7 @@ public class SemaphoreTest extends JSR166TestCase {
      * hasQueuedThreads reports whether there are waiting threads
      */
     public void testHasQueuedThreads() throws InterruptedException {
-	final Semaphore lock = new Semaphore(1, false);
+        final Semaphore lock = new Semaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
         assertFalse(lock.hasQueuedThreads());
@@ -290,7 +290,7 @@ public class SemaphoreTest extends JSR166TestCase {
      * getQueueLength reports number of waiting threads
      */
     public void testGetQueueLength() throws InterruptedException {
-	final Semaphore lock = new Semaphore(1, false);
+        final Semaphore lock = new Semaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
         assertEquals(0, lock.getQueueLength());
@@ -315,7 +315,7 @@ public class SemaphoreTest extends JSR166TestCase {
      * getQueuedThreads includes waiting threads
      */
     public void testGetQueuedThreads() throws InterruptedException {
-	final PublicSemaphore lock = new PublicSemaphore(1, false);
+        final PublicSemaphore lock = new PublicSemaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
         assertTrue(lock.getQueuedThreads().isEmpty());
@@ -523,8 +523,8 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testAcquireReleaseInDifferentThreads_fair()
         throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.acquire();
                 s.acquire();
                 s.acquire();
@@ -549,8 +549,8 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testAcquireReleaseNInDifferentThreads_fair()
         throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.acquire();
                 s.release(2);
                 s.acquire();
@@ -570,8 +570,8 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testAcquireReleaseNInDifferentThreads_fair2()
         throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.acquire(2);
                 s.acquire(2);
                 s.release(4);
@@ -593,8 +593,8 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testTimedAcquireReleaseInDifferentThreads_fair()
         throws InterruptedException {
         final Semaphore s = new Semaphore(1, true);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
                 threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
                 threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
@@ -602,7 +602,7 @@ public class SemaphoreTest extends JSR166TestCase {
                 threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
             }});
 
-	t.start();
+        t.start();
         s.release();
         s.release();
         s.release();
@@ -617,15 +617,15 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testTimedAcquireReleaseNInDifferentThreads_fair()
         throws InterruptedException {
         final Semaphore s = new Semaphore(2, true);
-	Thread t = new Thread(new CheckedRunnable() {
-	    public void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
                 s.release(2);
                 threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
                 s.release(2);
             }});
 
-	t.start();
+        t.start();
         assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
         s.release(2);
         assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
@@ -638,13 +638,13 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     public void testAcquire_InterruptedException_fair()
         throws InterruptedException {
-	final Semaphore s = new Semaphore(0, true);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        final Semaphore s = new Semaphore(0, true);
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.acquire();
             }});
 
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -655,13 +655,13 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     public void testAcquireN_InterruptedException_fair()
         throws InterruptedException {
-	final Semaphore s = new Semaphore(2, true);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        final Semaphore s = new Semaphore(2, true);
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.acquire(3);
             }});
 
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -672,13 +672,13 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     public void testTryAcquire_InterruptedException_fair()
         throws InterruptedException {
-	final Semaphore s = new Semaphore(0, true);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        final Semaphore s = new Semaphore(0, true);
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.tryAcquire(MEDIUM_DELAY_MS, MILLISECONDS);
             }});
 
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -689,13 +689,13 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     public void testTryAcquireN_InterruptedException_fair()
         throws InterruptedException {
-	final Semaphore s = new Semaphore(1, true);
-	Thread t = new Thread(new CheckedInterruptedRunnable() {
-	    public void realRun() throws InterruptedException {
+        final Semaphore s = new Semaphore(1, true);
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
                 s.tryAcquire(4, MEDIUM_DELAY_MS, MILLISECONDS);
             }});
 
-	t.start();
+        t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -705,7 +705,7 @@ public class SemaphoreTest extends JSR166TestCase {
      * getQueueLength reports number of waiting threads
      */
     public void testGetQueueLength_fair() throws InterruptedException {
-	final Semaphore lock = new Semaphore(1, true);
+        final Semaphore lock = new Semaphore(1, true);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
         assertEquals(0, lock.getQueueLength());

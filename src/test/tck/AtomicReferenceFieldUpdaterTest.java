@@ -73,11 +73,11 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-	assertEquals(one,a.get(this));
-	a.set(this,two);
-	assertEquals(two,a.get(this));
-	a.set(this,m3);
-	assertEquals(m3,a.get(this));
+        assertEquals(one,a.get(this));
+        a.set(this,two);
+        assertEquals(two,a.get(this));
+        a.set(this,m3);
+        assertEquals(m3,a.get(this));
     }
 
     /**
@@ -91,11 +91,11 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-	assertEquals(one,a.get(this));
-	a.lazySet(this,two);
-	assertEquals(two,a.get(this));
-	a.lazySet(this,m3);
-	assertEquals(m3,a.get(this));
+        assertEquals(one,a.get(this));
+        a.lazySet(this,two);
+        assertEquals(two,a.get(this));
+        a.lazySet(this,m3);
+        assertEquals(m3,a.get(this));
     }
 
     /**
@@ -109,13 +109,13 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-	assertTrue(a.compareAndSet(this,one,two));
-	assertTrue(a.compareAndSet(this,two,m4));
-	assertEquals(m4,a.get(this));
-	assertFalse(a.compareAndSet(this,m5,seven));
-	assertFalse((seven == a.get(this)));
-	assertTrue(a.compareAndSet(this,m4,seven));
-	assertEquals(seven,a.get(this));
+        assertTrue(a.compareAndSet(this,one,two));
+        assertTrue(a.compareAndSet(this,two,m4));
+        assertEquals(m4,a.get(this));
+        assertFalse(a.compareAndSet(this,m5,seven));
+        assertFalse((seven == a.get(this)));
+        assertTrue(a.compareAndSet(this,m4,seven));
+        assertEquals(seven,a.get(this));
     }
 
     /**
@@ -156,11 +156,11 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-	while (!a.weakCompareAndSet(this,one,two));
-	while (!a.weakCompareAndSet(this,two,m4));
-	assertEquals(m4,a.get(this));
-	while (!a.weakCompareAndSet(this,m4,seven));
-	assertEquals(seven,a.get(this));
+        while (!a.weakCompareAndSet(this,one,two));
+        while (!a.weakCompareAndSet(this,two,m4));
+        assertEquals(m4,a.get(this));
+        while (!a.weakCompareAndSet(this,m4,seven));
+        assertEquals(seven,a.get(this));
     }
 
     /**
@@ -174,9 +174,9 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-	assertEquals(one,a.getAndSet(this, zero));
-	assertEquals(zero,a.getAndSet(this,m10));
-	assertEquals(m10,a.getAndSet(this,1));
+        assertEquals(one,a.getAndSet(this, zero));
+        assertEquals(zero,a.getAndSet(this,m10));
+        assertEquals(m10,a.getAndSet(this,1));
     }
 
 }

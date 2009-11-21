@@ -350,13 +350,16 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      */
     public void testTimedOffer() throws InterruptedException {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.put(new Object());
                 q.put(new Object());
-                threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, MILLISECONDS));
-                q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
-            }};
+                assertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, MILLISECONDS));
+                try {
+                    q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);

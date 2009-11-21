@@ -375,8 +375,8 @@ public class DelayQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 q.put(new PDelay(0));
                 q.put(new PDelay(0));
-                threadAssertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, MILLISECONDS));
+                assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, MILLISECONDS));
             }});
 
         t.start();

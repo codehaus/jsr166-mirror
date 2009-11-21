@@ -198,7 +198,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
                 q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
             }});
 

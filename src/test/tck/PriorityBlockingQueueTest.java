@@ -332,8 +332,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             public void realRun() {
                 q.put(new Integer(0));
                 q.put(new Integer(0));
-                threadAssertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.offer(new Integer(0), LONG_DELAY_MS, MILLISECONDS));
+                assertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(q.offer(new Integer(0), LONG_DELAY_MS, MILLISECONDS));
             }});
 
         t.start();

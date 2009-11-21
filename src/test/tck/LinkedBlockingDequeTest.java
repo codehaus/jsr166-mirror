@@ -540,6 +540,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             shouldThrow();
         } catch (IllegalStateException success) {}
     }
+
     /**
      * Deque contains all elements, in traversal order, of successful addAll
      */
@@ -641,13 +642,16 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedOffer() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.put(new Object());
                 q.put(new Object());
-                threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
-                q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
-            }};
+                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                try {
+                    q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
         Thread.sleep(SMALL_DELAY_MS);
@@ -866,13 +870,16 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedOfferFirst() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.putFirst(new Object());
                 q.putFirst(new Object());
-                threadAssertFalse(q.offerFirst(new Object(), SHORT_DELAY_MS, MILLISECONDS));
-                q.offerFirst(new Object(), LONG_DELAY_MS, MILLISECONDS);
-            }};
+                assertFalse(q.offerFirst(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                try {
+                    q.offerFirst(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
         Thread.sleep(SMALL_DELAY_MS);
@@ -1079,13 +1086,16 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedOfferLast() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.putLast(new Object());
                 q.putLast(new Object());
-                threadAssertFalse(q.offerLast(new Object(), SHORT_DELAY_MS, MILLISECONDS));
-                q.offerLast(new Object(), LONG_DELAY_MS, MILLISECONDS);
-            }};
+                assertFalse(q.offerLast(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                try {
+                    q.offerLast(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
         Thread.sleep(SMALL_DELAY_MS);

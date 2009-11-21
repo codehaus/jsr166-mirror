@@ -49,8 +49,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         try {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue((Collection)null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -61,8 +60,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -131,7 +129,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -142,7 +140,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -174,8 +172,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -186,8 +183,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             ConcurrentLinkedQueue q = populatedQueue(SIZE);
             q.addAll(q);
             shouldThrow();
-        }
-        catch (IllegalArgumentException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -199,8 +195,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      *  addAll of a collection with any null elements throws NPE after
@@ -214,8 +209,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -273,8 +267,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -288,8 +281,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -468,14 +460,9 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         q.add(two);
         q.add(three);
 
-        try {
-            for (Iterator it = q.iterator(); it.hasNext();) {
-                q.remove();
-                it.next();
-            }
-        }
-        catch (ConcurrentModificationException e) {
-            shouldThrow();
+        for (Iterator it = q.iterator(); it.hasNext();) {
+            q.remove();
+            it.next();
         }
 
         assertEquals("queue should be empty again", 0, q.size());
@@ -513,23 +500,19 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     /**
      * A deserialized serialized queue has same elements in same order
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            ConcurrentLinkedQueue r = (ConcurrentLinkedQueue)in.readObject();
-            assertEquals(q.size(), r.size());
-            while (!q.isEmpty())
-                assertEquals(q.remove(), r.remove());
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        ConcurrentLinkedQueue r = (ConcurrentLinkedQueue)in.readObject();
+        assertEquals(q.size(), r.size());
+        while (!q.isEmpty())
+            assertEquals(q.remove(), r.remove());
     }
 
 }

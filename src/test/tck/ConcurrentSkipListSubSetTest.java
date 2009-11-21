@@ -138,7 +138,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = set0();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -168,8 +168,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             q.add(new Object());
             q.add(new Object());
             shouldThrow();
-        }
-        catch (ClassCastException success) {}
+        } catch (ClassCastException success) {}
     }
 
 
@@ -181,8 +180,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = set0();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with null elements throws NPE
@@ -193,8 +191,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with any null elements throws NPE after
@@ -208,8 +205,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
                 ints[i] = new Integer(i+SIZE);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -494,24 +490,19 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     /**
      * A deserialized serialized set has same elements
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         NavigableSet q = populatedSet(SIZE);
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            NavigableSet r = (NavigableSet)in.readObject();
-            assertEquals(q.size(), r.size());
-            while (!q.isEmpty())
-                assertEquals(q.pollFirst(), r.pollFirst());
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        NavigableSet r = (NavigableSet)in.readObject();
+        assertEquals(q.size(), r.size());
+        while (!q.isEmpty())
+            assertEquals(q.pollFirst(), r.pollFirst());
     }
 
     /**
@@ -656,7 +647,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = dset0();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -686,8 +677,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             q.add(new Object());
             q.add(new Object());
             shouldThrow();
-        }
-        catch (ClassCastException success) {}
+        } catch (ClassCastException success) {}
     }
 
 
@@ -699,8 +689,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = dset0();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with null elements throws NPE
@@ -711,8 +700,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with any null elements throws NPE after
@@ -726,8 +714,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
                 ints[i] = new Integer(i+SIZE);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1012,24 +999,19 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     /**
      * A deserialized serialized set has same elements
      */
-    public void testDescendingSerialization() {
+    public void testDescendingSerialization() throws Exception {
         NavigableSet q = populatedSet(SIZE);
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            NavigableSet r = (NavigableSet)in.readObject();
-            assertEquals(q.size(), r.size());
-            while (!q.isEmpty())
-                assertEquals(q.pollFirst(), r.pollFirst());
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        NavigableSet r = (NavigableSet)in.readObject();
+        assertEquals(q.size(), r.size());
+        while (!q.isEmpty())
+            assertEquals(q.pollFirst(), r.pollFirst());
     }
 
     /**

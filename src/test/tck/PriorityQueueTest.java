@@ -53,14 +53,13 @@ public class PriorityQueueTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws IAE if  capacity argument nonpositive
+     * Constructor throws IAE if capacity argument nonpositive
      */
     public void testConstructor2() {
         try {
             PriorityQueue q = new PriorityQueue(0);
             shouldThrow();
-        }
-        catch (IllegalArgumentException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -70,8 +69,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         try {
             PriorityQueue q = new PriorityQueue((Collection)null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -82,8 +80,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             PriorityQueue q = new PriorityQueue(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -96,8 +93,7 @@ public class PriorityQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             PriorityQueue q = new PriorityQueue(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -170,7 +166,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             PriorityQueue q = new PriorityQueue(1);
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -181,7 +177,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             PriorityQueue q = new PriorityQueue(1);
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -203,8 +199,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             q.offer(new Object());
             q.offer(new Object());
             shouldThrow();
-        }
-        catch (ClassCastException success) {}
+        } catch (ClassCastException success) {}
     }
 
     /**
@@ -226,8 +221,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             PriorityQueue q = new PriorityQueue(1);
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with null elements throws NPE
@@ -238,8 +232,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with any null elements throws NPE after
@@ -253,8 +246,7 @@ public class PriorityQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -312,8 +304,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -327,8 +318,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -492,22 +482,18 @@ public class PriorityQueueTest extends JSR166TestCase {
     /**
      * A deserialized serialized queue has same elements
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         PriorityQueue q = populatedQueue(SIZE);
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            PriorityQueue r = (PriorityQueue)in.readObject();
-            assertEquals(q.size(), r.size());
-            while (!q.isEmpty())
-                assertEquals(q.remove(), r.remove());
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        PriorityQueue r = (PriorityQueue)in.readObject();
+        assertEquals(q.size(), r.size());
+        while (!q.isEmpty())
+            assertEquals(q.remove(), r.remove());
     }
 }

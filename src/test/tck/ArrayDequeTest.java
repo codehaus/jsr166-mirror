@@ -45,8 +45,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         try {
             ArrayDeque q = new ArrayDeque((Collection)null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -54,15 +53,12 @@ public class ArrayDequeTest extends JSR166TestCase {
 
      */
     public void testConstructor6() {
-        try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
-            ArrayDeque q = new ArrayDeque(Arrays.asList(ints));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(ints[i], q.pollFirst());
-        }
-        finally {}
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
+        ArrayDeque q = new ArrayDeque(Arrays.asList(ints));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(ints[i], q.pollFirst());
     }
 
     /**
@@ -102,7 +98,7 @@ public class ArrayDequeTest extends JSR166TestCase {
             ArrayDeque q = new ArrayDeque(1);
             q.push(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -126,8 +122,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         try {
             q.pop();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -138,8 +133,7 @@ public class ArrayDequeTest extends JSR166TestCase {
             ArrayDeque q = new ArrayDeque();
             q.offerFirst(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -179,8 +173,7 @@ public class ArrayDequeTest extends JSR166TestCase {
             ArrayDeque q = new ArrayDeque();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -245,8 +238,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -303,8 +295,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         try {
             q.getFirst();
             shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -319,8 +310,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         try {
             q.getLast();
             shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
+        } catch (NoSuchElementException success) {}
         assertNull(q.peekLast());
     }
 
@@ -336,8 +326,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         try {
             q.removeFirst();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -489,7 +478,7 @@ public class ArrayDequeTest extends JSR166TestCase {
             l.add(new Integer(5));
             Object o[] = l.toArray(new String[10] );
             shouldThrow();
-        } catch (ArrayStoreException  success) {}
+        } catch (ArrayStoreException success) {}
     }
 
     /**
@@ -566,8 +555,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         assertFalse(it.hasNext());
         try {
             it.next();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**

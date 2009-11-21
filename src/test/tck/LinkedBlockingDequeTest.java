@@ -276,7 +276,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws IAE if  capacity argument nonpositive
+     * Constructor throws IAE if capacity argument nonpositive
      */
     public void testConstructor2() {
         try {
@@ -792,21 +792,21 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * putFirst blocks interruptibly if full
      */
     public void testBlockingPutFirst() throws InterruptedException {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-                        for (int i = 0; i < SIZE; ++i) {
-                            q.putFirst(new Integer(i));
-                            ++added;
-                        }
-                        q.putFirst(new Integer(SIZE));
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {
-                        threadAssertEquals(added, SIZE);
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                int added = 0;
+                try {
+                    LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+                    for (int i = 0; i < SIZE; ++i) {
+                        q.putFirst(new Integer(i));
+                        ++added;
                     }
-                }});
+                    q.putFirst(new Integer(SIZE));
+                    threadShouldThrow();
+                } catch (InterruptedException success) {
+                    threadAssertEquals(added, SIZE);
+                }
+            }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
@@ -819,24 +819,23 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testPutFirstWithTake() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        q.putFirst(new Object());
-                        ++added;
-                        q.putFirst(new Object());
-                        ++added;
-                        q.putFirst(new Object());
-                        ++added;
-                        q.putFirst(new Object());
-                        ++added;
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {
-                        threadAssertTrue(added >= 2);
-                    }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                int added = 0;
+                try {
+                    q.putFirst(new Object());
+                    ++added;
+                    q.putFirst(new Object());
+                    ++added;
+                    q.putFirst(new Object());
+                    ++added;
+                    q.putFirst(new Object());
+                    ++added;
+                    threadShouldThrow();
+                } catch (InterruptedException success) {
+                    threadAssertTrue(added >= 2);
                 }
-            });
+            }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
@@ -1000,21 +999,22 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * putLast blocks interruptibly if full
      */
     public void testBlockingPutLast() throws InterruptedException {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-                        for (int i = 0; i < SIZE; ++i) {
-                            q.putLast(new Integer(i));
-                            ++added;
-                        }
-                        q.putLast(new Integer(SIZE));
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {
-                        threadAssertEquals(added, SIZE);
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                int added = 0;
+                try {
+                    LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+                    for (int i = 0; i < SIZE; ++i) {
+                        q.putLast(new Integer(i));
+                        ++added;
                     }
-                }});
+                    q.putLast(new Integer(SIZE));
+                    threadShouldThrow();
+                } catch (InterruptedException success) {
+                    threadAssertEquals(added, SIZE);
+                }
+            }});
+
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
@@ -1026,24 +1026,23 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testPutLastWithTake() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        q.putLast(new Object());
-                        ++added;
-                        q.putLast(new Object());
-                        ++added;
-                        q.putLast(new Object());
-                        ++added;
-                        q.putLast(new Object());
-                        ++added;
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {
-                        threadAssertTrue(added >= 2);
-                    }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                int added = 0;
+                try {
+                    q.putLast(new Object());
+                    ++added;
+                    q.putLast(new Object());
+                    ++added;
+                    q.putLast(new Object());
+                    ++added;
+                    q.putLast(new Object());
+                    ++added;
+                    threadShouldThrow();
+                } catch (InterruptedException success) {
+                    threadAssertTrue(added >= 2);
                 }
-            });
+            }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);

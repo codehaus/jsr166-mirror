@@ -1281,6 +1281,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
                 future.get();
             shouldThrow();
         } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }

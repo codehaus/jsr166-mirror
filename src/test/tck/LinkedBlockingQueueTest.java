@@ -48,7 +48,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws IAE if  capacity argument nonpositive
+     * Constructor throws IAE if capacity argument nonpositive
      */
     public void testConstructor2() {
         try {

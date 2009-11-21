@@ -170,8 +170,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         try {
             new ForkJoinPool(-1);
             shouldThrow();
-        }
-        catch (IllegalArgumentException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -181,8 +180,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         try {
             new ForkJoinPool(1, null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -606,8 +604,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             TrackedShortRunnable task = null;
             Future<?> future = e.submit(task);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -620,8 +617,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             StringTask t = null;
             Future<String> future = e.submit(t);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -665,8 +661,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
                     return Boolean.TRUE;
                 }}).get();
             shouldThrow();
-        } catch (ExecutionException success) {
-        }
+        } catch (ExecutionException success) {}
+
         joinPool(p);
     }
 

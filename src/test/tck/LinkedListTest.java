@@ -156,7 +156,7 @@ public class LinkedListTest extends JSR166TestCase {
         try {
             l.addAll(4,m);
             shouldThrow();
-        } catch (IndexOutOfBoundsException  success) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -170,7 +170,7 @@ public class LinkedListTest extends JSR166TestCase {
         try {
             l.addAll(-1,m);
             shouldThrow();
-        } catch (IndexOutOfBoundsException  success) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**

@@ -175,15 +175,12 @@ public class DelayQueueTest extends JSR166TestCase {
      * Queue contains all elements of collection used to initialize
      */
     public void testConstructor6() {
-        try {
-            PDelay[] ints = new PDelay[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new PDelay(i);
-            DelayQueue q = new DelayQueue(Arrays.asList(ints));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(ints[i], q.poll());
-        }
-        finally {}
+        PDelay[] ints = new PDelay[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new PDelay(i);
+        DelayQueue q = new DelayQueue(Arrays.asList(ints));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(ints[i], q.poll());
     }
 
     /**
@@ -314,18 +311,15 @@ public class DelayQueueTest extends JSR166TestCase {
      * Queue contains all elements of successful addAll
      */
     public void testAddAll5() {
-        try {
-            PDelay[] empty = new PDelay[0];
-            PDelay[] ints = new PDelay[SIZE];
-            for (int i = SIZE-1; i >= 0; --i)
-                ints[i] = new PDelay(i);
-            DelayQueue q = new DelayQueue();
-            assertFalse(q.addAll(Arrays.asList(empty)));
-            assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(ints[i], q.poll());
-        }
-        finally {}
+        PDelay[] empty = new PDelay[0];
+        PDelay[] ints = new PDelay[SIZE];
+        for (int i = SIZE-1; i >= 0; --i)
+            ints[i] = new PDelay(i);
+        DelayQueue q = new DelayQueue();
+        assertFalse(q.addAll(Arrays.asList(empty)));
+        assertTrue(q.addAll(Arrays.asList(ints)));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(ints[i], q.poll());
     }
 
     /**

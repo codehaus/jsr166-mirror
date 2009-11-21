@@ -108,33 +108,27 @@ public class TreeSetTest extends JSR166TestCase {
      * Set contains all elements of collection used to initialize
      */
     public void testConstructor6() {
-        try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
-            TreeSet q = new TreeSet(Arrays.asList(ints));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(ints[i], q.pollFirst());
-        }
-        finally {}
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
+        TreeSet q = new TreeSet(Arrays.asList(ints));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(ints[i], q.pollFirst());
     }
 
     /**
      * The comparator used in constructor is used
      */
     public void testConstructor7() {
-        try {
-            MyReverseComparator cmp = new MyReverseComparator();
-            TreeSet q = new TreeSet(cmp);
-            assertEquals(cmp, q.comparator());
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
-            q.addAll(Arrays.asList(ints));
-            for (int i = SIZE-1; i >= 0; --i)
-                assertEquals(ints[i], q.pollFirst());
-        }
-        finally {}
+        MyReverseComparator cmp = new MyReverseComparator();
+        TreeSet q = new TreeSet(cmp);
+        assertEquals(cmp, q.comparator());
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
+        q.addAll(Arrays.asList(ints));
+        for (int i = SIZE-1; i >= 0; --i)
+            assertEquals(ints[i], q.pollFirst());
     }
 
     /**
@@ -248,18 +242,15 @@ public class TreeSetTest extends JSR166TestCase {
      * Set contains all elements of successful addAll
      */
     public void testAddAll5() {
-        try {
-            Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(SIZE-1-i);
-            TreeSet q = new TreeSet();
-            assertFalse(q.addAll(Arrays.asList(empty)));
-            assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(new Integer(i), q.pollFirst());
-        }
-        finally {}
+        Integer[] empty = new Integer[0];
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(SIZE-1-i);
+        TreeSet q = new TreeSet();
+        assertFalse(q.addAll(Arrays.asList(empty)));
+        assertTrue(q.addAll(Arrays.asList(ints)));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(new Integer(i), q.pollFirst());
     }
 
     /**

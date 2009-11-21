@@ -59,8 +59,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.add(one);
             shouldThrow();
-        } catch (IllegalStateException success) {
-        }
+        } catch (IllegalStateException success) {}
     }
 
     /**
@@ -71,8 +70,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -91,8 +89,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
 
@@ -112,8 +109,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -124,8 +120,7 @@ public class AbstractQueueTest extends JSR166TestCase {
             Succeed q = new Succeed();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -136,8 +131,7 @@ public class AbstractQueueTest extends JSR166TestCase {
             Succeed q = new Succeed();
             q.addAll(q);
             shouldThrow();
-        }
-        catch (IllegalArgumentException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
 
@@ -150,8 +144,7 @@ public class AbstractQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with any null elements throws NPE after
@@ -165,8 +158,7 @@ public class AbstractQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll throws ISE if an add fails
@@ -179,8 +171,7 @@ public class AbstractQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (IllegalStateException success) {}
+        } catch (IllegalStateException success) {}
     }
 
 }

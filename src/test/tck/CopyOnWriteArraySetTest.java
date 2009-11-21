@@ -51,7 +51,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
 
 
     /**
-     *   addAll  adds each element from the given collection
+     *  addAll adds each element from the given collection
      */
     public void testAddAll() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -64,7 +64,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   addAll adds each element from the given collection that did not
+     *  addAll adds each element from the given collection that did not
      *  already exist in the set
      */
     public void testAddAll2() {
@@ -78,7 +78,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   add will not add the element if it already exists in the set
+     *  add will not add the element if it already exists in the set
      */
     public void testAdd2() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -87,8 +87,8 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   add  adds the element when it does not exist
-     *   in the set
+     *  add  adds the element when it does not exist
+     *  in the set
      */
     public void testAdd3() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -97,7 +97,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   clear  removes all elements from the set
+     *  clear removes all elements from the set
      */
     public void testClear() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -134,7 +134,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
 
 
     /**
-     *   containsAll returns true for collections with subset of elements
+     *  containsAll returns true for collections with subset of elements
      */
     public void testContainsAll() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -147,7 +147,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   isEmpty is true when empty, else false
+     *  isEmpty is true when empty, else false
      */
     public void testIsEmpty() {
         CopyOnWriteArraySet empty = new CopyOnWriteArraySet();
@@ -157,7 +157,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   iterator() returns an iterator containing the elements of the set
+     *  iterator() returns an iterator containing the elements of the set
      */
     public void testIterator() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -178,8 +178,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         try {
             it.remove();
             shouldThrow();
-        }
-        catch (UnsupportedOperationException success) {}
+        } catch (UnsupportedOperationException success) {}
     }
 
     /**
@@ -195,7 +194,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
 
 
     /**
-     *   removeAll  removes all elements from the given collection
+     *  removeAll  removes all elements from the given collection
      */
     public void testRemoveAll() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -218,7 +217,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   size returns the number of elements
+     *  size returns the number of elements
      */
     public void testSize() {
         CopyOnWriteArraySet empty = new CopyOnWriteArraySet();
@@ -228,7 +227,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   toArray returns an Object array containing all elements from the set
+     *  toArray returns an Object array containing all elements from the set
      */
     public void testToArray() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -240,8 +239,8 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   toArray returns an Integer array containing all elements from
-     *   the set
+     *  toArray returns an Integer array containing all elements from
+     *  the set
      */
     public void testToArray2() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -271,24 +270,20 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     /**
      * A deserialized serialized set is equal
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         CopyOnWriteArraySet q = populatedSet(SIZE);
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            CopyOnWriteArraySet r = (CopyOnWriteArraySet)in.readObject();
-            assertEquals(q.size(), r.size());
-            assertTrue(q.equals(r));
-            assertTrue(r.equals(q));
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        CopyOnWriteArraySet r = (CopyOnWriteArraySet)in.readObject();
+        assertEquals(q.size(), r.size());
+        assertTrue(q.equals(r));
+        assertTrue(r.equals(q));
     }
 
 }

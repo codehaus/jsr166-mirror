@@ -36,7 +36,7 @@ public class FutureTaskTest extends JSR166TestCase {
     public void testConstructor() {
         try {
             FutureTask task = new FutureTask(null);
-            shouldThrow("NullPointerException");
+            shouldThrow();
         } catch (NullPointerException success) {}
     }
 
@@ -46,7 +46,7 @@ public class FutureTaskTest extends JSR166TestCase {
     public void testConstructor2() {
         try {
             FutureTask task = new FutureTask(null, Boolean.TRUE);
-            shouldThrow("NullPointerException");
+            shouldThrow();
         } catch (NullPointerException success) {}
     }
 
@@ -100,7 +100,7 @@ public class FutureTaskTest extends JSR166TestCase {
         task.setException(nse);
         try {
             Object x = task.get();
-            shouldThrow("ExecutionException");
+            shouldThrow();
         } catch (ExecutionException success) {
             assertSame(success.getCause(), nse);
         }
@@ -289,7 +289,7 @@ public class FutureTaskTest extends JSR166TestCase {
         ft.run();
         try {
             ft.get();
-            shouldThrow("ExecutionException");
+            shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof ArithmeticException);
         }
@@ -307,7 +307,7 @@ public class FutureTaskTest extends JSR166TestCase {
         ft.run();
         try {
             ft.get(SHORT_DELAY_MS, MILLISECONDS);
-            shouldThrow("ExecutionException");
+            shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof ArithmeticException);
         }
@@ -353,7 +353,7 @@ public class FutureTaskTest extends JSR166TestCase {
         try {
             FutureTask ft = new FutureTask(new NoOpCallable());
             ft.get(1,MILLISECONDS);
-            shouldThrow("TimeoutException");
+            shouldThrow();
         } catch (TimeoutException success) {}
     }
 

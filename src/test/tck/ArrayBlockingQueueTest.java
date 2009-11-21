@@ -104,15 +104,12 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * Queue contains all elements of collection used to initialize
      */
     public void testConstructor7() {
-        try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
-            ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, true, Arrays.asList(ints));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(ints[i], q.poll());
-        }
-        finally {}
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
+        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, true, Arrays.asList(ints));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(ints[i], q.poll());
     }
 
     /**

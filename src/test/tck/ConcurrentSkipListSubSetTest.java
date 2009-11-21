@@ -212,18 +212,15 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
      * Set contains all elements of successful addAll
      */
     public void testAddAll5() {
-        try {
-            Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(SIZE-1- i);
-            NavigableSet q = set0();
-            assertFalse(q.addAll(Arrays.asList(empty)));
-            assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(new Integer(i), q.pollFirst());
-        }
-        finally {}
+        Integer[] empty = new Integer[0];
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(SIZE-1- i);
+        NavigableSet q = set0();
+        assertFalse(q.addAll(Arrays.asList(empty)));
+        assertTrue(q.addAll(Arrays.asList(ints)));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(new Integer(i), q.pollFirst());
     }
 
     /**
@@ -721,18 +718,15 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
      * Set contains all elements of successful addAll
      */
     public void testDescendingAddAll5() {
-        try {
-            Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(SIZE-1- i);
-            NavigableSet q = dset0();
-            assertFalse(q.addAll(Arrays.asList(empty)));
-            assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(new Integer(i), q.pollFirst());
-        }
-        finally {}
+        Integer[] empty = new Integer[0];
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(SIZE-1- i);
+        NavigableSet q = dset0();
+        assertFalse(q.addAll(Arrays.asList(empty)));
+        assertTrue(q.addAll(Arrays.asList(ints)));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(new Integer(i), q.pollFirst());
     }
 
     /**

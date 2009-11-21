@@ -266,11 +266,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testWriteTryLockWhenLocked() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.writeLock().lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertFalse(lock.writeLock().tryLock());
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertFalse(lock.writeLock().tryLock());
+            }});
 
         t.start();
         t.join();
@@ -283,11 +282,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testReadTryLockWhenLocked() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.writeLock().lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertFalse(lock.readLock().tryLock());
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertFalse(lock.readLock().tryLock());
+            }});
 
         t.start();
         t.join();
@@ -300,12 +298,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testMultipleReadLocks() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.readLock().lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertTrue(lock.readLock().tryLock());
-                    lock.readLock().unlock();
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertTrue(lock.readLock().tryLock());
+                lock.readLock().unlock();
+            }});
 
         t.start();
         t.join();
@@ -318,18 +315,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testWriteAfterMultipleReadLocks() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.readLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.readLock().lock();
-                    lock.readLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.readLock().lock();
+                lock.readLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -347,18 +342,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testReadAfterWriteLock() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.writeLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.readLock().lock();
-                    lock.readLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.readLock().lock();
-                    lock.readLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.readLock().lock();
+                lock.readLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.readLock().lock();
+                lock.readLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -388,18 +381,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testReadHoldingWriteLock2() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.writeLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.readLock().lock();
-                    lock.readLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.readLock().lock();
-                    lock.readLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.readLock().lock();
+                lock.readLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.readLock().lock();
+                lock.readLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -422,18 +413,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testReadHoldingWriteLock3() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.writeLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -457,18 +446,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testWriteHoldingWriteLock4() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.writeLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -503,18 +490,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testReadHoldingWriteLockFair2() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         lock.writeLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.readLock().lock();
-                    lock.readLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.readLock().lock();
-                    lock.readLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.readLock().lock();
+                lock.readLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.readLock().lock();
+                lock.readLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -538,18 +523,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testReadHoldingWriteLockFair3() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         lock.writeLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -573,18 +556,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testWriteHoldingWriteLockFair4() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         lock.writeLock().lock();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    lock.writeLock().lock();
-                    lock.writeLock().unlock();
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                lock.writeLock().lock();
+                lock.writeLock().unlock();
+            }});
 
         t1.start();
         t2.start();
@@ -610,12 +591,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testTryLockWhenReadLocked() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.readLock().lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertTrue(lock.readLock().tryLock());
-                    lock.readLock().unlock();
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertTrue(lock.readLock().tryLock());
+                lock.readLock().unlock();
+            }});
 
         t.start();
         t.join();
@@ -630,11 +610,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testWriteTryLockWhenReadLocked() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.readLock().lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertFalse(lock.writeLock().tryLock());
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertFalse(lock.writeLock().tryLock());
+            }});
 
         t.start();
         t.join();
@@ -648,12 +627,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testTryLockWhenReadLockedFair() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         lock.readLock().lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertTrue(lock.readLock().tryLock());
-                    lock.readLock().unlock();
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertTrue(lock.readLock().tryLock());
+                lock.readLock().unlock();
+            }});
 
         t.start();
         t.join();
@@ -668,11 +646,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testWriteTryLockWhenReadLockedFair() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         lock.readLock().lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertFalse(lock.writeLock().tryLock());
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertFalse(lock.writeLock().tryLock());
+            }});
 
         t.start();
         t.join();

@@ -604,25 +604,20 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     /**
      * A deserialized map equals original
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         ConcurrentNavigableMap q = map5();
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            ConcurrentNavigableMap r = (ConcurrentNavigableMap)in.readObject();
-            assertEquals(q.size(), r.size());
-            assertTrue(q.equals(r));
-            assertTrue(r.equals(q));
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        ConcurrentNavigableMap r = (ConcurrentNavigableMap)in.readObject();
+        assertEquals(q.size(), r.size());
+        assertTrue(q.equals(r));
+        assertTrue(r.equals(q));
     }
 
 
@@ -1303,27 +1298,21 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     /**
      * A deserialized map equals original
      */
-    public void testDescendingSerialization() {
+    public void testDescendingSerialization() throws Exception {
         ConcurrentNavigableMap q = dmap5();
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            ConcurrentNavigableMap r = (ConcurrentNavigableMap)in.readObject();
-            assertEquals(q.size(), r.size());
-            assertTrue(q.equals(r));
-            assertTrue(r.equals(q));
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        ConcurrentNavigableMap r = (ConcurrentNavigableMap)in.readObject();
+        assertEquals(q.size(), r.size());
+        assertTrue(q.equals(r));
+        assertTrue(r.equals(q));
     }
-
 
 
     /**

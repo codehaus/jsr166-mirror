@@ -653,6 +653,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             for (Future<String> future : result) {
                 try {
                     future.get();
+                    shouldThrow();
                 } catch (ExecutionException success) {
                     assertTrue(success.getCause() instanceof NullPointerException);
                 }

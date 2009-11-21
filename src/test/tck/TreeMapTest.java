@@ -610,25 +610,20 @@ public class TreeMapTest extends JSR166TestCase {
     /**
      * A deserialized map equals original
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         TreeMap q = map5();
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            TreeMap r = (TreeMap)in.readObject();
-            assertEquals(q.size(), r.size());
-            assertTrue(q.equals(r));
-            assertTrue(r.equals(q));
-        } catch (Exception e) {
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        TreeMap r = (TreeMap)in.readObject();
+        assertEquals(q.size(), r.size());
+        assertTrue(q.equals(r));
+        assertTrue(r.equals(q));
     }
 
     /**

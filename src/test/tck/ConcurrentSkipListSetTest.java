@@ -115,18 +115,15 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * The comparator used in constructor is used
      */
     public void testConstructor7() {
-        try {
-            MyReverseComparator cmp = new MyReverseComparator();
-            ConcurrentSkipListSet q = new ConcurrentSkipListSet(cmp);
-            assertEquals(cmp, q.comparator());
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
-            q.addAll(Arrays.asList(ints));
-            for (int i = SIZE-1; i >= 0; --i)
-                assertEquals(ints[i], q.pollFirst());
-        }
-        finally {}
+        MyReverseComparator cmp = new MyReverseComparator();
+        ConcurrentSkipListSet q = new ConcurrentSkipListSet(cmp);
+        assertEquals(cmp, q.comparator());
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
+        q.addAll(Arrays.asList(ints));
+        for (int i = SIZE-1; i >= 0; --i)
+            assertEquals(ints[i], q.pollFirst());
     }
 
     /**
@@ -240,18 +237,15 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * Set contains all elements of successful addAll
      */
     public void testAddAll5() {
-        try {
-            Integer[] empty = new Integer[0];
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(SIZE-1-i);
-            ConcurrentSkipListSet q = new ConcurrentSkipListSet();
-            assertFalse(q.addAll(Arrays.asList(empty)));
-            assertTrue(q.addAll(Arrays.asList(ints)));
-            for (int i = 0; i < SIZE; ++i)
-                assertEquals(new Integer(i), q.pollFirst());
-        }
-        finally {}
+        Integer[] empty = new Integer[0];
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(SIZE-1-i);
+        ConcurrentSkipListSet q = new ConcurrentSkipListSet();
+        assertFalse(q.addAll(Arrays.asList(empty)));
+        assertTrue(q.addAll(Arrays.asList(ints)));
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(new Integer(i), q.pollFirst());
     }
 
     /**

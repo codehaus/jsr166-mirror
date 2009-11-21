@@ -195,7 +195,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * Sets delays as multiples of SHORT_DELAY.
      */
-    protected  void setDelays() {
+    protected void setDelays() {
         SHORT_DELAY_MS = getShortDelay();
         SMALL_DELAY_MS = SHORT_DELAY_MS * 5;
         MEDIUM_DELAY_MS = SHORT_DELAY_MS * 10;

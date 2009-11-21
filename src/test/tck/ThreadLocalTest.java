@@ -88,18 +88,14 @@ public class ThreadLocalTest extends JSR166TestCase {
     /**
      * InheritableThreadLocal propagates generic values.
      */
-    public void testGenericITL() {
+    public void testGenericITL() throws InterruptedException {
         final int threadCount = 10;
         final int x[] = new int[threadCount];
         Thread progenitor = new ITLThread(x);
-        try {
-            progenitor.start();
-            progenitor.join();
-            for (int i = 0; i < threadCount; i++) {
-                assertEquals(i, x[i]);
-            }
-        } catch (InterruptedException e) {
-            unexpectedException(e);
+        progenitor.start();
+        progenitor.join();
+        for (int i = 0; i < threadCount; i++) {
+            assertEquals(i, x[i]);
         }
     }
 }

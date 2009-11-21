@@ -19,7 +19,7 @@ public class SystemTest extends JSR166TestCase {
 
     /**
      * Worst case rounding for millisecs; set for 60 cycle millis clock.
-     * This value might need to be changed os JVMs with coarser
+     * This value might need to be changed on JVMs with coarser
      *  System.currentTimeMillis clocks.
      */
     static final long MILLIS_ROUND = 17;
@@ -29,24 +29,19 @@ public class SystemTest extends JSR166TestCase {
      * possible rounding).
      * This shows only that nano timing not (much) worse than milli.
      */
-    public void testNanoTime1() {
-        try {
-            long m1 = System.currentTimeMillis();
-            Thread.sleep(1);
-            long n1 = System.nanoTime();
-            Thread.sleep(SHORT_DELAY_MS);
-            long n2 = System.nanoTime();
-            Thread.sleep(1);
-            long m2 = System.currentTimeMillis();
-            long millis = m2 - m1;
-            long nanos = n2 - n1;
-            assertTrue(nanos >= 0);
-            long nanosAsMillis = nanos / 1000000;
-            assertTrue(nanosAsMillis <= millis + MILLIS_ROUND);
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+    public void testNanoTime1() throws InterruptedException {
+        long m1 = System.currentTimeMillis();
+        Thread.sleep(1);
+        long n1 = System.nanoTime();
+        Thread.sleep(SHORT_DELAY_MS);
+        long n2 = System.nanoTime();
+        Thread.sleep(1);
+        long m2 = System.currentTimeMillis();
+        long millis = m2 - m1;
+        long nanos = n2 - n1;
+        assertTrue(nanos >= 0);
+        long nanosAsMillis = nanos / 1000000;
+        assertTrue(nanosAsMillis <= millis + MILLIS_ROUND);
     }
 
     /**
@@ -54,25 +49,20 @@ public class SystemTest extends JSR166TestCase {
      * for rounding.
      * This shows only that nano timing not (much) worse than milli.
      */
-    public void testNanoTime2() {
-        try {
-            long n1 = System.nanoTime();
-            Thread.sleep(1);
-            long m1 = System.currentTimeMillis();
-            Thread.sleep(SHORT_DELAY_MS);
-            long m2 = System.currentTimeMillis();
-            Thread.sleep(1);
-            long n2 = System.nanoTime();
-            long millis = m2 - m1;
-            long nanos = n2 - n1;
+    public void testNanoTime2() throws InterruptedException {
+        long n1 = System.nanoTime();
+        Thread.sleep(1);
+        long m1 = System.currentTimeMillis();
+        Thread.sleep(SHORT_DELAY_MS);
+        long m2 = System.currentTimeMillis();
+        Thread.sleep(1);
+        long n2 = System.nanoTime();
+        long millis = m2 - m1;
+        long nanos = n2 - n1;
 
-            assertTrue(nanos >= 0);
-            long nanosAsMillis = nanos / 1000000;
-            assertTrue(millis <= nanosAsMillis + MILLIS_ROUND);
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+        assertTrue(nanos >= 0);
+        long nanosAsMillis = nanos / 1000000;
+        assertTrue(millis <= nanosAsMillis + MILLIS_ROUND);
     }
 
 }

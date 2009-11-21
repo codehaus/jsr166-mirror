@@ -189,7 +189,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   get returns the  value at the given index
+     *   get returns the value at the given index
      */
     public void testGet() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -247,8 +247,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         try {
             it.remove();
             shouldThrow();
-        }
-        catch (UnsupportedOperationException success) {}
+        } catch (UnsupportedOperationException success) {}
     }
 
     /**
@@ -598,24 +597,20 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     /**
      * a deserialized serialiszed list is equal
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         CopyOnWriteArrayList q = populatedArray(SIZE);
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            CopyOnWriteArrayList r = (CopyOnWriteArrayList)in.readObject();
-            assertEquals(q.size(), r.size());
-            assertTrue(q.equals(r));
-            assertTrue(r.equals(q));
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        CopyOnWriteArrayList r = (CopyOnWriteArrayList)in.readObject();
+        assertEquals(q.size(), r.size());
+        assertTrue(q.equals(r));
+        assertTrue(r.equals(q));
     }
 
 }

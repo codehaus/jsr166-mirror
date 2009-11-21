@@ -58,7 +58,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws IAE if  capacity argument nonpositive
+     * Constructor throws IAE if capacity argument nonpositive
      */
     public void testConstructor2() {
         try {
@@ -644,7 +644,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             PriorityBlockingQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(new String[10] );
             shouldThrow();
-        } catch (ArrayStoreException  success) {}
+        } catch (ArrayStoreException success) {}
     }
 
     /**

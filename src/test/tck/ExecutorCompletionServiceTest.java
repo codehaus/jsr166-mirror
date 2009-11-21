@@ -31,8 +31,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
         try {
             ExecutorCompletionService ecs = new ExecutorCompletionService(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -43,8 +42,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
             ExecutorService e = Executors.newCachedThreadPool();
             ExecutorCompletionService ecs = new ExecutorCompletionService(e, null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -82,7 +80,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
     /**
      * A taken submitted task is completed
      */
-    public void testTake() {
+    public void testTake() throws InterruptedException {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
         try {
@@ -90,8 +88,6 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
             ecs.submit(c);
             Future f = ecs.take();
             assertTrue(f.isDone());
-        } catch (Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -100,7 +96,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
     /**
      * Take returns the same future object returned by submit
      */
-    public void testTake2() {
+    public void testTake2() throws InterruptedException {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
         try {
@@ -108,8 +104,6 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
             Future f1 = ecs.submit(c);
             Future f2 = ecs.take();
             assertSame(f1, f2);
-        } catch (Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -118,7 +112,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
     /**
      * If poll returns non-null, the returned task is completed
      */
-    public void testPoll1() {
+    public void testPoll1() throws InterruptedException {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
         try {
@@ -133,8 +127,6 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
                     break;
                 }
             }
-        } catch (Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -143,7 +135,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
     /**
      * If timed poll returns non-null, the returned task is completed
      */
-    public void testPoll2() {
+    public void testPoll2() throws InterruptedException {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
         try {
@@ -153,8 +145,6 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
             Future f = ecs.poll(SHORT_DELAY_MS, MILLISECONDS);
             if (f != null)
                 assertTrue(f.isDone());
-        } catch (Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -163,7 +153,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
       * Submitting to underlying AES that overrides newTaskFor(Callable)
       * returns and eventually runs Future returned by newTaskFor.
       */
-     public void testNewTaskForCallable() {
+     public void testNewTaskForCallable() throws InterruptedException {
          final AtomicBoolean done = new AtomicBoolean(false);
          class MyCallableFuture<V> extends FutureTask<V> {
              MyCallableFuture(Callable<V> c) { super(c); }
@@ -187,8 +177,6 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
              Future f2 = ecs.take();
              assertSame("submit and take must return same objects", f1, f2);
              assertTrue("completed task must have set done", done.get());
-         } catch (Exception ex) {
-             unexpectedException();
          } finally {
              joinPool(e);
          }
@@ -198,7 +186,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
       * Submitting to underlying AES that overrides newTaskFor(Runnable,T)
       * returns and eventually runs Future returned by newTaskFor.
       */
-     public void testNewTaskForRunnable() {
+     public void testNewTaskForRunnable() throws InterruptedException {
          final AtomicBoolean done = new AtomicBoolean(false);
          class MyRunnableFuture<V> extends FutureTask<V> {
              MyRunnableFuture(Runnable t, V r) { super(t, r); }
@@ -222,13 +210,9 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
              Future f2 = ecs.take();
              assertSame("submit and take must return same objects", f1, f2);
              assertTrue("completed task must have set done", done.get());
-         } catch (Exception ex) {
-             unexpectedException();
          } finally {
              joinPool(e);
          }
      }
-
-
 
 }

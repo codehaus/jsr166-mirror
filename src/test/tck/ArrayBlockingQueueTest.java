@@ -456,6 +456,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                 }
                 try {
                     q.poll(SMALL_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 

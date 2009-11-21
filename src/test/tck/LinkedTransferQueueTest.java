@@ -369,12 +369,16 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testTimedPollWithOffer() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();
-        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
+        Thread t = new Thread(new CheckedRunnable() {
             void realRun() throws InterruptedException {
-                threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                q.poll(LONG_DELAY_MS, MILLISECONDS);
-                q.poll(LONG_DELAY_MS, MILLISECONDS);
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
             }});
+
         Thread.sleep(SMALL_DELAY_MS);
         assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();

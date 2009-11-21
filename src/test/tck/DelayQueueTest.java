@@ -493,10 +493,11 @@ public class DelayQueueTest extends JSR166TestCase {
      */
     public void testTimedPollWithOffer() throws InterruptedException {
         final DelayQueue q = new DelayQueue();
+        final PDelay pdelay = new PDelay(0);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                q.poll(LONG_DELAY_MS, MILLISECONDS);
+                assertSame(pdelay, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 try {
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
@@ -505,7 +506,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
         t.start();
         Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
+        assertTrue(q.offer(pdelay, SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();
         t.join();
     }

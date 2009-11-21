@@ -356,11 +356,11 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
                 assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 try {
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    threadShouldThrow();
+                    shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
@@ -396,7 +396,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final SynchronousQueue q = new SynchronousQueue(true);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
                 assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 try {
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
@@ -439,8 +439,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -706,8 +705,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q, 0);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**

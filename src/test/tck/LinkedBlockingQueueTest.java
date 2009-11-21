@@ -463,12 +463,15 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
      */
     public void testTimedPollWithOffer() throws InterruptedException {
         final LinkedBlockingQueue q = new LinkedBlockingQueue(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                q.poll(LONG_DELAY_MS, MILLISECONDS);
-                q.poll(LONG_DELAY_MS, MILLISECONDS);
-            }};
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
         Thread.sleep(SMALL_DELAY_MS);

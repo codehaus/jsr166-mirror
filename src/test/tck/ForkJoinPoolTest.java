@@ -590,6 +590,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             Object result = future.get();
             shouldThrow();
         } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof IndexOutOfBoundsException);
         } finally {
             Policy.setPolicy(savedPolicy);
         }
@@ -661,7 +662,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
                     return Boolean.TRUE;
                 }}).get();
             shouldThrow();
-        } catch (ExecutionException success) {}
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof ArithmeticException);
+        }
 
         joinPool(p);
     }
@@ -744,6 +747,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             e.invokeAny(l);
             shouldThrow();
         } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }
@@ -825,6 +829,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
                 future.get();
             shouldThrow();
         } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }
@@ -1021,6 +1026,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
                 future.get();
             shouldThrow();
         } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }

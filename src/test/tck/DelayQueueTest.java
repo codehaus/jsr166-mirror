@@ -476,7 +476,7 @@ public class DelayQueueTest extends JSR166TestCase {
                     assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, MILLISECONDS)));
                 }
                 try {
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    q.poll(SMALL_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});

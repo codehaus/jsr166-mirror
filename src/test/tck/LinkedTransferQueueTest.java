@@ -354,7 +354,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testInterruptedTimedPoll() throws InterruptedException {
         final LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
-        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i) {
                     long t0 = System.nanoTime();
@@ -363,7 +363,9 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                     long millisElapsed = (System.nanoTime() - t0)/(1024 * 1024);
                     assertTrue(millisElapsed < SMALL_DELAY_MS);
                 }
-                q.poll(LONG_DELAY_MS, MILLISECONDS);
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                } catch (InterruptedException success) {}
             }});
         Thread.sleep(SMALL_DELAY_MS);
         t.interrupt();

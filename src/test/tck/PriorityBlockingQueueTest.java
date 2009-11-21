@@ -433,7 +433,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                     assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
                 }
                 try {
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    q.poll(SMALL_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});

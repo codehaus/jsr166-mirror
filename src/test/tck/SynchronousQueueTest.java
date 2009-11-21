@@ -336,9 +336,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testInterruptedTimedPoll() throws InterruptedException {
+        final SynchronousQueue q = new SynchronousQueue();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                SynchronousQueue q = new SynchronousQueue();
                 q.poll(SMALL_DELAY_MS, MILLISECONDS);
             }});
 

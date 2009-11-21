@@ -1501,7 +1501,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             assertEquals(2, result.size());
             for (Future<String> future : result)
                 assertSame(TEST_STRING, future.get());
-        } catch (ExecutionException success) {
         } finally {
             joinPool(e);
         }

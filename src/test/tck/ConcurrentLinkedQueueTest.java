@@ -73,8 +73,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             ConcurrentLinkedQueue q = new ConcurrentLinkedQueue(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**

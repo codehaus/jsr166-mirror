@@ -169,6 +169,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             q.getFirst();
             shouldThrow();
         } catch (NoSuchElementException success) {}
+        assertNull(q.peekFirst());
     }
 
     /**
@@ -199,6 +200,22 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             q.removeFirst();
             shouldThrow();
         } catch (NoSuchElementException success) {}
+        assertNull(q.peekFirst());
+    }
+
+    /**
+     *  removeLast removes last element, or throws NSEE if empty
+     */
+    public void testRemoveLast() {
+        LinkedBlockingDeque q = populatedDeque(SIZE);
+        for (int i = SIZE - 1; i >= 0; --i) {
+            assertEquals(i, ((Integer)q.removeLast()).intValue());
+        }
+        try {
+            q.removeLast();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
+        assertNull(q.peekLast());
     }
 
     /**

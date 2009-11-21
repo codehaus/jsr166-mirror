@@ -54,137 +54,99 @@ public class CountDownLatchTest extends JSR166TestCase {
     /**
      * await returns after countDown to zero, but not before
      */
-    public void testAwait() {
+    public void testAwait() throws InterruptedException {
         final CountDownLatch l = new CountDownLatch(2);
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertTrue(l.getCount() > 0);
-                        l.await();
-                        threadAssertTrue(l.getCount() == 0);
-                    } catch (InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                threadAssertTrue(l.getCount() > 0);
+                l.await();
+                threadAssertTrue(l.getCount() == 0);
+            }});
+
         t.start();
-        try {
-            assertEquals(l.getCount(), 2);
-            Thread.sleep(SHORT_DELAY_MS);
-            l.countDown();
-            assertEquals(l.getCount(), 1);
-            l.countDown();
-            assertEquals(l.getCount(), 0);
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        assertEquals(l.getCount(), 2);
+        Thread.sleep(SHORT_DELAY_MS);
+        l.countDown();
+        assertEquals(l.getCount(), 1);
+        l.countDown();
+        assertEquals(l.getCount(), 0);
+        t.join();
     }
 
 
     /**
      * timed await returns after countDown to zero
      */
-    public void testTimedAwait() {
+    public void testTimedAwait() throws InterruptedException {
         final CountDownLatch l = new CountDownLatch(2);
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertTrue(l.getCount() > 0);
-                        threadAssertTrue(l.await(SMALL_DELAY_MS, MILLISECONDS));
-                    } catch (InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                threadAssertTrue(l.getCount() > 0);
+                threadAssertTrue(l.await(SMALL_DELAY_MS, MILLISECONDS));
+            }});
+
         t.start();
-        try {
-            assertEquals(l.getCount(), 2);
-            Thread.sleep(SHORT_DELAY_MS);
-            l.countDown();
-            assertEquals(l.getCount(), 1);
-            l.countDown();
-            assertEquals(l.getCount(), 0);
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        assertEquals(l.getCount(), 2);
+        Thread.sleep(SHORT_DELAY_MS);
+        l.countDown();
+        assertEquals(l.getCount(), 1);
+        l.countDown();
+        assertEquals(l.getCount(), 0);
+        t.join();
     }
 
     /**
      * await throws IE if interrupted before counted down
      */
-    public void testAwait_InterruptedException() {
+    public void testAwait_InterruptedException() throws InterruptedException {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertTrue(l.getCount() > 0);
-                        l.await();
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {}
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                threadAssertTrue(l.getCount() > 0);
+                l.await();
+            }});
+
         t.start();
-        try {
-            assertEquals(l.getCount(), 1);
-            t.interrupt();
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        assertEquals(l.getCount(), 1);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * timed await throws IE if interrupted before counted down
      */
-    public void testTimedAwait_InterruptedException() {
+    public void testTimedAwait_InterruptedException() throws InterruptedException {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertTrue(l.getCount() > 0);
-                        l.await(MEDIUM_DELAY_MS, MILLISECONDS);
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {}
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                threadAssertTrue(l.getCount() > 0);
+                l.await(MEDIUM_DELAY_MS, MILLISECONDS);
+            }});
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(l.getCount(), 1);
-            t.interrupt();
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(l.getCount(), 1);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * timed await times out if not counted down before timeout
      */
-    public void testAwaitTimeout() {
+    public void testAwaitTimeout() throws InterruptedException {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertTrue(l.getCount() > 0);
-                        threadAssertFalse(l.await(SHORT_DELAY_MS, MILLISECONDS));
-                        threadAssertTrue(l.getCount() > 0);
-                    } catch (InterruptedException ie) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                threadAssertTrue(l.getCount() > 0);
+                threadAssertFalse(l.await(SHORT_DELAY_MS, MILLISECONDS));
+                threadAssertTrue(l.getCount() > 0);
+            }});
+
         t.start();
-        try {
-            assertEquals(l.getCount(), 1);
-            t.join();
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        assertEquals(l.getCount(), 1);
+        t.join();
     }
 
     /**

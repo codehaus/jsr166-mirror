@@ -552,6 +552,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         assertFalse(it.hasNext());
         try {
             it.next();
+            shouldThrow();
         } catch (NoSuchElementException success) {}
     }
 

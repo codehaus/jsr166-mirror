@@ -42,8 +42,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         try {
             ThreadLocalRandom.current().setSeed(17);
             shouldThrow();
-        } catch (UnsupportedOperationException success) {
-        }
+        } catch (UnsupportedOperationException success) {}
     }
 
     /**
@@ -121,8 +120,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         try {
             int  f = ThreadLocalRandom.current().nextInt(-17);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -132,8 +130,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         try {
             int  f = ThreadLocalRandom.current().nextInt(17, 2);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
 
@@ -186,8 +183,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         try {
             long  f = ThreadLocalRandom.current().nextLong(-17);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -197,8 +193,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         try {
             long  f = ThreadLocalRandom.current().nextLong(17, 2);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**

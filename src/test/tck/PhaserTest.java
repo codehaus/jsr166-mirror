@@ -41,8 +41,7 @@ public class PhaserTest extends JSR166TestCase {
         try {
             new Phaser(-1);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -62,8 +61,7 @@ public class PhaserTest extends JSR166TestCase {
         try {
             new Phaser(new Phaser(), -1);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -100,8 +98,7 @@ public class PhaserTest extends JSR166TestCase {
         try {
             phaser.register();
             shouldThrow();
-        } catch (IllegalStateException success) {
-        }
+        } catch (IllegalStateException success) {}
     }
 
     /**
@@ -141,8 +138,7 @@ public class PhaserTest extends JSR166TestCase {
         try {
             new Phaser().bulkRegister(-1);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -163,8 +159,7 @@ public class PhaserTest extends JSR166TestCase {
         try {
             new Phaser().bulkRegister(1 << 16);
             shouldThrow();
-        } catch (IllegalStateException success) {
-        }
+        } catch (IllegalStateException success) {}
     }
 
     /**
@@ -229,8 +224,7 @@ public class PhaserTest extends JSR166TestCase {
             Phaser phaser = new Phaser();
             phaser.arriveAndDeregister();
             shouldThrow();
-        } catch (IllegalStateException success) {
-        }
+        } catch (IllegalStateException success) {}
     }
 
     /**
@@ -443,8 +437,7 @@ public class PhaserTest extends JSR166TestCase {
             Phaser phaser = new Phaser();
             phaser.arriveAndAwaitAdvance();
             shouldThrow();
-        } catch (IllegalStateException success) {
-        }
+        } catch (IllegalStateException success) {}
     }
 
     /**

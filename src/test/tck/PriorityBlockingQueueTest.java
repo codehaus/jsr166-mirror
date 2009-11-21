@@ -328,16 +328,13 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      */
     public void testTimedOffer() throws InterruptedException {
         final PriorityBlockingQueue q = new PriorityBlockingQueue(2);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.put(new Integer(0));
-                        q.put(new Integer(0));
-                        threadAssertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, MILLISECONDS));
-                        threadAssertTrue(q.offer(new Integer(0), LONG_DELAY_MS, MILLISECONDS));
-                    } finally { }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                q.put(new Integer(0));
+                q.put(new Integer(0));
+                threadAssertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, MILLISECONDS));
+                threadAssertTrue(q.offer(new Integer(0), LONG_DELAY_MS, MILLISECONDS));
+            }});
 
         t.start();
         Thread.sleep(SMALL_DELAY_MS);
@@ -433,11 +430,11 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 PriorityBlockingQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    threadAssertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
+                    assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
                 }
                 try {
-                    q.poll(SMALL_DELAY_MS, MILLISECONDS);
-                    threadShouldThrow();
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
@@ -455,8 +452,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         final PriorityBlockingQueue q = new PriorityBlockingQueue(2);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertEquals(0, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertEquals(0, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                 try {
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
                     threadShouldThrow();

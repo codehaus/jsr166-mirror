@@ -144,8 +144,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             DelayQueue q = new DelayQueue(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -156,8 +155,7 @@ public class DelayQueueTest extends JSR166TestCase {
             PDelay[] ints = new PDelay[SIZE];
             DelayQueue q = new DelayQueue(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -170,8 +168,7 @@ public class DelayQueueTest extends JSR166TestCase {
                 ints[i] = new PDelay(i);
             DelayQueue q = new DelayQueue(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -230,7 +227,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = new DelayQueue();
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -241,7 +238,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = new DelayQueue();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -272,8 +269,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = new DelayQueue();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
 
@@ -285,8 +281,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = populatedQueue(SIZE);
             q.addAll(q);
             shouldThrow();
-        }
-        catch (IllegalArgumentException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -298,8 +293,7 @@ public class DelayQueueTest extends JSR166TestCase {
             PDelay[] ints = new PDelay[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with any null elements throws NPE after
@@ -313,8 +307,7 @@ public class DelayQueueTest extends JSR166TestCase {
                 ints[i] = new PDelay(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -343,149 +336,104 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = new DelayQueue();
             q.put(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
      }
 
     /**
      * all elements successfully put are contained
      */
      public void testPut() {
-         try {
-             DelayQueue q = new DelayQueue();
-             for (int i = 0; i < SIZE; ++i) {
-                 PDelay I = new PDelay(i);
-                 q.put(I);
-                 assertTrue(q.contains(I));
-             }
-             assertEquals(SIZE, q.size());
+         DelayQueue q = new DelayQueue();
+         for (int i = 0; i < SIZE; ++i) {
+             PDelay I = new PDelay(i);
+             q.put(I);
+             assertTrue(q.contains(I));
          }
-         finally {
-        }
+         assertEquals(SIZE, q.size());
     }
 
     /**
      * put doesn't block waiting for take
      */
-    public void testPutWithTake() {
+    public void testPutWithTake() throws InterruptedException {
         final DelayQueue q = new DelayQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        q.put(new PDelay(0));
-                        ++added;
-                        q.put(new PDelay(0));
-                        ++added;
-                        q.put(new PDelay(0));
-                        ++added;
-                        q.put(new PDelay(0));
-                        ++added;
-                        threadAssertTrue(added == 4);
-                    } finally {
-                    }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            q.take();
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                q.put(new PDelay(0));
+                q.put(new PDelay(0));
+                q.put(new PDelay(0));
+                q.put(new PDelay(0));
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        q.take();
+        t.interrupt();
+        t.join();
     }
 
     /**
      * timed offer does not time out
      */
-    public void testTimedOffer() {
+    public void testTimedOffer() throws InterruptedException {
         final DelayQueue q = new DelayQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.put(new PDelay(0));
-                        q.put(new PDelay(0));
-                        threadAssertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
-                        threadAssertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, MILLISECONDS));
-                    } finally { }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                q.put(new PDelay(0));
+                q.put(new PDelay(0));
+                threadAssertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
+                threadAssertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, MILLISECONDS));
+            }});
 
-        try {
-            t.start();
-            Thread.sleep(SMALL_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SMALL_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * take retrieves elements in priority order
      */
-    public void testTake() {
-        try {
-            DelayQueue q = populatedQueue(SIZE);
-            for (int i = 0; i < SIZE; ++i) {
-                assertEquals(new PDelay(i), ((PDelay)q.take()));
-            }
-        } catch (InterruptedException e) {
-            unexpectedException();
+    public void testTake() throws InterruptedException {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(new PDelay(i), ((PDelay)q.take()));
         }
     }
 
     /**
      * take blocks interruptibly when empty
      */
-    public void testTakeFromEmpty() {
+    public void testTakeFromEmpty() throws InterruptedException {
         final DelayQueue q = new DelayQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.take();
-                        threadShouldThrow();
-                    } catch (InterruptedException success) { }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+            public void realRun() throws InterruptedException {
+                q.take();
+            }};
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * Take removes existing elements until empty, then blocks interruptibly
      */
-    public void testBlockingTake() {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        DelayQueue q = populatedQueue(SIZE);
-                        for (int i = 0; i < SIZE; ++i) {
-                            threadAssertEquals(new PDelay(i), ((PDelay)q.take()));
-                        }
-                        q.take();
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {
-                    }
-                }});
+    public void testBlockingTake() throws InterruptedException {
+        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+            public void realRun() throws InterruptedException {
+                DelayQueue q = populatedQueue(SIZE);
+                for (int i = 0; i < SIZE; ++i) {
+                    threadAssertEquals(new PDelay(i), ((PDelay)q.take()));
+                }
+                q.take();
+            }};
+
         t.start();
-        try {
-           Thread.sleep(SHORT_DELAY_MS);
-           t.interrupt();
-           t.join();
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
 
@@ -503,85 +451,69 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * timed pool with zero timeout succeeds when non-empty, else times out
      */
-    public void testTimedPoll0() {
-        try {
-            DelayQueue q = populatedQueue(SIZE);
-            for (int i = 0; i < SIZE; ++i) {
-                assertEquals(new PDelay(i), ((PDelay)q.poll(0, MILLISECONDS)));
-            }
-            assertNull(q.poll(0, MILLISECONDS));
-        } catch (InterruptedException e) {
-            unexpectedException();
+    public void testTimedPoll0() throws InterruptedException {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(new PDelay(i), ((PDelay)q.poll(0, MILLISECONDS)));
         }
+        assertNull(q.poll(0, MILLISECONDS));
     }
 
     /**
      * timed pool with nonzero timeout succeeds when non-empty, else times out
      */
-    public void testTimedPoll() {
-        try {
-            DelayQueue q = populatedQueue(SIZE);
-            for (int i = 0; i < SIZE; ++i) {
-                assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, MILLISECONDS)));
-            }
-            assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-        } catch (InterruptedException e) {
-            unexpectedException();
+    public void testTimedPoll() throws InterruptedException {
+        DelayQueue q = populatedQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, MILLISECONDS)));
         }
+        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
     }
 
     /**
      * Interrupted timed poll throws InterruptedException instead of
      * returning timeout status
      */
-    public void testInterruptedTimedPoll() {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        DelayQueue q = populatedQueue(SIZE);
-                        for (int i = 0; i < SIZE; ++i) {
-                            threadAssertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, MILLISECONDS)));
-                        }
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    } catch (InterruptedException success) {
-                    }
-                }});
+    public void testInterruptedTimedPoll() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                DelayQueue q = populatedQueue(SIZE);
+                for (int i = 0; i < SIZE; ++i) {
+                    assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, MILLISECONDS)));
+                }
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
+
         t.start();
-        try {
-           Thread.sleep(SHORT_DELAY_MS);
-           t.interrupt();
-           t.join();
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      *  timed poll before a delayed offer fails; after offer succeeds;
      *  on interruption throws
      */
-    public void testTimedPollWithOffer() {
+    public void testTimedPollWithOffer() throws InterruptedException {
         final DelayQueue q = new DelayQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                        q.poll(LONG_DELAY_MS, MILLISECONDS);
-                        q.poll(LONG_DELAY_MS, MILLISECONDS);
-                        threadFail("Should block");
-                    } catch (InterruptedException success) { }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SMALL_DELAY_MS);
-            assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
-            t.interrupt();
-            t.join();
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                q.poll(LONG_DELAY_MS, MILLISECONDS);
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
+
+        t.start();
+        Thread.sleep(SMALL_DELAY_MS);
+        assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
+        t.interrupt();
+        t.join();
     }
 
 
@@ -613,8 +545,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -628,8 +559,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -728,32 +658,24 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * toArray contains all elements
      */
-    public void testToArray() {
+    public void testToArray() throws InterruptedException {
         DelayQueue q = populatedQueue(SIZE);
         Object[] o = q.toArray();
         Arrays.sort(o);
-        try {
         for (int i = 0; i < o.length; i++)
             assertEquals(o[i], q.take());
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
     }
 
     /**
      * toArray(a) contains all elements
      */
-    public void testToArray2() {
+    public void testToArray2() throws InterruptedException {
         DelayQueue q = populatedQueue(SIZE);
         PDelay[] ints = new PDelay[SIZE];
         ints = (PDelay[])q.toArray(ints);
         Arrays.sort(ints);
-        try {
-            for (int i = 0; i < ints.length; i++)
-                assertEquals(ints[i], q.take());
-        } catch (InterruptedException e) {
-            unexpectedException();
-        }
+        for (int i = 0; i < ints.length; i++)
+            assertEquals(ints[i], q.take());
     }
 
 
@@ -776,7 +698,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(new String[10] );
             shouldThrow();
-        } catch (ArrayStoreException  success) {}
+        } catch (ArrayStoreException success) {}
     }
 
     /**
@@ -828,30 +750,19 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testPollInExecutor() {
         final DelayQueue q = new DelayQueue();
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        executor.execute(new Runnable() {
-            public void run() {
+        executor.execute(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 threadAssertNull(q.poll());
-                try {
-                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                    threadAssertTrue(q.isEmpty());
-                }
-                catch (InterruptedException e) {
-                    threadUnexpectedException();
-                }
-            }
-        });
+                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                threadAssertTrue(q.isEmpty());
+            }});
 
-        executor.execute(new Runnable() {
-            public void run() {
-                try {
-                    Thread.sleep(SHORT_DELAY_MS);
-                    q.put(new PDelay(1));
-                }
-                catch (InterruptedException e) {
-                    threadUnexpectedException();
-                }
-            }
-        });
+        executor.execute(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                Thread.sleep(SHORT_DELAY_MS);
+                q.put(new PDelay(1));
+            }});
+
         joinPool(executor);
 
     }
@@ -860,7 +771,7 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * Delayed actions do not occur until their delay elapses
      */
-    public void testDelay() {
+    public void testDelay() throws InterruptedException {
         DelayQueue q = new DelayQueue();
         NanoDelay[] elements = new NanoDelay[SIZE];
         for (int i = 0; i < SIZE; ++i) {
@@ -870,19 +781,14 @@ public class DelayQueueTest extends JSR166TestCase {
             q.add(elements[i]);
         }
 
-        try {
-            long last = 0;
-            for (int i = 0; i < SIZE; ++i) {
-                NanoDelay e = (NanoDelay)(q.take());
-                long tt = e.getTriggerTime();
-                assertTrue(tt <= System.nanoTime());
-                if (i != 0)
-                    assertTrue(tt >= last);
-                last = tt;
-            }
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
+        long last = 0;
+        for (int i = 0; i < SIZE; ++i) {
+            NanoDelay e = (NanoDelay)(q.take());
+            long tt = e.getTriggerTime();
+            assertTrue(tt <= System.nanoTime());
+            if (i != 0)
+                assertTrue(tt >= last);
+            last = tt;
         }
     }
 
@@ -908,14 +814,10 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * timed poll of a non-empty queue returns null if no expired elements.
      */
-    public void testTimedPollDelayed() {
+    public void testTimedPollDelayed() throws InterruptedException {
         DelayQueue q = new DelayQueue();
         q.add(new NanoDelay(LONG_DELAY_MS * 1000000L));
-        try {
-            assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
     }
 
     /**
@@ -926,8 +828,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -938,8 +839,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -973,23 +873,19 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * drainTo empties queue
      */
-    public void testDrainToWithActivePut() {
+    public void testDrainToWithActivePut() throws InterruptedException {
         final DelayQueue q = populatedQueue(SIZE);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    q.put(new PDelay(SIZE+1));
-                }
-            });
-        try {
-            t.start();
-            ArrayList l = new ArrayList();
-            q.drainTo(l);
-            assertTrue(l.size() >= SIZE);
-            t.join();
-            assertTrue(q.size() + l.size() >= SIZE);
-        } catch (Exception e) {
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                q.put(new PDelay(SIZE+1));
+            }});
+
+        t.start();
+        ArrayList l = new ArrayList();
+        q.drainTo(l);
+        assertTrue(l.size() >= SIZE);
+        t.join();
+        assertTrue(q.size() + l.size() >= SIZE);
     }
 
     /**
@@ -1000,8 +896,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null, 0);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1012,8 +907,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q, 0);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**

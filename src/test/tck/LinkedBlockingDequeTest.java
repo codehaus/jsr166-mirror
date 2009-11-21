@@ -548,25 +548,25 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     /**
      * put(null) throws NPE
      */
-     public void testPutNull() throws InterruptedException {
+    public void testPutNull() throws InterruptedException {
         try {
             LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
             q.put(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * all elements successfully put are contained
      */
-     public void testPut() throws InterruptedException {
-         LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-         for (int i = 0; i < SIZE; ++i) {
-             Integer I = new Integer(i);
-             q.put(I);
-             assertTrue(q.contains(I));
-         }
-         assertEquals(0, q.remainingCapacity());
+    public void testPut() throws InterruptedException {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            Integer I = new Integer(i);
+            q.put(I);
+            assertTrue(q.contains(I));
+        }
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**
@@ -600,24 +600,23 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testPutWithTake() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        q.put(new Object());
-                        ++added;
-                        q.put(new Object());
-                        ++added;
-                        q.put(new Object());
-                        ++added;
-                        q.put(new Object());
-                        ++added;
-                        threadShouldThrow();
-                    } catch (InterruptedException success) {
-                        threadAssertTrue(added >= 2);
-                    }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                int added = 0;
+                try {
+                    q.put(new Object());
+                    ++added;
+                    q.put(new Object());
+                    ++added;
+                    q.put(new Object());
+                    ++added;
+                    q.put(new Object());
+                    ++added;
+                    threadShouldThrow();
+                } catch (InterruptedException success) {
+                    threadAssertTrue(added >= 2);
                 }
-            });
+            }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
@@ -1559,8 +1558,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**

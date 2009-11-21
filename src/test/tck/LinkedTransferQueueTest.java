@@ -44,18 +44,15 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
         try {
             q.iterator().next();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -75,8 +72,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             new LinkedTransferQueue(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -88,8 +84,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             new LinkedTransferQueue(Arrays.asList(ints));
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -104,8 +99,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             }
             new LinkedTransferQueue(Arrays.asList(ints));
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -157,8 +151,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             LinkedTransferQueue q = new LinkedTransferQueue();
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -169,8 +162,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             LinkedTransferQueue q = new LinkedTransferQueue();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -181,8 +173,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             LinkedTransferQueue q = new LinkedTransferQueue();
             q.addAll(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -193,8 +184,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             LinkedTransferQueue q = populatedQueue(SIZE);
             q.addAll(q);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -206,8 +196,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -223,8 +212,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             }
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -365,8 +353,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 }
                 try {
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
                 } catch (InterruptedException success) {}
             }});
+
         Thread.sleep(SMALL_DELAY_MS);
         t.interrupt();
         t.join();
@@ -418,8 +408,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
         checkEmpty(q);
     }
 
@@ -434,8 +423,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
         checkEmpty(q);
     }
 
@@ -576,8 +564,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             LinkedTransferQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -588,8 +575,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             LinkedTransferQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(new String[10]);
             shouldThrow();
-        } catch (ArrayStoreException success) {
-        }
+        } catch (ArrayStoreException success) {}
     }
 
     /**
@@ -748,8 +734,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -760,8 +745,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -817,8 +801,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             q.drainTo(null, SIZE);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -829,8 +812,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         try {
             q.drainTo(q, SIZE);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**

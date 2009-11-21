@@ -31,8 +31,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "y");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
@@ -44,8 +43,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "z");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
@@ -57,9 +55,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "w");
             shouldThrow();
-        }
-
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**

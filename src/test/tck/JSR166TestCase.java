@@ -328,7 +328,7 @@ public class JSR166TestCase extends TestCase {
         } catch (SecurityException ok) {
             // Allowed in case test doesn't have privs
         } catch (InterruptedException ie) {
-            fail("Unexpected exception");
+            fail("Unexpected InterruptedException");
         }
     }
 
@@ -417,8 +417,7 @@ public class JSR166TestCase extends TestCase {
     void sleepTillInterrupted(long timeoutMillis) {
         try {
             Thread.sleep(timeoutMillis);
-        } catch (InterruptedException wakeup) {
-        }
+        } catch (InterruptedException wakeup) {}
     }
 
     /**
@@ -573,14 +572,12 @@ public class JSR166TestCase extends TestCase {
         void realRun() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
-            }
-            catch (InterruptedException ok) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
     class SmallCallable extends CheckedCallable {
-        Object realCall() throws Throwable {
+        Object realCall() throws InterruptedException {
             Thread.sleep(SMALL_DELAY_MS);
             return Boolean.TRUE;
         }
@@ -608,9 +605,7 @@ public class JSR166TestCase extends TestCase {
         void realRun() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
-            }
-            catch (InterruptedException ok) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
@@ -618,9 +613,7 @@ public class JSR166TestCase extends TestCase {
         void realRun() {
             try {
                 Thread.sleep(LONG_DELAY_MS);
-            }
-            catch (InterruptedException ok) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
@@ -639,8 +632,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
-            } catch (InterruptedException ok) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
@@ -650,8 +642,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
                 done = true;
-            } catch (InterruptedException ok) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
@@ -661,8 +652,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(LONG_DELAY_MS);
                 done = true;
-            } catch (InterruptedException ok) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
@@ -679,8 +669,7 @@ public class JSR166TestCase extends TestCase {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
-            } catch (InterruptedException ok) {
-            }
+            } catch (InterruptedException ok) {}
             return Boolean.TRUE;
         }
     }

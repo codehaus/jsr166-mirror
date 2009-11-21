@@ -49,8 +49,7 @@ public class SemaphoreTest extends JSR166TestCase {
 
 
     /**
-     * A runnable calling acquire that expects to be
-     * interrupted
+     * A runnable calling acquire that expects to be interrupted
      */
     class InterruptedLockRunnable extends CheckedInterruptedRunnable {
         final Semaphore lock;

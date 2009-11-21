@@ -1018,10 +1018,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      *  given a value less the core pool size
      */
     public void testMaximumPoolSizeIllegalArgumentException() {
-        ThreadPoolExecutor tpe = null;
-        try {
-            tpe = new CustomTPE(2,3,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-        } catch (Exception e) {}
+        ThreadPoolExecutor tpe =
+            new CustomTPE(2,3,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
         try {
             tpe.setMaximumPoolSize(1);
             shouldThrow();
@@ -1037,10 +1035,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      *  if given a negative value
      */
     public void testMaximumPoolSizeIllegalArgumentException2() {
-        ThreadPoolExecutor tpe = null;
-        try {
-            tpe = new CustomTPE(2,3,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-        } catch (Exception e) {}
+        ThreadPoolExecutor tpe =
+            new CustomTPE(2,3,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
         try {
             tpe.setMaximumPoolSize(-1);
             shouldThrow();
@@ -1057,10 +1053,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      *  when given a negative value
      */
     public void testKeepAliveTimeIllegalArgumentException() {
-        ThreadPoolExecutor tpe = null;
-        try {
-            tpe = new CustomTPE(2,3,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
-        } catch (Exception e) {}
+        ThreadPoolExecutor tpe =
+            new CustomTPE(2,3,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
 
         try {
             tpe.setKeepAliveTime(-1,MILLISECONDS);

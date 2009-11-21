@@ -126,7 +126,7 @@ public class EntryTest extends JSR166TestCase {
         assertEquals(v1, s.getValue());
         try {
             s.setValue(k2);
-            fail();
+            shouldThrow();
         } catch (UnsupportedOperationException success) {}
     }
 }

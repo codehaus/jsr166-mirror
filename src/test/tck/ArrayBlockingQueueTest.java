@@ -305,7 +305,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     }
                     q.put(new Integer(SIZE));
                     threadShouldThrow();
-                } catch (InterruptedException ie) {
+                } catch (InterruptedException success) {
                     threadAssertEquals(added, SIZE);
                 }}});
 
@@ -333,7 +333,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     q.put(new Object());
                     ++added;
                     threadShouldThrow();
-                } catch (InterruptedException e) {
+                } catch (InterruptedException success) {
                     threadAssertTrue(added >= 2);
                 }
             }});

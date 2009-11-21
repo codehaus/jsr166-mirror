@@ -410,7 +410,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("asdadasd");
             c.toArray(new Long[5]);
             shouldThrow();
-        } catch (ArrayStoreException e) {}
+        } catch (ArrayStoreException success) {}
     }
 
     /**
@@ -421,7 +421,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.get(-1);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -434,7 +434,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("asdad");
             c.get(100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -445,7 +445,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.set(-1,"qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -458,7 +458,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("asdad");
             c.set(100, "qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -469,7 +469,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.add(-1,"qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -482,7 +482,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("asdasdasd");
             c.add(100, "qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -493,7 +493,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.remove(-1);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -506,7 +506,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("adasdasd");
             c.remove(100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -517,7 +517,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.addAll(-1,new LinkedList());
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -530,7 +530,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("asdasdasd");
             c.addAll(100, new LinkedList());
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -541,7 +541,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.listIterator(-1);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -554,7 +554,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("asdasdas");
             c.listIterator(100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -564,9 +564,8 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         try {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.subList(-1,100);
-
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -578,7 +577,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
             c.add("asdasd");
             c.subList(1,100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -589,9 +588,8 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         try {
             CopyOnWriteArrayList c = new CopyOnWriteArrayList();
             c.subList(3,1);
-
             shouldThrow();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**

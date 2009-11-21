@@ -664,7 +664,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
     /**
      * Subsets of subsets subdivide correctly
      */
-    public void testRecursiveSubSets() {
+    public void testRecursiveSubSets() throws Exception {
         int setSize = 1000;
         Class cl = ConcurrentSkipListSet.class;
 
@@ -683,13 +683,8 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
                    0, setSize - 1, true);
     }
 
-    static NavigableSet<Integer> newSet(Class cl) {
-        NavigableSet<Integer> result = null;
-        try {
-            result = (NavigableSet<Integer>) cl.newInstance();
-        } catch (Exception e) {
-            fail();
-        }
+    static NavigableSet<Integer> newSet(Class cl) throws Exception {
+        NavigableSet<Integer> result = (NavigableSet<Integer>) cl.newInstance();
         assertEquals(result.size(), 0);
         assertFalse(result.iterator().hasNext());
         return result;
@@ -752,10 +747,8 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
             } else {
                 try {
                     set.add(element);
-                    fail();
-                } catch (IllegalArgumentException e) {
-                    // expected
-                }
+                    shouldThrow();
+                } catch (IllegalArgumentException success) {}
             }
         }
     }
@@ -954,16 +947,12 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
             assertEq(rs.last(),  -1);
             try {
                 set.first();
-                fail();
-            } catch (NoSuchElementException e) {
-                // expected
-            }
+                shouldThrow();
+            } catch (NoSuchElementException success) {}
             try {
                 set.last();
-                fail();
-            } catch (NoSuchElementException e) {
-                // expected
-            }
+                shouldThrow();
+            } catch (NoSuchElementException success) {}
         }
     }
 

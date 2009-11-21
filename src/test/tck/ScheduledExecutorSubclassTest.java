@@ -716,7 +716,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                       public String call() {
                           try {
                               latch.await();
-                          } catch (InterruptedException ok) {}
+                          } catch (InterruptedException quittingTime) {}
                           return TEST_STRING;
                       }});
             l.add(null);
@@ -900,7 +900,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                       public String call() {
                           try {
                               latch.await();
-                          } catch (InterruptedException ok) {}
+                          } catch (InterruptedException quittingTime) {}
                           return TEST_STRING;
                       }});
             l.add(null);

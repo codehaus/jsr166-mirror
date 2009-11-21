@@ -31,8 +31,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "y");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
 
@@ -45,8 +44,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "z");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
@@ -58,8 +56,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "w");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**

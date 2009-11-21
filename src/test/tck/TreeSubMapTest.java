@@ -328,8 +328,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         try {
             e.setValue("A");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         assertTrue(map.isEmpty());
         Map.Entry f = map.firstEntry();
         assertNull(f);
@@ -359,8 +358,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         try {
             e.setValue("E");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollLastEntry();
         assertNull(e);
     }
@@ -396,7 +394,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.get(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -407,7 +405,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.containsKey(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -418,7 +416,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -429,7 +427,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = map5();
             c.remove(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -898,8 +896,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         try {
             e.setValue("A");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollFirstEntry();
         assertNull(e);
     }
@@ -926,8 +923,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         try {
             e.setValue("E");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollLastEntry();
         assertNull(e);
     }
@@ -963,7 +959,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = dmap5();
             c.get(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -974,7 +970,7 @@ public class TreeSubMapTest extends JSR166TestCase {
             NavigableMap c = dmap5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**

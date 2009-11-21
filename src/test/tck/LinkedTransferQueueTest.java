@@ -886,8 +886,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             LinkedTransferQueue q = new LinkedTransferQueue();
             q.transfer(null);
             shouldThrow();
-        } catch (NullPointerException ex) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -994,8 +993,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             final LinkedTransferQueue q = new LinkedTransferQueue();
             q.tryTransfer(null);
             shouldThrow();
-        } catch (NullPointerException ex) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**

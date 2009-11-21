@@ -444,8 +444,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         try {
             e.setValue("A");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollFirstEntry();
         assertNull(e);
     }
@@ -472,8 +471,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         try {
             e.setValue("E");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollLastEntry();
         assertNull(e);
     }
@@ -509,7 +507,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.get(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -520,7 +518,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.containsKey(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -531,7 +529,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map0();
             c.containsValue(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
 
@@ -543,7 +541,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -554,7 +552,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.putIfAbsent(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -565,7 +563,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.replace(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -576,7 +574,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.replace(null, one, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -587,7 +585,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.remove(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -598,7 +596,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = map5();
             c.remove(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1138,8 +1136,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         try {
             e.setValue("A");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollFirstEntry();
         assertNull(e);
     }
@@ -1166,8 +1163,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         try {
             e.setValue("E");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollLastEntry();
         assertNull(e);
     }
@@ -1203,7 +1199,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.get(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1214,7 +1210,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.containsKey(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1225,7 +1221,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap0();
             c.containsValue(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
 
@@ -1237,7 +1233,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1248,7 +1244,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.putIfAbsent(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1259,7 +1255,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.replace(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1270,7 +1266,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.replace(null, m1, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1281,7 +1277,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.remove(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -1292,7 +1288,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
             ConcurrentNavigableMap c = dmap5();
             c.remove(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**

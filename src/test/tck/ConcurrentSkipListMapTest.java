@@ -516,25 +516,25 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         assertEquals(two, e.getKey());
         try {
             e.setValue("X");
-            fail();
+            shouldThrow();
         } catch (UnsupportedOperationException success) {}
         e = map.higherEntry(zero);
         assertEquals(one, e.getKey());
         try {
             e.setValue("X");
-            fail();
+            shouldThrow();
         } catch (UnsupportedOperationException success) {}
         e = map.floorEntry(one);
         assertEquals(one, e.getKey());
         try {
             e.setValue("X");
-            fail();
+            shouldThrow();
         } catch (UnsupportedOperationException success) {}
         e = map.ceilingEntry(five);
         assertEquals(five, e.getKey());
         try {
             e.setValue("X");
-            fail();
+            shouldThrow();
         } catch (UnsupportedOperationException success) {}
     }
 
@@ -638,8 +638,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         try {
             e.setValue("A");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollFirstEntry();
         assertNull(e);
     }
@@ -666,8 +665,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         try {
             e.setValue("E");
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (UnsupportedOperationException success) {}
         e = map.pollLastEntry();
         assertNull(e);
     }
@@ -703,7 +701,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             ConcurrentSkipListMap c = map5();
             c.get(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -714,7 +712,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             ConcurrentSkipListMap c = map5();
             c.containsKey(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -725,7 +723,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             ConcurrentSkipListMap c = new ConcurrentSkipListMap();
             c.containsValue(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
 
@@ -737,7 +735,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             ConcurrentSkipListMap c = map5();
             c.put(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -748,7 +746,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             ConcurrentSkipListMap c = map5();
             c.putIfAbsent(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -759,7 +757,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             ConcurrentSkipListMap c = map5();
             c.replace(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -770,7 +768,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             ConcurrentSkipListMap c = map5();
             c.replace(null, one, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -782,7 +780,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             c.put("sadsdf", "asdads");
             c.remove(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -794,20 +792,16 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             c.put("sadsdf", "asdads");
             c.remove(null, "whatever");
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
      * remove(x, null) returns false
      */
     public void testRemove3() {
-        try {
-            ConcurrentSkipListMap c = new ConcurrentSkipListMap();
-            c.put("sadsdf", "asdads");
-            assertFalse(c.remove("sadsdf", null));
-        } catch (NullPointerException e) {
-            fail();
-        }
+        ConcurrentSkipListMap c = new ConcurrentSkipListMap();
+        c.put("sadsdf", "asdads");
+        assertFalse(c.remove("sadsdf", null));
     }
 
     /**
@@ -994,7 +988,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
     /**
      * Submaps of submaps subdivide correctly
      */
-    public void testRecursiveSubMaps() {
+    public void testRecursiveSubMaps() throws Exception {
         int mapSize = 1000;
         Class cl = ConcurrentSkipListMap.class;
         NavigableMap<Integer, Integer> map = newMap(cl);
@@ -1012,13 +1006,9 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
                    0, mapSize - 1, true);
     }
 
-    static NavigableMap<Integer, Integer> newMap(Class cl) {
-        NavigableMap<Integer, Integer> result = null;
-        try {
-            result = (NavigableMap<Integer, Integer>) cl.newInstance();
-        } catch (Exception e) {
-            fail();
-        }
+    static NavigableMap<Integer, Integer> newMap(Class cl) throws Exception {
+        NavigableMap<Integer, Integer> result =
+            (NavigableMap<Integer, Integer>) cl.newInstance();
         assertEquals(result.size(), 0);
         assertFalse(result.keySet().iterator().hasNext());
         return result;
@@ -1081,10 +1071,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             } else {
                 try {
                     map.put(key, 2 * key);
-                    fail();
-                } catch (IllegalArgumentException e) {
-                    // expected
-                }
+                    shouldThrow();
+                } catch (IllegalArgumentException success) {}
             }
         }
     }
@@ -1279,16 +1267,12 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             assertEq(rs.last(),  -1);
             try {
                 map.firstKey();
-                fail();
-            } catch (NoSuchElementException e) {
-                // expected
-            }
+                shouldThrow();
+            } catch (NoSuchElementException success) {}
             try {
                 map.lastKey();
-                fail();
-            } catch (NoSuchElementException e) {
-                // expected
-            }
+                shouldThrow();
+            } catch (NoSuchElementException success) {}
         }
     }
 

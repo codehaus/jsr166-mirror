@@ -264,7 +264,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             c.add("asdadasd");
             c.toArray(new Long[5]);
             shouldThrow();
-        } catch (ArrayStoreException e) {}
+        } catch (ArrayStoreException success) {}
     }
 
     /**

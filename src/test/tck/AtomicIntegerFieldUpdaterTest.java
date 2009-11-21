@@ -30,8 +30,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "y");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
@@ -43,8 +42,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "z");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
@@ -56,8 +54,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "w");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**

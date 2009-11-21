@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 import java.util.*;
 
@@ -214,7 +215,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                lock.writeLock().tryLock(1000,TimeUnit.MILLISECONDS);
+                lock.writeLock().tryLock(1000,MILLISECONDS);
             }});
 
         t.start();
@@ -250,7 +251,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                lock.readLock().tryLock(1000,TimeUnit.MILLISECONDS);
+                lock.readLock().tryLock(1000,MILLISECONDS);
             }});
 
         t.start();
@@ -688,7 +689,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(lock.writeLock().tryLock(1, TimeUnit.MILLISECONDS));
+                threadAssertFalse(lock.writeLock().tryLock(1, MILLISECONDS));
             }});
 
         t.start();
@@ -705,7 +706,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(lock.readLock().tryLock(1, TimeUnit.MILLISECONDS));
+                threadAssertFalse(lock.readLock().tryLock(1, MILLISECONDS));
             }});
 
         t.start();
@@ -797,7 +798,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
         lock.writeLock().lock();
-        assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        assertFalse(c.await(SHORT_DELAY_MS, MILLISECONDS));
         lock.writeLock().unlock();
     }
 

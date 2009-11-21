@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CountDownLatchTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -92,7 +93,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                 public void run() {
                     try {
                         threadAssertTrue(l.getCount() > 0);
-                        threadAssertTrue(l.await(SMALL_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(l.await(SMALL_DELAY_MS, MILLISECONDS));
                     } catch (InterruptedException e) {
                         threadUnexpectedException();
                     }
@@ -145,7 +146,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                 public void run() {
                     try {
                         threadAssertTrue(l.getCount() > 0);
-                        l.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+                        l.await(MEDIUM_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (InterruptedException success) {}
                 }
@@ -170,7 +171,7 @@ public class CountDownLatchTest extends JSR166TestCase {
                 public void run() {
                     try {
                         threadAssertTrue(l.getCount() > 0);
-                        threadAssertFalse(l.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertFalse(l.await(SHORT_DELAY_MS, MILLISECONDS));
                         threadAssertTrue(l.getCount() > 0);
                     } catch (InterruptedException ie) {
                         threadUnexpectedException();

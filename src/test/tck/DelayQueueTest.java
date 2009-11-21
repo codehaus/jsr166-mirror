@@ -8,6 +8,7 @@
 
 import junit.framework.*;
 import java.util.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.concurrent.*;
 
 public class DelayQueueTest extends JSR166TestCase {
@@ -407,8 +408,8 @@ public class DelayQueueTest extends JSR166TestCase {
                     try {
                         q.put(new PDelay(0));
                         q.put(new PDelay(0));
-                        threadAssertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        threadAssertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
+                        threadAssertTrue(q.offer(new PDelay(0), LONG_DELAY_MS, MILLISECONDS));
                     } finally { }
                 }
             });
@@ -506,9 +507,9 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             DelayQueue q = populatedQueue(SIZE);
             for (int i = 0; i < SIZE; ++i) {
-                assertEquals(new PDelay(i), ((PDelay)q.poll(0, TimeUnit.MILLISECONDS)));
+                assertEquals(new PDelay(i), ((PDelay)q.poll(0, MILLISECONDS)));
             }
-            assertNull(q.poll(0, TimeUnit.MILLISECONDS));
+            assertNull(q.poll(0, MILLISECONDS));
         } catch (InterruptedException e) {
             unexpectedException();
         }
@@ -521,9 +522,9 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             DelayQueue q = populatedQueue(SIZE);
             for (int i = 0; i < SIZE; ++i) {
-                assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)));
+                assertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, MILLISECONDS)));
             }
-            assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
         } catch (InterruptedException e) {
             unexpectedException();
         }
@@ -539,9 +540,9 @@ public class DelayQueueTest extends JSR166TestCase {
                     try {
                         DelayQueue q = populatedQueue(SIZE);
                         for (int i = 0; i < SIZE; ++i) {
-                            threadAssertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)));
+                            threadAssertEquals(new PDelay(i), ((PDelay)q.poll(SHORT_DELAY_MS, MILLISECONDS)));
                         }
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
                     } catch (InterruptedException success) {
                     }
                 }});
@@ -565,9 +566,9 @@ public class DelayQueueTest extends JSR166TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                        q.poll(LONG_DELAY_MS, MILLISECONDS);
+                        q.poll(LONG_DELAY_MS, MILLISECONDS);
                         threadFail("Should block");
                     } catch (InterruptedException success) { }
                 }
@@ -575,7 +576,7 @@ public class DelayQueueTest extends JSR166TestCase {
         try {
             t.start();
             Thread.sleep(SMALL_DELAY_MS);
-            assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertTrue(q.offer(new PDelay(0), SHORT_DELAY_MS, MILLISECONDS));
             t.interrupt();
             t.join();
         } catch (Exception e) {
@@ -831,7 +832,7 @@ public class DelayQueueTest extends JSR166TestCase {
             public void run() {
                 threadAssertNull(q.poll());
                 try {
-                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                     threadAssertTrue(q.isEmpty());
                 }
                 catch (InterruptedException e) {
@@ -911,7 +912,7 @@ public class DelayQueueTest extends JSR166TestCase {
         DelayQueue q = new DelayQueue();
         q.add(new NanoDelay(LONG_DELAY_MS * 1000000L));
         try {
-            assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
         } catch (Exception ex) {
             unexpectedException();
         }

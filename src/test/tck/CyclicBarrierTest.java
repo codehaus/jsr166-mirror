@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CyclicBarrierTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -168,7 +169,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
         Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(LONG_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (InterruptedException success) {
                     } catch (Exception b) {
@@ -179,7 +180,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
         Thread t2 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(LONG_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (BrokenBarrierException success) {
                     } catch (Exception i) {
@@ -207,7 +208,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(SHORT_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (TimeoutException success) {
                     } catch (Exception b) {
@@ -233,7 +234,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
         Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(SHORT_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (TimeoutException success) {
                     } catch (Exception b) {
@@ -244,7 +245,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
         Thread t2 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(MEDIUM_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (BrokenBarrierException success) {
                     } catch (Exception i) {
@@ -271,7 +272,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
         Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                        c.await(SHORT_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (TimeoutException success) {
                     } catch (Exception b) {
@@ -529,7 +530,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
                             catch (Exception ie) {
                                 threadFail("start barrier");
                             }
-                            try { barrier.await(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS); }
+                            try { barrier.await(MEDIUM_DELAY_MS, MILLISECONDS); }
                             catch (TimeoutException ok) {}
                             catch (Throwable thrown) {
                                 unexpectedException();

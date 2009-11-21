@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
 public class PriorityBlockingQueueTest extends JSR166TestCase {
@@ -332,8 +333,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                     try {
                         q.put(new Integer(0));
                         q.put(new Integer(0));
-                        threadAssertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        threadAssertTrue(q.offer(new Integer(0), LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, MILLISECONDS));
+                        threadAssertTrue(q.offer(new Integer(0), LONG_DELAY_MS, MILLISECONDS));
                     } finally { }
                 }
             });
@@ -407,9 +408,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll0() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(0, TimeUnit.MILLISECONDS)).intValue());
+            assertEquals(i, ((Integer)q.poll(0, MILLISECONDS)).intValue());
         }
-        assertNull(q.poll(0, TimeUnit.MILLISECONDS));
+        assertNull(q.poll(0, MILLISECONDS));
     }
 
     /**
@@ -418,9 +419,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)).intValue());
+            assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
         }
-        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
     }
 
     /**
@@ -432,10 +433,10 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 PriorityBlockingQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    threadAssertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)).intValue());
+                    threadAssertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
                 }
                 try {
-                    q.poll(SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
+                    q.poll(SMALL_DELAY_MS, MILLISECONDS);
                     threadShouldThrow();
                 } catch (InterruptedException success) {}
             }});
@@ -454,17 +455,17 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         final PriorityBlockingQueue q = new PriorityBlockingQueue(2);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                threadAssertEquals(0, q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                threadAssertEquals(0, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                 try {
-                    q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
                     threadShouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
         t.start();
         Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        assertTrue(q.offer(new Integer(0), SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();
         t.join();
     }
@@ -703,7 +704,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 threadAssertNull(q.poll());
-                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                 threadAssertTrue(q.isEmpty());
             }});
 

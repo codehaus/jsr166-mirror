@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class ExchangerTest extends JSR166TestCase {
 
@@ -52,16 +53,16 @@ public class ExchangerTest extends JSR166TestCase {
         final Exchanger e = new Exchanger();
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                Object v = e.exchange(one, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                Object v = e.exchange(one, SHORT_DELAY_MS, MILLISECONDS);
                 threadAssertEquals(v, two);
-                Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                Object w = e.exchange(v, SHORT_DELAY_MS, MILLISECONDS);
                 threadAssertEquals(w, one);
             }});
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                Object v = e.exchange(two, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                Object v = e.exchange(two, SHORT_DELAY_MS, MILLISECONDS);
                 threadAssertEquals(v, one);
-                Object w = e.exchange(v, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                Object w = e.exchange(v, SHORT_DELAY_MS, MILLISECONDS);
                 threadAssertEquals(w, two);
             }});
 
@@ -94,7 +95,7 @@ public class ExchangerTest extends JSR166TestCase {
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws Exception {
-                e.exchange(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+                e.exchange(null, MEDIUM_DELAY_MS, MILLISECONDS);
             }});
 
         t.start();
@@ -110,7 +111,7 @@ public class ExchangerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 try {
-                    e.exchange(null, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+                    e.exchange(null, SHORT_DELAY_MS, MILLISECONDS);
                     threadShouldThrow();
                 } catch (TimeoutException success) {}
             }});

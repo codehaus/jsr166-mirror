@@ -10,6 +10,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
 public class ArrayBlockingQueueTest extends JSR166TestCase {
@@ -389,8 +390,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     try {
                         q.put(new Object());
                         q.put(new Object());
-                        threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, TimeUnit.MILLISECONDS));
-                        q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                        threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, MILLISECONDS));
+                        q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (InterruptedException success) {}
                 }
@@ -489,9 +490,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         try {
             ArrayBlockingQueue q = populatedQueue(SIZE);
             for (int i = 0; i < SIZE; ++i) {
-                assertEquals(i, ((Integer)q.poll(0, TimeUnit.MILLISECONDS)).intValue());
+                assertEquals(i, ((Integer)q.poll(0, MILLISECONDS)).intValue());
             }
-            assertNull(q.poll(0, TimeUnit.MILLISECONDS));
+            assertNull(q.poll(0, MILLISECONDS));
         } catch (InterruptedException e) {
             unexpectedException();
         }
@@ -504,9 +505,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         try {
             ArrayBlockingQueue q = populatedQueue(SIZE);
             for (int i = 0; i < SIZE; ++i) {
-                assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)).intValue());
+                assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
             }
-            assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
         } catch (InterruptedException e) {
             unexpectedException();
         }
@@ -522,9 +523,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                     try {
                         ArrayBlockingQueue q = populatedQueue(SIZE);
                         for (int i = 0; i < SIZE; ++i) {
-                            threadAssertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS)).intValue());
+                            threadAssertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
                         }
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
                     } catch (InterruptedException success) {
                     }
                 }});
@@ -548,9 +549,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                        threadAssertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                        q.poll(LONG_DELAY_MS, MILLISECONDS);
+                        q.poll(LONG_DELAY_MS, MILLISECONDS);
                         threadShouldThrow();
                     } catch (InterruptedException success) { }
                 }
@@ -558,7 +559,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         try {
             t.start();
             Thread.sleep(SMALL_DELAY_MS);
-            assertTrue(q.offer(zero, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+            assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
             t.interrupt();
             t.join();
         } catch (Exception e) {
@@ -854,7 +855,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             public void run() {
                 threadAssertFalse(q.offer(three));
                 try {
-                    threadAssertTrue(q.offer(three, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
                     threadAssertEquals(0, q.remainingCapacity());
                 }
                 catch (InterruptedException e) {
@@ -889,7 +890,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             public void run() {
                 threadAssertNull(q.poll());
                 try {
-                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
+                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                     threadAssertTrue(q.isEmpty());
                 }
                 catch (InterruptedException e) {

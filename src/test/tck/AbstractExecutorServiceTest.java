@@ -10,6 +10,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.math.BigInteger;
 import java.security.*;
 
@@ -487,7 +488,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     public void testTimedInvokeAny1() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            e.invokeAny(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAny(null, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (NullPointerException success) {
         } finally {
@@ -517,7 +518,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     public void testTimedInvokeAny2() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            e.invokeAny(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAny(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (IllegalArgumentException success) {
         } finally {
@@ -537,7 +538,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             l.add(new Callable<Integer>() {
                       public Integer call() { return 5/0; }});
             l.add(null);
-            e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (NullPointerException success) {
         } finally {
@@ -554,7 +555,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new NPETask());
-            e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof NullPointerException);
@@ -572,7 +573,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
-            String result = e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            String result = e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             assertSame(TEST_STRING, result);
         } finally {
             joinPool(e);
@@ -585,7 +586,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     public void testTimedInvokeAll1() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
         try {
-            e.invokeAll(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAll(null, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (NullPointerException success) {
         } finally {
@@ -615,7 +616,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     public void testTimedInvokeAll2() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
         try {
-            List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, MILLISECONDS);
             assertTrue(r.isEmpty());
         } finally {
             joinPool(e);
@@ -631,7 +632,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(null);
-            e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (NullPointerException success) {
         } finally {
@@ -647,7 +648,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
         try {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new NPETask());
-            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
             assertEquals(1, result.size());
             for (Future<String> future : result) {
                 try {
@@ -670,7 +671,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
             assertEquals(2, result.size());
             for (Future<String> future : result)
                 assertSame(TEST_STRING, future.get());
@@ -689,7 +690,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             l.add(new StringTask());
             l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
+            List<Future<String>> result = e.invokeAll(l, SMALL_DELAY_MS, MILLISECONDS);
             assertEquals(3, result.size());
             Iterator<Future<String>> it = result.iterator();
             Future<String> f1 = it.next();

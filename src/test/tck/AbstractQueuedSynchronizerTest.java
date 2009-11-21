@@ -10,6 +10,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.concurrent.locks.*;
 import java.io.*;
 
@@ -475,7 +476,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         final Mutex sync = new Mutex();
         final AbstractQueuedSynchronizer.ConditionObject c = sync.newCondition();
         sync.acquire(1);
-        assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        assertFalse(c.await(SHORT_DELAY_MS, MILLISECONDS));
         sync.release(1);
     }
 

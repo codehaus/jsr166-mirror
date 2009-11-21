@@ -10,6 +10,7 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.math.BigInteger;
 import java.security.*;
 
@@ -35,7 +36,7 @@ public class ExecutorsTest extends JSR166TestCase {
         public T call() throws Exception {
             Future<T> ftask = exec.submit(func);
             try {
-                return ftask.get(msecs, TimeUnit.MILLISECONDS);
+                return ftask.get(msecs, MILLISECONDS);
             } finally {
                 ftask.cancel(true);
             }
@@ -222,7 +223,7 @@ public class ExecutorsTest extends JSR166TestCase {
     public void testNewSingleThreadScheduledExecutor() throws Exception {
         TrackedCallable callable = new TrackedCallable();
         ScheduledExecutorService p1 = Executors.newSingleThreadScheduledExecutor();
-        Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+        Future f = p1.schedule(callable, SHORT_DELAY_MS, MILLISECONDS);
         assertFalse(callable.done);
         Thread.sleep(MEDIUM_DELAY_MS);
         assertTrue(callable.done);
@@ -236,7 +237,7 @@ public class ExecutorsTest extends JSR166TestCase {
     public void testnewScheduledThreadPool() throws Exception {
         TrackedCallable callable = new TrackedCallable();
         ScheduledExecutorService p1 = Executors.newScheduledThreadPool(2);
-        Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+        Future f = p1.schedule(callable, SHORT_DELAY_MS, MILLISECONDS);
         assertFalse(callable.done);
         Thread.sleep(MEDIUM_DELAY_MS);
         assertTrue(callable.done);
@@ -250,7 +251,7 @@ public class ExecutorsTest extends JSR166TestCase {
     public void testunconfigurableScheduledExecutorService() throws Exception {
         TrackedCallable callable = new TrackedCallable();
         ScheduledExecutorService p1 = Executors.unconfigurableScheduledExecutorService(Executors.newScheduledThreadPool(2));
-        Future f = p1.schedule(callable, SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+        Future f = p1.schedule(callable, SHORT_DELAY_MS, MILLISECONDS);
         assertFalse(callable.done);
         Thread.sleep(MEDIUM_DELAY_MS);
         assertTrue(callable.done);

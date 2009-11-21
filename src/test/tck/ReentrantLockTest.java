@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.*;
 import java.io.*;
 
@@ -265,7 +266,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lock();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                lock.tryLock(MEDIUM_DELAY_MS,TimeUnit.MILLISECONDS);
+                lock.tryLock(MEDIUM_DELAY_MS,MILLISECONDS);
             }});
 
         t.start();
@@ -298,7 +299,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(lock.tryLock(1, TimeUnit.MILLISECONDS));
+                threadAssertFalse(lock.tryLock(1, MILLISECONDS));
             }});
 
         t.start();
@@ -418,7 +419,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
         lock.lock();
-        assertFalse(c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        assertFalse(c.await(SHORT_DELAY_MS, MILLISECONDS));
         lock.unlock();
     }
 

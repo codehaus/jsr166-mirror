@@ -18,6 +18,12 @@ public class AtomicLongTest extends JSR166TestCase {
         return new TestSuite(AtomicLongTest.class);
     }
 
+    final long[] VALUES = {
+        Long.MIN_VALUE,
+        Integer.MIN_VALUE, -1, 0, 1, 42, Integer.MAX_VALUE,
+        Long.MAX_VALUE,
+    };
+
     /**
      * constructor initializes to given value
      */
@@ -44,7 +50,6 @@ public class AtomicLongTest extends JSR166TestCase {
         assertEquals(2,ai.get());
         ai.set(-3);
         assertEquals(-3,ai.get());
-
     }
 
     /**
@@ -57,7 +62,6 @@ public class AtomicLongTest extends JSR166TestCase {
         assertEquals(2,ai.get());
         ai.lazySet(-3);
         assertEquals(-3,ai.get());
-
     }
 
     /**
@@ -210,9 +214,22 @@ public class AtomicLongTest extends JSR166TestCase {
      */
     public void testToString() {
         AtomicLong ai = new AtomicLong();
-        for (long i = -12; i < 6; ++i) {
+        assertEquals("0", ai.toString());
+        for (long i : VALUES) {
             ai.set(i);
             assertEquals(ai.toString(), Long.toString(i));
+        }
+    }
+
+    /**
+     * intValue returns current value.
+     */
+    public void testIntValue() {
+        AtomicLong ai = new AtomicLong();
+        assertEquals(0, ai.intValue());
+        for (long x : VALUES) {
+            ai.set(x);
+            assertEquals((int)x, ai.intValue());
         }
     }
 
@@ -221,9 +238,10 @@ public class AtomicLongTest extends JSR166TestCase {
      */
     public void testLongValue() {
         AtomicLong ai = new AtomicLong();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals((long)i, ai.longValue());
+        assertEquals(0L, ai.longValue());
+        for (long x : VALUES) {
+            ai.set(x);
+            assertEquals((long)x, ai.longValue());
         }
     }
 
@@ -232,9 +250,10 @@ public class AtomicLongTest extends JSR166TestCase {
      */
     public void testFloatValue() {
         AtomicLong ai = new AtomicLong();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals((float)i, ai.floatValue());
+        assertEquals(0.0f, ai.floatValue());
+        for (long x : VALUES) {
+            ai.set(x);
+            assertEquals((float)x, ai.floatValue());
         }
     }
 
@@ -243,11 +262,11 @@ public class AtomicLongTest extends JSR166TestCase {
      */
     public void testDoubleValue() {
         AtomicLong ai = new AtomicLong();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals((double)i, ai.doubleValue());
+        assertEquals(0.0d, ai.doubleValue());
+        for (long x : VALUES) {
+            ai.set(x);
+            assertEquals((double)x, ai.doubleValue());
         }
     }
-
 
 }

@@ -18,6 +18,10 @@ public class AtomicIntegerTest extends JSR166TestCase {
         return new TestSuite(AtomicIntegerTest.class);
     }
 
+    final int[] VALUES = {
+        Integer.MIN_VALUE, -1, 0, 1, 42, Integer.MAX_VALUE,
+    };
+
     /**
      * constructor initializes to given value
      */
@@ -209,9 +213,10 @@ public class AtomicIntegerTest extends JSR166TestCase {
      */
     public void testToString() {
         AtomicInteger ai = new AtomicInteger();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals(ai.toString(), Integer.toString(i));
+        assertEquals("0", ai.toString());
+        for (int x : VALUES) {
+            ai.set(x);
+            assertEquals(ai.toString(), Integer.toString(x));
         }
     }
 
@@ -220,21 +225,22 @@ public class AtomicIntegerTest extends JSR166TestCase {
      */
     public void testIntValue() {
         AtomicInteger ai = new AtomicInteger();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals(i, ai.intValue());
+        assertEquals(0, ai.intValue());
+        for (int x : VALUES) {
+            ai.set(x);
+            assertEquals(x, ai.intValue());
         }
     }
-
 
     /**
      * longValue returns current value.
      */
     public void testLongValue() {
         AtomicInteger ai = new AtomicInteger();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals((long)i, ai.longValue());
+        assertEquals(0L, ai.longValue());
+        for (int x : VALUES) {
+            ai.set(x);
+            assertEquals((long)x, ai.longValue());
         }
     }
 
@@ -243,9 +249,10 @@ public class AtomicIntegerTest extends JSR166TestCase {
      */
     public void testFloatValue() {
         AtomicInteger ai = new AtomicInteger();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals((float)i, ai.floatValue());
+        assertEquals(0.0f, ai.floatValue());
+        for (int x : VALUES) {
+            ai.set(x);
+            assertEquals((float)x, ai.floatValue());
         }
     }
 
@@ -254,12 +261,11 @@ public class AtomicIntegerTest extends JSR166TestCase {
      */
     public void testDoubleValue() {
         AtomicInteger ai = new AtomicInteger();
-        for (int i = -12; i < 6; ++i) {
-            ai.set(i);
-            assertEquals((double)i, ai.doubleValue());
+        assertEquals(0.0d, ai.doubleValue());
+        for (int x : VALUES) {
+            ai.set(x);
+            assertEquals((double)x, ai.doubleValue());
         }
     }
-
-
 
 }

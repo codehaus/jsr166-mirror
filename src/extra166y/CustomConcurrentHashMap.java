@@ -53,10 +53,10 @@ import sun.misc.Unsafe;
  *     (STRONG,
  *      new Equivalence<Person>() {
  *          public boolean equal(Person k, Object x) {
- *            return x instanceOf Person && k.name.equals(((Person)x).name);
+ *            return x instanceof Person && k.name.equals(((Person)x).name);
  *          }
  *          public int hash(Object x) {
- *             return (x instanceOf Person)? ((Person)x).name.hashCode() : 0;
+ *             return (x instanceof Person)? ((Person)x).name.hashCode() : 0;
  *          }
  *        },
  *      STRONG, EQUALS, 0);

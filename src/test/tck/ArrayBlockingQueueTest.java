@@ -296,23 +296,23 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testBlockingPut() throws InterruptedException {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
         Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() {
-                int added = 0;
+            public void realRun() throws InterruptedException {
+                for (int i = 0; i < SIZE; ++i)
+                    q.put(i);
+                assertEquals(SIZE, q.size());
+                assertEquals(0, q.remainingCapacity());
                 try {
-                    for (int i = 0; i < SIZE; ++i) {
-                        q.put(new Integer(i));
-                        ++added;
-                    }
-                    q.put(new Integer(SIZE));
-                    threadShouldThrow();
-                } catch (InterruptedException success) {
-                    threadAssertEquals(added, SIZE);
-                }}});
+                    q.put(99);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
-        Thread.sleep(MEDIUM_DELAY_MS);
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
+        assertEquals(SIZE, q.size());
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**
@@ -373,7 +373,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testTake() throws InterruptedException {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.take()).intValue());
+            assertEquals(i, q.take());
         }
     }
 
@@ -397,19 +397,22 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * Take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() throws InterruptedException {
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+        final ArrayBlockingQueue q = populatedQueue(SIZE);
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                ArrayBlockingQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    threadAssertEquals(i, ((Integer)q.take()).intValue());
+                    assertEquals(i, q.take());
                 }
-                q.take();
-            }};
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
 
@@ -419,7 +422,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testPoll() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll()).intValue());
+            assertEquals(i, q.poll());
         }
         assertNull(q.poll());
     }
@@ -430,7 +433,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll0() throws InterruptedException {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(0, MILLISECONDS)).intValue());
+            assertEquals(i, q.poll(0, MILLISECONDS));
         }
         assertNull(q.poll(0, MILLISECONDS));
     }
@@ -441,7 +444,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll() throws InterruptedException {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
+            assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));
         }
         assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
     }
@@ -455,7 +458,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 ArrayBlockingQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
+                    assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));;
                 }
                 try {
                     q.poll(SMALL_DELAY_MS, MILLISECONDS);

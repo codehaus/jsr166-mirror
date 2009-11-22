@@ -415,14 +415,17 @@ public class DelayQueueTest extends JSR166TestCase {
      * Take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() throws InterruptedException {
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
+        final DelayQueue q = populatedQueue(SIZE);
+        Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                DelayQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    threadAssertEquals(new PDelay(i), ((PDelay)q.take()));
+                    assertEquals(new PDelay(i), ((PDelay)q.take()));
                 }
-                q.take();
-            }};
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);

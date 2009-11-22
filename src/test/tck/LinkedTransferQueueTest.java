@@ -284,14 +284,19 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testBlockingTake() throws InterruptedException {
         final LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
-        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
-            void realRun() throws InterruptedException {
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i) {
-                    threadAssertEquals(i, (int) q.take());
+                    assertEquals(i, (int) q.take());
                 }
-                q.take();
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
             }});
-        Thread.sleep(SMALL_DELAY_MS);
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
         checkEmpty(q);
@@ -379,6 +384,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 } catch (InterruptedException success) {}
             }});
 
+        t.start();
         Thread.sleep(SMALL_DELAY_MS);
         assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();

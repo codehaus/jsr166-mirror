@@ -570,8 +570,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * toArray(null) throws NullPointerException
      */
     public void testToArray_BadArg() {
+        LinkedTransferQueue q = populatedQueue(SIZE);
         try {
-            LinkedTransferQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -581,8 +581,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * toArray(incompatible array type) throws CCE
      */
     public void testToArray1_BadArg() {
+        LinkedTransferQueue q = populatedQueue(SIZE);
         try {
-            LinkedTransferQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}

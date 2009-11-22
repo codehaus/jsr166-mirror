@@ -502,10 +502,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testPeek() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.peek()).intValue());
-            q.poll();
+            assertEquals(i, q.peek());
+            assertEquals(i, q.poll());
             assertTrue(q.peek() == null ||
-                       i != ((Integer)q.peek()).intValue());
+                       !q.peek().equals(i));
         }
         assertNull(q.peek());
     }
@@ -516,8 +516,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testElement() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.element()).intValue());
-            q.poll();
+            assertEquals(i, q.element());
+            assertEquals(i, q.poll());
         }
         try {
             q.element();
@@ -531,7 +531,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testRemove() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.remove()).intValue());
+            assertEquals(i, q.remove());
         }
         try {
             q.remove();
@@ -561,7 +561,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(q.contains(new Integer(i)));
-            q.poll();
+            assertEquals(i, q.poll());
             assertFalse(q.contains(new Integer(i)));
         }
     }
@@ -656,8 +656,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
+        ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
-            ArrayBlockingQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -667,9 +667,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
+        ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
-            ArrayBlockingQueue q = populatedQueue(SIZE);
-            Object o[] = q.toArray(new String[10] );
+            Object o[] = q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }
@@ -718,8 +718,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
-            int i = ((Integer)(it.next())).intValue();
-            assertEquals(++k, i);
+            assertEquals(++k, it.next());
         }
         assertEquals(3, k);
     }

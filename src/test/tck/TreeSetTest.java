@@ -19,11 +19,7 @@ public class TreeSetTest extends JSR166TestCase {
 
     static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
-            int i = ((Integer)x).intValue();
-            int j = ((Integer)y).intValue();
-            if (i < j) return 1;
-            if (i > j) return -1;
-            return 0;
+            return ((Comparable)y).compareTo(x);
         }
     }
 
@@ -259,7 +255,7 @@ public class TreeSetTest extends JSR166TestCase {
     public void testPollFirst() {
         TreeSet q = populatedSet(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.pollFirst()).intValue());
+            assertEquals(i, q.pollFirst());
         }
         assertNull(q.pollFirst());
     }
@@ -270,7 +266,7 @@ public class TreeSetTest extends JSR166TestCase {
     public void testPollLast() {
         TreeSet q = populatedSet(SIZE);
         for (int i = SIZE-1; i >= 0; --i) {
-            assertEquals(i, ((Integer)q.pollLast()).intValue());
+            assertEquals(i, q.pollLast());
         }
         assertNull(q.pollFirst());
     }

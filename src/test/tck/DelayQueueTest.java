@@ -522,11 +522,11 @@ public class DelayQueueTest extends JSR166TestCase {
         DelayQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(new PDelay(i), ((PDelay)q.peek()));
-            q.poll();
+            assertEquals(new PDelay(i), ((PDelay)q.poll()));
             if (q.isEmpty())
                 assertNull(q.peek());
             else
-                assertTrue(i != ((PDelay)q.peek()).intValue());
+                assertFalse(new PDelay(i).equals(q.peek()));
         }
         assertNull(q.peek());
     }
@@ -681,8 +681,8 @@ public class DelayQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
+        DelayQueue q = populatedQueue(SIZE);
         try {
-            DelayQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -692,9 +692,9 @@ public class DelayQueueTest extends JSR166TestCase {
      * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
+        DelayQueue q = populatedQueue(SIZE);
         try {
-            DelayQueue q = populatedQueue(SIZE);
-            Object o[] = q.toArray(new String[10] );
+            Object o[] = q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }

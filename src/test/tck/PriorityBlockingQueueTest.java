@@ -25,11 +25,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     /** Sample Comparator */
     static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
-            int i = ((Integer)x).intValue();
-            int j = ((Integer)y).intValue();
-            if (i < j) return 1;
-            if (i > j) return -1;
-            return 0;
+            return ((Comparable)y).compareTo(x);
         }
     }
 
@@ -348,7 +344,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testTake() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.take()).intValue());
+            assertEquals(i, q.take());
         }
     }
 
@@ -397,7 +393,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testPoll() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll()).intValue());
+            assertEquals(i, q.poll());
         }
         assertNull(q.poll());
     }
@@ -408,7 +404,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll0() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(0, MILLISECONDS)).intValue());
+            assertEquals(i, q.poll(0, MILLISECONDS));
         }
         assertNull(q.poll(0, MILLISECONDS));
     }
@@ -419,7 +415,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
+            assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));
         }
         assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
     }
@@ -433,7 +429,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 PriorityBlockingQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
+                    assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));
                 }
                 try {
                     q.poll(SMALL_DELAY_MS, MILLISECONDS);
@@ -477,10 +473,10 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testPeek() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.peek()).intValue());
-            q.poll();
+            assertEquals(i, q.peek());
+            assertEquals(i, q.poll());
             assertTrue(q.peek() == null ||
-                       i != ((Integer)q.peek()).intValue());
+                       !q.peek().equals(i));
         }
         assertNull(q.peek());
     }
@@ -491,8 +487,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testElement() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.element()).intValue());
-            q.poll();
+            assertEquals(i, q.element());
+            assertEquals(i, q.poll());
         }
         try {
             q.element();
@@ -506,7 +502,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testRemove() {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.remove()).intValue());
+            assertEquals(i, q.remove());
         }
         try {
             q.remove();
@@ -632,8 +628,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
+        PriorityBlockingQueue q = populatedQueue(SIZE);
         try {
-            PriorityBlockingQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -643,9 +639,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
+        PriorityBlockingQueue q = populatedQueue(SIZE);
         try {
-            PriorityBlockingQueue q = populatedQueue(SIZE);
-            Object o[] = q.toArray(new String[10] );
+            Object o[] = q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }

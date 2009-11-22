@@ -359,7 +359,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     public void testTake() throws InterruptedException {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.take()).intValue());
+            assertEquals(i, q.take());
         }
     }
 
@@ -387,7 +387,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(i, ((Integer)q.take()).intValue());
+                    assertEquals(i, q.take());
                 }
                 try {
                     q.take();
@@ -407,7 +407,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     public void testPoll() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll()).intValue());
+            assertEquals(i, q.poll());
         }
         assertNull(q.poll());
     }
@@ -418,7 +418,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll0() throws InterruptedException {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(0, MILLISECONDS)).intValue());
+            assertEquals(i, q.poll(0, MILLISECONDS));
         }
         assertNull(q.poll(0, MILLISECONDS));
     }
@@ -429,7 +429,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll() throws InterruptedException {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
+            assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));
         }
         assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
     }
@@ -443,7 +443,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 LinkedBlockingQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(i, ((Integer)q.poll(SHORT_DELAY_MS, MILLISECONDS)).intValue());
+                    assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));
                 }
                 try {
                     q.poll(SMALL_DELAY_MS, MILLISECONDS);
@@ -486,10 +486,10 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     public void testPeek() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.peek()).intValue());
-            q.poll();
+            assertEquals(i, q.peek());
+            assertEquals(i, q.poll());
             assertTrue(q.peek() == null ||
-                       i != ((Integer)q.peek()).intValue());
+                       !q.peek().equals(i));
         }
         assertNull(q.peek());
     }
@@ -500,8 +500,8 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     public void testElement() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.element()).intValue());
-            q.poll();
+            assertEquals(i, q.element());
+            assertEquals(i, q.poll());
         }
         try {
             q.element();
@@ -515,7 +515,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     public void testRemove() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.remove()).intValue());
+            assertEquals(i, q.remove());
         }
         try {
             q.remove();
@@ -653,8 +653,8 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
         try {
-            LinkedBlockingQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -664,9 +664,9 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
      * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
+        LinkedBlockingQueue q = populatedQueue(SIZE);
         try {
-            LinkedBlockingQueue q = populatedQueue(SIZE);
-            Object o[] = q.toArray(new String[10] );
+            Object o[] = q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }
@@ -714,8 +714,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         assertEquals(0, q.remainingCapacity());
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
-            int i = ((Integer)(it.next())).intValue();
-            assertEquals(++k, i);
+            assertEquals(++k, it.next());
         }
         assertEquals(3, k);
     }

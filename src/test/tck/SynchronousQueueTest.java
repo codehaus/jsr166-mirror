@@ -524,8 +524,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
+        SynchronousQueue q = new SynchronousQueue();
         try {
-            SynchronousQueue q = new SynchronousQueue();
             Object o[] = q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}

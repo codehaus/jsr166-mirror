@@ -19,11 +19,7 @@ public class TreeSubSetTest extends JSR166TestCase {
 
     static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
-            int i = ((Integer)x).intValue();
-            int j = ((Integer)y).intValue();
-            if (i < j) return 1;
-            if (i > j) return -1;
-            return 0;
+            return ((Comparable)y).compareTo(x);
         }
     }
 
@@ -104,9 +100,9 @@ public class TreeSubSetTest extends JSR166TestCase {
     public void testEmpty() {
         NavigableSet q = set0();
         assertTrue(q.isEmpty());
-        q.add(new Integer(1));
+        assertTrue(q.add(new Integer(1)));
         assertFalse(q.isEmpty());
-        q.add(new Integer(2));
+        assertTrue(q.add(new Integer(2)));
         q.pollFirst();
         q.pollFirst();
         assertTrue(q.isEmpty());
@@ -226,7 +222,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     public void testPoll() {
         NavigableSet q = populatedSet(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.pollFirst()).intValue());
+            assertEquals(i, q.pollFirst());
         }
         assertNull(q.pollFirst());
     }
@@ -266,7 +262,7 @@ public class TreeSubSetTest extends JSR166TestCase {
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
-        q.add(new Integer(1));
+        assertTrue(q.add(new Integer(1)));
         assertFalse(q.isEmpty());
         q.clear();
         assertTrue(q.isEmpty());
@@ -464,8 +460,8 @@ public class TreeSubSetTest extends JSR166TestCase {
         it.remove();
 
         it = q.iterator();
-        assertEquals(it.next(), new Integer(2));
-        assertEquals(it.next(), new Integer(3));
+        assertEquals(it.next(), 2);
+        assertEquals(it.next(), 3);
         assertFalse(it.hasNext());
     }
 
@@ -721,7 +717,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     public void testDescendingPoll() {
         NavigableSet q = populatedSet(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.pollFirst()).intValue());
+            assertEquals(i, q.pollFirst());
         }
         assertNull(q.pollFirst());
     }
@@ -761,7 +757,7 @@ public class TreeSubSetTest extends JSR166TestCase {
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
-        q.add(new Integer(1));
+        assertTrue(q.add(new Integer(1)));
         assertFalse(q.isEmpty());
         q.clear();
         assertTrue(q.isEmpty());
@@ -959,8 +955,8 @@ public class TreeSubSetTest extends JSR166TestCase {
         it.remove();
 
         it = q.iterator();
-        assertEquals(it.next(), new Integer(2));
-        assertEquals(it.next(), new Integer(3));
+        assertEquals(it.next(), 2);
+        assertEquals(it.next(), 3);
         assertFalse(it.hasNext());
     }
 

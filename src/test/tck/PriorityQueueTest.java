@@ -21,11 +21,7 @@ public class PriorityQueueTest extends JSR166TestCase {
 
     static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
-            int i = ((Integer)x).intValue();
-            int j = ((Integer)y).intValue();
-            if (i < j) return 1;
-            if (i > j) return -1;
-            return 0;
+            return ((Comparable)y).compareTo(x);
         }
     }
 
@@ -264,7 +260,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     public void testPoll() {
         PriorityQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll()).intValue());
+            assertEquals(i, q.poll());
         }
         assertNull(q.poll());
     }
@@ -275,10 +271,10 @@ public class PriorityQueueTest extends JSR166TestCase {
     public void testPeek() {
         PriorityQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.peek()).intValue());
-            q.poll();
+            assertEquals(i, q.peek());
+            assertEquals(i, q.poll());
             assertTrue(q.peek() == null ||
-                       i != ((Integer)q.peek()).intValue());
+                       !q.peek().equals(i));
         }
         assertNull(q.peek());
     }
@@ -289,8 +285,8 @@ public class PriorityQueueTest extends JSR166TestCase {
     public void testElement() {
         PriorityQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.element()).intValue());
-            q.poll();
+            assertEquals(i, q.element());
+            assertEquals(i, q.poll());
         }
         try {
             q.element();
@@ -304,7 +300,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     public void testRemove() {
         PriorityQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.remove()).intValue());
+            assertEquals(i, q.remove());
         }
         try {
             q.remove();

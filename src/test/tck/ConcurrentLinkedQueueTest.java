@@ -229,7 +229,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     public void testPoll() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.poll()).intValue());
+            assertEquals(i, q.poll());
         }
         assertNull(q.poll());
     }
@@ -240,10 +240,10 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     public void testPeek() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.peek()).intValue());
-            q.poll();
+            assertEquals(i, q.peek());
+            assertEquals(i, q.poll());
             assertTrue(q.peek() == null ||
-                       i != ((Integer)q.peek()).intValue());
+                       !q.peek().equals(i));
         }
         assertNull(q.peek());
     }
@@ -254,8 +254,8 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     public void testElement() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.element()).intValue());
-            q.poll();
+            assertEquals(i, q.element());
+            assertEquals(i, q.poll());
         }
         try {
             q.element();
@@ -269,7 +269,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     public void testRemove() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, ((Integer)q.remove()).intValue());
+            assertEquals(i, q.remove());
         }
         try {
             q.remove();
@@ -394,8 +394,8 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
         try {
-            ConcurrentLinkedQueue q = populatedQueue(SIZE);
             Object o[] = q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -405,9 +405,9 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
      * toArray with incompatible array type throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
+        ConcurrentLinkedQueue q = populatedQueue(SIZE);
         try {
-            ConcurrentLinkedQueue q = populatedQueue(SIZE);
-            Object o[] = q.toArray(new String[10] );
+            Object o[] = q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }
@@ -437,8 +437,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
-            int i = ((Integer)(it.next())).intValue();
-            assertEquals(++k, i);
+            assertEquals(++k, it.next());
         }
 
         assertEquals(3, k);

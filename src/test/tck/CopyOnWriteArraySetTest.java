@@ -164,7 +164,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         Iterator i = full.iterator();
         int j;
         for (j = 0; i.hasNext(); j++)
-            assertEquals(j, ((Integer)i.next()).intValue());
+            assertEquals(j, i.next());
         assertEquals(3, j);
     }
 
@@ -233,9 +233,9 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         CopyOnWriteArraySet full = populatedSet(3);
         Object[] o = full.toArray();
         assertEquals(3, o.length);
-        assertEquals(0, ((Integer)o[0]).intValue());
-        assertEquals(1, ((Integer)o[1]).intValue());
-        assertEquals(2, ((Integer)o[2]).intValue());
+        assertEquals(0, o[0]);
+        assertEquals(1, o[1]);
+        assertEquals(2, o[2]);
     }
 
     /**
@@ -247,9 +247,9 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         Integer[] i = new Integer[3];
         i = (Integer[])full.toArray(i);
         assertEquals(3, i.length);
-        assertEquals(0, i[0].intValue());
-        assertEquals(1, i[1].intValue());
-        assertEquals(2, i[2].intValue());
+        assertEquals(0, (int) i[0]);
+        assertEquals(1, (int) i[1]);
+        assertEquals(2, (int) i[2]);
     }
 
 

@@ -193,7 +193,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testGet() {
         CopyOnWriteArrayList full = populatedArray(3);
-        assertEquals(0, ((Integer)full.get(0)).intValue());
+        assertEquals(0, full.get(0));
     }
 
     /**
@@ -233,7 +233,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         Iterator i = full.iterator();
         int j;
         for (j = 0; i.hasNext(); j++)
-            assertEquals(j, ((Integer)i.next()).intValue());
+            assertEquals(j, i.next());
         assertEquals(SIZE, j);
     }
 
@@ -291,7 +291,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         ListIterator i = full.listIterator();
         int j;
         for (j = 0; i.hasNext(); j++)
-            assertEquals(j, ((Integer)i.next()).intValue());
+            assertEquals(j, i.next());
         assertEquals(SIZE, j);
     }
 
@@ -303,7 +303,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         ListIterator i = full.listIterator(1);
         int j;
         for (j = 0; i.hasNext(); j++)
-            assertEquals(j+1, ((Integer)i.next()).intValue());
+            assertEquals(j+1, i.next());
         assertEquals(2, j);
     }
 
@@ -334,7 +334,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     public void testSet() {
         CopyOnWriteArrayList full = populatedArray(3);
         assertEquals(two, full.set(2, four));
-        assertEquals(4, ((Integer)full.get(2)).intValue());
+        assertEquals(4, full.get(2));
     }
 
     /**
@@ -354,9 +354,9 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         CopyOnWriteArrayList full = populatedArray(3);
         Object[] o = full.toArray();
         assertEquals(3, o.length);
-        assertEquals(0, ((Integer)o[0]).intValue());
-        assertEquals(1, ((Integer)o[1]).intValue());
-        assertEquals(2, ((Integer)o[2]).intValue());
+        assertEquals(0, o[0]);
+        assertEquals(1, o[1]);
+        assertEquals(2, o[2]);
     }
 
     /**

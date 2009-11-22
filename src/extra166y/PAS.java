@@ -2821,7 +2821,7 @@ class PAS {
     }
 
     /**
-     * Computational operations for FJSCan
+     * Computational operations for FJScan
      */
     static abstract class FJScanOp {
         final int threshold;

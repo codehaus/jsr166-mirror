@@ -119,11 +119,11 @@ public class ConcurrentSkipListSet<E>
      */
     public Object clone() {
         ConcurrentSkipListSet<E> clone = null;
-	try {
-	    clone = (ConcurrentSkipListSet<E>) super.clone();
-	} catch (CloneNotSupportedException e) {
-	    throw new InternalError();
-	}
+        try {
+            clone = (ConcurrentSkipListSet<E>) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError();
+        }
 
         clone.m.initialize();
         clone.addAll(this);
@@ -149,7 +149,7 @@ public class ConcurrentSkipListSet<E>
      * @return  the number of elements in this set.
      */
     public int size() {
-	return m.size();
+        return m.size();
     }
 
     /**
@@ -157,7 +157,7 @@ public class ConcurrentSkipListSet<E>
      * @return <tt>true</tt> if this set contains no elements.
      */
     public boolean isEmpty() {
-	return m.isEmpty();
+        return m.isEmpty();
     }
 
     /**
@@ -167,11 +167,11 @@ public class ConcurrentSkipListSet<E>
      * @return <tt>true</tt> if this set contains the specified element.
      *
      * @throws ClassCastException if the specified object cannot be compared
-     * 		  with the elements currently in the set.
+     *            with the elements currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
      */
     public boolean contains(Object o) {
-	return m.containsKey(o);
+        return m.containsKey(o);
     }
 
     /**
@@ -182,11 +182,11 @@ public class ConcurrentSkipListSet<E>
      *         element.
      *
      * @throws ClassCastException if the specified object cannot be compared
-     * 		  with the elements currently in the set.
+     *            with the elements currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
      */
     public boolean add(E o) {
-	return m.putIfAbsent(o, Boolean.TRUE) == null;
+        return m.putIfAbsent(o, Boolean.TRUE) == null;
     }
 
     /**
@@ -196,18 +196,18 @@ public class ConcurrentSkipListSet<E>
      * @return <tt>true</tt> if the set contained the specified element.
      *
      * @throws ClassCastException if the specified object cannot be compared
-     * 		  with the elements currently in the set.
+     *            with the elements currently in the set.
      * @throws NullPointerException if o is <tt>null</tt>.
      */
     public boolean remove(Object o) {
-	return m.removep(o);
+        return m.removep(o);
     }
 
     /**
      * Removes all of the elements from this set.
      */
     public void clear() {
-	m.clear();
+        m.clear();
     }
 
     /**
@@ -217,7 +217,7 @@ public class ConcurrentSkipListSet<E>
      * @return an iterator over the elements in this set.
      */
     public Iterator<E> iterator() {
-	return m.keyIterator();
+        return m.keyIterator();
     }
 
     /**
@@ -227,7 +227,7 @@ public class ConcurrentSkipListSet<E>
      * @return an iterator over the elements in this set.
      */
     public Iterator<E> descendingIterator() {
-	return m.descendingKeyIterator();
+        return m.descendingKeyIterator();
     }
 
     /* ---------------- AbstractSet Overrides -------------- */
@@ -246,11 +246,11 @@ public class ConcurrentSkipListSet<E>
      */
     public boolean equals(Object o) {
         // Override AbstractSet version to avoid calling size()
-	if (o == this)
-	    return true;
-	if (!(o instanceof Set))
-	    return false;
-	Collection c = (Collection) o;
+        if (o == this)
+            return true;
+        if (!(o instanceof Set))
+            return false;
+        Collection c = (Collection) o;
         try {
             return containsAll(c) && c.containsAll(this);
         } catch(ClassCastException unused)   {
@@ -411,8 +411,8 @@ public class ConcurrentSkipListSet<E>
      * @param fromElement low endpoint (inclusive) of the subSet.
      * @param toElement high endpoint (exclusive) of the subSet.
      * @return a view of the portion of this set whose elements range from
-     * 	       <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
-     * 	       exclusive.
+     *         <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
+     *         exclusive.
      * @throws ClassCastException if <tt>fromElement</tt> and
      *         <tt>toElement</tt> cannot be compared to one another using
      *         this set's comparator (or, if the set has no comparator,
@@ -420,10 +420,10 @@ public class ConcurrentSkipListSet<E>
      * @throws IllegalArgumentException if <tt>fromElement</tt> is
      * greater than <tt>toElement</tt>.
      * @throws NullPointerException if <tt>fromElement</tt> or
-     *	       <tt>toElement</tt> is <tt>null</tt>.
+     *         <tt>toElement</tt> is <tt>null</tt>.
      */
     public NavigableSet<E> subSet(E fromElement, E toElement) {
-	return new ConcurrentSkipListSubSet<E>(m, fromElement, toElement);
+        return new ConcurrentSkipListSubSet<E>(m, fromElement, toElement);
     }
 
     /**
@@ -433,14 +433,14 @@ public class ConcurrentSkipListSet<E>
      * set, and vice-versa.
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
-     * 	       less than toElement.
+     *         less than toElement.
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>.
      */
     public NavigableSet<E> headSet(E toElement) {
-	return new ConcurrentSkipListSubSet<E>(m, null, toElement);
+        return new ConcurrentSkipListSubSet<E>(m, null, toElement);
     }
 
 
@@ -459,7 +459,7 @@ public class ConcurrentSkipListSet<E>
      * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>.
      */
     public NavigableSet<E> tailSet(E fromElement) {
-	return new ConcurrentSkipListSubSet<E>(m, fromElement, null);
+        return new ConcurrentSkipListSubSet<E>(m, fromElement, null);
     }
 
     /**

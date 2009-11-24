@@ -676,10 +676,10 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * in the correct order.
      *
      * @return an array containing all of the elements in this list
-     * 	       in the correct order
+     *         in the correct order
      */
     public Object[] toArray() {
-	return copyElements(new Object[size()]);
+        return copyElements(new Object[size()]);
     }
 
     /**
@@ -694,8 +694,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * immediately following the end of the collection is set to <tt>null</tt>.
      *
      * @param a the array into which the elements of the deque are to
-     *		be stored, if it is big enough; otherwise, a new array of the
-     * 		same runtime type is allocated for this purpose
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
      * @return an array containing the elements of the deque
      * @throws ArrayStoreException if the runtime type of a is not a supertype
      *         of the runtime type of every element in this deque
@@ -705,7 +705,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         if (a.length < size)
             a = (T[])java.lang.reflect.Array.newInstance(
                     a.getClass().getComponentType(), size);
-	copyElements(a);
+        copyElements(a);
         if (a.length > size)
             a[size] = null;
         return a;

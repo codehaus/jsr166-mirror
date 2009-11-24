@@ -583,8 +583,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * support the <tt>Map.Entry.setValue</tt> method.
      */
     static class SnapshotEntry<K,V> implements Map.Entry<K,V> {
-	private final K key;
-	private final V value;
+        private final K key;
+        private final V value;
 
         /**
          * Creates a new entry representing the given key and value.
@@ -592,31 +592,31 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * @param value the value
          */
         SnapshotEntry(K key, V value) {
-	    this.key = key;
-	    this.value = value;
-	}
+            this.key = key;
+            this.value = value;
+        }
 
-    	/**
-	 * Returns the key corresponding to this entry.
-	 *
-	 * @return the key corresponding to this entry.
-	 */
+        /**
+         * Returns the key corresponding to this entry.
+         *
+         * @return the key corresponding to this entry.
+         */
         public K getKey() {
             return key;
         }
 
-    	/**
-	 * Returns the value corresponding to this entry.
-	 *
-	 * @return the value corresponding to this entry.
-	 */
+        /**
+         * Returns the value corresponding to this entry.
+         *
+         * @return the value corresponding to this entry.
+         */
         public V getValue() {
-	    return value;
+            return value;
         }
 
-    	/**
-	 * Always fails, throwing <tt>UnsupportedOperationException</tt>.
-	 * @throws UnsupportedOperationException always.
+        /**
+         * Always fails, throwing <tt>UnsupportedOperationException</tt>.
+         * @throws UnsupportedOperationException always.
          */
         public V setValue(V value) {
             throw new UnsupportedOperationException();
@@ -649,7 +649,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * @return a String representation of this entry.
          */
         public String toString() {
-	    return getKey() + "=" + getValue();
+            return getKey() + "=" + getValue();
         }
     }
 
@@ -1847,7 +1847,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *
      * @param value value whose presence in this Map is to be tested.
      * @return  <tt>true</tt> if a mapping to <tt>value</tt> exists;
-     *		<tt>false</tt> otherwise.
+     *          <tt>false</tt> otherwise.
      * @throws  NullPointerException  if the value is <tt>null</tt>.
      */
     public boolean containsValue(Object value) {
@@ -2056,11 +2056,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @return <tt>true</tt> if the specified object is equal to this map.
      */
     public boolean equals(Object o) {
-	if (o == this)
-	    return true;
-	if (!(o instanceof Map))
-	    return false;
-	Map<K,V> t = (Map<K,V>) o;
+        if (o == this)
+            return true;
+        if (!(o instanceof Map))
+            return false;
+        Map<K,V> t = (Map<K,V>) o;
         try {
             return (containsAllMappings(this, t) &&
                     containsAllMappings(t, this));
@@ -2525,8 +2525,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         Node<K,V> last;
         /** the next node to return from next(); */
         Node<K,V> next;
-	/** Cache of next value field to maintain weak consistency */
-	Object nextValue;
+        /** Cache of next value field to maintain weak consistency */
+        Object nextValue;
 
         Iter() {}
 
@@ -2537,7 +2537,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /** initialize ascending iterator for entire range  */
         final void initAscending() {
             for (;;) {
-		next = findFirst();
+                next = findFirst();
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2553,7 +2553,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          */
         final void initAscending(K least, K fence) {
             for (;;) {
-		next = findCeiling(least);
+                next = findCeiling(least);
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2571,7 +2571,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if ((last = next) == null)
                 throw new NoSuchElementException();
             for (;;) {
-		next = next.next;
+                next = next.next;
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2587,7 +2587,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if ((last = next) == null)
                 throw new NoSuchElementException();
             for (;;) {
-		next = next.next;
+                next = next.next;
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2604,7 +2604,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /** initialize descending iterator for entire range  */
         final void initDescending() {
             for (;;) {
-		next = findLast();
+                next = findLast();
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2621,7 +2621,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          */
         final void initDescending(K least, K fence) {
             for (;;) {
-		next = findLower(fence);
+                next = findLower(fence);
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2641,7 +2641,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 throw new NoSuchElementException();
             K k = last.key;
             for (;;) {
-		next = findNear(k, LT);
+                next = findNear(k, LT);
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2658,7 +2658,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 throw new NoSuchElementException();
             K k = last.key;
             for (;;) {
-		next = findNear(k, LT);
+                next = findNear(k, LT);
                 if (next == null)
                     break;
                 nextValue = next.value;
@@ -2781,7 +2781,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             Object v = lastValue;
             if (last == null || v == null)
                 throw new IllegalStateException();
-	    return (V)v;
+            return (V)v;
         }
 
         public V setValue(V value) {
@@ -2810,7 +2810,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             // If not acting as entry, just use default.
             if (last == null)
                 return super.toString();
-	    return getKey() + "=" + getValue();
+            return getKey() + "=" + getValue();
         }
     }
 

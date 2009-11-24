@@ -50,7 +50,7 @@ public class LinkedBlockingDeque<E>
 
     /** Doubly-linked list node class */
     static final class Node<E> {
-	E item;
+        E item;
         Node<E> prev;
         Node<E> next;
         Node(E x, Node<E> p, Node<E> n) {

@@ -123,8 +123,8 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @param fromElement low endpoint (inclusive) of the subSet.
      * @param toElement high endpoint (exclusive) of the subSet.
      * @return a view of the portion of this set whose elements range from
-     * 	       <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
-     * 	       exclusive.
+     *         <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
+     *         exclusive.
      * @throws ClassCastException if <tt>fromElement</tt> and
      *         <tt>toElement</tt> cannot be compared to one another using
      *         this set's comparator (or, if the set has no comparator,
@@ -132,7 +132,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @throws IllegalArgumentException if <tt>fromElement</tt> is
      * greater than <tt>toElement</tt>.
      * @throws NullPointerException if <tt>fromElement</tt> or
-     *	       <tt>toElement</tt> is <tt>null</tt>
+     *         <tt>toElement</tt> is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */
     public NavigableSet<E> subSet(E fromElement, E toElement);
@@ -144,7 +144,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * set, and vice-versa.
      * @param toElement high endpoint (exclusive) of the headSet.
      * @return a view of the portion of this set whose elements are strictly
-     * 	       less than toElement.
+     *         less than toElement.
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
      *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).

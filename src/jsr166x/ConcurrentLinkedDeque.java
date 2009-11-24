@@ -69,18 +69,18 @@ public class ConcurrentLinkedDeque<E>
      *        further forward around the dead node.
      *    (2.1) forward pointers are still correct when pointing to dead
      *        nodes, and forward pointers from dead nodes are left
-     *	      as they were when the node was deleted.
+     *        as they were when the node was deleted.
      *    (2.2) multiple dead nodes may point forward to the same node.
      *    (3) backward pointers were correct when they were installed
      *    (3.1) backward pointers are correct when pointing to any
      *        node which points forward to them, but since more than
-     *	      one forward pointer may point to them, the live one is best.
+     *        one forward pointer may point to them, the live one is best.
      *    (4) backward pointers that are out of date due to deletion
      *        point to a deleted node, and need to point further back until
-     *	      they point to the live node that points to their source.
+     *        they point to the live node that points to their source.
      *    (5) backward pointers that are out of date due to insertion
      *        point too far backwards, so shortening their scope (by searching
-     *	      forward) fixes them.
+     *        forward) fixes them.
      *    (6) backward pointers from a dead node cannot be "improved" since
      *        there may be no live node pointing forward to their origin.
      *        (However, it does no harm to try to improve them while
@@ -117,22 +117,22 @@ public class ConcurrentLinkedDeque<E>
      * deleted node can become unrecoverably stale.
      */
     static final class Node<E> extends AtomicReference<Node<E>> {
-	private volatile Node<E> prev;
-	final E element;
+        private volatile Node<E> prev;
+        final E element;
 
         /** Creates a node with given contents */
-	Node(E element, Node<E> next, Node<E> prev) {
+        Node(E element, Node<E> next, Node<E> prev) {
             super(next);
-	    this.prev = prev;
-	    this.element = element;
-	}
+            this.prev = prev;
+            this.element = element;
+        }
 
         /** Creates a marker node with given successor */
-	Node(Node<E> next) {
+        Node(Node<E> next) {
             super(next);
-	    this.prev = this;
-	    this.element = null;
-	}
+            this.prev = this;
+            this.element = null;
+        }
 
         /**
          * Gets next link (which is actually the value held
@@ -447,11 +447,11 @@ public class ConcurrentLinkedDeque<E>
      * Constructs an empty deque.
      */
     public ConcurrentLinkedDeque() {
-	Node h = new Node(null, null, null);
-	Node t = new Node(null, null, h);
-	h.setNext(t);
-	header = h;
-	trailer = t;
+        Node h = new Node(null, null, null);
+        Node t = new Node(null, null, h);
+        h.setNext(t);
+        header = h;
+        trailer = t;
     }
 
     /**
@@ -465,8 +465,8 @@ public class ConcurrentLinkedDeque<E>
      * is <tt>null</tt>
      */
      public ConcurrentLinkedDeque(Collection<? extends E> c) {
-	 this();
-	 addAll(c);
+         this();
+         addAll(c);
      }
 
     /**
@@ -477,7 +477,7 @@ public class ConcurrentLinkedDeque<E>
      */
     public void addFirst(E o) {
         checkNullArg(o);
-	while (header.append(o) == null)
+        while (header.append(o) == null)
             ;
     }
 
@@ -751,7 +751,7 @@ public class ConcurrentLinkedDeque<E>
      * is <tt>null</tt>
      */
     public boolean addAll(Collection<? extends E> c) {
-	Iterator<? extends E> it = c.iterator();
+        Iterator<? extends E> it = c.iterator();
         if (!it.hasNext())
             return false;
         do {
@@ -773,7 +773,7 @@ public class ConcurrentLinkedDeque<E>
      * in the correct order.
      *
      * @return an array containing all of the elements in this deque
-     * 	       in the correct order.
+     *         in the correct order.
      */
     public Object[] toArray() {
         return toArrayList().toArray();
@@ -794,8 +794,8 @@ public class ConcurrentLinkedDeque<E>
      * does not contain any null elements.
      *
      * @param a the array into which the elements of the deque are to
-     *		be stored, if it is big enough; otherwise, a new array of the
-     * 		same runtime type is allocated for this purpose.
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose.
      * @return an array containing the elements of the deque.
      * @throws ArrayStoreException if the runtime type of a is not a
      *         supertype of the runtime type of every element in this deque.
@@ -830,7 +830,7 @@ public class ConcurrentLinkedDeque<E>
         public E next() {
             Node<E> l = last = next;
             if (l == null)
-		throw new NoSuchElementException();
+                throw new NoSuchElementException();
             next = next.forward();
             return l.element;
         }

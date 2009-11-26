@@ -366,34 +366,34 @@ public class JSR166TestCase extends TestCase {
     /**
      * The number of elements to place in collections, arrays, etc.
      */
-    static final int SIZE = 20;
+    public static final int SIZE = 20;
 
     // Some convenient Integer constants
 
-    static final Integer zero = new Integer(0);
-    static final Integer one = new Integer(1);
-    static final Integer two = new Integer(2);
-    static final Integer three  = new Integer(3);
-    static final Integer four  = new Integer(4);
-    static final Integer five  = new Integer(5);
-    static final Integer six = new Integer(6);
-    static final Integer seven = new Integer(7);
-    static final Integer eight = new Integer(8);
-    static final Integer nine = new Integer(9);
-    static final Integer m1  = new Integer(-1);
-    static final Integer m2  = new Integer(-2);
-    static final Integer m3  = new Integer(-3);
-    static final Integer m4 = new Integer(-4);
-    static final Integer m5 = new Integer(-5);
-    static final Integer m6 = new Integer(-6);
-    static final Integer m10 = new Integer(-10);
+    public static final Integer zero = new Integer(0);
+    public static final Integer one = new Integer(1);
+    public static final Integer two = new Integer(2);
+    public static final Integer three  = new Integer(3);
+    public static final Integer four  = new Integer(4);
+    public static final Integer five  = new Integer(5);
+    public static final Integer six = new Integer(6);
+    public static final Integer seven = new Integer(7);
+    public static final Integer eight = new Integer(8);
+    public static final Integer nine = new Integer(9);
+    public static final Integer m1  = new Integer(-1);
+    public static final Integer m2  = new Integer(-2);
+    public static final Integer m3  = new Integer(-3);
+    public static final Integer m4 = new Integer(-4);
+    public static final Integer m5 = new Integer(-5);
+    public static final Integer m6 = new Integer(-6);
+    public static final Integer m10 = new Integer(-10);
 
 
     /**
      * A security policy where new permissions can be dynamically added
      * or all cleared.
      */
-    static class AdjustablePolicy extends java.security.Policy {
+    public static class AdjustablePolicy extends java.security.Policy {
         Permissions perms = new Permissions();
         AdjustablePolicy() { }
         void addPermission(Permission perm) { perms.add(perm); }
@@ -431,8 +431,8 @@ public class JSR166TestCase extends TestCase {
 
     // Some convenient Runnable classes
 
-    abstract class CheckedRunnable implements Runnable {
-        abstract void realRun() throws Throwable;
+    public abstract class CheckedRunnable implements Runnable {
+        protected abstract void realRun() throws Throwable;
 
         public final void run() {
             try {
@@ -443,8 +443,8 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    abstract class RunnableShouldThrow implements Runnable {
-        abstract void realRun() throws Throwable;
+    public abstract class RunnableShouldThrow implements Runnable {
+        protected abstract void realRun() throws Throwable;
 
         final Class<?> exceptionClass;
 
@@ -464,8 +464,8 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    abstract class ThreadShouldThrow extends Thread {
-        abstract void realRun() throws Throwable;
+    public abstract class ThreadShouldThrow extends Thread {
+        protected abstract void realRun() throws Throwable;
 
         final Class<?> exceptionClass;
 
@@ -485,8 +485,8 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    abstract class CheckedInterruptedRunnable implements Runnable {
-        abstract void realRun() throws Throwable;
+    public abstract class CheckedInterruptedRunnable implements Runnable {
+        protected abstract void realRun() throws Throwable;
 
         public final void run() {
             try {
@@ -499,8 +499,8 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    abstract class CheckedCallable<T> implements Callable<T> {
-        abstract T realCall() throws Throwable;
+    public abstract class CheckedCallable<T> implements Callable<T> {
+        protected abstract T realCall() throws Throwable;
 
         public final T call() {
             try {
@@ -512,8 +512,8 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    abstract class CheckedInterruptedCallable<T> implements Callable<T> {
-        abstract T realCall() throws Throwable;
+    public abstract class CheckedInterruptedCallable<T> implements Callable<T> {
+        protected abstract T realCall() throws Throwable;
 
         public final T call() {
             try {
@@ -528,89 +528,89 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    static class NoOpRunnable implements Runnable {
+    public static class NoOpRunnable implements Runnable {
         public void run() {}
     }
 
-    static class NoOpCallable implements Callable {
+    public static class NoOpCallable implements Callable {
         public Object call() { return Boolean.TRUE; }
     }
 
-    static final String TEST_STRING = "a test string";
+    public static final String TEST_STRING = "a test string";
 
-    static class StringTask implements Callable<String> {
+    public static class StringTask implements Callable<String> {
         public String call() { return TEST_STRING; }
     }
 
-    static class NPETask implements Callable<String> {
+    public static class NPETask implements Callable<String> {
         public String call() { throw new NullPointerException(); }
     }
 
-    static class CallableOne implements Callable<Integer> {
+    public static class CallableOne implements Callable<Integer> {
         public Integer call() { return one; }
     }
 
-    class ShortRunnable extends CheckedRunnable {
-        void realRun() throws Throwable {
+    public class ShortRunnable extends CheckedRunnable {
+        protected void realRun() throws Throwable {
             Thread.sleep(SHORT_DELAY_MS);
         }
     }
 
-    class ShortInterruptedRunnable extends CheckedInterruptedRunnable {
-        void realRun() throws InterruptedException {
+    public class ShortInterruptedRunnable extends CheckedInterruptedRunnable {
+        protected void realRun() throws InterruptedException {
             Thread.sleep(SHORT_DELAY_MS);
         }
     }
 
-    class SmallRunnable extends CheckedRunnable {
-        void realRun() throws Throwable {
+    public class SmallRunnable extends CheckedRunnable {
+        protected void realRun() throws Throwable {
             Thread.sleep(SMALL_DELAY_MS);
         }
     }
 
-    class SmallPossiblyInterruptedRunnable extends CheckedRunnable {
-        void realRun() {
+    public class SmallPossiblyInterruptedRunnable extends CheckedRunnable {
+        protected void realRun() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
             } catch (InterruptedException ok) {}
         }
     }
 
-    class SmallCallable extends CheckedCallable {
-        Object realCall() throws InterruptedException {
+    public class SmallCallable extends CheckedCallable {
+        protected Object realCall() throws InterruptedException {
             Thread.sleep(SMALL_DELAY_MS);
             return Boolean.TRUE;
         }
     }
 
-    class SmallInterruptedRunnable extends CheckedInterruptedRunnable {
-        void realRun() throws InterruptedException {
+    public class SmallInterruptedRunnable extends CheckedInterruptedRunnable {
+        protected void realRun() throws InterruptedException {
             Thread.sleep(SMALL_DELAY_MS);
         }
     }
 
-    class MediumRunnable extends CheckedRunnable {
-        void realRun() throws Throwable {
+    public class MediumRunnable extends CheckedRunnable {
+        protected void realRun() throws Throwable {
             Thread.sleep(MEDIUM_DELAY_MS);
         }
     }
 
-    class MediumInterruptedRunnable extends CheckedInterruptedRunnable {
-        void realRun() throws InterruptedException {
+    public class MediumInterruptedRunnable extends CheckedInterruptedRunnable {
+        protected void realRun() throws InterruptedException {
             Thread.sleep(MEDIUM_DELAY_MS);
         }
     }
 
-    class MediumPossiblyInterruptedRunnable extends CheckedRunnable {
-        void realRun() {
+    public class MediumPossiblyInterruptedRunnable extends CheckedRunnable {
+        protected void realRun() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
             } catch (InterruptedException ok) {}
         }
     }
 
-    class LongPossiblyInterruptedRunnable extends CheckedRunnable {
-        void realRun() {
+    public class LongPossiblyInterruptedRunnable extends CheckedRunnable {
+        protected void realRun() {
             try {
                 Thread.sleep(LONG_DELAY_MS);
             } catch (InterruptedException ok) {}
@@ -620,14 +620,14 @@ public class JSR166TestCase extends TestCase {
     /**
      * For use as ThreadFactory in constructors
      */
-    static class SimpleThreadFactory implements ThreadFactory {
+    public static class SimpleThreadFactory implements ThreadFactory {
         public Thread newThread(Runnable r) {
             return new Thread(r);
         }
     }
 
-    static class TrackedShortRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedShortRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
@@ -636,8 +636,8 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    static class TrackedMediumRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedMediumRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
@@ -646,8 +646,8 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    static class TrackedLongRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedLongRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             try {
                 Thread.sleep(LONG_DELAY_MS);
@@ -656,15 +656,15 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    static class TrackedNoOpRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedNoOpRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             done = true;
         }
     }
 
-    static class TrackedCallable implements Callable {
-        volatile boolean done = false;
+    public static class TrackedCallable implements Callable {
+        public volatile boolean done = false;
         public Object call() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
@@ -678,7 +678,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * For use as RejectedExecutionHandler in constructors
      */
-    static class NoOpREHandler implements RejectedExecutionHandler {
+    public static class NoOpREHandler implements RejectedExecutionHandler {
         public void rejectedExecution(Runnable r,
                                       ThreadPoolExecutor executor) {}
     }

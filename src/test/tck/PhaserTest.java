@@ -194,7 +194,7 @@ public class PhaserTest extends JSR166TestCase {
         for (int i = 0; i < 10; i++)
             phaser.register();
             threads.add(newStartedThread(new CheckedRunnable() {
-                void realRun() throws InterruptedException {
+                public void realRun() throws InterruptedException {
                     Thread.sleep(SMALL_DELAY_MS);
                     phaser.arriveAndDeregister();
                 }}));
@@ -295,7 +295,7 @@ public class PhaserTest extends JSR166TestCase {
     public void testArriveAndDeregister6() throws InterruptedException {
         final Phaser phaser = new Phaser(2);
         Thread t = newStartedThread(new CheckedRunnable() {
-            void realRun() {
+            public void realRun() {
                 sleepTillInterrupted(SHORT_DELAY_MS);
                 phaser.arrive();
             }});
@@ -330,7 +330,7 @@ public class PhaserTest extends JSR166TestCase {
         phaser.register();
 
         Thread t = newStartedThread(new CheckedRunnable() {
-            void realRun() throws InterruptedException {
+            public void realRun() throws InterruptedException {
                 phaser.register();
                 sleepTillInterrupted(LONG_DELAY_MS);
                 phaser.awaitAdvance(phaser.arrive());
@@ -353,7 +353,7 @@ public class PhaserTest extends JSR166TestCase {
         List<Thread> threads = new ArrayList<Thread>();
         for (int i = 0; i < 4; i++) {
             threads.add(newStartedThread(new CheckedRunnable() {
-                void realRun() {
+                public void realRun() {
                     int phase = phaser.arrive();
                     phaseCount.incrementAndGet();
                     sleepTillInterrupted(SMALL_DELAY_MS);
@@ -376,7 +376,7 @@ public class PhaserTest extends JSR166TestCase {
         List<Thread> threads = new ArrayList<Thread>();
         for (int i = 0; i < 8; i++) {
             threads.add(newStartedThread(new CheckedRunnable() {
-                void realRun() {
+                public void realRun() {
                     sleepTillInterrupted(SHORT_DELAY_MS);
                     phaser.arrive();
                 }}));
@@ -399,7 +399,7 @@ public class PhaserTest extends JSR166TestCase {
          * waits for the second thread's party to arrive
          */
         Thread t1 = newStartedThread(new CheckedRunnable() {
-            void realRun() {
+            public void realRun() {
                 sleepTillInterrupted(SMALL_DELAY_MS);
                 int phase = phaser.awaitAdvance(phaser.arrive());
                 /*
@@ -414,7 +414,7 @@ public class PhaserTest extends JSR166TestCase {
          * should exit peacefully as this one
          */
         Thread t2 = newStartedThread(new CheckedRunnable() {
-            void realRun() {
+            public void realRun() {
                 sleepTillInterrupted(MEDIUM_DELAY_MS);
                 int p1 = phaser.arrive();
                 int phase = phaser.awaitAdvance(p1);
@@ -446,7 +446,7 @@ public class PhaserTest extends JSR166TestCase {
     public void testArriveAndAwaitAdvance2() throws InterruptedException {
         final Phaser phaser = new Phaser(2);
         Thread th = newStartedThread(new CheckedRunnable() {
-            void realRun() {
+            public void realRun() {
                 phaser.arriveAndAwaitAdvance();
             }});
 
@@ -469,7 +469,7 @@ public class PhaserTest extends JSR166TestCase {
         final List<Thread> threads = new ArrayList<Thread>();
         for (int i = 0; i < 6; i++) {
             threads.add(newStartedThread(new CheckedRunnable() {
-                void realRun() throws InterruptedException {
+                public void realRun() throws InterruptedException {
                     phaser.register();
                     sleepTillInterrupted(SHORT_DELAY_MS);
                     arrivingCount.getAndIncrement();

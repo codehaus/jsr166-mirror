@@ -630,7 +630,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         final ForkJoinPool p = new ForkJoinPool(1);
 
         Thread t = new Thread(new CheckedInterruptedRunnable() {
-            void realRun() throws Throwable {
+            public void realRun() throws Throwable {
                 p.submit(new CheckedCallable<Object>() {
                     public Object realCall() throws Throwable {
                         try {

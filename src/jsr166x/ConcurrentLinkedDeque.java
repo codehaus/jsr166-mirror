@@ -24,22 +24,22 @@ import java.util.concurrent.atomic.*;
  * <em>optional</em> methods of the {@link Collection} and {@link
  * Iterator} interfaces. Like most other concurrent collection
  * implementations, this class does not permit the use of
- * <tt>null</tt> elements.  because some null arguments and return
+ * {@code null} elements.  because some null arguments and return
  * values cannot be reliably distinguished from the absence of
  * elements. Arbitrarily, the {@link Collection#remove} method is
- * mapped to <tt>removeFirstOccurrence</tt>, and {@link
- * Collection#add} is mapped to <tt>addLast</tt>.
+ * mapped to {@code removeFirstOccurrence}, and {@link
+ * Collection#add} is mapped to {@code addLast}.
  *
- * <p>Beware that, unlike in most collections, the <tt>size</tt>
+ * <p>Beware that, unlike in most collections, the {@code size}
  * method is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these deques, determining the current number
  * of elements requires a traversal of the elements.
  *
- * <p>This class is <tt>Serializable</tt>, but relies on default
+ * <p>This class is {@code Serializable}, but relies on default
  * serialization mechanisms.  Usually, it is a better idea for any
- * serializable class using a <tt>ConcurrentLinkedDeque</tt> to instead
+ * serializable class using a {@code ConcurrentLinkedDeque} to instead
  * serialize a snapshot of the elements obtained by method
- * <tt>toArray</tt>.
+ * {@code toArray}.
  *
  * @author  Doug Lea
  * @param <E> the type of elements held in this collection
@@ -461,8 +461,8 @@ public class ConcurrentLinkedDeque<E>
      *
      * @param c the collection whose elements are to be placed into
      * this deque.
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * @throws NullPointerException if {@code c} or any element within it
+     * is {@code null}
      */
      public ConcurrentLinkedDeque(Collection<? extends E> c) {
          this();
@@ -473,7 +473,7 @@ public class ConcurrentLinkedDeque<E>
      * Prepends the given element at the beginning of this deque.
      *
      * @param o the element to be inserted at the beginning of this deque.
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is {@code null}
      */
     public void addFirst(E o) {
         checkNullArg(o);
@@ -483,10 +483,10 @@ public class ConcurrentLinkedDeque<E>
 
     /**
      * Appends the given element to the end of this deque.  This is
-     * identical in function to the <tt>add</tt> method.
+     * identical in function to the {@code add} method.
      *
      * @param o the element to be inserted at the end of this deque.
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is {@code null}
      */
     public void addLast(E o) {
         checkNullArg(o);
@@ -498,8 +498,8 @@ public class ConcurrentLinkedDeque<E>
      * Prepends the given element at the beginning of this deque.
      *
      * @param o the element to be inserted at the beginning of this deque.
-     * @return <tt>true</tt> always
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @return {@code true} always
+     * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean offerFirst(E o) {
         addFirst(o);
@@ -508,11 +508,11 @@ public class ConcurrentLinkedDeque<E>
 
     /**
      * Appends the given element to the end of this deque.  (Identical in
-     * function to the <tt>add</tt> method; included only for consistency.)
+     * function to the {@code add} method; included only for consistency.)
      *
      * @param o the element to be inserted at the end of this deque.
-     * @return <tt>true</tt> always
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @return {@code true} always
+     * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean offerLast(E o) {
         addLast(o);
@@ -522,7 +522,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves, but does not remove, the first element of
      * this deque, or returns null if this deque is empty.
-     * @return the first element of this queue, or <tt>null</tt> if
+     * @return the first element of this queue, or {@code null} if
      * empty.
      */
     public E peekFirst() {
@@ -533,7 +533,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves, but does not remove, the last element of
      * this deque, or returns null if this deque is empty.
-     * @return the last element of this deque, or <tt>null</tt> if empty.
+     * @return the last element of this deque, or {@code null} if empty.
      */
     public E peekLast() {
         Node<E> n = trailer.predecessor();
@@ -563,7 +563,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves and removes the first element of this deque, or
      * returns null if this deque is empty.
-     * @return the first element of this deque, or <tt>null</tt> if empty.
+     * @return the first element of this deque, or {@code null} if empty.
      */
     public E pollFirst() {
         for (;;) {
@@ -578,7 +578,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves and removes the last element of this deque, or returns
      * null if this deque is empty.
-     * @return the last element of this deque, or <tt>null</tt> if empty.
+     * @return the last element of this deque, or {@code null} if empty.
      */
     public E pollLast() {
         for (;;) {
@@ -621,13 +621,13 @@ public class ConcurrentLinkedDeque<E>
     public E pop()            { return removeFirst(); }
 
     /**
-     * Removes the first element <tt>e</tt> such that
-     * <tt>o.equals(e)</tt>, if such an element exists in this deque.
+     * Removes the first element {@code e} such that
+     * {@code o.equals(e)}, if such an element exists in this deque.
      * If the deque does not contain the element, it is unchanged.
      *
      * @param o element to be removed from this deque, if present.
-     * @return <tt>true</tt> if the deque contained the specified element.
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @return {@code true} if the deque contained the specified element.
+     * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean removeFirstOccurrence(Object o) {
         checkNullArg(o);
@@ -648,13 +648,13 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Removes the last element <tt>e</tt> such that
-     * <tt>o.equals(e)</tt>, if such an element exists in this deque.
+     * Removes the last element {@code e} such that
+     * {@code o.equals(e)}, if such an element exists in this deque.
      * If the deque does not contain the element, it is unchanged.
      *
      * @param o element to be removed from this deque, if present.
-     * @return <tt>true</tt> if the deque contained the specified element.
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @return {@code true} if the deque contained the specified element.
+     * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean removeLastOccurrence(Object o) {
         checkNullArg(o);
@@ -678,11 +678,11 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this deque contains at least one
-     * element <tt>e</tt> such that <tt>o.equals(e)</tt>.
+     * Returns {@code true} if this deque contains at least one
+     * element {@code e} such that {@code o.equals(e)}.
      *
      * @param o element whose presence in this deque is to be tested.
-     * @return <tt>true</tt> if this deque contains the specified element.
+     * @return {@code true} if this deque contains the specified element.
      */
     public boolean contains(Object o) {
         if (o == null) return false;
@@ -693,9 +693,9 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this collection contains no elements.<p>
+     * Returns {@code true} if this collection contains no elements.<p>
      *
-     * @return <tt>true</tt> if this collection contains no elements.
+     * @return {@code true} if this collection contains no elements.
      */
     public boolean isEmpty() {
         return !usable(header.successor());
@@ -703,8 +703,8 @@ public class ConcurrentLinkedDeque<E>
 
     /**
      * Returns the number of elements in this deque.  If this deque
-     * contains more than <tt>Integer.MAX_VALUE</tt> elements, it
-     * returns <tt>Integer.MAX_VALUE</tt>.
+     * contains more than {@code Integer.MAX_VALUE} elements, it
+     * returns {@code Integer.MAX_VALUE}.
      *
      * <p>Beware that, unlike in most collections, this method is
      * <em>NOT</em> a constant-time operation. Because of the
@@ -725,13 +725,13 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Removes the first element <tt>e</tt> such that
-     * <tt>o.equals(e)</tt>, if such an element exists in this deque.
+     * Removes the first element {@code e} such that
+     * {@code o.equals(e)}, if such an element exists in this deque.
      * If the deque does not contain the element, it is unchanged.
      *
      * @param o element to be removed from this deque, if present.
-     * @return <tt>true</tt> if the deque contained the specified element.
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @return {@code true} if the deque contained the specified element.
+     * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean remove(Object o) {
         return removeFirstOccurrence(o);
@@ -746,9 +746,9 @@ public class ConcurrentLinkedDeque<E>
      * the specified Collection is this deque, and this deque is nonempty.)
      *
      * @param c the elements to be inserted into this deque.
-     * @return <tt>true</tt> if this deque changed as a result of the call.
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * @return {@code true} if this deque changed as a result of the call.
+     * @throws NullPointerException if {@code c} or any element within it
+     * is {@code null}
      */
     public boolean addAll(Collection<? extends E> c) {
         Iterator<? extends E> it = c.iterator();
@@ -807,7 +807,7 @@ public class ConcurrentLinkedDeque<E>
 
     /**
      * Returns a weakly consistent iterator over the elements in this
-     * deque, in first-to-last order. The <tt>next</tt> method returns
+     * deque, in first-to-last order. The {@code next} method returns
      * elements reflecting the state of the deque at some point at or
      * since the creation of the iterator.  The method does
      * <em>not</em> throw {@link ConcurrentModificationException}, and

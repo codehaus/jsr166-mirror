@@ -99,6 +99,7 @@ public class ExchangerTest extends JSR166TestCase {
             }});
 
         t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }

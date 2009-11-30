@@ -77,6 +77,7 @@ public class LockSupportTest extends JSR166TestCase {
             }});
 
         t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         lock.unlock();
         t.join();

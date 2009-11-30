@@ -330,10 +330,11 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                sync.tryAcquireNanos(1, MEDIUM_DELAY_MS * 1000 * 1000);
+                sync.tryAcquireNanos(1, MEDIUM_DELAY_MS * 1000L * 1000L);
             }});
 
         t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -363,7 +364,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(sync.tryAcquireNanos(1, 1000 * 1000));
+                threadAssertFalse(sync.tryAcquireNanos(1, SHORT_DELAY_MS * 1000L * 1000L));
             }});
 
         t.start();
@@ -419,6 +420,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         sync.acquireInterruptibly(1);
         Thread t = new Thread(new InterruptedSyncRunnable(sync));
         t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         assertTrue(sync.isHeldExclusively());
         t.join();
@@ -806,7 +808,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                c.awaitNanos(1000 * 1000 * 1000); // 1 sec
+                c.awaitNanos(LONG_DELAY_MS * 1000L * 1000L);
             }});
 
         t.start();
@@ -954,7 +956,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 threadAssertFalse(l.isSignalled());
-                threadAssertTrue(l.tryAcquireSharedNanos(0, MEDIUM_DELAY_MS* 1000 * 1000));
+                threadAssertTrue(l.tryAcquireSharedNanos(0, MEDIUM_DELAY_MS * 1000L * 1000L));
                 threadAssertTrue(l.isSignalled());
             }});
 
@@ -991,7 +993,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 threadAssertFalse(l.isSignalled());
-                l.tryAcquireSharedNanos(0, SMALL_DELAY_MS* 1000 * 1000);
+                l.tryAcquireSharedNanos(0, SMALL_DELAY_MS * 1000L * 1000L);
             }});
 
         t.start();
@@ -1009,7 +1011,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 threadAssertFalse(l.isSignalled());
-                threadAssertFalse(l.tryAcquireSharedNanos(0, SMALL_DELAY_MS* 1000 * 1000));
+                threadAssertFalse(l.tryAcquireSharedNanos(0, SMALL_DELAY_MS * 1000L * 1000L));
             }});
 
         t.start();

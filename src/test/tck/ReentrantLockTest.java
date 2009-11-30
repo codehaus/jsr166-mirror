@@ -270,6 +270,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -370,6 +371,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lockInterruptibly();
         Thread t = new Thread(new InterruptedLockRunnable(lock));
         t.start();
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         assertTrue(lock.isLocked());
         assertTrue(lock.isHeldByCurrentThread());
@@ -774,7 +776,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                c.awaitNanos(1000 * 1000 * 1000); // 1 sec
+                c.awaitNanos(LONG_DELAY_MS * 1000L * 1000L);
             }});
 
         t.start();

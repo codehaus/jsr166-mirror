@@ -456,7 +456,6 @@ public class JSR166TestCase extends TestCase {
             try {
                 realRun();
                 threadShouldThrow(exceptionClass.getSimpleName());
-            } catch (InterruptedException success) {
             } catch (Throwable t) {
                 if (! exceptionClass.isInstance(t))
                     threadUnexpectedException(t);
@@ -477,7 +476,6 @@ public class JSR166TestCase extends TestCase {
             try {
                 realRun();
                 threadShouldThrow(exceptionClass.getSimpleName());
-            } catch (InterruptedException success) {
             } catch (Throwable t) {
                 if (! exceptionClass.isInstance(t))
                     threadUnexpectedException(t);

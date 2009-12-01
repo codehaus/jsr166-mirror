@@ -617,7 +617,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     public void testAddFirst() {
         ArrayDeque q = populatedDeque(3);
         q.addFirst(four);
-        assertEquals(four,q.peekFirst());
+        assertSame(four, q.peekFirst());
     }
 
     /**
@@ -626,7 +626,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     public void testAddLast() {
         ArrayDeque q = populatedDeque(3);
         q.addLast(four);
-        assertEquals(four,q.peekLast());
+        assertSame(four, q.peekLast());
     }
 
 }

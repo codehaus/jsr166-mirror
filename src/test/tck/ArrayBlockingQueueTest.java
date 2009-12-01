@@ -696,8 +696,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         it.remove();
 
         it = q.iterator();
-        assertEquals(it.next(), one);
-        assertEquals(it.next(), three);
+        assertSame(it.next(), one);
+        assertSame(it.next(), three);
         assertFalse(it.hasNext());
     }
 
@@ -769,7 +769,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             }});
 
         joinPool(executor);
-
     }
 
     /**

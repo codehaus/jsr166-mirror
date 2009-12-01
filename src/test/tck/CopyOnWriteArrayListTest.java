@@ -312,7 +312,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testRemove() {
         CopyOnWriteArrayList full = populatedArray(3);
-        assertEquals(two, full.remove(2));
+        assertEquals(2, full.remove(2));
         assertEquals(2, full.size());
     }
 
@@ -333,7 +333,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testSet() {
         CopyOnWriteArrayList full = populatedArray(3);
-        assertEquals(two, full.set(2, four));
+        assertEquals(2, full.set(2, four));
         assertEquals(4, full.get(2));
     }
 

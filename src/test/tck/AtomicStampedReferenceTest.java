@@ -22,12 +22,11 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
      */
     public void testConstructor() {
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        assertEquals(one,ai.getReference());
+        assertSame(one,ai.getReference());
         assertEquals(0, ai.getStamp());
         AtomicStampedReference a2 = new AtomicStampedReference(null, 1);
         assertNull(a2.getReference());
         assertEquals(1, a2.getStamp());
-
     }
 
     /**
@@ -36,19 +35,19 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     public void testGetSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        assertEquals(one,ai.getReference());
+        assertSame(one,ai.getReference());
         assertEquals(0, ai.getStamp());
-        assertEquals(one, ai.get(mark));
+        assertSame(one, ai.get(mark));
         assertEquals(0, mark[0]);
         ai.set(two, 0);
-        assertEquals(two,ai.getReference());
+        assertSame(two,ai.getReference());
         assertEquals(0, ai.getStamp());
-        assertEquals(two, ai.get(mark));
+        assertSame(two, ai.get(mark));
         assertEquals(0, mark[0]);
         ai.set(one, 1);
-        assertEquals(one,ai.getReference());
+        assertSame(one,ai.getReference());
         assertEquals(1, ai.getStamp());
-        assertEquals(one, ai.get(mark));
+        assertSame(one, ai.get(mark));
         assertEquals(1,mark[0]);
     }
 
@@ -61,7 +60,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         assertEquals(0, ai.getStamp());
         assertTrue(ai.attemptStamp(one, 1));
         assertEquals(1, ai.getStamp());
-        assertEquals(one, ai.get(mark));
+        assertSame(one, ai.get(mark));
         assertEquals(1, mark[0]);
     }
 
@@ -72,20 +71,20 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     public void testCompareAndSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        assertEquals(one, ai.get(mark));
+        assertSame(one, ai.get(mark));
         assertEquals(0, ai.getStamp());
         assertEquals(0, mark[0]);
 
         assertTrue(ai.compareAndSet(one, two, 0, 0));
-        assertEquals(two, ai.get(mark));
+        assertSame(two, ai.get(mark));
         assertEquals(0, mark[0]);
 
         assertTrue(ai.compareAndSet(two, m3, 0, 1));
-        assertEquals(m3, ai.get(mark));
+        assertSame(m3, ai.get(mark));
         assertEquals(1, mark[0]);
 
         assertFalse(ai.compareAndSet(two, m3, 1, 1));
-        assertEquals(m3, ai.get(mark));
+        assertSame(m3, ai.get(mark));
         assertEquals(1, mark[0]);
     }
 
@@ -105,7 +104,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(one, two, 0, 0));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertEquals(ai.getReference(), three);
+        assertSame(ai.getReference(), three);
         assertEquals(ai.getStamp(), 0);
     }
 
@@ -125,7 +124,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(one, one, 0, 1));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertEquals(ai.getReference(), one);
+        assertSame(ai.getReference(), one);
         assertEquals(ai.getStamp(), 2);
     }
 
@@ -136,16 +135,16 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     public void testWeakCompareAndSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        assertEquals(one, ai.get(mark));
+        assertSame(one, ai.get(mark));
         assertEquals(0, ai.getStamp ());
         assertEquals(0, mark[0]);
 
         while (!ai.weakCompareAndSet(one, two, 0, 0));
-        assertEquals(two, ai.get(mark));
+        assertSame(two, ai.get(mark));
         assertEquals(0, mark[0]);
 
         while (!ai.weakCompareAndSet(two, m3, 0, 1));
-        assertEquals(m3, ai.get(mark));
+        assertSame(m3, ai.get(mark));
         assertEquals(1, mark[0]);
     }
 

@@ -48,7 +48,6 @@ public class AtomicIntegerTest extends JSR166TestCase {
         assertEquals(2,ai.get());
         ai.set(-3);
         assertEquals(-3,ai.get());
-
     }
 
     /**
@@ -61,8 +60,8 @@ public class AtomicIntegerTest extends JSR166TestCase {
         assertEquals(2,ai.get());
         ai.lazySet(-3);
         assertEquals(-3,ai.get());
-
     }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
@@ -72,7 +71,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(2,-4));
         assertEquals(-4,ai.get());
         assertFalse(ai.compareAndSet(-5,7));
-        assertFalse((7 == ai.get()));
+        assertEquals(-4,ai.get());
         assertTrue(ai.compareAndSet(-4,7));
         assertEquals(7,ai.get());
     }

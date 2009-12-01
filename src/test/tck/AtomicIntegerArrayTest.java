@@ -120,7 +120,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             assertTrue(ai.compareAndSet(i, 2,-4));
             assertEquals(-4,ai.get(i));
             assertFalse(ai.compareAndSet(i, -5,7));
-            assertFalse((7 == ai.get(i)));
+            assertEquals(-4,ai.get(i));
             assertTrue(ai.compareAndSet(i, -4,7));
             assertEquals(7,ai.get(i));
         }

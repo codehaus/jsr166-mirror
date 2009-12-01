@@ -472,8 +472,8 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         it.next();
         it.remove();
         it = q.iterator();
-        assertEquals(it.next(), two);
-        assertEquals(it.next(), three);
+        assertSame(it.next(), two);
+        assertSame(it.next(), three);
         assertFalse(it.hasNext());
     }
 

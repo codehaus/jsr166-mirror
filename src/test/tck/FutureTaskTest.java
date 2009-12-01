@@ -88,7 +88,7 @@ public class FutureTaskTest extends JSR166TestCase {
     public void testSet() throws Exception {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.set(one);
-        assertEquals(task.get(), one);
+        assertSame(task.get(), one);
     }
 
     /**

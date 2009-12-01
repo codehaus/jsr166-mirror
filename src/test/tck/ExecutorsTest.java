@@ -390,7 +390,6 @@ public class ExecutorsTest extends JSR166TestCase {
         } finally {
             joinPool(e);
         }
-
     }
 
     void checkCCL() {
@@ -539,7 +538,7 @@ public class ExecutorsTest extends JSR166TestCase {
      */
     public void testCallable2() throws Exception {
         Callable c = Executors.callable(new NoOpRunnable(), one);
-        assertEquals(one, c.call());
+        assertSame(one, c.call());
     }
 
     /**
@@ -548,7 +547,7 @@ public class ExecutorsTest extends JSR166TestCase {
     public void testCallable3() throws Exception {
         Callable c = Executors.callable(new PrivilegedAction() {
                 public Object run() { return one; }});
-        assertEquals(one, c.call());
+        assertSame(one, c.call());
     }
 
     /**
@@ -557,7 +556,7 @@ public class ExecutorsTest extends JSR166TestCase {
     public void testCallable4() throws Exception {
         Callable c = Executors.callable(new PrivilegedExceptionAction() {
                 public Object run() { return one; }});
-        assertEquals(one, c.call());
+        assertSame(one, c.call());
     }
 
 

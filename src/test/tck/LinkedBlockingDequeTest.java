@@ -269,7 +269,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         LinkedBlockingDeque q = populatedDeque(3);
         q.pollLast();
         q.addFirst(four);
-        assertEquals(four,q.peekFirst());
+        assertSame(four, q.peekFirst());
     }
 
     /**
@@ -279,7 +279,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         LinkedBlockingDeque q = populatedDeque(3);
         q.pollLast();
         q.addLast(four);
-        assertEquals(four,q.peekLast());
+        assertSame(four, q.peekLast());
     }
 
 
@@ -437,7 +437,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         LinkedBlockingDeque q = populatedDeque(3);
         q.pollLast();
         q.push(four);
-        assertEquals(four,q.peekFirst());
+        assertSame(four, q.peekFirst());
     }
 
 
@@ -1385,8 +1385,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         it.remove();
 
         it = q.iterator();
-        assertEquals(it.next(), one);
-        assertEquals(it.next(), three);
+        assertSame(it.next(), one);
+        assertSame(it.next(), three);
         assertFalse(it.hasNext());
     }
 

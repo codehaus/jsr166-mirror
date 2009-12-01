@@ -614,8 +614,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         it.remove();
 
         it = q.iterator();
-        assertEquals(it.next(), one);
-        assertEquals(it.next(), three);
+        assertSame(it.next(), one);
+        assertSame(it.next(), three);
         assertFalse(it.hasNext());
     }
 
@@ -680,7 +680,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                assertEquals(one, q.take());
+                assertSame(one, q.take());
             }});
 
         joinPool(executor);
@@ -891,7 +891,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.transfer(SIZE);
-                threadAssertTrue(q.isEmpty());
+                assertTrue(q.isEmpty());
             }});
 
         Thread.sleep(SHORT_DELAY_MS);
@@ -912,8 +912,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 Integer i = SIZE + 1;
                 q.transfer(i);
-                threadAssertTrue(!q.contains(i));
-                threadAssertEquals(1, q.size());
+                assertTrue(!q.contains(i));
+                assertEquals(1, q.size());
             }});
 
         Thread interruptedThread = newStartedThread(
@@ -946,13 +946,13 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.transfer(four);
-                threadAssertFalse(q.contains(four));
-                threadAssertEquals(three, q.poll());
+                assertFalse(q.contains(four));
+                assertSame(three, q.poll());
             }});
 
         Thread.sleep(SHORT_DELAY_MS);
         assertTrue(q.offer(three));
-        assertEquals(four, q.poll());
+        assertSame(four, q.poll());
         t.join();
     }
 
@@ -1010,10 +1010,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             public void realRun() {
                 while (! q.hasWaitingConsumer())
                     Thread.yield();
-                threadAssertTrue(q.hasWaitingConsumer());
-                threadAssertTrue(q.isEmpty());
-                threadAssertTrue(q.size() == 0);
-                threadAssertTrue(q.tryTransfer(hotPotato));
+                assertTrue(q.hasWaitingConsumer());
+                assertTrue(q.isEmpty());
+                assertEquals(q.size(), 0);
+                assertTrue(q.tryTransfer(hotPotato));
             }});
 
         assertSame(hotPotato, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
@@ -1033,10 +1033,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             public void realRun() {
                 while (! q.hasWaitingConsumer())
                     Thread.yield();
-                threadAssertTrue(q.hasWaitingConsumer());
-                threadAssertTrue(q.isEmpty());
-                threadAssertTrue(q.size() == 0);
-                threadAssertTrue(q.tryTransfer(hotPotato));
+                assertTrue(q.hasWaitingConsumer());
+                assertTrue(q.isEmpty());
+                assertEquals(q.size(), 0);
+                assertTrue(q.tryTransfer(hotPotato));
             }});
 
         assertSame(q.take(), hotPotato);
@@ -1094,8 +1094,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         Thread.sleep(SHORT_DELAY_MS);
         assertEquals(2, q.size());
-        assertEquals(four, q.poll());
-        assertEquals(five, q.poll());
+        assertSame(four, q.poll());
+        assertSame(five, q.poll());
         checkEmpty(q);
         t.join();
     }
@@ -1110,7 +1110,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertEquals(1, q.size());
         assertFalse(q.tryTransfer(five, SHORT_DELAY_MS, MILLISECONDS));
         assertEquals(1, q.size());
-        assertEquals(four, q.poll());
+        assertSame(four, q.poll());
         assertNull(q.poll());
         checkEmpty(q);
     }

@@ -73,7 +73,7 @@ public class AtomicLongTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(2,-4));
         assertEquals(-4,ai.get());
         assertFalse(ai.compareAndSet(-5,7));
-        assertFalse((7 == ai.get()));
+        assertEquals(-4,ai.get());
         assertTrue(ai.compareAndSet(-4,7));
         assertEquals(7,ai.get());
     }

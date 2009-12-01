@@ -451,15 +451,15 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testDescendingIteratorRemove () {
         final LinkedList q = new LinkedList();
-        q.add(new Integer(3));
-        q.add(new Integer(2));
-        q.add(new Integer(1));
+        q.add(three);
+        q.add(two);
+        q.add(one);
         Iterator it = q.descendingIterator();
         it.next();
         it.remove();
         it = q.descendingIterator();
-        assertEquals(it.next(), 2);
-        assertEquals(it.next(), 3);
+        assertSame(it.next(), two);
+        assertSame(it.next(), three);
         assertFalse(it.hasNext());
     }
 
@@ -481,7 +481,7 @@ public class LinkedListTest extends JSR166TestCase {
     public void testAddFirst() {
         LinkedList q = populatedQueue(3);
         q.addFirst(four);
-        assertEquals(four,q.peek());
+        assertSame(four, q.peek());
     }
 
     /**
@@ -489,9 +489,8 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testPush() {
         LinkedList q = populatedQueue(3);
-        q.pollLast();
         q.push(four);
-        assertEquals(four,q.peekFirst());
+        assertSame(four, q.peekFirst());
     }
 
     /**

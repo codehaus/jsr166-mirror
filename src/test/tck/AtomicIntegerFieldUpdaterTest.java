@@ -73,7 +73,6 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         assertEquals(2,a.get(this));
         a.set(this,-3);
         assertEquals(-3,a.get(this));
-
     }
 
     /**
@@ -92,7 +91,6 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         assertEquals(2,a.get(this));
         a.lazySet(this,-3);
         assertEquals(-3,a.get(this));
-
     }
 
     /**
@@ -110,7 +108,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         assertTrue(a.compareAndSet(this,2,-4));
         assertEquals(-4,a.get(this));
         assertFalse(a.compareAndSet(this,-5,7));
-        assertFalse((7 == a.get(this)));
+        assertEquals(-4,a.get(this));
         assertTrue(a.compareAndSet(this,-4,7));
         assertEquals(7,a.get(this));
     }

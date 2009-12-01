@@ -23,7 +23,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
      */
     public void testConstructor() {
         AtomicReference ai = new AtomicReference(one);
-        assertEquals(one,ai.get());
+        assertSame(one,ai.get());
     }
 
     /**
@@ -39,11 +39,11 @@ public class AtomicReferenceTest extends JSR166TestCase {
      */
     public void testGetSet() {
         AtomicReference ai = new AtomicReference(one);
-        assertEquals(one,ai.get());
+        assertSame(one,ai.get());
         ai.set(two);
-        assertEquals(two,ai.get());
+        assertSame(two,ai.get());
         ai.set(m3);
-        assertEquals(m3,ai.get());
+        assertSame(m3,ai.get());
     }
 
     /**
@@ -51,11 +51,11 @@ public class AtomicReferenceTest extends JSR166TestCase {
      */
     public void testGetLazySet() {
         AtomicReference ai = new AtomicReference(one);
-        assertEquals(one,ai.get());
+        assertSame(one,ai.get());
         ai.lazySet(two);
-        assertEquals(two,ai.get());
+        assertSame(two,ai.get());
         ai.lazySet(m3);
-        assertEquals(m3,ai.get());
+        assertSame(m3,ai.get());
     }
 
     /**
@@ -65,11 +65,11 @@ public class AtomicReferenceTest extends JSR166TestCase {
         AtomicReference ai = new AtomicReference(one);
         assertTrue(ai.compareAndSet(one,two));
         assertTrue(ai.compareAndSet(two,m4));
-        assertEquals(m4,ai.get());
+        assertSame(m4,ai.get());
         assertFalse(ai.compareAndSet(m5,seven));
-        assertFalse((seven.equals(ai.get())));
+        assertSame(m4,ai.get());
         assertTrue(ai.compareAndSet(m4,seven));
-        assertEquals(seven,ai.get());
+        assertSame(seven,ai.get());
     }
 
     /**
@@ -88,7 +88,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(one, two));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertEquals(ai.get(), three);
+        assertSame(ai.get(), three);
     }
 
     /**
@@ -99,9 +99,9 @@ public class AtomicReferenceTest extends JSR166TestCase {
         AtomicReference ai = new AtomicReference(one);
         while (!ai.weakCompareAndSet(one,two));
         while (!ai.weakCompareAndSet(two,m4));
-        assertEquals(m4,ai.get());
+        assertSame(m4,ai.get());
         while (!ai.weakCompareAndSet(m4,seven));
-        assertEquals(seven,ai.get());
+        assertSame(seven,ai.get());
     }
 
     /**
@@ -109,9 +109,9 @@ public class AtomicReferenceTest extends JSR166TestCase {
      */
     public void testGetAndSet() {
         AtomicReference ai = new AtomicReference(one);
-        assertEquals(one,ai.getAndSet(zero));
-        assertEquals(zero,ai.getAndSet(m10));
-        assertEquals(m10,ai.getAndSet(one));
+        assertSame(one,ai.getAndSet(zero));
+        assertSame(zero,ai.getAndSet(m10));
+        assertSame(m10,ai.getAndSet(one));
     }
 
     /**

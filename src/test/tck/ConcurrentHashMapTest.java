@@ -318,7 +318,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         map.remove(four, "A");
         assertEquals(4, map.size());
         assertTrue(map.containsKey(four));
-
     }
 
     /**

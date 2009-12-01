@@ -74,7 +74,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     }
 
 
-
     /**
      * execute successfully executes a runnable
      */

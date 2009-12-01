@@ -578,7 +578,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         joinPool(executor);
-
     }
 
     /**

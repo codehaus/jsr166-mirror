@@ -309,7 +309,6 @@ public class TimeUnitTest extends JSR166TestCase {
         assertEquals(Long.MIN_VALUE,
                      TimeUnit.NANOSECONDS.convert(-Long.MAX_VALUE / 4,
                                                   TimeUnit.DAYS));
-
     }
 
     /**

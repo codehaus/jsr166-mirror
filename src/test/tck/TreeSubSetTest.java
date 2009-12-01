@@ -335,7 +335,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.lower(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -354,7 +353,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.higher(six);
         assertNull(e4);
-
     }
 
     /**
@@ -373,7 +371,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.floor(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -392,7 +389,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.ceiling(six);
         assertNull(e4);
-
     }
 
     /**
@@ -830,7 +826,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.lower(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -849,7 +844,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.higher(m6);
         assertNull(e4);
-
     }
 
     /**
@@ -868,7 +862,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.floor(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -887,7 +880,6 @@ public class TreeSubSetTest extends JSR166TestCase {
 
         Object e4 = q.ceiling(m6);
         assertNull(e4);
-
     }
 
     /**

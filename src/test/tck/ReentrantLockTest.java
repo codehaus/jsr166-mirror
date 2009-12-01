@@ -56,8 +56,6 @@ public class ReentrantLockTest extends JSR166TestCase {
         public Collection<Thread> getWaitingThreads(Condition c) {
             return super.getWaitingThreads(c);
         }
-
-
     }
 
     /**

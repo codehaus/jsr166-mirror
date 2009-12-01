@@ -178,7 +178,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         }
 
         joinPool(se);
-
     }
 
     /**

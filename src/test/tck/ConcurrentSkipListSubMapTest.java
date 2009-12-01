@@ -343,7 +343,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         map.remove(four, "A");
         assertEquals(4, map.size());
         assertTrue(map.containsKey(four));
-
     }
 
     /**
@@ -362,7 +361,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.lowerEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -381,7 +379,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.higherEntry(six);
         assertNull(e4);
-
     }
 
     /**
@@ -400,7 +397,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.floorEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -419,7 +415,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.ceilingEntry(six);
         assertNull(e4);
-
     }
 
     /**
@@ -1035,7 +1030,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         map.remove(m4, "A");
         assertEquals(4, map.size());
         assertTrue(map.containsKey(m4));
-
     }
 
     /**
@@ -1054,7 +1048,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.lowerEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -1073,7 +1066,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.higherEntry(m6);
         assertNull(e4);
-
     }
 
     /**
@@ -1092,7 +1084,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.floorEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -1111,7 +1102,6 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.ceilingEntry(m6);
         assertNull(e4);
-
     }
 
     /**

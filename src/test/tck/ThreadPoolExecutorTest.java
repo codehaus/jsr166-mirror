@@ -385,7 +385,6 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             try {
                 l = p1.shutdownNow();
             } catch (SecurityException ok) { return; }
-
         }
         assertTrue(p1.isShutdown());
         assertTrue(l.size() <= 4);

@@ -246,7 +246,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.lowerEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -265,7 +264,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.higherEntry(six);
         assertNull(e4);
-
     }
 
     /**
@@ -284,7 +282,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.floorEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -303,7 +300,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.ceilingEntry(six);
         assertNull(e4);
-
     }
 
     /**
@@ -814,7 +810,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.lowerEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -833,7 +828,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.higherEntry(m6);
         assertNull(e4);
-
     }
 
     /**
@@ -852,7 +846,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.floorEntry(zero);
         assertNull(e4);
-
     }
 
     /**
@@ -871,7 +864,6 @@ public class TreeSubMapTest extends JSR166TestCase {
 
         Map.Entry e4 = map.ceilingEntry(m6);
         assertNull(e4);
-
     }
 
     /**

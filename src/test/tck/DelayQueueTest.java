@@ -754,7 +754,6 @@ public class DelayQueueTest extends JSR166TestCase {
             }});
 
         joinPool(executor);
-
     }
 
 

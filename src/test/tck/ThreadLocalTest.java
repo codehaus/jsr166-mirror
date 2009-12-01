@@ -39,11 +39,11 @@ public class ThreadLocalTest extends JSR166TestCase {
      * remove causes next access to return initial value
      */
     public void testRemove() {
-        assertEquals(tl.get(), one);
+        assertSame(tl.get(), one);
         tl.set(two);
-        assertEquals(tl.get(), two);
+        assertSame(tl.get(), two);
         tl.remove();
-        assertEquals(tl.get(), one);
+        assertSame(tl.get(), one);
     }
 
     /**
@@ -51,11 +51,11 @@ public class ThreadLocalTest extends JSR166TestCase {
      * initial value
      */
     public void testRemoveITL() {
-        assertEquals(itl.get(), zero);
+        assertSame(itl.get(), zero);
         itl.set(two);
-        assertEquals(itl.get(), two);
+        assertSame(itl.get(), two);
         itl.remove();
-        assertEquals(itl.get(), zero);
+        assertSame(itl.get(), zero);
     }
 
     private class ITLThread extends Thread {

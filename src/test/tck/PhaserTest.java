@@ -358,7 +358,7 @@ public class PhaserTest extends JSR166TestCase {
                     phaseCount.incrementAndGet();
                     sleepTillInterrupted(SMALL_DELAY_MS);
                     phaser.awaitAdvance(phase);
-                    threadAssertTrue(phaseCount.get() == 4);
+                    assertEquals(phaseCount.get(), 4);
                 }}));
         }
         for (Thread thread : threads)
@@ -381,7 +381,7 @@ public class PhaserTest extends JSR166TestCase {
                     phaser.arrive();
                 }}));
             phase = phaser.awaitAdvance(phaser.arrive());
-            threadAssertEquals(phase, phaser.getPhase());
+            assertEquals(phase, phaser.getPhase());
         }
         for (Thread thread : threads)
             thread.join();
@@ -405,8 +405,8 @@ public class PhaserTest extends JSR166TestCase {
                 /*
                  * This point is reached when force termination is called in which phase = -1
                  */
-                threadAssertTrue(phase < 0);
-                threadAssertTrue(phaser.isTerminated());
+                assertTrue(phase < 0);
+                assertTrue(phaser.isTerminated());
             }});
         /*
          * This thread will cause the first thread run to wait, in doing so
@@ -418,8 +418,8 @@ public class PhaserTest extends JSR166TestCase {
                 sleepTillInterrupted(MEDIUM_DELAY_MS);
                 int p1 = phaser.arrive();
                 int phase = phaser.awaitAdvance(p1);
-                threadAssertTrue(phase < 0);
-                threadAssertTrue(phaser.isTerminated());
+                assertTrue(phase < 0);
+                assertTrue(phaser.isTerminated());
             }});
 
         phaser.arrive();
@@ -480,7 +480,7 @@ public class PhaserTest extends JSR166TestCase {
         arrivingCount.incrementAndGet();
         //the + 1 adds to expectedArrive to account for the main threads arrival
         int expectedArrived = phaseNumber > 0 ? phaseNumber * six + 1 : phaser.getArrivedParties() + 1;
-        threadAssertEquals(expectedArrived, arrivingCount.get());
+        assertEquals(expectedArrived, arrivingCount.get());
         for (Thread thread : threads)
             thread.join();
     }

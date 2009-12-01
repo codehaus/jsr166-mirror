@@ -292,7 +292,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     try {
                         AsyncFib f = new AsyncFib(8);
                         f.fork();
-                        f.get(5L, TimeUnit.SECONDS);
+                        f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadAssertTrue(f.number == 21);
                         threadAssertTrue(f.isDone());
                     } catch (Exception ex) {
@@ -470,7 +470,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     try {
                         FailingAsyncFib f = new FailingAsyncFib(8);
                         f.fork();
-                        f.get(5L, TimeUnit.SECONDS);
+                        f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         shouldThrow();
                     } catch (ExecutionException success) {
                     } catch (Exception ex) {
@@ -605,7 +605,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                         AsyncFib f = new AsyncFib(8);
                         f.cancel(true);
                         f.fork();
-                        f.get(5L, TimeUnit.SECONDS);
+                        f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         shouldThrow();
                     } catch (CancellationException success) {
                     } catch (Exception ex) {

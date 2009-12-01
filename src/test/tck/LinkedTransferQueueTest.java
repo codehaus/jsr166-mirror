@@ -351,8 +351,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i) {
                     long t0 = System.nanoTime();
-                    threadAssertEquals(i, (int) q.poll(LONG_DELAY_MS,
-                                                       MILLISECONDS));
+                    assertEquals(i, (int) q.poll(LONG_DELAY_MS, MILLISECONDS));
                     long millisElapsed = (System.nanoTime() - t0)/(1024 * 1024);
                     assertTrue(millisElapsed < SMALL_DELAY_MS);
                 }
@@ -462,7 +461,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertTrue(q.remove(one));
         assertTrue(q.remove(two));
         assertTrue(q.add(three));
-        assertTrue(q.take() == three);
+        assertSame(q.take(), three);
     }
 
     /**
@@ -675,14 +674,13 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() {
-                threadAssertTrue(q.offer(three, MEDIUM_DELAY_MS,
-                                         MILLISECONDS));
+                assertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                threadAssertEquals(one, q.take());
+                assertEquals(one, q.take());
             }});
 
         joinPool(executor);
@@ -1018,7 +1016,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 threadAssertTrue(q.tryTransfer(hotPotato));
             }});
 
-        assertTrue(q.poll(MEDIUM_DELAY_MS, MILLISECONDS) == hotPotato);
+        assertSame(hotPotato, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
         checkEmpty(q);
         t.join();
     }
@@ -1041,7 +1039,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 threadAssertTrue(q.tryTransfer(hotPotato));
             }});
 
-        assertTrue(q.take() == hotPotato);
+        assertSame(q.take(), hotPotato);
         checkEmpty(q);
         t.join();
     }
@@ -1071,9 +1069,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse
-                    (q.tryTransfer(new Object(),
-                                   SHORT_DELAY_MS, MILLISECONDS));
+                assertFalse(q.tryTransfer(new Object(),
+                                          SHORT_DELAY_MS, MILLISECONDS));
             }});
 
         Thread.sleep(SMALL_DELAY_MS);
@@ -1091,9 +1088,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(q.tryTransfer(five,
-                                               MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.isEmpty());
+                assertTrue(q.tryTransfer(five, MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
             }});
 
         Thread.sleep(SHORT_DELAY_MS);

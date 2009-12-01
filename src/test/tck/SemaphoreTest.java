@@ -212,9 +212,9 @@ public class SemaphoreTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 s.release();
-                threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
                 s.release();
-                threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
             }});
 
         t.start();
@@ -594,11 +594,11 @@ public class SemaphoreTest extends JSR166TestCase {
         final Semaphore s = new Semaphore(1, true);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
             }});
 
         t.start();

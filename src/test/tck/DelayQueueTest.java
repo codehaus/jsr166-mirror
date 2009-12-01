@@ -750,9 +750,9 @@ public class DelayQueueTest extends JSR166TestCase {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll());
-                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.isEmpty());
+                assertNull(q.poll());
+                assertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
             }});
 
         executor.execute(new CheckedRunnable() {

@@ -899,7 +899,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
-                c.awaitNanos(LONG_DELAY_MS * 1000L * 1000L);
+                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
                 lock.writeLock().unlock();
             }});
 

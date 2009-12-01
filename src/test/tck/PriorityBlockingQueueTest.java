@@ -699,15 +699,15 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll());
-                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.isEmpty());
+                assertNull(q.poll());
+                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                q.put(new Integer(1));
+                q.put(one);
             }});
 
         joinPool(executor);

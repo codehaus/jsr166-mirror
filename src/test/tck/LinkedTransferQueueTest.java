@@ -697,10 +697,9 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll());
-                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS,
-                                                MILLISECONDS));
-                threadAssertTrue(q.isEmpty());
+                assertNull(q.poll());
+                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
             }});
 
         executor.execute(new CheckedRunnable() {
@@ -859,14 +858,14 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                threadAssertTrue(q.hasWaitingConsumer());
-                threadAssertEquals(q.getWaitingConsumerCount(), 1);
-                threadAssertTrue(q.offer(new Object()));
-                threadAssertFalse(q.hasWaitingConsumer());
-                threadAssertEquals(q.getWaitingConsumerCount(), 0);
+                assertTrue(q.hasWaitingConsumer());
+                assertEquals(q.getWaitingConsumerCount(), 1);
+                assertTrue(q.offer(one));
+                assertFalse(q.hasWaitingConsumer());
+                assertEquals(q.getWaitingConsumerCount(), 0);
             }});
 
-        assertTrue(q.poll(LONG_DELAY_MS, MILLISECONDS) != null);
+        assertSame(one, q.poll(LONG_DELAY_MS, MILLISECONDS));
         assertEquals(q.getWaitingConsumerCount(), 0);
         assertFalse(q.hasWaitingConsumer());
         t.join();

@@ -327,7 +327,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                sync.tryAcquireNanos(1, MEDIUM_DELAY_MS * 1000L * 1000L);
+                sync.tryAcquireNanos(1, MILLISECONDS.toNanos(MEDIUM_DELAY_MS));
             }});
 
         t.start();
@@ -361,7 +361,8 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(sync.tryAcquireNanos(1, SHORT_DELAY_MS * 1000L * 1000L));
+                long nanos = MILLISECONDS.toNanos(SHORT_DELAY_MS);
+                assertFalse(sync.tryAcquireNanos(1, nanos));
             }});
 
         t.start();
@@ -806,7 +807,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                c.awaitNanos(LONG_DELAY_MS * 1000L * 1000L);
+                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
             }});
 
         t.start();
@@ -953,9 +954,10 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(l.isSignalled());
-                threadAssertTrue(l.tryAcquireSharedNanos(0, MEDIUM_DELAY_MS * 1000L * 1000L));
-                threadAssertTrue(l.isSignalled());
+                assertFalse(l.isSignalled());
+                long nanos = MILLISECONDS.toNanos(MEDIUM_DELAY_MS);
+                assertTrue(l.tryAcquireSharedNanos(0, nanos));
+                assertTrue(l.isSignalled());
             }});
 
         t.start();
@@ -990,8 +992,9 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(l.isSignalled());
-                l.tryAcquireSharedNanos(0, SMALL_DELAY_MS * 1000L * 1000L);
+                assertFalse(l.isSignalled());
+                long nanos = MILLISECONDS.toNanos(SMALL_DELAY_MS);
+                l.tryAcquireSharedNanos(0, nanos);
             }});
 
         t.start();
@@ -1008,8 +1011,9 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(l.isSignalled());
-                threadAssertFalse(l.tryAcquireSharedNanos(0, SMALL_DELAY_MS * 1000L * 1000L));
+                assertFalse(l.isSignalled());
+                long nanos = MILLISECONDS.toNanos(SMALL_DELAY_MS);
+                assertFalse(l.tryAcquireSharedNanos(0, nanos));
             }});
 
         t.start();

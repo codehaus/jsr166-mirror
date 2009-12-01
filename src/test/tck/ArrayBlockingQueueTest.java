@@ -319,30 +319,26 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * put blocks waiting for take when full
      */
     public void testPutWithTake() throws InterruptedException {
-        final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
+        final int capacity = 2;
+        final ArrayBlockingQueue q = new ArrayBlockingQueue(capacity);
         Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() {
-                int added = 0;
+            public void realRun() throws InterruptedException {
+                for (int i = 0; i < capacity + 1; i++)
+                    q.put(i);
                 try {
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    threadShouldThrow();
-                } catch (InterruptedException success) {
-                    threadAssertTrue(added >= 2);
-                }
+                    q.put(99);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
             }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
-        q.take();
+        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.take());
+        Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
+        assertEquals(q.remainingCapacity(), 0);
     }
 
     /**
@@ -761,15 +757,15 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(q.offer(three));
-                threadAssertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertEquals(0, q.remainingCapacity());
+                assertFalse(q.offer(three));
+                assertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
+                assertEquals(0, q.remainingCapacity());
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                threadAssertEquals(one, q.take());
+                assertSame(one, q.take());
             }});
 
         joinPool(executor);
@@ -784,9 +780,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll());
-                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.isEmpty());
+                assertNull(q.poll());
+                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
             }});
 
         executor.execute(new CheckedRunnable() {

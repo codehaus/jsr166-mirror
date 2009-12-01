@@ -649,7 +649,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         assertEquals(1, sm.size());
         assertEquals(three, sm.firstKey());
         assertEquals(three, sm.lastKey());
-        assertTrue(sm.remove(three) != null);
+        assertEquals("C", sm.remove(three));
         assertTrue(sm.isEmpty());
         assertEquals(3, map.size());
     }
@@ -677,7 +677,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         assertEquals(4, map.size());
         assertEquals(0, sm.size());
         assertTrue(sm.isEmpty());
-        assertTrue(sm.remove(three) == null);
+        assertSame(sm.remove(three), null);
         assertEquals(4, map.size());
     }
 
@@ -749,7 +749,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         SortedMap ssm = sm.tailMap(four);
         assertEquals(four, ssm.firstKey());
         assertEquals(five, ssm.lastKey());
-        assertTrue(ssm.remove(four) != null);
+        assertEquals("D", ssm.remove(four));
         assertEquals(1, ssm.size());
         assertEquals(3, sm.size());
         assertEquals(4, map.size());
@@ -1340,7 +1340,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         assertEquals(1, sm.size());
         assertEquals(m3, sm.firstKey());
         assertEquals(m3, sm.lastKey());
-        assertTrue(sm.remove(m3) != null);
+        assertEquals("C", sm.remove(m3));
         assertTrue(sm.isEmpty());
         assertEquals(3, map.size());
     }
@@ -1368,7 +1368,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         assertEquals(4, map.size());
         assertEquals(0, sm.size());
         assertTrue(sm.isEmpty());
-        assertTrue(sm.remove(m3) == null);
+        assertSame(sm.remove(m3), null);
         assertEquals(4, map.size());
     }
 
@@ -1440,7 +1440,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
         SortedMap ssm = sm.tailMap(m4);
         assertEquals(m4, ssm.firstKey());
         assertEquals(m5, ssm.lastKey());
-        assertTrue(ssm.remove(m4) != null);
+        assertEquals("D", ssm.remove(m4));
         assertEquals(1, ssm.size());
         assertEquals(3, sm.size());
         assertEquals(4, map.size());

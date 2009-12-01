@@ -618,9 +618,9 @@ public class SemaphoreTest extends JSR166TestCase {
         final Semaphore s = new Semaphore(2, true);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
                 s.release(2);
-                threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
                 s.release(2);
             }});
 

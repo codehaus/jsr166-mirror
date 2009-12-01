@@ -776,7 +776,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                c.awaitNanos(LONG_DELAY_MS * 1000L * 1000L);
+                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
             }});
 
         t.start();

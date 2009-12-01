@@ -757,15 +757,15 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(q.offer(three));
-                threadAssertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertEquals(0, q.remainingCapacity());
+                assertFalse(q.offer(three));
+                assertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
+                assertEquals(0, q.remainingCapacity());
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                threadAssertEquals(one, q.take());
+                assertSame(one, q.take());
             }});
 
         joinPool(executor);
@@ -779,9 +779,9 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll());
-                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.isEmpty());
+                assertNull(q.poll());
+                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
             }});
 
         executor.execute(new CheckedRunnable() {

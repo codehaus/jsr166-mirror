@@ -169,23 +169,18 @@ public class SynchronousQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 int added = 0;
                 try {
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    threadShouldThrow();
+                    while (true) {
+                        q.put(added);
+                        ++added;
+                    }
                 } catch (InterruptedException success) {
-                    assertTrue(added >= 1);
+                    assertTrue(added == 1);
                 }
             }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
-        q.take();
+        assertEquals(0, q.take());
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -251,23 +246,18 @@ public class SynchronousQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 int added = 0;
                 try {
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    q.put(new Object());
-                    ++added;
-                    threadShouldThrow();
+                    while (true) {
+                        q.put(added);
+                        ++added;
+                    }
                 } catch (InterruptedException success) {
-                    assertTrue(added >= 1);
+                    assertTrue(added == 1);
                 }
             }});
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
-        q.take();
+        assertEquals(0, q.take());
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -280,7 +270,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final SynchronousQueue q = new SynchronousQueue(true);
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
                 q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
             }});
 
@@ -573,19 +563,18 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testOfferInExecutor() {
         final SynchronousQueue q = new SynchronousQueue();
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        final Integer one = new Integer(1);
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(q.offer(one));
-                threadAssertTrue(q.offer(one, MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertEquals(0, q.remainingCapacity());
+                assertFalse(q.offer(one));
+                assertTrue(q.offer(one, MEDIUM_DELAY_MS, MILLISECONDS));
+                assertEquals(0, q.remainingCapacity());
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                threadAssertEquals(one, q.take());
+                assertSame(one, q.take());
             }});
 
         joinPool(executor);
@@ -600,15 +589,15 @@ public class SynchronousQueueTest extends JSR166TestCase {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertNull(q.poll());
-                threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(q.isEmpty());
+                assertNull(q.poll());
+                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SMALL_DELAY_MS);
-                q.put(new Integer(1));
+                Thread.sleep(SHORT_DELAY_MS);
+                q.put(one);
             }});
 
         joinPool(executor);

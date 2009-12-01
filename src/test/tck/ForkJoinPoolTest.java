@@ -412,7 +412,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             p.execute(f);
             assertTrue(p.getPoolSize() >= 4);
             int r = f.get();
-            assertTrue(r ==  832040);
+            assertTrue(r == 832040);
         } finally {
             p.shutdownNow(); // don't wait out shutdown
         }

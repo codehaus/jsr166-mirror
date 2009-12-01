@@ -118,7 +118,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
      */
     public void testNextIntBoundedNeg() {
         try {
-            int  f = ThreadLocalRandom.current().nextInt(-17);
+            int f = ThreadLocalRandom.current().nextInt(-17);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -128,7 +128,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
      */
     public void testNextIntBadBounds() {
         try {
-            int  f = ThreadLocalRandom.current().nextInt(17, 2);
+            int f = ThreadLocalRandom.current().nextInt(17, 2);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -181,7 +181,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
      */
     public void testNextLongBoundedNeg() {
         try {
-            long  f = ThreadLocalRandom.current().nextLong(-17);
+            long f = ThreadLocalRandom.current().nextLong(-17);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -191,7 +191,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
      */
     public void testNextLongBadBounds() {
         try {
-            long  f = ThreadLocalRandom.current().nextLong(17, 2);
+            long f = ThreadLocalRandom.current().nextLong(17, 2);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }

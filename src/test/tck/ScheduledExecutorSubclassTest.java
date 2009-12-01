@@ -313,7 +313,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      *    getCompletedTaskCount increases, but doesn't overestimate,
      *   when tasks complete
      */
-    public void testGetCompletedTaskCount()throws InterruptedException  {
+    public void testGetCompletedTaskCount() throws InterruptedException {
         CustomExecutor p2 = new CustomExecutor(2);
         assertEquals(0, p2.getCompletedTaskCount());
         p2.execute(new SmallRunnable());

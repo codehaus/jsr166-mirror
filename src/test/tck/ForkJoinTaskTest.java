@@ -148,7 +148,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
 
     }
 
-    static final class AsyncFib  extends BinaryAsyncAction {
+    static final class AsyncFib extends BinaryAsyncAction {
         int number;
         public AsyncFib(int n) {
             this.number = n;
@@ -177,7 +177,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
 
-    static final class FailingAsyncFib  extends BinaryAsyncAction {
+    static final class FailingAsyncFib extends BinaryAsyncAction {
         int number;
         public FailingAsyncFib(int n) {
             this.number = n;

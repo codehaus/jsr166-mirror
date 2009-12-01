@@ -887,7 +887,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             new ObjectOutputStream(new BufferedOutputStream(bout));
         out.writeObject(l);
         out.close();
-        
+
         ByteArrayInputStream bin =
             new ByteArrayInputStream(bout.toByteArray());
         ObjectInputStream in =

@@ -24,7 +24,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
     /**
      * A delayed implementation for testing.
-     * Most  tests use Pseudodelays, where delays are all elapsed
+     * Most tests use Pseudodelays, where delays are all elapsed
      * (so, no blocking solely for delays) but are still ordered
      */
     static class PDelay implements Delayed {
@@ -32,25 +32,21 @@ public class DelayQueueTest extends JSR166TestCase {
         PDelay(int i) { pseudodelay = Integer.MIN_VALUE + i; }
         public int compareTo(PDelay y) {
             int i = pseudodelay;
-            int j = ((PDelay)y).pseudodelay;
+            int j = y.pseudodelay;
             if (i < j) return -1;
             if (i > j) return 1;
             return 0;
         }
 
         public int compareTo(Delayed y) {
-            int i = pseudodelay;
-            int j = ((PDelay)y).pseudodelay;
-            if (i < j) return -1;
-            if (i > j) return 1;
-            return 0;
+            return compareTo((PDelay)y);
         }
 
         public boolean equals(Object other) {
-            return ((PDelay)other).pseudodelay == pseudodelay;
+            return equals((PDelay)other);
         }
         public boolean equals(PDelay other) {
-            return ((PDelay)other).pseudodelay == pseudodelay;
+            return other.pseudodelay == pseudodelay;
         }
 
 
@@ -77,25 +73,21 @@ public class DelayQueueTest extends JSR166TestCase {
         }
         public int compareTo(NanoDelay y) {
             long i = trigger;
-            long j = ((NanoDelay)y).trigger;
+            long j = y.trigger;
             if (i < j) return -1;
             if (i > j) return 1;
             return 0;
         }
 
         public int compareTo(Delayed y) {
-            long i = trigger;
-            long j = ((NanoDelay)y).trigger;
-            if (i < j) return -1;
-            if (i > j) return 1;
-            return 0;
+            return compareTo((NanoDelay)y);
         }
 
         public boolean equals(Object other) {
-            return ((NanoDelay)other).trigger == trigger;
+            return equals((NanoDelay)other);
         }
         public boolean equals(NanoDelay other) {
-            return ((NanoDelay)other).trigger == trigger;
+            return other.trigger == trigger;
         }
 
         public long getDelay(TimeUnit unit) {

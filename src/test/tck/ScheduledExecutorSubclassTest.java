@@ -707,18 +707,12 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      * invokeAny(c) throws NPE if c has null elements
      */
     public void testInvokeAny3() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1);
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(latchAwaitingStringTask(latch));
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new Callable<String>() {
-                      public String call() {
-                          try {
-                              latch.await();
-                          } catch (InterruptedException quittingTime) {}
-                          return TEST_STRING;
-                      }});
-            l.add(null);
             e.invokeAny(l);
             shouldThrow();
         } catch (NullPointerException success) {
@@ -733,9 +727,9 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testInvokeAny4() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new NPETask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new NPETask());
             e.invokeAny(l);
             shouldThrow();
         } catch (ExecutionException success) {
@@ -751,7 +745,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public void testInvokeAny5() throws Exception {
         ExecutorService e = new CustomExecutor(2);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
             String result = e.invokeAny(l);
@@ -793,10 +787,10 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testInvokeAll3() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
-            l.add(null);
             e.invokeAll(l);
             shouldThrow();
         } catch (NullPointerException success) {
@@ -810,13 +804,12 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testInvokeAll4() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new NPETask());
+        List<Future<String>> futures = e.invokeAll(l);
+        assertEquals(1, futures.size());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new NPETask());
-            List<Future<String>> result = e.invokeAll(l);
-            assertEquals(1, result.size());
-            for (Future<String> future : result)
-                future.get();
+            futures.get(0).get();
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof NullPointerException);
@@ -831,12 +824,12 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public void testInvokeAll5() throws Exception {
         ExecutorService e = new CustomExecutor(2);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l);
-            assertEquals(2, result.size());
-            for (Future<String> future : result)
+            List<Future<String>> futures = e.invokeAll(l);
+            assertEquals(2, futures.size());
+            for (Future<String> future : futures)
                 assertSame(TEST_STRING, future.get());
         } finally {
             joinPool(e);
@@ -862,9 +855,9 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testTimedInvokeAnyNullTimeUnit() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
             e.invokeAny(l, MEDIUM_DELAY_MS, null);
             shouldThrow();
         } catch (NullPointerException success) {
@@ -891,18 +884,12 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      * timed invokeAny(c) throws NPE if c has null elements
      */
     public void testTimedInvokeAny3() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1);
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(latchAwaitingStringTask(latch));
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new Callable<String>() {
-                      public String call() {
-                          try {
-                              latch.await();
-                          } catch (InterruptedException quittingTime) {}
-                          return TEST_STRING;
-                      }});
-            l.add(null);
             e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (NullPointerException success) {
@@ -917,9 +904,9 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testTimedInvokeAny4() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new NPETask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new NPETask());
             e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
@@ -935,7 +922,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public void testTimedInvokeAny5() throws Exception {
         ExecutorService e = new CustomExecutor(2);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
             String result = e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
@@ -964,9 +951,9 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testTimedInvokeAllNullTimeUnit() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
             e.invokeAll(l, MEDIUM_DELAY_MS, null);
             shouldThrow();
         } catch (NullPointerException success) {
@@ -993,10 +980,10 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testTimedInvokeAll3() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
-            l.add(null);
             e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (NullPointerException success) {
@@ -1010,13 +997,13 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testTimedInvokeAll4() throws Exception {
         ExecutorService e = new CustomExecutor(2);
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new NPETask());
+        List<Future<String>> futures =
+            e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
+        assertEquals(1, futures.size());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new NPETask());
-            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
-            assertEquals(1, result.size());
-            for (Future<String> future : result)
-                future.get();
+            futures.get(0).get();
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof NullPointerException);
@@ -1031,12 +1018,13 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public void testTimedInvokeAll5() throws Exception {
         ExecutorService e = new CustomExecutor(2);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
-            assertEquals(2, result.size());
-            for (Future<String> future : result)
+            List<Future<String>> futures =
+                e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
+            assertEquals(2, futures.size());
+            for (Future<String> future : futures)
                 assertSame(TEST_STRING, future.get());
         } finally {
             joinPool(e);
@@ -1049,13 +1037,14 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public void testTimedInvokeAll6() throws Exception {
         ExecutorService e = new CustomExecutor(2);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, SHORT_DELAY_MS, MILLISECONDS);
-            assertEquals(3, result.size());
-            Iterator<Future<String>> it = result.iterator();
+            List<Future<String>> futures =
+                e.invokeAll(l, SHORT_DELAY_MS, MILLISECONDS);
+            assertEquals(3, futures.size());
+            Iterator<Future<String>> it = futures.iterator();
             Future<String> f1 = it.next();
             Future<String> f2 = it.next();
             Future<String> f3 = it.next();

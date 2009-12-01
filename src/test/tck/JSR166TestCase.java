@@ -540,6 +540,16 @@ public class JSR166TestCase extends TestCase {
         public String call() { return TEST_STRING; }
     }
 
+    public Callable<String> latchAwaitingStringTask(final CountDownLatch latch) {
+        return new CheckedCallable<String>() {
+            public String realCall() {
+                try {
+                    latch.await();
+                } catch (InterruptedException quittingTime) {}
+                return TEST_STRING;
+            }};
+    }
+
     public static class NPETask implements Callable<String> {
         public String call() { throw new NullPointerException(); }
     }

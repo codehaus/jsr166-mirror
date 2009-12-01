@@ -27,17 +27,13 @@ public class ExchangerTest extends JSR166TestCase {
         final Exchanger e = new Exchanger();
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Object v = e.exchange(one);
-                threadAssertEquals(v, two);
-                Object w = e.exchange(v);
-                threadAssertEquals(w, one);
+                assertSame(one, e.exchange(two));
+                assertSame(two, e.exchange(one));
             }});
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Object v = e.exchange(two);
-                threadAssertEquals(v, one);
-                Object w = e.exchange(v);
-                threadAssertEquals(w, two);
+                assertSame(two, e.exchange(one));
+                assertSame(one, e.exchange(two));
             }});
 
         t1.start();
@@ -53,17 +49,13 @@ public class ExchangerTest extends JSR166TestCase {
         final Exchanger e = new Exchanger();
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                Object v = e.exchange(one, SHORT_DELAY_MS, MILLISECONDS);
-                threadAssertEquals(v, two);
-                Object w = e.exchange(v, SHORT_DELAY_MS, MILLISECONDS);
-                threadAssertEquals(w, one);
+                assertSame(one, e.exchange(two, SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(two, e.exchange(one, SHORT_DELAY_MS, MILLISECONDS));
             }});
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                Object v = e.exchange(two, SHORT_DELAY_MS, MILLISECONDS);
-                threadAssertEquals(v, one);
-                Object w = e.exchange(v, SHORT_DELAY_MS, MILLISECONDS);
-                threadAssertEquals(w, two);
+                assertSame(two, e.exchange(one, SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(one, e.exchange(two, SHORT_DELAY_MS, MILLISECONDS));
             }});
 
         t1.start();
@@ -95,7 +87,7 @@ public class ExchangerTest extends JSR166TestCase {
         final Exchanger e = new Exchanger();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws Exception {
-                e.exchange(null, MEDIUM_DELAY_MS, MILLISECONDS);
+                e.exchange(null, SMALL_DELAY_MS, MILLISECONDS);
             }});
 
         t.start();
@@ -109,13 +101,10 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testExchange_TimeOutException() throws InterruptedException {
         final Exchanger e = new Exchanger();
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = new ThreadShouldThrow(TimeoutException.class) {
             public void realRun() throws Exception {
-                try {
-                    e.exchange(null, SHORT_DELAY_MS, MILLISECONDS);
-                    threadShouldThrow();
-                } catch (TimeoutException success) {}
-            }});
+                e.exchange(null, SHORT_DELAY_MS, MILLISECONDS);
+            }};
 
         t.start();
         t.join();
@@ -128,23 +117,19 @@ public class ExchangerTest extends JSR166TestCase {
         final Exchanger e = new Exchanger();
         Thread t1 = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                Object v = e.exchange(one);
-                threadAssertEquals(v, two);
-                Object w = e.exchange(v);
+                assertSame(two, e.exchange(one));
+                e.exchange(two);
             }});
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Object v = e.exchange(two);
-                threadAssertEquals(v, one);
+                assertSame(one, e.exchange(two));
                 Thread.sleep(SMALL_DELAY_MS);
-                Object w = e.exchange(v);
-                threadAssertEquals(w, three);
+                assertSame(three, e.exchange(one));
             }});
         Thread t3 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Thread.sleep(SMALL_DELAY_MS);
-                Object w = e.exchange(three);
-                threadAssertEquals(w, one);
+                assertSame(one, e.exchange(three));
             }});
 
         t1.start();

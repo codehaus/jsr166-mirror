@@ -470,12 +470,12 @@ public class PhaserTest extends JSR166TestCase {
             threads.add(newStartedThread(new CheckedRunnable() {
                     public void realRun() throws InterruptedException {
                         phaser.register();
-                        phaser.arrive();
+                        phaser.arriveAndAwaitAdvance();
                     }}));
         }
         Thread.sleep(LONG_DELAY_MS);
         assertEquals(phaser.getArrivedParties(), 3);
-        phaser.arrive();
+        phaser.arriveAndAwaitAdvance();
         for (Thread thread : threads)
             thread.join();
     }

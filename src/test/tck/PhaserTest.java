@@ -473,7 +473,7 @@ public class PhaserTest extends JSR166TestCase {
                         phaser.arriveAndAwaitAdvance();
                     }}));
         }
-        Thread.sleep(LONG_DELAY_MS);
+        Thread.sleep(MEDIUM_DELAY_MS);
         assertEquals(phaser.getArrivedParties(), 3);
         phaser.arriveAndAwaitAdvance();
         for (Thread thread : threads)

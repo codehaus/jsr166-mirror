@@ -22,46 +22,6 @@ public class ExecutorsTest extends JSR166TestCase {
         return new TestSuite(ExecutorsTest.class);
     }
 
-    static class TimedCallable<T> implements Callable<T> {
-        private final ExecutorService exec;
-        private final Callable<T> func;
-        private final long msecs;
-
-        TimedCallable(ExecutorService exec, Callable<T> func, long msecs) {
-            this.exec = exec;
-            this.func = func;
-            this.msecs = msecs;
-        }
-
-        public T call() throws Exception {
-            Future<T> ftask = exec.submit(func);
-            try {
-                return ftask.get(msecs, MILLISECONDS);
-            } finally {
-                ftask.cancel(true);
-            }
-        }
-    }
-
-
-    private static class Fib implements Callable<BigInteger> {
-        private final BigInteger n;
-        Fib(long n) {
-            if (n < 0) throw new IllegalArgumentException("need non-negative arg, but got " + n);
-            this.n = BigInteger.valueOf(n);
-        }
-        public BigInteger call() {
-            BigInteger f1 = BigInteger.ONE;
-            BigInteger f2 = f1;
-            for (BigInteger i = BigInteger.ZERO; i.compareTo(n) < 0; i = i.add(BigInteger.ONE)) {
-                BigInteger t = f1.add(f2);
-                f1 = f2;
-                f2 = t;
-            }
-            return f1;
-        }
-    };
-
     /**
      * A newCachedThreadPool can execute runnables
      */
@@ -260,39 +220,34 @@ public class ExecutorsTest extends JSR166TestCase {
     }
 
     /**
-     *  timeouts from execute will time out if they compute too long.
+     *  Future.get on submitted tasks will time out if they compute too long.
      */
     public void testTimedCallable() throws Exception {
-        int N = 10000;
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        List<Callable<BigInteger>> tasks = new ArrayList<Callable<BigInteger>>(N);
-        try {
-            long startTime = System.currentTimeMillis();
-
-            long i = 0;
-            while (tasks.size() < N) {
-                tasks.add(new TimedCallable<BigInteger>(executor, new Fib(i), 1));
-                i += 10;
-            }
-
-            int iters = 0;
-            BigInteger sum = BigInteger.ZERO;
-            for (Iterator<Callable<BigInteger>> it = tasks.iterator(); it.hasNext();) {
+        final Runnable sleeper =
+            new RunnableShouldThrow(InterruptedException.class) {
+                public void realRun() throws InterruptedException {
+                    Thread.sleep(LONG_DELAY_MS);
+                }};
+        for (ExecutorService executor :
+                 new ExecutorService[] {
+                     Executors.newSingleThreadExecutor(),
+                     Executors.newCachedThreadPool(),
+                     Executors.newFixedThreadPool(2),
+                     Executors.newScheduledThreadPool(2),
+                 }) {
+            try {
+                Future future = executor.submit(sleeper);
                 try {
-                    ++iters;
-                    sum = sum.add(it.next().call());
-                }
-                catch (TimeoutException success) {
-                    assertTrue(iters > 0);
-                    return;
+                    future.get(SHORT_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (TimeoutException success) {
+                } finally {
+                    future.cancel(true);
                 }
             }
-            // if by chance we didn't ever time out, total time must be small
-            long elapsed = System.currentTimeMillis() - startTime;
-            assertTrue(elapsed < N);
-        }
-        finally {
-            joinPool(executor);
+            finally {
+                joinPool(executor);
+            }
         }
     }
 

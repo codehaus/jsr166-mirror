@@ -465,22 +465,17 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testArriveAndAwaitAdvance3() throws InterruptedException {
         final Phaser phaser = new Phaser(1);
-        final AtomicInteger arrivingCount = new AtomicInteger(0);
         final List<Thread> threads = new ArrayList<Thread>();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 3; i++) {
             threads.add(newStartedThread(new CheckedRunnable() {
-                public void realRun() throws InterruptedException {
-                    phaser.register();
-                    sleepTillInterrupted(SHORT_DELAY_MS);
-                    arrivingCount.getAndIncrement();
-                    phaser.arrive();
-                }}));
+                    public void realRun() throws InterruptedException {
+                        phaser.register();
+                        phaser.arrive();
+                    }}));
         }
-        int phaseNumber = phaser.arriveAndAwaitAdvance();
-        arrivingCount.incrementAndGet();
-        //the + 1 adds to expectedArrive to account for the main threads arrival
-        int expectedArrived = phaseNumber > 0 ? phaseNumber * six + 1 : phaser.getArrivedParties() + 1;
-        assertEquals(expectedArrived, arrivingCount.get());
+        Thread.sleep(LONG_DELAY_MS);
+        assertEquals(phaser.getArrivedParties(), 3);
+        phaser.arrive();
         for (Thread thread : threads)
             thread.join();
     }

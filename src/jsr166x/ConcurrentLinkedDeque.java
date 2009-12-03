@@ -120,14 +120,14 @@ public class ConcurrentLinkedDeque<E>
         private volatile Node<E> prev;
         final E element;
 
-        /** Creates a node with given contents */
+        /** Creates a node with given contents. */
         Node(E element, Node<E> next, Node<E> prev) {
             super(next);
             this.prev = prev;
             this.element = element;
         }
 
-        /** Creates a marker node with given successor */
+        /** Creates a marker node with given successor. */
         Node(Node<E> next) {
             super(next);
             this.prev = this;
@@ -143,7 +143,7 @@ public class ConcurrentLinkedDeque<E>
         }
 
         /**
-         * Sets next link
+         * Sets next link.
          * @param n the next node
          */
         void setNext(Node<E> n) {
@@ -158,14 +158,14 @@ public class ConcurrentLinkedDeque<E>
         }
 
         /**
-         * Gets prev link
+         * Gets prev link.
          */
         private Node<E> getPrev() {
             return prev;
         }
 
         /**
-         * Sets prev link
+         * Sets prev link.
          * @param b the previous node
          */
         void setPrev(Node<E> b) {
@@ -173,28 +173,28 @@ public class ConcurrentLinkedDeque<E>
         }
 
         /**
-         * Returns true if this is a header, trailer, or marker node
+         * Returns true if this is a header, trailer, or marker node.
          */
         boolean isSpecial() {
             return element == null;
         }
 
         /**
-         * Returns true if this is a trailer node
+         * Returns true if this is a trailer node.
          */
         boolean isTrailer() {
             return getNext() == null;
         }
 
         /**
-         * Returns true if this is a header node
+         * Returns true if this is a header node.
          */
         boolean isHeader()  {
             return getPrev() == null;
         }
 
         /**
-         * Returns true if this is a marker node
+         * Returns true if this is a marker node.
          */
         boolean isMarker()  {
             return getPrev() == this;
@@ -211,7 +211,7 @@ public class ConcurrentLinkedDeque<E>
         }
 
         /**
-         * Returns next node, ignoring deletion marker
+         * Returns next node, ignoring deletion marker.
          */
         private Node<E> nextNonmarker() {
             Node<E> f = getNext();
@@ -311,7 +311,7 @@ public class ConcurrentLinkedDeque<E>
          * Tries to insert a node holding element as successor, failing
          * if this node is deleted.
          * @param element the element
-         * @return the new node, or null on failure.
+         * @return the new node, or null on failure
          */
         Node<E> append(E element) {
             for (;;) {
@@ -330,7 +330,7 @@ public class ConcurrentLinkedDeque<E>
          * Tries to insert a node holding element as predecessor, failing
          * if no live predecessor can be found to link to.
          * @param element the element
-         * @return the new node, or null on failure.
+         * @return the new node, or null on failure
          */
         Node<E> prepend(E element) {
             for (;;) {
@@ -347,7 +347,7 @@ public class ConcurrentLinkedDeque<E>
 
         /**
          * Tries to mark this node as deleted, failing if already
-         * deleted or if this node is header or trailer
+         * deleted or if this node is header or trailer.
          * @return true if successful
          */
         boolean delete() {
@@ -366,7 +366,7 @@ public class ConcurrentLinkedDeque<E>
          * Tries to insert a node holding element to replace this node.
          * failing if already deleted.
          * @param newElement the new element
-         * @return the new node, or null on failure.
+         * @return the new node, or null on failure
          */
         Node<E> replace(E newElement) {
             for (;;) {
@@ -397,7 +397,7 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Throws NullPointerException if argument is null
+     * Throws NullPointerException if argument is null.
      * @param v the element
      */
     private static void checkNullArg(Object v) {
@@ -472,7 +472,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Prepends the given element at the beginning of this deque.
      *
-     * @param o the element to be inserted at the beginning of this deque.
+     * @param o the element to be inserted at the beginning of this deque
      * @throws NullPointerException if the specified element is {@code null}
      */
     public void addFirst(E o) {
@@ -485,7 +485,7 @@ public class ConcurrentLinkedDeque<E>
      * Appends the given element to the end of this deque.  This is
      * identical in function to the {@code add} method.
      *
-     * @param o the element to be inserted at the end of this deque.
+     * @param o the element to be inserted at the end of this deque
      * @throws NullPointerException if the specified element is {@code null}
      */
     public void addLast(E o) {
@@ -497,7 +497,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Prepends the given element at the beginning of this deque.
      *
-     * @param o the element to be inserted at the beginning of this deque.
+     * @param o the element to be inserted at the beginning of this deque
      * @return {@code true} always
      * @throws NullPointerException if the specified element is {@code null}
      */
@@ -510,7 +510,7 @@ public class ConcurrentLinkedDeque<E>
      * Appends the given element to the end of this deque.  (Identical in
      * function to the {@code add} method; included only for consistency.)
      *
-     * @param o the element to be inserted at the end of this deque.
+     * @param o the element to be inserted at the end of this deque
      * @return {@code true} always
      * @throws NullPointerException if the specified element is {@code null}
      */
@@ -522,8 +522,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves, but does not remove, the first element of
      * this deque, or returns null if this deque is empty.
-     * @return the first element of this queue, or {@code null} if
-     * empty.
+     *
+     * @return the first element of this queue, or {@code null} if empty
      */
     public E peekFirst() {
         Node<E> n = header.successor();
@@ -533,7 +533,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves, but does not remove, the last element of
      * this deque, or returns null if this deque is empty.
-     * @return the last element of this deque, or {@code null} if empty.
+     *
+     * @return the last element of this deque, or {@code null} if empty
      */
     public E peekLast() {
         Node<E> n = trailer.predecessor();
@@ -543,8 +544,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Returns the first element in this deque.
      *
-     * @return the first element in this deque.
-     * @throws    NoSuchElementException if this deque is empty.
+     * @return the first element in this deque
+     * @throws NoSuchElementException if this deque is empty
      */
     public E getFirst() {
         return screenNullResult(peekFirst());
@@ -553,8 +554,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Returns the last element in this deque.
      *
-     * @return the last element in this deque.
-     * @throws    NoSuchElementException if this deque is empty.
+     * @return the last element in this deque
+     * @throws NoSuchElementException if this deque is empty
      */
     public E getLast()  {
         return screenNullResult(peekLast());
@@ -563,7 +564,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves and removes the first element of this deque, or
      * returns null if this deque is empty.
-     * @return the first element of this deque, or {@code null} if empty.
+     *
+     * @return the first element of this deque, or {@code null} if empty
      */
     public E pollFirst() {
         for (;;) {
@@ -578,7 +580,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Retrieves and removes the last element of this deque, or returns
      * null if this deque is empty.
-     * @return the last element of this deque, or {@code null} if empty.
+     *
+     * @return the last element of this deque, or {@code null} if empty
      */
     public E pollLast() {
         for (;;) {
@@ -593,8 +596,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Removes and returns the first element from this deque.
      *
-     * @return the first element from this deque.
-     * @throws    NoSuchElementException if this deque is empty.
+     * @return the first element from this deque
+     * @throws NoSuchElementException if this deque is empty
      */
     public E removeFirst() {
         return screenNullResult(pollFirst());
@@ -603,8 +606,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Removes and returns the last element from this deque.
      *
-     * @return the last element from this deque.
-     * @throws    NoSuchElementException if this deque is empty.
+     * @return the last element from this deque
+     * @throws NoSuchElementException if this deque is empty
      */
     public E removeLast() {
         return screenNullResult(pollLast());
@@ -625,8 +628,8 @@ public class ConcurrentLinkedDeque<E>
      * {@code o.equals(e)}, if such an element exists in this deque.
      * If the deque does not contain the element, it is unchanged.
      *
-     * @param o element to be removed from this deque, if present.
-     * @return {@code true} if the deque contained the specified element.
+     * @param o element to be removed from this deque, if present
+     * @return {@code true} if the deque contained the specified element
      * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean removeFirstOccurrence(Object o) {
@@ -652,8 +655,8 @@ public class ConcurrentLinkedDeque<E>
      * {@code o.equals(e)}, if such an element exists in this deque.
      * If the deque does not contain the element, it is unchanged.
      *
-     * @param o element to be removed from this deque, if present.
-     * @return {@code true} if the deque contained the specified element.
+     * @param o element to be removed from this deque, if present
+     * @return {@code true} if the deque contained the specified element
      * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean removeLastOccurrence(Object o) {
@@ -681,8 +684,8 @@ public class ConcurrentLinkedDeque<E>
      * Returns {@code true} if this deque contains at least one
      * element {@code e} such that {@code o.equals(e)}.
      *
-     * @param o element whose presence in this deque is to be tested.
-     * @return {@code true} if this deque contains the specified element.
+     * @param o element whose presence in this deque is to be tested
+     * @return {@code true} if this deque contains the specified element
      */
     public boolean contains(Object o) {
         if (o == null) return false;
@@ -693,9 +696,9 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Returns {@code true} if this collection contains no elements.<p>
+     * Returns {@code true} if this collection contains no elements.
      *
-     * @return {@code true} if this collection contains no elements.
+     * @return {@code true} if this collection contains no elements
      */
     public boolean isEmpty() {
         return !usable(header.successor());
@@ -715,7 +718,7 @@ public class ConcurrentLinkedDeque<E>
      * will be inaccurate. Thus, this method is typically not very
      * useful in concurrent applications.
      *
-     * @return  the number of elements in this deque.
+     * @return the number of elements in this deque
      */
     public int size() {
         long count = 0;
@@ -729,8 +732,8 @@ public class ConcurrentLinkedDeque<E>
      * {@code o.equals(e)}, if such an element exists in this deque.
      * If the deque does not contain the element, it is unchanged.
      *
-     * @param o element to be removed from this deque, if present.
-     * @return {@code true} if the deque contained the specified element.
+     * @param o element to be removed from this deque, if present
+     * @return {@code true} if the deque contained the specified element
      * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean remove(Object o) {
@@ -745,8 +748,8 @@ public class ConcurrentLinkedDeque<E>
      * progress.  (This implies that the behavior of this call is undefined if
      * the specified Collection is this deque, and this deque is nonempty.)
      *
-     * @param c the elements to be inserted into this deque.
-     * @return {@code true} if this deque changed as a result of the call.
+     * @param c the elements to be inserted into this deque
+     * @return {@code true} if this deque changed as a result of the call
      * @throws NullPointerException if {@code c} or any element within it
      * is {@code null}
      */
@@ -773,7 +776,7 @@ public class ConcurrentLinkedDeque<E>
      * in the correct order.
      *
      * @return an array containing all of the elements in this deque
-     *         in the correct order.
+     *         in the correct order
      */
     public Object[] toArray() {
         return toArrayList().toArray();
@@ -796,10 +799,10 @@ public class ConcurrentLinkedDeque<E>
      * @param a the array into which the elements of the deque are to
      *          be stored, if it is big enough; otherwise, a new array of the
      *          same runtime type is allocated for this purpose.
-     * @return an array containing the elements of the deque.
+     * @return an array containing the elements of the deque
      * @throws ArrayStoreException if the runtime type of a is not a
-     *         supertype of the runtime type of every element in this deque.
-     * @throws NullPointerException if the specified array is null.
+     *         supertype of the runtime type of every element in this deque
+     * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T[] a) {
         return toArrayList().toArray(a);

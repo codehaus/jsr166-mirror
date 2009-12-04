@@ -1493,34 +1493,32 @@ public class ForkJoinPool extends AbstractExecutorService {
             long prev = w.lastEventCount;
             WaitQueueNode node = null;
             WaitQueueNode h;
-            boolean helpSignal = false;
-            while (eventCount == prev &&
+            long ec;
+            while ((ec = eventCount) == prev &&
                    ((h = syncStack) == null || h.count == prev)) {
                 if (node == null)
                     node = new WaitQueueNode(prev, w);
                 if (casBarrierStack(node.next = h, node)) {
-                    if (!Thread.interrupted() && node.thread != null &&
-                        eventCount == prev) {
-                        if (h == null && // cover signalWork race
-                            ForkJoinWorkerThread.hasQueuedTasks(workers))
-                            helpSignal = true;
-                        else
-                            LockSupport.park(this);
-                    }
-                    if (node.thread != null)
+                    if (!Thread.interrupted() && 
+                        node.thread != null &&
+                        eventCount == prev &&
+                        (h != null || // cover signalWork race
+                         (!ForkJoinWorkerThread.hasQueuedTasks(workers) &&
+                          eventCount == prev)))
+                        LockSupport.park(this);
+                    ec = eventCount;
+                    if (node.thread != null) {
                         node.thread = null;
+                        if (ec == prev)
+                            casEventCount(prev, prev + 1); // help signal
+                    }
                     break;
                 }
             }
-            long ec = eventCount;
-            if (ec != prev)
-                w.lastEventCount = ec;
-            else if (helpSignal)
-                casEventCount(ec, ec + 1);
+            w.lastEventCount = ec;
             ensureSync();
         }
     }
-
 
     /**
      * Returns {@code true} if a new sync event occurred since last

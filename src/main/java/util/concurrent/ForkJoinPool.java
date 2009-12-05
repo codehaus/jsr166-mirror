@@ -524,14 +524,16 @@ public class ForkJoinPool extends AbstractExecutorService {
                 ws = workers;
                 if (ws == null) {
                     int ps = parallelism;
+                    updateWorkerCount(ps);
                     ws = ensureWorkerArrayCapacity(ps);
                     for (int i = 0; i < ps; ++i) {
                         ForkJoinWorkerThread w = createWorker(i);
                         if (w != null) {
                             ws[i] = w;
                             w.start();
-                            updateWorkerCount(1);
                         }
+                        else
+                            updateWorkerCount(-1);
                     }
                 }
             } finally {
@@ -797,10 +799,12 @@ public class ForkJoinPool extends AbstractExecutorService {
             if (isProcessingTasks()) {
                 int p = this.parallelism;
                 this.parallelism = parallelism;
-                if (parallelism > p)
-                    createAndStartAddedWorkers();
-                else
-                    trimSpares();
+                if (workers != null) {
+                    if (parallelism > p)
+                        createAndStartAddedWorkers();
+                    else
+                        trimSpares();
+                }
             }
         } finally {
             lock.unlock();
@@ -1374,7 +1378,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
     }
 
-
     /*
      * Nodes for event barrier to manage idle threads.  Queue nodes
      * are basic Treiber stack nodes, also used for spare stack.
@@ -1398,15 +1401,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      * handling: Method signalWork returns without advancing count if
      * the queue appears to be empty.  This would ordinarily result in
      * races causing some queued waiters not to be woken up. To avoid
-     * this, the first worker enqueued in method sync (see
-     * syncIsReleasable) rescans for tasks after being enqueued, and
-     * helps signal if any are found. This works well because the
-     * worker has nothing better to do, and so might as well help
-     * alleviate the overhead and contention on the threads actually
-     * doing work.  Also, since event counts increments on task
-     * availability exist to maintain liveness (rather than to force
-     * refreshes etc), it is OK for callers to exit early if
-     * contending with another signaller.
+     * this, the first worker enqueued in method sync rescans for
+     * tasks after being enqueued, and helps signal if any are
+     * found. This works well because the worker has nothing better to
+     * do, and so might as well help alleviate the overhead and
+     * contention on the threads actually doing work.  Also, since
+     * event counts increments on task availability exist to maintain
+     * liveness (rather than to force refreshes etc), it is OK for
+     * callers to exit early if contending with another signaller.
      */
     static final class WaitQueueNode {
         WaitQueueNode next; // only written before enqueued
@@ -1419,32 +1421,13 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Wakes up waiter, returning false if known to already
+         * Wakes up waiter, also clearing thread field
          */
-        boolean signal() {
+        void signal() {
             ForkJoinWorkerThread t = thread;
-            if (t == null)
-                return false;
-            thread = null;
-            LockSupport.unpark(t);
-            return true;
-        }
-
-        /**
-         * Awaits release on sync.
-         */
-        void awaitSyncRelease(ForkJoinPool p) {
-            while (thread != null && !p.syncIsReleasable(this))
-                LockSupport.park(this);
-        }
-
-        /**
-         * Awaits resumption as spare.
-         */
-        void awaitSpareRelease() {
-            while (thread != null) {
-                if (!Thread.interrupted())
-                    LockSupport.park(this);
+            if (t != null) {
+                thread = null;
+                LockSupport.unpark(t);
             }
         }
     }
@@ -1453,10 +1436,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Ensures that no thread is waiting for count to advance from the
      * current value of eventCount read on entry to this method, by
      * releasing waiting threads if necessary.
-     *
-     * @return the count
      */
-    final long ensureSync() {
+    final void ensureSync() {
         long c = eventCount;
         WaitQueueNode q;
         while ((q = syncStack) != null && q.count < c) {
@@ -1467,7 +1448,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                 break;
             }
         }
-        return c;
     }
 
     /**
@@ -1482,22 +1462,26 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Signals threads waiting to poll a task. Because method sync
      * rechecks availability, it is OK to only proceed if queue
-     * appears to be non-empty, and OK to skip under contention to
-     * increment count (since some other thread succeeded).
+     * appears to be non-empty, and OK if CAS to increment count
+     * fails (since some other thread succeeded).
      */
     final void signalWork() {
-        long c;
-        WaitQueueNode q;
-        if (syncStack != null &&
-            casEventCount(c = eventCount, c+1) &&
-            (((q = syncStack) != null && q.count <= c) &&
-             (!casBarrierStack(q, q.next) || !q.signal())))
-            ensureSync();
+        if (syncStack != null) {
+            long c = eventCount;
+            casEventCount(c, c+1);
+            WaitQueueNode q = syncStack;
+            if (q != null && q.count <= c) {
+                if (casBarrierStack(q, q.next))
+                    q.signal();
+                else
+                    ensureSync(); // awaken all on contention
+            }
+        }
     }
 
     /**
-     * Waits until event count advances from last value held by
-     * caller, or if excess threads, caller is resumed as spare, or
+     * Possibly blocks until event count advances from last value held
+     * by caller, or if excess threads, caller is resumed as spare, or
      * caller or pool is terminating. Updates caller's event on exit.
      *
      * @param w the calling worker thread
@@ -1505,52 +1489,35 @@ public class ForkJoinPool extends AbstractExecutorService {
     final void sync(ForkJoinWorkerThread w) {
         updateStealCount(w); // Transfer w's count while it is idle
 
-        while (!w.isShutdown() && isProcessingTasks() && !suspendIfSpare(w)) {
+        if (!w.isShutdown() && isProcessingTasks() && !suspendIfSpare(w)) {
             long prev = w.lastEventCount;
             WaitQueueNode node = null;
             WaitQueueNode h;
-            while (eventCount == prev &&
+            long c;
+            while ((c = eventCount) == prev &&
                    ((h = syncStack) == null || h.count == prev)) {
                 if (node == null)
                     node = new WaitQueueNode(prev, w);
                 if (casBarrierStack(node.next = h, node)) {
-                    node.awaitSyncRelease(this);
+                    if (!Thread.interrupted() &&
+                        node.thread != null &&
+                        eventCount == prev &&
+                        (h != null || // cover signalWork race
+                         (!ForkJoinWorkerThread.hasQueuedTasks(workers) &&
+                          eventCount == prev)))
+                        LockSupport.park(this);
+                    c = eventCount;
+                    if (node.thread != null) { // help signal if not unparked
+                        node.thread = null;
+                        if (c == prev)
+                            casEventCount(prev, prev + 1);
+                    }
                     break;
                 }
             }
-            long ec = ensureSync();
-            if (ec != prev) {
-                w.lastEventCount = ec;
-                break;
-            }
+            w.lastEventCount = c;
+            ensureSync();
         }
-    }
-
-    /**
-     * Returns {@code true} if worker waiting on sync can proceed:
-     *  - on signal (thread == null)
-     *  - on event count advance (winning race to notify vs signaller)
-     *  - on interrupt
-     *  - if the first queued node, we find work available
-     * If node was not signalled and event count not advanced on exit,
-     * then we also help advance event count.
-     *
-     * @return {@code true} if node can be released
-     */
-    final boolean syncIsReleasable(WaitQueueNode node) {
-        long prev = node.count;
-        if (!Thread.interrupted() && node.thread != null &&
-            (node.next != null ||
-             !ForkJoinWorkerThread.hasQueuedTasks(workers)) &&
-            eventCount == prev)
-            return false;
-        if (node.thread != null) {
-            node.thread = null;
-            long ec = eventCount;
-            if (prev <= ec) // help signal
-                casEventCount(ec, ec+1);
-        }
-        return true;
     }
 
     /**
@@ -1558,12 +1525,12 @@ public class ForkJoinPool extends AbstractExecutorService {
      * call to sync or this method, if so, updating caller's count.
      */
     final boolean hasNewSyncEvent(ForkJoinWorkerThread w) {
-        long lc = w.lastEventCount;
-        long ec = ensureSync();
-        if (ec == lc)
-            return false;
-        w.lastEventCount = ec;
-        return true;
+        long wc = w.lastEventCount;
+        long c = eventCount;
+        if (wc != c)
+            w.lastEventCount = c;
+        ensureSync();
+        return wc != c || wc != eventCount;
     }
 
     //  Parallelism maintenance
@@ -1729,19 +1696,25 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private boolean suspendIfSpare(ForkJoinWorkerThread w) {
         WaitQueueNode node = null;
-        int s;
-        while (parallelism < runningCountOf(s = workerCounts)) {
+        for (;;) {
+            int s = workerCounts;
+            int rc = runningCountOf(s);
+            int tc = totalCountOf(s);
+            int ps = parallelism;
+            // use tc as bound if rc transiently out of sync
+            if (tc <= ps || rc <= ps)
+                return false; // not a spare
             if (node == null)
                 node = new WaitQueueNode(0, w);
-            if (casWorkerCounts(s, s-1)) { // representation-dependent
-                // push onto stack
-                do {} while (!casSpareStack(node.next = spareStack, node));
-                // block until released by resumeSpare
-                node.awaitSpareRelease();
-                return true;
-            }
+            if (casWorkerCounts(s, workerCountsFor(tc, rc - 1)))
+                break;
         }
-        return false;
+        // push onto stack
+        do {} while (!casSpareStack(node.next = spareStack, node));
+        // block until released by resumeSpare
+        while (!Thread.interrupted() && node.thread != null)
+            LockSupport.park(this);
+        return true;
     }
 
     /**

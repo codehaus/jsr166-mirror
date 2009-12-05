@@ -1423,15 +1423,14 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Wakes up waiter, returning false if known to already be awake
+         * Wakes up waiter, also clearing thread field
          */
-        boolean signal() {
+        void signal() {
             ForkJoinWorkerThread t = thread;
-            if (t == null)
-                return false;
-            thread = null;
-            LockSupport.unpark(t);
-            return true;
+            if (t != null) {
+                thread = null;
+                LockSupport.unpark(t);
+            }
         }
     }
 
@@ -1470,18 +1469,21 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final void signalWork() {
         if (syncStack != null) {
-            long c;
-            casEventCount(c = eventCount, c+1);
+            long c = eventCount;
+            casEventCount(c, c+1);
             WaitQueueNode q = syncStack;
-            if (q != null && q.count <= c &&
-                (!casBarrierStack(q, q.next) || !q.signal()))
-                ensureSync();
+            if (q != null && q.count <= c) {
+                if (casBarrierStack(q, q.next))
+                    q.signal();
+                else
+                    ensureSync(); // awaken all on contention
+            }
         }
     }
 
     /**
-     * Waits until event count advances from last value held by
-     * caller, or if excess threads, caller is resumed as spare, or
+     * Possibly blocks until event count advances from last value held
+     * by caller, or if excess threads, caller is resumed as spare, or
      * caller or pool is terminating. Updates caller's event on exit.
      *
      * @param w the calling worker thread
@@ -1493,29 +1495,29 @@ public class ForkJoinPool extends AbstractExecutorService {
             long prev = w.lastEventCount;
             WaitQueueNode node = null;
             WaitQueueNode h;
-            long ec;
-            while ((ec = eventCount) == prev &&
+            long c;
+            while ((c = eventCount) == prev &&
                    ((h = syncStack) == null || h.count == prev)) {
                 if (node == null)
                     node = new WaitQueueNode(prev, w);
                 if (casBarrierStack(node.next = h, node)) {
-                    if (!Thread.interrupted() && 
+                    if (!Thread.interrupted() &&
                         node.thread != null &&
                         eventCount == prev &&
                         (h != null || // cover signalWork race
                          (!ForkJoinWorkerThread.hasQueuedTasks(workers) &&
                           eventCount == prev)))
                         LockSupport.park(this);
-                    ec = eventCount;
-                    if (node.thread != null) {
+                    c = eventCount;
+                    if (node.thread != null) { // help signal if not unparked
                         node.thread = null;
-                        if (ec == prev)
-                            casEventCount(prev, prev + 1); // help signal
+                        if (c == prev)
+                            casEventCount(prev, prev + 1);
                     }
                     break;
                 }
             }
-            w.lastEventCount = ec;
+            w.lastEventCount = c;
             ensureSync();
         }
     }
@@ -1525,12 +1527,12 @@ public class ForkJoinPool extends AbstractExecutorService {
      * call to sync or this method, if so, updating caller's count.
      */
     final boolean hasNewSyncEvent(ForkJoinWorkerThread w) {
-        long lc = w.lastEventCount;
-        long ec = eventCount;
-        if (lc != ec)
-            w.lastEventCount = ec;
+        long wc = w.lastEventCount;
+        long c = eventCount;
+        if (wc != c)
+            w.lastEventCount = c;
         ensureSync();
-        return lc != ec || lc != eventCount;
+        return wc != c || wc != eventCount;
     }
 
     //  Parallelism maintenance
@@ -1697,16 +1699,16 @@ public class ForkJoinPool extends AbstractExecutorService {
     private boolean suspendIfSpare(ForkJoinWorkerThread w) {
         WaitQueueNode node = null;
         for (;;) {
-            int p = parallelism;
             int s = workerCounts;
-            int r = runningCountOf(s);
-            int t = totalCountOf(s);
-            // use t as bound if r transiently out of sync
-            if (t <= p || r <= p) 
+            int rc = runningCountOf(s);
+            int tc = totalCountOf(s);
+            int ps = parallelism;
+            // use tc as bound if rc transiently out of sync
+            if (tc <= ps || rc <= ps)
                 return false; // not a spare
             if (node == null)
                 node = new WaitQueueNode(0, w);
-            if (casWorkerCounts(s, workerCountsFor(t, r - 1)))
+            if (casWorkerCounts(s, workerCountsFor(tc, rc - 1)))
                 break;
         }
         // push onto stack

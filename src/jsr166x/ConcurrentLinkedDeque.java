@@ -215,7 +215,7 @@ public class ConcurrentLinkedDeque<E>
          */
         private Node<E> nextNonmarker() {
             Node<E> f = getNext();
-            return (f == null || !f.isMarker())? f : f.getNext();
+            return (f == null || !f.isMarker()) ? f : f.getNext();
         }
 
         /**
@@ -292,7 +292,7 @@ public class ConcurrentLinkedDeque<E>
          */
         Node<E> forward() {
             Node<E> f = successor();
-            return (f == null || f.isSpecial())? null : f;
+            return (f == null || f.isSpecial()) ? null : f;
         }
 
         /**
@@ -304,7 +304,7 @@ public class ConcurrentLinkedDeque<E>
          */
         Node<E> back() {
             Node<E> f = predecessor();
-            return (f == null || f.isSpecial())? null : f;
+            return (f == null || f.isSpecial()) ? null : f;
         }
 
         /**
@@ -724,7 +724,7 @@ public class ConcurrentLinkedDeque<E>
         long count = 0;
         for (Node<E> n = header.forward(); n != null; n = n.forward())
             ++count;
-        return (count >= Integer.MAX_VALUE)? Integer.MAX_VALUE : (int)count;
+        return (count >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count;
     }
 
     /**

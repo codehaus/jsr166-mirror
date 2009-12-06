@@ -123,6 +123,7 @@ public class ConcurrentLinkedDeque<E>
     static final class Node<E> extends AtomicReference<Node<E>> {
         private volatile Node<E> prev;
         final E element;
+        private static final long serialVersionUID = 876323262645176354L;
 
         /** Creates a node with given contents. */
         Node(E element, Node<E> next, Node<E> prev) {
@@ -358,7 +359,7 @@ public class ConcurrentLinkedDeque<E>
             Node<E> b = getPrev();
             Node<E> f = getNext();
             if (b != null && f != null && !f.isMarker() &&
-                casNext(f, new Node(f))) {
+                casNext(f, new Node<E>(f))) {
                 if (b.casNext(this, f))
                     f.setPrev(b);
                 return true;
@@ -379,7 +380,7 @@ public class ConcurrentLinkedDeque<E>
                 if (b == null || f == null || f.isMarker())
                     return null;
                 Node<E> x = new Node<E>(newElement, f, b);
-                if (casNext(f, new Node(x))) {
+                if (casNext(f, new Node<E>(x))) {
                     b.successor(); // to relink b
                     x.successor(); // to relink f
                     return x;
@@ -451,8 +452,8 @@ public class ConcurrentLinkedDeque<E>
      * Constructs an empty deque.
      */
     public ConcurrentLinkedDeque() {
-        Node h = new Node(null, null, null);
-        Node t = new Node(null, null, h);
+        Node<E> h = new Node<E>(null, null, null);
+        Node<E> t = new Node<E>(null, null, h);
         h.setNext(t);
         header = h;
         trailer = t;

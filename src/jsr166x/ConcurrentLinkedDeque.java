@@ -103,8 +103,8 @@ public class ConcurrentLinkedDeque<E>
      *
      * Nodes are in doubly-linked lists. There are three
      * kinds of special nodes, distinguished by:
-     *  * The list header   has a null prev link
-     *  * The list trailer  has a null next link
+     *  * The list header   has a null prev link.
+     *  * The list trailer  has a null next link.
      *  * A deletion marker has a prev link pointing to itself.
      * All three kinds of special nodes have null element fields.
      *
@@ -206,8 +206,9 @@ public class ConcurrentLinkedDeque<E>
         }
 
         /**
-         * Returns true if this node is followed by a marker, meaning
-         * that it is deleted.
+         * Returns true if this node is followed by a marker node,
+         * meaning that this node is deleted.
+         *
          * @return true if this node is deleted
          */
         boolean isDeleted() {
@@ -226,8 +227,9 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Returns the next non-deleted node, swinging next pointer
          * around any encountered deleted nodes, and also patching up
-         * successor''s prev link to point back to this.  Returns
+         * successor's prev link to point back to this.  Returns
          * null if this node is trailer so has no successor.
+         *
          * @return successor, or null if no such
          */
         Node<E> successor() {
@@ -249,8 +251,9 @@ public class ConcurrentLinkedDeque<E>
 
         /**
          * Returns the apparent predecessor of target by searching
-         * forward for it starting at this node, patching up pointers
+         * forward for it, starting at this node, patching up pointers
          * while traversing. Used by predecessor().
+         *
          * @return target's predecessor, or null if not found
          */
         private Node<E> findPredecessorOf(Node<E> target) {
@@ -268,8 +271,9 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Returns the previous non-deleted node, patching up pointers
          * as needed.  Returns null if this node is header so has no
-         * successor. May also return null if this node is deleted, so
-         * doesn't have a distinct predecessor.
+         * successor.  May also return null if this node is deleted,
+         * so doesn't have a distinct predecessor.
+         *
          * @return predecessor or null if not found
          */
         Node<E> predecessor() {
@@ -293,6 +297,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Returns the next node containing a nondeleted user element.
          * Use for forward list traversal.
+         *
          * @return successor, or null if no such
          */
         Node<E> forward() {
@@ -305,6 +310,7 @@ public class ConcurrentLinkedDeque<E>
          * possible.  Use for backward list traversal, but beware that
          * if this method is called from a deleted node, it might not
          * be able to determine a usable predecessor.
+         *
          * @return predecessor, or null if no such could be found
          */
         Node<E> back() {
@@ -315,6 +321,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Tries to insert a node holding element as successor, failing
          * if this node is deleted.
+         *
          * @param element the element
          * @return the new node, or null on failure
          */
@@ -334,6 +341,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Tries to insert a node holding element as predecessor, failing
          * if no live predecessor can be found to link to.
+         *
          * @param element the element
          * @return the new node, or null on failure
          */
@@ -353,6 +361,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Tries to mark this node as deleted, failing if already
          * deleted or if this node is header or trailer.
+         *
          * @return true if successful
          */
         boolean delete() {
@@ -370,6 +379,7 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Tries to insert a node holding element to replace this node.
          * failing if already deleted.
+         *
          * @param newElement the new element
          * @return the new node, or null on failure
          */
@@ -394,6 +404,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Returns true if given reference is non-null and isn't a header,
      * trailer, or marker.
+     *
      * @param n (possibly null) node
      * @return true if n exists as a user node
      */
@@ -403,9 +414,10 @@ public class ConcurrentLinkedDeque<E>
 
     /**
      * Throws NullPointerException if argument is null.
+     *
      * @param v the element
      */
-    private static void checkNullArg(Object v) {
+    private static void checkNotNull(Object v) {
         if (v == null)
             throw new NullPointerException();
     }
@@ -413,6 +425,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Returns element unless it is null, in which case throws
      * NoSuchElementException.
+     *
      * @param v the element
      * @return the element
      */
@@ -425,6 +438,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Creates an array list and fills it with elements of this list.
      * Used by toArray.
+     *
      * @return the arrayList
      */
     private ArrayList<E> toArrayList() {
@@ -465,7 +479,7 @@ public class ConcurrentLinkedDeque<E>
      * iterator.
      *
      * @param c the collection whose elements are to be placed into
-     * this deque.
+     * this deque
      * @throws NullPointerException if {@code c} or any element within it
      * is {@code null}
      */
@@ -481,7 +495,7 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is {@code null}
      */
     public void addFirst(E o) {
-        checkNullArg(o);
+        checkNotNull(o);
         while (header.append(o) == null)
             ;
     }
@@ -494,7 +508,7 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is {@code null}
      */
     public void addLast(E o) {
-        checkNullArg(o);
+        checkNotNull(o);
         while (trailer.prepend(o) == null)
             ;
     }
@@ -638,7 +652,7 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean removeFirstOccurrence(Object o) {
-        checkNullArg(o);
+        checkNotNull(o);
         for (;;) {
             Node<E> n = header.forward();
             for (;;) {
@@ -665,7 +679,7 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is {@code null}
      */
     public boolean removeLastOccurrence(Object o) {
-        checkNullArg(o);
+        checkNotNull(o);
         for (;;) {
             Node<E> s = trailer;
             for (;;) {

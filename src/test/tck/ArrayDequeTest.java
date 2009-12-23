@@ -462,7 +462,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatible aray type throws CCE
+     * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
         ArrayDeque l = new ArrayDeque();

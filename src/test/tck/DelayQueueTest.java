@@ -191,7 +191,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     * remainingCapacity does not change when elementa added or removed,
+     * remainingCapacity does not change when elements added or removed,
      * but size does
      */
     public void testRemainingCapacity() {

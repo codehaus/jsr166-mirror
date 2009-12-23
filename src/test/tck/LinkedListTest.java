@@ -353,7 +353,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatable aray type throws CCE
+     * toArray with incompatible array type throws CCE
      */
     public void testToArray1_BadArg() {
         LinkedList l = new LinkedList();

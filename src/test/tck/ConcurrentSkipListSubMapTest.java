@@ -1182,7 +1182,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     // Exception testDescendings
 
     /**
-     * get(null) of nm1mpty map throws NPE
+     * get(null) of empty map throws NPE
      */
     public void testDescendingGet_NullPointerException() {
         try {
@@ -1193,7 +1193,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     }
 
     /**
-     * containsKey(null) of nm1mpty map throws NPE
+     * containsKey(null) of empty map throws NPE
      */
     public void testDescendingContainsKey_NullPointerException() {
         try {

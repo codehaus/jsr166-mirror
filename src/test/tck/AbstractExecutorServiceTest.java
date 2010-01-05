@@ -81,98 +81,64 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
 
 
     /**
-     * A submitted privileged action to completion
+     * A submitted privileged action runs to completion
      */
     public void testSubmitPrivilegedAction() throws Exception {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(Executors.callable(new PrivilegedAction() {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new DirectExecutorService();
+                Future future = e.submit(Executors.callable(new PrivilegedAction() {
                     public Object run() {
                         return TEST_STRING;
                     }}));
 
-            Object result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        finally {
-            try {
-                Policy.setPolicy(savedPolicy);
-            } catch (AccessControlException ok) {
-                return;
-            }
-        }
+                assertSame(TEST_STRING, future.get());
+            }};
+
+        runWithPermissions(r,
+                           new RuntimePermission("getClassLoader"),
+                           new RuntimePermission("setContextClassLoader"),
+                           new RuntimePermission("modifyThread"));
     }
 
     /**
-     * A submitted a privileged exception action runs to completion
+     * A submitted privileged exception action runs to completion
      */
     public void testSubmitPrivilegedExceptionAction() throws Exception {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
-
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new DirectExecutorService();
+                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() {
                         return TEST_STRING;
                     }}));
 
-            Object result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        finally {
-            Policy.setPolicy(savedPolicy);
-        }
+                assertSame(TEST_STRING, future.get());
+            }};
+
+        runWithPermissions(r);
     }
 
     /**
      * A submitted failed privileged exception action reports exception
      */
     public void testSubmitFailedPrivilegedExceptionAction() throws Exception {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
-
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new DirectExecutorService();
+                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() throws Exception {
                         throw new IndexOutOfBoundsException();
                     }}));
 
-            future.get();
-            shouldThrow();
-        } catch (ExecutionException success) {
-            assertTrue(success.getCause() instanceof IndexOutOfBoundsException);
-        }
-        finally {
-            Policy.setPolicy(savedPolicy);
-        }
+                try {
+                    future.get();
+                    shouldThrow();
+                } catch (ExecutionException success) {
+                    assertTrue(success.getCause() instanceof IndexOutOfBoundsException);
+                }}};
+
+        runWithPermissions(r);
     }
 
     /**

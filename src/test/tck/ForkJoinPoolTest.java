@@ -504,96 +504,64 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         assertSame(TEST_STRING, result);
     }
 
-
     /**
-     * A submitted privileged action to completion
+     * A submitted privileged action runs to completion
      */
     public void testSubmitPrivilegedAction() throws Throwable {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
-        try {
-            ExecutorService e = new ForkJoinPool(1);
-            Future future = e.submit(Executors.callable(new PrivilegedAction() {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new ForkJoinPool(1);
+                Future future = e.submit(Executors.callable(new PrivilegedAction() {
                     public Object run() {
                         return TEST_STRING;
                     }}));
 
-            Object result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        finally {
-            Policy.setPolicy(savedPolicy);
-        }
+                Object result = future.get();
+                assertSame(TEST_STRING, result);
+            }};
+
+        runWithPermissions(r, new RuntimePermission("modifyThread"));
     }
 
     /**
-     * A submitted a privileged exception action runs to completion
+     * A submitted privileged exception action runs to completion
      */
     public void testSubmitPrivilegedExceptionAction() throws Throwable {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
-
-        try {
-            ExecutorService e = new ForkJoinPool(1);
-            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new ForkJoinPool(1);
+                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() {
                         return TEST_STRING;
                     }}));
 
-            Object result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        finally {
-            Policy.setPolicy(savedPolicy);
-        }
+                Object result = future.get();
+                assertSame(TEST_STRING, result);
+            }};
+
+        runWithPermissions(r, new RuntimePermission("modifyThread"));
     }
 
     /**
      * A submitted failed privileged exception action reports exception
      */
     public void testSubmitFailedPrivilegedExceptionAction() throws Throwable {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
-
-
-        try {
-            ExecutorService e = new ForkJoinPool(1);
-            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new ForkJoinPool(1);
+                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() throws Exception {
                         throw new IndexOutOfBoundsException();
                     }}));
 
-            Object result = future.get();
-            shouldThrow();
-        } catch (ExecutionException success) {
-            assertTrue(success.getCause() instanceof IndexOutOfBoundsException);
-        } finally {
-            Policy.setPolicy(savedPolicy);
-        }
+                try {
+                    Object result = future.get();
+                    shouldThrow();
+                } catch (ExecutionException success) {
+                    assertTrue(success.getCause() instanceof IndexOutOfBoundsException);
+                }}};
+
+        runWithPermissions(r, new RuntimePermission("modifyThread"));
     }
 
     /**

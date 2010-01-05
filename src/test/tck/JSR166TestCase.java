@@ -87,10 +87,18 @@ import java.security.*;
  * </ul>
  */
 public class JSR166TestCase extends TestCase {
+    private static final boolean useSecurityManager =
+        Boolean.getBoolean("jsr166.useSecurityManager");
+
     /**
      * Runs all JSR166 unit tests using junit.textui.TestRunner
      */
     public static void main(String[] args) {
+        if (useSecurityManager) {
+            System.err.println("Setting a permissive security manager");
+            Policy.setPolicy(permissivePolicy());
+            System.setSecurityManager(new SecurityManager());
+        }
         int iters = 1;
         if (args.length > 0)
             iters = Integer.parseInt(args[0]);
@@ -390,12 +398,56 @@ public class JSR166TestCase extends TestCase {
 
 
     /**
+     * Runs Runnable r with a security policy that permits precisely
+     * the specified permissions.  If there is no current security
+     * manager, the runnable is run twice, both with and without a
+     * security manager.  We require that any security manager permit
+     * getPolicy/setPolicy.
+     */
+    public void runWithPermissions(Runnable r, Permission... permissions) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm == null) {
+            r.run();
+            Policy savedPolicy = Policy.getPolicy();
+            try {
+                Policy.setPolicy(permissivePolicy());
+                System.setSecurityManager(new SecurityManager());
+                runWithPermissions(r, permissions);
+            } finally {
+                System.setSecurityManager(null);
+                Policy.setPolicy(savedPolicy);
+            }
+        } else {
+            Policy savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy(permissions);
+            Policy.setPolicy(policy);
+
+            try {
+                r.run();
+            } finally {
+                policy.addPermission(new SecurityPermission("setPolicy"));
+                Policy.setPolicy(savedPolicy);
+            }
+        }
+    }
+
+    /**
+     * Runs a runnable without any permissions.
+     */
+    public void runWithoutPermissions(Runnable r) {
+        runWithPermissions(r);
+    }
+
+    /**
      * A security policy where new permissions can be dynamically added
      * or all cleared.
      */
     public static class AdjustablePolicy extends java.security.Policy {
         Permissions perms = new Permissions();
-        AdjustablePolicy() { }
+        AdjustablePolicy(Permission... permissions) {
+            for (Permission permission : permissions)
+                perms.add(permission);
+        }
         void addPermission(Permission perm) { perms.add(perm); }
         void clearPermissions() { perms = new Permissions(); }
         public PermissionCollection getPermissions(CodeSource cs) {
@@ -408,6 +460,25 @@ public class JSR166TestCase extends TestCase {
             return perms.implies(p);
         }
         public void refresh() {}
+    }
+
+    /**
+     * Returns a policy containing all the permissions we ever need.
+     */
+    public static Policy permissivePolicy() {
+        return new AdjustablePolicy
+            // Permissions j.u.c. needs directly
+            (new RuntimePermission("modifyThread"),
+             new RuntimePermission("getClassLoader"),
+             new RuntimePermission("setContextClassLoader"),
+             // Permissions needed to change permissions!
+             new SecurityPermission("getPolicy"),
+             new SecurityPermission("setPolicy"),
+             new RuntimePermission("setSecurityManager"),
+             // Permissions needed by the junit test harness
+             new RuntimePermission("accessDeclaredMembers"),
+             new PropertyPermission("*", "read"),
+             new java.io.FilePermission("<<ALL FILES>>", "read"));
     }
 
     /**

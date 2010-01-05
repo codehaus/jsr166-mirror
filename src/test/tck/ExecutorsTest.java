@@ -298,53 +298,51 @@ public class ExecutorsTest extends JSR166TestCase {
      * access control context and context class loader
      */
     public void testPrivilegedThreadFactory() throws Exception {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
-        final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
-        final ClassLoader thisccl = Thread.currentThread().getContextClassLoader();
-        final AccessControlContext thisacc = AccessController.getContext();
-        Runnable r = new Runnable() {
-                public void run() {
-                    try {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
+                final ClassLoader thisccl = Thread.currentThread().getContextClassLoader();
+                final AccessControlContext thisacc = AccessController.getContext();
+                Runnable r = new CheckedRunnable() {
+                    public void realRun() {
                         Thread current = Thread.currentThread();
-                        threadAssertTrue(!current.isDaemon());
-                        threadAssertTrue(current.getPriority() <= Thread.NORM_PRIORITY);
+                        assertTrue(!current.isDaemon());
+                        assertTrue(current.getPriority() <= Thread.NORM_PRIORITY);
                         ThreadGroup g = current.getThreadGroup();
                         SecurityManager s = System.getSecurityManager();
                         if (s != null)
-                            threadAssertTrue(g == s.getThreadGroup());
+                            assertTrue(g == s.getThreadGroup());
                         else
-                            threadAssertTrue(g == egroup);
+                            assertTrue(g == egroup);
                         String name = current.getName();
-                        threadAssertTrue(name.endsWith("thread-1"));
-                        threadAssertTrue(thisccl == current.getContextClassLoader());
-                        threadAssertTrue(thisacc.equals(AccessController.getContext()));
-                    } catch (SecurityException ok) {
-                        // Also pass if not allowed to change settings
-                    }
-                }
-            };
-        ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
+                        assertTrue(name.endsWith("thread-1"));
+                        assertTrue(thisccl == current.getContextClassLoader());
+                        assertTrue(thisacc.equals(AccessController.getContext()));
+                    }};
+                ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
+                e.execute(r);
+                e.shutdown();
+                Thread.sleep(SHORT_DELAY_MS);
+                joinPool(e);
+            }};
 
-        Policy.setPolicy(savedPolicy);
-        e.execute(r);
-        try {
-            e.shutdown();
-        } catch (SecurityException ok) {
+        runWithPermissions(r,
+                           new RuntimePermission("getClassLoader"),
+                           new RuntimePermission("setContextClassLoader"),
+                           new RuntimePermission("modifyThread"));
+    }
+
+    boolean haveCCLPermissions() {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            try {
+                sm.checkPermission(new RuntimePermission("setContextClassLoader"));
+                sm.checkPermission(new RuntimePermission("getClassLoader"));
+            } catch (AccessControlException e) {
+                return false;
+            }
         }
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-        } finally {
-            joinPool(e);
-        }
+        return true;
     }
 
     void checkCCL() {
@@ -368,31 +366,17 @@ public class ExecutorsTest extends JSR166TestCase {
      * privilegedCallableUsingCurrentClassLoader throws ACE
      */
     public void testCreatePrivilegedCallableUsingCCLWithNoPrivs() {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                if (System.getSecurityManager() == null)
+                    return;
+                try {
+                    Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
+                    shouldThrow();
+                } catch (AccessControlException success) {}
+            }};
 
-        // Check if program still has too many permissions to run test
-        try {
-            checkCCL();
-            // too many privileges to test; so return
-            Policy.setPolicy(savedPolicy);
-            return;
-        } catch (AccessControlException ok) {
-        }
-
-        try {
-            Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
-            shouldThrow();
-        } catch (AccessControlException success) {
-        } finally {
-            Policy.setPolicy(savedPolicy);
-        }
+        runWithoutPermissions(r);
     }
 
     /**
@@ -400,84 +384,99 @@ public class ExecutorsTest extends JSR166TestCase {
      * privilegedCallableUsingCurrentClassLoader does not throw ACE
      */
     public void testprivilegedCallableUsingCCLWithPrivs() throws Exception {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                Executors.privilegedCallableUsingCurrentClassLoader
+                    (new NoOpCallable())
+                    .call();
+            }};
 
-        try {
-            Callable task = Executors.privilegedCallableUsingCurrentClassLoader(new NoOpCallable());
-            task.call();
-        }
-        finally {
-            Policy.setPolicy(savedPolicy);
-        }
+        runWithPermissions(r,
+                           new RuntimePermission("getClassLoader"),
+                           new RuntimePermission("setContextClassLoader"));
     }
 
     /**
      * Without permissions, calling privilegedCallable throws ACE
      */
     public void testprivilegedCallableWithNoPrivs() throws Exception {
-        Callable task;
-        Policy savedPolicy = null;
-        AdjustablePolicy policy = null;
-        AccessControlContext noprivAcc = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            policy = new AdjustablePolicy();
-            Policy.setPolicy(policy);
-            noprivAcc = AccessController.getContext();
-            task = Executors.privilegedCallable(new CheckCCL());
-            Policy.setPolicy(savedPolicy);
-        } catch (AccessControlException ok) {
-            return; // program has too few permissions to set up test
-        }
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                if (System.getSecurityManager() == null)
+                    return;
+                Callable task = Executors.privilegedCallable(new CheckCCL());
+                try {
+                    task.call();
+                    shouldThrow();
+                } catch (AccessControlException success) {}
+            }};
 
-        // Make sure that program doesn't have too many permissions
-        try {
-            AccessController.doPrivileged(new PrivilegedAction() {
-                    public Object run() {
-                        checkCCL();
-                        return null;
-                    }}, noprivAcc);
-            // too many permssions; skip test
-            return;
-        } catch (AccessControlException ok) {
-        }
+        runWithoutPermissions(r);
 
-        try {
-            task.call();
-            shouldThrow();
-        } catch (AccessControlException success) {}
+        // It seems rather difficult to test that the
+        // AccessControlContext of the privilegedCallable is used
+        // instead of its caller.  Below is a failed attempt to do
+        // that, which does not work because the AccessController
+        // cannot capture the internal state of the current Policy.
+        // It would be much more work to differentiate based on,
+        // e.g. CodeSource.
+
+//         final AccessControlContext[] noprivAcc = new AccessControlContext[1];
+//         final Callable[] task = new Callable[1];
+
+//         runWithPermissions
+//             (new CheckedRunnable() {
+//                 public void realRun() {
+//                     if (System.getSecurityManager() == null)
+//                         return;
+//                     noprivAcc[0] = AccessController.getContext();
+//                     task[0] = Executors.privilegedCallable(new CheckCCL());
+//                     try {
+//                         AccessController.doPrivileged(new PrivilegedAction<Void>() {
+//                                                           public Void run() {
+//                                                               checkCCL();
+//                                                               return null;
+//                                                           }}, noprivAcc[0]);
+//                         shouldThrow();
+//                     } catch (AccessControlException success) {}
+//                 }});
+
+//         runWithPermissions
+//             (new CheckedRunnable() {
+//                 public void realRun() throws Exception {
+//                     if (System.getSecurityManager() == null)
+//                         return;
+//                     // Verify that we have an underprivileged ACC
+//                     try {
+//                         AccessController.doPrivileged(new PrivilegedAction<Void>() {
+//                                                           public Void run() {
+//                                                               checkCCL();
+//                                                               return null;
+//                                                           }}, noprivAcc[0]);
+//                         shouldThrow();
+//                     } catch (AccessControlException success) {}
+
+//                     try {
+//                         task[0].call();
+//                         shouldThrow();
+//                     } catch (AccessControlException success) {}
+//                 }},
+//              new RuntimePermission("getClassLoader"),
+//              new RuntimePermission("setContextClassLoader"));
     }
 
     /**
      * With permissions, calling privilegedCallable succeeds
      */
     public void testprivilegedCallableWithPrivs() throws Exception {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch (AccessControlException ok) {
-            return;
-        }
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                Executors.privilegedCallable(new CheckCCL()).call();
+            }};
 
-        Callable task = Executors.privilegedCallable(new CheckCCL());
-        try {
-            task.call();
-        } finally {
-            Policy.setPolicy(savedPolicy);
-        }
+         runWithPermissions(r,
+                           new RuntimePermission("getClassLoader"),
+                           new RuntimePermission("setContextClassLoader"));
     }
 
     /**

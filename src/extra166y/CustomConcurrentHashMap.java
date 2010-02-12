@@ -2101,7 +2101,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         final int locator;
         final CustomConcurrentHashMap cchm;
         WeakKeyNode(int locator, Object key, CustomConcurrentHashMap cchm) {
-            super(key);
+            super(key, getReclamationQueue());
             this.locator = locator;
             this.cchm = cchm;
         }
@@ -2396,7 +2396,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         final int locator;
         final CustomConcurrentHashMap cchm;
         SoftKeyNode(int locator, Object key, CustomConcurrentHashMap cchm) {
-            super(key);
+            super(key, getReclamationQueue());
             this.locator = locator;
             this.cchm = cchm;
         }

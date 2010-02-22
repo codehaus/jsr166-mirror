@@ -235,7 +235,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         ForkJoinPool p = null;
         try {
             p = new ForkJoinPool(1);
-            assertTrue(p.getPoolSize() == 0);
+            assertTrue(p.getActiveThreadCount() == 0);
             Future<String> future = p.submit(new StringTask());
             assertTrue(p.getPoolSize() == 1);
 

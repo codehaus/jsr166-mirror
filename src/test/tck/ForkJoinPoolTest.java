@@ -320,6 +320,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             Thread.sleep(MEDIUM_DELAY_MS);
             assertTrue(eh.catches > 0);
         } finally {
+            p.shutdownNow();
             joinPool(p);
         }
     }

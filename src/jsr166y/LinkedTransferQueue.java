@@ -1125,7 +1125,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @return {@code true} if this queue contains no elements
      */
     public boolean isEmpty() {
-        return firstOfMode(true) == null;
+        for (Node p = head; p != null; p = succ(p)) {
+            if (!p.isMatched())
+                return !p.isData;
+        }
+        return true;
     }
 
     public boolean hasWaitingConsumer() {

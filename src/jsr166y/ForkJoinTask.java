@@ -185,7 +185,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private static final int EXCEPTIONAL          = 0xa0000000;
     private static final int SIGNAL_MASK          = 0x0000ffff;
     private static final int INTERNAL_SIGNAL_MASK = 0x00007fff;
-    private static final int EXTERNAL_SIGNAL      = 0x00008000; 
+    private static final int EXTERNAL_SIGNAL      = 0x00008000;
 
     /**
      * Table of exceptions thrown by tasks, to enable reporting by
@@ -258,11 +258,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     final int requestSignal() {
         int s;
-        do {} while ((s = status) >= 0 && 
+        do {} while ((s = status) >= 0 &&
                      !UNSAFE.compareAndSwapInt(this, statusOffset, s, s + 1));
         return s;
     }
-    
+
     /**
      * Sets external signal request unless already done.
      *
@@ -270,8 +270,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int requestExternalSignal() {
         int s;
-        do {} while ((s = status) >= 0 && 
-                     !UNSAFE.compareAndSwapInt(this, statusOffset, 
+        do {} while ((s = status) >= 0 &&
+                     !UNSAFE.compareAndSwapInt(this, statusOffset,
                                                s, s | EXTERNAL_SIGNAL));
         return s;
     }
@@ -289,11 +289,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private void awaitDone(ForkJoinWorkerThread w) {
         if (status >= 0) {
             w.pool.preJoin(this);
-            while (status >= 0) { 
+            while (status >= 0) {
                 try { // minimize lock scope
                     synchronized(this) {
-                        if (status >= 0) 
-                            wait(); 
+                        if (status >= 0)
+                            wait();
                         else { // help release; also helps avoid lock-biasing
                             notifyAll();
                             break;
@@ -315,8 +315,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             while (status >= 0) {
                 try {
                     synchronized(this) {
-                        if (status >= 0) 
-                            wait(); 
+                        if (status >= 0)
+                            wait();
                         else {
                             notifyAll();
                             break;
@@ -352,9 +352,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                 }
                 else {
                     int s; // adjust running count on timeout
-                    while ((s = status) >= 0 && 
+                    while ((s = status) >= 0 &&
                            (s & INTERNAL_SIGNAL_MASK) != 0) {
-                        if (UNSAFE.compareAndSwapInt(this, statusOffset, 
+                        if (UNSAFE.compareAndSwapInt(this, statusOffset,
                                                      s, s - 1)) {
                             pool.updateRunningCount(1);
                             break;
@@ -684,7 +684,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private void cancelIfTerminating() {
         Thread t = Thread.currentThread();
         if ((t instanceof ForkJoinWorkerThread) &&
-            ((ForkJoinWorkerThread) t).isTerminating()) { 
+            ((ForkJoinWorkerThread) t).isTerminating()) {
             try {
                 cancel(false);
             } catch (Throwable ignore) {
@@ -780,7 +780,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         quietlyJoin();
         return reportFutureResult();
     }
-    
+
     public final V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         long nanos = unit.toNanos(timeout);
@@ -832,14 +832,31 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     public final void quietlyHelpJoin() {
         ForkJoinWorkerThread w = (ForkJoinWorkerThread) Thread.currentThread();
         if (!w.unpushTask(this) || !tryExec()) {
-            while (status >= 0) {
-                ForkJoinTask<?> t = w.scanWhileJoining(this);
-                if (t == null) {
-                    if (status >= 0)
-                        awaitDone(w);
-                    break;
+            for (;;) {
+                ForkJoinTask<?> t;
+                if (status < 0)
+                    return;
+                else if ((t = w.scanWhileJoining(this)) != null)
+                    t.tryExec();
+                else if (status < 0)
+                    return;
+                else if (w.pool.preBlockHelpingJoin(this)) {
+                    while (status >= 0) { // variant of awaitDone
+                        try {
+                            synchronized(this) {
+                                if (status >= 0)
+                                    wait();
+                                else {
+                                    notifyAll();
+                                    break;
+                                }
+                            }
+                        } catch (InterruptedException ie) {
+                            cancelIfTerminating();
+                        }
+                    }
+                    return;
                 }
-                t.tryExec();
             }
         }
     }

@@ -633,7 +633,7 @@ public class ForkJoinWorkerThread extends Thread {
                         return t;
                     }
                 }
-                j = -n;               // reset on contention
+                j = -n;           // reset on contention
             }
             k = j >= 0? k + ((n >>> 1) | 1) : r;
         }
@@ -875,7 +875,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns a stolen task, if available, unless joinMe is done
+     * Returns a popped or stolen task, if available, unless joinMe is done
      *
      * This method is intrinsically nonmodular. To maintain the
      * property that tasks are never stolen if the awaited task is
@@ -887,24 +887,18 @@ public class ForkJoinWorkerThread extends Thread {
      * without adjusting index. The scan loop is otherwise the same as
      * in scan.
      *
-     * The outer loop cannot be allowed to run forever, because it
-     * could lead to a form of deadlock if all threads are executing
-     * this method. However, we must also be patient before giving up,
-     * to cope with GC stalls, transient high loads, etc. The loop
-     * terminates (causing caller to possibly block this thread and
-     * create a replacement) only after #workers clean sweeps during
-     * which all running threads are active.
      */
     final ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
-        int sweeps = 0;
-        int r = seed;
-        ForkJoinPool p = pool;
-        p.releaseWaiters(); // help other threads progress
-        while (joinMe.status >= 0) {
+        ForkJoinTask<?> popped; // prefer local tasks
+        if (base != sp && (popped = popWhileJoining(joinMe)) != null)
+            return popped;
+        if (joinMe.status >= 0) {
+            ForkJoinPool p = pool;
             ForkJoinWorkerThread[] ws = p.workers;
             int n = ws.length;
+            int r = seed;
             int k = r;
-            for (int j = -n; j < n; ++j) {
+            for (int j = -n; j < n && joinMe.status >= 0; ++j) {
                 ForkJoinWorkerThread v = ws[k & (n - 1)];
                 r ^= r << 13; r ^= r >>> 17; r ^= r << 5; // xorshift
                 if (v != null) {
@@ -913,30 +907,49 @@ public class ForkJoinWorkerThread extends Thread {
                     if (b != v.sp && (q = v.queue) != null) {
                         int i = (q.length - 1) & b;
                         ForkJoinTask<?> t = q[i];
-                        if (t != null) {
-                            if (joinMe.status < 0)
-                                return null;
-                            if (UNSAFE.compareAndSwapObject
-                                (q, (i << qShift) + qBase, t, null)) {
-                                if (joinMe.status < 0) {
-                                    writeSlot(q, i, t); // back out
-                                    return null;
-                                }
+                        if (t != null && UNSAFE.compareAndSwapObject
+                            (q, (i << qShift) + qBase, t, null)) {
+                            if (joinMe.status >= 0) { 
                                 v.base = b + 1;
                                 seed = r;
                                 ++stealCount;
                                 return t;
                             }
+                            UNSAFE.putObjectVolatile(q, (i<<qShift)+qBase, t);
+                            break; // back out
                         }
-                        sweeps = 0; // ensure rescan on contention
+                        j = -n;
                     }
                 }
                 k = j >= 0? k + ((n >>> 1) | 1) : r;
-                if ((j & 7) == 0 && joinMe.status < 0) // periodically recheck
-                    return null;
             }
-            if ((sweeps = p.inactiveCount() == 0 ? sweeps + 1 : 0) > n)
-                return null;
+        }
+        return null;
+    }
+
+    /**
+     * Version of popTask with join checks surrounding extraction.
+     * Uses the same backout strategy as scanWhileJoining. Note that
+     * we ignore locallyFifo flag for local tasks here since helping
+     * joins only make sense in LIFO mode.
+     *
+     * @return a popped task, if available, unless joinMe is done
+     */
+    private ForkJoinTask<?> popWhileJoining(ForkJoinTask<?> joinMe) {
+        int s;
+        ForkJoinTask<?>[] q;
+        while ((s = sp) != base && (q = queue) != null && joinMe.status >= 0) {
+            int i = (q.length - 1) & --s;
+            ForkJoinTask<?> t = q[i];
+            if (t != null && UNSAFE.compareAndSwapObject
+                (q, (i << qShift) + qBase, t, null)) {
+                if (joinMe.status >= 0) {
+                    sp = s;
+                    return t;
+                }
+                UNSAFE.putObjectVolatile(q, (i << qShift) + qBase, t);
+                break;  // back out
+            }
         }
         return null;
     }

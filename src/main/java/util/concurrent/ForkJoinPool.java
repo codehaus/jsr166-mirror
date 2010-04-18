@@ -1492,7 +1492,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * construction of new threads. The use of this method may cause
      * tasks that intrinsically require extra threads for dependent
      * computations to indefinitely stall. If you are instead trying
-     * to minimize internal thread creation, consider setting {link
+     * to minimize internal thread creation, consider setting {@link
      * #setMaintainsParallelism} as false.
      *
      * @throws IllegalArgumentException if negative or greater than

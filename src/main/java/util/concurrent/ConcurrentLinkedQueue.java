@@ -32,10 +32,14 @@ import java.util.Queue;
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.
  *
- * <p>Beware that, unlike in most collections, the {@code size} method
- * is <em>NOT</em> a constant-time operation. Because of the
+ * <p>Beware that, unlike in most collections, the {@link #size}
+ * method is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
- * of elements requires a traversal of the elements.
+ * of elements requires traversing them all to count them.
+ * Additionally, it is possible for the size to change during
+ * execution of this method, in which case the returned result will be
+ * inaccurate. Thus, this method is typically not very useful in
+ * concurrent applications.
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -380,7 +384,11 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * <p>Beware that, unlike in most collections, this method is
      * <em>NOT</em> a constant-time operation. Because of the
      * asynchronous nature of these queues, determining the current
-     * number of elements requires an O(n) traversal.
+     * number of elements requires traversing them all to count them.
+     * Additionally, it is possible for the size to change during
+     * execution of this method, in which case the returned result
+     * will be inaccurate. Thus, this method is typically not very
+     * useful in concurrent applications.
      *
      * @return the number of elements in this queue
      */

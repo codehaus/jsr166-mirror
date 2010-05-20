@@ -35,10 +35,14 @@ import java.util.concurrent.atomic.AtomicReference;
  * mapped to {@code removeFirstOccurrence}, and {@link
  * Collection#add} is mapped to {@code addLast}.
  *
- * <p>Beware that, unlike in most collections, the {@code size}
+ * <p>Beware that, unlike in most collections, the {@link #size}
  * method is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these deques, determining the current number
- * of elements requires a traversal of the elements.
+ * of elements requires traversing them all to count them.
+ * Additionally, it is possible for the size to change during
+ * execution of this method, in which case the returned result will be
+ * inaccurate. Thus, this method is typically not very useful in
+ * concurrent applications.
  *
  * <p>This class is {@code Serializable}, but relies on default
  * serialization mechanisms.  Usually, it is a better idea for any

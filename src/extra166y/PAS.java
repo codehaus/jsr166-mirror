@@ -1681,7 +1681,7 @@ class PAS {
                               l+h, n-h, l, g, null).compute();
             }
             else
-                oquickSort(a, cmp, l, l+n-1);
+                Arrays.sort(a, l, l+n, cmp);
         }
     }
 
@@ -1717,7 +1717,7 @@ class PAS {
                                l+h, n-h, l, g, null).compute();
             }
             else
-                ocquickSort(a, l, l+n-1);
+                Arrays.sort(a, l, l+n);
         }
     }
 
@@ -1754,7 +1754,7 @@ class PAS {
                               l+h, n-h, l, g, null).compute();
             }
             else
-                dquickSort(a, cmp, l, l+n-1);
+                Arrays.sort(a, l, l+n, cmp);
         }
     }
 
@@ -1790,7 +1790,7 @@ class PAS {
                                l+h, n-h, l, g, null).compute();
             }
             else
-                dcquickSort(a, l, l+n-1);
+                Arrays.sort(a, l, l+n);
         }
     }
 
@@ -1828,7 +1828,7 @@ class PAS {
                               l+h, n-h, l, g, null).compute();
             }
             else
-                lquickSort(a, cmp, l, l+n-1);
+                Arrays.sort(a, l, l+n, cmp);
         }
     }
 
@@ -1865,7 +1865,7 @@ class PAS {
                                l+h, n-h, l, g, null).compute();
             }
             else
-                lcquickSort(a, l, l+n-1);
+                Arrays.sort(a, l, l+n);
         }
     }
 
@@ -2298,323 +2298,6 @@ class PAS {
                 else
                     rights.join();
                 rights = rights.next;
-            }
-        }
-    }
-
-    /** Cutoff for when to use insertion-sort instead of quicksort */
-    static final int INSERTION_SORT_THRESHOLD = 8;
-
-    // Six nearly identical versions of quicksort
-
-    static void oquickSort(Object[] a, Comparator cmp, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    Object t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && cmp.compare(t, a[j]) < 0) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (cmp.compare(a[lo], a[mid]) > 0) {
-                Object t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (cmp.compare(a[mid], a[hi]) > 0) {
-                Object t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (cmp.compare(a[lo], a[mid]) > 0) {
-                    Object u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-
-            Object pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            for (;;) {
-                while (cmp.compare(pivot, a[right]) < 0)
-                    --right;
-                while (left < right && cmp.compare(pivot, a[left]) >= 0)
-                    ++left;
-                if (left < right) {
-                    Object t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (left - lo <= hi - right) {
-                oquickSort(a, cmp, lo, left);
-                lo = left + 1;
-            }
-            else {
-                oquickSort(a, cmp, right, hi);
-                hi = left;
-            }
-        }
-    }
-
-    static void ocquickSort(Comparable[] a, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    Comparable t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && t.compareTo(a[j]) < 0) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (a[lo].compareTo(a[mid]) > 0) {
-                Comparable t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (a[mid].compareTo(a[hi]) > 0) {
-                Comparable t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (a[lo].compareTo(a[mid]) > 0) {
-                    Comparable u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-
-            Comparable pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            for (;;) {
-                while (pivot.compareTo(a[right]) < 0)
-                    --right;
-                while (left < right && pivot.compareTo(a[left]) >= 0)
-                    ++left;
-                if (left < right) {
-                    Comparable t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (left - lo <= hi - right) {
-                ocquickSort(a, lo, left);
-                lo = left + 1;
-            }
-            else {
-                ocquickSort(a, right, hi);
-                hi = left;
-            }
-        }
-    }
-
-    static void dquickSort(double[] a, DoubleComparator cmp, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    double t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && cmp.compare(t, a[j]) < 0) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (cmp.compare(a[lo], a[mid]) > 0) {
-                double t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (cmp.compare(a[mid], a[hi]) > 0) {
-                double t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (cmp.compare(a[lo], a[mid]) > 0) {
-                    double u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-
-            double pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            for (;;) {
-                while (cmp.compare(pivot, a[right]) < 0)
-                    --right;
-                while (left < right && cmp.compare(pivot, a[left]) >= 0)
-                    ++left;
-                if (left < right) {
-                    double t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (left - lo <= hi - right) {
-                dquickSort(a, cmp, lo, left);
-                lo = left + 1;
-            }
-            else {
-                dquickSort(a, cmp, right, hi);
-                hi = left;
-            }
-        }
-    }
-
-    static void dcquickSort(double[] a, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    double t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && t < a[j]) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (a[lo] > a[mid]) {
-                double t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (a[mid] > a[hi]) {
-                double t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (a[lo] > a[mid]) {
-                    double u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-
-            double pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            for (;;) {
-                while (pivot < a[right])
-                    --right;
-                while (left < right && pivot >= a[left])
-                    ++left;
-                if (left < right) {
-                    double t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (left - lo <= hi - right) {
-                dcquickSort(a, lo, left);
-                lo = left + 1;
-            }
-            else {
-                dcquickSort(a, right, hi);
-                hi = left;
-            }
-        }
-    }
-
-    static void lquickSort(long[] a, LongComparator cmp, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    long t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && cmp.compare(t, a[j]) < 0) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (cmp.compare(a[lo], a[mid]) > 0) {
-                long t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (cmp.compare(a[mid], a[hi]) > 0) {
-                long t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (cmp.compare(a[lo], a[mid]) > 0) {
-                    long u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-
-            long pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            for (;;) {
-                while (cmp.compare(pivot, a[right]) < 0)
-                    --right;
-                while (left < right && cmp.compare(pivot, a[left]) >= 0)
-                    ++left;
-                if (left < right) {
-                    long t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (left - lo <= hi - right) {
-                lquickSort(a, cmp, lo, left);
-                lo = left + 1;
-            }
-            else {
-                lquickSort(a, cmp, right, hi);
-                hi = left;
-            }
-        }
-    }
-
-    static void lcquickSort(long[] a, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    long t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && t < a[j]) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (a[lo] > a[mid]) {
-                long t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (a[mid] > a[hi]) {
-                long t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (a[lo] > a[mid]) {
-                    long u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-
-            long pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            for (;;) {
-                while (pivot < a[right])
-                    --right;
-                while (left < right && pivot >= a[left])
-                    ++left;
-                if (left < right) {
-                    long t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (left - lo <= hi - right) {
-                lcquickSort(a, lo, left);
-                lo = left + 1;
-            }
-            else {
-                lcquickSort(a, right, hi);
-                hi = left;
             }
         }
     }

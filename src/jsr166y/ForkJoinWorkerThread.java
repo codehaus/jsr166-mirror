@@ -504,12 +504,12 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Returns a popped task, or null if empty. Assumes active status.
      * Called only by current thread. (Note: a specialization of this
-     * code appears in scanWhileJoining.)
+     * code appears in popWhileJoining.)
      */
     final ForkJoinTask<?> popTask() {
         int s;
-        ForkJoinTask<?>[] q = queue;
-        if (q != null && (s = sp) != base) {
+        ForkJoinTask<?>[] q;
+        if (base != (s = sp) && (q = queue) != null) {
             int i = (q.length - 1) & --s;
             ForkJoinTask<?> t = q[i];
             if (t != null && UNSAFE.compareAndSwapObject
@@ -522,17 +522,18 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Specialized version of popTask to pop only if
-     * topmost element is the given task. Called only
-     * by current thread while active.
+     * Specialized version of popTask to pop only if topmost element
+     * is the given task. Called only by current thread while
+     * active.
      *
      * @param t the task. Caller must ensure non-null.
      */
     final boolean unpushTask(ForkJoinTask<?> t) {
         int s;
-        ForkJoinTask<?>[] q = queue;
-        if (q != null && UNSAFE.compareAndSwapObject
-            (q, (((q.length - 1) & (s = sp - 1)) << qShift) + qBase, t, null)){
+        ForkJoinTask<?>[] q;
+        if (base != (s = sp) && (q = queue) != null &&
+            UNSAFE.compareAndSwapObject
+            (q, (((q.length - 1) & --s) << qShift) + qBase, t, null)) {
             sp = s;
             return true;
         }
@@ -610,23 +611,25 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private ForkJoinTask<?> scan() {
         ForkJoinPool p = pool;
-        ForkJoinWorkerThread[] ws = p.workers;
-        int n = ws.length;            // upper bound of #workers
-        boolean canSteal = active;    // shadow active status
-        int r = seed;                 // extract seed once
-        int k = r;                    // index: random if j<0 else step
-        for (int j = -n; j < n; ++j) {
-            ForkJoinWorkerThread v = ws[k & (n - 1)];
-            r ^= r << 13; r ^= r >>> 17; r ^= r << 5; // xorshift
-            if (v != null && v.base != v.sp) {
-                if (canSteal ||       // ensure active status
-                    (canSteal = active = p.tryIncrementActiveCount())) {
-                    int b, i;         // inlined specialization of deqTask
-                    ForkJoinTask<?> t;
+        ForkJoinWorkerThread[] ws;        // worker array
+        int n;                            // upper bound of #workers
+        if ((ws = p.workers) != null && (n = ws.length) > 1) {
+            boolean canSteal = active;    // shadow active status
+            int r = seed;                 // extract seed once
+            int mask = n - 1;
+            int j = -n;                   // loop counter
+            int k = r;                    // worker index, random if j < 0
+            for (;;) {
+                ForkJoinWorkerThread v = ws[k & mask];
+                r ^= r << 13; r ^= r >>> 17; r ^= r << 5; // inline xorshift
+                if (v != null && v.base != v.sp) {
+                    int b, i;             // inline specialized deqTask
                     ForkJoinTask<?>[] q;
-                    if ((b = v.base) != v.sp &&  // recheck
+                    ForkJoinTask<?> t;
+                    if ((canSteal ||      // ensure active status
+                         (canSteal = active = p.tryIncrementActiveCount())) &&
                         (q = v.queue) != null &&
-                        (t = q[i = (q.length - 1) & b]) != null &&
+                        (t = q[i = (q.length - 1) & (b = v.base)]) != null &&
                         UNSAFE.compareAndSwapObject
                         (q, (i << qShift) + qBase, t, null)) {
                         v.base = b + 1;
@@ -634,10 +637,16 @@ public class ForkJoinWorkerThread extends Thread {
                         ++stealCount;
                         return t;
                     }
+                    j = -n;
+                    k = r;                // restart on contention
                 }
-                j = -n;           // reset on contention
+                else if (++j <= 0)
+                    k = r;
+                else if (j <= n)
+                    k += (n >>> 1) | 1;
+                else
+                    break;
             }
-            k = j >= 0? k + ((n >>> 1) | 1) : r;
         }
         return null;
     }
@@ -877,7 +886,23 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns a popped or stolen task, if available, unless joinMe is done
+     * Executes or processes other tasks awaiting the given task
+     * @return task completion status
+     */
+    final int execWhileJoining(ForkJoinTask<?> joinMe) {
+        int s;
+        while ((s = joinMe.status) >= 0) {
+            ForkJoinTask<?> t = base != sp?
+                popWhileJoining(joinMe) :
+                scanWhileJoining(joinMe);
+            if (t != null)
+                t.tryExec();
+        }
+        return s;
+    }
+
+    /**
+     * Returns or stolen task, if available, unless joinMe is done
      *
      * This method is intrinsically nonmodular. To maintain the
      * property that tasks are never stolen if the awaited task is
@@ -886,52 +911,53 @@ public class ForkJoinWorkerThread extends Thread {
      * to cancel a steal even after CASing slot to null, but before
      * adjusting base index: If, after the CAS, we see that joinMe is
      * ready, we can back out by placing the task back into the slot,
-     * without adjusting index. The scan loop is otherwise the same as
-     * in scan.
+     * without adjusting index. The loop is otherwise a variant of the
+     * one in scan().
      *
      */
-    final ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
-        ForkJoinTask<?> popped; // prefer local tasks
-        if (base != sp && (popped = popWhileJoining(joinMe)) != null)
-            return popped;
-        if (joinMe.status >= 0) {
-            ForkJoinPool p = pool;
-            ForkJoinWorkerThread[] ws = p.workers;
-            int n = ws.length;
-            int r = seed;
+    private ForkJoinTask<?> scanWhileJoining(ForkJoinTask<?> joinMe) {
+        int r = seed;
+        ForkJoinPool p = pool;
+        ForkJoinWorkerThread[] ws;
+        int n;
+        outer:while ((ws = p.workers) != null && (n = ws.length) > 1) {
+            int mask = n - 1;
             int k = r;
-            for (int j = -n; j < n && joinMe.status >= 0; ++j) {
-                ForkJoinWorkerThread v = ws[k & (n - 1)];
+            boolean contended = false; // to retry loop if deq contends
+            for (int j = -n; j <= n; ++j) {
+                if (joinMe.status < 0)
+                    break outer;
+                int b;
+                ForkJoinTask<?>[] q;
+                ForkJoinWorkerThread v = ws[k & mask];
                 r ^= r << 13; r ^= r >>> 17; r ^= r << 5; // xorshift
-                if (v != null) {
-                    int b = v.base;
-                    ForkJoinTask<?>[] q;
-                    if (b != v.sp && (q = v.queue) != null) {
-                        int i = (q.length - 1) & b;
-                        ForkJoinTask<?> t = q[i];
-                        if (t != null && UNSAFE.compareAndSwapObject
-                            (q, (i << qShift) + qBase, t, null)) {
-                            if (joinMe.status >= 0) { 
-                                v.base = b + 1;
-                                seed = r;
-                                ++stealCount;
-                                return t;
-                            }
-                            UNSAFE.putObjectVolatile(q, (i<<qShift)+qBase, t);
-                            break; // back out
+                if (v != null && (b=v.base) != v.sp && (q=v.queue) != null) {
+                    int i = (q.length - 1) & b;
+                    ForkJoinTask<?> t = q[i];
+                    if (t != null && UNSAFE.compareAndSwapObject
+                        (q, (i << qShift) + qBase, t, null)) {
+                        if (joinMe.status >= 0) {
+                            v.base = b + 1;
+                            seed = r;
+                            ++stealCount;
+                            return t;
                         }
-                        j = -n;
+                        UNSAFE.putObjectVolatile(q, (i<<qShift)+qBase, t);
+                        break outer; // back out
                     }
+                    contended = true;
                 }
-                k = j >= 0? k + ((n >>> 1) | 1) : r;
+                k = j < 0 ? r : (k + ((n >>> 1) | 1));
             }
+            if (!contended && p.tryAwaitBusyJoin(joinMe))
+                break;
         }
         return null;
     }
 
     /**
      * Version of popTask with join checks surrounding extraction.
-     * Uses the same backout strategy as scanWhileJoining. Note that
+     * Uses the same backout strategy as helpJoinTask. Note that
      * we ignore locallyFifo flag for local tasks here since helping
      * joins only make sense in LIFO mode.
      *

@@ -138,7 +138,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Capacity of work-stealing queue array upon initialization.
-     * Must be a power of two. Initial size must be at least 2, but is
+     * Must be a power of two. Initial size must be at least 4, but is
      * padded to minimize cache effects.
      */
     private static final int INITIAL_QUEUE_CAPACITY = 1 << 13;
@@ -358,17 +358,23 @@ public class ForkJoinWorkerThread extends Thread {
      * Find and execute tasks and check status while running
      */
     private void mainLoop() {
-        boolean ran = false; // true if ran task on previous step
+        boolean ran = false;      // true if ran task in last loop iter
+        boolean prevRan = false;  // true if ran on last or previous step
         ForkJoinPool p = pool;
         for (;;) {
-            p.preStep(this, ran);
+            p.preStep(this, prevRan);
             if (runState != 0)
                 return;
             ForkJoinTask<?> t; // try to get and run stolen or submitted task
-            if (ran = (t = scan()) != null || (t = pollSubmission()) != null) {
+            if ((t = scan()) != null || (t = pollSubmission()) != null) {
                 t.tryExec();
                 if (base != sp)
                     runLocalTasks();
+                prevRan = ran = true;
+            }
+            else {
+                prevRan = ran;
+                ran = false;
             }
         }
     }
@@ -447,14 +453,14 @@ public class ForkJoinWorkerThread extends Thread {
      * @param t the task. Caller must ensure non-null.
      */
     final void pushTask(ForkJoinTask<?> t) {
-        int s;
         ForkJoinTask<?>[] q = queue;
         int mask = q.length - 1; // implicit assert q != null
-        UNSAFE.putOrderedObject(q, (((s = sp++) & mask) << qShift) + qBase, t);
-        if ((s -= base) <= 0)
-            pool.signalWork();
-        else if (s + 1 >= mask)
-            growQueue();
+        int s = sp++;            // ok to increment sp before slot write
+        UNSAFE.putOrderedObject(q, ((s & mask) << qShift) + qBase, t);
+        if ((s -= base) == 0)
+            pool.signalWork();   // was empty
+        else if (s == mask)
+            growQueue();         // is full
     }
 
     /**

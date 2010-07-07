@@ -21,7 +21,8 @@ package java.util.concurrent.atomic;
  * order between two writes, and {@code orderAccesses} between a write
  * and a read.  Method {@code orderReads} is used to enforce order
  * between two reads with respect to other {@code orderWrites} and/or
- * {@code orderAccesses} invocations.  These methods provide
+ * {@code orderAccesses} invocations.  The formally specified
+ * properties of these methods described below provide
  * platform-independent guarantees that are honored by all levels of a
  * platform (compilers, systems, processors).  The use of these
  * methods may result in the suppression of otherwise valid compiler
@@ -43,92 +44,10 @@ package java.util.concurrent.atomic;
  * related language-based constructions, but without other
  * compile-time and runtime benefits that make language-based
  * constructions far better choices when they are applicable.  Usages
- * should be is restricted to the control of strictly internal
+ * should be restricted to the control of strictly internal
  * implementation matters inside a class or package, and must either
  * avoid or document any consequent violations of ordering or safety
  * properties expected by users of a class employing them.
- *
- * <p><b>Ordering Semantics.</b> Informal descriptions of ordering
- * methods are provided in method specifications and usage examples
- * below.  More formally, using the terminology of The Java Language
- * Specification chapter 17, the rules governing their semantics
- * are as follows:
- *
- * <ol COMPACT>
- *
- *   <li>Every invocation of {@code orderAccesses} is an element of the
- *   <em>synchronization order</em>.
- *
- *   <li>Given:
- *
- *   <ul COMPACT>
- *
- *     <li><em>ref</em>, a reference to an object,
- *
- *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or
- *       {@code orderAccesses(ref)},
- *
- *     <li><em>w</em>, a write of <em>ref</em> that follows <em>wf</em>
- *         in program order,
- *
- *     <li> <em>r</em>, a read that sees write <em>w</em>,
- *
- *     <li> <em>rf</em>, an invocation of {@code orderReads(ref)} or
- *     {@code orderAccesses(ref)} following <em>r</em> in program
- *     order.
- *
- *   </ul>
- *
- *    then:
- *
- *   <ul COMPACT>
- *
- *     <li> <em>wf happens-before rf</em>, and
- *
- *     <li> <em>wf</em> precedes <em>rf</em> in the
- *          <em>synchronization order</em>.
- *     <li> If (<em>r1</em>, <em>w1</em>) and
- *          (<em>r2</em>, <em>w2</em>) are two
- *          pairs of reads and and writes, both
- *          respectively satisfying the above conditions
- *          for <em>ref</em>, and <em>r1</em> precedes <em>r2</em>
- *          in program order, then it is not the
- *          case that <em>w2 happens-before w1</em>.
- *
- *   </ul>
- *
- *   <li>Given:
- *
- *   <ul COMPACT>
- *
- *     <li><em>ref</em>, a reference to an object,
- *
- *     <li><em>wf</em>, an invocation of {@code orderWrites(ref)} or,
- *       (for some reference <em>p</em>) {@code orderAccesses(p)},
- *
- *     <li><em>w</em>, a write of <em>ref</em> that follows <em>wf</em>
- *         in program order,
- *
- *     <li> <em>r</em>, a read that sees write <em>w</em>, where
- *         <em>r</em> is the first read by some thread
- *         <em>t</em> that sees value <em>ref</em>,
- *
- *
- *     <li> <em>d</em>, a use of <em>r</em> with the effect
- *          of reading or writing a field (or if array, an element)
- *          of the referenced object.
- *
- *   </ul>
- *
- *    then:
- *
- *   <ul COMPACT>
- *
- *     <li> the effects of <em>d</em> are constrained
- *          by the relation <em>wf happens-before d</em>.
- *   </ul>
- *
- * </ol>
  *
  * <p><b>Reachability.</b> Method {@code reachabilityFence}
  * establishes an ordering for strong reachability (as defined in the
@@ -140,14 +59,7 @@ package java.util.concurrent.atomic;
  * this method is applicable only when reclamation may have visible
  * effects, which is possible for objects with finalizers (see Section
  * 12.6 of the Java Language Specification) that are implemented in
- * ways that rely on ordering control for correctness.  More formally,
- * use of this method ensures: given <em>ref</em>, a reference to an
- * object; <em>f</em>, an invocation of {@code
- * reachabilityFence(ref)}; and <em>a</em>, an action (by the garbage
- * collector) comprising either an invocation of {@code
- * ref.finalize()} or the enqueing of any {@link
- * java.lang.ref.Reference} constructed with argument <em>ref</em>,
- * that <em>f happens-before a</em>.
+ * ways that rely on ordering control for correctness.  
  *
  * <p><b>Sample Usages</b>
  *
@@ -166,7 +78,7 @@ package java.util.concurrent.atomic;
  *     WidgetHolder h = new WidgetHolder();
  *     h.widget = new Widget(params);
  *     return Fences.orderWrites(h);
- *  }
+ *   }
  * }
  * </pre>
  *
@@ -213,13 +125,18 @@ package java.util.concurrent.atomic;
  * that itself guarantees the expected ordering relations. However, it
  * may come into play in the construction of such classes themselves.
  *
- * <p><b>Safely updating fields.</b> Outside of the initialization idioms
- * illustrated above, Fence methods ordering writes must be paired
- * with those ordering reads.  Suppose there is an accessible variable
- * that should have been declared as {@code volatile} but wasn't:
+ * <p><b>Safely updating fields.</b> Outside of the initialization
+ * idioms illustrated above, Fence methods ordering writes must be
+ * paired with those ordering reads. To illustrate, suppose class
+ * {@code c} contains an accessible variable {@code data} that should
+ * have been declared as {@code volatile} but wasn't:
  *
  * <pre>
- * class C { Object data;  ...  }
+ * class C { 
+ *    Object data;  // need volatile access but not volatile
+ *    // ...
+ * }
+ *
  * class App {
  *   Object getData(C c) {
  *      return Fences.orderReads(c).data;
@@ -277,7 +194,7 @@ package java.util.concurrent.atomic;
  * }
  *
  * class ItemHolder {
- *   Item item;
+ *   private Item item;
  *   Item acquireItem() {
  *      return Fences.orderReads(item);
  *   }
@@ -387,6 +304,161 @@ package java.util.concurrent.atomic;
  * where this approach is not as efficient, desirable, or possible;
  * for example because it would encounter deadlock.
  *
+ * <p><b>Formal Properties.</b> 
+ * 
+ * <p>Using the terminology of The Java Language Specification chapter
+ * 17, the rules governing the semantics of the methods of this class
+ * are as follows:
+ *
+ * <p> The following is still under construction. 
+ * 
+ * <dl>
+ *
+ *   <dt><b>[Definitions]</b>
+ *   <dd>
+ *   <ul>
+ *
+ *     <li>Define <em>sequenced(a, b)</em> to be true if <em>a</em> 
+ *     occurs before <em>b</em> in <em>program order</em>.
+ *
+ *     <li>Define <em>accesses(a, p)</em> to be true if
+ *     <em>a</em> is a read or write of a field (or if an array, an
+ *     element) of the object referenced by <em>p</em>.
+ *
+ *     <li>Define <em>deeplyAccesses(a, p)</em> to be true if either
+ *     <em>accesses(a, p)</em> or <em>deeplyAccesses(a, q)</em> where
+ *     <em>q</em> is the value seen by some read <em>r</em> 
+ *     such that <em>accesses(r, p)</em>.
+ *
+ *   </ul> 
+ *   <p>
+ *   <dt><b>[Matching]</b> 
+ *   <dd> Given:
+ *
+ *   <ul>
+ *
+ *     <li><em>p</em>, a reference to an object
+ *
+ *     <li><em>wf</em>, an invocation of {@code orderWrites(p)} or
+ *       {@code orderAccesses(p)}
+ *
+ *     <li><em>w</em>, a write of value <em>p</em>
+ *
+ *     <li> <em>rf</em>, an invocation of {@code orderReads(p)} or
+ *     {@code orderAccesses(p)}
+ *
+ *     <li> <em>r</em>, a read returning value <em>p</em>
+ *
+ *   </ul>
+ *   If:
+ *   <ul>
+ *     <li>sequenced(wf, w)
+ *     <li>read <em>r</em> sees write <em>w</em>
+ *     <li>sequenced(r, rf)
+ *   </ul>
+ *   Then:
+ *   <ul>
+ *
+ *     <li> <em>wf happens-before rf</em>
+ *
+ *     <li> <em>wf</em> precedes <em>rf</em> in the
+ *          <em>synchronization order</em>
+ *
+ *     <li> If (<em>r1</em>, <em>w1</em>) and (<em>r2</em>,
+ *     <em>w2</em>) are two pairs of reads and and writes, both
+ *     respectively satisfying the above conditions for <em>p</em>,
+ *     and sequenced(r1, r2) then it is not the case that <em>w2
+ *     happens-before w1</em>.
+ *
+ *   </ul>
+ *   <p>
+ *   <dt><b>[Initial Reads]</b> 
+ *   <dd> Given:
+ *
+ *   <ul>
+ *
+ *     <li><em>p</em>, a reference to an object
+ *
+ *     <li> <em>a</em>, an access where deeplyAccesses(a, p)
+ *
+ *     <li><em>wf</em>, an invocation of {@code orderWrites(p)} or
+ *       {@code orderAccesses(p)}
+ *
+ *     <li><em>w</em>, a write of value <em>p</em>
+ *
+ *     <li> <em>r</em>, a read returning value <em>p</em>
+ *
+ *     <li> <em>b</em>, an access where accesses(b, p)
+ *
+ *   </ul>
+ *   If:
+ *   <ul>
+ *     <li>sequenced(a, wf);
+ *     <li>sequenced(wf, w)
+ *     <li>read <em>r</em> sees write <em>w</em>, and
+ *         <em>r</em> is the first read by some thread
+ *         <em>t</em> that sees value <em>p</em>
+ *     <li>sequenced(r, b)
+ *   </ul>
+ *   Then:
+ *   <ul>
+ *     <li> the effects of <em>b</em> are constrained
+ *          by the relation <em>a happens-before b</em>.
+ *   </ul>
+ *  <p>
+ *  <dt><b>[orderAccesses]</b> 
+ *  <dd> Given:
+ *
+ *   <ul>
+ *     <li><em>p</em>, a reference to an object
+ *     <li><em>f</em>, an invocation of  {@code orderAccesses(p)}
+ *   </ul>
+ *   If:
+ *   <ul>
+ *     <li>sequenced(f, w)
+ *   </ul>
+ *
+ *    Then:
+ *
+ *   <ul>
+ *
+ *     <li> <em>f</em> is an element of the <em>synchronization order</em>.
+ *
+ *   </ul>
+ *   <p>
+ *   <dt><b>[Reachability]</b> 
+ *   <dd> Given:
+ *
+ *   <ul>
+ *
+ *     <li><em>p</em>, a reference to an object
+ *
+ *     <li><em>f</em>, an invocation of {@code reachabilityFence(p)}
+ *
+ *     <li><em>a</em>, an access where accesses(a, p)
+ *
+ *     <li><em>b</em>, an action (by a garbage collector) taking
+ *     the form of an invocation of {@code
+ *     p.finalize()} or of enqueing any {@link
+ *     java.lang.ref.Reference} constructed with argument <em>p</em>
+ * 
+ *   </ul>
+ *
+ *   If:
+ *   <ul>
+ *     <li>sequenced(a, f)
+ *   </ul>
+ *
+ *    Then:
+ *
+ *   <ul>
+ *
+ *     <li> <em>a happens-before b</em>.
+ *
+ *   </ul>
+ *
+ * </dl>
+ *
  * @since 1.7
  * @author Doug Lea
  */
@@ -428,8 +500,7 @@ public class Fences {
      * method occur before a subsequent write of the reference. For
      * details, see the class documentation for this class.
      *
-     * @param ref the (non-null) reference. If null, the effects
-     * of the method are undefined.
+     * @param ref the reference. If null, this method has no effect.
      * @return the given ref, to simplify usage
      */
     public static <T> T orderWrites(T ref) {

@@ -90,7 +90,7 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
             }
             r += seqFib(n);
             while (rt != null) {
-                if (rt.tryUnfork()) rt.compute(); else rt.helpJoin();
+                if (rt.tryUnfork()) rt.compute(); else rt.join();
                 r += rt.number;
                 rt = rt.next;
             }

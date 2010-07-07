@@ -89,7 +89,7 @@ public class FJJacobi {
                 compute();
             else {
                 //                quietlyJoin();
-                quietlyHelpJoin();
+                quietlyJoin();
                 reinitialize();
             }
             double m = maxDiff;

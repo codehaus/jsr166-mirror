@@ -162,8 +162,6 @@ public abstract class AbstractExecutorService implements ExecutorService {
                     --active;
                     try {
                         return f.get();
-                    } catch (InterruptedException ie) {
-                        throw ie;
                     } catch (ExecutionException eex) {
                         ee = eex;
                     } catch (RuntimeException rex) {

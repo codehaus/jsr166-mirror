@@ -69,8 +69,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     implements BlockingQueue<E>, java.io.Serializable {
     private static final long serialVersionUID = 5595510919245408276L;
 
-    private final PriorityQueue<E> q;
-    private final ReentrantLock lock = new ReentrantLock(true);
+    final PriorityQueue<E> q;
+    final ReentrantLock lock = new ReentrantLock(true);
     private final Condition notEmpty = lock.newCondition();
 
     /**
@@ -214,15 +214,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            try {
-                while (q.size() == 0)
-                    notEmpty.await();
-            } catch (InterruptedException ie) {
-                notEmpty.signal(); // propagate to non-interrupted thread
-                throw ie;
-            }
-            E x = q.poll();
-            assert x != null;
+            E x;
+            while ( (x = q.poll()) == null)
+                notEmpty.await();
             return x;
         } finally {
             lock.unlock();
@@ -234,19 +228,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            for (;;) {
-                E x = q.poll();
-                if (x != null)
-                    return x;
+            E x;
+            while ( (x = q.poll()) == null) {
                 if (nanos <= 0)
                     return null;
-                try {
-                    nanos = notEmpty.awaitNanos(nanos);
-                } catch (InterruptedException ie) {
-                    notEmpty.signal(); // propagate to non-interrupted thread
-                    throw ie;
-                }
+                nanos = notEmpty.awaitNanos(nanos);
             }
+            return x;
         } finally {
             lock.unlock();
         }

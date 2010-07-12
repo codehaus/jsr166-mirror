@@ -55,11 +55,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private static final long serialVersionUID = -817911632652898426L;
 
     /** The queued items  */
-    private final E[] items;
+    final E[] items;
     /** items index for next take, poll or remove */
-    private int takeIndex;
+    int takeIndex;
     /** items index for next put, offer, or add. */
-    private int putIndex;
+    int putIndex;
     /** Number of items in the queue */
     private int count;
 
@@ -69,11 +69,16 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
 
     /** Main lock guarding all access */
-    private final ReentrantLock lock;
+    final ReentrantLock lock;
     /** Condition for waiting takes */
     private final Condition notEmpty;
     /** Condition for waiting puts */
     private final Condition notFull;
+
+    /** Predicate for the notEmpty condition */
+    boolean empty() { return count == 0; }
+    /** Predicate for the notFull condition */
+    boolean full() { return count == items.length; }
 
     // Internal helper methods
 
@@ -81,7 +86,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Circularly increment i.
      */
     final int inc(int i) {
-        return (++i == items.length)? 0 : i;
+        return (++i == items.length) ? 0 : i;
     }
 
     /**
@@ -222,7 +227,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            if (count == items.length)
+            if (full())
                 return false;
             else {
                 insert(e);
@@ -242,17 +247,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     public void put(E e) throws InterruptedException {
         if (e == null) throw new NullPointerException();
-        final E[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            try {
-                while (count == items.length)
-                    notFull.await();
-            } catch (InterruptedException ie) {
-                notFull.signal(); // propagate to non-interrupted thread
-                throw ie;
-            }
+            while (full())
+                notFull.await();
             insert(e);
         } finally {
             lock.unlock();
@@ -275,20 +274,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            for (;;) {
-                if (count != items.length) {
-                    insert(e);
-                    return true;
-                }
+            while (full()) {
                 if (nanos <= 0)
                     return false;
-                try {
-                    nanos = notFull.awaitNanos(nanos);
-                } catch (InterruptedException ie) {
-                    notFull.signal(); // propagate to non-interrupted thread
-                    throw ie;
-                }
+                nanos = notFull.awaitNanos(nanos);
             }
+            insert(e);
+            return true;
         } finally {
             lock.unlock();
         }
@@ -298,10 +290,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            if (count == 0)
-                return null;
-            E x = extract();
-            return x;
+            return empty() ? null : extract();
         } finally {
             lock.unlock();
         }
@@ -311,15 +300,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            try {
-                while (count == 0)
-                    notEmpty.await();
-            } catch (InterruptedException ie) {
-                notEmpty.signal(); // propagate to non-interrupted thread
-                throw ie;
-            }
-            E x = extract();
-            return x;
+            while (empty())
+                notEmpty.await();
+            return extract();
         } finally {
             lock.unlock();
         }
@@ -330,21 +313,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            for (;;) {
-                if (count != 0) {
-                    E x = extract();
-                    return x;
-                }
+            while (empty()) {
                 if (nanos <= 0)
                     return null;
-                try {
-                    nanos = notEmpty.awaitNanos(nanos);
-                } catch (InterruptedException ie) {
-                    notEmpty.signal(); // propagate to non-interrupted thread
-                    throw ie;
-                }
-
+                nanos = notEmpty.awaitNanos(nanos);
             }
+            return extract();
         } finally {
             lock.unlock();
         }
@@ -354,7 +328,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return (count == 0) ? null : items[takeIndex];
+            return empty() ? null : items[takeIndex];
         } finally {
             lock.unlock();
         }
@@ -643,7 +617,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int i = takeIndex;
             int n = 0;
             int sz = count;
-            int max = (maxElements < count)? maxElements : count;
+            int max = (maxElements < count) ? maxElements : count;
             while (n < max) {
                 c.add(items[i]);
                 items[i] = null;
@@ -708,7 +682,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
         Itr() {
             lastRet = -1;
-            if (count == 0)
+            if (empty())
                 nextIndex = -1;
             else {
                 nextIndex = takeIndex;

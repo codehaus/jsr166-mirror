@@ -147,21 +147,24 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * in a way that flows well in javadocs.
      */
 
-    /**
-     * Run control status bits packed into a single int to minimize
-     * footprint and to ensure atomicity (via CAS).  Status is
-     * initially zero, and takes on nonnegative values until
-     * completed, upon which status holds value COMPLETED. CANCELLED,
-     * or EXCEPTIONAL. Tasks undergoing blocking waits by other
-     * threads have the SIGNAL bit set.  Completion of a stolen task
-     * with SIGNAL set awakens any waiters via notifyAll. Even though
-     * suboptimal for some purposes, we use basic builtin wait/notify
-     * to take advantage of "monitor inflation" in JVMs that we would
-     * otherwise need to emulate to avoid adding further per-task
-     * bookkeeping overhead.  We want these monitors to be "fat",
-     * i.e., not use biasing or thin-lock techniques, so use some odd
-     * coding idioms that tend to avoid them.
+    /*
+     * The status field holds run control status bits packed into a
+     * single int to minimize footprint and to ensure atomicity (via
+     * CAS).  Status is initially zero, and takes on nonnegative
+     * values until completed, upon which status holds value
+     * COMPLETED. CANCELLED, or EXCEPTIONAL. Tasks undergoing blocking
+     * waits by other threads have the SIGNAL bit set.  Completion of
+     * a stolen task with SIGNAL set awakens any waiters via
+     * notifyAll. Even though suboptimal for some purposes, we use
+     * basic builtin wait/notify to take advantage of "monitor
+     * inflation" in JVMs that we would otherwise need to emulate to
+     * avoid adding further per-task bookkeeping overhead.  We want
+     * these monitors to be "fat", i.e., not use biasing or thin-lock
+     * techniques, so use some odd coding idioms that tend to avoid
+     * them.
      */
+
+    /** Run status of this task */
     volatile int status; // accessed directly by pool and workers
 
     private static final int NORMAL      = -1;
@@ -214,23 +217,18 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Blocks a worker thread until completion. Called only by pool.
      */
-    final int internalAwaitDone() {
-        int s;
+    final void internalAwaitDone() {
+        int s;         // the odd construction reduces lock bias effects
         while ((s = status) >= 0) {
-            synchronized(this) {
-                if (UNSAFE.compareAndSwapInt(this, statusOffset, s, SIGNAL)) {
-                    do {
-                        try {
-                            wait();
-                        } catch (InterruptedException ie) {
-                            cancelIfTerminating();
-                        }
-                    } while ((s = status) >= 0);
-                    break;
+            try {
+                synchronized(this) {
+                    if (UNSAFE.compareAndSwapInt(this, statusOffset, s,SIGNAL))
+                        wait();
                 }
+            } catch (InterruptedException ie) {
+                cancelIfTerminating();
             }
         }
-        return s;
     }
 
     /**
@@ -243,13 +241,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             synchronized(this) {
                 if (UNSAFE.compareAndSwapInt(this, statusOffset, s, SIGNAL)){
                     boolean interrupted = false;
-                    do {
+                    while ((s = status) >= 0) {
                         try {
                             wait();
                         } catch (InterruptedException ie) {
                             interrupted = true;
                         }
-                    } while ((s = status) >= 0);
+                    }
                     if (interrupted)
                         Thread.currentThread().interrupt();
                     break;
@@ -297,8 +295,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                 if (completed)
                     return setCompletion(NORMAL);
             }
-            w.joinTask(this);
-            return status;
+            return w.joinTask(this);
         }
         return externalAwaitDone();
     }
@@ -317,10 +314,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             } catch (Throwable rex) {
                 return setExceptionalCompletion(rex);
             }
-            if (completed)
-                stat = setCompletion(NORMAL);
-            else
-                stat = doJoin();
+            stat = completed ? setCompletion(NORMAL) : doJoin();
         }
         return stat;
     }
@@ -538,8 +532,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return {@code true} if this task is now cancelled
      */
     public boolean cancel(boolean mayInterruptIfRunning) {
-        setCompletion(CANCELLED);
-        return status == CANCELLED;
+        return setCompletion(CANCELLED) == CANCELLED;
     }
 
     /**
@@ -556,7 +549,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Cancels ignoring exceptions if worker is terminating
      */
-    private void cancelIfTerminating() {
+    final void cancelIfTerminating() {
         Thread t = Thread.currentThread();
         if ((t instanceof ForkJoinWorkerThread) &&
             ((ForkJoinWorkerThread) t).isTerminating()) {
@@ -1103,8 +1096,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         Object ex = s.readObject();
         if (ex != null)
             setExceptionalCompletion((Throwable) ex);
-        if (status < 0)
-            synchronized (this) { notifyAll(); }
     }
 
     // Unsafe mechanics

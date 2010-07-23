@@ -61,7 +61,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /** items index for next put, offer, or add. */
     int putIndex;
     /** Number of items in the queue */
-    private int count;
+    int count;
 
     /*
      * Concurrency control uses the classic two-condition algorithm
@@ -74,11 +74,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private final Condition notEmpty;
     /** Condition for waiting puts */
     private final Condition notFull;
-
-    /** Predicate for the notEmpty condition */
-    boolean empty() { return count == 0; }
-    /** Predicate for the notFull condition */
-    boolean full() { return count == items.length; }
 
     // Internal helper methods
 
@@ -227,7 +222,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            if (full())
+            if (count == items.length)
                 return false;
             else {
                 insert(e);
@@ -250,7 +245,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            while (full())
+            while (count == items.length)
                 notFull.await();
             insert(e);
         } finally {
@@ -274,7 +269,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            while (full()) {
+            while (count == items.length) {
                 if (nanos <= 0)
                     return false;
                 nanos = notFull.awaitNanos(nanos);
@@ -290,7 +285,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return empty() ? null : extract();
+            return (count == 0) ? null : extract();
         } finally {
             lock.unlock();
         }
@@ -300,7 +295,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            while (empty())
+            while (count == 0)
                 notEmpty.await();
             return extract();
         } finally {
@@ -313,7 +308,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            while (empty()) {
+            while (count == 0) {
                 if (nanos <= 0)
                     return null;
                 nanos = notEmpty.awaitNanos(nanos);
@@ -328,7 +323,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return empty() ? null : items[takeIndex];
+            return (count == 0) ? null : items[takeIndex];
         } finally {
             lock.unlock();
         }
@@ -682,7 +677,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
         Itr() {
             lastRet = -1;
-            if (empty())
+            if (count == 0)
                 nextIndex = -1;
             else {
                 nextIndex = takeIndex;

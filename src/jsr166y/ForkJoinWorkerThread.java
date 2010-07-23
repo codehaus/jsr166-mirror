@@ -1143,8 +1143,6 @@ public class ForkJoinWorkerThread extends Thread {
         objectFieldOffset("runState", ForkJoinWorkerThread.class);
     private static final long qBase =
         UNSAFE.arrayBaseOffset(ForkJoinTask[].class);
-    private static final long threadStatusOffset =
-        objectFieldOffset("threadStatus", Thread.class);
     private static final int qShift;
 
     static {

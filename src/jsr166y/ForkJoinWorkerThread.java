@@ -198,7 +198,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Initialized in onStart, to improve memory locality.
      */
     private ForkJoinTask<?>[] queue;
-    
+
     /**
      * Index (mod queue.length) of least valid queue slot, which is
      * always the next position to steal from if nonempty.
@@ -269,7 +269,7 @@ public class ForkJoinWorkerThread extends Thread {
      * pool-wide.
      */
     private final boolean locallyFifo;
-    
+
     /**
      * Index of this worker in pool array. Set once by pool before
      * running, and accessed directly by pool to locate this worker in
@@ -295,7 +295,7 @@ public class ForkJoinWorkerThread extends Thread {
      * others.
      */
     private volatile ForkJoinTask<?> currentJoin;
-    
+
     /**
      * The task most recently stolen from another worker (or
      * submission queue).  Not volatile because always read/written in
@@ -431,7 +431,7 @@ public class ForkJoinWorkerThread extends Thread {
                 currentSteal = null;
                 emptyScans = 0;
             }
-            else 
+            else
                 ++emptyScans;
         }
     }
@@ -570,7 +570,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Returns a popped task, or null if empty. Assumes active status.
-     * Called only by current thread. 
+     * Called only by current thread.
      */
     final ForkJoinTask<?> popTask() {
         int s;
@@ -963,7 +963,7 @@ public class ForkJoinWorkerThread extends Thread {
             ForkJoinTask<?> t;
             int i = (q.length - 1) & --s;
             long u = (i << qShift) + qBase; // raw offset
-            if ((t = q[i]) != null && 
+            if ((t = q[i]) != null &&
                 UNSAFE.compareAndSwapObject(q, u, t, null)) {
                 /*
                  * This recheck (and similarly in helpJoinTask)
@@ -1025,7 +1025,7 @@ public class ForkJoinWorkerThread extends Thread {
                 ForkJoinTask<?>[] q;
                 while ((b = v.base) != v.sp && (q = v.queue) != null) {
                     int i = (q.length - 1) & b;
-                    long u = (i << qShift) + qBase; 
+                    long u = (i << qShift) + qBase;
                     ForkJoinTask<?> t = q[i];
                     if (task.status < 0)          // stale
                         continue restart;
@@ -1033,7 +1033,7 @@ public class ForkJoinWorkerThread extends Thread {
                         if (t == null)            // producer stalled
                             continue restart;     // retry via restart
                         if (UNSAFE.compareAndSwapObject(q, u, t, null)) {
-                            if (joinMe.status < 0) { 
+                            if (joinMe.status < 0) {
                                 UNSAFE.putObjectVolatile(q, u, t);
                                 return;           // back out on cancel
                             }

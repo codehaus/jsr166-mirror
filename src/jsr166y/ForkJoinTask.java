@@ -280,11 +280,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int doJoin() {
         int stat;
-        if ((stat = status) < 0)
-            return stat;
-        Thread t = Thread.currentThread();
+        Thread t;
         ForkJoinWorkerThread w;
-        if (t instanceof ForkJoinWorkerThread) {
+        if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) {
+            if ((stat = status) < 0)
+                return stat;
             if ((w = (ForkJoinWorkerThread) t).unpushTask(this)) {
                 boolean completed;
                 try {
@@ -536,8 +536,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Cancels, ignoring any exceptions it throws. Used during worker
-     * and pool shutdown.
+     * Cancels, ignoring any exceptions thrown by cancel. Used during
+     * worker and pool shutdown. Cancel is spec'ed not to throw any
+     * exceptions, but if it does anyway, we have no recourse during
+     * shutdown, so guard against this case.
      */
     final void cancelIgnoringExceptions() {
         try {
@@ -671,7 +673,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         else
             pool = null;
         /*
-         * Timed wait loop intermixes cases for fj (pool != null) and
+         * Timed wait loop intermixes cases for FJ (pool != null) and
          * non FJ threads. For FJ, decrement pool count but don't try
          * for replacement; increment count on completion. For non-FJ,
          * deal with interrupts. This is messy, but a little less so
@@ -687,8 +689,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             int s = status;
             if (s < 0)
                 break;
-            if (UNSAFE.compareAndSwapInt(this, statusOffset,
-                                         s, s | SIGNAL)) {
+            if (UNSAFE.compareAndSwapInt(this, statusOffset, s, SIGNAL)) {
                 long startTime = System.nanoTime();
                 long nanos = unit.toNanos(timeout);
                 long nt; // wait time

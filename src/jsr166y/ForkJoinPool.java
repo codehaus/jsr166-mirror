@@ -52,7 +52,7 @@ import java.util.concurrent.CountDownLatch;
  * convenient form for informal monitoring.
  *
  * <p> As is the case with other ExecutorServices, there are three
- * main task execution methods summarized in the follwoing
+ * main task execution methods summarized in the following
  * table. These are designed to be used by clients not already engaged
  * in fork/join computations in the current pool.  The main forms of
  * these methods accept instances of {@code ForkJoinTask}, but
@@ -138,31 +138,31 @@ public class ForkJoinPool extends AbstractExecutorService {
      * cache pollution effects.)
      *
      * Beyond work-stealing support and essential bookkeeping, the
-     * main responsibility of this framework is to arrange tactics for
-     * when one worker is waiting to join a task stolen (or always
-     * held by) another.  Becauae we are multiplexing many tasks on to
-     * a pool of workers, we can't just let them block (as in
-     * Thread.join).  We also cannot just reassign the joiner's
-     * run-time stack with another and replace it later, which would
-     * be a form of "continuation", that even if possible is not
-     * necessarily a good idea. Given that the creation costs of most
-     * threads on most systems mainly surrounds setting up runtime
-     * stacks, thread creation and switching is usually not much more
-     * expensive than stack creation and switching, and is more
-     * flexible). Instead we combine two tactics:
+     * main responsibility of this framework is to take actions when
+     * one worker is waiting to join a task stolen (or always held by)
+     * another.  Becauae we are multiplexing many tasks on to a pool
+     * of workers, we can't just let them block (as in Thread.join).
+     * We also cannot just reassign the joiner's run-time stack with
+     * another and replace it later, which would be a form of
+     * "continuation", that even if possible is not necessarily a good
+     * idea. Given that the creation costs of most threads on most
+     * systems mainly surrounds setting up runtime stacks, thread
+     * creation and switching is usually not much more expensive than
+     * stack creation and switching, and is more flexible). Instead we
+     * combine two tactics:
      *
-     *   1. Arranging for the joiner to execute some task that it
+     *   Helping: Arranging for the joiner to execute some task that it
      *      would be running if the steal had not occurred.  Method
      *      ForkJoinWorkerThread.helpJoinTask tracks joining->stealing
      *      links to try to find such a task.
      *
-     *   2. Unless there are already enough live threads, creating or
-     *      or re-activating a spare thread to compensate for the
-     *      (blocked) joiner until it unblocks.  Spares then suspend
-     *      at their next opportunity or eventually die if unused for
-     *      too long.  See below and the internal documentation
-     *      for tryAwaitJoin for more details about compensation
-     *      rules.
+     *   Compensating: Unless there are already enough live threads, 
+     *      creating or or re-activating a spare thread to compensate
+     *      for the (blocked) joiner until it unblocks.  Spares then
+     *      suspend at their next opportunity or eventually die if
+     *      unused for too long.  See below and the internal
+     *      documentation for tryAwaitJoin for more details about
+     *      compensation rules.
      *
      * Because the determining existence of conservatively safe
      * helping targets, the availability of already-created spares,
@@ -173,8 +173,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * increases application footprint, so we try to avoid it, within
      * reason.
      *
-     * The ManagedBlocker extension API can't use option (1) so uses a
-     * special version of (2) in method awaitBlocker.
+     * The ManagedBlocker extension API can't use helping so uses a
+     * special version of compensation in method awaitBlocker.
      *
      * The main throughput advantages of work-stealing stem from
      * decentralized control -- workers mostly steal tasks from each
@@ -497,8 +497,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * making decisions about creating and suspending spare
      * threads. Updated only by CAS. Note that adding a new worker
      * requires incrementing both counts, since workers start off in
-     * running state.  This field is also used for memory-fencing
-     * configuration parameters.
+     * running state.
      */
     private volatile int workerCounts;
 
@@ -657,12 +656,11 @@ public class ForkJoinPool extends AbstractExecutorService {
         try {
             w = factory.newThread(this);
         } finally { // Adjust on either null or exceptional factory return
-            if (w == null) {
+            if (w == null)
                 onWorkerCreationFailure();
-                return null;
-            }
         }
-        w.start(recordWorker(w), ueh);
+        if (w != null)
+            w.start(recordWorker(w), ueh);
         return w;
     }
 
@@ -672,8 +670,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     private void onWorkerCreationFailure() {
         for (;;) {
             int wc = workerCounts;
-            if ((wc >>> TOTAL_COUNT_SHIFT) == 0)
-                Thread.yield(); // wait for other counts to settle
+            int rc = wc & RUNNING_COUNT_MASK;
+            int tc = wc >>> TOTAL_COUNT_SHIFT;
+            if (rc == 0 || wc == 0)
+                Thread.yield(); // must wait for other counts to settle
             else if (UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
                                               wc - (ONE_RUNNING|ONE_TOTAL)))
                 break;
@@ -682,42 +682,16 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Creates and/or resumes enough workers to establish target
-     * parallelism, giving up if terminating or addWorker fails
-     *
-     * TODO: recast this to support lazier creation and automated
-     * parallelism maintenance
+     * Creates enough total workers to establish target parallelism,
+     * giving up if terminating or addWorker fails
      */
-    private void ensureEnoughWorkers() {
-        while ((runState & TERMINATING) == 0) {
-            int pc = parallelism;
-            int wc = workerCounts;
-            int rc = wc & RUNNING_COUNT_MASK;
-            int tc = wc >>> TOTAL_COUNT_SHIFT;
-            if (tc < pc) {
-                if (UNSAFE.compareAndSwapInt
-                    (this, workerCountsOffset,
-                     wc, wc + (ONE_RUNNING|ONE_TOTAL)) &&
-                    addWorker() == null)
-                    break;
-            }
-            else if (tc > pc && rc < pc &&
-                     tc > (runState & ACTIVE_COUNT_MASK)) {
-                ForkJoinWorkerThread spare = null;
-                ForkJoinWorkerThread[] ws = workers;
-                int nws = ws.length;
-                for (int i = 0; i < nws; ++i) {
-                    ForkJoinWorkerThread w = ws[i];
-                    if (w != null && w.isSuspended()) {
-                        if ((workerCounts & RUNNING_COUNT_MASK) > pc)
-                            return;
-                        if (w.tryResumeSpare())
-                            incrementRunningCount();
-                        break;
-                    }
-                }
-            }
-            else
+    private void ensureEnoughTotalWorkers() {
+        int wc;
+        while (((wc = workerCounts) >>> TOTAL_COUNT_SHIFT) < parallelism &&
+               runState < TERMINATING) {
+            if ((UNSAFE.compareAndSwapInt(this, workerCountsOffset,
+                                          wc, wc + (ONE_RUNNING|ONE_TOTAL)) &&
+                 addWorker() == null))
                 break;
         }
     }
@@ -744,7 +718,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         for (;;) {
             int wc = workerCounts;
             int rc = wc & RUNNING_COUNT_MASK;
-            if (rc - nr < 0 || (wc >>> TOTAL_COUNT_SHIFT) == 0)
+            int tc = wc >>> TOTAL_COUNT_SHIFT;
+            if (rc - nr < 0 || tc == 0)
                 Thread.yield(); // back off if waiting for other updates
             else if (UNSAFE.compareAndSwapInt(this, workerCountsOffset,
                                               wc, wc - unit))
@@ -753,7 +728,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
         accumulateStealCount(w); // collect final count
         if (!tryTerminate(false))
-            ensureEnoughWorkers();
+            ensureEnoughTotalWorkers();
     }
 
     // Waiting for and signalling events
@@ -769,7 +744,8 @@ public class ForkJoinPool extends AbstractExecutorService {
             int n = ws.length;
             for (;;) {
                 int i = ((int)(top & WAITER_ID_MASK)) - 1;
-                if (i < 0 || (int)(top >>> EVENT_COUNT_SHIFT) == eventCount)
+                int e = (int)(top >>> EVENT_COUNT_SHIFT);
+                if (i < 0 || e == eventCount)
                     return;
                 ForkJoinWorkerThread w;
                 if (i < n && (w = ws[i]) != null &&
@@ -809,7 +785,8 @@ public class ForkJoinPool extends AbstractExecutorService {
             int n = ws.length;
             for (;;) {
                 int i = ((int)(top & WAITER_ID_MASK)) - 1;
-                if (i < 0 || (int)(top >>> EVENT_COUNT_SHIFT) == ec)
+                int e = (int)(top >>> EVENT_COUNT_SHIFT);
+                if (i < 0 || e == ec)
                     return;
                 ForkJoinWorkerThread w;
                 if (i < n && (w = ws[i]) != null &&
@@ -826,44 +803,30 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * If worker is inactive, blocks until terminating or event count
-     * advances from last value held by worker; in any case helps
-     * release others.
+     * Blockss worker until terminating or event count
+     * advances from last value held by worker
      *
      * @param w the calling worker thread
-     * @param retries the number of scans by caller failing to find work
-     * @return false if now too many threads running
      */
-    private boolean eventSync(ForkJoinWorkerThread w, int retries) {
+    private void eventSync(ForkJoinWorkerThread w) {
         int wec = w.lastEventCount;
-        if (retries > 1) { // can only block after 2nd miss
-            long nextTop = (((long)wec << EVENT_COUNT_SHIFT) |
-                            ((long)(w.poolIndex + 1)));
-            long top;
-            while ((runState < SHUTDOWN || !tryTerminate(false)) &&
-                   (((int)(top = eventWaiters) & WAITER_ID_MASK) == 0 ||
-                    (int)(top >>> EVENT_COUNT_SHIFT) == wec) &&
-                   eventCount == wec) {
-                if (UNSAFE.compareAndSwapLong(this, eventWaitersOffset,
-                                              w.nextWaiter = top, nextTop)) {
-                    accumulateStealCount(w); // transfer steals while idle
-                    Thread.interrupted();    // clear/ignore interrupt
-                    while (eventCount == wec)
-                        w.doPark();
-                    break;
-                }
+        long nextTop = (((long)wec << EVENT_COUNT_SHIFT) |
+                        ((long)(w.poolIndex + 1)));
+        long top;
+        while ((runState < SHUTDOWN || !tryTerminate(false)) &&
+               (((int)(top = eventWaiters) & WAITER_ID_MASK) == 0 ||
+                (int)(top >>> EVENT_COUNT_SHIFT) == wec) &&
+               eventCount == wec) {
+            if (UNSAFE.compareAndSwapLong(this, eventWaitersOffset,
+                                          w.nextWaiter = top, nextTop)) {
+                accumulateStealCount(w); // transfer steals while idle
+                Thread.interrupted();    // clear/ignore interrupt
+                while (eventCount == wec)
+                    w.doPark();
+                break;
             }
-            wec = eventCount;
         }
-        releaseWaiters();
-        int wc = workerCounts;
-        if ((wc & RUNNING_COUNT_MASK) <= parallelism) {
-            w.lastEventCount = wec;
-            return true;
-        }
-        if (wec != w.lastEventCount) // back up if may re-wait
-            w.lastEventCount = wec - (wc >>> TOTAL_COUNT_SHIFT);
-        return false;
+        w.lastEventCount = eventCount;
     }
 
     /**
@@ -889,7 +852,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final void preStep(ForkJoinWorkerThread w, int retries) {
         boolean active = w.active;
-        boolean inactivate = active && retries != 0;
+        boolean inactivate = active && retries > 0;
         for (;;) {
             int rs, wc;
             if (inactivate &&
@@ -897,10 +860,14 @@ public class ForkJoinPool extends AbstractExecutorService {
                                          rs = runState, rs - ONE_ACTIVE))
                 inactivate = active = w.active = false;
             if (((wc = workerCounts) & RUNNING_COUNT_MASK) <= parallelism) {
-                if (active || eventSync(w, retries))
-                    break;
+                if (retries > 0) {
+                    if (retries > 1 && !active)
+                        eventSync(w);
+                    releaseWaiters();
+                }
+                break;
             }
-            else if (!(inactivate |= active) &&  // must inactivate to suspend
+            if (!(inactivate |= active) &&  // must inactivate to suspend
                 UNSAFE.compareAndSwapInt(this, workerCountsOffset,
                                          wc, wc - ONE_RUNNING) &&
                 !w.suspendAsSpare())             // false if trimmed
@@ -912,8 +879,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Awaits join of the given task if enough threads, or can resume
      * or create a spare. Fails (in which case the given task might
      * not be done) upon contention or lack of decision about
-     * blocking. Returns void because caller must check
-     * task status on return anyway.
+     * blocking.
      *
      * We allow blocking if:
      *
@@ -921,105 +887,86 @@ public class ForkJoinPool extends AbstractExecutorService {
      *    parallelism level if this thread blocks.
      *
      * 2. A spare is resumed to replace this worker. We tolerate
-     *    slop in the decision to replace if a spare is found without
-     *    first decrementing run count.  This may release too many,
-     *    but if so, the superfluous ones will re-suspend via
-     *    preStep().
+     *    races in the decision to replace when a spare is found.
+     *    This may release too many, but if so, the superfluous ones
+     *    will re-suspend via preStep().
      *
-     * 3. After #spares repeated checks, there are no fewer than #spare
+     * 3. After #spares repeated retries, there are fewer than #spare
      *    threads not running. We allow this slack to avoid hysteresis
      *    and as a hedge against lag/uncertainty of running count
      *    estimates when signalling or unblocking stalls.
      *
-     * 4. All existing workers are busy (as rechecked via repeated
-     *    retries by caller) and a new spare is created.
+     * 4. All existing workers are busy (as rechecked via #spares
+     *    repeated retries by caller) and a new spare is created.
      *
-     * If none of the above hold, we try to escape out by
-     * re-incrementing count and returning to caller, which can retry
-     * later.
+     * If none of the above hold, we escape out by re-incrementing
+     * count and returning to caller, which can retry later.
      *
      * @param joinMe the task to join
-     * @param retries if negative, then serve only as a precheck
-     *   that the thread can be replaced by a spare. Otherwise,
-     *   the number of repeated calls to this method returning busy
-     * @return true if the call must be retried because there
-     *   none of the blocking checks hold
+     * @param retries the number of calls to this method for this join
      */
-    final boolean tryAwaitJoin(ForkJoinTask<?> joinMe, int retries) {
-        if (joinMe.status < 0) // precheck for cancellation
-            return false;
-        if ((runState & TERMINATING) != 0) { // shutting down
-            joinMe.cancelIgnoringExceptions();
-            return false;
-        }
-
+    final void tryAwaitJoin(ForkJoinTask<?> joinMe, int retries) {
         int pc = parallelism;
         boolean running = true; // false when running count decremented
-        outer:for (;;) {
+        outer:while (joinMe.status >= 0) {
             int wc = workerCounts;
             int rc = wc & RUNNING_COUNT_MASK;
             int tc = wc >>> TOTAL_COUNT_SHIFT;
             if (running) { // replace with spare or decrement count
                 if (rc <= pc && tc > pc &&
                     (retries > 0 || tc > (runState & ACTIVE_COUNT_MASK))) {
-                    ForkJoinWorkerThread[] ws = workers;
+                    ForkJoinWorkerThread[] ws = workers; // search for spare
                     int nws = ws.length;
-                    for (int i = 0; i < nws; ++i) { // search for spare
+                    for (int i = 0; i < nws; ++i) {
                         ForkJoinWorkerThread w = ws[i];
-                        if (w != null) {
+                        if (w != null && w.isSuspended()) {
+                            if ((workerCounts & RUNNING_COUNT_MASK) > pc)
+                                continue outer;
                             if (joinMe.status < 0)
-                                return false;
-                            if (w.isSuspended()) {
-                                if ((workerCounts & RUNNING_COUNT_MASK)>=pc &&
-                                    w.tryResumeSpare()) {
-                                    running = false;
-                                    break outer;
-                                }
-                                continue outer; // rescan
+                                break outer;
+                            if (w.tryResumeSpare()) {
+                                running = false;
+                                break outer;
                             }
+                            continue outer; // rescan on failure to resume
                         }
                     }
                 }
-                if (retries < 0 || // < 0 means replacement check only
-                    rc == 0 || joinMe.status < 0 || workerCounts != wc ||
-                    !UNSAFE.compareAndSwapInt(this, workerCountsOffset,
-                                              wc, wc - ONE_RUNNING))
-                    return false; // done or inconsistent or contended
-                running = false;
-                if (rc > pc)
+                if ((rc <= pc && (rc == 0 || --retries < 0)) || // no retry
+                    joinMe.status < 0)
                     break;
+                if (workerCounts == wc &&
+                    UNSAFE.compareAndSwapInt(this, workerCountsOffset,
+                                             wc, wc - ONE_RUNNING))
+                    running = false;
             }
             else { // allow blocking if enough threads
-                if (rc >= pc || joinMe.status < 0)
+                int sc = tc - pc + 1;          // = spares, plus the one to add
+                if (sc > 0 && rc > 0 && rc >= pc - sc && rc > pc - retries)
+                    break;  
+                if (--retries > sc && tc < MAX_THREADS &&
+                    tc == (runState & ACTIVE_COUNT_MASK) &&
+                    workerCounts == wc &&
+                    UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
+                                             wc + (ONE_RUNNING|ONE_TOTAL))) {
+                    addWorker();
                     break;
-                int sc = tc - pc + 1; // = spare threads, plus the one to add
-                if (retries > sc) {
-                    if (rc > 0 && rc >= pc - sc) // allow slack
-                        break;
-                    if (tc < MAX_THREADS &&
-                        tc == (runState & ACTIVE_COUNT_MASK) &&
-                        workerCounts == wc &&
-                        UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
-                                                 wc+(ONE_RUNNING|ONE_TOTAL))) {
-                        addWorker();
-                        break;
-                    }
                 }
-                if (workerCounts == wc &&        // back out to allow rescan
+                if (workerCounts == wc &&
                     UNSAFE.compareAndSwapInt (this, workerCountsOffset,
                                               wc, wc + ONE_RUNNING)) {
-                    releaseWaiters();            // help others progress
-                    return true;                 // let caller retry
+                    running = true;            // back out; allow retry
+                    break;
                 }
             }
         }
-        // arrive here if can block
-        joinMe.internalAwaitDone();
-        int c;                      // to inline incrementRunningCount
-        do {} while (!UNSAFE.compareAndSwapInt
-                     (this, workerCountsOffset,
-                      c = workerCounts, c + ONE_RUNNING));
-        return false;
+        if (!running) { // can block
+            int c;                      // to inline incrementRunningCount
+            joinMe.internalAwaitDone();
+            do {} while (!UNSAFE.compareAndSwapInt
+                         (this, workerCountsOffset,
+                          c = workerCounts, c + ONE_RUNNING));
+        }
     }
 
     /**
@@ -1029,64 +976,60 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final void awaitBlocker(ManagedBlocker blocker)
         throws InterruptedException {
-        boolean done;
-        if (done = blocker.isReleasable())
-            return;
         int pc = parallelism;
+        boolean running = true;
         int retries = 0;
-        boolean running = true; // false when running count decremented
-        outer:for (;;) {
+        boolean done;
+        outer:while (!(done = blocker.isReleasable())) {
             int wc = workerCounts;
             int rc = wc & RUNNING_COUNT_MASK;
             int tc = wc >>> TOTAL_COUNT_SHIFT;
             if (running) {
-                if (rc <= pc && tc > pc &&
+                if (rc <= pc && tc > pc && 
                     (retries > 0 || tc > (runState & ACTIVE_COUNT_MASK))) {
                     ForkJoinWorkerThread[] ws = workers;
                     int nws = ws.length;
                     for (int i = 0; i < nws; ++i) {
                         ForkJoinWorkerThread w = ws[i];
-                        if (w != null) {
+                        if (w != null && w.isSuspended()) {
+                            if ((workerCounts & RUNNING_COUNT_MASK) > pc)
+                                continue outer;
                             if (done = blocker.isReleasable())
-                                return;
-                            if (w.isSuspended()) {
-                                if ((workerCounts & RUNNING_COUNT_MASK)>=pc &&
-                                    w.tryResumeSpare()) {
-                                    running = false;
-                                    break outer;
-                                }
-                                continue outer; // rescan
+                                break outer;
+                            if (w.tryResumeSpare()) {
+                                running = false;
+                                break outer;
                             }
+                            continue outer;
                         }
                     }
+                    if (done = blocker.isReleasable())
+                        break;
                 }
-                if (done = blocker.isReleasable())
-                    return;
-                if (rc == 0 || workerCounts != wc ||
-                    !UNSAFE.compareAndSwapInt(this, workerCountsOffset,
-                                              wc, wc - ONE_RUNNING))
-                    continue;
-                running = false;
-                if (rc > pc)
-                    break;
+                if (rc > 0 && workerCounts == wc &&
+                    UNSAFE.compareAndSwapInt(this, workerCountsOffset,
+                                             wc, wc - ONE_RUNNING)) {
+                    running = false;
+                    if (rc > pc)
+                        break;
+                }
             }
-            else {
-                if (rc >= pc || (done = blocker.isReleasable()))
-                    break;
-                int sc = tc - pc + 1;
-                if (retries++ > sc) {
-                    if (rc > 0 && rc >= pc - sc)
-                        break;
-                    if (tc < MAX_THREADS &&
-                        tc == (runState & ACTIVE_COUNT_MASK) &&
-                        workerCounts == wc &&
-                        UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
-                                                 wc+(ONE_RUNNING|ONE_TOTAL))) {
-                        addWorker();
-                        break;
-                    }
-                }
+            else if (rc >= pc)
+                break;
+            else if (tc < MAX_THREADS && 
+                     tc == (runState & ACTIVE_COUNT_MASK) &&
+                     workerCounts == wc &&
+                     UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
+                                              wc + (ONE_RUNNING|ONE_TOTAL))) {
+                addWorker();
+                break;
+            }
+            else if (workerCounts == wc &&
+                     UNSAFE.compareAndSwapInt (this, workerCountsOffset,
+                                              wc, wc + ONE_RUNNING)) {
                 Thread.yield();
+                ++retries;
+                running = true;            // allow rescan
             }
         }
 
@@ -1342,7 +1285,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             throw new RejectedExecutionException();
         submissionQueue.offer(task);
         signalEvent();
-        ensureEnoughWorkers();
+        ensureEnoughTotalWorkers();
     }
 
     /**

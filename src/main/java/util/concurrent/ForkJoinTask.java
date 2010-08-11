@@ -641,6 +641,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
          */
         boolean interrupted = false;
         boolean dec = false; // true if pool count decremented
+        long nanos = unit.toNanos(timeout);
         for (;;) {
             if (Thread.interrupted() && pool == null) {
                 interrupted = true;
@@ -651,7 +652,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                 break;
             if (UNSAFE.compareAndSwapInt(this, statusOffset, s, SIGNAL)) {
                 long startTime = System.nanoTime();
-                long nanos = unit.toNanos(timeout);
                 long nt; // wait time
                 while (status >= 0 &&
                        (nt = nanos - (System.nanoTime() - startTime)) > 0) {

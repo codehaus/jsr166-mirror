@@ -3,8 +3,25 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
  */
+import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.TimeUnit;
 import junit.framework.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.*;
 import java.util.*;
 
@@ -27,11 +44,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
 
     static final ForkJoinPool mainPool = new ForkJoinPool();
     static final ForkJoinPool singletonPool = new ForkJoinPool(1);
-    static final ForkJoinPool asyncSingletonPool = new ForkJoinPool(1);
-    static {
-        asyncSingletonPool.setAsyncMode(true);
-    }
-
+    static final ForkJoinPool asyncSingletonPool = 
+        new ForkJoinPool(1, ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+                         null, true);
     static final class FJException extends RuntimeException {
         FJException() { super(); }
     }
@@ -324,22 +339,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
     /**
-     * helpJoin of a forked task returns when task completes
-     */
-    public void testForkHelpJoin() {
-        RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    f.helpJoin();
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(f.isDone());
-                }
-            };
-        mainPool.invoke(a);
-    }
-
-    /**
      * quietlyJoin of a forked task returns when task completes
      */
     public void testForkQuietlyJoin() {
@@ -348,23 +347,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     AsyncFib f = new AsyncFib(8);
                     f.fork();
                     f.quietlyJoin();
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(f.isDone());
-                }
-            };
-        mainPool.invoke(a);
-    }
-
-
-    /**
-     * quietlyHelpJoin of a forked task returns when task completes
-     */
-    public void testForkQuietlyHelpJoin() {
-        RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    f.quietlyHelpJoin();
                     threadAssertTrue(f.number == 21);
                     threadAssertTrue(f.isDone());
                 }
@@ -482,45 +464,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
     /**
-     * join of a forked task throws exception when task completes abnormally
-     */
-    public void testAbnormalForkHelpJoin() {
-        RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FailingAsyncFib f = new FailingAsyncFib(8);
-                        f.fork();
-                        f.helpJoin();
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
-                }
-            };
-        mainPool.invoke(a);
-    }
-
-    /**
-     * quietlyHelpJoin of a forked task returns when task completes abnormally.
-     * getException of failed task returns its exception.
-     * isCompletedAbnormally of a failed task returns true.
-     * isCancelled of a failed uncancelled task returns false
-     */
-    public void testAbnormalForkQuietlyHelpJoin() {
-        RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    FailingAsyncFib f = new FailingAsyncFib(8);
-                    f.fork();
-                    f.quietlyHelpJoin();
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.isCompletedAbnormally());
-                    threadAssertFalse(f.isCancelled());
-                    threadAssertTrue(f.getException() instanceof FJException);
-                }
-            };
-        mainPool.invoke(a);
-    }
-
-    /**
      * quietlyJoin of a forked task returns when task completes abnormally
      */
     public void testAbnormalForkQuietlyJoin() {
@@ -611,47 +554,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     } catch (Exception ex) {
                         unexpectedException(ex);
                     }
-                }
-            };
-        mainPool.invoke(a);
-    }
-
-    /**
-     * join of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkHelpJoin() {
-        RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.cancel(true);
-                        f.fork();
-                        f.helpJoin();
-                        shouldThrow();
-                    } catch (CancellationException success) {
-                    }
-                }
-            };
-        mainPool.invoke(a);
-    }
-
-    /**
-     * quietlyHelpJoin of a forked task returns when task cancelled.
-     * getException of cancelled task returns its exception.
-     * isCompletedAbnormally of a cancelled task returns true.
-     * isCancelled of a cancelled task returns true
-     */
-    public void testCancelledForkQuietlyHelpJoin() {
-        RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.cancel(true);
-                    f.fork();
-                    f.quietlyHelpJoin();
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.isCompletedAbnormally());
-                    threadAssertTrue(f.isCancelled());
-                    threadAssertTrue(f.getException() instanceof CancellationException);
                 }
             };
         mainPool.invoke(a);

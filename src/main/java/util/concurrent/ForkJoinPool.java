@@ -108,7 +108,7 @@ import java.util.concurrent.CountDownLatch;
  *
  * <p>This implementation rejects submitted tasks (that is, by throwing
  * {@link RejectedExecutionException}) only when the pool is shut down
- * or internal resources have been exhuasted.
+ * or internal resources have been exhausted.
  *
  * @since 1.7
  * @author Doug Lea

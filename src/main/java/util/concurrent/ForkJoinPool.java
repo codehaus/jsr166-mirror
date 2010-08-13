@@ -1269,9 +1269,6 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Performs the given task, returning its result upon completion.
-     * If the caller is already engaged in a fork/join computation in
-     * the current pool, this method is equivalent in effect to
-     * {@link ForkJoinTask#invoke}.
      *
      * @param task the task
      * @return the task's result

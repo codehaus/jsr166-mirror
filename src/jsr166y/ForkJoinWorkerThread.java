@@ -164,11 +164,12 @@ public class ForkJoinWorkerThread extends Thread {
     private static final int MAX_HELP_DEPTH = 8;
 
     /**
-     * The wakeup interval (in nanoseconds) for the first worker
+     * The wakeup interval (in nanoseconds) for the oldest worker
      * suspended as spare.  On each wakeup not signalled by a
      * resumption, it may ask the pool to reduce the number of spares.
      */
-    private static final long TRIM_RATE_NANOS = 200L * 1000L * 1000L;
+    private static final long TRIM_RATE_NANOS =
+        5L * 1000L * 1000L * 1000L; // 5sec
 
     /**
      * Capacity of work-stealing queue array upon initialization.
@@ -224,7 +225,9 @@ public class ForkJoinWorkerThread extends Thread {
      * Run state of this worker. In addition to the usual run levels,
      * tracks if this worker is suspended as a spare, and if it was
      * killed (trimmed) while suspended. However, "active" status is
-     * maintained separately.
+     * maintained separately and modified only in conjunction with
+     * CASes of the pool's runState (which are currently sadly manually
+     * inlined for performance.)
      */
     private volatile int runState;
 
@@ -380,11 +383,16 @@ public class ForkJoinWorkerThread extends Thread {
      */
     protected void onTermination(Throwable exception) {
         try {
+            ForkJoinPool p = pool;
+            if (active) {
+                int a; // inline p.tryDecrementActiveCount
+                active = false;
+                do {} while(!UNSAFE.compareAndSwapInt
+                            (p, poolRunStateOffset, a = p.runState, a - 1));
+            }
             cancelTasks();
-            while (active)              // force inactive
-                active = !pool.tryDecrementActiveCount();
             setTerminated();
-            pool.workerTerminated(this);
+            p.workerTerminated(this);
         } catch (Throwable ex) {        // Shouldn't ever happen
             if (exception == null)      // but if so, at least rethrown
                 exception = ex;
@@ -453,8 +461,10 @@ public class ForkJoinWorkerThread extends Thread {
     private boolean tryExecSubmission() {
         ForkJoinPool p = pool;
         while (p.hasQueuedSubmissions()) {
-            ForkJoinTask<?> t;
-            if (active || (active = p.tryIncrementActiveCount())) {
+            ForkJoinTask<?> t; int a;
+            if (active || // ugly/hacky: inline p.tryIncrementActiveCount
+                (active = UNSAFE.compareAndSwapInt(p, poolRunStateOffset,
+                                                   a = p.runState, a + 1))) {
                 if ((t = p.pollSubmission()) != null) {
                     currentSteal = t;
                     t.quietlyExec();
@@ -707,9 +717,11 @@ public class ForkJoinWorkerThread extends Thread {
                 ForkJoinWorkerThread v = ws[k & mask];
                 r ^= r << 13; r ^= r >>> 17; r ^= r << 5; // inline xorshift
                 if (v != null && v.base != v.sp) {
-                    ForkJoinTask<?>[] q; int b;
-                    if ((canSteal ||       // ensure active status
-                         (canSteal = active = p.tryIncrementActiveCount())) &&
+                    ForkJoinTask<?>[] q; int b, a;
+                    if ((canSteal ||      // Ugly/hacky: inline
+                         (canSteal = active =  // p.tryIncrementActiveCount
+                          UNSAFE.compareAndSwapInt(p, poolRunStateOffset,
+                                                   a = p.runState, a + 1))) &&
                         (q = v.queue) != null && (b = v.base) != v.sp) {
                         int i = (q.length - 1) & b;
                         long u = (i << qShift) + qBase; // raw offset
@@ -749,13 +761,10 @@ public class ForkJoinWorkerThread extends Thread {
     final boolean isTrimmed()     { return (runState & TRIMMED) != 0; }
 
     /**
-     * Sets state to TERMINATING, also, unless "quiet", unparking if
-     * not already terminated
-     *
-     * @param quiet don't unpark (used for faster status updates on
-     * pool termination)
+     * Sets state to TERMINATING. Does NOT unpark or interrupt
+     * to wake up if currently blocked.
      */
-    final void shutdown(boolean quiet) {
+    final void shutdown() {
         for (;;) {
             int s = runState;
             if ((s & (TERMINATING|TERMINATED)) != 0)
@@ -770,8 +779,6 @@ public class ForkJoinWorkerThread extends Thread {
                                               s | TERMINATING))
                 break;
         }
-        if (!quiet && (runState & TERMINATED) != 0)
-            LockSupport.unpark(this);
     }
 
     /**
@@ -785,7 +792,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * If suspended, tries to set status to unsuspended and unparks.
+     * If suspended, tries to set status to unsuspended.
      *
      * @return true if successful
      */
@@ -802,16 +809,14 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Sets suspended status and blocks as spare until resumed
      * or shutdown.
-     * @returns true if still running on exit
      */
-    final boolean suspendAsSpare() {
-        lastEventCount = 0;         // reset upon resume
+    final void suspendAsSpare() {
         for (;;) {                  // set suspended unless terminating
             int s = runState;
             if ((s & TERMINATING) != 0) { // must kill
                 if (UNSAFE.compareAndSwapInt(this, runStateOffset, s,
                                              s | (TRIMMED | TERMINATING)))
-                    return false;
+                    return;
             }
             else if (UNSAFE.compareAndSwapInt(this, runStateOffset, s,
                                               s | SUSPENDED))
@@ -819,25 +824,25 @@ public class ForkJoinWorkerThread extends Thread {
         }
         ForkJoinPool p = pool;
         p.pushSpare(this);
+        lastEventCount = 0;         // reset upon resume
         while ((runState & SUSPENDED) != 0) {
-            if (!p.tryAccumulateStealCount(this))
-                continue;
-            interrupted();          // clear/ignore interrupts
-            if ((runState & SUSPENDED) == 0)
-                break;
-            if (nextSpare != 0)     // untimed
-                LockSupport.park(this);
-            else {
-                long startTime = System.nanoTime();
-                LockSupport.parkNanos(this, TRIM_RATE_NANOS);
+            if (p.tryAccumulateStealCount(this)) {
+                boolean untimed = nextSpare != 0;
+                long startTime = untimed? 0 : System.nanoTime();
+                interrupted();          // clear/ignore interrupts
                 if ((runState & SUSPENDED) == 0)
                     break;
-                long now = System.nanoTime();
-                if (now - startTime >= TRIM_RATE_NANOS)
-                    pool.tryTrimSpare(now);
+                if (untimed)     // untimed
+                    LockSupport.park(this);
+                else {
+                    LockSupport.parkNanos(this, TRIM_RATE_NANOS);
+                    if ((runState & SUSPENDED) == 0)
+                        break;
+                    if (System.nanoTime() - startTime >= TRIM_RATE_NANOS)
+                        p.tryShutdownSpare();
+                }
             }
         }
-        return runState == 0;
     }
 
     // Misc support methods for ForkJoinPool
@@ -902,8 +907,12 @@ public class ForkJoinWorkerThread extends Thread {
      * @return a task, if available
      */
     final ForkJoinTask<?> pollLocalTask() {
+        ForkJoinPool p = pool;
         while (sp != base) {
-            if (active || (active = pool.tryIncrementActiveCount()))
+            int a; // inline p.tryIncrementActiveCount
+            if (active ||
+                (active = UNSAFE.compareAndSwapInt(p, poolRunStateOffset,
+                                                   a = p.runState, a + 1)))
                 return locallyFifo? locallyDeqTask() : popTask();
         }
         return null;
@@ -1116,14 +1125,17 @@ public class ForkJoinWorkerThread extends Thread {
             }
             else {
                 ForkJoinPool p = pool;
+                int a; // to inline CASes
                 if (active) {
-                    if (!p.tryDecrementActiveCount())
+                    if (!UNSAFE.compareAndSwapInt
+                        (p, poolRunStateOffset, a = p.runState, a - 1))
                         continue;   // retry later
                     active = false; // inactivate
                 }
                 if (p.isQuiescent()) {
                     active = true; // re-activate
-                    do {} while (!p.tryIncrementActiveCount());
+                    do {} while(!UNSAFE.compareAndSwapInt
+                                (p, poolRunStateOffset, a = p.runState, a+1));
                     return;
                 }
             }
@@ -1143,6 +1155,8 @@ public class ForkJoinWorkerThread extends Thread {
         objectFieldOffset("currentSteal", ForkJoinWorkerThread.class);
     private static final long qBase =
         UNSAFE.arrayBaseOffset(ForkJoinTask[].class);
+    private static final long poolRunStateOffset = // to inline CAS
+        objectFieldOffset("runState", ForkJoinPool.class);
 
     private static final int qShift;
 

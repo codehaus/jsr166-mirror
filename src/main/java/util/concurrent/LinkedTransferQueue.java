@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.locks.LockSupport;
+
 /**
  * An unbounded {@link TransferQueue} based on linked nodes.
  * This queue orders elements FIFO (first-in-first-out) with respect
@@ -420,7 +421,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         final boolean casItem(Object cmp, Object val) {
-            assert cmp == null || cmp.getClass() != Node.class;
+            //            assert cmp == null || cmp.getClass() != Node.class;
             return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
         }
 
@@ -444,7 +445,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         /**
          * Sets item to self and waiter to null, to avoid garbage
          * retention after matching or cancelling. Uses relaxed writes
-         * bacause order is already constrained in the only calling
+         * because order is already constrained in the only calling
          * contexts: item is forgotten only after volatile/atomic
          * mechanics that extract items.  Similarly, clearing waiter
          * follows either CAS or return from park (if ever parked;
@@ -486,7 +487,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * Tries to artificially match a data node -- used by remove.
          */
         final boolean tryMatchData() {
-            assert isData;
+            //            assert isData;
             Object x = item;
             if (x != null && x != this && casItem(x, null)) {
                 LockSupport.unpark(waiter);
@@ -539,7 +540,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     @SuppressWarnings("unchecked")
     static <E> E cast(Object item) {
-        assert item == null || item.getClass() != Node.class;
+        //        assert item == null || item.getClass() != Node.class;
         return (E) item;
     }
 
@@ -654,7 +655,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         for (;;) {
             Object item = s.item;
             if (item != e) {                  // matched
-                assert item != s;
+                //                assert item != s;
                 s.forgetContents();           // avoid garbage
                 return this.<E>cast(item);
             }

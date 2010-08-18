@@ -1855,11 +1855,11 @@ public class ForkJoinPool extends AbstractExecutorService {
      *   QueueTaker(BlockingQueue<E> q) { this.queue = q; }
      *   public boolean block() throws InterruptedException {
      *     if (item == null)
-     *       item = queue.take
+     *       item = queue.take();
      *     return true;
      *   }
      *   public boolean isReleasable() {
-     *     return item != null || (item = queue.poll) != null;
+     *     return item != null || (item = queue.poll()) != null;
      *   }
      *   public E getItem() { // call after pool.managedBlock completes
      *     return item;

@@ -24,7 +24,8 @@ import java.util.Queue;
  * operations obtain elements at the head of the queue.
  * A {@code ConcurrentLinkedQueue} is an appropriate choice when
  * many threads will share access to a common collection.
- * This queue does not permit {@code null} elements.
+ * Like most other concurrent collection implementations, this class
+ * does not permit the use of {@code null} elements.
  *
  * <p>This implementation employs an efficient &quot;wait-free&quot;
  * algorithm based on one described in <a
@@ -32,18 +33,20 @@ import java.util.Queue;
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.
  *
- * <p>Beware that, unlike in most collections, the {@link #size}
- * method is <em>NOT</em> a constant-time operation. Because of the
- * asynchronous nature of these queues, determining the current number
- * of elements requires traversing them all to count them.
- * Additionally, it is possible for the size to change during
- * execution of this method, in which case the returned result will be
- * inaccurate. Thus, this method is typically not very useful in
- * concurrent applications.
+ * <p>Iterators are <i>weakly consistent</i>, returning elements
+ * reflecting the state of the queue at some point at or since the
+ * creation of the iterator.  They do <em>not</em> throw {@link
+ * ConcurrentModificationException}, and may proceed concurrently with
+ * other operations.  Elements contained in the queue since the creation
+ * of the iterator will be returned exactly once.
  *
- * <p>This class and its iterator implement all of the
- * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces.
+ * <p>Beware that, unlike in most collections, the {@code size} method
+ * is <em>NOT</em> a constant-time operation. Because of the
+ * asynchronous nature of these queues, determining the current number
+ * of elements requires a traversal of the elements.
+ *
+ * <p>This class and its iterator implement all of the <em>optional</em>
+ * methods of the {@link Queue} and {@link Iterator} interfaces.
  *
  * <p>Memory consistency effects: As with other concurrent
  * collections, actions in a thread prior to placing an object into a
@@ -164,10 +167,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             UNSAFE.putOrderedObject(this, nextOffset, val);
         }
 
-        Node<E> getNext() {
-            return next;
-        }
-
         boolean casNext(Node<E> cmp, Node<E> val) {
             return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
@@ -194,7 +193,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * - it is permitted for tail to lag behind head, that is, for tail
      *   to not be reachable from head!
      */
-    private transient volatile Node<E> head = new Node<E>(null);
+    private transient volatile Node<E> head;
 
     /**
      * A node from which the last node on list (that is, the unique
@@ -208,25 +207,41 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      *   to not be reachable from head!
      * - tail.next may or may not be self-pointing to tail.
      */
-    private transient volatile Node<E> tail = head;
+    private transient volatile Node<E> tail;
 
 
     /**
      * Creates a {@code ConcurrentLinkedQueue} that is initially empty.
      */
-    public ConcurrentLinkedQueue() {}
+    public ConcurrentLinkedQueue() {
+        head = tail = new Node<E>(null);
+    }
 
     /**
      * Creates a {@code ConcurrentLinkedQueue}
      * initially containing the elements of the given collection,
      * added in traversal order of the collection's iterator.
+     *
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if the specified collection or any
      *         of its elements are null
      */
     public ConcurrentLinkedQueue(Collection<? extends E> c) {
-        for (E e : c)
-            add(e);
+        Node<E> h = null, t = null;
+        for (E e : c) {
+            checkNotNull(e);
+            Node<E> newNode = new Node<E>(e);
+            if (h == null)
+                h = t = newNode;
+            else {
+                t.next = newNode;
+                t = newNode;
+            }
+        }
+        if (h == null)
+            h = t = new Node<E>(null);
+        head = h;
+        tail = t;
     }
 
     // Have to override just to update the javadoc
@@ -263,7 +278,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * stale pointer that is now off the list.
      */
     final Node<E> succ(Node<E> p) {
-        Node<E> next = p.getNext();
+        Node<E> next = p.next;
         return (p == next) ? head : next;
     }
 
@@ -274,7 +289,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
-        if (e == null) throw new NullPointerException();
+        checkNotNull(e);
         Node<E> n = new Node<E>(e);
         retry:
         for (;;) {
@@ -305,7 +320,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
             if (item != null && p.casItem(item, null)) {
                 if (hops >= HOPS) {
-                    Node<E> q = p.getNext();
+                    Node<E> q = p.next;
                     updateHead(h, (q != null) ? q : p);
                 }
                 return item;
@@ -384,11 +399,11 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * <p>Beware that, unlike in most collections, this method is
      * <em>NOT</em> a constant-time operation. Because of the
      * asynchronous nature of these queues, determining the current
-     * number of elements requires traversing them all to count them.
-     * Additionally, it is possible for the size to change during
-     * execution of this method, in which case the returned result
-     * will be inaccurate. Thus, this method is typically not very
-     * useful in concurrent applications.
+     * number of elements requires an O(n) traversal.
+     * Additionally, if elements are added or removed during execution
+     * of this method, the returned result may be inaccurate.  Thus,
+     * this method is typically not very useful in concurrent
+     * applications.
      *
      * @return the number of elements in this queue
      */
@@ -450,6 +465,57 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             pred = p;
         }
         return false;
+    }
+
+    /**
+     * Appends all of the elements in the specified collection to the end of
+     * this queue, in the order that they are returned by the specified
+     * collection's iterator.
+     *
+     * @param c the elements to be inserted into this queue
+     * @return {@code true} if this queue changed as a result of the call
+     * @throws NullPointerException if {@code c} or any element within it
+     * is {@code null}
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        // Copy c into a private chain of Nodes
+        Node<E> splice = null, last = null;
+        for (E e : c) {
+            checkNotNull(e);
+            Node<E> newNode = new Node<E>(e);
+            if (splice == null)
+                splice = last = newNode;
+            else {
+                last.next = newNode;
+                last = newNode;
+            }
+        }
+        if (splice == null)
+            return false;
+
+        // Atomically splice the chain as the tail of this collection
+        retry:
+        for (;;) {
+            for (Node<E> t = tail, p = t;;) {
+                Node<E> next = succ(p);
+                if (next != null) {
+                    if (t != tail)
+                        continue retry;
+                    p = next;
+                } else if (p.casNext(null, splice)) {
+                    if (! casTail(t, last)) {
+                        // Try a little harder to update tail,
+                        // since we may be adding many elements.
+                        t = tail;
+                        if (last.next == null)
+                            casTail(t, last);
+                    }
+                    return true;
+                } else {
+                    p = succ(p);
+                }
+            }
+        }
     }
 
     /**
@@ -540,7 +606,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
-     * The returned iterator is a "weakly consistent" iterator that
+     * The elements will be returned in order from first (head) to last (tail).
+     *
+     * <p>The returned {@code Iterator} is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException
      * ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
@@ -633,7 +701,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Save the state to a stream (that is, serialize it).
+     * Saves the state to a stream (that is, serializes it).
      *
      * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
@@ -657,25 +725,40 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Reconstitute the Queue instance from a stream (that is,
-     * deserialize it).
+     * Reconstitutes the instance from a stream (that is, deserializes it).
      * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-        // Read in capacity, and any hidden stuff
         s.defaultReadObject();
-        head = new Node<E>(null);
-        tail = head;
-        // Read in all elements and place in queue
-        for (;;) {
+
+        // Read in elements until trailing null sentinel found
+        Node<E> h = null, t = null;
+        Object item;
+        while ((item = s.readObject()) != null) {
             @SuppressWarnings("unchecked")
-            E item = (E)s.readObject();
-            if (item == null)
-                break;
-            else
-                offer(item);
+            Node<E> newNode = new Node<E>((E) item);
+            if (h == null)
+                h = t = newNode;
+            else {
+                t.next = newNode;
+                t = newNode;
+            }
         }
+        if (h == null)
+            h = t = new Node<E>(null);
+        head = h;
+        tail = t;
+    }
+
+    /**
+     * Throws NullPointerException if argument is null.
+     *
+     * @param v the element
+     */
+    private static void checkNotNull(Object v) {
+        if (v == null)
+            throw new NullPointerException();
     }
 
     // Unsafe mechanics

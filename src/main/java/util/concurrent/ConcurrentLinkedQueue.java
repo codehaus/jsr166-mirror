@@ -470,14 +470,20 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * Appends all of the elements in the specified collection to the end of
      * this queue, in the order that they are returned by the specified
-     * collection's iterator.
+     * collection's iterator.  Attempts to {@code addAll} of a queue to
+     * itself result in {@code IllegalArgumentException}.
      *
      * @param c the elements to be inserted into this queue
      * @return {@code true} if this queue changed as a result of the call
-     * @throws NullPointerException if {@code c} or any element within it
-     * is {@code null}
+     * @throws NullPointerException if the specified collection or any
+     *         of its elements are null
+     * @throws IllegalArgumentException if the collection is this queue
      */
     public boolean addAll(Collection<? extends E> c) {
+        if (c == this)
+            // As historically specified in AbstractQueue#addAll
+            throw new IllegalArgumentException();
+
         // Copy c into a private chain of Nodes
         Node<E> splice = null, last = null;
         for (E e : c) {

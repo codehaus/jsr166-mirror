@@ -96,14 +96,14 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @throws NullPointerException {@inheritDoc}
      */
     public boolean contains(Object o) {
-        Iterator<E> e = iterator();
+        Iterator<E> it = iterator();
         if (o==null) {
-            while (e.hasNext())
-                if (e.next()==null)
+            while (it.hasNext())
+                if (it.next()==null)
                     return true;
         } else {
-            while (e.hasNext())
-                if (o.equals(e.next()))
+            while (it.hasNext())
+                if (o.equals(it.next()))
                     return true;
         }
         return false;
@@ -255,18 +255,18 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @throws NullPointerException          {@inheritDoc}
      */
     public boolean remove(Object o) {
-        Iterator<E> e = iterator();
+        Iterator<E> it = iterator();
         if (o==null) {
-            while (e.hasNext()) {
-                if (e.next()==null) {
-                    e.remove();
+            while (it.hasNext()) {
+                if (it.next()==null) {
+                    it.remove();
                     return true;
                 }
             }
         } else {
-            while (e.hasNext()) {
-                if (o.equals(e.next())) {
-                    e.remove();
+            while (it.hasNext()) {
+                if (o.equals(it.next())) {
+                    it.remove();
                     return true;
                 }
             }
@@ -290,9 +290,9 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @see #contains(Object)
      */
     public boolean containsAll(Collection<?> c) {
-        Iterator<?> e = c.iterator();
-        while (e.hasNext())
-            if (!contains(e.next()))
+        Iterator<?> it = c.iterator();
+        while (it.hasNext())
+            if (!contains(it.next()))
                 return false;
         return true;
     }
@@ -317,9 +317,9 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      */
     public boolean addAll(Collection<? extends E> c) {
         boolean modified = false;
-        Iterator<? extends E> e = c.iterator();
-        while (e.hasNext()) {
-            if (add(e.next()))
+        Iterator<? extends E> it = c.iterator();
+        while (it.hasNext()) {
+            if (add(it.next()))
                 modified = true;
         }
         return modified;
@@ -348,10 +348,10 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      */
     public boolean removeAll(Collection<?> c) {
         boolean modified = false;
-        Iterator<?> e = iterator();
-        while (e.hasNext()) {
-            if (c.contains(e.next())) {
-                e.remove();
+        Iterator<?> it = iterator();
+        while (it.hasNext()) {
+            if (c.contains(it.next())) {
+                it.remove();
                 modified = true;
             }
         }
@@ -381,10 +381,10 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      */
     public boolean retainAll(Collection<?> c) {
         boolean modified = false;
-        Iterator<E> e = iterator();
-        while (e.hasNext()) {
-            if (!c.contains(e.next())) {
-                e.remove();
+        Iterator<E> it = iterator();
+        while (it.hasNext()) {
+            if (!c.contains(it.next())) {
+                it.remove();
                 modified = true;
             }
         }
@@ -407,10 +407,10 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @throws UnsupportedOperationException {@inheritDoc}
      */
     public void clear() {
-        Iterator<E> e = iterator();
-        while (e.hasNext()) {
-            e.next();
-            e.remove();
+        Iterator<E> it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.remove();
         }
     }
 
@@ -428,16 +428,16 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @return a string representation of this collection
      */
     public String toString() {
-        Iterator<E> i = iterator();
-        if (! i.hasNext())
+        Iterator<E> it = iterator();
+        if (! it.hasNext())
             return "[]";
 
         StringBuilder sb = new StringBuilder();
         sb.append('[');
         for (;;) {
-            E e = i.next();
+            E e = it.next();
             sb.append(e == this ? "(this Collection)" : e);
-            if (! i.hasNext())
+            if (! it.hasNext())
                 return sb.append(']').toString();
             sb.append(", ");
         }

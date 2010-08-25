@@ -5,12 +5,17 @@
  */
 
 import junit.framework.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.*;
-import java.util.concurrent.*;
 
 public class ArrayDequeTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
@@ -18,7 +23,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Create a queue of given size containing consecutive
+     * Create a deque of given size containing consecutive
      * Integers 0 ... n.
      */
     private ArrayDeque populatedDeque(int n) {
@@ -32,7 +37,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * new queue is empty
+     * new deque is empty
      */
     public void testConstructor1() {
         assertEquals(0, new ArrayDeque().size());
@@ -49,8 +54,31 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Queue contains all elements of collection used to initialize
+     * Initializing from Collection of null elements throws NPE
+     */
+    public void testConstructor4() {
+        try {
+            Integer[] ints = new Integer[SIZE];
+            ArrayDeque q = new ArrayDeque(Arrays.asList(ints));
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
 
+    /**
+     * Initializing from Collection with some null elements throws NPE
+     */
+    public void testConstructor5() {
+        try {
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
+                ints[i] = new Integer(i);
+            ArrayDeque q = new ArrayDeque(Arrays.asList(ints));
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * Deque contains all elements of collection used to initialize
      */
     public void testConstructor6() {
         Integer[] ints = new Integer[SIZE];
@@ -102,7 +130,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * peekFirst returns element inserted with push
+     * peekFirst() returns element inserted with push
      */
     public void testPush() {
         ArrayDeque q = populatedDeque(3);
@@ -112,7 +140,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  pop removes next element, or throws NSEE if empty
+     * pop() removes next element, or throws NSEE if empty
      */
     public void testPop() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -128,6 +156,17 @@ public class ArrayDequeTest extends JSR166TestCase {
     /**
      * offer(null) throws NPE
      */
+    public void testOfferNull() {
+        try {
+            ArrayDeque q = new ArrayDeque();
+            q.offer(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * offerFirst(null) throws NPE
+     */
     public void testOfferFirstNull() {
         try {
             ArrayDeque q = new ArrayDeque();
@@ -137,32 +176,113 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * OfferFirst succeeds
+     * offerLast(null) throws NPE
+     */
+    public void testOfferLastNull() {
+        try {
+            ArrayDeque q = new ArrayDeque();
+            q.offerLast(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * offer(x) succeeds
+     */
+    public void testOffer() {
+        ArrayDeque q = new ArrayDeque();
+        assertTrue(q.offer(zero));
+        assertTrue(q.offer(one));
+        assertSame(zero, q.peekFirst());
+        assertSame(one, q.peekLast());
+    }
+
+    /**
+     * offerFirst(x) succeeds
      */
     public void testOfferFirst() {
         ArrayDeque q = new ArrayDeque();
-        assertTrue(q.offerFirst(new Integer(0)));
-        assertTrue(q.offerFirst(new Integer(1)));
+        assertTrue(q.offerFirst(zero));
+        assertTrue(q.offerFirst(one));
+        assertSame(one, q.peekFirst());
+        assertSame(zero, q.peekLast());
     }
 
     /**
-     * OfferLast succeeds
+     * offerLast(x) succeeds
      */
     public void testOfferLast() {
         ArrayDeque q = new ArrayDeque();
-        assertTrue(q.offerLast(new Integer(0)));
-        assertTrue(q.offerLast(new Integer(1)));
+        assertTrue(q.offerLast(zero));
+        assertTrue(q.offerLast(one));
+        assertSame(zero, q.peekFirst());
+        assertSame(one, q.peekLast());
     }
 
     /**
-     * add succeeds
+     * add(null) throws NPE
+     */
+    public void testAddNull() {
+        try {
+            ArrayDeque q = new ArrayDeque();
+            q.add(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * addFirst(null) throws NPE
+     */
+    public void testAddFirstNull() {
+        try {
+            ArrayDeque q = new ArrayDeque();
+            q.addFirst(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * addLast(null) throws NPE
+     */
+    public void testAddLastNull() {
+        try {
+            ArrayDeque q = new ArrayDeque();
+            q.addLast(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * add(x) succeeds
      */
     public void testAdd() {
         ArrayDeque q = new ArrayDeque();
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, q.size());
-            assertTrue(q.add(new Integer(i)));
-        }
+        assertTrue(q.add(zero));
+        assertTrue(q.add(one));
+        assertSame(zero, q.peekFirst());
+        assertSame(one, q.peekLast());
+    }
+
+    /**
+     * addFirst(x) succeeds
+     */
+    public void testAddFirst() {
+        ArrayDeque q = new ArrayDeque();
+        q.addFirst(zero);
+        q.addFirst(one);
+        assertSame(one, q.peekFirst());
+        assertSame(zero, q.peekLast());
+    }
+
+    /**
+     * addLast(x) succeeds
+     */
+    public void testAddLast() {
+        ArrayDeque q = new ArrayDeque();
+        q.addLast(zero);
+        q.addLast(one);
+        assertSame(zero, q.peekFirst());
+        assertSame(one, q.peekLast());
     }
 
     /**
@@ -177,7 +297,34 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Queue contains all elements, in traversal order, of successful addAll
+     * addAll of a collection with null elements throws NPE
+     */
+    public void testAddAll2() {
+        try {
+            ArrayDeque q = new ArrayDeque();
+            Integer[] ints = new Integer[SIZE];
+            q.addAll(Arrays.asList(ints));
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * addAll of a collection with any null elements throws NPE after
+     * possibly adding some elements
+     */
+    public void testAddAll3() {
+        try {
+            ArrayDeque q = new ArrayDeque();
+            Integer[] ints = new Integer[SIZE];
+            for (int i = 0; i < SIZE-1; ++i)
+                ints[i] = new Integer(i);
+            q.addAll(Arrays.asList(ints));
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * Deque contains all elements, in traversal order, of successful addAll
      */
     public void testAddAll5() {
         Integer[] empty = new Integer[0];
@@ -192,7 +339,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  pollFirst succeeds unless empty
+     * pollFirst() succeeds unless empty
      */
     public void testPollFirst() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -203,7 +350,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  pollLast succeeds unless empty
+     * pollLast() succeeds unless empty
      */
     public void testPollLast() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -214,7 +361,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  poll succeeds unless empty
+     * poll() succeeds unless empty
      */
     public void testPoll() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -225,7 +372,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  remove removes next element, or throws NSEE if empty
+     * remove() removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -239,7 +386,22 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  peekFirst returns next element, or null if empty
+     * remove(x) removes x and returns true if present
+     */
+    public void testRemoveElement() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 1; i < SIZE; i+=2) {
+            assertTrue(q.remove(new Integer(i)));
+        }
+        for (int i = 0; i < SIZE; i+=2) {
+            assertTrue(q.remove(new Integer(i)));
+            assertFalse(q.remove(new Integer(i+1)));
+        }
+        assertTrue(q.isEmpty());
+    }
+
+    /**
+     * peekFirst() returns next element, or null if empty
      */
     public void testPeekFirst() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -253,7 +415,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  peek returns next element, or null if empty
+     * peek() returns next element, or null if empty
      */
     public void testPeek() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -267,7 +429,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  peekLast returns next element, or null if empty
+     * peekLast() returns next element, or null if empty
      */
     public void testPeekLast() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -281,7 +443,22 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * getFirst returns next getFirst, or throws NSEE if empty
+     * element() returns first element, or throws NSEE if empty
+     */
+    public void testElement() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertEquals(i, q.element());
+            assertEquals(i, q.poll());
+        }
+        try {
+            q.element();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
+    }
+
+    /**
+     * getFirst() returns first element, or throws NSEE if empty
      */
     public void testFirstElement() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -296,7 +473,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  getLast returns next element, or throws NSEE if empty
+     * getLast() returns last element, or throws NSEE if empty
      */
     public void testLastElement() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -313,7 +490,7 @@ public class ArrayDequeTest extends JSR166TestCase {
 
 
     /**
-     *  removeFirst removes next element, or throws NSEE if empty
+     * removeFirst() removes first element, or throws NSEE if empty
      */
     public void testRemoveFirst() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -324,6 +501,22 @@ public class ArrayDequeTest extends JSR166TestCase {
             q.removeFirst();
             shouldThrow();
         } catch (NoSuchElementException success) {}
+        assertNull(q.peekFirst());
+    }
+
+    /**
+     * removeLast() removes last element, or throws NSEE if empty
+     */
+    public void testRemoveLast() {
+        ArrayDeque q = populatedDeque(SIZE);
+        for (int i = SIZE - 1; i >= 0; --i) {
+            assertEquals(i, q.removeLast());
+        }
+        try {
+            q.removeLast();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
+        assertNull(q.peekLast());
     }
 
     /**
@@ -427,7 +620,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  toArray contains all elements
+     * toArray() contains all elements
      */
     public void testToArray() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -438,7 +631,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  toArray(a) contains all elements
+     * toArray(a) contains all elements
      */
     public void testToArray2() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -474,7 +667,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  iterator iterates through all elements
+     * Iterator iterates through all elements
      */
     public void testIterator() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -488,13 +681,13 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  iterator ordering is FIFO
+     * Iterator ordering is FIFO
      */
     public void testIteratorOrdering() {
         final ArrayDeque q = new ArrayDeque();
-        q.add(new Integer(1));
-        q.add(new Integer(2));
-        q.add(new Integer(3));
+        q.add(one);
+        q.add(two);
+        q.add(three);
         int k = 0;
         for (Iterator it = q.iterator(); it.hasNext();) {
             assertEquals(++k, it.next());
@@ -504,9 +697,9 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * iterator.remove removes current element
+     * iterator.remove() removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final ArrayDeque q = new ArrayDeque();
         final Random rng = new Random();
         for (int iters = 0; iters < 100; ++iters) {
@@ -532,7 +725,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  Descending iterator iterates through all elements
+     * Descending iterator iterates through all elements
      */
     public void testDescendingIterator() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -551,7 +744,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  Descending iterator ordering is reverse FIFO
+     * Descending iterator ordering is reverse FIFO
      */
     public void testDescendingIteratorOrdering() {
         final ArrayDeque q = new ArrayDeque();
@@ -572,9 +765,9 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * descendingIterator.remove removes current element
+     * descendingIterator.remove() removes current element
      */
-    public void testDescendingIteratorRemove () {
+    public void testDescendingIteratorRemove() {
         final ArrayDeque q = new ArrayDeque();
         final Random rng = new Random();
         for (int iters = 0; iters < 100; ++iters) {
@@ -601,7 +794,7 @@ public class ArrayDequeTest extends JSR166TestCase {
 
 
     /**
-     * toString contains toStrings of elements
+     * toString() contains toStrings of elements
      */
     public void testToString() {
         ArrayDeque q = populatedDeque(SIZE);
@@ -612,21 +805,21 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * peekFirst returns element inserted with addFirst
+     * A deserialized serialized deque has same elements in same order
      */
-    public void testAddFirst() {
-        ArrayDeque q = populatedDeque(3);
-        q.addFirst(four);
-        assertSame(four, q.peekFirst());
-    }
+    public void testSerialization() throws Exception {
+        ArrayDeque q = populatedDeque(SIZE);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-    /**
-     * peekLast returns element inserted with addLast
-     */
-    public void testAddLast() {
-        ArrayDeque q = populatedDeque(3);
-        q.addLast(four);
-        assertSame(four, q.peekLast());
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        ArrayDeque r = (ArrayDeque)in.readObject();
+        assertEquals(q.size(), r.size());
+        while (!q.isEmpty())
+            assertEquals(q.remove(), r.remove());
     }
 
 }

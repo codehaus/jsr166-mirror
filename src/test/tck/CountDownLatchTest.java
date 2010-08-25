@@ -13,7 +13,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CountDownLatchTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(CountDownLatchTest.class);

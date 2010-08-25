@@ -14,7 +14,7 @@ import java.util.*;
 
 public class ThreadPoolExecutorTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(ThreadPoolExecutorTest.class);
@@ -846,7 +846,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  execute (null) throws NPE
+     * execute(null) throws NPE
      */
     public void testExecuteNull() {
         ThreadPoolExecutor tpe = new ThreadPoolExecutor(1,2,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
@@ -859,7 +859,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  setCorePoolSize of negative value throws IllegalArgumentException
+     * setCorePoolSize of negative value throws IllegalArgumentException
      */
     public void testCorePoolSizeIllegalArgumentException() {
         ThreadPoolExecutor tpe =

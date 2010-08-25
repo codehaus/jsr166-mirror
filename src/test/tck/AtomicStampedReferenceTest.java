@@ -10,8 +10,8 @@ import junit.framework.*;
 import java.util.concurrent.atomic.*;
 
 public class AtomicStampedReferenceTest extends JSR166TestCase {
-    public static void main (String[] args) {
-        junit.textui.TestRunner.run (suite());
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(AtomicStampedReferenceTest.class);
@@ -136,7 +136,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
         assertSame(one, ai.get(mark));
-        assertEquals(0, ai.getStamp ());
+        assertEquals(0, ai.getStamp());
         assertEquals(0, mark[0]);
 
         while (!ai.weakCompareAndSet(one, two, 0, 0));

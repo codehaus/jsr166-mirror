@@ -14,7 +14,7 @@ import java.io.*;
 
 public class PriorityBlockingQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(PriorityBlockingQueueTest.class);
@@ -663,7 +663,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final PriorityBlockingQueue q = new PriorityBlockingQueue(3);
         q.add(new Integer(2));
         q.add(new Integer(1));

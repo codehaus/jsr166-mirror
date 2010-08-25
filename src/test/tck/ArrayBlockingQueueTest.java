@@ -15,7 +15,7 @@ import java.io.*;
 
 public class ArrayBlockingQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(ArrayBlockingQueueTest.class);
@@ -685,7 +685,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(3);
         q.add(two);
         q.add(one);
@@ -722,7 +722,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     /**
      * Modifications do not cause iterators to fail
      */
-    public void testWeaklyConsistentIteration () {
+    public void testWeaklyConsistentIteration() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(3);
         q.add(one);
         q.add(two);

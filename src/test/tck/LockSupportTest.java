@@ -13,7 +13,7 @@ import java.util.concurrent.locks.*;
 
 public class LockSupportTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(LockSupportTest.class);

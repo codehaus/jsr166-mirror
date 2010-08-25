@@ -12,7 +12,7 @@ import java.io.*;
 
 public class LinkedBlockingDequeTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
@@ -1374,7 +1374,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(3);
         q.add(two);
         q.add(one);
@@ -1410,7 +1410,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     /**
      * Modifications do not cause iterators to fail
      */
-    public void testWeaklyConsistentIteration () {
+    public void testWeaklyConsistentIteration() {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(3);
         q.add(one);
         q.add(two);
@@ -1466,7 +1466,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     /**
      * descendingIterator.remove removes current element
      */
-    public void testDescendingIteratorRemove () {
+    public void testDescendingIteratorRemove() {
         final LinkedBlockingDeque q = new LinkedBlockingDeque();
         for (int iters = 0; iters < 100; ++iters) {
             q.add(new Integer(3));

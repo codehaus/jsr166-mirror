@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.*;
 
 public class ScheduledExecutorTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(ScheduledExecutorTest.class);
@@ -137,7 +137,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  execute (null) throws NPE
+     *  execute(null) throws NPE
      */
     public void testExecuteNull() throws InterruptedException {
         ScheduledThreadPoolExecutor se = null;
@@ -151,7 +151,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     * schedule (null) throws NPE
+     * schedule(null) throws NPE
      */
     public void testScheduleNull() throws InterruptedException {
         ScheduledThreadPoolExecutor se = new ScheduledThreadPoolExecutor(1);

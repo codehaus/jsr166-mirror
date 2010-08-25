@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 
 public class LinkedListTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
@@ -397,7 +397,7 @@ public class LinkedListTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final LinkedList q = new LinkedList();
         q.add(new Integer(1));
         q.add(new Integer(2));
@@ -449,7 +449,7 @@ public class LinkedListTest extends JSR166TestCase {
     /**
      * descendingIterator.remove removes current element
      */
-    public void testDescendingIteratorRemove () {
+    public void testDescendingIteratorRemove() {
         final LinkedList q = new LinkedList();
         q.add(three);
         q.add(two);

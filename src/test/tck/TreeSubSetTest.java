@@ -11,7 +11,7 @@ import java.io.*;
 
 public class TreeSubSetTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(TreeSubSetTest.class);
@@ -445,7 +445,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final NavigableSet q = set0();
         q.add(new Integer(2));
         q.add(new Integer(1));
@@ -936,7 +936,7 @@ public class TreeSubSetTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testDescendingIteratorRemove () {
+    public void testDescendingIteratorRemove() {
         final NavigableSet q = dset0();
         q.add(new Integer(2));
         q.add(new Integer(1));

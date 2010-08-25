@@ -14,7 +14,7 @@ import java.io.*;
 
 public class ConcurrentHashMapTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(ConcurrentHashMapTest.class);

@@ -14,7 +14,7 @@ import java.io.*;
 public class CopyOnWriteArrayListTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
@@ -240,7 +240,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     /**
      * iterator.remove throws UnsupportedOperationException
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         CopyOnWriteArrayList full = populatedArray(SIZE);
         Iterator it = full.iterator();
         it.next();

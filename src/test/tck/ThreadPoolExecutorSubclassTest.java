@@ -983,7 +983,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
 
 
     /**
-     *  execute (null) throws NPE
+     * execute(null) throws NPE
      */
     public void testExecuteNull() {
         ThreadPoolExecutor tpe = null;

@@ -10,8 +10,8 @@ import junit.framework.*;
 import java.util.concurrent.atomic.*;
 
 public class AtomicMarkableReferenceTest extends JSR166TestCase {
-    public static void main (String[] args) {
-        junit.textui.TestRunner.run (suite());
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
         return new TestSuite(AtomicMarkableReferenceTest.class);

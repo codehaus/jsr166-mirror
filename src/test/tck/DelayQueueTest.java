@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 
 public class DelayQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
@@ -708,7 +708,7 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final DelayQueue q = new DelayQueue();
         q.add(new PDelay(2));
         q.add(new PDelay(1));

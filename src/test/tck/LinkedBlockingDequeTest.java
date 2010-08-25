@@ -157,7 +157,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * getFirst returns next getFirst, or throws NSEE if empty
+     * getFirst() returns first element, or throws NSEE if empty
      */
     public void testFirstElement() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -173,7 +173,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  getLast returns next element, or throws NSEE if empty
+     *  getLast() returns last element, or throws NSEE if empty
      */
     public void testLastElement() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -189,7 +189,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  removeFirst removes next element, or throws NSEE if empty
+     * removeFirst() removes first element, or throws NSEE if empty
      */
     public void testRemoveFirst() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -204,7 +204,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  removeLast removes last element, or throws NSEE if empty
+     * removeLast() removes last element, or throws NSEE if empty
      */
     public void testRemoveLast() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -513,6 +513,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
      * addAll of a collection with any null elements throws NPE after
      * possibly adding some elements
@@ -527,6 +528,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
      * addAll throws ISE if not enough room
      */

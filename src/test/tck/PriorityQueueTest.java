@@ -213,6 +213,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
      * addAll of a collection with null elements throws NPE
      */
@@ -224,6 +225,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
      * addAll of a collection with any null elements throws NPE after
      * possibly adding some elements

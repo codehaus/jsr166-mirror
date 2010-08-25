@@ -149,70 +149,69 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-     /**
-      * Submitting to underlying AES that overrides newTaskFor(Callable)
-      * returns and eventually runs Future returned by newTaskFor.
-      */
-     public void testNewTaskForCallable() throws InterruptedException {
-         final AtomicBoolean done = new AtomicBoolean(false);
-         class MyCallableFuture<V> extends FutureTask<V> {
-             MyCallableFuture(Callable<V> c) { super(c); }
-             protected void done() { done.set(true); }
-         }
-         ExecutorService e = new ThreadPoolExecutor(
-                                 1, 1, 30L, TimeUnit.SECONDS,
-                                 new ArrayBlockingQueue<Runnable>(1)) {
-             protected <T> RunnableFuture<T> newTaskFor(Callable<T> c) {
-                 return new MyCallableFuture<T>(c);
-             }
-         };
-         ExecutorCompletionService<String> ecs =
-             new ExecutorCompletionService<String>(e);
-         try {
-             assertNull(ecs.poll());
-             Callable<String> c = new StringTask();
-             Future f1 = ecs.submit(c);
-             assertTrue("submit must return MyCallableFuture",
-                        f1 instanceof MyCallableFuture);
-             Future f2 = ecs.take();
-             assertSame("submit and take must return same objects", f1, f2);
-             assertTrue("completed task must have set done", done.get());
-         } finally {
-             joinPool(e);
-         }
-     }
 
-     /**
-      * Submitting to underlying AES that overrides newTaskFor(Runnable,T)
-      * returns and eventually runs Future returned by newTaskFor.
-      */
-     public void testNewTaskForRunnable() throws InterruptedException {
-         final AtomicBoolean done = new AtomicBoolean(false);
-         class MyRunnableFuture<V> extends FutureTask<V> {
-             MyRunnableFuture(Runnable t, V r) { super(t, r); }
-             protected void done() { done.set(true); }
-         }
-         ExecutorService e = new ThreadPoolExecutor(
+    /**
+     * Submitting to underlying AES that overrides newTaskFor(Callable)
+     * returns and eventually runs Future returned by newTaskFor.
+     */
+    public void testNewTaskForCallable() throws InterruptedException {
+        final AtomicBoolean done = new AtomicBoolean(false);
+        class MyCallableFuture<V> extends FutureTask<V> {
+            MyCallableFuture(Callable<V> c) { super(c); }
+            protected void done() { done.set(true); }
+        }
+        ExecutorService e = new ThreadPoolExecutor(
                                  1, 1, 30L, TimeUnit.SECONDS,
                                  new ArrayBlockingQueue<Runnable>(1)) {
-             protected <T> RunnableFuture<T> newTaskFor(Runnable t, T r) {
-                 return new MyRunnableFuture<T>(t, r);
-             }
-         };
-         ExecutorCompletionService<String> ecs =
-             new ExecutorCompletionService<String>(e);
-         try {
-             assertNull(ecs.poll());
-             Runnable r = new NoOpRunnable();
-             Future f1 = ecs.submit(r, null);
-             assertTrue("submit must return MyRunnableFuture",
-                        f1 instanceof MyRunnableFuture);
-             Future f2 = ecs.take();
-             assertSame("submit and take must return same objects", f1, f2);
-             assertTrue("completed task must have set done", done.get());
-         } finally {
-             joinPool(e);
-         }
-     }
+            protected <T> RunnableFuture<T> newTaskFor(Callable<T> c) {
+                return new MyCallableFuture<T>(c);
+            }};
+        ExecutorCompletionService<String> ecs =
+            new ExecutorCompletionService<String>(e);
+        try {
+            assertNull(ecs.poll());
+            Callable<String> c = new StringTask();
+            Future f1 = ecs.submit(c);
+            assertTrue("submit must return MyCallableFuture",
+                       f1 instanceof MyCallableFuture);
+            Future f2 = ecs.take();
+            assertSame("submit and take must return same objects", f1, f2);
+            assertTrue("completed task must have set done", done.get());
+        } finally {
+            joinPool(e);
+        }
+    }
+
+    /**
+     * Submitting to underlying AES that overrides newTaskFor(Runnable,T)
+     * returns and eventually runs Future returned by newTaskFor.
+     */
+    public void testNewTaskForRunnable() throws InterruptedException {
+        final AtomicBoolean done = new AtomicBoolean(false);
+        class MyRunnableFuture<V> extends FutureTask<V> {
+            MyRunnableFuture(Runnable t, V r) { super(t, r); }
+            protected void done() { done.set(true); }
+        }
+        ExecutorService e = new ThreadPoolExecutor(
+                                 1, 1, 30L, TimeUnit.SECONDS,
+                                 new ArrayBlockingQueue<Runnable>(1)) {
+            protected <T> RunnableFuture<T> newTaskFor(Runnable t, T r) {
+                return new MyRunnableFuture<T>(t, r);
+            }};
+        ExecutorCompletionService<String> ecs =
+            new ExecutorCompletionService<String>(e);
+        try {
+            assertNull(ecs.poll());
+            Runnable r = new NoOpRunnable();
+            Future f1 = ecs.submit(r, null);
+            assertTrue("submit must return MyRunnableFuture",
+                       f1 instanceof MyRunnableFuture);
+            Future f2 = ecs.take();
+            assertSame("submit and take must return same objects", f1, f2);
+            assertTrue("completed task must have set done", done.get());
+        } finally {
+            joinPool(e);
+        }
+    }
 
 }

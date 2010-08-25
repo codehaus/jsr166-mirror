@@ -214,6 +214,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
      * addAll of a collection with any null elements throws NPE after
      * possibly adding some elements
@@ -228,6 +229,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
      * addAll throws ISE if not enough room
      */
@@ -241,6 +243,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (IllegalStateException success) {}
     }
+
     /**
      * Queue contains all elements, in traversal order, of successful addAll
      */

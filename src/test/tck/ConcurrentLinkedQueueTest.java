@@ -14,7 +14,7 @@ import java.io.*;
 public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
@@ -193,8 +193,9 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
-     *  addAll of a collection with any null elements throws NPE after
+     * addAll of a collection with any null elements throws NPE after
      * possibly adding some elements
      */
     public void testAddAll3() {
@@ -446,7 +447,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     /**
      * Modifications do not cause iterators to fail
      */
-    public void testWeaklyConsistentIteration () {
+    public void testWeaklyConsistentIteration() {
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         q.add(one);
         q.add(two);
@@ -463,7 +464,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     /**
      * iterator.remove removes current element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue();
         q.add(one);
         q.add(two);

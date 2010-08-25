@@ -119,6 +119,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
+
     /**
      * addAll throws ISE if no active taker
      */

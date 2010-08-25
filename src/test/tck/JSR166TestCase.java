@@ -26,19 +26,19 @@ import java.security.*;
  * <li> All assertions in code running in generated threads must use
  * the forms {@link #threadFail}, {@link #threadAssertTrue}, {@link
  * #threadAssertEquals}, or {@link #threadAssertNull}, (not
- * <tt>fail</tt>, <tt>assertTrue</tt>, etc.) It is OK (but not
+ * {@code fail}, {@code assertTrue}, etc.) It is OK (but not
  * particularly recommended) for other code to use these forms too.
  * Only the most typically used JUnit assertion methods are defined
  * this way, but enough to live with.</li>
  *
  * <li> If you override {@link #setUp} or {@link #tearDown}, make sure
- * to invoke <tt>super.setUp</tt> and <tt>super.tearDown</tt> within
+ * to invoke {@code super.setUp} and {@code super.tearDown} within
  * them. These methods are used to clear and check for thread
  * assertion failures.</li>
  *
- * <li>All delays and timeouts must use one of the constants <tt>
- * SHORT_DELAY_MS</tt>, <tt> SMALL_DELAY_MS</tt>, <tt> MEDIUM_DELAY_MS</tt>,
- * <tt> LONG_DELAY_MS</tt>. The idea here is that a SHORT is always
+ * <li>All delays and timeouts must use one of the constants {@code 
+ * SHORT_DELAY_MS}, {@code SMALL_DELAY_MS}, {@code MEDIUM_DELAY_MS},
+ * {@code LONG_DELAY_MS}. The idea here is that a SHORT is always
  * discriminable from zero time, and always allows enough time for the
  * small amounts of computation (creating a thread, calling a few
  * methods, etc) needed to reach a timeout point. Similarly, a SMALL
@@ -48,8 +48,8 @@ import java.security.*;
  * in one spot to rerun tests on slower platforms.</li>
  *
  * <li> All threads generated must be joined inside each test case
- * method (or <tt>fail</tt> to do so) before returning from the
- * method. The <tt> joinPool</tt> method can be used to do this when
+ * method (or {@code fail} to do so) before returning from the
+ * method. The {@code joinPool} method can be used to do this when
  * using Executors.</li>
  *
  * </ol>
@@ -81,7 +81,7 @@ import java.security.*;
  * any particular package to simplify things for people integrating
  * them in TCK test suites.</li>
  *
- * <li> As a convenience, the <tt>main</tt> of this class (JSR166TestCase)
+ * <li> As a convenience, the {@code main} of this class (JSR166TestCase)
  * runs all JSR166 unit tests.</li>
  *
  * </ul>
@@ -143,6 +143,7 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(new TestSuite(AtomicReferenceTest.class));
         suite.addTest(new TestSuite(AtomicStampedReferenceTest.class));
         suite.addTest(new TestSuite(ConcurrentHashMapTest.class));
+        suite.addTest(new TestSuite(ConcurrentLinkedDequeTest.class));
         suite.addTest(new TestSuite(ConcurrentLinkedQueueTest.class));
         suite.addTest(new TestSuite(ConcurrentSkipListMapTest.class));
         suite.addTest(new TestSuite(ConcurrentSkipListSubMapTest.class));

@@ -14,6 +14,7 @@
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -35,6 +36,7 @@ public class RemovePollRace {
 
     Collection<Queue<Boolean>> concurrentQueues() {
         List<Queue<Boolean>> queues = new ArrayList<Queue<Boolean>>();
+        queues.add(new ConcurrentLinkedDeque<Boolean>());
         queues.add(new ConcurrentLinkedQueue<Boolean>());
         queues.add(new ArrayBlockingQueue<Boolean>(count, false));
         queues.add(new ArrayBlockingQueue<Boolean>(count, true));

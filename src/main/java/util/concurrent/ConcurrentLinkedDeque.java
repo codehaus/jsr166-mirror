@@ -16,42 +16,43 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * A concurrent linked-list implementation of a {@link Deque}
- * (double-ended queue).  Concurrent insertion, removal, and access
- * operations execute safely across multiple threads. Iterators are
- * <i>weakly consistent</i>, returning elements reflecting the state
- * of the deque at some point at or since the creation of the
- * iterator.  They do <em>not</em> throw {@link
+ * An unbounded concurrent {@linkplain Deque deque} based on linked nodes.
+ * Concurrent insertion, removal, and access operations execute safely
+ * across multiple threads.
+ * A {@code ConcurrentLinkedDeque} is an appropriate choice when
+ * many threads will share access to a common collection.
+ * Like most other concurrent collection implementations, this class
+ * does not permit the use of {@code null} elements.
+ *
+ * <p>Iterators are <i>weakly consistent</i>, returning elements
+ * reflecting the state of the deque at some point at or since the
+ * creation of the iterator.  They do <em>not</em> throw {@link
+ * java.util.ConcurrentModificationException
  * ConcurrentModificationException}, and may proceed concurrently with
  * other operations.
  *
- * <p>This class and its iterators implement all of the
- * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces. Like most other concurrent collection
- * implementations, this class does not permit the use of
- * {@code null} elements.  because some null arguments and return
- * values cannot be reliably distinguished from the absence of
- * elements. Arbitrarily, the {@link Collection#remove} method is
- * mapped to {@code removeFirstOccurrence}, and {@link
- * Collection#add} is mapped to {@code addLast}.
- *
- * <p>Beware that, unlike in most collections, the {@link #size}
+ * <p>Beware that, unlike in most collections, the {@code size}
  * method is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these deques, determining the current number
- * of elements requires traversing them all to count them.
- * Additionally, it is possible for the size to change during
- * execution of this method, in which case the returned result will be
- * inaccurate. Thus, this method is typically not very useful in
- * concurrent applications.
+ * of elements requires a traversal of the elements.
  *
- * <p>This class is {@code Serializable}, but relies on default
- * serialization mechanisms.  Usually, it is a better idea for any
- * serializable class using a {@code ConcurrentLinkedDeque} to instead
- * serialize a snapshot of the elements obtained by method
- * {@code toArray}.
+ * <p>This class and its iterator implement all of the <em>optional</em>
+ * methods of the {@link Deque} and {@link Iterator} interfaces.
  *
- * @author  Doug Lea
- * @author  Martin Buchholz
+ * <p>Memory consistency effects: As with other concurrent collections,
+ * actions in a thread prior to placing an object into a
+ * {@code ConcurrentLinkedDeque}
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * actions subsequent to the access or removal of that element from
+ * the {@code ConcurrentLinkedDeque} in another thread.
+ *
+ * <p>This class is a member of the
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
+ * Java Collections Framework</a>.
+ *
+ * @since 1.7
+ * @author Doug Lea
+ * @author Martin Buchholz
  * @param <E> the type of elements held in this collection
  */
 
@@ -62,70 +63,110 @@ public class ConcurrentLinkedDeque<E>
     /*
      * This is an implementation of a concurrent lock-free deque
      * supporting interior removes but not interior insertions, as
-     * required to fully support the Deque interface.
+     * required to support the entire Deque interface.
      *
-     * We extend the techniques developed for
-     * ConcurrentLinkedQueue and LinkedTransferQueue
-     * (see the internal docs for those classes).
+     * We extend the techniques developed for ConcurrentLinkedQueue and
+     * LinkedTransferQueue (see the internal docs for those classes).
      *
-     * At any time, there is precisely one "first" active node with a
-     * null prev pointer.  Similarly there is one "last" active node
-     * with a null next pointer.  New nodes are simply enqueued by
-     * null-CASing.
+     * The data structure is a symmetrical doubly-linked "GC-robust"
+     * linked list of nodes.  We minimize the number of volatile writes
+     * using two techniques: advancing multiple hops with a single CAS
+     * and mixing volatile and non-volatile writes of the same memory
+     * locations.
      *
-     * A node p is considered "active" if it either contains an
-     * element, or is an end node and neither next nor prev pointers
-     * are self-links:
+     * A node contains the expected E ("item") and links to predecessor
+     * ("prev") and successor ("next") nodes:
+     *
+     * class Node<E> { volatile Node<E> prev, next; volatile E item; }
+     *
+     * A node p is considered "live" if it contains a non-null item
+     * (p.item != null).  When an item is CASed to null, the item is
+     * atomically logically deleted from the collection.
+     *
+     * At any time, there is precisely one "first" node with a null
+     * prev reference that terminates any chain of prev references
+     * starting at a live node.  Similarly there is precisely one
+     * "last" node terminating any chain of next references starting at
+     * a live node.  The "first" and "last" nodes may or may not be live.
+     * The "first" and "last" nodes are always mutually reachable.
+     *
+     * A new element is added atomically by CASing the null prev or
+     * next reference in the first or last node to a fresh node
+     * containing the element.
+     *
+     * A node is considered "active" if it is a live node, or the
+     * first or last node.  Active nodes cannot be unlinked.
+     *
+     * A "self-link" is a next or prev reference that is the same node:
+     *   p.prev == p  or  p.next == p
+     * Self-links are used in the node unlinking process.  Active nodes
+     * never have self-links.
+     *
+     * A node p is active if and only if:
      *
      * p.item != null ||
      * (p.prev == null && p.next != p) ||
      * (p.next == null && p.prev != p)
      *
-     * The head and tail pointers are only approximations to the start
-     * and end of the deque.  The first node can always be found by
+     * The deque object has two node references, "head" and "tail".
+     * The head and tail are only approximations to the first and last
+     * nodes of the deque.  The first node can always be found by
      * following prev pointers from head; likewise for tail.  However,
-     * head and tail may be pointing at deleted nodes that have been
-     * unlinked and so may not be reachable from any live node.
+     * it is permissible for head and tail to be referring to deleted
+     * nodes that have been unlinked and so may not be reachable from
+     * any live node.
      *
-     * There are 3 levels of node deletion:
-     * - logical deletion atomically removes the element
-     * - "unlinking" makes a deleted node unreachable from active
-     *   nodes, and thus eventually reclaimable by GC
-     * - "gc-unlinking" further does the reverse of making active
-     *   nodes unreachable from deleted nodes, making it easier for
-     *   the GC to reclaim future deleted nodes
+     * There are 3 stages of node deletion;
+     * "logical deletion", "unlinking", and "gc-unlinking".
      *
-     * TODO: find a better name for "gc-unlinked"
+     * 1. "logical deletion" by CASing item to null atomically removes
+     * the element from the collection, and makes the containing node
+     * eligible for unlinking.
      *
-     * Logical deletion of a node simply involves CASing its element
-     * to null.  Physical deletion is merely an optimization (albeit a
-     * critical one), and can be performed at our convenience.  At any
-     * time, the set of non-logically-deleted nodes maintained by prev
-     * and next links are identical, that is the live elements found
-     * via next links from the first node is equal to the elements
-     * found via prev links from the last node.  However, this is not
-     * true for nodes that have already been logically deleted - such
-     * nodes may only be reachable in one direction.
+     * 2. "unlinking" makes a deleted node unreachable from active
+     * nodes, and thus eventually reclaimable by GC.  Unlinked nodes
+     * may remain reachable indefinitely from an iterator.
      *
-     * When a node is dequeued at either end, e.g. via poll(), we
-     * would like to break any references from the node to live nodes,
-     * to stop old garbage from causing retention of new garbage with
-     * a generational or conservative GC.  We develop further the
-     * self-linking trick that was very effective in other concurrent
-     * collection classes.  The idea is to replace prev and next
-     * pointers to active nodes with special values that are
-     * interpreted to mean off-the-list-at-one-end.  These are
-     * approximations, but good enough to preserve the properties we
-     * want in our traversals, e.g. we guarantee that a traversal will
-     * never hit the same element twice, but we don't guarantee
-     * whether a traversal that runs out of elements will be able to
-     * see more elements later after more elements are added at that
-     * end.  Doing gc-unlinking safely is particularly tricky, since
-     * any node can be in use indefinitely (for example by an
-     * iterator).  We must make sure that the nodes pointed at by
-     * head/tail do not get gc-unlinked, since head/tail are needed to
-     * get "back on track" by other nodes that are gc-unlinked.
-     * gc-unlinking accounts for much of the implementation complexity.
+     * Physical node unlinking is merely an optimization (albeit a
+     * critical one), and so can be performed at our convenience.  At
+     * any time, the set of live nodes maintained by prev and next
+     * links are identical, that is, the live nodes found via next
+     * links from the first node is equal to the elements found via
+     * prev links from the last node.  However, this is not true for
+     * nodes that have already been logically deleted - such nodes may
+     * be reachable in one direction only.
+     *
+     * 3. "gc-unlinking" takes unlinking further by making active
+     * nodes unreachable from deleted nodes, making it easier for the
+     * GC to reclaim future deleted nodes.  This step makes the data
+     * structure "gc-robust", as first described in detail by Boehm
+     * (http://portal.acm.org/citation.cfm?doid=503272.503282).
+     *
+     * GC-unlinked nodes may remain reachable indefinitely from an
+     * iterator, but unlike unlinked nodes, are never reachable from
+     * head or tail.
+     *
+     * Making the data structure GC-robust will eliminate the risk of
+     * unbounded memory retention with conservative GCs and is likely
+     * to improve performance with generational GCs.
+     *
+     * When a node is dequeued at either end, e.g. via poll(), we would
+     * like to break any references from the node to active nodes.  We
+     * develop further the use of self-links that was very effective in
+     * other concurrent collection classes.  The idea is to replace
+     * prev and next pointers with special values that are interpreted
+     * to mean off-the-list-at-one-end.  These are approximations, but
+     * good enough to preserve the properties we want in our
+     * traversals, e.g. we guarantee that a traversal will never visit
+     * the same element twice, but we don't guarantee whether a
+     * traversal that runs out of elements will be able to see more
+     * elements later after enqueues at that end.  Doing gc-unlinking
+     * safely is particularly tricky, since any node can be in use
+     * indefinitely (for example by an iterator).  We must ensure that
+     * the nodes pointed at by head/tail never get gc-unlinked, since
+     * head/tail are needed to get "back on track" by other nodes that
+     * are gc-unlinked.  gc-unlinking accounts for much of the
+     * implementation complexity.
      *
      * Since neither unlinking nor gc-unlinking are necessary for
      * correctness, there are many implementation choices regarding
@@ -137,13 +178,16 @@ public class ConcurrentLinkedDeque<E>
      * are occasionally broken.
      *
      * The actual representation we use is that p.next == p means to
-     * goto the first node, and p.next == null && p.prev == p means
+     * goto the first node (which in turn is reached by following prev
+     * pointers from head), and p.next == null && p.prev == p means
      * that the iteration is at an end and that p is a (final static)
      * dummy node, NEXT_TERMINATOR, and not the last active node.
      * Finishing the iteration when encountering such a TERMINATOR is
-     * good enough for read-only traversals.  When the last active
-     * node is desired, for example when enqueueing, goto tail and
-     * continue traversal.
+     * good enough for read-only traversals, so such traversals can use
+     * p.next == null as the termination condition.  When we need to
+     * find the last (active) node, for enqueueing a new node, we need
+     * to check whether we have reached a TERMINATOR node; if so,
+     * restart traversal from tail.
      *
      * The implementation is completely directionally symmetrical,
      * except that most public methods that iterate through the list
@@ -161,19 +205,36 @@ public class ConcurrentLinkedDeque<E>
      * good as we can hope for.
      */
 
+    private static final long serialVersionUID = 876323262645176354L;
+
     /**
-     * A node from which the first node on list (that is, the unique
-     * node with node.prev == null) can be reached in O(1) time.
+     * A node from which the first node on list (that is, the unique node p
+     * with p.prev == null && p.next != p) can be reached in O(1) time.
      * Invariants:
      * - the first node is always O(1) reachable from head via prev links
      * - all live nodes are reachable from the first node via succ()
      * - head != null
      * - (tmp = head).next != tmp || tmp != head
+     * - head is never gc-unlinked (but may be unlinked)
      * Non-invariants:
      * - head.item may or may not be null
      * - head may not be reachable from the first or last node, or from tail
      */
-    private transient volatile Node<E> head = new Node<E>(null);
+    private transient volatile Node<E> head;
+
+    /**
+     * A node from which the last node on list (that is, the unique node p
+     * with p.next == null && p.prev != p) can be reached in O(1) time.
+     * Invariants:
+     * - the last node is always O(1) reachable from tail via next links
+     * - all live nodes are reachable from the last node via pred()
+     * - tail != null
+     * - tail is never gc-unlinked (but may be unlinked)
+     * Non-invariants:
+     * - tail.item may or may not be null
+     * - tail may not be reachable from the first or last node, or from head
+     */
+    private transient volatile Node<E> tail;
 
     private final static Node<Object> PREV_TERMINATOR, NEXT_TERMINATOR;
 
@@ -193,19 +254,6 @@ public class ConcurrentLinkedDeque<E>
     Node<E> nextTerminator() {
         return (Node<E>) NEXT_TERMINATOR;
     }
-
-    /**
-     * A node from which the last node on list (that is, the unique
-     * node with node.next == null) can be reached in O(1) time.
-     * Invariants:
-     * - the last node is always O(1) reachable from tail via next links
-     * - all live nodes are reachable from the last node via pred()
-     * - tail != null
-     * Non-invariants:
-     * - tail.item may or may not be null
-     * - tail may not be reachable from the first or last node, or from head
-     */
-    private transient volatile Node<E> tail = head;
 
     static final class Node<E> {
         volatile Node<E> prev;
@@ -265,8 +313,9 @@ public class ConcurrentLinkedDeque<E>
             for (Node<E> h = head, p = h;;) {
                 Node<E> q = p.prev;
                 if (q == null) {
-                    if (p.next == p)
+                    if (p.next == p) // PREV_TERMINATOR
                         continue retry;
+                    // p is first node
                     newNode.lazySetNext(p); // CAS piggyback
                     if (p.casPrev(null, newNode)) {
                         if (p != h) // hop two nodes at a time
@@ -296,8 +345,9 @@ public class ConcurrentLinkedDeque<E>
             for (Node<E> t = tail, p = t;;) {
                 Node<E> q = p.next;
                 if (q == null) {
-                    if (p.prev == p)
+                    if (p.prev == p) // NEXT_TERMINATOR
                         continue retry;
+                    // p is last node
                     newNode.lazySetPrev(p); // CAS piggyback
                     if (p.casNext(null, newNode)) {
                         if (p != t) // hop two nodes at a time
@@ -315,29 +365,16 @@ public class ConcurrentLinkedDeque<E>
         }
     }
 
-    // TODO: Is there a better cheap way of performing some cleanup
-    // operation "occasionally"?
-    static class Count {
-        int count = 0;
-    }
-    private final static ThreadLocal<Count> tlc =
-        new ThreadLocal<Count>() {
-        protected Count initialValue() { return new Count(); }
-    };
-    private static boolean shouldGCUnlinkOccasionally() {
-        return (tlc.get().count++ & 0x3) == 0;
-    }
-
     private final static int HOPS = 2;
 
     /**
      * Unlinks non-null node x.
      */
     void unlink(Node<E> x) {
-        assert x != null;
-        assert x.item == null;
-        assert x != PREV_TERMINATOR;
-        assert x != NEXT_TERMINATOR;
+        // assert x != null;
+        // assert x.item == null;
+        // assert x != PREV_TERMINATOR;
+        // assert x != NEXT_TERMINATOR;
 
         final Node<E> prev = x.prev;
         final Node<E> next = x.next;
@@ -350,7 +387,7 @@ public class ConcurrentLinkedDeque<E>
             //
             // This is the common case, since a series of polls at the
             // same end will be "interior" removes, except perhaps for
-            // the first one, since end nodes cannot be physically removed.
+            // the first one, since end nodes cannot be unlinked.
             //
             // At any time, all active nodes are mutually reachable by
             // following a sequence of either next or prev pointers.
@@ -359,18 +396,18 @@ public class ConcurrentLinkedDeque<E>
             // and successor of x.  Try to fix up their links so that
             // they point to each other, leaving x unreachable from
             // active nodes.  If successful, and if x has no live
-            // predecessor/successor, we additionally try to leave
-            // active nodes unreachable from x, by rechecking that
-            // the status of predecessor and successor are unchanged
-            // and ensuring that x is not reachable from tail/head,
-            // before setting x's prev/next links to their logical
-            // approximate replacements, self/TERMINATOR.
+            // predecessor/successor, we additionally try to gc-unlink,
+            // leaving active nodes unreachable from x, by rechecking
+            // that the status of predecessor and successor are
+            // unchanged and ensuring that x is not reachable from
+            // tail/head, before setting x's prev/next links to their
+            // logical approximate replacements, self/TERMINATOR.
             Node<E> activePred, activeSucc;
             boolean isFirst, isLast;
             int hops = 1;
 
             // Find active predecessor
-            for (Node<E> p = prev;; ++hops) {
+            for (Node<E> p = prev; ; ++hops) {
                 if (p.item != null) {
                     activePred = p;
                     isFirst = false;
@@ -378,7 +415,7 @@ public class ConcurrentLinkedDeque<E>
                 }
                 Node<E> q = p.prev;
                 if (q == null) {
-                    if (p == p.next)
+                    if (p.next == p)
                         return;
                     activePred = p;
                     isFirst = true;
@@ -391,7 +428,7 @@ public class ConcurrentLinkedDeque<E>
             }
 
             // Find active successor
-            for (Node<E> p = next;; ++hops) {
+            for (Node<E> p = next; ; ++hops) {
                 if (p.item != null) {
                     activeSucc = p;
                     isLast = false;
@@ -399,7 +436,7 @@ public class ConcurrentLinkedDeque<E>
                 }
                 Node<E> q = p.next;
                 if (q == null) {
-                    if (p == p.prev)
+                    if (p.prev == p)
                         return;
                     activeSucc = p;
                     isLast = true;
@@ -424,7 +461,6 @@ public class ConcurrentLinkedDeque<E>
 
             // Try to gc-unlink, if possible
             if ((isFirst | isLast) &&
-                //shouldGCUnlinkOccasionally() &&
 
                 // Recheck expected state of predecessor and successor
                 (activePred.next == activeSucc) &&
@@ -435,6 +471,8 @@ public class ConcurrentLinkedDeque<E>
                 // Ensure x is not reachable from head or tail
                 updateHead();
                 updateTail();
+
+                // Finally, actually gc-unlink
                 x.lazySetPrev(isFirst ? prevTerminator() : x);
                 x.lazySetNext(isLast  ? nextTerminator() : x);
             }
@@ -445,26 +483,21 @@ public class ConcurrentLinkedDeque<E>
      * Unlinks non-null first node.
      */
     private void unlinkFirst(Node<E> first, Node<E> next) {
-        assert first != null && next != null && first.item == null;
+        // assert first != null && next != null && first.item == null;
         Node<E> o = null, p = next;
-        for (int hops = 0;; ++hops) {
+        for (int hops = 0; ; ++hops) {
             Node<E> q;
             if (p.item != null || (q = p.next) == null) {
-                if (hops >= HOPS) {
-                    if (p == p.prev)
-                        return;
-                    if (first.casNext(next, p)) {
-                        skipDeletedPredecessors(p);
-                        if (//shouldGCUnlinkOccasionally() &&
-                            first.prev == null &&
-                            (p.next == null || p.item != null) &&
-                            p.prev == first) {
+                if (hops >= HOPS && p.prev != p && first.casNext(next, p)) {
+                    skipDeletedPredecessors(p);
+                    if (first.prev == null &&
+                        (p.next == null || p.item != null) &&
+                        p.prev == first) {
 
-                            updateHead();
-                            updateTail();
-                            o.lazySetNext(o);
-                            o.lazySetPrev(prevTerminator());
-                        }
+                        updateHead();
+                        updateTail();
+                        o.lazySetNext(o);
+                        o.lazySetPrev(prevTerminator());
                     }
                 }
                 return;
@@ -482,26 +515,21 @@ public class ConcurrentLinkedDeque<E>
      * Unlinks non-null last node.
      */
     private void unlinkLast(Node<E> last, Node<E> prev) {
-        assert last != null && prev != null && last.item == null;
+        // assert last != null && prev != null && last.item == null;
         Node<E> o = null, p = prev;
-        for (int hops = 0;; ++hops) {
+        for (int hops = 0; ; ++hops) {
             Node<E> q;
             if (p.item != null || (q = p.prev) == null) {
-                if (hops >= HOPS) {
-                    if (p == p.next)
-                        return;
-                    if (last.casPrev(prev, p)) {
-                        skipDeletedSuccessors(p);
-                        if (//shouldGCUnlinkOccasionally() &&
-                            last.next == null &&
-                            (p.prev == null || p.item != null) &&
-                            p.next == last) {
+                if (hops >= HOPS && p.next != p && last.casPrev(prev, p)) {
+                    skipDeletedSuccessors(p);
+                    if (last.next == null &&
+                        (p.prev == null || p.item != null) &&
+                        p.next == last) {
 
-                            updateHead();
-                            updateTail();
-                            o.lazySetPrev(o);
-                            o.lazySetNext(nextTerminator());
-                        }
+                        updateHead();
+                        updateTail();
+                        o.lazySetPrev(o);
+                        o.lazySetNext(nextTerminator());
                     }
                 }
                 return;
@@ -515,10 +543,20 @@ public class ConcurrentLinkedDeque<E>
         }
     }
 
+    /**
+     * Sets head to first node.  Guarantees that any node which was
+     * unlinked before a call to this method will be unreachable from
+     * head after it returns.
+     */
     private final void updateHead() {
         first();
     }
 
+    /**
+     * Sets tail to last node.  Guarantees that any node which was
+     * unlinked before a call to this method will be unreachable from
+     * tail after it returns.
+     */
     private final void updateTail() {
         last();
     }
@@ -527,9 +565,9 @@ public class ConcurrentLinkedDeque<E>
         whileActive:
         do {
             Node<E> prev = x.prev;
-            assert prev != null;
-            assert x != NEXT_TERMINATOR;
-            assert x != PREV_TERMINATOR;
+            // assert prev != null;
+            // assert x != NEXT_TERMINATOR;
+            // assert x != PREV_TERMINATOR;
             Node<E> p = prev;
             findActive:
             for (;;) {
@@ -558,9 +596,9 @@ public class ConcurrentLinkedDeque<E>
         whileActive:
         do {
             Node<E> next = x.next;
-            assert next != null;
-            assert x != NEXT_TERMINATOR;
-            assert x != PREV_TERMINATOR;
+            // assert next != null;
+            // assert x != NEXT_TERMINATOR;
+            // assert x != PREV_TERMINATOR;
             Node<E> p = next;
             findActive:
             for (;;) {
@@ -607,7 +645,8 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Returns the first node, the unique node which has a null prev link.
+     * Returns the first node, the unique node p for which:
+     *     p.prev == null && p.next != p
      * The returned node may or may not be logically deleted.
      * Guarantees that head is set to the returned node.
      */
@@ -619,7 +658,7 @@ public class ConcurrentLinkedDeque<E>
                 if (q == null) {
                     if (p == h
                         // It is possible that p is PREV_TERMINATOR,
-                        // but if so, the CAS will fail.
+                        // but if so, the CAS is guaranteed to fail.
                         || casHead(h, p))
                         return p;
                     else
@@ -634,7 +673,8 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Returns the last node, the unique node which has a null next link.
+     * Returns the last node, the unique node p for which:
+     *     p.next == null && p.prev != p
      * The returned node may or may not be logically deleted.
      * Guarantees that tail is set to the returned node.
      */
@@ -646,7 +686,7 @@ public class ConcurrentLinkedDeque<E>
                 if (q == null) {
                     if (p == t
                         // It is possible that p is NEXT_TERMINATOR,
-                        // but if so, the CAS will fail.
+                        // but if so, the CAS is guaranteed to fail.
                         || casTail(t, p))
                         return p;
                     else
@@ -692,23 +732,21 @@ public class ConcurrentLinkedDeque<E>
      * @return the arrayList
      */
     private ArrayList<E> toArrayList() {
-        ArrayList<E> c = new ArrayList<E>();
+        ArrayList<E> list = new ArrayList<E>();
         for (Node<E> p = first(); p != null; p = succ(p)) {
             E item = p.item;
             if (item != null)
-                c.add(item);
+                list.add(item);
         }
-        return c;
+        return list;
     }
-
-    // Fields and constructors
-
-    private static final long serialVersionUID = 876323262645176354L;
 
     /**
      * Constructs an empty deque.
      */
-    public ConcurrentLinkedDeque() {}
+    public ConcurrentLinkedDeque() {
+        head = tail = new Node<E>(null);
+    }
 
     /**
      * Constructs a deque initially containing the elements of
@@ -719,10 +757,25 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified collection or any
      *         of its elements are null
      */
-     public ConcurrentLinkedDeque(Collection<? extends E> c) {
-         this();
-         addAll(c);
-     }
+    public ConcurrentLinkedDeque(Collection<? extends E> c) {
+        // Copy c into a private chain of Nodes
+        Node<E> h = null, t = null;
+        for (E e : c) {
+            checkNotNull(e);
+            Node<E> newNode = new Node<E>(e);
+            if (h == null)
+                h = t = newNode;
+            else {
+                t.next = newNode;
+                newNode.prev = t;
+                t = newNode;
+            }
+        }
+        if (h == null)
+            h = t = new Node<E>(null);
+        head = h;
+        tail = t;
+    }
 
     /**
      * Inserts the specified element at the front of this deque.
@@ -735,7 +788,8 @@ public class ConcurrentLinkedDeque<E>
 
     /**
      * Inserts the specified element at the end of this deque.
-     * This is identical in function to the {@code add} method.
+     *
+     * <p>This method is equivalent to {@link #add}.
      *
      * @throws NullPointerException {@inheritDoc}
      */
@@ -972,24 +1026,65 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Appends all of the elements in the specified collection to the end of
      * this deque, in the order that they are returned by the specified
-     * collection's iterator.  The behavior of this operation is undefined if
-     * the specified collection is modified while the operation is in
-     * progress.  (This implies that the behavior of this call is undefined if
-     * the specified Collection is this deque, and this deque is nonempty.)
+     * collection's iterator.  Attempts to {@code addAll} of a deque to
+     * itself result in {@code IllegalArgumentException}.
      *
      * @param c the elements to be inserted into this deque
      * @return {@code true} if this deque changed as a result of the call
-     * @throws NullPointerException if {@code c} or any element within it
-     * is {@code null}
+     * @throws NullPointerException if the specified collection or any
+     *         of its elements are null
+     * @throws IllegalArgumentException if the collection is this deque
      */
     public boolean addAll(Collection<? extends E> c) {
-        Iterator<? extends E> it = c.iterator();
-        if (!it.hasNext())
+        if (c == this)
+            // As historically specified in AbstractQueue#addAll
+            throw new IllegalArgumentException();
+
+        // Copy c into a private chain of Nodes
+        Node<E> splice = null, last = null;
+        for (E e : c) {
+            checkNotNull(e);
+            Node<E> newNode = new Node<E>(e);
+            if (splice == null)
+                splice = last = newNode;
+            else {
+                last.next = newNode;
+                newNode.prev = last;
+                last = newNode;
+            }
+        }
+        if (splice == null)
             return false;
-        do {
-            addLast(it.next());
-        } while (it.hasNext());
-        return true;
+
+        // Atomically splice the chain as the tail of this collection
+        retry:
+        for (;;) {
+            for (Node<E> t = tail, p = t;;) {
+                Node<E> q = p.next;
+                if (q == null) {
+                    if (p.prev == p) // NEXT_TERMINATOR
+                        continue retry;
+                    // p is last node
+                    splice.lazySetPrev(p); // CAS piggyback
+                    if (p.casNext(null, splice)) {
+                        if (! casTail(t, last)) {
+                            // Try a little harder to update tail,
+                            // since we may be adding many elements.
+                            t = tail;
+                            if (last.next == null)
+                                casTail(t, last);
+                        }
+                        return true;
+                    } else {
+                        p = p.next; // lost CAS race to another thread
+                    }
+                }
+                else if (p == q)
+                    continue retry;
+                else
+                    p = q;
+            }
+        }
     }
 
     /**
@@ -1030,10 +1125,11 @@ public class ConcurrentLinkedDeque<E>
      * the array immediately following the end of the deque is set to
      * {@code null}.
      *
-     * <p>Like the {@link #toArray()} method, this method acts as bridge between
-     * array-based and collection-based APIs.  Further, this method allows
-     * precise control over the runtime type of the output array, and may,
-     * under certain circumstances, be used to save allocation costs.
+     * <p>Like the {@link #toArray()} method, this method acts as
+     * bridge between array-based and collection-based APIs.  Further,
+     * this method allows precise control over the runtime type of the
+     * output array, and may, under certain circumstances, be used to
+     * save allocation costs.
      *
      * <p>Suppose {@code x} is a deque known to contain only strings.
      * The following code can be used to dump the deque into a newly
@@ -1086,6 +1182,8 @@ public class ConcurrentLinkedDeque<E>
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
+     *
+     * @return an iterator over the elements in this deque in reverse order
      */
     public Iterator<E> descendingIterator() {
         return new DescendingItr();
@@ -1175,7 +1273,7 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Save the state to a stream (that is, serialize it).
+     * Saves the state to a stream (that is, serializes it).
      *
      * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
@@ -1199,24 +1297,31 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Reconstitute the Queue instance from a stream (that is,
-     * deserialize it).
+     * Reconstitutes the instance from a stream (that is, deserializes it).
      * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-        // Read in capacity, and any hidden stuff
         s.defaultReadObject();
-        tail = head = new Node<E>(null);
-        // Read in all elements and place in queue
-        for (;;) {
+
+        // Read in elements until trailing null sentinel found
+        Node<E> h = null, t = null;
+        Object item;
+        while ((item = s.readObject()) != null) {
             @SuppressWarnings("unchecked")
-            E item = (E)s.readObject();
-            if (item == null)
-                break;
-            else
-                offer(item);
+            Node<E> newNode = new Node<E>((E) item);
+            if (h == null)
+                h = t = newNode;
+            else {
+                t.next = newNode;
+                newNode.prev = t;
+                t = newNode;
+            }
         }
+        if (h == null)
+            h = t = new Node<E>(null);
+        head = h;
+        tail = t;
     }
 
     // Unsafe mechanics

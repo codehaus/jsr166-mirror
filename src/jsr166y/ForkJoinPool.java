@@ -161,15 +161,17 @@ public class ForkJoinPool extends AbstractExecutorService {
      *      re-activate a spare thread to compensate for blocked
      *      joiners until they unblock.
      *
-     * Because the determining existence of conservatively safe
-     * helping targets, the availability of already-created spares,
-     * and the apparent need to create new spares are all racy and
-     * require heuristic guidance, we rely on multiple retries of
-     * each. Further, because it is impossible to keep exactly the
-     * target (parallelism) number of threads running at any given
-     * time, we allow compensation during joins to fail, and enlist
-     * all other threads to help out whenever they are not otherwise
-     * occupied (i.e., mainly in method preStep).
+     * It is impossible to keep exactly the target (parallelism)
+     * number of threads running at any given time.  Determining
+     * existence of conservatively safe helping targets, the
+     * availability of already-created spares, and the apparent need
+     * to create new spares are all racy and require heuristic
+     * guidance, so we rely on multiple retries of each.  Compensation
+     * occurs in slow-motion. It is triggered only upon timeouts of
+     * Object.wait used for joins. This reduces poor decisions that
+     * would otherwise be made when threads are waiting for others
+     * that are stalled because of unrelated activities such as
+     * garbage collection.
      *
      * The ManagedBlocker extension API can't use helping so relies
      * only on compensation in method awaitBlocker.
@@ -271,45 +273,44 @@ public class ForkJoinPool extends AbstractExecutorService {
      * In addition to allowing simpler decisions about need for
      * wakeup, the event count bits in eventWaiters serve the role of
      * tags to avoid ABA errors in Treiber stacks. Upon any wakeup,
-     * released threads also try to release others (but give up upon
-     * contention to reduce useless flailing).  The net effect is a
-     * tree-like diffusion of signals, where released threads (and
-     * possibly others) help with unparks.  To further reduce
-     * contention effects a bit, failed CASes to increment field
-     * eventCount are tolerated without retries in signalWork.
+     * released threads also try to release at most two others.  The
+     * net effect is a tree-like diffusion of signals, where released
+     * threads (and possibly others) help with unparks.  To further
+     * reduce contention effects a bit, failed CASes to increment
+     * field eventCount are tolerated without retries in signalWork.
      * Conceptually they are merged into the same event, which is OK
      * when their only purpose is to enable workers to scan for work.
      *
-     * 5. Managing suspension of extra workers. When a worker is about
-     * to block waiting for a join (or via ManagedBlockers), we may
-     * create a new thread to maintain parallelism level, or at least
-     * avoid starvation. Usually, extra threads are needed for only
-     * very short periods, yet join dependencies are such that we
-     * sometimes need them in bursts. Rather than create new threads
-     * each time this happens, we suspend no-longer-needed extra ones
-     * as "spares". For most purposes, we don't distinguish "extra"
-     * spare threads from normal "core" threads: On each call to
-     * preStep (the only point at which we can do this) a worker
-     * checks to see if there are now too many running workers, and if
-     * so, suspends itself.  Method helpMaintainParallelism looks for
-     * suspended threads to resume before considering creating a new
-     * replacement. The spares themselves are encoded on another
-     * variant of a Treiber Stack, headed at field "spareWaiters".
-     * Note that the use of spares is intrinsically racy.  One thread
-     * may become a spare at about the same time as another is
-     * needlessly being created. We counteract this and related slop
-     * in part by requiring resumed spares to immediately recheck (in
-     * preStep) to see whether they they should re-suspend.
+     * 5. Managing suspension of extra workers. When a worker notices
+     * (usually upon timeout of a wait()) that there are too few
+     * running threads, we may create a new thread to maintain
+     * parallelism level, or at least avoid starvation. Usually, extra
+     * threads are needed for only very short periods, yet join
+     * dependencies are such that we sometimes need them in
+     * bursts. Rather than create new threads each time this happens,
+     * we suspend no-longer-needed extra ones as "spares". For most
+     * purposes, we don't distinguish "extra" spare threads from
+     * normal "core" threads: On each call to preStep (the only point
+     * at which we can do this) a worker checks to see if there are
+     * now too many running workers, and if so, suspends itself.
+     * Method helpMaintainParallelism looks for suspended threads to
+     * resume before considering creating a new replacement. The
+     * spares themselves are encoded on another variant of a Treiber
+     * Stack, headed at field "spareWaiters".  Note that the use of
+     * spares is intrinsically racy.  One thread may become a spare at
+     * about the same time as another is needlessly being created. We
+     * counteract this and related slop in part by requiring resumed
+     * spares to immediately recheck (in preStep) to see whether they
+     * they should re-suspend.
      *
-     * 6. Killing off unneeded workers. The Spare and Event queues use
-     * similar mechanisms to shed unused workers: The oldest (first)
-     * waiter uses a timed rather than hard wait. When this wait times
-     * out without a normal wakeup, it tries to shutdown any one (for
-     * convenience the newest) other waiter via tryShutdownSpare or
-     * tryShutdownWaiter, respectively. The wakeup rates for spares
-     * are much shorter than for waiters. Together, they will
-     * eventually reduce the number of worker threads to a minimum of
-     * one after a long enough period without use.
+     * 6. Killing off unneeded workers. A timeout mechanism is used to
+     * shed unused workers: The oldest (first) event queue waiter uses
+     * a timed rather than hard wait. When this wait times out without
+     * a normal wakeup, it tries to shutdown any one (for convenience
+     * the newest) other spare or event waiter via
+     * tryShutdownUnusedWorker. This eventually reduces the number of
+     * worker threads to a minimum of one after a long enough period
+     * without use.
      *
      * 7. Deciding when to create new workers. The main dynamic
      * control in this class is deciding when to create extra threads
@@ -322,18 +323,15 @@ public class ForkJoinPool extends AbstractExecutorService {
      * compilation, and wake-up lags. These transients are extremely
      * common -- we are normally trying to fully saturate the CPUs on
      * a machine, so almost any activity other than running tasks
-     * impedes accuracy. Our main defense is to allow some slack in
-     * creation thresholds, using rules that reflect the fact that the
-     * more threads we have running, the more likely that we are
-     * underestimating the number running threads. (We also include
-     * some heuristic use of Thread.yield when all workers appear to
-     * be busy, to improve likelihood of counts settling.) The rules
-     * also better cope with the fact that some of the methods in this
-     * class tend to never become compiled (but are interpreted), so
-     * some components of the entire set of controls might execute 100
-     * times faster than others. And similarly for cases where the
-     * apparent lack of work is just due to GC stalls and other
-     * transient system activity.
+     * impedes accuracy. Our main defense is to allow parallelism to
+     * lapse for a while during joins, and use a timeout to see if,
+     * after the resulting settling, there is still a need for
+     * additional workers.  This also better copes with the fact that
+     * some of the methods in this class tend to never become compiled
+     * (but are interpreted), so some components of the entire set of
+     * controls might execute 100 times faster than others. And
+     * similarly for cases where the apparent lack of work is just due
+     * to GC stalls and other transient system activity.
      *
      * Beware that there is a lot of representation-level coupling
      * among classes ForkJoinPool, ForkJoinWorkerThread, and
@@ -420,14 +418,25 @@ public class ForkJoinPool extends AbstractExecutorService {
         new AtomicInteger();
 
     /**
+     * The time to block in a join (see awaitJoin) before checking if
+     * a new worker should be (re)started to maintain parallelism
+     * level. The value should be short enough to maintain gloabal
+     * responsiveness and progress but long enough to avoid
+     * counterproductive firings during GC stalls or unrelated system
+     * activity, and to not bog down systems with continual re-firings
+     * on GCs or legitimately long waits.
+     */
+    private static final long JOIN_TIMEOUT_MILLIS = 250L; // 4 per second
+
+    /**
      * The wakeup interval (in nanoseconds) for the oldest worker
-     * worker waiting for an event invokes tryShutdownWaiter to shrink
+     * worker waiting for an event invokes tryShutdownUnusedWorker to shrink
      * the number of workers.  The exact value does not matter too
      * much, but should be long enough to slowly release resources
      * during long periods without use without disrupting normal use.
      */
     private static final long SHRINK_RATE_NANOS =
-        60L * 1000L * 1000L * 1000L; // one minute
+        30L * 1000L * 1000L * 1000L; // 2 per minute
 
     /**
      * Absolute bound for parallelism level. Twice this number plus
@@ -567,7 +576,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private final int poolNumber;
 
-
     // Utilities for CASing fields. Note that most of these
     // are usually manually inlined by callers
 
@@ -612,27 +620,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                                          wc, wc - (dr + dt)))
                 return;
         }
-    }
-
-    /**
-     * Increments event count
-     */
-    private void advanceEventCount() {
-        int c;
-        do {} while(!UNSAFE.compareAndSwapInt(this, eventCountOffset,
-                                              c = eventCount, c+1));
-    }
-
-    /**
-     * Tries incrementing active count; fails on contention.
-     * Called by workers before executing tasks.
-     *
-     * @return true on success
-     */
-    final boolean tryIncrementActiveCount() {
-        int c;
-        return UNSAFE.compareAndSwapInt(this, runStateOffset,
-                                        c = runState, c + 1);
     }
 
     /**
@@ -703,32 +690,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
     }
 
-    // adding and removing workers
-
-    /**
-     * Tries to create and add new worker. Assumes that worker counts
-     * are already updated to accommodate the worker, so adjusts on
-     * failure.
-     *
-     * @return the worker, or null on failure
-     */
-    private ForkJoinWorkerThread addWorker() {
-        ForkJoinWorkerThread w = null;
-        try {
-            w = factory.newThread(this);
-        } finally { // Adjust on either null or exceptional factory return
-            if (w == null) {
-                decrementWorkerCounts(ONE_RUNNING, ONE_TOTAL);
-                tryTerminate(false); // in case of failure during shutdown
-            }
-        }
-        if (w != null) {
-            w.start(recordWorker(w), ueh);
-            advanceEventCount();
-        }
-        return w;
-    }
-
     /**
      * Final callback from terminating worker.  Removes record of
      * worker from array, and adjusts counts. If pool is shutting
@@ -750,22 +711,28 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Releases workers blocked on a count not equal to current count.
      * Normally called after precheck that eventWaiters isn't zero to
      * avoid wasted array checks. Gives up upon a change in count or
-     * contention, letting other workers take over.
+     * upon releasing two workers, letting others take over.
      */
     private void releaseEventWaiters() {
         ForkJoinWorkerThread[] ws = workers;
         int n = ws.length;
         long h = eventWaiters;
         int ec = eventCount;
+        boolean releasedOne = false;
         ForkJoinWorkerThread w; int id;
-        while ((int)(h >>> EVENT_COUNT_SHIFT) != ec &&
-               (id = ((int)(h & WAITER_ID_MASK)) - 1) >= 0 &&
-               id < n && (w = ws[id]) != null &&
-               UNSAFE.compareAndSwapLong(this, eventWaitersOffset,
-                                         h,  h = w.nextWaiter)) {
-            LockSupport.unpark(w);
-            if (eventWaiters != h || eventCount != ec)
+        while ((id = ((int)(h & WAITER_ID_MASK)) - 1) >= 0 &&
+               (int)(h >>> EVENT_COUNT_SHIFT) != ec &&
+               id < n && (w = ws[id]) != null) {
+            if (UNSAFE.compareAndSwapLong(this, eventWaitersOffset,
+                                          h,  w.nextWaiter)) {
+                LockSupport.unpark(w);
+                if (releasedOne) // exit on second release
+                    break;
+                releasedOne = true;
+            }
+            if (eventCount != ec)
                 break;
+            h = eventWaiters;
         }
     }
 
@@ -782,13 +749,12 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Adds the given worker to event queue and blocks until
-     * terminating or event count advances from the workers
-     * lastEventCount value
+     * terminating or event count advances from the given value
      *
      * @param w the calling worker thread
+     * @param ec the count
      */
-    private void eventSync(ForkJoinWorkerThread w) {
-        int ec = w.lastEventCount;
+    private void eventSync(ForkJoinWorkerThread w, int ec) {
         long nh = (((long)ec) << EVENT_COUNT_SHIFT) | ((long)(w.poolIndex+1));
         long h;
         while ((runState < SHUTDOWN || !tryTerminate(false)) &&
@@ -808,7 +774,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * event waiter) until terminating or event count advances from
      * the given value. The oldest (first) waiter uses a timed wait to
      * occasionally one-by-one shrink the number of workers (to a
-     * minumum of one) if the pool has not been used for extended
+     * minimum of one) if the pool has not been used for extended
      * periods.
      *
      * @param w the calling worker thread
@@ -821,58 +787,24 @@ public class ForkJoinPool extends AbstractExecutorService {
                                    (workerCounts & RUNNING_COUNT_MASK) <= 1);
                 long startTime = untimed? 0 : System.nanoTime();
                 Thread.interrupted();         // clear/ignore interrupt
-                if (eventCount != ec || !w.isRunning() ||
+                if (eventCount != ec || w.runState != 0 ||
                     runState >= TERMINATING)  // recheck after clear
                     break;
                 if (untimed)
                     LockSupport.park(w);
                 else {
                     LockSupport.parkNanos(w, SHRINK_RATE_NANOS);
-                    if (eventCount != ec || !w.isRunning() ||
+                    if (eventCount != ec || w.runState != 0 ||
                         runState >= TERMINATING)
                         break;
                     if (System.nanoTime() - startTime >= SHRINK_RATE_NANOS)
-                        tryShutdownWaiter(ec);
+                        tryShutdownUnusedWorker(ec);
                 }
             }
         }
     }
 
-    /**
-     * Callback from the oldest waiter in awaitEvent waking up after a
-     * period of non-use. Tries (once) to shutdown an event waiter (or
-     * a spare, if one exists). Note that we don't need CAS or locks
-     * here because the method is called only from one thread
-     * occasionally waking (and even misfires are OK). Note that
-     * until the shutdown worker fully terminates, workerCounts
-     * will overestimate total count, which is tolerable.
-     *
-     * @param ec the event count waited on by caller (to abort
-     * attempt if count has since changed).
-     */
-    private void tryShutdownWaiter(int ec) {
-        if (spareWaiters != 0) { // prefer killing spares
-            tryShutdownSpare();
-            return;
-        }
-        ForkJoinWorkerThread[] ws = workers;
-        int n = ws.length;
-        long h = eventWaiters;
-        ForkJoinWorkerThread w; int id; long nh;
-        if (runState == 0 &&
-            submissionQueue.isEmpty() &&
-            eventCount == ec &&
-            (id = ((int)(h & WAITER_ID_MASK)) - 1) >= 0 &&
-            id < n && (w = ws[id]) != null &&
-            (nh = w.nextWaiter) != 0L && // keep at least one worker
-            UNSAFE.compareAndSwapLong(this, eventWaitersOffset, h, nh)) {
-            w.shutdown();
-            LockSupport.unpark(w);
-        }
-        releaseEventWaiters();
-    }
-
-    // Maintaining spares
+    // Maintaining parallelism
 
     /**
      * Pushes worker onto the spare stack
@@ -884,130 +816,117 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Callback from oldest spare occasionally waking up.  Tries
-     * (once) to shutdown a spare. Same idea as tryShutdownWaiter.
+     * Tries (once) to resume a spare if the number of running
+     * threads is less than target.
      */
-    final void tryShutdownSpare() {
+    private void tryResumeSpare() {
         int sw, id;
-        ForkJoinWorkerThread w;
-        ForkJoinWorkerThread[] ws;
-        if ((id = ((sw = spareWaiters) & SPARE_ID_MASK) - 1) >= 0 &&
-            id < (ws = workers).length && (w = ws[id]) != null &&
-            (workerCounts & RUNNING_COUNT_MASK) >= parallelism &&
-            UNSAFE.compareAndSwapInt(this, spareWaitersOffset,
-                                     sw, w.nextSpare)) {
-            w.shutdown();
-            LockSupport.unpark(w);
-            advanceEventCount();
-        }
-    }
-
-    /**
-     * Tries (once) to resume a spare if worker counts match
-     * the given count.
-     *
-     * @param wc workerCounts value on invocation of this method
-     */
-    private void tryResumeSpare(int wc) {
         ForkJoinWorkerThread[] ws = workers;
         int n = ws.length;
-        int sw, id, rs;  ForkJoinWorkerThread w;
-        if ((id = ((sw = spareWaiters) & SPARE_ID_MASK) - 1) >= 0 &&
+        ForkJoinWorkerThread w;
+        if ((sw = spareWaiters) != 0 &&
+            (id = (sw & SPARE_ID_MASK) - 1) >= 0 &&
             id < n && (w = ws[id]) != null &&
-            (rs = runState) < TERMINATING &&
-            eventWaiters == 0L && workerCounts == wc) {
-            // In case all workers busy, heuristically back off to let settle
-            Thread.yield();
-            if (eventWaiters == 0L && runState == rs && // recheck
-                workerCounts == wc && spareWaiters == sw &&
-                UNSAFE.compareAndSwapInt(this, spareWaitersOffset,
-                                         sw, w.nextSpare)) {
-                int c;              // increment running count before resume
-                do {} while(!UNSAFE.compareAndSwapInt
-                            (this, workerCountsOffset,
-                             c = workerCounts, c + ONE_RUNNING));
-                if (w.tryUnsuspend())
-                    LockSupport.unpark(w);
-                else               // back out if w was shutdown
-                    decrementWorkerCounts(ONE_RUNNING, 0);
-            }
-        }
-    }
-
-    // adding workers on demand
-
-    /**
-     * Adds one or more workers if needed to establish target parallelism.
-     * Retries upon contention.
-     */
-    private void addWorkerIfBelowTarget() {
-        int pc = parallelism;
-        int wc;
-        while (((wc = workerCounts) >>> TOTAL_COUNT_SHIFT) < pc &&
-               runState < TERMINATING) {
-            if (UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
-                                         wc + (ONE_RUNNING|ONE_TOTAL))) {
-                if (addWorker() == null)
-                    break;
-            }
+            (workerCounts & RUNNING_COUNT_MASK) < parallelism &&
+            spareWaiters == sw &&
+            UNSAFE.compareAndSwapInt(this, spareWaitersOffset,
+                                     sw, w.nextSpare)) {
+            int c; // increment running count before resume
+            do {} while(!UNSAFE.compareAndSwapInt
+                        (this, workerCountsOffset,
+                         c = workerCounts, c + ONE_RUNNING));
+            if (w.tryUnsuspend())
+                LockSupport.unpark(w);
+            else   // back out if w was shutdown
+                decrementWorkerCounts(ONE_RUNNING, 0);
         }
     }
 
     /**
-     * Tries (once) to add a new worker if all existing workers are
-     * busy, and there are either no running workers or the deficit is
-     * at least twice the surplus.
-     *
-     * @param wc workerCounts value on invocation of this method
-     */
-    private void tryAddWorkerIfBusy(int wc) {
-        int tc, rc, rs;
-        int pc = parallelism;
-        if ((tc = wc >>> TOTAL_COUNT_SHIFT) < MAX_WORKERS &&
-            ((rc = wc & RUNNING_COUNT_MASK) == 0 || 
-             rc < pc - ((tc - pc) << 1)) &&
-            (rs = runState) < TERMINATING &&
-            (rs & ACTIVE_COUNT_MASK) == tc) {
-            // Since all workers busy, heuristically back off to let settle
-            Thread.yield();
-            if (eventWaiters == 0L && spareWaiters == 0 && // recheck
-                runState == rs && workerCounts == wc &&
-                UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
-                                         wc + (ONE_RUNNING|ONE_TOTAL)))
-                addWorker();
-        }
-    }
-
-    /**
-     * Does at most one of:
-     *
-     * 1. Help wake up existing workers waiting for work via
-     *    releaseEventWaiters. (If any exist, then it doesn't
-     *    matter right now if under target parallelism level.)
-     *
-     * 2. If a spare exists, try (once) to resume it via tryResumeSpare.
-     *
-     * 3. If there are not enough total workers, add some
-     *    via addWorkerIfBelowTarget;
-     *
-     * 4. Try (once) to add a new worker if all existing workers
-     *     are busy, via tryAddWorkerIfBusy
+     * Tries to increase the number of running workers if below target
+     * parallelism: If a spare exists tries to resume it via
+     * tryResumeSpare.  Otherwise, if not enough total workers or all
+     * existing workers are busy, adds a new worker. In all casses also
+     * helps wake up releasable workers waiting for work.
      */
     private void helpMaintainParallelism() {
-        long h; int pc, wc;
-        if (((int)((h = eventWaiters) & WAITER_ID_MASK)) != 0) {
-            if ((int)(h >>> EVENT_COUNT_SHIFT) != eventCount)
-                releaseEventWaiters(); // avoid useless call
-        }
-        else if ((pc = parallelism) >
-                 ((wc = workerCounts) & RUNNING_COUNT_MASK)) {
+        int pc = parallelism;
+        int wc, rs, tc;
+        while (((wc = workerCounts) & RUNNING_COUNT_MASK) < pc &&
+               (rs = runState) < TERMINATING) {
             if (spareWaiters != 0)
-                tryResumeSpare(wc);
-            else if ((wc >>> TOTAL_COUNT_SHIFT) < pc)
-                addWorkerIfBelowTarget();
-            else
-                tryAddWorkerIfBusy(wc);
+                tryResumeSpare();
+            else if ((tc = wc >>> TOTAL_COUNT_SHIFT) >= MAX_WORKERS ||
+                     (tc >= pc && (rs & ACTIVE_COUNT_MASK) != tc))
+                break;   // enough total
+            else if (runState == rs && workerCounts == wc &&
+                     UNSAFE.compareAndSwapInt(this, workerCountsOffset, wc,
+                                              wc + (ONE_RUNNING|ONE_TOTAL))) {
+                ForkJoinWorkerThread w = null;
+                try {
+                    w = factory.newThread(this);
+                } finally { // adjust on null or exceptional factory return
+                    if (w == null) {
+                        decrementWorkerCounts(ONE_RUNNING, ONE_TOTAL);
+                        tryTerminate(false); // handle failure during shutdown
+                    }
+                }
+                if (w == null)
+                    break;
+                w.start(recordWorker(w), ueh);
+                if ((workerCounts >>> TOTAL_COUNT_SHIFT) >= pc) {
+                    int c; // advance event count
+                    UNSAFE.compareAndSwapInt(this, eventCountOffset,
+                                             c = eventCount, c+1);
+                    break; // add at most one unless total below target
+                }
+            }
         }
+        if (eventWaiters != 0L)
+            releaseEventWaiters();
+    }
+
+    /**
+     * Callback from the oldest waiter in awaitEvent waking up after a
+     * period of non-use. If all workers are idle, tries (once) to
+     * shutdown an event waiter or a spare, if one exists. Note that
+     * we don't need CAS or locks here because the method is called
+     * only from one thread occasionally waking (and even misfires are
+     * OK). Note that until the shutdown worker fully terminates,
+     * workerCounts will overestimate total count, which is tolerable.
+     *
+     * @param ec the event count waited on by caller (to abort
+     * attempt if count has since changed).
+     */
+    private void tryShutdownUnusedWorker(int ec) {
+        if (runState == 0 && eventCount == ec) { // only trigger if all idle
+            ForkJoinWorkerThread[] ws = workers;
+            int n = ws.length;
+            ForkJoinWorkerThread w = null;
+            boolean shutdown = false;
+            int sw;
+            long h;
+            if ((sw = spareWaiters) != 0) { // prefer killing spares
+                int id = (sw & SPARE_ID_MASK) - 1;
+                if (id >= 0 && id < n && (w = ws[id]) != null &&
+                    UNSAFE.compareAndSwapInt(this, spareWaitersOffset,
+                                             sw, w.nextSpare))
+                    shutdown = true;
+            }
+            else if ((h = eventWaiters) != 0L) {
+                long nh;
+                int id = ((int)(h & WAITER_ID_MASK)) - 1;
+                if (id >= 0 && id < n && (w = ws[id]) != null &&
+                    (nh = w.nextWaiter) != 0L && // keep at least one worker
+                    UNSAFE.compareAndSwapLong(this, eventWaitersOffset, h, nh))
+                    shutdown = true;
+            }
+            if (w != null && shutdown) {
+                w.shutdown();
+                LockSupport.unpark(w);
+            }
+        }
+        releaseEventWaiters(); // in case of interference
     }
 
     /**
@@ -1015,132 +934,125 @@ public class ForkJoinPool extends AbstractExecutorService {
      * stealing a task or taking a submission and running it).
      * Performs one or more of the following:
      *
-     * 1. If the worker is active, try to set its active status to
-     *    inactive and update activeCount. On contention, we may try
-     *    again on this or subsequent call.
+     * 1. If the worker is active and either did not run a task
+     *    or there are too many workers, try to set its active status
+     *    to inactive and update activeCount. On contention, we may
+     *    try again in this or a subsequent call.
      *
-     * 2. Release any existing event waiters that are now relesable
+     * 2. If not enough total workers, help create some.
      *
-     * 3. If there are too many running threads, suspend this worker
-     *    (first forcing inactive if necessary).  If it is not
-     *    needed, it may be killed while suspended via
-     *    tryShutdownSpare. Otherwise, upon resume it rechecks to make
-     *    sure that it is still needed.
+     * 3. If there are too many running workers, suspend this worker
+     *    (first forcing inactive if necessary).  If it is not needed,
+     *    it may be shutdown while suspended (via
+     *    tryShutdownUnusedWorker).  Otherwise, upon resume it
+     *    rechecks running thread count and need for event sync.
      *
-     * 4. If more than 1 miss, await the next task event via
-     *    eventSync (first forcing inactivation if necessary), upon
-     *    which worker may also be killed, via tryShutdownWaiter.
-     *
-     * 5. Help reactivate other workers via helpMaintainParallelism
+     * 4. If worker did not run a task, await the next task event via
+     *    eventSync if necessary (first forcing inactivation), upon
+     *    which the worker may be shutdown via
+     *    tryShutdownUnusedWorker.  Otherwise, help release any
+     *    existing event waiters that are now releasable,
      *
      * @param w the worker
-     * @param misses the number of scans by caller failing to find work
-     * (saturating at 2 to avoid wraparound)
+     * @param ran true if worker ran a task since last call to this method
      */
-    final void preStep(ForkJoinWorkerThread w, int misses) {
+    final void preStep(ForkJoinWorkerThread w, boolean ran) {
+        int wec = w.lastEventCount;
         boolean active = w.active;
+        boolean inactivate = false;
         int pc = parallelism;
-        for (;;) {
-            int rs, wc, rc, ec; long h;
-            if (active && UNSAFE.compareAndSwapInt(this, runStateOffset,
-                                                   rs = runState, rs - 1))
-                active = w.active = false;
-            if (((int)((h = eventWaiters) & WAITER_ID_MASK)) != 0 &&
-                (int)(h >>> EVENT_COUNT_SHIFT) != eventCount) {
-                releaseEventWaiters();
-                if (misses > 1)
-                    continue;                  // clear before sync below
-            }
-            if ((rc = ((wc = workerCounts) & RUNNING_COUNT_MASK)) > pc) {
-                if (!active &&                 // must inactivate to suspend
+        int rs;
+        while (w.runState == 0 && (rs = runState) < TERMINATING) {
+            if ((inactivate || (active && (rs & ACTIVE_COUNT_MASK) >= pc)) &&
+                UNSAFE.compareAndSwapInt(this, runStateOffset, rs, rs - 1))
+                inactivate = active = w.active = false;
+            int wc = workerCounts;
+            if ((wc & RUNNING_COUNT_MASK) > pc) {
+                if (!(inactivate |= active) && // must inactivate to suspend
                     workerCounts == wc &&      // try to suspend as spare
                     UNSAFE.compareAndSwapInt(this, workerCountsOffset,
-                                             wc, wc - ONE_RUNNING)) {
+                                             wc, wc - ONE_RUNNING))
                     w.suspendAsSpare();
-                    if (!w.isRunning())
-                        break;                 // was killed while spare
-                }
-                continue;
             }
-            if (misses > 0) {
-                if ((ec = eventCount) == w.lastEventCount && misses > 1) {
-                    if (!active) {             // must inactivate to sync
-                        eventSync(w);
-                        if (w.isRunning())
-                            misses = 1;        // don't re-sync
-                        else
-                            break;             // was killed while waiting
-                    }
-                    continue;
+            else if ((wc >>> TOTAL_COUNT_SHIFT) < pc)
+                helpMaintainParallelism();     // not enough workers
+            else if (!ran) {
+                long h = eventWaiters;
+                int ec = eventCount;
+                if (h != 0L && (int)(h >>> EVENT_COUNT_SHIFT) != ec)
+                    releaseEventWaiters();     // release others before waiting
+                else if (ec != wec) {
+                    w.lastEventCount = ec;     // no need to wait
+                    break;
                 }
-                w.lastEventCount = ec;
+                else if (!(inactivate |= active))   
+                    eventSync(w, wec);         // must inactivate before sync
             }
-            if (rc < pc)
-                helpMaintainParallelism();
-            break;
+            else
+                break;
         }
     }
 
     /**
      * Helps and/or blocks awaiting join of the given task.
-     * Alternates between helpJoinTask() and helpMaintainParallelism()
-     * as many times as there is a deficit in running count (or longer
-     * if running count would become zero), then blocks if task still
-     * not done.
+     * See above for explanation.
      *
      * @param joinMe the task to join
+     * @param worker the current worker thread
      */
     final void awaitJoin(ForkJoinTask<?> joinMe, ForkJoinWorkerThread worker) {
-        int threshold = parallelism;         // descend blocking thresholds
+        int retries = 2 + (parallelism >> 2); // #helpJoins before blocking
         while (joinMe.status >= 0) {
-            boolean block; int wc;
+            int wc;
             worker.helpJoinTask(joinMe);
             if (joinMe.status < 0)
                 break;
-            if (((wc = workerCounts) & RUNNING_COUNT_MASK) <= threshold) {
-                if (threshold > 0)
-                    --threshold;
-                else
-                    advanceEventCount(); // force release
-                block = false;
-            }
-            else
-                block = UNSAFE.compareAndSwapInt(this, workerCountsOffset,
-                                                 wc, wc - ONE_RUNNING);
-            helpMaintainParallelism();
-            if (block) {
-                int c;
-                joinMe.internalAwaitDone();
+            else if (retries > 0)
+                --retries;
+            else if (((wc = workerCounts) & RUNNING_COUNT_MASK) != 0 &&
+                     UNSAFE.compareAndSwapInt(this, workerCountsOffset,
+                                              wc, wc - ONE_RUNNING)) {
+                int stat, c; long h;
+                while ((stat = joinMe.status) >= 0 &&
+                       (h = eventWaiters) != 0L && // help release others
+                       (int)(h >>> EVENT_COUNT_SHIFT) != eventCount)
+                    releaseEventWaiters();
+                if (stat >= 0 &&
+                    ((workerCounts & RUNNING_COUNT_MASK) == 0 ||
+                     (stat =
+                      joinMe.internalAwaitDone(JOIN_TIMEOUT_MILLIS)) >= 0))
+                    helpMaintainParallelism(); // timeout or no running workers
                 do {} while (!UNSAFE.compareAndSwapInt
                              (this, workerCountsOffset,
                               c = workerCounts, c + ONE_RUNNING));
-                break;
+                if (stat < 0)
+                    break;   // else restart
             }
         }
     }
 
     /**
-     * Same idea as awaitJoin, but no helping
+     * Same idea as awaitJoin, but no helping, retries, or timeouts.
      */
     final void awaitBlocker(ManagedBlocker blocker)
         throws InterruptedException {
-        int threshold = parallelism;
         while (!blocker.isReleasable()) {
-            boolean block; int wc;
-            if (((wc = workerCounts) & RUNNING_COUNT_MASK) <= threshold) {
-                if (threshold > 0)
-                    --threshold;
-                else
-                    advanceEventCount();
-                block = false;
-            }
-            else
-                block = UNSAFE.compareAndSwapInt(this, workerCountsOffset,
-                                                 wc, wc - ONE_RUNNING);
-            helpMaintainParallelism();
-            if (block) {
+            int wc = workerCounts;
+            if ((wc & RUNNING_COUNT_MASK) != 0 &&
+                UNSAFE.compareAndSwapInt(this, workerCountsOffset,
+                                         wc, wc - ONE_RUNNING)) {
                 try {
-                    do {} while (!blocker.isReleasable() && !blocker.block());
+                    while (!blocker.isReleasable()) {
+                        long h = eventWaiters;
+                        if (h != 0L &&
+                            (int)(h >>> EVENT_COUNT_SHIFT) != eventCount)
+                            releaseEventWaiters();
+                        else if ((workerCounts & RUNNING_COUNT_MASK) == 0 &&
+                                 runState < TERMINATING)
+                            helpMaintainParallelism();
+                        else if (blocker.block())
+                            break;
+                    }
                 } finally {
                     int c;
                     do {} while (!UNSAFE.compareAndSwapInt
@@ -1190,7 +1102,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     private void startTerminating() {
         cancelSubmissions();
         for (int passes = 0; passes < 4 && workerCounts != 0; ++passes) {
-            advanceEventCount();
+            int c; // advance event count
+            UNSAFE.compareAndSwapInt(this, eventCountOffset,
+                                     c = eventCount, c+1);
             eventWaiters = 0L; // clobber lists
             spareWaiters = 0;
             ForkJoinWorkerThread[] ws = workers;
@@ -1353,8 +1267,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param pc the initial parallelism level
      */
     private static int initialArraySizeFor(int pc) {
-        // See Hackers Delight, sec 3.2. We know MAX_WORKERS < (1 >>> 16)
+        // If possible, initially allocate enough space for one spare
         int size = pc < MAX_WORKERS ? pc + 1 : MAX_WORKERS;
+        // See Hackers Delight, sec 3.2. We know MAX_WORKERS < (1 >>> 16)
         size |= size >>> 1;
         size |= size >>> 2;
         size |= size >>> 4;
@@ -1373,11 +1288,9 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (runState >= SHUTDOWN)
             throw new RejectedExecutionException();
         submissionQueue.offer(task);
-        advanceEventCount();
-        if (eventWaiters != 0L)
-            releaseEventWaiters();
-        if ((workerCounts >>> TOTAL_COUNT_SHIFT) < parallelism)
-            addWorkerIfBelowTarget();
+        int c; // try to increment event count -- CAS failure OK
+        UNSAFE.compareAndSwapInt(this, eventCountOffset, c = eventCount, c+1);
+        helpMaintainParallelism(); // create, start, or resume some workers
     }
 
     /**

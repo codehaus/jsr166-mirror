@@ -214,7 +214,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Blocks a worker thread until completion. Called only by pool.
+     * Blocks a worker thread until completion. Called only by
+     * pool. Currently unused -- pool-based waits use timeout
+     * version below.
      */
     final void internalAwaitDone() {
         int s;         // the odd construction reduces lock bias effects
@@ -228,6 +230,28 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                 cancelIfTerminating();
             }
         }
+    }
+
+    /**
+     * Blocks a worker thread until completed or timed out.  Called
+     * only by pool.
+     *
+     * @return status on exit
+     */
+    final int internalAwaitDone(long millis) {
+        int s;
+        if ((s = status) >= 0) {
+            try {
+                synchronized(this) {
+                    if (UNSAFE.compareAndSwapInt(this, statusOffset, s,SIGNAL))
+                        wait(millis, 0);
+                }
+            } catch (InterruptedException ie) {
+                cancelIfTerminating();
+            }
+            s = status;
+        }
+        return s;
     }
 
     /**

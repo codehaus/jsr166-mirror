@@ -25,14 +25,14 @@ class Producer extends Thread
       final ReentrantLock bar = RLJBar.bar;
       final ReentrantLock end = RLJBar.End;
       final Condition endCondition = RLJBar.EndCondition;
-      if (RLJBar.OneKey) key = new Integer(0) ; 	// per-thread v. per iteration
+      if (RLJBar.OneKey) key = new Integer(0) ;         // per-thread v. per iteration
 
       // The barrier has a number of interesting effects:
-      // 1.	It enforces full LWP provisioning on T1.
-      //		(nearly all workers park concurrently).
-      // 2.	It gives the C2 compiler thread(s) a chance to run.
-      //		By transiently quiescing the workings the C2 threads
-      //		might avoid starvation.
+      // 1.     It enforces full LWP provisioning on T1.
+      //                (nearly all workers park concurrently).
+      // 2.     It gives the C2 compiler thread(s) a chance to run.
+      //                By transiently quiescing the workings the C2 threads
+      //                might avoid starvation.
       //
 
       try {
@@ -88,11 +88,11 @@ class Producer extends Thread
 }
 
 
-public class RLJBar				// ProdConsTest
+public class RLJBar                             // ProdConsTest
 {
 
     public static final int ITERS = 10;
-  public static boolean OneKey = false ; 			// alloc once or once per iteration
+  public static boolean OneKey = false ;                        // alloc once or once per iteration
 
   public static boolean UseBar = false ;
   public static int nThreads = 100 ;

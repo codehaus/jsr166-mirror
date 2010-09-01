@@ -16,15 +16,15 @@ import java.io.*;
 public class ParallelArrayAsListTest extends JSR166TestCase{
 
     public static void main(String[] args) {
-	junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run (suite());
     }
 
     public static Test suite() {
-	return new TestSuite(ParallelArrayAsListTest.class);
+        return new TestSuite(ParallelArrayAsListTest.class);
     }
 
     static List populatedArray(int n){
-	List a = ParallelArray.createEmpty(n, Object.class, ParallelArray.defaultExecutor()).asList();
+        List a = ParallelArray.createEmpty(n, Object.class, ParallelArray.defaultExecutor()).asList();
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; ++i)
             a.add(new Integer(i));
@@ -35,7 +35,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 
 
     static List emptyArray(){
-	List a = ParallelArray.createEmpty(1, Object.class, ParallelArray.defaultExecutor()).asList();
+        List a = ParallelArray.createEmpty(1, Object.class, ParallelArray.defaultExecutor()).asList();
         return a;
     }
 
@@ -44,7 +44,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      * a new list is empty
      */
     public void testConstructor() {
-	List a = ParallelArray.createEmpty(1, Object.class, ParallelArray.defaultExecutor()).asList();
+        List a = ParallelArray.createEmpty(1, Object.class, ParallelArray.defaultExecutor()).asList();
         assertTrue(a.isEmpty());
     }
 
@@ -55,7 +55,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
         Integer[] ints = new Integer[SIZE];
         for (int i = 0; i < SIZE-1; ++i)
             ints[i] = new Integer(i);
-	List a = ParallelArray.createUsingHandoff(ints, ParallelArray.defaultExecutor()).asList();
+        List a = ParallelArray.createUsingHandoff(ints, ParallelArray.defaultExecutor()).asList();
         for (int i = 0; i < SIZE; ++i)
             assertEquals(ints[i], a.get(i));
     }
@@ -65,22 +65,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      *   addAll  adds each element from the given collection
      */
     public void testAddAll() {
-	List full = populatedArray(3);
-	Vector v = new Vector();
-	v.add(three);
-	v.add(four);
-	v.add(five);
-	full.addAll(v);
-	assertEquals(6, full.size());
+        List full = populatedArray(3);
+        Vector v = new Vector();
+        v.add(three);
+        v.add(four);
+        v.add(five);
+        full.addAll(v);
+        assertEquals(6, full.size());
     }
 
     /**
      *   clear removes all elements from the list
      */
     public void testClear() {
-	List full = populatedArray(SIZE);
-	full.clear();
-	assertEquals(0, full.size());
+        List full = populatedArray(SIZE);
+        full.clear();
+        assertEquals(0, full.size());
     }
 
 
@@ -89,16 +89,16 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      *   contains is true for added elements
      */
     public void testContains() {
-	List full = populatedArray(3);
-	assertTrue(full.contains(one));
-	assertFalse(full.contains(five));
+        List full = populatedArray(3);
+        assertTrue(full.contains(one));
+        assertFalse(full.contains(five));
     }
 
     /**
      * adding at an index places it in the indicated index
      */
     public void testAddIndex() {
-	List full = populatedArray(3);
+        List full = populatedArray(3);
         full.add(0, m1);
         assertEquals(4, full.size());
         assertEquals(m1, full.get(0));
@@ -114,8 +114,8 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      * lists with same elements are equal and have same hashCode
      */
     public void testEquals() {
-	List a = populatedArray(3);
-	List b = populatedArray(3);
+        List a = populatedArray(3);
+        List b = populatedArray(3);
         assertTrue(a.equals(b));
         assertTrue(b.equals(a));
         assertEquals(a.hashCode(), b.hashCode());
@@ -133,59 +133,59 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      *   containsAll returns true for collection with subset of elements
      */
     public void testContainsAll() {
-	List full = populatedArray(3);
-	Vector v = new Vector();
-	v.add(one);
-	v.add(two);
-	assertTrue(full.containsAll(v));
-	v.add(six);
-	assertFalse(full.containsAll(v));
+        List full = populatedArray(3);
+        Vector v = new Vector();
+        v.add(one);
+        v.add(two);
+        assertTrue(full.containsAll(v));
+        v.add(six);
+        assertFalse(full.containsAll(v));
     }
 
     /**
      *   get returns the  value at the given index
      */
     public void testGet() {
-	List full = populatedArray(3);
-	assertEquals(0, ((Integer)full.get(0)).intValue());
+        List full = populatedArray(3);
+        assertEquals(0, ((Integer)full.get(0)).intValue());
     }
 
     /**
      *   indexOf gives the index for the given object
      */
     public void testIndexOf() {
-	List full = populatedArray(3);
-	assertEquals(1, full.indexOf(one));
-	assertEquals(-1, full.indexOf("puppies"));
+        List full = populatedArray(3);
+        assertEquals(1, full.indexOf(one));
+        assertEquals(-1, full.indexOf("puppies"));
     }
 
     /**
      *   isEmpty returns true when empty, else false
      */
     public void testIsEmpty() {
-	List empty = emptyArray();
-	List full = populatedArray(SIZE);
-	assertTrue(empty.isEmpty());
-	assertFalse(full.isEmpty());
+        List empty = emptyArray();
+        List full = populatedArray(SIZE);
+        assertTrue(empty.isEmpty());
+        assertFalse(full.isEmpty());
     }
 
     /**
      *   iterator() returns an iterator containing the elements of the list
      */
     public void testIterator() {
-	List full = populatedArray(SIZE);
-	Iterator i = full.iterator();
-	int j;
-	for (j = 0; i.hasNext(); j++)
-	    assertEquals(j, ((Integer)i.next()).intValue());
-	assertEquals(SIZE, j);
+        List full = populatedArray(SIZE);
+        Iterator i = full.iterator();
+        int j;
+        for (j = 0; i.hasNext(); j++)
+            assertEquals(j, ((Integer)i.next()).intValue());
+        assertEquals(SIZE, j);
     }
 
     /**
      * iterator.remove removes element
      */
     public void testIteratorRemove () {
-	List full = populatedArray(SIZE);
+        List full = populatedArray(SIZE);
         Iterator it = full.iterator();
         Object first = full.get(0);
         it.next();
@@ -197,7 +197,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      * toString contains toString of elements
      */
     public void testToString() {
-	List full = populatedArray(3);
+        List full = populatedArray(3);
         String s = full.toString();
         for (int i = 0; i < 3; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
@@ -208,87 +208,87 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      *   lastIndexOf returns the index for the given object
      */
     public void testLastIndexOf1() {
-	List full = populatedArray(3);
-	full.add(one);
-	full.add(three);
-	assertEquals(3, full.lastIndexOf(one));
-	assertEquals(-1, full.lastIndexOf(six));
+        List full = populatedArray(3);
+        full.add(one);
+        full.add(three);
+        assertEquals(3, full.lastIndexOf(one));
+        assertEquals(-1, full.lastIndexOf(six));
     }
 
     /**
      *  listIterator traverses all elements
      */
     public void testListIterator1() {
-	List full = populatedArray(SIZE);
-	ListIterator i = full.listIterator();
-	int j;
-	for (j = 0; i.hasNext(); j++)
-	    assertEquals(j, ((Integer)i.next()).intValue());
-	assertEquals(SIZE, j);
+        List full = populatedArray(SIZE);
+        ListIterator i = full.listIterator();
+        int j;
+        for (j = 0; i.hasNext(); j++)
+            assertEquals(j, ((Integer)i.next()).intValue());
+        assertEquals(SIZE, j);
     }
 
     /**
      *  listIterator only returns those elements after the given index
      */
     public void testListIterator2() {
-	List full = populatedArray(3);
-	ListIterator i = full.listIterator(1);
-	int j;
-	for (j = 0; i.hasNext(); j++)
-	    assertEquals(j+1, ((Integer)i.next()).intValue());
-	assertEquals(2, j);
+        List full = populatedArray(3);
+        ListIterator i = full.listIterator(1);
+        int j;
+        for (j = 0; i.hasNext(); j++)
+            assertEquals(j+1, ((Integer)i.next()).intValue());
+        assertEquals(2, j);
     }
 
     /**
      *   remove  removes and returns the object at the given index
      */
     public void testRemove() {
-	List full = populatedArray(3);
-	assertEquals(two, full.remove(2));
-	assertEquals(2, full.size());
+        List full = populatedArray(3);
+        assertEquals(two, full.remove(2));
+        assertEquals(2, full.size());
     }
 
     /**
      *   removeAll  removes all elements from the given collection
      */
     public void testRemoveAll() {
-	List full = populatedArray(3);
-	Vector v = new Vector();
-	v.add(one);
-	v.add(two);
-	full.removeAll(v);
-	assertEquals(1, full.size());
+        List full = populatedArray(3);
+        Vector v = new Vector();
+        v.add(one);
+        v.add(two);
+        full.removeAll(v);
+        assertEquals(1, full.size());
     }
 
     /**
      *   set  changes the element at the given index
      */
     public void testSet() {
-	List full = populatedArray(3);
-	assertEquals(two, full.set(2, four));
-	assertEquals(4, ((Integer)full.get(2)).intValue());
+        List full = populatedArray(3);
+        assertEquals(two, full.set(2, four));
+        assertEquals(4, ((Integer)full.get(2)).intValue());
     }
 
     /**
      *   size returns the number of elements
      */
     public void testSize() {
-	List empty = emptyArray();
-	List full = populatedArray(SIZE);
-	assertEquals(SIZE, full.size());
-	assertEquals(0, empty.size());
+        List empty = emptyArray();
+        List full = populatedArray(SIZE);
+        assertEquals(SIZE, full.size());
+        assertEquals(0, empty.size());
     }
 
     /**
      *   toArray returns an Object array containing all elements from the list
      */
     public void testToArray() {
-	List full = populatedArray(3);
-	Object[] o = full.toArray();
-	assertEquals(3, o.length);
-	assertEquals(0, ((Integer)o[0]).intValue());
-	assertEquals(1, ((Integer)o[1]).intValue());
-	assertEquals(2, ((Integer)o[2]).intValue());
+        List full = populatedArray(3);
+        Object[] o = full.toArray();
+        assertEquals(3, o.length);
+        assertEquals(0, ((Integer)o[0]).intValue());
+        assertEquals(1, ((Integer)o[1]).intValue());
+        assertEquals(2, ((Integer)o[2]).intValue());
     }
 
     /**
@@ -296,13 +296,13 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      *   the list
      */
     public void testToArray2() {
-	List full = populatedArray(3);
-	Integer[] i = new Integer[3];
-	i = (Integer[])full.toArray(i);
-	assertEquals(3, i.length);
-	assertEquals(0, i[0].intValue());
-	assertEquals(1, i[1].intValue());
-	assertEquals(2, i[2].intValue());
+        List full = populatedArray(3);
+        Integer[] i = new Integer[3];
+        i = (Integer[])full.toArray(i);
+        assertEquals(3, i.length);
+        assertEquals(0, i[0].intValue());
+        assertEquals(1, i[1].intValue());
+        assertEquals(2, i[2].intValue());
     }
 
 
@@ -310,22 +310,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
      * sublists contains elements at indexes offset from their base
      */
     public void testSubList() {
-	List a = populatedArray(10);
+        List a = populatedArray(10);
         assertTrue(a.subList(1,1).isEmpty());
-	for (int j = 0; j < 9; ++j) {
-	    for (int i = j ; i < 10; ++i) {
-		List b = a.subList(j,i);
-		for (int k = j; k < i; ++k) {
-		    assertEquals(new Integer(k), b.get(k-j));
-		}
-	    }
-	}
+        for (int j = 0; j < 9; ++j) {
+            for (int i = j ; i < 10; ++i) {
+                List b = a.subList(j,i);
+                for (int k = j; k < i; ++k) {
+                    assertEquals(new Integer(k), b.get(k-j));
+                }
+            }
+        }
 
-	List s = a.subList(2, 5);
+        List s = a.subList(2, 5);
         assertEquals(s.size(), 3);
         s.set(2, m1);
         assertEquals(a.get(4), m1);
-	s.clear();
+        s.clear();
         assertEquals(a.size(), 7);
     }
 
@@ -341,7 +341,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("zfasdfsdf");
             c.add("asdadasd");
             c.toArray(new Long[5]);
-	    shouldThrow();
+            shouldThrow();
         } catch (ArrayStoreException e){}
     }
 

@@ -32,12 +32,12 @@ public class ExchangeLoops {
             argc++;
         }
 
-	// Display runtime parameters
-	System.out.print("ExchangeTest");
-	System.out.print(" -t " + trialMillis);
+        // Display runtime parameters
+        System.out.print("ExchangeTest");
+        System.out.print(" -t " + trialMillis);
         System.out.print(" -r " + nReps);
-	System.out.print(" max threads " + maxThreads);
-	System.out.println();
+        System.out.print(" max threads " + maxThreads);
+        System.out.println();
         long warmupTime = 2000;
         long sleepTime = 100;
         int nw = (maxThreads >= 3) ? 3 : 2;

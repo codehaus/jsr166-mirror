@@ -20,9 +20,9 @@ public final class ALoops {
         if (args.length > 1)
             mask = Integer.parseInt(args[1]);
 
-		System.out.println("Running ALoops.main with these values:");
-		System.out.println("Mask: " + mask + " CPUs: " + NCPU + " Iters: " + iters + " MaxThreads: " + maxThreads);
-		System.out.println("\n");
+                System.out.println("Running ALoops.main with these values:");
+                System.out.println("Mask: " + mask + " CPUs: " + NCPU + " Iters: " + iters + " MaxThreads: " + maxThreads);
+                System.out.println("\n");
 
         warmup();
         print = true;

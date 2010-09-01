@@ -27,20 +27,20 @@ class ReadHoldingWriteLock {
      * Readlocks succeed after a writing thread unlocks
      */
     public void testReadAfterWriteLock() throws Exception {
-	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	lock.writeLock().lock();
-	Thread t1 = new Thread(new Runnable() {
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        lock.writeLock().lock();
+        Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     lock.readLock().lock();
                     lock.readLock().unlock();
-		}
-	    });
-	Thread t2 = new Thread(new Runnable() {
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
                 public void run() {
                     lock.readLock().lock();
                     lock.readLock().unlock();
-		}
-	    });
+                }
+            });
 
         t1.start();
         t2.start();
@@ -57,8 +57,8 @@ class ReadHoldingWriteLock {
      * Read trylock succeeds if write locked by current thread
      */
     public void testReadHoldingWriteLock()throws Exception {
-	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	lock.writeLock().lock();
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        lock.writeLock().lock();
         assertTrue(lock.readLock().tryLock());
         lock.readLock().unlock();
         lock.writeLock().unlock();
@@ -69,20 +69,20 @@ class ReadHoldingWriteLock {
      * other threads are waiting
      */
     public void testReadHoldingWriteLock2() throws Exception{
-	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	lock.writeLock().lock();
-	Thread t1 = new Thread(new Runnable() {
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        lock.writeLock().lock();
+        Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     lock.readLock().lock();
                     lock.readLock().unlock();
-		}
-	    });
-	Thread t2 = new Thread(new Runnable() {
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
                 public void run() {
                     lock.readLock().lock();
                     lock.readLock().unlock();
-		}
-	    });
+                }
+            });
 
         t1.start();
         t2.start();
@@ -102,8 +102,8 @@ class ReadHoldingWriteLock {
      * Fair Read trylock succeeds if write locked by current thread
      */
     public void testReadHoldingWriteLockFair() throws Exception{
-	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
-	lock.writeLock().lock();
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+        lock.writeLock().lock();
         assertTrue(lock.readLock().tryLock());
         lock.readLock().unlock();
         lock.writeLock().unlock();
@@ -114,20 +114,20 @@ class ReadHoldingWriteLock {
      * other threads are waiting
      */
     public void testReadHoldingWriteLockFair2() throws Exception {
-	final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
-	lock.writeLock().lock();
-	Thread t1 = new Thread(new Runnable() {
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+        lock.writeLock().lock();
+        Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     lock.readLock().lock();
                     lock.readLock().unlock();
-		}
-	    });
-	Thread t2 = new Thread(new Runnable() {
+                }
+            });
+        Thread t2 = new Thread(new Runnable() {
                 public void run() {
                     lock.readLock().lock();
                     lock.readLock().unlock();
-		}
-	    });
+                }
+            });
 
         t1.start();
         t2.start();

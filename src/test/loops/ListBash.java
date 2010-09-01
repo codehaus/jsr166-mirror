@@ -19,11 +19,11 @@ public class ListBash {
         listSize = Integer.parseInt(args[2]);
         cl = null;
 
-	try {
-	    cl = Class.forName(args[0]);
-	} catch (ClassNotFoundException e) {
-	    fail("Class " + args[0] + " not found.");
-	}
+        try {
+            cl = Class.forName(args[0]);
+        } catch (ClassNotFoundException e) {
+            fail("Class " + args[0] + " not found.");
+        }
 
         synch = (args.length>3);
         oneRun();
@@ -33,14 +33,14 @@ public class ListBash {
 
     static void oneRun() {
         long startTime = System.nanoTime();
-	for (int i=0; i<numItr; i++) {
+        for (int i=0; i<numItr; i++) {
             elementLoop();
-	}
-	List<Integer> s = newList(cl, synch);
-	for (int i=0; i<listSize; i++)
-	    s.add(new Integer(i));
-	if (s.size() != listSize)
-	    fail("Size of [0..n-1] != n");
+        }
+        List<Integer> s = newList(cl, synch);
+        for (int i=0; i<listSize; i++)
+            s.add(new Integer(i));
+        if (s.size() != listSize)
+            fail("Size of [0..n-1] != n");
         evenOdd(s);
         sublists(s);
         arrays();
@@ -245,48 +245,48 @@ public class ListBash {
         if (s.hashCode() != a.hashCode())
             fail("Incorrect hashCode computation.");
 
-	List clone = newList(cl, synch);
-	clone.addAll(a);
-	if (!s.equals(clone))
-	    fail("List not equal to copy.");
-	if (!s.containsAll(clone))
-	    fail("List does not contain copy.");
-	if (!clone.containsAll(s))
-	    fail("Copy does not contain list.");
+        List clone = newList(cl, synch);
+        clone.addAll(a);
+        if (!s.equals(clone))
+            fail("List not equal to copy.");
+        if (!s.containsAll(clone))
+            fail("List does not contain copy.");
+        if (!clone.containsAll(s))
+            fail("Copy does not contain list.");
 
-	return (List<Integer>) clone;
+        return (List<Integer>) clone;
     }
 
     static List<Integer> newList(Class cl, boolean synch) {
-	try {
-	    List<Integer> s = (List<Integer>) cl.newInstance();
+        try {
+            List<Integer> s = (List<Integer>) cl.newInstance();
             if (synch)
                 s = Collections.synchronizedList(s);
-	    if (!s.isEmpty())
-		fail("New instance non empty.");
-	    return s;
-	} catch (Throwable t) {
-	    fail("Can't instantiate " + cl + ": " + t);
-	}
-	return null; //Shut up compiler.
+            if (!s.isEmpty())
+                fail("New instance non empty.");
+            return s;
+        } catch (Throwable t) {
+            fail("Can't instantiate " + cl + ": " + t);
+        }
+        return null; //Shut up compiler.
     }
 
     static void AddRandoms(List<Integer> s, int n) {
-	for (int i=0; i<n; i++) {
-	    int r = rnd.nextInt() % n;
-	    Integer e = new Integer(r < 0 ? -r : r);
+        for (int i=0; i<n; i++) {
+            int r = rnd.nextInt() % n;
+            Integer e = new Integer(r < 0 ? -r : r);
 
-	    int preSize = s.size();
-	    if (!s.add(e))
-		fail ("Add failed.");
-	    int postSize = s.size();
-	    if (postSize-preSize != 1)
-		fail ("Add didn't increase size by 1.");
-	}
+            int preSize = s.size();
+            if (!s.add(e))
+                fail ("Add failed.");
+            int postSize = s.size();
+            if (postSize-preSize != 1)
+                fail ("Add didn't increase size by 1.");
+        }
     }
 
     static void fail(String s) {
-	System.out.println(s);
-	System.exit(1);
+        System.out.println(s);
+        System.exit(1);
     }
 }

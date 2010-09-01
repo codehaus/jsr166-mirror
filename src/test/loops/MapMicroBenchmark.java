@@ -143,7 +143,7 @@ public class MapMicroBenchmark {
         warmup1(mixed);
         warmup3(jobs);
         Thread.sleep(500);
-	time(jobs);
+        time(jobs);
     }
 
     static void runWork(Job[] jobs, int minIters, int maxIters, long timeLimit) throws Throwable {
@@ -193,7 +193,7 @@ public class MapMicroBenchmark {
         long[] aves = new long[nsizes];
         int njobs = jobs.length;
 
-	for (int i = 0; i < njobs; i++) {
+        for (int i = 0; i < njobs; i++) {
             System.out.print(jobs[i].name);
             for (int k = 0; k < nsizes; ++k) {
                 long nanos = jobs[i].nanos[k];
@@ -212,7 +212,7 @@ public class MapMicroBenchmark {
 
 
     static final class Job {
-	final String name;
+        final String name;
         final Class elementClass;
         long[] nanos = new long[nsizes];
         final Object[] items;

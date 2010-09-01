@@ -36,13 +36,13 @@ public class TimeoutExchangerLoops {
             argc++;
         }
 
-	// Display runtime parameters
-	System.out.print("TimeoutExchangerTest");
-	System.out.print(" -t " + trialMillis);
-	System.out.print(" -p " + patienceNanos);
+        // Display runtime parameters
+        System.out.print("TimeoutExchangerTest");
+        System.out.print(" -t " + trialMillis);
+        System.out.print(" -p " + patienceNanos);
         System.out.print(" -r " + nReps);
-	System.out.print(" max threads " + maxThreads);
-	System.out.println();
+        System.out.print(" max threads " + maxThreads);
+        System.out.println();
 
         System.out.println("Warmups..");
         long warmupTime = 1000;

@@ -74,7 +74,7 @@ public final class IteratorLoops {
     long traversals(int n) {
         long count = 0;
         long check = 0;
-	for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             check += elementCount;
             count += counts();
             maybeAdd();

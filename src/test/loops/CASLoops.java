@@ -46,7 +46,7 @@ public class CASLoops {
         if (args.length > 0)
             maxThreads = Integer.parseInt(args[0]);
 
-	loopIters = new long[maxThreads+1];
+        loopIters = new long[maxThreads+1];
 
         if (args.length > 1)
             includeLocks = true;

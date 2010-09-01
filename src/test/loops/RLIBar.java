@@ -175,7 +175,7 @@ public class RLIBar {
         if (false && batchLimit <= 0)
             batchLimit = (2 * nClients + 1) / 3;
 
-        ExThreads = nServers * nClients ; 	// expected # of threads
+        ExThreads = nServers * nClients ;       // expected # of threads
         HoldLimit = ExThreads ;
 
         // start up all threads
@@ -241,7 +241,7 @@ public class RLIBar {
                 numMsgs += servers[i].msgsReceived;
             long deltaMsgs = numMsgs - lastNumMsgs;
             long deltaT = sampleEnd - sampleStart;
-            if (true || j != 2) { 	// Don't report results if we issued a hold ...
+            if (true || j != 2) {       // Don't report results if we issued a hold ...
                 System.out.print(
                                  "Sample period = " + deltaT + " ms; "
                                  + "New msgs rcvd = " + deltaMsgs + "; "

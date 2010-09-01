@@ -157,7 +157,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *      links to try to find such a task.
      *
      *   Compensating: Unless there are already enough live threads,
-     *      method helpMaintainParallelism() may create or or
+     *      method helpMaintainParallelism() may create or
      *      re-activate a spare thread to compensate for blocked
      *      joiners until they unblock.
      *
@@ -318,8 +318,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * exactly #parallelism threads running, which is an impossible
      * task. We always need to create one when the number of running
      * threads would become zero and all workers are busy. Beyond
-     * this, we must rely on heuristics that work well in the the
-     * presence of transients phenomena such as GC stalls, dynamic
+     * this, we must rely on heuristics that work well in the
+     * presence of transient phenomena such as GC stalls, dynamic
      * compilation, and wake-up lags. These transients are extremely
      * common -- we are normally trying to fully saturate the CPUs on
      * a machine, so almost any activity other than running tasks
@@ -985,7 +985,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     w.lastEventCount = ec;     // no need to wait
                     break;
                 }
-                else if (!(inactivate |= active))   
+                else if (!(inactivate |= active))
                     eventSync(w, wec);         // must inactivate before sync
             }
             else

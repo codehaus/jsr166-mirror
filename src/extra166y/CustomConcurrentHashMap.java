@@ -2984,7 +2984,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // Temporary Unsafe mechanics for preliminary release
 
-    static final Unsafe _unsafe;
+    static final Unsafe UNSAFE;
     static final long tableBase;
     static final int tableShift;
     static final long segmentsBase;
@@ -3015,14 +3015,14 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     static {
         try {
-            _unsafe = getUnsafe();
-            tableBase = _unsafe.arrayBaseOffset(Node[].class);
-            int s = _unsafe.arrayIndexScale(Node[].class);
+            UNSAFE = getUnsafe();
+            tableBase = UNSAFE.arrayBaseOffset(Node[].class);
+            int s = UNSAFE.arrayIndexScale(Node[].class);
             if ((s & (s-1)) != 0)
                 throw new Error("data type scale not a power of two");
             tableShift = 31 - Integer.numberOfLeadingZeros(s);
-            segmentsBase = _unsafe.arrayBaseOffset(Segment[].class);
-            s = _unsafe.arrayIndexScale(Segment[].class);
+            segmentsBase = UNSAFE.arrayBaseOffset(Segment[].class);
+            s = UNSAFE.arrayIndexScale(Segment[].class);
             if ((s & (s-1)) != 0)
                 throw new Error("data type scale not a power of two");
             segmentsShift = 31 - Integer.numberOfLeadingZeros(s);
@@ -3035,13 +3035,13 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static final  void storeNode(Node[] table,
                                  int i, Node r) {
         long nodeOffset = ((long) i << tableShift) + tableBase;
-        _unsafe.putOrderedObject(table, nodeOffset, r);
+        UNSAFE.putOrderedObject(table, nodeOffset, r);
     }
 
     static final  void storeSegment(Segment[] segs,
                                     int i, Segment s) {
         long segmentOffset = ((long) i << segmentsShift) + segmentsBase;
-        _unsafe.putOrderedObject(segs, segmentOffset, s);
+        UNSAFE.putOrderedObject(segs, segmentOffset, s);
     }
 
 

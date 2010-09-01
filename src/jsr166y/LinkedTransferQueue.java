@@ -344,18 +344,18 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * When these cases arise, rather than always retraversing the
      * entire list to find an actual predecessor to unlink (which
      * won't help for case (1) anyway), we record a conservative
-     * estimate of possible unsplice failures (in "sweepVotes").  We
-     * trigger a full sweep when the estimate exceeds a threshold
-     * indicating the maximum number of estimated removal failures to
-     * tolerate before sweeping through, unlinking cancelled nodes
-     * that were not unlinked upon initial removal. We perform sweeps
-     * by the thread hitting threshold (rather than background threads
-     * or by spreading work to other threads) because in the main
-     * contexts in which removal occurs, the caller is already
-     * timed-out, cancelled, or performing a potentially O(n)
-     * operation (i.e., remove(x)), none of which are time-critical
-     * enough to warrant the overhead that alternatives would impose
-     * on other threads.
+     * estimate of possible unsplice failures (in "sweepVotes").
+     * We trigger a full sweep when the estimate exceeds a threshold
+     * ("SWEEP_THRESHOLD") indicating the maximum number of estimated
+     * removal failures to tolerate before sweeping through, unlinking
+     * cancelled nodes that were not unlinked upon initial removal.
+     * We perform sweeps by the thread hitting threshold (rather than
+     * background threads or by spreading work to other threads)
+     * because in the main contexts in which removal occurs, the
+     * caller is already timed-out, cancelled, or performing a
+     * potentially O(n) operation (e.g. remove(x)), none of which are
+     * time-critical enough to warrant the overhead that alternatives
+     * would impose on other threads.
      *
      * Because the sweepVotes estimate is conservative, and because
      * nodes become unlinked "naturally" as they fall off the head of

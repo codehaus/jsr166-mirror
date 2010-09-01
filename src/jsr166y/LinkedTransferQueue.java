@@ -877,7 +877,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Unlinks matched nodes encountered in a traversal from head.
+     * Unlinks matched (typically cancelled) nodes encountered in a
+     * traversal from head.
      */
     private void sweep() {
         for (Node p = head, s, n; p != null && (s = p.next) != null; ) {

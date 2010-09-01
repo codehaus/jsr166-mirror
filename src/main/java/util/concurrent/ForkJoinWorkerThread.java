@@ -379,8 +379,8 @@ public class ForkJoinWorkerThread extends Thread {
             if (active) {
                 int a; // inline p.tryDecrementActiveCount
                 active = false;
-                do {} while(!UNSAFE.compareAndSwapInt
-                            (p, poolRunStateOffset, a = p.runState, a - 1));
+                do {} while (!UNSAFE.compareAndSwapInt
+                             (p, poolRunStateOffset, a = p.runState, a - 1));
             }
             cancelTasks();
             setTerminated();
@@ -1128,8 +1128,8 @@ public class ForkJoinWorkerThread extends Thread {
                 }
                 if (p.isQuiescent()) {
                     active = true; // re-activate
-                    do {} while(!UNSAFE.compareAndSwapInt
-                                (p, poolRunStateOffset, a = p.runState, a+1));
+                    do {} while (!UNSAFE.compareAndSwapInt
+                                 (p, poolRunStateOffset, a = p.runState, a+1));
                     return;
                 }
             }

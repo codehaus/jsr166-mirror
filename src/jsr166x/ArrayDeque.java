@@ -504,7 +504,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Pops an element from the stack represented by this deque.  In other
-     * words, removes and returns the the first element of this deque.
+     * words, removes and returns the first element of this deque.
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
      *

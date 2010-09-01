@@ -45,7 +45,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("Hashtable, negative load factor");
 
           testSucceeded = false;
@@ -56,7 +56,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("Hashtable, NaN load factor");
 
           testSucceeded = false;
@@ -67,7 +67,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("HashMap, negative load factor");
 
           testSucceeded = false;
@@ -78,7 +78,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("HashMap, NaN load factor");
 
 
@@ -90,7 +90,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("HashSet, negative load factor");
 
           testSucceeded = false;
@@ -101,7 +101,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("HashSet, NaN load factor");
 
           testSucceeded = false;
@@ -112,7 +112,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("WeakHashMap, negative load factor");
 
           testSucceeded = false;
@@ -123,7 +123,7 @@ public class IllegalLoadFactor {
           catch (IllegalArgumentException e1) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("WeakHashMap, NaN load factor");
 
           // Make sure that legal creates don't throw exceptions

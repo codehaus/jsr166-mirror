@@ -823,7 +823,7 @@ public class Collections {
                     i -= size;
                 displaced = list.set(i, displaced);
                 nMoved ++;
-            } while(i != cycleStart);
+            } while (i != cycleStart);
         }
     }
 

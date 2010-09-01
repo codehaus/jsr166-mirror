@@ -37,10 +37,10 @@ public final class CancelledFutureLoops {
             try {
                 new FutureLoop(i).test();
             }
-            catch(BrokenBarrierException bb) {
+            catch (BrokenBarrierException bb) {
                 // OK; ignore
             }
-            catch(ExecutionException ee) {
+            catch (ExecutionException ee) {
                 // OK; ignore
             }
             Thread.sleep(TIMEOUT);

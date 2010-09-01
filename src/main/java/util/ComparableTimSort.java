@@ -236,7 +236,7 @@ class ComparableTimSort {
              */
             int n = start - left;  // The number of elements to move
             // Switch is just an optimization for arraycopy in default case
-            switch(n) {
+            switch (n) {
                 case 2:  a[left + 2] = a[left + 1];
                 case 1:  a[left + 1] = a[left];
                          break;
@@ -279,7 +279,7 @@ class ComparableTimSort {
 
         // Find end of run, and reverse range if descending
         if (((Comparable) a[runHi++]).compareTo(a[lo]) < 0) { // Descending
-            while(runHi < hi && ((Comparable) a[runHi]).compareTo(a[runHi - 1]) < 0)
+            while (runHi < hi && ((Comparable) a[runHi]).compareTo(a[runHi - 1]) < 0)
                 runHi++;
             reverseRange(a, lo, runHi);
         } else {                              // Ascending

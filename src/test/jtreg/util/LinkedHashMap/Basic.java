@@ -128,7 +128,7 @@ public class Basic {
             throw new Exception("clear failed.");
 
         Iterator it = m.entrySet().iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             it.next();
             it.remove();
         }
@@ -227,7 +227,7 @@ public class Basic {
             ObjectInputStream in = new ObjectInputStream(bis);
             result = (Map)in.readObject();
             in.close();
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return result;

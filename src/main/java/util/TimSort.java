@@ -269,7 +269,7 @@ class TimSort<T> {
              */
             int n = start - left;  // The number of elements to move
             // Switch is just an optimization for arraycopy in default case
-            switch(n) {
+            switch (n) {
                 case 2:  a[left + 2] = a[left + 1];
                 case 1:  a[left + 1] = a[left];
                          break;
@@ -313,7 +313,7 @@ class TimSort<T> {
 
         // Find end of run, and reverse range if descending
         if (c.compare(a[runHi++], a[lo]) < 0) { // Descending
-            while(runHi < hi && c.compare(a[runHi], a[runHi - 1]) < 0)
+            while (runHi < hi && c.compare(a[runHi], a[runHi - 1]) < 0)
                 runHi++;
             reverseRange(a, lo, runHi);
         } else {                              // Ascending

@@ -126,7 +126,7 @@ public class Basic {
             ObjectInputStream in = new ObjectInputStream(bis);
             result = (Set)in.readObject();
             in.close();
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return result;

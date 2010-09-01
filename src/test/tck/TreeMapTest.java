@@ -992,7 +992,7 @@ public class TreeMapTest extends JSR166TestCase {
                 // BitSet should support this! Test would run much faster
                 while (key >= min) {
                     if (bs.get(key))
-                        return(key);
+                        return key;
                     key--;
                 }
                 return -1;

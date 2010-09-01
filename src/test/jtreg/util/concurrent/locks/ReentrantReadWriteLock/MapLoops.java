@@ -38,7 +38,7 @@ public class MapLoops {
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
-            } catch(ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 throw new RuntimeException("Class " + args[0] + " not found.");
             }
         }

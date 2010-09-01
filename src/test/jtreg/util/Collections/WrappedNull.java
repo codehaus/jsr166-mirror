@@ -39,7 +39,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("Arrays.asList");
 
           testSucceeded = false;
@@ -49,7 +49,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("unmodifiableCollection");
 
           testSucceeded = false;
@@ -59,7 +59,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("unmodifiableSet");
 
           testSucceeded = false;
@@ -69,7 +69,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("unmodifiableList");
 
           testSucceeded = false;
@@ -79,7 +79,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("unmodifiableMap");
 
           testSucceeded = false;
@@ -89,7 +89,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("unmodifiableSortedSet");
 
           testSucceeded = false;
@@ -99,7 +99,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("unmodifiableSortedMap");
 
           testSucceeded = false;
@@ -109,7 +109,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("synchronizedCollection");
 
           testSucceeded = false;
@@ -119,7 +119,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("synchronizedSet");
 
           testSucceeded = false;
@@ -129,7 +129,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("synchronizedList");
 
           testSucceeded = false;
@@ -139,7 +139,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("synchronizedMap");
 
           testSucceeded = false;
@@ -149,7 +149,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("synchronizedSortedSet");
 
           testSucceeded = false;
@@ -159,7 +159,7 @@ public class WrappedNull {
           catch (NullPointerException e) {
               testSucceeded = true;
           }
-          if(!testSucceeded)
+          if (!testSucceeded)
               throw new Exception("synchronizedSortedMap");
 
           // Make sure that non-null arguments don't throw exc.

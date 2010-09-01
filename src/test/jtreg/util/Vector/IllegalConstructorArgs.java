@@ -50,8 +50,8 @@ public class IllegalConstructorArgs {
             testSucceeded =0;
         }
 
-        if(testSucceeded == 0)
-             throw new RuntimeException("Wrong exception thrown.");
+        if (testSucceeded == 0)
+            throw new RuntimeException("Wrong exception thrown.");
 
      }
 

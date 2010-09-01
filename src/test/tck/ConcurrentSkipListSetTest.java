@@ -875,7 +875,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
                 // BitSet should support this! Test would run much faster
                 while (element >= min) {
                     if (bs.get(element))
-                        return(element);
+                        return element;
                     element--;
                 }
                 return -1;

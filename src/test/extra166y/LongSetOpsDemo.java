@@ -16,7 +16,7 @@ class LongSetOpsDemo {
     static int reps = 16;
     static final long maxValue = 1 << 12;
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         int n = 1 << 20;
         long[] a = new long[n];
         ParallelLongArray pa = ParallelLongArray.createUsingHandoff(a, fjpool);
@@ -288,7 +288,7 @@ class LongSetOpsDemo {
         return u;
     }
 
-    static void checkSorted (ParallelLongArray pa)  {
+    static void checkSorted(ParallelLongArray pa)  {
         int n = pa.size();
         for (int i = 0; i < n - 1; i++) {
             if (pa.get(i) >= pa.get(i+1)) {

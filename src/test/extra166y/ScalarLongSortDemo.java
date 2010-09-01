@@ -11,7 +11,7 @@ import java.util.*;
 class ScalarLongSortDemo {
     static final long NPS = (1000L * 1000 * 1000);
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         int n = 1 << 20;
         int sreps = 4;
         int reps = 10;
@@ -45,7 +45,7 @@ class ScalarLongSortDemo {
         fjpool.shutdown();
     }
 
-    static void checkSorted (long[] a)  {
+    static void checkSorted(long[] a)  {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {

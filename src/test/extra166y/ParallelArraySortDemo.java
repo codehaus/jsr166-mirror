@@ -13,7 +13,7 @@ class ParallelArraySortDemo {
     static final Random rng = new Random();
     static final long NPS = (1000L * 1000 * 1000);
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         int n = 1 << 20;
         int reps = 9;
         System.out.printf("Sorting %d Longs, %d replications\n", n, reps);
@@ -44,7 +44,7 @@ class ParallelArraySortDemo {
         fjpool.shutdown();
     }
 
-    static void checkSorted (Long[] a)  {
+    static void checkSorted(Long[] a)  {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i].compareTo(a[i+1]) > 0) {

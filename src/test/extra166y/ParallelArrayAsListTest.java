@@ -16,7 +16,7 @@ import java.io.*;
 public class ParallelArrayAsListTest extends JSR166TestCase{
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
+        junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
@@ -184,7 +184,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     /**
      * iterator.remove removes element
      */
-    public void testIteratorRemove () {
+    public void testIteratorRemove() {
         List full = populatedArray(SIZE);
         Iterator it = full.iterator();
         Object first = full.get(0);

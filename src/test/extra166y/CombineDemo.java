@@ -16,7 +16,7 @@ class CombineDemo {
     static int reps = 16;
     static final long maxValue = 1 << 12;
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         int n = 1 << 20;
         Long[] a = new Long[n];
         ParallelArray<Long> pa = ParallelArray.createUsingHandoff(a, fjpool);
@@ -291,7 +291,7 @@ class CombineDemo {
         return u;
     }
 
-    static void checkSorted (ParallelArray<Long> pa)  {
+    static void checkSorted(ParallelArray<Long> pa)  {
         int n = pa.size();
         for (int i = 0; i < n - 1; i++) {
             if (pa.get(i).compareTo(pa.get(i+1)) >= 0) {

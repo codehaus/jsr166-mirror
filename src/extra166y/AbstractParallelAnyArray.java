@@ -4893,8 +4893,8 @@ public abstract class AbstractParallelAnyArray {
         }
 
         public ParallelDoubleArrayWithLongMapping withMapping(DoubleToLong op) {
-            return new DFLCPap (ex, origin, fence, array, selector,
-                                compoundIndexedOp(this.op, op));
+            return new DFLCPap(ex, origin, fence, array, selector,
+                               compoundIndexedOp(this.op, op));
         }
 
         public <U> ParallelDoubleArrayWithMapping< U> withMapping
@@ -5131,8 +5131,8 @@ public abstract class AbstractParallelAnyArray {
         }
 
         public ParallelDoubleArrayWithLongMapping withMapping(DoubleToLong op) {
-            return new DRLCPap (ex, origin, fence, array, selector,
-                                compoundIndexedOp(this.op, op));
+            return new DRLCPap(ex, origin, fence, array, selector,
+                               compoundIndexedOp(this.op, op));
         }
 
         public <U> ParallelDoubleArrayWithMapping< U> withMapping

@@ -983,7 +983,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     w.lastEventCount = ec;     // no need to wait
                     break;
                 }
-                else if (!(inactivate |= active))   
+                else if (!(inactivate |= active))
                     eventSync(w, wec);         // must inactivate before sync
             }
             else

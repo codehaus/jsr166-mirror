@@ -59,7 +59,7 @@ package java.util.concurrent.atomic;
  * this method is applicable only when reclamation may have visible
  * effects, which is possible for objects with finalizers (see Section
  * 12.6 of the Java Language Specification) that are implemented in
- * ways that rely on ordering control for correctness.  
+ * ways that rely on ordering control for correctness.
  *
  * <p><b>Sample Usages</b>
  *
@@ -132,7 +132,7 @@ package java.util.concurrent.atomic;
  * have been declared as {@code volatile} but wasn't:
  *
  * <pre>
- * class C { 
+ * class C {
  *    Object data;  // need volatile access but not volatile
  *    // ...
  * }
@@ -304,21 +304,21 @@ package java.util.concurrent.atomic;
  * where this approach is not as efficient, desirable, or possible;
  * for example because it would encounter deadlock.
  *
- * <p><b>Formal Properties.</b> 
- * 
+ * <p><b>Formal Properties.</b>
+ *
  * <p>Using the terminology of The Java Language Specification chapter
  * 17, the rules governing the semantics of the methods of this class
  * are as follows:
  *
- * <p> The following is still under construction. 
- * 
+ * <p> The following is still under construction.
+ *
  * <dl>
  *
  *   <dt><b>[Definitions]</b>
  *   <dd>
  *   <ul>
  *
- *     <li>Define <em>sequenced(a, b)</em> to be true if <em>a</em> 
+ *     <li>Define <em>sequenced(a, b)</em> to be true if <em>a</em>
  *     occurs before <em>b</em> in <em>program order</em>.
  *
  *     <li>Define <em>accesses(a, p)</em> to be true if
@@ -327,12 +327,12 @@ package java.util.concurrent.atomic;
  *
  *     <li>Define <em>deeplyAccesses(a, p)</em> to be true if either
  *     <em>accesses(a, p)</em> or <em>deeplyAccesses(a, q)</em> where
- *     <em>q</em> is the value seen by some read <em>r</em> 
+ *     <em>q</em> is the value seen by some read <em>r</em>
  *     such that <em>accesses(r, p)</em>.
  *
- *   </ul> 
+ *   </ul>
  *   <p>
- *   <dt><b>[Matching]</b> 
+ *   <dt><b>[Matching]</b>
  *   <dd> Given:
  *
  *   <ul>
@@ -372,7 +372,7 @@ package java.util.concurrent.atomic;
  *
  *   </ul>
  *   <p>
- *   <dt><b>[Initial Reads]</b> 
+ *   <dt><b>[Initial Reads]</b>
  *   <dd> Given:
  *
  *   <ul>
@@ -406,7 +406,7 @@ package java.util.concurrent.atomic;
  *          by the relation <em>a happens-before b</em>.
  *   </ul>
  *  <p>
- *  <dt><b>[orderAccesses]</b> 
+ *  <dt><b>[orderAccesses]</b>
  *  <dd> Given:
  *
  *   <ul>
@@ -426,7 +426,7 @@ package java.util.concurrent.atomic;
  *
  *   </ul>
  *   <p>
- *   <dt><b>[Reachability]</b> 
+ *   <dt><b>[Reachability]</b>
  *   <dd> Given:
  *
  *   <ul>
@@ -441,7 +441,7 @@ package java.util.concurrent.atomic;
  *     the form of an invocation of {@code
  *     p.finalize()} or of enqueing any {@link
  *     java.lang.ref.Reference} constructed with argument <em>p</em>
- * 
+ *
  *   </ul>
  *
  *   If:

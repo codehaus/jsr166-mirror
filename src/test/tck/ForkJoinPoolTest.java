@@ -571,7 +571,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof ArithmeticException);
         }
-        
+
         joinPool(p);
     }
 

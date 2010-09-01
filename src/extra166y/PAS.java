@@ -2352,7 +2352,7 @@ class PAS {
                 }
                 else break;
             }
-            
+
             if (sameLefts && right == hi - 1)
                 return;
             if (left - lo <= hi - right) {
@@ -2529,7 +2529,7 @@ class PAS {
                 }
                 else break;
             }
-            
+
             if (sameLefts && right == hi - 1)
                 return;
             if (left - lo <= hi - right) {

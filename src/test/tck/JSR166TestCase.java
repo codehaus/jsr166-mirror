@@ -36,7 +36,7 @@ import java.security.*;
  * them. These methods are used to clear and check for thread
  * assertion failures.</li>
  *
- * <li>All delays and timeouts must use one of the constants {@code 
+ * <li>All delays and timeouts must use one of the constants {@code
  * SHORT_DELAY_MS}, {@code SMALL_DELAY_MS}, {@code MEDIUM_DELAY_MS},
  * {@code LONG_DELAY_MS}. The idea here is that a SHORT is always
  * discriminable from zero time, and always allows enough time for the

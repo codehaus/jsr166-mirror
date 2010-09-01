@@ -66,9 +66,9 @@ class ScalarLongSort {
     }
 
     static final class Sorter extends RecursiveAction {
-        final long[] a; 
+        final long[] a;
         final long[] w;
-        final int origin; 
+        final int origin;
         final int n;
         Sorter(long[] a, long[] w, int origin, int n) {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
@@ -96,7 +96,7 @@ class ScalarLongSort {
             }
         }
     }
-    
+
     static final class SubSorter extends RecursiveAction {
         final Sorter left;
         final Sorter right;
@@ -130,7 +130,7 @@ class ScalarLongSort {
          * and finding index of right closest to split point.
          * Uses left-spine decomposition to generate all
          * merge tasks before bottomming out at base case.
-         * 
+         *
          */
         public void compute() {
             Merger rights = null;
@@ -172,7 +172,7 @@ class ScalarLongSort {
                 w[k++] = a[l++];
             while (r < rFence)
                 w[k++] = a[r++];
-            
+
             while (rights != null) {
                 rights.join();
                 rights = rights.next;
@@ -185,7 +185,7 @@ class ScalarLongSort {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {
-                throw new Error("Unsorted at " + i + ": " + 
+                throw new Error("Unsorted at " + i + ": " +
                                 a[i] + " / " + a[i+1]);
             }
         }

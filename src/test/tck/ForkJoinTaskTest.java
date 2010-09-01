@@ -44,7 +44,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
 
     static final ForkJoinPool mainPool = new ForkJoinPool();
     static final ForkJoinPool singletonPool = new ForkJoinPool(1);
-    static final ForkJoinPool asyncSingletonPool = 
+    static final ForkJoinPool asyncSingletonPool =
         new ForkJoinPool(1, ForkJoinPool.defaultForkJoinWorkerThreadFactory,
                          null, true);
     static final class FJException extends RuntimeException {

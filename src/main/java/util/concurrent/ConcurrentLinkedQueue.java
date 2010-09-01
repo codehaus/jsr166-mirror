@@ -142,9 +142,12 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         private volatile E item;
         private volatile Node<E> next;
 
+        /**
+         * Constructs a new node.  Uses relaxed write because item can
+         * only be seen after publication via casNext.
+         */
         Node(E item) {
-            // Piggyback on imminent casNext()
-            lazySetItem(item);
+            UNSAFE.putObject(this, itemOffset, item);
         }
 
         E getItem() {
@@ -157,10 +160,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
         void setItem(E val) {
             item = val;
-        }
-
-        void lazySetItem(E val) {
-            UNSAFE.putOrderedObject(this, itemOffset, val);
         }
 
         void lazySetNext(Node<E> val) {

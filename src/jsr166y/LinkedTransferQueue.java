@@ -428,8 +428,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Creates a new node. Uses relaxed write because item can only
-         * be seen if followed by CAS.
+         * Constructs a new node.  Uses relaxed write because item can
+         * only be seen after publication via casNext.
          */
         Node(Object item, boolean isData) {
             UNSAFE.putObject(this, itemOffset, item); // relaxed write

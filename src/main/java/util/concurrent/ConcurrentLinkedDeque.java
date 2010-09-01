@@ -260,17 +260,16 @@ public class ConcurrentLinkedDeque<E>
         volatile E item;
         volatile Node<E> next;
 
+        /**
+         * Constructs a new node.  Uses relaxed write because item can
+         * only be seen after publication via casNext or casPrev.
+         */
         Node(E item) {
-            // Piggyback on imminent casNext() or casPrev()
-            lazySetItem(item);
+            UNSAFE.putObject(this, itemOffset, item);
         }
 
         boolean casItem(E cmp, E val) {
             return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
-        }
-
-        void lazySetItem(E val) {
-            UNSAFE.putOrderedObject(this, itemOffset, val);
         }
 
         void lazySetNext(Node<E> val) {

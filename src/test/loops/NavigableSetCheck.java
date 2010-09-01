@@ -96,7 +96,7 @@ public class NavigableSetCheck {
             }
         }
         timer.finish();
-        reallyAssert (sum == expect * iters);
+        reallyAssert(sum == expect * iters);
     }
 
     static void t2(String nm, int n, NavigableSet s, Integer[] key, int expect) {
@@ -106,7 +106,7 @@ public class NavigableSetCheck {
             if (s.remove(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t3(String nm, int n, NavigableSet s, Integer[] key, int expect) {
@@ -116,7 +116,7 @@ public class NavigableSetCheck {
             if (s.add(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t4(String nm, int n, NavigableSet s, Integer[] key, int expect) {
@@ -126,7 +126,7 @@ public class NavigableSetCheck {
             if (s.contains(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t5(String nm, int n, NavigableSet s, Integer[] key, int expect) {
@@ -136,7 +136,7 @@ public class NavigableSetCheck {
             if (s.remove(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t6(String nm, int n, NavigableSet s, Integer[] k1, Integer[] k2) {
@@ -147,7 +147,7 @@ public class NavigableSetCheck {
             if (s.contains(k2[i & absentMask])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == n);
+        reallyAssert(sum == n);
     }
 
     static void t7(String nm, int n, NavigableSet s, Integer[] k1, Integer[] k2) {
@@ -158,7 +158,7 @@ public class NavigableSetCheck {
             if (s.contains(k2[i & absentMask])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == n);
+        reallyAssert(sum == n);
     }
 
     static void t8(String nm, int n, NavigableSet s, Integer[] key, int expect) {
@@ -168,7 +168,7 @@ public class NavigableSetCheck {
             if (s.contains(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
 
@@ -182,7 +182,7 @@ public class NavigableSetCheck {
             e = s.higher(e);
         }
         timer.finish();
-        reallyAssert (sum == iters);
+        reallyAssert(sum == iters);
     }
 
     static void lowerTest(NavigableSet s) {
@@ -195,7 +195,7 @@ public class NavigableSetCheck {
             e = s.higher(e);
         }
         timer.finish();
-        reallyAssert (sum == iters);
+        reallyAssert(sum == iters);
     }
 
     static void ceilingTest(NavigableSet s) {
@@ -209,7 +209,7 @@ public class NavigableSetCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == iters);
+        reallyAssert(sum == iters);
     }
 
     static void floorTest(NavigableSet s) {
@@ -223,7 +223,7 @@ public class NavigableSetCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == iters-1);
+        reallyAssert(sum == iters-1);
     }
 
 
@@ -234,7 +234,7 @@ public class NavigableSetCheck {
             if (s.contains(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
 
@@ -246,7 +246,7 @@ public class NavigableSetCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void ittest(NavigableSet s, int size) {
@@ -261,7 +261,7 @@ public class NavigableSetCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void rittest(NavigableSet s, int size) {
@@ -292,13 +292,13 @@ public class NavigableSetCheck {
 
         timer.start("Iter Equals            ", size * 2);
         boolean eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (eqt);
+        reallyAssert(eqt);
         timer.finish();
 
         timer.start("Iter HashCode          ", size * 2);
         int shc = s.hashCode();
         int s2hc = s2.hashCode();
-        reallyAssert (shc == s2hc);
+        reallyAssert(shc == s2hc);
         timer.finish();
 
         timer.start("Add (present)          ", size);
@@ -312,21 +312,21 @@ public class NavigableSetCheck {
         timer.start("Iter Equals            ", size * 2);
         eqt = s2.equals(s) && s.equals(s2);
         if (as2)
-            reallyAssert (!eqt);
+            reallyAssert(!eqt);
         timer.finish();
 
         timer.start("Iter HashCode          ", size * 2);
         int s1h = s.hashCode();
         int s2h = s2.hashCode();
         if (as2)
-            reallyAssert (s1h != s2h);
+            reallyAssert(s1h != s2h);
         timer.finish();
 
         timer.start("Clear                  ", size);
         s.clear();
         s2.clear();
         timer.finish();
-        reallyAssert (s2.isEmpty() && s.isEmpty());
+        reallyAssert(s2.isEmpty() && s.isEmpty());
     }
 
 

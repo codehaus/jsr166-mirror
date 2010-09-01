@@ -153,7 +153,7 @@ public class MapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
         checkSum += sum;
     }
 
@@ -167,7 +167,7 @@ public class MapCheck {
             if (intMap.get(i) != i) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void remTest(String nm, int n, Map s, Object[] key, int expect) {
@@ -177,7 +177,7 @@ public class MapCheck {
             if (s.remove(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
         checkSum += sum;
     }
 
@@ -186,7 +186,7 @@ public class MapCheck {
         timer.start(nm, n);
         s.clear();
         timer.finish();
-        reallyAssert (s.isEmpty());
+        reallyAssert(s.isEmpty());
     }
 
     static void putTest(String nm, int n, Map s, Object[] key, int expect) {
@@ -198,7 +198,7 @@ public class MapCheck {
             if (v == null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
         checkSum += sum;
     }
 
@@ -209,7 +209,7 @@ public class MapCheck {
             if (s.containsKey(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
         checkSum += sum;
     }
 
@@ -219,7 +219,7 @@ public class MapCheck {
         for (int i = 0; i < n; i++) {
             if (s.containsKey(key[i])) ++sum;
         }
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
         checkSum += sum;
     }
 
@@ -230,7 +230,7 @@ public class MapCheck {
             if (s.remove(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
         checkSum += sum;
     }
 
@@ -240,7 +240,7 @@ public class MapCheck {
         timer.start("Traverse key or value  ", size);
         if (s.containsValue(MISSING)) ++sum;
         timer.finish();
-        reallyAssert (sum == 0);
+        reallyAssert(sum == 0);
         checkSum += sum;
     }
 
@@ -256,7 +256,7 @@ public class MapCheck {
             last = x;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
         checkSum += sum;
         return last;
     }
@@ -272,7 +272,7 @@ public class MapCheck {
             last = x;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
         checkSum += sum;
         return last;
     }
@@ -289,13 +289,13 @@ public class MapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
         checkSum += sum;
     }
 
     static void itRemTest(Map s, int size) {
         int sz = s.size();
-        reallyAssert (sz == size);
+        reallyAssert(sz == size);
         timer.start("Remove Present         ", size);
         int sum = 0;
         for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
@@ -304,13 +304,13 @@ public class MapCheck {
             ++sum;
         }
         timer.finish();
-        reallyAssert (sum == sz);
+        reallyAssert(sum == sz);
         checkSum += sum;
     }
 
     static void itHalfRemTest(Map s, int size) {
         int sz = s.size();
-        reallyAssert (sz == size);
+        reallyAssert(sz == size);
         timer.start("Remove Present         ", size);
         int sum = 0;
         for (Iterator it = s.keySet().iterator(); it.hasNext(); ) {
@@ -321,7 +321,7 @@ public class MapCheck {
             ++sum;
         }
         timer.finish();
-        reallyAssert (sum == sz / 2);
+        reallyAssert(sum == sz / 2);
         checkSum += sum;
     }
 
@@ -329,7 +329,7 @@ public class MapCheck {
         timer.start(nm, n);
         dst.putAll(src);
         timer.finish();
-        reallyAssert (src.size() == dst.size());
+        reallyAssert(src.size() == dst.size());
     }
 
     static void serTest(Map s, int size) throws Exception {
@@ -358,7 +358,7 @@ public class MapCheck {
         System.out.print(time + "ms");
 
         if (s instanceof IdentityHashMap) return;
-        reallyAssert (s.equals(m));
+        reallyAssert(s.equals(m));
     }
 
     static void mainTest(Map s, Object[] key, Object[] absent) {
@@ -426,34 +426,34 @@ public class MapCheck {
         timer.start("Traverse entry         ", size * 12); // 12 until finish
 
         int sh1 = s.hashCode() - s2.hashCode();
-        reallyAssert (sh1 == 0);
+        reallyAssert(sh1 == 0);
 
         boolean eq1 = s2.equals(s);
         boolean eq2 = s.equals(s2);
-        reallyAssert (eq1 && eq2);
+        reallyAssert(eq1 && eq2);
 
         Set es2 = s2.entrySet();
         for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
             Object entry = it.next();
             if (es2.contains(entry)) ++sum;
         }
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
 
         s2.put(lastkey, MISSING);
 
         int sh2 = s.hashCode() - s2.hashCode();
-        reallyAssert (sh2 != 0);
+        reallyAssert(sh2 != 0);
 
         eq1 = s2.equals(s);
         eq2 = s.equals(s2);
-        reallyAssert (!eq1 && !eq2);
+        reallyAssert(!eq1 && !eq2);
 
         sum = 0;
         for (Iterator it = s.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
             e.setValue(absent[sum++]);
         }
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
         for (Iterator it = s2.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
             e.setValue(s.get(e.getKey()));
@@ -473,12 +473,12 @@ public class MapCheck {
         reallyAssert(rmiss == 0);
 
         clrTest(size, s2);
-        reallyAssert (s2.isEmpty() && s.isEmpty());
+        reallyAssert(s2.isEmpty() && s.isEmpty());
     }
 
     static void itTest4(Map s, int size, int pos) {
         IdentityHashMap seen = new IdentityHashMap(size);
-        reallyAssert (s.size() == size);
+        reallyAssert(s.size() == size);
         int sum = 0;
         timer.start("Iter XEntry            ", size);
         Iterator it = s.entrySet().iterator();
@@ -492,9 +492,9 @@ public class MapCheck {
             if (x != MISSING)
                 ++sum;
         }
-        reallyAssert (s.containsKey(k));
+        reallyAssert(s.containsKey(k));
         it.remove();
-        reallyAssert (!s.containsKey(k));
+        reallyAssert(!s.containsKey(k));
         while (it.hasNext()) {
             Map.Entry x = (Map.Entry)(it.next());
             Object k2 = x.getKey();
@@ -503,12 +503,12 @@ public class MapCheck {
                 ++sum;
         }
 
-        reallyAssert (s.size() == size-1);
+        reallyAssert(s.size() == size-1);
         s.put(k, v);
-        reallyAssert (seen.size() == size);
+        reallyAssert(seen.size() == size);
         timer.finish();
-        reallyAssert (sum == size);
-        reallyAssert (s.size() == size);
+        reallyAssert(sum == size);
+        reallyAssert(s.size() == size);
     }
 
 

@@ -61,7 +61,7 @@ public class ConcurrentDequeLoops {
         final CyclicBarrier barrier;
         final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
         int items;
-        Stage (Deque<Integer> q, CyclicBarrier b, int items) {
+        Stage(Deque<Integer> q, CyclicBarrier b, int items) {
             queue = q;
             barrier = b;
             this.items = items;

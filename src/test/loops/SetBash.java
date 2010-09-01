@@ -113,14 +113,14 @@ public class SetBash {
             boolean prePresent = s.contains(e);
             boolean added = s.add(e);
             if (!s.contains(e))
-                fail ("Element not present after addition.");
+                fail("Element not present after addition.");
             if (added == prePresent)
-                fail ("added == alreadyPresent");
+                fail("added == alreadyPresent");
             int postSize = s.size();
             if (added && preSize == postSize)
-                fail ("Add returned true, but size didn't change.");
+                fail("Add returned true, but size didn't change.");
             if (!added && preSize != postSize)
-                fail ("Add returned false, but size changed.");
+                fail("Add returned false, but size changed.");
         }
     }
 

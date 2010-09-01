@@ -278,10 +278,10 @@ public class ListBash {
 
             int preSize = s.size();
             if (!s.add(e))
-                fail ("Add failed.");
+                fail("Add failed.");
             int postSize = s.size();
             if (postSize-preSize != 1)
-                fail ("Add didn't increase size by 1.");
+                fail("Add didn't increase size by 1.");
         }
     }
 

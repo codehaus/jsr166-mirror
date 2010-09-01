@@ -111,7 +111,7 @@ public class CancelledProducerConsumerLoops {
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         final int iters;
-        Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
+        Stage(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             queue = q;
             barrier = b;
             this.iters = iters;

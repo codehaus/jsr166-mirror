@@ -15,7 +15,7 @@ class ScalarLongSort {
     static int THRESHOLD;
     static final boolean warmup = true;
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         int n = 1 << 22;
         int sreps = 2;
         int reps = 20;
@@ -181,7 +181,7 @@ class ScalarLongSort {
 
     }
 
-    static void checkSorted (long[] a)  {
+    static void checkSorted(long[] a)  {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {

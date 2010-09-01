@@ -96,7 +96,7 @@ public class NavigableMapCheck {
             }
         }
         timer.finish();
-        reallyAssert (sum == expect * iters);
+        reallyAssert(sum == expect * iters);
     }
 
     static void t2(String nm, int n, NavigableMap s, Integer[] key, int expect) {
@@ -106,7 +106,7 @@ public class NavigableMapCheck {
             if (s.remove(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t3(String nm, int n, NavigableMap s, Integer[] key, int expect) {
@@ -116,7 +116,7 @@ public class NavigableMapCheck {
             if (s.put(key[i], absent[i & absentMask]) == null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t4(String nm, int n, NavigableMap s, Integer[] key, int expect) {
@@ -126,7 +126,7 @@ public class NavigableMapCheck {
             if (s.containsKey(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t5(String nm, int n, NavigableMap s, Integer[] key, int expect) {
@@ -136,7 +136,7 @@ public class NavigableMapCheck {
             if (s.remove(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t6(String nm, int n, NavigableMap s, Integer[] k1, Integer[] k2) {
@@ -147,7 +147,7 @@ public class NavigableMapCheck {
             if (s.get(k2[i & absentMask]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == n);
+        reallyAssert(sum == n);
     }
 
     static void t7(String nm, int n, NavigableMap s, Integer[] k1, Integer[] k2) {
@@ -158,7 +158,7 @@ public class NavigableMapCheck {
             if (s.containsKey(k2[i & absentMask])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == n);
+        reallyAssert(sum == n);
     }
 
     static void t8(String nm, int n, NavigableMap s, Integer[] key, int expect) {
@@ -168,7 +168,7 @@ public class NavigableMapCheck {
             if (s.get(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
 
@@ -180,7 +180,7 @@ public class NavigableMapCheck {
         for (int i = 0; i < absentSize; i += step)
             if (s.containsValue(absent[i])) ++sum;
         timer.finish();
-        reallyAssert (sum != 0);
+        reallyAssert(sum != 0);
     }
 
     static void higherTest(NavigableMap s) {
@@ -193,7 +193,7 @@ public class NavigableMapCheck {
             e = s.higherEntry(e.getKey());
         }
         timer.finish();
-        reallyAssert (sum == iters);
+        reallyAssert(sum == iters);
     }
 
     static void lowerTest(NavigableMap s) {
@@ -206,7 +206,7 @@ public class NavigableMapCheck {
             e = s.higherEntry(e.getKey());
         }
         timer.finish();
-        reallyAssert (sum == iters);
+        reallyAssert(sum == iters);
     }
 
     static void ceilingTest(NavigableMap s) {
@@ -220,7 +220,7 @@ public class NavigableMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == iters);
+        reallyAssert(sum == iters);
     }
 
     static void floorTest(NavigableMap s) {
@@ -234,7 +234,7 @@ public class NavigableMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == iters-1);
+        reallyAssert(sum == iters-1);
     }
 
 
@@ -246,7 +246,7 @@ public class NavigableMapCheck {
             if (ks.contains(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
 
@@ -258,7 +258,7 @@ public class NavigableMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void ittest2(NavigableMap s, int size) {
@@ -269,7 +269,7 @@ public class NavigableMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
     static void ittest3(NavigableMap s, int size) {
         int sum = 0;
@@ -279,7 +279,7 @@ public class NavigableMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void ittest(NavigableMap s, int size) {
@@ -296,7 +296,7 @@ public class NavigableMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
 
@@ -337,13 +337,13 @@ public class NavigableMapCheck {
 
         timer.start("Iter Equals            ", size * 2);
         boolean eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (eqt);
+        reallyAssert(eqt);
         timer.finish();
 
         timer.start("Iter HashCode          ", size * 2);
         int shc = s.hashCode();
         int s2hc = s2.hashCode();
-        reallyAssert (shc == s2hc);
+        reallyAssert(shc == s2hc);
         timer.finish();
 
         timer.start("Put (present)          ", size);
@@ -358,7 +358,7 @@ public class NavigableMapCheck {
             if (es2.contains(entry)) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
 
         t6("Get                    ", size, s2, key, absent);
 
@@ -366,13 +366,13 @@ public class NavigableMapCheck {
         s2.put(key[size-1], absent[0]);
         timer.start("Iter Equals            ", size * 2);
         eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (!eqt);
+        reallyAssert(!eqt);
         timer.finish();
 
         timer.start("Iter HashCode          ", size * 2);
         int s1h = s.hashCode();
         int s2h = s2.hashCode();
-        reallyAssert (s1h != s2h);
+        reallyAssert(s1h != s2h);
         timer.finish();
 
         s2.put(key[size-1], hold);
@@ -383,12 +383,12 @@ public class NavigableMapCheck {
             es.remove(s2i.next());
         timer.finish();
 
-        reallyAssert (s.isEmpty());
+        reallyAssert(s.isEmpty());
 
         timer.start("Clear                  ", size);
         s2.clear();
         timer.finish();
-        reallyAssert (s2.isEmpty() && s.isEmpty());
+        reallyAssert(s2.isEmpty() && s.isEmpty());
     }
 
 

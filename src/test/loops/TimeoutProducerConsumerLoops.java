@@ -114,7 +114,7 @@ public class TimeoutProducerConsumerLoops {
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         final Phaser lagPhaser;
-        Stage (BlockingQueue<Integer> q, CyclicBarrier b, Phaser s, int iters) {
+        Stage(BlockingQueue<Integer> q, CyclicBarrier b, Phaser s, int iters) {
             queue = q;
             barrier = b;
             lagPhaser = s;

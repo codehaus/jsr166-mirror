@@ -139,8 +139,7 @@ public class OfferPollLoops {
         final Queue<Integer> queue;
         final CyclicBarrier barrier;
         final Phaser lagPhaser;
-        Stage (Queue<Integer> q, CyclicBarrier b, Phaser s,
-               int iters) {
+        Stage(Queue<Integer> q, CyclicBarrier b, Phaser s, int iters) {
             queue = q;
             barrier = b;
             lagPhaser = s;

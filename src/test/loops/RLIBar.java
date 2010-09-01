@@ -15,39 +15,39 @@ import java.util.concurrent.locks.*;
 
 public class RLIBar {
 
-    static int batchLimit ;
-    static int mseq ;
-    static int nReady ;
-    static int ExThreads ;
-    static int ASum ;
-    static final ReentrantLock Gate = new ReentrantLock () ;
-    static final Condition GateCond = Gate.newCondition () ;
+    static int batchLimit;
+    static int mseq;
+    static int nReady;
+    static int ExThreads;
+    static int ASum;
+    static final ReentrantLock Gate = new ReentrantLock();
+    static final Condition GateCond = Gate.newCondition();
 
-    static final ReentrantLock HoldQ = new ReentrantLock () ;
-    static final Condition HoldQCond = HoldQ.newCondition() ;
-    static boolean Hold = false ;
-    static int HoldPop ;
-    static int HoldLimit ;
+    static final ReentrantLock HoldQ = new ReentrantLock();
+    static final Condition HoldQCond = HoldQ.newCondition();
+    static boolean Hold = false;
+    static int HoldPop;
+    static int HoldLimit;
 
-    static private boolean HoldCheck () {
+    static private boolean HoldCheck() {
         try {
             HoldQ.lock();
             try {
                 if (!Hold) return false;
                 else {
-                    ++HoldPop ;
+                    ++HoldPop;
                     if (HoldPop >= HoldLimit) {
-                        System.out.print ("Holding ") ;
-                        Thread.sleep (1000) ;
-                        System.out.println () ;
-                        Hold = false ;
-                        HoldQCond.signalAll () ;
+                        System.out.print("Holding ");
+                        Thread.sleep(1000);
+                        System.out.println();
+                        Hold = false;
+                        HoldQCond.signalAll();
                     }
                     else
                         while (Hold)
-                            HoldQCond.await() ;
+                            HoldQCond.await();
 
-                    if (--HoldPop == 0) HoldQCond.signalAll () ;
+                    if (--HoldPop == 0) HoldQCond.signalAll();
                     return true;
                 }
             }
@@ -55,7 +55,7 @@ public class RLIBar {
                 HoldQ.unlock();
             }
         } catch (Exception Ex) {
-            System.out.println ("Unexpected exception in Hold: " + Ex) ;
+            System.out.println("Unexpected exception in Hold: " + Ex);
             return false;
         }
     }
@@ -65,15 +65,15 @@ public class RLIBar {
         final ReentrantLock thisLock = new ReentrantLock();
         final Condition thisCond = thisLock.newCondition();
 
-        Server (int nClients) {
+        Server(int nClients) {
             this.nClients = nClients;
             try {
                 for (int i = 0; i < nClients; ++i) {
-                    final int fix = i ;
-                    new Thread() { public void run () { runServer(fix); }}.start();
+                    final int fix = i;
+                    new Thread() { public void run() { runServer(fix); }}.start();
                 }
             } catch (Exception e) {
-                System.err.println(e) ;
+                System.err.println(e);
             }
         }
 
@@ -88,8 +88,8 @@ public class RLIBar {
         // was incremented
         private int currentBatchSize = 0;
 
-        private void runServer (int id) {
-            int msg ;
+        private void runServer(int id) {
+            int msg;
             boolean held = false;
             final ReentrantLock thisLock = this.thisLock;
             final Condition thisCond = this.thisCond;
@@ -101,20 +101,20 @@ public class RLIBar {
                 // proper provisioning on T1.
                 // Alternately, use THR_BOUND threads
                 Gate.lock(); try {
-                    ++nReady ;
-                    if (nReady == ExThreads ) {
-                        GateCond.signalAll () ;
+                    ++nReady;
+                    if (nReady == ExThreads) {
+                        GateCond.signalAll();
                     }
-                    while (nReady != ExThreads )
-                        GateCond.await() ;
+                    while (nReady != ExThreads)
+                        GateCond.await();
                 } finally { Gate.unlock(); }
 
                 for (;;) {
-                    //                    if (!held && currentBatchSize == 0) held = HoldCheck () ;
-                    msg = (++ mseq) ^ id ;
+                    //                    if (!held && currentBatchSize == 0) held = HoldCheck ();
+                    msg = (++ mseq) ^ id;
                     thisLock.lock();
                     try {
-                        ASum += msg ;
+                        ASum += msg;
                         ++msgsReceived;
                         int myBatch = currentBatch;
                         if (++currentBatchSize >= batchLimit) {
@@ -122,7 +122,7 @@ public class RLIBar {
                             ++currentBatch;
                             currentBatchSize = 0;
                             // and wake up everyone in this one
-                            thisCond.signalAll () ;
+                            thisCond.signalAll();
                         }
                         // Wait until our batch is complete
                         while (myBatch == currentBatch)
@@ -133,7 +133,7 @@ public class RLIBar {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Server thread: exception "  + e) ;
+                System.err.println("Server thread: exception "  + e);
                 e.printStackTrace();
             }
         }
@@ -141,9 +141,9 @@ public class RLIBar {
 
     }
 
-    public static void main (String[] args) throws Exception {
-        int nServers = 10 ;
-        int nClients = 10 ;
+    public static void main(String[] args) throws Exception {
+        int nServers = 10;
+        int nClients = 10;
         int samplePeriod = 10000;
         int nSamples = 5;
 
@@ -161,13 +161,13 @@ public class RLIBar {
             else if (arg.equals("-np"))
                 nSamples = Integer.parseInt(args[nextArg++]);
             else {
-                System.err.println ("Argument error:" + arg) ;
-                System.exit (1) ;
+                System.err.println("Argument error:" + arg);
+                System.exit(1);
             }
         }
         if (nClients <= 0 || nServers <= 0 || samplePeriod <= 0 || batchLimit > nClients) {
-            System.err.println ("Argument error") ;
-            System.exit (1) ;
+            System.err.println("Argument error");
+            System.exit(1);
         }
 
         // default batch size is 2/3 the number of clients
@@ -175,8 +175,8 @@ public class RLIBar {
         if (false && batchLimit <= 0)
             batchLimit = (2 * nClients + 1) / 3;
 
-        ExThreads = nServers * nClients ;       // expected # of threads
-        HoldLimit = ExThreads ;
+        ExThreads = nServers * nClients;       // expected # of threads
+        HoldLimit = ExThreads;
 
         // start up all threads
         Server[] servers = new Server[nServers];
@@ -187,13 +187,13 @@ public class RLIBar {
         // Wait for consensus
         try {
             Gate.lock(); try {
-                while (nReady != ExThreads ) GateCond.await() ;
+                while (nReady != ExThreads ) GateCond.await();
             } finally { Gate.unlock(); }
         } catch (Exception ex) {
-            System.out.println (ex);
+            System.out.println(ex);
         }
-        System.out.println (
-                            nReady + " Ready: nc=" + nClients + " ns=" + nServers + " batch=" + batchLimit) ;
+        System.out.println(
+                            nReady + " Ready: nc=" + nClients + " ns=" + nServers + " batch=" + batchLimit);
 
         // Start sampling ...
         // Methodological problem: all the mutator threads
@@ -219,11 +219,11 @@ public class RLIBar {
             }
 
             if (false && j == 2) {
-                System.out.print ("Hold activated ...") ;
+                System.out.print("Hold activated ...");
                 HoldQ.lock();
                 try  {
-                    Hold = true ;
-                    while (Hold) HoldQCond.await() ;
+                    Hold = true;
+                    while (Hold) HoldQCond.await();
                 }
                 finally {
                     HoldQ.unlock();

@@ -64,7 +64,7 @@ public class SingleProducerMultipleConsumerLoops {
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         volatile int result;
-        Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
+        Stage(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             queue = q;
             barrier = b;
             this.iters = iters;

@@ -302,7 +302,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             if (cclass.isInstance(obj)) {
                 return;
             }
-            throw new RuntimeException (
+            throw new RuntimeException(
                 new IllegalAccessException("Class " +
                     cclass.getName() +
                     " can not access a protected member of class " +
@@ -393,7 +393,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
             if (cclass.isInstance(obj)) {
                 return;
             }
-            throw new RuntimeException (
+            throw new RuntimeException(
                 new IllegalAccessException("Class " +
                     cclass.getName() +
                     " can not access a protected member of class " +

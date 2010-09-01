@@ -67,7 +67,7 @@ public class ConcurrentQueueLoops {
         final Queue<Integer> queue;
         final CyclicBarrier barrier;
         final int nthreads;
-        Stage (Queue<Integer> q, CyclicBarrier b, int nthreads) {
+        Stage(Queue<Integer> q, CyclicBarrier b, int nthreads) {
             queue = q;
             barrier = b;
             this.nthreads = nthreads;

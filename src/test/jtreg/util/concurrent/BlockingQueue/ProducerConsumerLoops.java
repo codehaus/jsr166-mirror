@@ -79,7 +79,7 @@ public class ProducerConsumerLoops {
         final int iters;
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
-        Stage (BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
+        Stage(BlockingQueue<Integer> q, CyclicBarrier b, int iters) {
             queue = q;
             barrier = b;
             this.iters = iters;

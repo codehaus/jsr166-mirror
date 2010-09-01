@@ -51,9 +51,9 @@ public class ExchangeLoops {
         final Exchanger<Int> right;
         final CyclicBarrier barrier;
         volatile int result;
-        Stage (Exchanger<Int> left,
-               Exchanger<Int> right,
-               CyclicBarrier b, int iters) {
+        Stage(Exchanger<Int> left,
+              Exchanger<Int> right,
+              CyclicBarrier b, int iters) {
             this.left = left;
             this.right = right;
             barrier = b;

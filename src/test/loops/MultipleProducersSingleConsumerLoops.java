@@ -156,8 +156,8 @@ public class MultipleProducersSingleConsumerLoops {
         final CyclicBarrier barrier;
         final Phaser lagPhaser;
         final int lag;
-        Stage (BlockingQueue<Integer> q, CyclicBarrier b, Phaser s,
-               int iters, int lag) {
+        Stage(BlockingQueue<Integer> q, CyclicBarrier b, Phaser s,
+              int iters, int lag) {
             queue = q;
             barrier = b;
             lagPhaser = s;

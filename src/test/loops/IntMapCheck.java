@@ -99,7 +99,7 @@ public class IntMapCheck {
             }
         }
         timer.finish();
-        reallyAssert (sum == expect * iters);
+        reallyAssert(sum == expect * iters);
     }
 
     static void t1Boxed(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
@@ -112,7 +112,7 @@ public class IntMapCheck {
             }
         }
         timer.finish();
-        reallyAssert (sum == expect * iters);
+        reallyAssert(sum == expect * iters);
     }
 
 
@@ -123,7 +123,7 @@ public class IntMapCheck {
             if (s.remove(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t3(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
@@ -135,7 +135,7 @@ public class IntMapCheck {
             if (s.put(k, v) == null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t4(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
@@ -145,7 +145,7 @@ public class IntMapCheck {
             if (s.containsKey(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t5(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
@@ -155,7 +155,7 @@ public class IntMapCheck {
             if (s.remove(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
     static void t6(String nm, int n, Map<Integer,Integer> s, Integer[] k1, Integer[] k2) {
@@ -166,7 +166,7 @@ public class IntMapCheck {
             if (s.get(k2[i & absentMask]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == n);
+        reallyAssert(sum == n);
     }
 
     static void t7(String nm, int n, Map<Integer,Integer> s, Integer[] k1, Integer[] k2) {
@@ -177,7 +177,7 @@ public class IntMapCheck {
             if (s.containsKey(k2[i & absentMask])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == n);
+        reallyAssert(sum == n);
     }
 
     static void t8(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
@@ -187,7 +187,7 @@ public class IntMapCheck {
             if (s.get(key[i]) != null) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == expect);
+        reallyAssert(sum == expect);
     }
 
 
@@ -199,7 +199,7 @@ public class IntMapCheck {
         for (int i = 0; i < absentSize; i += step)
             if (s.containsValue(absent[i])) ++sum;
         timer.finish();
-        reallyAssert (sum != 0);
+        reallyAssert(sum != 0);
     }
 
 
@@ -211,7 +211,7 @@ public class IntMapCheck {
             if (ks.contains(key[i])) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
 
@@ -225,7 +225,7 @@ public class IntMapCheck {
         timer.finish();
         //        if (sum != size)
         //            System.out.println("iters " + sum + " size " + size);
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void ittest2(Map<Integer,Integer> s, int size) {
@@ -238,7 +238,7 @@ public class IntMapCheck {
         timer.finish();
         //        if (sum != size)
         //            System.out.println("iters " + sum + " size " + size);
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
     static void ittest3(Map<Integer,Integer> s, int size) {
         int sum = 0;
@@ -248,12 +248,12 @@ public class IntMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void ittest4(Map<Integer,Integer> s, int size, int pos) {
         IdentityHashMap seen = new IdentityHashMap(size);
-        reallyAssert (s.size() == size);
+        reallyAssert(s.size() == size);
         int sum = 0;
         timer.start("Iter XEntry            ", size);
         Iterator it = s.entrySet().iterator();
@@ -267,9 +267,9 @@ public class IntMapCheck {
             if (v != MISSING)
                 ++sum;
         }
-        reallyAssert (s.containsKey(k));
+        reallyAssert(s.containsKey(k));
         it.remove();
-        reallyAssert (!s.containsKey(k));
+        reallyAssert(!s.containsKey(k));
         while (it.hasNext()) {
             Map.Entry<Integer,Integer> x = (Map.Entry<Integer,Integer>)(it.next());
             Integer k2 = x.getKey();
@@ -278,12 +278,12 @@ public class IntMapCheck {
                 ++sum;
         }
 
-        reallyAssert (s.size() == size-1);
+        reallyAssert(s.size() == size-1);
         s.put(k, v);
-        reallyAssert (seen.size() == size);
+        reallyAssert(seen.size() == size);
         timer.finish();
-        reallyAssert (sum == size);
-        reallyAssert (s.size() == size);
+        reallyAssert(sum == size);
+        reallyAssert(s.size() == size);
     }
 
 
@@ -306,7 +306,7 @@ public class IntMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void entest2(Hashtable ht, int size) {
@@ -317,7 +317,7 @@ public class IntMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
 
@@ -331,7 +331,7 @@ public class IntMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void entest4(Hashtable ht, int size) {
@@ -343,7 +343,7 @@ public class IntMapCheck {
                 ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
     }
 
     static void entest(Map<Integer,Integer> s, int size) {
@@ -396,7 +396,7 @@ public class IntMapCheck {
         System.out.print(time + "ms");
 
         if (s instanceof IdentityHashMap) return;
-        reallyAssert (s.equals(m));
+        reallyAssert(s.equals(m));
     }
 
 
@@ -459,13 +459,13 @@ public class IntMapCheck {
 
         timer.start("Iter Equals            ", size * 2);
         boolean eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (eqt);
+        reallyAssert(eqt);
         timer.finish();
 
         timer.start("Iter HashCode          ", size * 2);
         int shc = s.hashCode();
         int s2hc = s2.hashCode();
-        reallyAssert (shc == s2hc);
+        reallyAssert(shc == s2hc);
         timer.finish();
 
         timer.start("Put (present)          ", size * 2);
@@ -479,7 +479,7 @@ public class IntMapCheck {
             if (s2.put(me.getKey(), me.getValue()) != null)
                 ++ipsum;
         }
-        reallyAssert (ipsum == s.size());
+        reallyAssert(ipsum == s.size());
         timer.finish();
 
         timer.start("Iter EntrySet contains ", size * 2);
@@ -490,19 +490,19 @@ public class IntMapCheck {
             if (es2.contains(entry)) ++sum;
         }
         timer.finish();
-        reallyAssert (sum == size);
+        reallyAssert(sum == size);
 
         Integer hold = s2.get(key[size-1]);
         s2.put(key[size-1], absent[0]);
         timer.start("Iter Equals            ", size * 2);
         eqt = s2.equals(s) && s.equals(s2);
-        reallyAssert (!eqt);
+        reallyAssert(!eqt);
         timer.finish();
 
         timer.start("Iter HashCode          ", size * 2);
         int s1h = s.hashCode();
         int s2h = s2.hashCode();
-        reallyAssert (s1h != s2h);
+        reallyAssert(s1h != s2h);
         timer.finish();
 
         s2.put(key[size-1], hold);
@@ -513,12 +513,12 @@ public class IntMapCheck {
             reallyAssert(es.remove(s2i.next()));
         timer.finish();
 
-        reallyAssert (s.isEmpty());
+        reallyAssert(s.isEmpty());
 
         timer.start("Clear                  ", size);
         s2.clear();
         timer.finish();
-        reallyAssert (s2.isEmpty() && s.isEmpty());
+        reallyAssert(s2.isEmpty() && s.isEmpty());
     }
 
     static class TestTimer {

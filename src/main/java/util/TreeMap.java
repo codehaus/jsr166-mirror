@@ -2142,7 +2142,7 @@ public class TreeMap<K,V>
         // If strictly internal, copy successor's element to p and then make p
         // point to successor.
         if (p.left != null && p.right != null) {
-            Entry<K,V> s = successor (p);
+            Entry<K,V> s = successor(p);
             p.key = s.key;
             p.value = s.value;
             p = s;

@@ -262,7 +262,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
             if (cclass.isInstance(obj)) {
                 return;
             }
-            throw new RuntimeException (
+            throw new RuntimeException(
                 new IllegalAccessException("Class " +
                     cclass.getName() +
                     " can not access a protected member of class " +

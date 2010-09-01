@@ -16,16 +16,16 @@ class Producer extends Thread
 {
     //  private static Hashtable buddiesOnline = new Hashtable();
   private static Map buddiesOnline = new ConcurrentHashMap();
-  public Producer (String name) { super(name); }
+  public Producer(String name) { super(name); }
 
   public void run()
     {
-      Object key = null ;
+      Object key = null;
       final ReentrantLock dr = RLJBar.DeathRow;
       final ReentrantLock bar = RLJBar.bar;
       final ReentrantLock end = RLJBar.End;
       final Condition endCondition = RLJBar.EndCondition;
-      if (RLJBar.OneKey) key = new Integer(0) ;         // per-thread v. per iteration
+      if (RLJBar.OneKey) key = new Integer(0);         // per-thread v. per iteration
 
       // The barrier has a number of interesting effects:
       // 1.     It enforces full LWP provisioning on T1.
@@ -38,18 +38,18 @@ class Producer extends Thread
       try {
           bar.lock();
           try {
-              ++RLJBar.nUp ;
+              ++RLJBar.nUp;
               if (RLJBar.nUp == RLJBar.nThreads) {
                   if (RLJBar.quiesce != 0) {
-                      RLJBar.barCondition.awaitNanos(RLJBar.quiesce * 1000000) ;
+                      RLJBar.barCondition.awaitNanos(RLJBar.quiesce * 1000000);
                   }
-                  RLJBar.epoch = System.currentTimeMillis () ;
-                  RLJBar.barCondition.signalAll () ;
-                  //                  System.out.print ("Consensus ") ;
+                  RLJBar.epoch = System.currentTimeMillis();
+                  RLJBar.barCondition.signalAll();
+                  //                  System.out.print ("Consensus ");
               }
               if (RLJBar.UseBar) {
                   while (RLJBar.nUp != RLJBar.nThreads) {
-                      RLJBar.barCondition.await () ;
+                      RLJBar.barCondition.await();
                   }
               }
           }
@@ -57,13 +57,13 @@ class Producer extends Thread
               bar.unlock();
           }
       } catch (Exception ex) {
-        System.out.println ("Exception in barrier: " + ex) ;
+        System.out.println("Exception in barrier: " + ex);
       }
 
       // Main execution time ... the code being timed ...
       // HashTable.get() is highly contended (serial).
       for (int loop = 1; loop < 100000 ;loop++) {
-        if (!RLJBar.OneKey) key = new Integer(0) ;
+        if (!RLJBar.OneKey) key = new Integer(0);
         buddiesOnline.get(key);
       }
 
@@ -73,10 +73,10 @@ class Producer extends Thread
 
       end.lock();
       try {
-        ++RLJBar.nDead ;
+        ++RLJBar.nDead;
         if (RLJBar.nDead == RLJBar.nUp) {
-            //          System.out.print((System.currentTimeMillis()-RLJBar.epoch) + " ms") ;
-          endCondition.signalAll() ;
+            //          System.out.print((System.currentTimeMillis()-RLJBar.epoch) + " ms");
+          endCondition.signalAll();
         }
       }
       finally {
@@ -92,37 +92,37 @@ public class RLJBar                             // ProdConsTest
 {
 
     public static final int ITERS = 10;
-  public static boolean OneKey = false ;                        // alloc once or once per iteration
+  public static boolean OneKey = false;                        // alloc once or once per iteration
 
-  public static boolean UseBar = false ;
-  public static int nThreads = 100 ;
-  public static int nUp = 0 ;
-  public static int nDead = 0 ;
-  public static ReentrantLock bar = new ReentrantLock() ;
-  public static Condition barCondition = bar.newCondition() ;
-  public static long epoch ;
-  public static ReentrantLock DeathRow = new ReentrantLock () ;
-  public static ReentrantLock End = new ReentrantLock () ;
-  public static int quiesce = 0 ;
+  public static boolean UseBar = false;
+  public static int nThreads = 100;
+  public static int nUp = 0;
+  public static int nDead = 0;
+  public static ReentrantLock bar = new ReentrantLock();
+  public static Condition barCondition = bar.newCondition();
+  public static long epoch;
+  public static ReentrantLock DeathRow = new ReentrantLock();
+  public static ReentrantLock End = new ReentrantLock();
+  public static int quiesce = 0;
   public static Condition EndCondition = End.newCondition();
 
-  public static void main (String[] args)    {
-      int argix = 0 ;
+  public static void main(String[] args)    {
+      int argix = 0;
       if (argix < args.length && args[argix].equals("-o")) {
-          ++argix ;
-          OneKey = true ;
-          System.out.println ("OneKey") ;
+          ++argix;
+          OneKey = true;
+          System.out.println("OneKey");
       }
       if (argix < args.length && args[argix].equals ("-b")) {
-          ++argix ;
-          UseBar = true ;
-          System.out.println ("UseBar") ;
+          ++argix;
+          UseBar = true;
+          System.out.println("UseBar");
       }
       if (argix < args.length && args[argix].equals ("-q")) {
-          ++argix ;
+          ++argix;
           if (argix < args.length) {
-              quiesce = Integer.parseInt (args[argix++]) ;
-              System.out.println ("Quiesce " + quiesce + " msecs") ;
+              quiesce = Integer.parseInt(args[argix++]);
+              System.out.println("Quiesce " + quiesce + " msecs");
           }
       }
       for (int k = 0; k < ITERS; ++k)
@@ -130,36 +130,36 @@ public class RLJBar                             // ProdConsTest
   }
 
     public static void oneRun() {
-        DeathRow = new ReentrantLock () ;
-        End = new ReentrantLock () ;
+        DeathRow = new ReentrantLock();
+        End = new ReentrantLock();
         EndCondition = End.newCondition();
 
-        nDead = nUp = 0 ;
-        long cyBase = System.currentTimeMillis () ;
+        nDead = nUp = 0;
+        long cyBase = System.currentTimeMillis();
         DeathRow.lock();
         try {
-            for (int i = 1; i <= nThreads ; i++) {
+            for (int i = 1; i <= nThreads; i++) {
                 new Producer("Producer" + i).start();
             }
             try {
                 End.lock();
                 try {
                     while (nDead != nThreads)
-                        EndCondition.await() ;
+                        EndCondition.await();
                 }
                 finally {
                     End.unlock();
                 }
             } catch (Exception ex) {
-                System.out.println ("Exception in End: " + ex) ;
+                System.out.println("Exception in End: " + ex);
             }
         }
         finally {
             DeathRow.unlock();
         }
-        System.out.println ("Outer time: " + (System.currentTimeMillis()-cyBase)) ;
+        System.out.println("Outer time: " + (System.currentTimeMillis()-cyBase));
 
         // Let workers quiesce/exit.
-        try { Thread.sleep (1000) ; } catch (Exception ex) {} ;
+        try { Thread.sleep (1000); } catch (Exception ex) {};
     }
 }

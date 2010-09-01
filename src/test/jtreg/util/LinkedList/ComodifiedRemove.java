@@ -41,7 +41,7 @@ public class ComodifiedRemove {
         list.add(o1);
         ListIterator e = list.listIterator();
         e.next();
-        Object o2 = new Integer (2);
+        Object o2 = new Integer(2);
         list.add(o2);
 
         try{

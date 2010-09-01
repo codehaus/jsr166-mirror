@@ -67,7 +67,7 @@ import java.util.concurrent.CountDownLatch;
  *    <td ALIGN=CENTER> <b>Call from within fork/join computations</b></td>
  *  </tr>
  *  <tr>
- *    <td> <b>Arange async execution</td>
+ *    <td> <b>Arrange async execution</td>
  *    <td> {@link #execute(ForkJoinTask)}</td>
  *    <td> {@link ForkJoinTask#fork}</td>
  *  </tr>
@@ -138,7 +138,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Beyond work-stealing support and essential bookkeeping, the
      * main responsibility of this framework is to take actions when
      * one worker is waiting to join a task stolen (or always held by)
-     * another.  Becauae we are multiplexing many tasks on to a pool
+     * another.  Because we are multiplexing many tasks on to a pool
      * of workers, we can't just let them block (as in Thread.join).
      * We also cannot just reassign the joiner's run-time stack with
      * another and replace it later, which would be a form of
@@ -224,11 +224,11 @@ public class ForkJoinPool extends AbstractExecutorService {
      * ManagedBlocker), we may create or resume others to take their
      * place until they unblock (see below). Implementing this
      * requires counts of the number of "running" threads (i.e., those
-     * that are neither blocked nor artifically suspended) as well as
+     * that are neither blocked nor artificially suspended) as well as
      * the total number.  These two values are packed into one field,
      * "workerCounts" because we need accurate snapshots when deciding
      * to create, resume or suspend.  Note however that the
-     * correspondance of these counts to reality is not guaranteed. In
+     * correspondence of these counts to reality is not guaranteed. In
      * particular updates for unblocked threads may lag until they
      * actually wake up.
      *
@@ -313,7 +313,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * 7. Deciding when to create new workers. The main dynamic
      * control in this class is deciding when to create extra threads
      * in method helpMaintainParallelism. We would like to keep
-     * exactly #parallelism threads running, which is an impossble
+     * exactly #parallelism threads running, which is an impossible
      * task. We always need to create one when the number of running
      * threads would become zero and all workers are busy. Beyond
      * this, we must rely on heuristics that work well in the the
@@ -418,7 +418,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * The time to block in a join (see awaitJoin) before checking if
      * a new worker should be (re)started to maintain parallelism
-     * level. The value should be short enough to maintain gloabal
+     * level. The value should be short enough to maintain global
      * responsiveness and progress but long enough to avoid
      * counterproductive firings during GC stalls or unrelated system
      * activity, and to not bog down systems with continual re-firings
@@ -481,7 +481,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     private volatile long stealCount;
 
     /**
-     * Encoded record of top of treiber stack of threads waiting for
+     * Encoded record of top of Treiber stack of threads waiting for
      * events. The top 32 bits contain the count being waited for. The
      * bottom 16 bits contains one plus the pool index of waiting
      * worker thread. (Bits 16-31 are unused.)
@@ -500,7 +500,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     private volatile int eventCount;
 
     /**
-     * Encoded record of top of treiber stack of spare threads waiting
+     * Encoded record of top of Treiber stack of spare threads waiting
      * for resumption. The top 16 bits contain an arbitrary count to
      * avoid ABA effects. The bottom 16bits contains one plus the pool
      * index of waiting worker thread.
@@ -676,7 +676,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private void forgetWorker(ForkJoinWorkerThread w) {
         int idx = w.poolIndex;
-        // Locking helps method recordWorker avoid unecessary expansion
+        // Locking helps method recordWorker avoid unnecessary expansion
         final ReentrantLock lock = this.workerLock;
         lock.lock();
         try {
@@ -691,7 +691,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Final callback from terminating worker.  Removes record of
      * worker from array, and adjusts counts. If pool is shutting
-     * down, tries to complete terminatation.
+     * down, tries to complete termination.
      *
      * @param w the worker
      */
@@ -844,7 +844,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Tries to increase the number of running workers if below target
      * parallelism: If a spare exists tries to resume it via
      * tryResumeSpare.  Otherwise, if not enough total workers or all
-     * existing workers are busy, adds a new worker. In all casses also
+     * existing workers are busy, adds a new worker. In all cases also
      * helps wake up releasable workers waiting for work.
      */
     private void helpMaintainParallelism() {
@@ -1172,7 +1172,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final int idlePerActive() {
         int pc = parallelism; // use parallelism, not rc
-        int ac = runState;    // no mask -- artifically boosts during shutdown
+        int ac = runState;    // no mask -- artificially boosts during shutdown
         // Use exact results for small values, saturate past 4
         return pc <= ac? 0 : pc >>> 1 <= ac? 1 : pc >>> 2 <= ac? 3 : pc >>> 3;
     }

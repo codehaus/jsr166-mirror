@@ -320,7 +320,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * situations in which we cannot guarantee to make node s
      * unreachable in this way: (1) If s is the trailing node of list
      * (i.e., with null next), then it is pinned as the target node
-     * for appends, so can only be removed later when other nodes are
+     * for appends, so can only be removed later after other nodes are
      * appended. (2) We cannot necessarily unlink s given a
      * predecessor node that is matched (including the case of being
      * cancelled): the predecessor may already be unspliced, in which

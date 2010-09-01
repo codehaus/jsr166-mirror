@@ -477,7 +477,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     private void execLocalTasks() {
         while (runState == 0) {
-            ForkJoinTask<?> t = locallyFifo? locallyDeqTask() : popTask();
+            ForkJoinTask<?> t = locallyFifo ? locallyDeqTask() : popTask();
             if (t != null)
                 t.quietlyExec();
             else if (sp == base)
@@ -897,7 +897,7 @@ public class ForkJoinWorkerThread extends Thread {
             if (active ||
                 (active = UNSAFE.compareAndSwapInt(p, poolRunStateOffset,
                                                    a = p.runState, a + 1)))
-                return locallyFifo? locallyDeqTask() : popTask();
+                return locallyFifo ? locallyDeqTask() : popTask();
         }
         return null;
     }

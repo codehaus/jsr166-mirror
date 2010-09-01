@@ -346,7 +346,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * "while ((local = field) != 0)") which are usually the simplest
      * way to ensure the required read orderings (which are sometimes
      * critical). Also several occurrences of the unusual "do {}
-     * while(!cas...)" which is the simplest way to force an update of
+     * while (!cas...)" which is the simplest way to force an update of
      * a CAS'ed variable. There are also other coding oddities that
      * help some methods perform reasonably even when interpreted (not
      * compiled), at the expense of some messy constructions that
@@ -832,9 +832,9 @@ public class ForkJoinPool extends AbstractExecutorService {
             UNSAFE.compareAndSwapInt(this, spareWaitersOffset,
                                      sw, w.nextSpare)) {
             int c; // increment running count before resume
-            do {} while(!UNSAFE.compareAndSwapInt
-                        (this, workerCountsOffset,
-                         c = workerCounts, c + ONE_RUNNING));
+            do {} while (!UNSAFE.compareAndSwapInt
+                         (this, workerCountsOffset,
+                          c = workerCounts, c + ONE_RUNNING));
             if (w.tryUnsuspend())
                 LockSupport.unpark(w);
             else   // back out if w was shutdown
@@ -1721,7 +1721,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         throws InterruptedException {
         try {
             return termination.awaitAdvanceInterruptibly(0, timeout, unit) > 0;
-        } catch(TimeoutException ex) {
+        } catch (TimeoutException ex) {
             return false;
         }
     }

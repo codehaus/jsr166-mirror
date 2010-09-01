@@ -667,7 +667,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             do {
                 elements[i] = null;
                 i = (i + 1) & mask;
-            } while(i != t);
+            } while (i != t);
         }
     }
 

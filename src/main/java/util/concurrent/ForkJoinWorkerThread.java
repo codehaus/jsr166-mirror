@@ -228,8 +228,8 @@ public class ForkJoinWorkerThread extends Thread {
     private static final int TRIMMED     = 0x08; // killed while suspended
 
     /**
-     * Number of steals, transferred and reset in pool callbacks pool
-     * when idle Accessed directly by pool.
+     * Number of steals. Directly accessed (and reset) by
+     * pool.tryAccumulateStealCount when idle.
      */
     int stealCount;
 
@@ -284,8 +284,8 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * The task currently being joined, set only when actively trying
-     * to helpStealer. Written only by current thread, but read by
-     * others.
+     * to help other stealers in helpJoinTask. Written only by current
+     * thread, but read by others.
      */
     private volatile ForkJoinTask<?> currentJoin;
 
@@ -347,7 +347,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Initializes internal state after construction but before
      * processing any tasks. If you override this method, you must
-     * invoke super.onStart() at the beginning of the method.
+     * invoke @code{super.onStart()} at the beginning of the method.
      * Initialization requires care: Most fields must have legal
      * default values, to ensure that attempted accesses from other
      * threads work correctly even before this thread starts
@@ -445,12 +445,15 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * If a submission exists, try to activate and run it;
+     * If a submission exists, try to activate and run it.
      *
      * @return true if ran a task
      */
     private boolean tryExecSubmission() {
         ForkJoinPool p = pool;
+        // This loop is needed in case attempt to activate fails, in
+        // which case we only retry if there still appears to be a
+        // submission.
         while (p.hasQueuedSubmissions()) {
             ForkJoinTask<?> t; int a;
             if (active || // inline p.tryIncrementActiveCount
@@ -1053,6 +1056,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
+     * Implements ForJoinTask.getSurplusQueuedTaskCount().
      * Returns an estimate of the number of tasks, offset by a
      * function of number of idle workers.
      *

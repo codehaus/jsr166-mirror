@@ -170,11 +170,11 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Maximum work-stealing queue array size.  Must be less than or
-     * equal to 1 << 28 to ensure lack of index wraparound. (This
-     * is less than usual bounds, because we need leftshift by 3
-     * to be in int range).
+     * equal to 1 << (31 - width of array entry) to ensure lack of
+     * index wraparound. The value is set in the static block
+     * at the end of this file after obtaining width.
      */
-    private static final int MAXIMUM_QUEUE_CAPACITY = 1 << 28;
+    private static final int MAXIMUM_QUEUE_CAPACITY;
 
     /**
      * The pool this thread works in. Accessed directly by ForkJoinTask.
@@ -1159,6 +1159,7 @@ public class ForkJoinWorkerThread extends Thread {
         if ((s & (s-1)) != 0)
             throw new Error("data type scale not a power of two");
         qShift = 31 - Integer.numberOfLeadingZeros(s);
+        MAXIMUM_QUEUE_CAPACITY = 1 << (31 - qShift);
     }
 
     private static long objectFieldOffset(String field, Class<?> klazz) {

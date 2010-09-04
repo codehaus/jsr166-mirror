@@ -345,17 +345,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                                   null, null, 1);
     }
 
-    /** Updater for casHead */
-    private static final
-        AtomicReferenceFieldUpdater<ConcurrentSkipListMap, HeadIndex>
-        headUpdater = AtomicReferenceFieldUpdater.newUpdater
-        (ConcurrentSkipListMap.class, HeadIndex.class, "head");
-
     /**
      * compareAndSet head node
      */
     private boolean casHead(HeadIndex<K,V> cmp, HeadIndex<K,V> val) {
-        return headUpdater.compareAndSet(this, cmp, val);
+        return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
     }
 
     /* ---------------- Nodes -------------- */
@@ -394,28 +388,18 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             this.next = next;
         }
 
-        /** Updater for casNext */
-        static final AtomicReferenceFieldUpdater<Node, Node>
-            nextUpdater = AtomicReferenceFieldUpdater.newUpdater
-            (Node.class, Node.class, "next");
-
-        /** Updater for casValue */
-        static final AtomicReferenceFieldUpdater<Node, Object>
-            valueUpdater = AtomicReferenceFieldUpdater.newUpdater
-            (Node.class, Object.class, "value");
-
         /**
          * compareAndSet value field
          */
         boolean casValue(Object cmp, Object val) {
-            return valueUpdater.compareAndSet(this, cmp, val);
+            return UNSAFE.compareAndSwapObject(this, valueOffset, cmp, val);
         }
-
+        
         /**
          * compareAndSet next field
          */
         boolean casNext(Node<K,V> cmp, Node<K,V> val) {
-            return nextUpdater.compareAndSet(this, cmp, val);
+            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
 
         /**
@@ -493,6 +477,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return null;
             return new AbstractMap.SimpleImmutableEntry<K,V>(key, v);
         }
+
+        // Unsafe mechanics
+        private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
+        private static final long valueOffset =
+            objectFieldOffset(UNSAFE, "value", Node.class);
+        private static final long nextOffset =
+            objectFieldOffset(UNSAFE, "next", Node.class);
+
     }
 
     /* ---------------- Indexing -------------- */
@@ -518,16 +510,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             this.right = right;
         }
 
-        /** Updater for casRight */
-        static final AtomicReferenceFieldUpdater<Index, Index>
-            rightUpdater = AtomicReferenceFieldUpdater.newUpdater
-            (Index.class, Index.class, "right");
-
         /**
          * compareAndSet right field
          */
         final boolean casRight(Index<K,V> cmp, Index<K,V> val) {
-            return rightUpdater.compareAndSet(this, cmp, val);
+            return UNSAFE.compareAndSwapObject(this, rightOffset, cmp, val);
         }
 
         /**
@@ -562,6 +549,12 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         final boolean unlink(Index<K,V> succ) {
             return !indexesDeletedNode() && casRight(succ, succ.right);
         }
+
+        // Unsafe mechanics
+        private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
+        private static final long rightOffset =
+            objectFieldOffset(UNSAFE, "right", Index.class);
+
     }
 
     /* ---------------- Head nodes -------------- */
@@ -3112,4 +3105,22 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
     }
+
+    // Unsafe mechanics
+    private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
+    private static final long headOffset =
+        objectFieldOffset(UNSAFE, "head", ConcurrentSkipListMap.class);
+    
+    static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
+                                  String field, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
+        }
+    }
+
 }

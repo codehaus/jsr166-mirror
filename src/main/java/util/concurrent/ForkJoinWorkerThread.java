@@ -311,7 +311,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Performs additional initialization and starts this thread
+     * Performs additional initialization and starts this thread.
      */
     final void start(int poolIndex, UncaughtExceptionHandler ueh) {
         this.poolIndex = poolIndex;
@@ -414,7 +414,7 @@ public class ForkJoinWorkerThread extends Thread {
     // helpers for run()
 
     /**
-     * Find and execute tasks and check status while running
+     * Finds and executes tasks, and checks status while running.
      */
     private void mainLoop() {
         boolean ran = false; // true if ran a task on last step
@@ -428,7 +428,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Try to steal a task and execute it
+     * Tries to steal a task and execute it.
      *
      * @return true if ran a task
      */
@@ -518,7 +518,7 @@ public class ForkJoinWorkerThread extends Thread {
      * range. This method is used only during resets and backouts.
      */
     private static final void writeSlot(ForkJoinTask<?>[] q, int i,
-                                              ForkJoinTask<?> t) {
+                                        ForkJoinTask<?> t) {
         UNSAFE.putObjectVolatile(q, (i << qShift) + qBase, t);
     }
 
@@ -629,7 +629,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns next task or null if empty or contended
+     * Returns next task, or null if empty or contended.
      */
     final ForkJoinTask<?> peekTask() {
         ForkJoinTask<?>[] q = queue;
@@ -671,7 +671,7 @@ public class ForkJoinWorkerThread extends Thread {
      * Computes next value for random victim probe in scan().  Scans
      * don't require a very high quality generator, but also not a
      * crummy one.  Marsaglia xor-shift is cheap and works well enough.
-     * Note: This is manually inlined in scan()
+     * Note: This is manually inlined in scan().
      */
     private static final int xorShift(int r) {
         r ^= r << 13;
@@ -777,7 +777,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Sets state to TERMINATED. Called only by onTermination()
+     * Sets state to TERMINATED. Called only by onTermination().
      */
     private void setTerminated() {
         int s;

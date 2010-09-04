@@ -205,7 +205,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Record exception and set exceptional completion
+     * Records exception and sets exceptional completion.
+     * 
      * @return status on exit
      */
     private void setExceptionalCompletion(Throwable rex) {
@@ -338,7 +339,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Commences performing this task, awaits its completion if
-     * necessary, and return its result, or throws an (unchecked)
+     * necessary, and returns its result, or throws an (unchecked)
      * exception if the underlying computation did so.
      *
      * @return the computed result
@@ -534,7 +535,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Cancels ignoring exceptions if worker is terminating
+     * Cancels if current thread is a terminating worker thread,
+     * ignoring any exceptions thrown by cancel.
      */
     final void cancelIfTerminating() {
         Thread t = Thread.currentThread();
@@ -1093,7 +1095,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private static final long serialVersionUID = -7721805057305804111L;
 
     /**
-     * Saves the state to a stream.
+     * Saves the state to a stream (that is, serializes it).
      *
      * @serialData the current run status and the exception thrown
      * during execution, or {@code null} if none
@@ -1106,7 +1108,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Reconstitutes the instance from a stream.
+     * Reconstitutes the instance from a stream (that is, deserializes it).
      *
      * @param s the stream
      */

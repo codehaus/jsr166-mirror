@@ -7,7 +7,6 @@
 package jsr166y;
 
 import java.util.concurrent.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

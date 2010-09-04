@@ -172,11 +172,11 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Maximum work-stealing queue array size.  Must be less than or
-     * equal to 1 << 28 to ensure lack of index wraparound. (This
-     * is less than usual bounds, because we need leftshift by 3
-     * to be in int range).
+     * equal to 1 << (31 - width of array entry) to ensure lack of
+     * index wraparound. The value is set in the static block
+     * at the end of this file after obtaining width.
      */
-    private static final int MAXIMUM_QUEUE_CAPACITY = 1 << 28;
+    private static final int MAXIMUM_QUEUE_CAPACITY;
 
     /**
      * The pool this thread works in. Accessed directly by ForkJoinTask.
@@ -230,8 +230,8 @@ public class ForkJoinWorkerThread extends Thread {
     private static final int TRIMMED     = 0x08; // killed while suspended
 
     /**
-     * Number of steals, transferred and reset in pool callbacks pool
-     * when idle Accessed directly by pool.
+     * Number of steals. Directly accessed (and reset) by
+     * pool.tryAccumulateStealCount when idle.
      */
     int stealCount;
 
@@ -286,14 +286,14 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * The task currently being joined, set only when actively trying
-     * to helpStealer. Written only by current thread, but read by
-     * others.
+     * to help other stealers in helpJoinTask. Written only by this
+     * thread, but read by others.
      */
     private volatile ForkJoinTask<?> currentJoin;
 
     /**
      * The task most recently stolen from another worker (or
-     * submission queue).  Written only by current thread, but read by
+     * submission queue).  Written only by this thread, but read by
      * others.
      */
     private volatile ForkJoinTask<?> currentSteal;
@@ -349,7 +349,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * Initializes internal state after construction but before
      * processing any tasks. If you override this method, you must
-     * invoke super.onStart() at the beginning of the method.
+     * invoke @code{super.onStart()} at the beginning of the method.
      * Initialization requires care: Most fields must have legal
      * default values, to ensure that attempted accesses from other
      * threads work correctly even before this thread starts
@@ -447,12 +447,15 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * If a submission exists, try to activate and run it;
+     * If a submission exists, try to activate and run it.
      *
      * @return true if ran a task
      */
     private boolean tryExecSubmission() {
         ForkJoinPool p = pool;
+        // This loop is needed in case attempt to activate fails, in
+        // which case we only retry if there still appears to be a
+        // submission.
         while (p.hasQueuedSubmissions()) {
             ForkJoinTask<?> t; int a;
             if (active || // inline p.tryIncrementActiveCount
@@ -562,7 +565,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Tries to take a task from the base of own queue. Assumes active
-     * status.  Called only by current thread.
+     * status.  Called only by this thread.
      *
      * @return a task, or null if none
      */
@@ -585,7 +588,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Returns a popped task, or null if empty. Assumes active status.
-     * Called only by current thread.
+     * Called only by this thread.
      */
     private ForkJoinTask<?> popTask() {
         ForkJoinTask<?>[] q = queue;
@@ -609,8 +612,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Specialized version of popTask to pop only if topmost element
-     * is the given task. Called only by current thread while
-     * active.
+     * is the given task. Called only by this thread while active.
      *
      * @param t the task. Caller must ensure non-null.
      */
@@ -1055,6 +1057,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
+     * Implements ForJoinTask.getSurplusQueuedTaskCount().
      * Returns an estimate of the number of tasks, offset by a
      * function of number of idle workers.
      *
@@ -1157,6 +1160,7 @@ public class ForkJoinWorkerThread extends Thread {
         if ((s & (s-1)) != 0)
             throw new Error("data type scale not a power of two");
         qShift = 31 - Integer.numberOfLeadingZeros(s);
+        MAXIMUM_QUEUE_CAPACITY = 1 << (31 - qShift);
     }
 
     private static long objectFieldOffset(String field, Class<?> klazz) {

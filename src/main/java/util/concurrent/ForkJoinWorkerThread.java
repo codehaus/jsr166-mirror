@@ -284,14 +284,14 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * The task currently being joined, set only when actively trying
-     * to help other stealers in helpJoinTask. Written only by current
+     * to help other stealers in helpJoinTask. Written only by this
      * thread, but read by others.
      */
     private volatile ForkJoinTask<?> currentJoin;
 
     /**
      * The task most recently stolen from another worker (or
-     * submission queue).  Written only by current thread, but read by
+     * submission queue).  Written only by this thread, but read by
      * others.
      */
     private volatile ForkJoinTask<?> currentSteal;
@@ -563,7 +563,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Tries to take a task from the base of own queue. Assumes active
-     * status.  Called only by current thread.
+     * status.  Called only by this thread.
      *
      * @return a task, or null if none
      */
@@ -586,7 +586,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Returns a popped task, or null if empty. Assumes active status.
-     * Called only by current thread.
+     * Called only by this thread.
      */
     private ForkJoinTask<?> popTask() {
         ForkJoinTask<?>[] q = queue;
@@ -610,8 +610,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * Specialized version of popTask to pop only if topmost element
-     * is the given task. Called only by current thread while
-     * active.
+     * is the given task. Called only by this thread while active.
      *
      * @param t the task. Caller must ensure non-null.
      */

@@ -52,8 +52,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Gets the current value, with memory effects corresponding
-     * to those of a volatile variable.
+     * Gets the current value.
      *
      * @return the current value
      */
@@ -62,8 +61,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Sets to the given value, with memory effects corresponding
-     * to those of a volatile variable.
+     * Sets to the given value.
      *
      * @param newValue the new value
      */
@@ -72,82 +70,13 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the value to the given updated value
-     * if the current value {@code ==} the expected value,
-     * with memory effects of get() followed by set().
-     *
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful. False return indicates that
-     * the actual value was not equal to the expected value.
-     */
-    public final boolean compareAndSet(int expect, int update) {
-        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
-    }
-
-    /**
-     * Gets the current value, with memory effects corresponding
-     * to those of a non-volatile variable.
-     *
-     * @return the current value
-     * @since 1.7
-     */
-    public final int getInRelaxedOrder() {
-        return unsafe.getInt(this, valueOffset);
-    }
-
-    /**
-     * Sets the given value, with memory effects equivalent to
-     * setting a final variable (without any restriction about
-     * resetting the value).
+     * Eventually sets to the given value.
      *
      * @param newValue the new value
-     * @since 1.7
+     * @since 1.6
      */
-    public final void setInReleaseOrder(int newValue) {
+    public final void lazySet(int newValue) {
         unsafe.putOrderedInt(this, valueOffset, newValue);
-    }
-
-    /**
-     * Sets the given value, with memory effects equivalent to
-     * setting a non-volatile variable.
-     *
-     * @param newValue the new value
-     * @since 1.7
-     */
-    public final void setInRelaxedOrder(int newValue) {
-        unsafe.putOrderedInt(this, valueOffset, newValue);
-    }
-
-    /**
-     * Atomically sets the value to the given updated value
-     * if the current value {@code ==} the expected value.
-     *
-     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
-     * and does not provide ordering guarantees, so is only rarely an
-     * appropriate alternative to {@code compareAndSet}.
-     *
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful.
-     */
-    public final boolean weakCompareAndSet(int expect, int update) {
-        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
-    }
-
-    /**
-     * Atomically sets the value to the given updated value
-     * if the current value {@code ==} the expected value,
-     * with memory effects of get() followed by setInReleaseOrder().
-     *
-     * @param expect the expected value
-     * @param update the new value
-     * @return true if successful. False return indicates that
-     * the actual value was not equal to the expected value.
-     * @since 1.7
-     */
-    public final boolean compareAndSetInReleaseOrder(int expect, int update) {
-        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
     /**
@@ -165,29 +94,32 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the value to the given updated value if the
-     * current value {@code ==} the expected value, in either case
-     * returning the value, with memory effects of get().
+     * Atomically sets the value to the given updated value
+     * if the current value {@code ==} the expected value.
      *
      * @param expect the expected value
      * @param update the new value
-     * @return the current value
-     * @since 1.7
+     * @return true if successful. False return indicates that
+     * the actual value was not equal to the expected value.
      */
-    public final int compareAndSetAndGet(int expect, int update) {
-        unsafe.compareAndSwapInt(this, valueOffset, expect, update);
-        return value;
+    public final boolean compareAndSet(int expect, int update) {
+        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
     /**
-     * Eventually sets to the given value. Equivalent to
-     * to {link #setInReleaseOrder}.
+     * Atomically sets the value to the given updated value
+     * if the current value {@code ==} the expected value.
      *
-     * @param newValue the new value
-     * @since 1.6
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
+     *
+     * @param expect the expected value
+     * @param update the new value
+     * @return true if successful.
      */
-    public final void lazySet(int newValue) {
-        unsafe.putOrderedInt(this, valueOffset, newValue);
+    public final boolean weakCompareAndSet(int expect, int update) {
+        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
     /**

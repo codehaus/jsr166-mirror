@@ -619,13 +619,14 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Completes this task, and if not already aborted or cancelled,
-     * returning a {@code null} result upon {@code join} and related
-     * operations. This method may be used to provide results for
-     * asynchronous tasks, or to provide alternative handling for
-     * tasks that would not otherwise complete normally. Its use in
-     * other situations is discouraged. This method is
-     * overridable, but overridden versions must invoke {@code super}
-     * implementation to maintain guarantees.
+     * returning the given value as the result of subsequent
+     * invocations of {@code join} and related operations. This method
+     * may be used to provide results for asynchronous tasks, or to
+     * provide alternative handling for tasks that would not otherwise
+     * complete normally. Its use in other situations is
+     * discouraged. This method is overridable, but overridden
+     * versions must invoke {@code super} implementation to maintain
+     * guarantees.
      *
      * @param value the result value for this task
      */
@@ -677,7 +678,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         boolean dec = false; // true if pool count decremented
         long nanos = unit.toNanos(timeout);
         for (;;) {
-            if (Thread.interrupted() && pool == null) {
+            if (pool == null && Thread.interrupted()) {
                 interrupted = true;
                 break;
             }
@@ -762,9 +763,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Commences performing this task and awaits its completion if
      * necessary, without returning its result or throwing its
-     * exception. This method may be useful when processing
-     * collections of tasks when some have been cancelled or otherwise
-     * known to have aborted.
+     * exception.
      */
     public final void quietlyInvoke() {
         if (status >= 0) {

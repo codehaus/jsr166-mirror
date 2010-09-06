@@ -673,7 +673,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Nulls out record of worker in workers array
+     * Nulls out record of worker in workers array.
      */
     private void forgetWorker(ForkJoinWorkerThread w) {
         int idx = w.poolIndex;
@@ -1106,10 +1106,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                                      c = eventCount, c+1);
             eventWaiters = 0L; // clobber lists
             spareWaiters = 0;
-            ForkJoinWorkerThread[] ws = workers;
-            int n = ws.length;
-            for (int i = 0; i < n; ++i) {
-                ForkJoinWorkerThread w = ws[i];
+            for (ForkJoinWorkerThread w : workers) {
                 if (w != null) {
                     w.shutdown();
                     if (passes > 0 && !w.isTerminated()) {
@@ -1526,13 +1523,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public long getQueuedTaskCount() {
         long count = 0;
-        ForkJoinWorkerThread[] ws = workers;
-        int n = ws.length;
-        for (int i = 0; i < n; ++i) {
-            ForkJoinWorkerThread w = ws[i];
+        for (ForkJoinWorkerThread w : workers)
             if (w != null)
                 count += w.getQueueSize();
-        }
         return count;
     }
 
@@ -1587,13 +1580,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     protected int drainTasksTo(Collection<? super ForkJoinTask<?>> c) {
         int count = submissionQueue.drainTo(c);
-        ForkJoinWorkerThread[] ws = workers;
-        int n = ws.length;
-        for (int i = 0; i < n; ++i) {
-            ForkJoinWorkerThread w = ws[i];
+        for (ForkJoinWorkerThread w : workers)
             if (w != null)
                 count += w.drainTasksTo(c);
-        }
         return count;
     }
 

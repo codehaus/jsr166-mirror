@@ -365,7 +365,7 @@ package java.util.concurrent.atomic;
  *          <em>synchronization order</em>
  *
  *     <li> If (<em>r1</em>, <em>w1</em>) and (<em>r2</em>,
- *     <em>w2</em>) are two pairs of reads and and writes, both
+ *     <em>w2</em>) are two pairs of reads and writes, both
  *     respectively satisfying the above conditions for <em>p</em>,
  *     and sequenced(r1, r2) then it is not the case that <em>w2
  *     happens-before w1</em>.

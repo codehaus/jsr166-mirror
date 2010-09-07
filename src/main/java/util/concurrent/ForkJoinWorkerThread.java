@@ -494,7 +494,7 @@ public class ForkJoinWorkerThread extends Thread {
      * callers and (3) effective offsets are known not to overflow
      * from int to long (because of MAXIMUM_QUEUE_CAPACITY). We don't
      * need corresponding version for reads: plain array reads are OK
-     * because they protected by other volatile reads and are
+     * because they are protected by other volatile reads and are
      * confirmed by CASes.
      *
      * Most uses don't actually call these methods, but instead contain

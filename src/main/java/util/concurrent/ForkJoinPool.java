@@ -1224,13 +1224,13 @@ public class ForkJoinPool extends AbstractExecutorService {
      * use {@link #defaultForkJoinWorkerThreadFactory}.
      * @param handler the handler for internal worker threads that
      * terminate due to unrecoverable errors encountered while executing
-     * tasks. For default value, use <code>null</code>.
+     * tasks. For default value, use {@code null}.
      * @param asyncMode if true,
      * establishes local first-in-first-out scheduling mode for forked
      * tasks that are never joined. This mode may be more appropriate
      * than default locally stack-based mode in applications in which
      * worker threads only process event-style asynchronous tasks.
-     * For default value, use <code>false</code>.
+     * For default value, use {@code false}.
      * @throws IllegalArgumentException if parallelism less than or
      *         equal to zero, or greater than implementation limit
      * @throws NullPointerException if the factory is null

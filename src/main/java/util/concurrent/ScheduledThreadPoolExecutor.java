@@ -33,8 +33,8 @@ import java.util.*;
  * time of cancellation.
  *
  * <p>Successive executions of a task scheduled via
- * <code>scheduleAtFixedRate</code> or
- * <code>scheduleWithFixedDelay</code> do not overlap. While different
+ * {@code scheduleAtFixedRate} or
+ * {@code scheduleWithFixedDelay} do not overlap. While different
  * executions may be performed by different threads, the effects of
  * prior executions <a
  * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>

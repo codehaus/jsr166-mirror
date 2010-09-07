@@ -25,8 +25,8 @@ import java.util.*;    // XXX This import goes away        XXX
  * <tt>Deque</tt> implementations; in most implementations, insert
  * operations cannot fail.
  *
- * <p>The twelve methods described above are summarized in the
- * following table:<p>
+ * <p>The twelve methods described above are are summarized in the
+ * follwoing table:<p>
  *
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>

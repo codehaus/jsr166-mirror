@@ -300,7 +300,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * about the same time as another is needlessly being created. We
      * counteract this and related slop in part by requiring resumed
      * spares to immediately recheck (in preStep) to see whether they
-     * they should re-suspend.
+     * should re-suspend.
      *
      * 6. Killing off unneeded workers. A timeout mechanism is used to
      * shed unused workers: The oldest (first) event queue waiter uses
@@ -429,7 +429,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * The wakeup interval (in nanoseconds) for the oldest worker
-     * worker waiting for an event invokes tryShutdownUnusedWorker to shrink
+     * waiting for an event invokes tryShutdownUnusedWorker to shrink
      * the number of workers.  The exact value does not matter too
      * much, but should be long enough to slowly release resources
      * during long periods without use without disrupting normal use.
@@ -1125,7 +1125,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Clear out and cancel submissions, ignoring exceptions
+     * Clears out and cancels submissions, ignoring exceptions.
      */
     private void cancelSubmissions() {
         ForkJoinTask<?> task;
@@ -1140,15 +1140,15 @@ public class ForkJoinPool extends AbstractExecutorService {
     // misc support for ForkJoinWorkerThread
 
     /**
-     * Returns pool number
+     * Returns pool number.
      */
     final int getPoolNumber() {
         return poolNumber;
     }
 
     /**
-     * Tries to accumulates steal count from a worker, clearing
-     * the worker's value.
+     * Tries to accumulate steal count from a worker, clearing
+     * the worker's value if successful.
      *
      * @return true if worker steal count now zero
      */
@@ -1172,7 +1172,10 @@ public class ForkJoinPool extends AbstractExecutorService {
         int pc = parallelism; // use parallelism, not rc
         int ac = runState;    // no mask -- artificially boosts during shutdown
         // Use exact results for small values, saturate past 4
-        return pc <= ac? 0 : pc >>> 1 <= ac? 1 : pc >>> 2 <= ac? 3 : pc >>> 3;
+        return ((pc <= ac) ? 0 :
+                (pc >>> 1 <= ac) ? 1 :
+                (pc >>> 2 <= ac) ? 3 :
+                pc >>> 3);
     }
 
     // Public and protected methods

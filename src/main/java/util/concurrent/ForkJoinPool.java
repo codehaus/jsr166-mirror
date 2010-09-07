@@ -1440,7 +1440,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Returns the number of worker threads that have started but not
-     * yet terminated.  This result returned by this method may differ
+     * yet terminated.  The result returned by this method may differ
      * from {@link #getParallelism} when threads are created to
      * maintain parallelism when others are cooperatively blocked.
      *

@@ -1841,11 +1841,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final long eventCountOffset =
         objectFieldOffset("eventCount", ForkJoinPool.class);
     private static final long eventWaitersOffset =
-        objectFieldOffset("eventWaiters",ForkJoinPool.class);
+        objectFieldOffset("eventWaiters", ForkJoinPool.class);
     private static final long stealCountOffset =
-        objectFieldOffset("stealCount",ForkJoinPool.class);
+        objectFieldOffset("stealCount", ForkJoinPool.class);
     private static final long spareWaitersOffset =
-        objectFieldOffset("spareWaiters",ForkJoinPool.class);
+        objectFieldOffset("spareWaiters", ForkJoinPool.class);
 
     private static long objectFieldOffset(String field, Class<?> klazz) {
         try {

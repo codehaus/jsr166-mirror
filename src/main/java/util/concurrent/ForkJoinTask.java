@@ -151,7 +151,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * single int to minimize footprint and to ensure atomicity (via
      * CAS).  Status is initially zero, and takes on nonnegative
      * values until completed, upon which status holds value
-     * NORMAL. CANCELLED, or EXCEPTIONAL. Tasks undergoing blocking
+     * NORMAL, CANCELLED, or EXCEPTIONAL. Tasks undergoing blocking
      * waits by other threads have the SIGNAL bit set.  Completion of
      * a stolen task with SIGNAL set awakens any waiters via
      * notifyAll. Even though suboptimal for some purposes, we use

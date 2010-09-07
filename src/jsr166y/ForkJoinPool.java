@@ -806,7 +806,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     // Maintaining parallelism
 
     /**
-     * Pushes worker onto the spare stack
+     * Pushes worker onto the spare stack.
      */
     final void pushSpare(ForkJoinWorkerThread w) {
         int ns = (++w.spareCount << SPARE_COUNT_SHIFT) | (w.poolIndex + 1);

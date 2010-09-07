@@ -6,7 +6,6 @@
 
 package jsr166y;
 
-import java.util.concurrent.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -429,10 +428,11 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * The wakeup interval (in nanoseconds) for the oldest worker
-     * waiting for an event invokes tryShutdownUnusedWorker to shrink
-     * the number of workers.  The exact value does not matter too
-     * much, but should be long enough to slowly release resources
-     * during long periods without use without disrupting normal use.
+     * waiting for an event to invoke tryShutdownUnusedWorker to
+     * shrink the number of workers.  The exact value does not matter
+     * too much. It must be short enough to release resources during
+     * sustained periods of idleness, but not so short that threads
+     * are continually re-created.
      */
     private static final long SHRINK_RATE_NANOS =
         30L * 1000L * 1000L * 1000L; // 2 per minute
@@ -604,7 +604,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * (rarely) necessary when other count updates lag.
      *
      * @param dr -- either zero or ONE_RUNNING
-     * @param dt == either zero or ONE_TOTAL
+     * @param dt -- either zero or ONE_TOTAL
      */
     private void decrementWorkerCounts(int dr, int dt) {
         for (;;) {

@@ -523,7 +523,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Lifecycle control. The low word contains the number of workers
      * that are (probably) executing tasks. This value is atomically
      * incremented before a worker gets a task to run, and decremented
-     * when worker has no tasks and cannot find any.  Bits 16-18
+     * when a worker has no tasks and cannot find any.  Bits 16-18
      * contain runLevel value. When all are zero, the pool is
      * running. Level transitions are monotonic (running -> shutdown
      * -> terminating -> terminated) so each transition adds a bit.

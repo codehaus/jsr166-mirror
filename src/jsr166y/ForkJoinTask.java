@@ -206,7 +206,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Records exception and sets exceptional completion.
-     * 
+     *
      * @return status on exit
      */
     private void setExceptionalCompletion(Throwable rex) {

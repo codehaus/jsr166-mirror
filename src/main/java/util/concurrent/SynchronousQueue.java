@@ -260,9 +260,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
         /** The head (top) of the stack */
         volatile SNode head;
-        
+
         boolean casHead(SNode h, SNode nh) {
-            return h == head && 
+            return h == head &&
                 UNSAFE.compareAndSwapObject(this, headOffset, h, nh);
         }
 
@@ -514,7 +514,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             void tryCancel(Object cmp) {
                 UNSAFE.compareAndSwapObject(this, itemOffset, cmp, this);
             }
-            
+
             boolean isCancelled() {
                 return item == this;
             }
@@ -558,7 +558,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * old head's next node to avoid garbage retention.
          */
         void advanceHead(QNode h, QNode nh) {
-            if (h == head && 
+            if (h == head &&
                 UNSAFE.compareAndSwapObject(this, headOffset, h, nh))
                 h.next = h; // forget old next
         }
@@ -770,7 +770,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             objectFieldOffset(UNSAFE, "tail", TransferQueue.class);
         private static final long cleanMeOffset =
             objectFieldOffset(UNSAFE, "cleanMe", TransferQueue.class);
-        
+
     }
 
     /**

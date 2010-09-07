@@ -394,7 +394,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         boolean casValue(Object cmp, Object val) {
             return UNSAFE.compareAndSwapObject(this, valueOffset, cmp, val);
         }
-        
+
         /**
          * compareAndSet next field
          */
@@ -3110,7 +3110,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
     private static final long headOffset =
         objectFieldOffset(UNSAFE, "head", ConcurrentSkipListMap.class);
-    
+
     static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
                                   String field, Class<?> klazz) {
         try {

@@ -490,7 +490,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /*
      * Intrinsics-based atomic writes for queue slots. These are
-     * basically the same as methods in AtomicObjectArray, but
+     * basically the same as methods in AtomicReferenceArray, but
      * specialized for (1) ForkJoinTask elements (2) requirement that
      * nullness and bounds checks have already been performed by
      * callers and (3) effective offsets are known not to overflow

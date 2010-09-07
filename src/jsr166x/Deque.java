@@ -25,8 +25,8 @@ import java.util.*;    // XXX This import goes away        XXX
  * <tt>Deque</tt> implementations; in most implementations, insert
  * operations cannot fail.
  *
- * <p>The twelve methods described above are are summarized in the
- * follwoing table:<p>
+ * <p>The twelve methods described above are summarized in the
+ * following table:<p>
  *
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
@@ -132,7 +132,7 @@ import java.util.*;    // XXX This import goes away        XXX
  * a deque is used as a queue or a stack; in either case, elements are
  * drawn from the beginning of the deque.
  *
- * <p>This inteface provides two methods to to remove interior
+ * <p>This interface provides two methods to remove interior
  * elements, {@link #removeFirstOccurrence removeFirstOccurrence} and
  * {@link #removeLastOccurrence removeLastOccurrence}.  Unlike the
  * {@link List} interface, this interface does not provide support for

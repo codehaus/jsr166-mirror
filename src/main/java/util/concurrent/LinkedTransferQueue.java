@@ -884,7 +884,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 p = head;
             else if (!s.isMatched())
                 p = s;
-            else if ((n = s.next) == null) // trailing node is pinned
+            else if ((n = s.next) == null || s == n) // trailing node is pinned
                 break;
             else
                 p.casNext(s, n);

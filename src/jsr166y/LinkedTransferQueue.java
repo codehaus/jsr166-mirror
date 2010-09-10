@@ -882,12 +882,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      */
     private void sweep() {
         for (Node p = head, s, n; p != null && (s = p.next) != null; ) {
-            if (p == s)                    // stale
-                p = head;
-            else if (!s.isMatched())
+            if (!s.isMatched())
+                // Unmatched nodes are never self-linked
                 p = s;
-            else if ((n = s.next) == null || s == n) // trailing node is pinned
+            else if ((n = s.next) == null) // trailing node is pinned
                 break;
+            else if (s == n)    // stale
+                // No need to also check for p == s, since that implies s == n
+                p = head;
             else
                 p.casNext(s, n);
         }

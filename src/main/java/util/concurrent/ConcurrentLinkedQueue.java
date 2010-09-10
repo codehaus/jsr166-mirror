@@ -289,7 +289,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public boolean offer(E e) {
         checkNotNull(e);
-        Node<E> n = new Node<E>(e);
+        Node<E> newNode = new Node<E>(e);
+
         retry:
         for (;;) {
             Node<E> t = tail;
@@ -300,9 +301,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                     if (hops > HOPS && t != tail)
                         continue retry;
                     p = next;
-                } else if (p.casNext(null, n)) {
+                } else if (p.casNext(null, newNode)) {
                     if (hops >= HOPS)
-                        casTail(t, n);  // Failure is OK.
+                        casTail(t, newNode);  // Failure is OK.
                     return true;
                 } else {
                     p = succ(p);

@@ -783,10 +783,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
     }
 
-    private void lazySetHead(Node<E> val) {
-        UNSAFE.putOrderedObject(this, headOffset, val);
-    }
-
     static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
                                   String field, Class<?> klazz) {
         try {

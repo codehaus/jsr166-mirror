@@ -289,7 +289,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public boolean offer(E e) {
         checkNotNull(e);
-        Node<E> newNode = new Node<E>(e);
+        final Node<E> newNode = new Node<E>(e);
 
         restartFromTail:
         for (;;) {

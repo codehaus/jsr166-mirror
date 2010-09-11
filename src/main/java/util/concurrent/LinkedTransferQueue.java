@@ -559,7 +559,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             throw new NullPointerException();
         Node s = null;                        // the node to append, if needed
 
-        retry: for (;;) {                     // restart on append race
+        retry:
+        for (;;) {                            // restart on append race
 
             for (Node h = head, p = h; p != null;) { // find & match first node
                 boolean isData = p.isData;

@@ -313,13 +313,13 @@ public class ConcurrentLinkedDeque<E>
         checkNotNull(e);
         final Node<E> newNode = new Node<E>(e);
 
-        retry:
+        restartFromHead:
         for (;;) {
             for (Node<E> h = head, p = h;;) {
                 Node<E> q = p.prev;
                 if (q == null) {
                     if (p.next == p) // PREV_TERMINATOR
-                        continue retry;
+                        continue restartFromHead;
                     // p is first node
                     newNode.lazySetNext(p); // CAS piggyback
                     if (p.casPrev(null, newNode)) {
@@ -334,7 +334,7 @@ public class ConcurrentLinkedDeque<E>
                     }
                 }
                 else if (p == q)
-                    continue retry;
+                    continue restartFromHead;
                 else
                     p = q;
             }
@@ -348,13 +348,13 @@ public class ConcurrentLinkedDeque<E>
         checkNotNull(e);
         final Node<E> newNode = new Node<E>(e);
 
-        retry:
+        restartFromTail:
         for (;;) {
             for (Node<E> t = tail, p = t;;) {
                 Node<E> q = p.next;
                 if (q == null) {
                     if (p.prev == p) // NEXT_TERMINATOR
-                        continue retry;
+                        continue restartFromTail;
                     // p is last node
                     newNode.lazySetPrev(p); // CAS piggyback
                     if (p.casNext(null, newNode)) {
@@ -369,7 +369,7 @@ public class ConcurrentLinkedDeque<E>
                     }
                 }
                 else if (p == q)
-                    continue retry;
+                    continue restartFromTail;
                 else
                     p = q;
             }
@@ -665,7 +665,7 @@ public class ConcurrentLinkedDeque<E>
      * Guarantees that head is set to the returned node.
      */
     Node<E> first() {
-        retry:
+        restartFromHead:
         for (;;) {
             for (Node<E> h = head, p = h;;) {
                 Node<E> q = p.prev;
@@ -676,9 +676,9 @@ public class ConcurrentLinkedDeque<E>
                         || casHead(h, p))
                         return p;
                     else
-                        continue retry;
+                        continue restartFromHead;
                 } else if (p == q) {
-                    continue retry;
+                    continue restartFromHead;
                 } else {
                     p = q;
                 }
@@ -693,7 +693,7 @@ public class ConcurrentLinkedDeque<E>
      * Guarantees that tail is set to the returned node.
      */
     Node<E> last() {
-        retry:
+        restartFromTail:
         for (;;) {
             for (Node<E> t = tail, p = t;;) {
                 Node<E> q = p.next;
@@ -704,9 +704,9 @@ public class ConcurrentLinkedDeque<E>
                         || casTail(t, p))
                         return p;
                     else
-                        continue retry;
+                        continue restartFromTail;
                 } else if (p == q) {
-                    continue retry;
+                    continue restartFromTail;
                 } else {
                     p = q;
                 }
@@ -1071,13 +1071,13 @@ public class ConcurrentLinkedDeque<E>
             return false;
 
         // Atomically splice the chain as the tail of this collection
-        retry:
+        restartFromTail:
         for (;;) {
             for (Node<E> t = tail, p = t;;) {
                 Node<E> q = p.next;
                 if (q == null) {
                     if (p.prev == p) // NEXT_TERMINATOR
-                        continue retry;
+                        continue restartFromTail;
                     // p is last node
                     splice.lazySetPrev(p); // CAS piggyback
                     if (p.casNext(null, splice)) {
@@ -1094,7 +1094,7 @@ public class ConcurrentLinkedDeque<E>
                     }
                 }
                 else if (p == q)
-                    continue retry;
+                    continue restartFromTail;
                 else
                     p = q;
             }

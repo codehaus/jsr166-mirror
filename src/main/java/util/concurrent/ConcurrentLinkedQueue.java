@@ -291,7 +291,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         checkNotNull(e);
         Node<E> newNode = new Node<E>(e);
 
-        retry:
+        restartFromTail:
         for (;;) {
             Node<E> t = tail;
             Node<E> p = t;
@@ -299,7 +299,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                 Node<E> next = succ(p);
                 if (next != null) {
                     if (hops > HOPS && t != tail)
-                        continue retry;
+                        continue restartFromTail;
                     p = next;
                 } else if (p.casNext(null, newNode)) {
                     if (hops >= HOPS)
@@ -500,13 +500,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             return false;
 
         // Atomically splice the chain as the tail of this collection
-        retry:
+        restartFromTail:
         for (;;) {
             for (Node<E> t = tail, p = t;;) {
                 Node<E> next = succ(p);
                 if (next != null) {
                     if (t != tail)
-                        continue retry;
+                        continue restartFromTail;
                     p = next;
                 } else if (p.casNext(null, splice)) {
                     if (! casTail(t, last)) {

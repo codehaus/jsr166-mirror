@@ -67,6 +67,8 @@ public class ConcurrentLinkedDeque<E>
      *
      * We extend the techniques developed for ConcurrentLinkedQueue and
      * LinkedTransferQueue (see the internal docs for those classes).
+     * Understanding the ConcurrentLinkedQueue implementation is a
+     * prerequisite for understanding the implementation of this class.
      *
      * The data structure is a symmetrical doubly-linked "GC-robust"
      * linked list of nodes.  We minimize the number of volatile writes
@@ -193,12 +195,15 @@ public class ConcurrentLinkedDeque<E>
      * except that most public methods that iterate through the list
      * follow next pointers ("forward" direction).
      *
-     * There is one desirable property we would like to have, but
-     * don't: it is possible, when an addFirst(A) is racing with
-     * pollFirst() removing B, for an iterating observer to see A B C
-     * and subsequently see A C, even though no interior removes are
-     * ever performed.  I believe this wart can only be removed at
-     * significant runtime cost.
+     * We believe (without full proof) that all single-element deque
+     * operations (e.g., addFirst, peekLast, pollLast) are linearizable
+     * (see Herlihy and Shavit's book).  However, some combinations of
+     * operations are known not to be linearizable.  In particular,
+     * when an addFirst(A) is racing with pollFirst() removing B, it is
+     * possible for an observer iterating over the elements to observe
+     * A B C and subsequently observe A C, even though no interior
+     * removes are ever performed.  Nevertheless, iterators behave
+     * reasonably, providing the "weakly consistent" guarantees.
      *
      * Empirically, microbenchmarks suggest that this class adds about
      * 40% overhead relative to ConcurrentLinkedQueue, which feels as
@@ -467,9 +472,8 @@ public class ConcurrentLinkedDeque<E>
                 (isFirst ? activePred.prev == null : activePred.item != null) &&
                 (isLast  ? activeSucc.next == null : activeSucc.item != null)) {
 
-                // Ensure x is not reachable from head or tail
-                updateHead();
-                updateTail();
+                updateHead(); // Ensure x is not reachable from head
+                updateTail(); // Ensure x is not reachable from tail
 
                 // Finally, actually gc-unlink
                 x.lazySetPrev(isFirst ? prevTerminator() : x);
@@ -493,8 +497,10 @@ public class ConcurrentLinkedDeque<E>
                         (p.next == null || p.item != null) &&
                         p.prev == first) {
 
-                        updateHead();
-                        updateTail();
+                        updateHead(); // Ensure o is not reachable from head
+                        updateTail(); // Ensure o is not reachable from tail
+
+                        // Finally, actually gc-unlink
                         o.lazySetNext(o);
                         o.lazySetPrev(prevTerminator());
                     }
@@ -525,8 +531,10 @@ public class ConcurrentLinkedDeque<E>
                         (p.prev == null || p.item != null) &&
                         p.next == last) {
 
-                        updateHead();
-                        updateTail();
+                        updateHead(); // Ensure o is not reachable from head
+                        updateTail(); // Ensure o is not reachable from tail
+
+                        // Finally, actually gc-unlink
                         o.lazySetPrev(o);
                         o.lazySetNext(nextTerminator());
                     }

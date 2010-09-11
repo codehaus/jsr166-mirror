@@ -13,6 +13,7 @@ public class RecursiveActionTest extends JSR166TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
+
     public static Test suite() {
         return new TestSuite(RecursiveActionTest.class);
     }
@@ -67,7 +68,6 @@ public class RecursiveActionTest extends JSR166TestCase {
      * invoke returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally
      * completed tasks. getRawResult of a RecursiveAction returns null;
-     *
      */
     public void testInvoke() {
         RecursiveAction a = new RecursiveAction() {
@@ -460,7 +460,6 @@ public class RecursiveActionTest extends JSR166TestCase {
 
     /**
      * getPoolIndex of current thread in pool returns 0 <= value < poolSize
-     *
      */
     public void testWorkerGetPoolIndex() {
         RecursiveAction a = new RecursiveAction() {

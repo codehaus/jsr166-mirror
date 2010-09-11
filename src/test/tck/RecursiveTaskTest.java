@@ -64,7 +64,6 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * isCompletedAbnormally and isCancelled return false for normally
      * completed tasks. getRawResult of a completed non-null task
      * returns value;
-     *
      */
     public void testInvoke() {
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {

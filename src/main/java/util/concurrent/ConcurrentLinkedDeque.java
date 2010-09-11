@@ -94,7 +94,8 @@ public class ConcurrentLinkedDeque<E>
      *
      * A new element is added atomically by CASing the null prev or
      * next reference in the first or last node to a fresh node
-     * containing the element.
+     * containing the element.  The element's node atomically becomes
+     * "live" at that point.
      *
      * A node is considered "active" if it is a live node, or the
      * first or last node.  Active nodes cannot be unlinked.
@@ -322,6 +323,9 @@ public class ConcurrentLinkedDeque<E>
                     // p is first node
                     newNode.lazySetNext(p); // CAS piggyback
                     if (p.casPrev(null, newNode)) {
+                        // Successful CAS is the linearization point
+                        // for e to become an element of this deque,
+                        // and for newNode to become "live".
                         if (p != h) // hop two nodes at a time
                             casHead(h, newNode);
                         return;
@@ -354,6 +358,9 @@ public class ConcurrentLinkedDeque<E>
                     // p is last node
                     newNode.lazySetPrev(p); // CAS piggyback
                     if (p.casNext(null, newNode)) {
+                        // Successful CAS is the linearization point
+                        // for e to become an element of this deque,
+                        // and for newNode to become "live".
                         if (p != t) // hop two nodes at a time
                             casTail(t, newNode);
                         return;

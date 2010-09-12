@@ -233,7 +233,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             if (h == null)
                 h = t = newNode;
             else {
-                t.next = newNode;
+                t.lazySetNext(newNode);
                 t = newNode;
             }
         }
@@ -492,7 +492,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             if (splice == null)
                 splice = last = newNode;
             else {
-                last.next = newNode;
+                last.lazySetNext(newNode);
                 last = newNode;
             }
         }
@@ -747,7 +747,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             if (h == null)
                 h = t = newNode;
             else {
-                t.next = newNode;
+                t.lazySetNext(newNode);
                 t = newNode;
             }
         }

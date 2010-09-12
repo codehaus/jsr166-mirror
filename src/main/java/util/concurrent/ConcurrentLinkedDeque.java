@@ -780,8 +780,8 @@ public class ConcurrentLinkedDeque<E>
             if (h == null)
                 h = t = newNode;
             else {
-                t.next = newNode;
-                newNode.prev = t;
+                t.lazySetNext(newNode);
+                newNode.lazySetPrev(t);
                 t = newNode;
             }
         }
@@ -1062,8 +1062,8 @@ public class ConcurrentLinkedDeque<E>
             if (splice == null)
                 splice = last = newNode;
             else {
-                last.next = newNode;
-                newNode.prev = last;
+                last.lazySetNext(newNode);
+                newNode.lazySetPrev(last);
                 last = newNode;
             }
         }
@@ -1327,8 +1327,8 @@ public class ConcurrentLinkedDeque<E>
             if (h == null)
                 h = t = newNode;
             else {
-                t.next = newNode;
-                newNode.prev = t;
+                t.lazySetNext(newNode);
+                newNode.lazySetPrev(t);
                 t = newNode;
             }
         }

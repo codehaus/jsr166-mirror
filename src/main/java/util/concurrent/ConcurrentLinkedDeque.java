@@ -493,7 +493,9 @@ public class ConcurrentLinkedDeque<E>
      * Unlinks non-null first node.
      */
     private void unlinkFirst(Node<E> first, Node<E> next) {
-        // assert first != null && next != null && first.item == null;
+        // assert first != null;
+        // assert next != null;
+        // assert first.item == null;
         Node<E> o = null, p = next;
         for (int hops = 0; ; ++hops) {
             Node<E> q;
@@ -527,7 +529,9 @@ public class ConcurrentLinkedDeque<E>
      * Unlinks non-null last node.
      */
     private void unlinkLast(Node<E> last, Node<E> prev) {
-        // assert last != null && prev != null && last.item == null;
+        // assert last != null;
+        // assert prev != null;
+        // assert last.item == null;
         Node<E> o = null, p = prev;
         for (int hops = 0; ; ++hops) {
             Node<E> q;
@@ -785,8 +789,24 @@ public class ConcurrentLinkedDeque<E>
                 t = newNode;
             }
         }
-        if (h == null)
-            h = t = new Node<E>(null);
+        initHeadTail(h, t);
+    }
+
+    /**
+     * Initializes head and tail, ensuring invariants hold.
+     */
+    private void initHeadTail(Node<E> h, Node<E> t) {
+        if (h == t) {
+            if (h == null)
+                h = t = new Node<E>(null);
+            else {
+                // Avoid edge case of a single Node with non-null item.
+                Node<E> newNode = new Node<E>(null);
+                t.lazySetNext(newNode);
+                newNode.lazySetPrev(t);
+                t = newNode;
+            }
+        }
         head = h;
         tail = t;
     }
@@ -1332,10 +1352,7 @@ public class ConcurrentLinkedDeque<E>
                 t = newNode;
             }
         }
-        if (h == null)
-            h = t = new Node<E>(null);
-        head = h;
-        tail = t;
+        initHeadTail(h, t);
     }
 
     // Unsafe mechanics

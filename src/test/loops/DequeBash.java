@@ -38,17 +38,19 @@ public class DequeBash {
     }
 
     public static void main(String args[]) throws Exception {
-        Class cls = Class.forName(args[0]);
+        Class<?> cls = Class.forName(args[0]);
         int n = 1000000;
 
         for (int j = 0; j < 3; ++j) {
+            @SuppressWarnings("unchecked")
             Deque<Integer> deque = (Deque<Integer>) cls.newInstance();
             nextTail =  0;
             nextHead = -1;
-            long start = System.currentTimeMillis();
+            long start = System.nanoTime();
             mainTest(deque, n);
-            long end = System.currentTimeMillis();
-            System.out.println("Time: " + (end - start) + "ms");
+            long end = System.nanoTime();
+            long elapsedTimeMillis = (end - start) / (1000L * 1000L);
+            System.out.printf("Time: %d ms%n", elapsedTimeMillis);
             if (deque.isEmpty()) System.out.print(" ");
         }
 
@@ -71,9 +73,8 @@ public class DequeBash {
 
             // Test serialization and copying
             if ((i & 4095) == 0) {
-                testEqual(deque, deepCopy(deque));
-                testEqual(deque, (Deque<Integer>) deque.getClass().
-                          getConstructor(Collection.class).newInstance(deque));
+                testEqual(deque, serialClone(deque));
+                testEqual(deque, copyConstructorClone(deque));
             }
 
             // Test fancy removal stuff once in a blue moon
@@ -270,34 +271,28 @@ public class DequeBash {
             throw new Exception("d2 contains all of {Integer.MIN_VALUE }");
     }
 
-    private static <T> T deepCopy(T o) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(o);
-            oos.flush();
-            ByteArrayInputStream bin = new ByteArrayInputStream(
-                bos.toByteArray());
-            ObjectInputStream ois = new ObjectInputStream(bin);
+    @SuppressWarnings("unchecked")
+    private static <T> T copyConstructorClone(T o) throws Exception {
+        return (T) o.getClass().getConstructor(Collection.class).newInstance(o);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T serialClone(T o) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(o);
+        oos.flush();
+        oos.close();
+        ByteArrayInputStream bin =
+            new ByteArrayInputStream(bos.toByteArray());
+        ObjectInputStream ois = new ObjectInputStream(bin);
             return (T) ois.readObject();
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
-        }
     }
 
     private static void testRemove(Deque<Integer> deque) throws Exception {
-        Deque<Integer> copy = null;
-        switch (random() & 1) {
-          case 0:
-            copy = (Deque<Integer>) deque.getClass().
-                getConstructor(Collection.class).newInstance(deque);
-            break;
-          case 1:
-            copy = deepCopy(deque);
-            break;
-          default:
-            throw new Exception("How'd we get here");
-        }
+        Deque<Integer> copy = ((random() & 1) == 0) ?
+            copyConstructorClone(deque) :
+            serialClone(deque);
 
         int numRemoved = 0;
         for (Iterator<Integer> it = copy.iterator(); it.hasNext(); ) {
@@ -335,8 +330,7 @@ public class DequeBash {
 
         testEmpty(copy);
 
-        copy = (Deque<Integer>) deque.getClass().
-            getConstructor(Collection.class).newInstance(deque);
+        copy = copyConstructorClone(deque);
         copy.retainAll(deque);
         testEqual(deque, copy);
         copy.removeAll(deque);

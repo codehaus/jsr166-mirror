@@ -3,10 +3,10 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
  */
+
 import junit.framework.*;
 import java.util.concurrent.*;
 import java.util.*;
-
 
 public class RecursiveTaskTest extends JSR166TestCase {
 
@@ -17,11 +17,27 @@ public class RecursiveTaskTest extends JSR166TestCase {
         return new TestSuite(RecursiveTaskTest.class);
     }
 
-    static final ForkJoinPool mainPool = new ForkJoinPool();
-    static final ForkJoinPool singletonPool = new ForkJoinPool(1);
-    static final ForkJoinPool asyncSingletonPool =
-        new ForkJoinPool(1, ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-                         null, true);
+    private static ForkJoinPool mainPool() {
+        return new ForkJoinPool();
+    }
+
+    private static ForkJoinPool singletonPool() {
+        return new ForkJoinPool(1);
+    }
+
+    private static ForkJoinPool asyncSingletonPool() {
+        return new ForkJoinPool(1,
+                                ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+                                null, true);
+    }
+
+    private <T> T testInvokeOnPool(ForkJoinPool pool, RecursiveTask<T> a) {
+        try {
+            return pool.invoke(a);
+        } finally {
+            joinPool(pool);
+        }
+    }
 
     static final class FJException extends RuntimeException {
         FJException() { super(); }
@@ -78,7 +94,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return r;
             }
         };
-        assertTrue(mainPool.invoke(a) == 21);
+        assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -99,7 +115,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return r;
             }
         };
-        assertTrue(mainPool.invoke(a) == 21);
+        assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -116,7 +132,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return r;
             }
         };
-        assertTrue(mainPool.invoke(a) == 21);
+        assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -138,7 +154,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        assertTrue(mainPool.invoke(a) == 21);
+        assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -160,7 +176,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        assertTrue(mainPool.invoke(a) == 21);
+        assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -178,7 +194,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return r;
             }
         };
-        assertTrue(mainPool.invoke(a) == 21);
+        assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
 
@@ -199,7 +215,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return r;
             }
         };
-        assertTrue(mainPool.invoke(a) == 21);
+        assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
 
@@ -219,7 +235,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -234,7 +250,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -254,7 +270,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -276,7 +292,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -298,7 +314,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -316,7 +332,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -336,7 +352,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -357,7 +373,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -380,7 +396,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -403,7 +419,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -422,20 +438,21 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
      * getPool of executing task returns its pool
      */
     public void testGetPool() {
+        final ForkJoinPool mainPool = mainPool();
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
             public Integer compute() {
                 threadAssertTrue(getPool() == mainPool);
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool, a));
     }
 
     /**
@@ -461,7 +478,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -487,7 +504,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        assertEquals(a.invoke(), NoResult);
+        assertSame(NoResult, a.invoke());
     }
 
     /**
@@ -508,7 +525,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -528,7 +545,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -545,7 +562,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return r;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -564,7 +581,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -580,7 +597,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -602,7 +619,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -628,7 +645,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
 
@@ -649,7 +666,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -668,7 +685,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -689,7 +706,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -714,7 +731,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        mainPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
     /**
@@ -735,7 +752,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        singletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
     /**
@@ -756,7 +773,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        singletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
     /**
@@ -776,7 +793,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        singletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
     /**
@@ -796,12 +813,11 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        singletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
     /**
-     * pollTask returns an unexecuted task
-     * without executing it
+     * pollTask returns an unexecuted task without executing it
      */
     public void testPollTask() {
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
@@ -817,7 +833,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        singletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
     /**
@@ -837,7 +853,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        asyncSingletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(asyncSingletonPool(), a));
     }
 
     /**
@@ -858,7 +874,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        asyncSingletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(asyncSingletonPool(), a));
     }
 
     /**
@@ -879,7 +895,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        asyncSingletonPool.invoke(a);
+        assertSame(NoResult, testInvokeOnPool(asyncSingletonPool(), a));
     }
 
 }

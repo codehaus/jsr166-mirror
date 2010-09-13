@@ -24,7 +24,29 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         return new TestSuite(ForkJoinTaskTest.class);
     }
 
-    /**
+    private static ForkJoinPool mainPool() {
+        return new ForkJoinPool();
+    }
+
+    private static ForkJoinPool singletonPool() {
+        return new ForkJoinPool(1);
+    }
+
+    private static ForkJoinPool asyncSingletonPool() {
+        return new ForkJoinPool(1,
+                                ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+                                null, true);
+    }
+
+    private void testInvokeOnPool(ForkJoinPool pool, RecursiveAction a) {
+        try {
+            assertTrue(pool.invoke(a) == null);
+        } finally {
+            joinPool(pool);
+        }
+    }
+
+    /*
      * Testing coverage notes:
      *
      * To test extension methods and overrides, most tests use
@@ -32,11 +54,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      * differently than supplied Recursive forms.
      */
 
-    static final ForkJoinPool mainPool = new ForkJoinPool();
-    static final ForkJoinPool singletonPool = new ForkJoinPool(1);
-    static final ForkJoinPool asyncSingletonPool =
-        new ForkJoinPool(1, ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-                         null, true);
     static final class FJException extends RuntimeException {
         FJException() { super(); }
     }
@@ -226,7 +243,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertFalse(f.isCompletedAbnormally());
                 threadAssertTrue(f.getRawResult() == null);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -245,7 +262,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertFalse(f.isCompletedAbnormally());
                 threadAssertTrue(f.getRawResult() == null);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -261,7 +278,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isDone());
                 threadAssertTrue(f.getRawResult() == null);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -280,7 +297,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     unexpectedException(ex);
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -299,7 +316,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     unexpectedException(ex);
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -318,7 +335,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     unexpectedException(ex);
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -333,7 +350,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.number == 21);
                 threadAssertTrue(f.isDone());
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
 
@@ -351,7 +368,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isDone());
                 threadAssertTrue(getQueuedTaskCount() == 0);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
 
@@ -368,7 +385,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (FJException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -381,7 +398,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 f.quietlyInvoke();
                 threadAssertTrue(f.isDone());
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -398,7 +415,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (FJException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -417,7 +434,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     unexpectedException(ex);
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -436,7 +453,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     unexpectedException(ex);
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -452,7 +469,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isCompletedAbnormally());
                 threadAssertTrue(f.getException() instanceof FJException);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -469,7 +486,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (CancellationException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -487,7 +504,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (CancellationException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -507,7 +524,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     unexpectedException(ex);
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -527,7 +544,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     unexpectedException(ex);
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -544,18 +561,19 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isCompletedAbnormally());
                 threadAssertTrue(f.getException() instanceof CancellationException);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
      * getPool of executing task returns its pool
      */
     public void testGetPool() {
+        final ForkJoinPool mainPool = mainPool();
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 threadAssertTrue(getPool() == mainPool);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool, a);
     }
 
     /**
@@ -577,7 +595,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             public void compute() {
                 threadAssertTrue(inForkJoinPool());
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -616,7 +634,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (FJException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -633,7 +651,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(g.isDone());
                 threadAssertTrue(g.number == 34);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -647,7 +665,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isDone());
                 threadAssertTrue(f.number == 21);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -667,7 +685,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(h.isDone());
                 threadAssertTrue(h.number == 13);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -691,7 +709,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(h.isDone());
                 threadAssertTrue(h.number == 13);
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
 
@@ -710,7 +728,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (NullPointerException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -727,7 +745,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (FJException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -743,7 +761,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (FJException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -761,7 +779,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (FJException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -783,7 +801,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 } catch (FJException success) {
                 }
             }};
-        mainPool.invoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -802,7 +820,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertFalse(f.isDone());
                 threadAssertTrue(g.isDone());
             }};
-        singletonPool.invoke(a);
+        testInvokeOnPool(singletonPool(), a);
     }
 
     /**
@@ -821,7 +839,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(getSurplusQueuedTaskCount() > 0);
                 helpQuiesce();
             }};
-        singletonPool.invoke(a);
+        testInvokeOnPool(singletonPool(), a);
     }
 
     /**
@@ -839,7 +857,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isDone());
                 helpQuiesce();
             }};
-        singletonPool.invoke(a);
+        testInvokeOnPool(singletonPool(), a);
     }
 
     /**
@@ -857,7 +875,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 helpQuiesce();
                 threadAssertFalse(f.isDone());
             }};
-        singletonPool.invoke(a);
+        testInvokeOnPool(singletonPool(), a);
     }
 
     /**
@@ -876,7 +894,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertFalse(f.isDone());
                 threadAssertTrue(g.isDone());
             }};
-        singletonPool.invoke(a);
+        testInvokeOnPool(singletonPool(), a);
     }
 
     /**
@@ -894,7 +912,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 helpQuiesce();
                 threadAssertTrue(f.isDone());
             }};
-        asyncSingletonPool.invoke(a);
+        testInvokeOnPool(asyncSingletonPool(), a);
     }
 
     /**
@@ -913,7 +931,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isDone());
                 threadAssertFalse(g.isDone());
             }};
-        asyncSingletonPool.invoke(a);
+        testInvokeOnPool(asyncSingletonPool(), a);
     }
 
     /**
@@ -932,6 +950,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 threadAssertTrue(f.isDone());
                 threadAssertFalse(g.isDone());
             }};
-        asyncSingletonPool.invoke(a);
+        testInvokeOnPool(asyncSingletonPool(), a);
     }
 }

@@ -329,9 +329,8 @@ public class ConcurrentLinkedDeque<E>
                         if (p != h) // hop two nodes at a time
                             casHead(h, newNode);  // Failure is OK.
                         return;
-                    } else {
-                        p = p.prev; // lost CAS race to another thread
                     }
+                    // Lost CAS race to another thread; re-read prev
                 }
                 else if (p == q)
                     continue restartFromHead;
@@ -364,9 +363,8 @@ public class ConcurrentLinkedDeque<E>
                         if (p != t) // hop two nodes at a time
                             casTail(t, newNode);  // Failure is OK.
                         return;
-                    } else {
-                        p = p.next; // lost CAS race to another thread
                     }
+                    // Lost CAS race to another thread; re-read next
                 }
                 else if (p == q)
                     continue restartFromTail;
@@ -1109,9 +1107,8 @@ public class ConcurrentLinkedDeque<E>
                                 casTail(t, last);
                         }
                         return true;
-                    } else {
-                        p = p.next; // lost CAS race to another thread
                     }
+                    // Lost CAS race to another thread; re-read next
                 }
                 else if (p == q)
                     continue restartFromTail;

@@ -94,7 +94,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction f = new FibAction(8);
-                f.invoke();
+                threadAssertNull(f.invoke());
                 threadAssertTrue(f.result == 21);
                 threadAssertTrue(f.isDone());
                 threadAssertFalse(f.isCancelled());
@@ -130,8 +130,8 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction f = new FibAction(8);
-                f.fork();
-                f.join();
+                threadAssertSame(f, f.fork());
+                threadAssertNull(f.join());
                 threadAssertTrue(f.result == 21);
                 threadAssertTrue(f.isDone());
                 threadAssertTrue(f.getRawResult() == null);
@@ -147,8 +147,8 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FibAction f = new FibAction(8);
-                    f.fork();
-                    f.get();
+                    threadAssertSame(f, f.fork());
+                    threadAssertNull(f.get());
                     threadAssertTrue(f.result == 21);
                     threadAssertTrue(f.isDone());
                 } catch (Exception ex) {
@@ -166,8 +166,8 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FibAction f = new FibAction(8);
-                    f.fork();
-                    f.get(5L, TimeUnit.SECONDS);
+                    threadAssertSame(f, f.fork());
+                    threadAssertNull(f.get(5L, TimeUnit.SECONDS));
                     threadAssertTrue(f.result == 21);
                     threadAssertTrue(f.isDone());
                 } catch (Exception ex) {
@@ -185,7 +185,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FibAction f = new FibAction(8);
-                    f.fork();
+                    threadAssertSame(f, f.fork());
                     f.get(5L, null);
                     shouldThrow();
                 } catch (NullPointerException success) {
@@ -203,7 +203,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 f.quietlyJoin();
                 threadAssertTrue(f.result == 21);
                 threadAssertTrue(f.isDone());
@@ -220,7 +220,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 f.helpQuiesce();
                 threadAssertTrue(f.result == 21);
                 threadAssertTrue(f.isDone());
@@ -267,7 +267,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FailingFibAction f = new FailingFibAction(8);
-                    f.fork();
+                    threadAssertSame(f, f.fork());
                     f.join();
                     shouldThrow();
                 } catch (FJException success) {
@@ -284,7 +284,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FailingFibAction f = new FailingFibAction(8);
-                    f.fork();
+                    threadAssertSame(f, f.fork());
                     f.get();
                     shouldThrow();
                 } catch (ExecutionException success) {
@@ -303,7 +303,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FailingFibAction f = new FailingFibAction(8);
-                    f.fork();
+                    threadAssertSame(f, f.fork());
                     f.get(5L, TimeUnit.SECONDS);
                     shouldThrow();
                 } catch (ExecutionException success) {
@@ -321,7 +321,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FailingFibAction f = new FailingFibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 f.quietlyJoin();
                 threadAssertTrue(f.isDone());
                 threadAssertTrue(f.isCompletedAbnormally());
@@ -338,7 +338,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FibAction f = new FibAction(8);
-                    f.cancel(true);
+                    threadAssertTrue(f.cancel(true));
                     f.invoke();
                     shouldThrow();
                 } catch (CancellationException success) {
@@ -355,8 +355,8 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FibAction f = new FibAction(8);
-                    f.cancel(true);
-                    f.fork();
+                    threadAssertTrue(f.cancel(true));
+                    threadAssertSame(f, f.fork());
                     f.join();
                     shouldThrow();
                 } catch (CancellationException success) {
@@ -373,8 +373,8 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FibAction f = new FibAction(8);
-                    f.cancel(true);
-                    f.fork();
+                    threadAssertTrue(f.cancel(true));
+                    threadAssertSame(f, f.fork());
                     f.get();
                     shouldThrow();
                 } catch (CancellationException success) {
@@ -393,8 +393,8 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 try {
                     FibAction f = new FibAction(8);
-                    f.cancel(true);
-                    f.fork();
+                    threadAssertTrue(f.cancel(true));
+                    threadAssertSame(f, f.fork());
                     f.get(5L, TimeUnit.SECONDS);
                     shouldThrow();
                 } catch (CancellationException success) {
@@ -412,8 +412,8 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction f = new FibAction(8);
-                f.cancel(true);
-                f.fork();
+                threadAssertTrue(f.cancel(true));
+                threadAssertSame(f, f.fork());
                 f.quietlyJoin();
                 threadAssertTrue(f.isDone());
                 threadAssertTrue(f.isCompletedAbnormally());
@@ -442,7 +442,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 threadAssertTrue(getPool() == null);
             }};
-        a.invoke();
+        assertNull(a.invoke());
     }
 
     /**
@@ -464,7 +464,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 threadAssertTrue(!inForkJoinPool());
             }};
-        a.invoke();
+        assertNull(a.invoke());
     }
 
     /**
@@ -506,7 +506,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 setRawResult(null);
             }};
-        a.invoke();
+        assertNull(a.invoke());
     }
 
     /**
@@ -516,13 +516,13 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction f = new FibAction(8);
-                f.invoke();
+                threadAssertNull(f.invoke());
                 threadAssertTrue(f.result == 21);
                 threadAssertTrue(f.isDone());
                 threadAssertFalse(f.isCancelled());
                 threadAssertFalse(f.isCompletedAbnormally());
                 f.reinitialize();
-                f.invoke();
+                threadAssertNull(f.invoke());
                 threadAssertTrue(f.result == 21);
             }};
         testInvokeOnPool(mainPool(), a);
@@ -553,7 +553,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void compute() {
                 FibAction f = new FibAction(8);
                 f.complete(null);
-                f.invoke();
+                threadAssertNull(f.invoke());
                 threadAssertTrue(f.isDone());
                 threadAssertTrue(f.result == 0);
             }};
@@ -735,9 +735,9 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(f.tryUnfork());
                 helpQuiesce();
                 threadAssertFalse(f.isDone());
@@ -754,11 +754,11 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction h = new FibAction(7);
-                h.fork();
+                threadAssertSame(h, h.fork());
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(getSurplusQueuedTaskCount() > 0);
                 helpQuiesce();
             }};
@@ -772,11 +772,11 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(peekNextLocalTask() == f);
-                f.join();
+                threadAssertNull(f.join());
                 threadAssertTrue(f.isDone());
                 helpQuiesce();
             }};
@@ -791,9 +791,9 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(pollNextLocalTask() == f);
                 helpQuiesce();
                 threadAssertFalse(f.isDone());
@@ -809,9 +809,9 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(pollTask() == f);
                 helpQuiesce();
                 threadAssertFalse(f.isDone());
@@ -827,11 +827,11 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(peekNextLocalTask() == g);
-                f.join();
+                threadAssertNull(f.join());
                 helpQuiesce();
                 threadAssertTrue(f.isDone());
             }};
@@ -846,9 +846,9 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(pollNextLocalTask() == g);
                 helpQuiesce();
                 threadAssertTrue(f.isDone());
@@ -865,9 +865,9 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new RecursiveAction() {
             public void compute() {
                 FibAction g = new FibAction(9);
-                g.fork();
+                threadAssertSame(g, g.fork());
                 FibAction f = new FibAction(8);
-                f.fork();
+                threadAssertSame(f, f.fork());
                 threadAssertTrue(pollTask() == g);
                 helpQuiesce();
                 threadAssertTrue(f.isDone());

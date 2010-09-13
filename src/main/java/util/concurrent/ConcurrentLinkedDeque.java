@@ -327,7 +327,7 @@ public class ConcurrentLinkedDeque<E>
                         // for e to become an element of this deque,
                         // and for newNode to become "live".
                         if (p != h) // hop two nodes at a time
-                            casHead(h, newNode);
+                            casHead(h, newNode);  // Failure is OK.
                         return;
                     } else {
                         p = p.prev; // lost CAS race to another thread
@@ -362,7 +362,7 @@ public class ConcurrentLinkedDeque<E>
                         // for e to become an element of this deque,
                         // and for newNode to become "live".
                         if (p != t) // hop two nodes at a time
-                            casTail(t, newNode);
+                            casTail(t, newNode);  // Failure is OK.
                         return;
                     } else {
                         p = p.next; // lost CAS race to another thread

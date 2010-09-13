@@ -302,6 +302,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                         continue restartFromTail;
                     p = next;
                 } else if (p.casNext(null, newNode)) {
+                    // Successful CAS is the linearization point
+                    // for e to become an element of this queue,
+                    // and for newNode to become "live".
                     if (hops >= HOPS)
                         casTail(t, newNode);  // Failure is OK.
                     return true;

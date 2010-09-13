@@ -30,6 +30,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
+
     public static Test suite() {
         return new TestSuite(ForkJoinTaskTest.class);
     }
@@ -227,16 +228,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvoke() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.invoke();
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(f.isDone());
-                    threadAssertFalse(f.isCancelled());
-                    threadAssertFalse(f.isCompletedAbnormally());
-                    threadAssertTrue(f.getRawResult() == null);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                f.invoke();
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(f.isDone());
+                threadAssertFalse(f.isCancelled());
+                threadAssertFalse(f.isCompletedAbnormally());
+                threadAssertTrue(f.getRawResult() == null);
+            }};
         mainPool.invoke(a);
     }
 
@@ -247,16 +247,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testQuietlyInvoke() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.quietlyInvoke();
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(f.isDone());
-                    threadAssertFalse(f.isCancelled());
-                    threadAssertFalse(f.isCompletedAbnormally());
-                    threadAssertTrue(f.getRawResult() == null);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                f.quietlyInvoke();
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(f.isDone());
+                threadAssertFalse(f.isCancelled());
+                threadAssertFalse(f.isCompletedAbnormally());
+                threadAssertTrue(f.getRawResult() == null);
+            }};
         mainPool.invoke(a);
     }
 
@@ -265,15 +264,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkJoin() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    f.join();
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.getRawResult() == null);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                f.join();
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(f.getRawResult() == null);
+            }};
         mainPool.invoke(a);
     }
 
@@ -282,18 +280,17 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkGet() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.fork();
-                        f.get();
-                        threadAssertTrue(f.number == 21);
-                        threadAssertTrue(f.isDone());
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.fork();
+                    f.get();
+                    threadAssertTrue(f.number == 21);
+                    threadAssertTrue(f.isDone());
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -302,18 +299,17 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkTimedGet() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.fork();
-                        f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadAssertTrue(f.number == 21);
-                        threadAssertTrue(f.isDone());
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.fork();
+                    f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                    threadAssertTrue(f.number == 21);
+                    threadAssertTrue(f.isDone());
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -322,18 +318,17 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkTimedGetNPE() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.fork();
-                        f.get(5L, null);
-                        shouldThrow();
-                    } catch (NullPointerException success) {
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.fork();
+                    f.get(5L, null);
+                    shouldThrow();
+                } catch (NullPointerException success) {
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -342,14 +337,13 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkQuietlyJoin() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    f.quietlyJoin();
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(f.isDone());
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                f.quietlyJoin();
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(f.isDone());
+            }};
         mainPool.invoke(a);
     }
 
@@ -360,15 +354,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkHelpQuiesce() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    f.helpQuiesce();
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(getQueuedTaskCount() == 0);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                f.helpQuiesce();
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(getQueuedTaskCount() == 0);
+            }};
         mainPool.invoke(a);
     }
 
@@ -378,15 +371,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvoke() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FailingAsyncFib f = new FailingAsyncFib(8);
-                        f.invoke();
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
+            public void compute() {
+                try {
+                    FailingAsyncFib f = new FailingAsyncFib(8);
+                    f.invoke();
+                    shouldThrow();
+                } catch (FJException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -395,12 +387,11 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalQuietlyInvoke() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    FailingAsyncFib f = new FailingAsyncFib(8);
-                    f.quietlyInvoke();
-                    threadAssertTrue(f.isDone());
-                }
-            };
+            public void compute() {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                f.quietlyInvoke();
+                threadAssertTrue(f.isDone());
+            }};
         mainPool.invoke(a);
     }
 
@@ -409,16 +400,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkJoin() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FailingAsyncFib f = new FailingAsyncFib(8);
-                        f.fork();
-                        f.join();
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
+            public void compute() {
+                try {
+                    FailingAsyncFib f = new FailingAsyncFib(8);
+                    f.fork();
+                    f.join();
+                    shouldThrow();
+                } catch (FJException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -427,18 +417,17 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkGet() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FailingAsyncFib f = new FailingAsyncFib(8);
-                        f.fork();
-                        f.get();
-                        shouldThrow();
-                    } catch (ExecutionException success) {
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    FailingAsyncFib f = new FailingAsyncFib(8);
+                    f.fork();
+                    f.get();
+                    shouldThrow();
+                } catch (ExecutionException success) {
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -447,18 +436,17 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkTimedGet() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FailingAsyncFib f = new FailingAsyncFib(8);
-                        f.fork();
-                        f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        shouldThrow();
-                    } catch (ExecutionException success) {
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    FailingAsyncFib f = new FailingAsyncFib(8);
+                    f.fork();
+                    f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                    shouldThrow();
+                } catch (ExecutionException success) {
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -467,15 +455,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkQuietlyJoin() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    FailingAsyncFib f = new FailingAsyncFib(8);
-                    f.fork();
-                    f.quietlyJoin();
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.isCompletedAbnormally());
-                    threadAssertTrue(f.getException() instanceof FJException);
-                }
-            };
+            public void compute() {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                f.fork();
+                f.quietlyJoin();
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(f.isCompletedAbnormally());
+                threadAssertTrue(f.getException() instanceof FJException);
+            }};
         mainPool.invoke(a);
     }
 
@@ -484,16 +471,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledInvoke() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.cancel(true);
-                        f.invoke();
-                        shouldThrow();
-                    } catch (CancellationException success) {
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.cancel(true);
+                    f.invoke();
+                    shouldThrow();
+                } catch (CancellationException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -502,17 +488,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkJoin() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.cancel(true);
-                        f.fork();
-                        f.join();
-                        shouldThrow();
-                    } catch (CancellationException success) {
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.cancel(true);
+                    f.fork();
+                    f.join();
+                    shouldThrow();
+                } catch (CancellationException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -521,19 +506,18 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkGet() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.cancel(true);
-                        f.fork();
-                        f.get();
-                        shouldThrow();
-                    } catch (CancellationException success) {
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.cancel(true);
+                    f.fork();
+                    f.get();
+                    shouldThrow();
+                } catch (CancellationException success) {
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -542,19 +526,18 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkTimedGet() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.cancel(true);
-                        f.fork();
-                        f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        shouldThrow();
-                    } catch (CancellationException success) {
-                    } catch (Exception ex) {
-                        unexpectedException(ex);
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.cancel(true);
+                    f.fork();
+                    f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                    shouldThrow();
+                } catch (CancellationException success) {
+                } catch (Exception ex) {
+                    unexpectedException(ex);
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -563,16 +546,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkQuietlyJoin() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    f.cancel(true);
-                    f.fork();
-                    f.quietlyJoin();
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.isCompletedAbnormally());
-                    threadAssertTrue(f.getException() instanceof CancellationException);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                f.cancel(true);
+                f.fork();
+                f.quietlyJoin();
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(f.isCompletedAbnormally());
+                threadAssertTrue(f.getException() instanceof CancellationException);
+            }};
         mainPool.invoke(a);
     }
 
@@ -581,10 +563,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testGetPool() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    threadAssertTrue(getPool() == mainPool);
-                }
-            };
+            public void compute() {
+                threadAssertTrue(getPool() == mainPool);
+            }};
         mainPool.invoke(a);
     }
 
@@ -593,10 +574,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testGetPool2() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    threadAssertTrue(getPool() == null);
-                }
-            };
+            public void compute() {
+                threadAssertTrue(getPool() == null);
+            }};
         a.invoke();
     }
 
@@ -605,10 +585,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInForkJoinPool() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    threadAssertTrue(inForkJoinPool());
-                }
-            };
+            public void compute() {
+                threadAssertTrue(inForkJoinPool());
+            }};
         mainPool.invoke(a);
     }
 
@@ -617,10 +596,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInForkJoinPool2() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    threadAssertTrue(!inForkJoinPool());
-                }
-            };
+            public void compute() {
+                threadAssertTrue(!inForkJoinPool());
+            }};
         a.invoke();
     }
 
@@ -629,10 +607,9 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testSetRawResult() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    setRawResult(null);
-                }
-            };
+            public void compute() {
+                setRawResult(null);
+            }};
         a.invoke();
     }
 
@@ -641,16 +618,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCompleteExceptionally() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        f.completeExceptionally(new FJException());
-                        f.invoke();
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    f.completeExceptionally(new FJException());
+                    f.invoke();
+                    shouldThrow();
+                } catch (FJException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -659,16 +635,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll2() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    AsyncFib g = new AsyncFib(9);
-                    invokeAll(f, g);
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(g.isDone());
-                    threadAssertTrue(g.number == 34);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                invokeAll(f, g);
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(g.isDone());
+                threadAssertTrue(g.number == 34);
+            }};
         mainPool.invoke(a);
     }
 
@@ -677,13 +652,12 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll1() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    invokeAll(f);
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.number == 21);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                invokeAll(f);
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(f.number == 21);
+            }};
         mainPool.invoke(a);
     }
 
@@ -692,19 +666,18 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll3() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    AsyncFib g = new AsyncFib(9);
-                    AsyncFib h = new AsyncFib(7);
-                    invokeAll(f, g, h);
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(g.isDone());
-                    threadAssertTrue(g.number == 34);
-                    threadAssertTrue(h.isDone());
-                    threadAssertTrue(h.number == 13);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                AsyncFib h = new AsyncFib(7);
+                invokeAll(f, g, h);
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(g.isDone());
+                threadAssertTrue(g.number == 34);
+                threadAssertTrue(h.isDone());
+                threadAssertTrue(h.number == 13);
+            }};
         mainPool.invoke(a);
     }
 
@@ -713,23 +686,22 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAllCollection() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib f = new AsyncFib(8);
-                    AsyncFib g = new AsyncFib(9);
-                    AsyncFib h = new AsyncFib(7);
-                    HashSet set = new HashSet();
-                    set.add(f);
-                    set.add(g);
-                    set.add(h);
-                    invokeAll(set);
-                    threadAssertTrue(f.isDone());
-                    threadAssertTrue(f.number == 21);
-                    threadAssertTrue(g.isDone());
-                    threadAssertTrue(g.number == 34);
-                    threadAssertTrue(h.isDone());
-                    threadAssertTrue(h.number == 13);
-                }
-            };
+            public void compute() {
+                AsyncFib f = new AsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                AsyncFib h = new AsyncFib(7);
+                HashSet set = new HashSet();
+                set.add(f);
+                set.add(g);
+                set.add(h);
+                invokeAll(set);
+                threadAssertTrue(f.isDone());
+                threadAssertTrue(f.number == 21);
+                threadAssertTrue(g.isDone());
+                threadAssertTrue(g.number == 34);
+                threadAssertTrue(h.isDone());
+                threadAssertTrue(h.number == 13);
+            }};
         mainPool.invoke(a);
     }
 
@@ -739,17 +711,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAllNPE() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        AsyncFib g = new AsyncFib(9);
-                        AsyncFib h = null;
-                        invokeAll(f, g, h);
-                        shouldThrow();
-                    } catch (NullPointerException success) {
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    AsyncFib g = new AsyncFib(9);
+                    AsyncFib h = null;
+                    invokeAll(f, g, h);
+                    shouldThrow();
+                } catch (NullPointerException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -758,16 +729,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll2() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        FailingAsyncFib g = new FailingAsyncFib(9);
-                        invokeAll(f, g);
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    FailingAsyncFib g = new FailingAsyncFib(9);
+                    invokeAll(f, g);
+                    shouldThrow();
+                } catch (FJException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -776,15 +746,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll1() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FailingAsyncFib g = new FailingAsyncFib(9);
-                        invokeAll(g);
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
+            public void compute() {
+                try {
+                    FailingAsyncFib g = new FailingAsyncFib(9);
+                    invokeAll(g);
+                    shouldThrow();
+                } catch (FJException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -793,17 +762,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll3() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        AsyncFib f = new AsyncFib(8);
-                        FailingAsyncFib g = new FailingAsyncFib(9);
-                        AsyncFib h = new AsyncFib(7);
-                        invokeAll(f, g, h);
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
+            public void compute() {
+                try {
+                    AsyncFib f = new AsyncFib(8);
+                    FailingAsyncFib g = new FailingAsyncFib(9);
+                    AsyncFib h = new AsyncFib(7);
+                    invokeAll(f, g, h);
+                    shouldThrow();
+                } catch (FJException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -812,21 +780,20 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAllCollection() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    try {
-                        FailingAsyncFib f = new FailingAsyncFib(8);
-                        AsyncFib g = new AsyncFib(9);
-                        AsyncFib h = new AsyncFib(7);
-                        HashSet set = new HashSet();
-                        set.add(f);
-                        set.add(g);
-                        set.add(h);
-                        invokeAll(set);
-                        shouldThrow();
-                    } catch (FJException success) {
-                    }
+            public void compute() {
+                try {
+                    FailingAsyncFib f = new FailingAsyncFib(8);
+                    AsyncFib g = new AsyncFib(9);
+                    AsyncFib h = new AsyncFib(7);
+                    HashSet set = new HashSet();
+                    set.add(f);
+                    set.add(g);
+                    set.add(h);
+                    invokeAll(set);
+                    shouldThrow();
+                } catch (FJException success) {
                 }
-            };
+            }};
         mainPool.invoke(a);
     }
 
@@ -836,17 +803,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testTryUnfork() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(f.tryUnfork());
-                    helpQuiesce();
-                    threadAssertFalse(f.isDone());
-                    threadAssertTrue(g.isDone());
-                }
-            };
+            public void compute() {
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(f.tryUnfork());
+                helpQuiesce();
+                threadAssertFalse(f.isDone());
+                threadAssertTrue(g.isDone());
+            }};
         singletonPool.invoke(a);
     }
 
@@ -856,17 +822,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testGetSurplusQueuedTaskCount() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib h = new AsyncFib(7);
-                    h.fork();
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(getSurplusQueuedTaskCount() > 0);
-                    helpQuiesce();
-                }
-            };
+            public void compute() {
+                AsyncFib h = new AsyncFib(7);
+                h.fork();
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(getSurplusQueuedTaskCount() > 0);
+                helpQuiesce();
+            }};
         singletonPool.invoke(a);
     }
 
@@ -875,17 +840,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPeekNextLocalTask() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(peekNextLocalTask() == f);
-                    f.join();
-                    threadAssertTrue(f.isDone());
-                    helpQuiesce();
-                }
-            };
+            public void compute() {
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(peekNextLocalTask() == f);
+                f.join();
+                threadAssertTrue(f.isDone());
+                helpQuiesce();
+            }};
         singletonPool.invoke(a);
     }
 
@@ -895,16 +859,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollNextLocalTask() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(pollNextLocalTask() == f);
-                    helpQuiesce();
-                    threadAssertFalse(f.isDone());
-                }
-            };
+            public void compute() {
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(pollNextLocalTask() == f);
+                helpQuiesce();
+                threadAssertFalse(f.isDone());
+            }};
         singletonPool.invoke(a);
     }
 
@@ -914,17 +877,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollTask() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(pollTask() == f);
-                    helpQuiesce();
-                    threadAssertFalse(f.isDone());
-                    threadAssertTrue(g.isDone());
-                }
-            };
+            public void compute() {
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(pollTask() == f);
+                helpQuiesce();
+                threadAssertFalse(f.isDone());
+                threadAssertTrue(g.isDone());
+            }};
         singletonPool.invoke(a);
     }
 
@@ -933,17 +895,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPeekNextLocalTaskAsync() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(peekNextLocalTask() == g);
-                    f.join();
-                    helpQuiesce();
-                    threadAssertTrue(f.isDone());
-                }
-            };
+            public void compute() {
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(peekNextLocalTask() == g);
+                f.join();
+                helpQuiesce();
+                threadAssertTrue(f.isDone());
+            }};
         asyncSingletonPool.invoke(a);
     }
 
@@ -953,17 +914,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollNextLocalTaskAsync() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(pollNextLocalTask() == g);
-                    helpQuiesce();
-                    threadAssertTrue(f.isDone());
-                    threadAssertFalse(g.isDone());
-                }
-            };
+            public void compute() {
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(pollNextLocalTask() == g);
+                helpQuiesce();
+                threadAssertTrue(f.isDone());
+                threadAssertFalse(g.isDone());
+            }};
         asyncSingletonPool.invoke(a);
     }
 
@@ -973,17 +933,16 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollTaskAsync() {
         RecursiveAction a = new RecursiveAction() {
-                public void compute() {
-                    AsyncFib g = new AsyncFib(9);
-                    g.fork();
-                    AsyncFib f = new AsyncFib(8);
-                    f.fork();
-                    threadAssertTrue(pollTask() == g);
-                    helpQuiesce();
-                    threadAssertTrue(f.isDone());
-                    threadAssertFalse(g.isDone());
-                }
-            };
+            public void compute() {
+                AsyncFib g = new AsyncFib(9);
+                g.fork();
+                AsyncFib f = new AsyncFib(8);
+                f.fork();
+                threadAssertTrue(pollTask() == g);
+                helpQuiesce();
+                threadAssertTrue(f.isDone());
+                threadAssertFalse(g.isDone());
+            }};
         asyncSingletonPool.invoke(a);
     }
 }

@@ -10,8 +10,8 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.*;
-import java.util.*;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.HashSet;
 import junit.framework.*;
 
 public class ForkJoinTaskTest extends JSR166TestCase {

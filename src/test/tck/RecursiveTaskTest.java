@@ -5,8 +5,12 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.*;
-import java.util.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.TimeUnit;
+import java.util.HashSet;
 
 public class RecursiveTaskTest extends JSR166TestCase {
 

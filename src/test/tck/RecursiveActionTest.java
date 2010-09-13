@@ -5,8 +5,13 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.*;
-import java.util.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.TimeUnit;
+import java.util.HashSet;
 
 public class RecursiveActionTest extends JSR166TestCase {
 

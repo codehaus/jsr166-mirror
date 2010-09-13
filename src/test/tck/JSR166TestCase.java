@@ -295,6 +295,17 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * If arguments not identical, set status to indicate current testcase
+     * should fail
+     */
+    public void threadAssertSame(Object x, Object y) {
+        if (x != y) {
+            threadFailed = true;
+            assertSame(x, y);
+        }
+    }
+
+    /**
      * threadFail with message "should throw exception"
      */
     public void threadShouldThrow() {

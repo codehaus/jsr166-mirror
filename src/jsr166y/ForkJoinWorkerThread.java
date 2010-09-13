@@ -1057,7 +1057,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Implements ForJoinTask.getSurplusQueuedTaskCount().
+     * Implements ForkJoinTask.getSurplusQueuedTaskCount().
      * Returns an estimate of the number of tasks, offset by a
      * function of number of idle workers.
      *

@@ -1035,11 +1035,13 @@ public class ConcurrentLinkedDeque<E>
      * @return the number of elements in this deque
      */
     public int size() {
-        long count = 0;
+        int count = 0;
         for (Node<E> p = first(); p != null; p = succ(p))
             if (p.item != null)
-                ++count;
-        return (count >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count;
+                // Collection.size() spec says to max out
+                if (++count == Integer.MAX_VALUE)
+                    break;
+        return count;
     }
 
     /**

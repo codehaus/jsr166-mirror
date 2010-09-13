@@ -126,8 +126,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * this is merely an optimization.
      *
      * When constructing a Node (before enqueuing it) we avoid paying
-     * for a volatile write to item by using lazySet instead of a
-     * normal write.  This allows the cost of enqueue to be
+     * for a volatile write to item by using Unsafe.putObject instead
+     * of a normal write.  This allows the cost of enqueue to be
      * "one-and-a-half" CASes.
      *
      * Both head and tail may or may not point to a Node with a
@@ -139,8 +139,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
 
     private static class Node<E> {
-        private volatile E item;
-        private volatile Node<E> next;
+        volatile E item;
+        volatile Node<E> next;
 
         /**
          * Constructs a new node.  Uses relaxed write because item can
@@ -150,16 +150,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             UNSAFE.putObject(this, itemOffset, item);
         }
 
-        E getItem() {
-            return item;
-        }
-
         boolean casItem(E cmp, E val) {
             return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
-        }
-
-        void setItem(E val) {
-            item = val;
         }
 
         void lazySetNext(Node<E> val) {
@@ -319,7 +311,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node<E> h = head;
         Node<E> p = h;
         for (int hops = 0; ; hops++) {
-            E item = p.getItem();
+            E item = p.item;
 
             if (item != null && p.casItem(item, null)) {
                 if (hops >= HOPS) {
@@ -343,7 +335,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node<E> p = h;
         E item;
         for (;;) {
-            item = p.getItem();
+            item = p.item;
             if (item != null)
                 break;
             Node<E> next = succ(p);
@@ -369,7 +361,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node<E> p = h;
         Node<E> result;
         for (;;) {
-            E item = p.getItem();
+            E item = p.item;
             if (item != null) {
                 result = p;
                 break;
@@ -412,13 +404,11 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public int size() {
         int count = 0;
-        for (Node<E> p = first(); p != null; p = succ(p)) {
-            if (p.getItem() != null) {
-                // Collections.size() spec says to max out
+        for (Node<E> p = first(); p != null; p = succ(p))
+            if (p.item != null)
+                // Collection.size() spec says to max out
                 if (++count == Integer.MAX_VALUE)
                     break;
-            }
-        }
         return count;
     }
 
@@ -433,7 +423,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     public boolean contains(Object o) {
         if (o == null) return false;
         for (Node<E> p = first(); p != null; p = succ(p)) {
-            E item = p.getItem();
+            E item = p.item;
             if (item != null &&
                 o.equals(item))
                 return true;
@@ -456,7 +446,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         if (o == null) return false;
         Node<E> pred = null;
         for (Node<E> p = first(); p != null; p = succ(p)) {
-            E item = p.getItem();
+            E item = p.item;
             if (item != null &&
                 o.equals(item) &&
                 p.casItem(item, null)) {
@@ -544,7 +534,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         // Use ArrayList to deal with resizing.
         ArrayList<E> al = new ArrayList<E>();
         for (Node<E> p = first(); p != null; p = succ(p)) {
-            E item = p.getItem();
+            E item = p.item;
             if (item != null)
                 al.add(item);
         }
@@ -593,7 +583,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         int k = 0;
         Node<E> p;
         for (p = first(); p != null && k < a.length; p = succ(p)) {
-            E item = p.getItem();
+            E item = p.item;
             if (item != null)
                 a[k++] = (T)item;
         }
@@ -606,7 +596,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         // If won't fit, use ArrayList version
         ArrayList<E> al = new ArrayList<E>();
         for (Node<E> q = first(); q != null; q = succ(q)) {
-            E item = q.getItem();
+            E item = q.item;
             if (item != null)
                 al.add(item);
         }
@@ -676,7 +666,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                     nextItem = null;
                     return x;
                 }
-                E item = p.getItem();
+                E item = p.item;
                 if (item != null) {
                     nextNode = p;
                     nextItem = item;
@@ -704,7 +694,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             Node<E> l = lastRet;
             if (l == null) throw new IllegalStateException();
             // rely on a future traversal to relink.
-            l.setItem(null);
+            l.item = null;
             lastRet = null;
         }
     }
@@ -724,7 +714,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
         // Write out all elements in the proper order.
         for (Node<E> p = first(); p != null; p = succ(p)) {
-            Object item = p.getItem();
+            Object item = p.item;
             if (item != null)
                 s.writeObject(item);
         }

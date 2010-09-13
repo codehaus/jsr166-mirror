@@ -495,7 +495,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
     /**
-     * setRawResult(null) succeeds
+     * The value set by setRawResult is returned by invoke
      */
     public void testSetRawResult() {
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {

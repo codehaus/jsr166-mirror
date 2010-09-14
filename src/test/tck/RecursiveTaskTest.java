@@ -505,7 +505,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
             public Integer compute() {
                 setRawResult(NoResult);
-                threadAssertSame(getRawResult(), NoResult);
+                threadAssertSame(NoResult, getRawResult());
                 return NoResult;
             }
         };

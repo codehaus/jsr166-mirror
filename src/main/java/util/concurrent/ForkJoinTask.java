@@ -640,6 +640,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         setCompletion(NORMAL);
     }
 
+    /**
+     * @throws CancellationException {@inheritDoc}
+     */
     public final V get() throws InterruptedException, ExecutionException {
         quietlyJoin();
         if (Thread.interrupted())
@@ -655,6 +658,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         return getRawResult();
     }
 
+    /**
+     * @throws CancellationException {@inheritDoc}
+     */
     public final V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         Thread t = Thread.currentThread();

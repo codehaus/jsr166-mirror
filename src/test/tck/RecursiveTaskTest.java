@@ -499,16 +499,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
     /**
-     * The value set by setRawResult is returned by invoke
+     * The value set by setRawResult is returned by getRawResult
      */
     public void testSetRawResult() {
         RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
             public Integer compute() {
                 setRawResult(NoResult);
+                threadAssertSame(getRawResult(), NoResult);
                 return NoResult;
             }
         };
-        assertSame(NoResult, a.invoke());
+        a.invoke();
     }
 
     /**

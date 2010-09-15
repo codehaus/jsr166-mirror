@@ -428,8 +428,9 @@ public class RecursiveActionTest extends JSR166TestCase {
     public void testGetPool() {
         final ForkJoinPool mainPool = mainPool();
         RecursiveAction a = new RecursiveAction() {
+            final ForkJoinPool p = mainPool;
             public void compute() {
-                threadAssertTrue(getPool() == mainPool);
+                threadAssertTrue(getPool() == p);
             }};
         testInvokeOnPool(mainPool, a);
     }

@@ -266,16 +266,16 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
 
     static final int COUNTDOWN = 100000;
 
-    class Counter implements Runnable {
+    class Counter extends CheckedRunnable {
         final AtomicIntegerArray ai;
         volatile int counts;
         Counter(AtomicIntegerArray a) { ai = a; }
-        public void run() {
+        public void realRun() {
             for (;;) {
                 boolean done = true;
                 for (int i = 0; i < ai.length(); ++i) {
                     int v = ai.get(i);
-                    threadAssertTrue(v >= 0);
+                    assertTrue(v >= 0);
                     if (v != 0) {
                         done = false;
                         if (ai.compareAndSet(i, v, v-1))

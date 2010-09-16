@@ -788,7 +788,7 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testPeekDelayed() {
         DelayQueue q = new DelayQueue();
         q.add(new NanoDelay(Long.MAX_VALUE));
-        assert(q.peek() != null);
+        assertNotNull(q.peek());
     }
 
 

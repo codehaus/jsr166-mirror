@@ -161,14 +161,14 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testDefaultInitialState() {
         ForkJoinPool p = new ForkJoinPool(1);
         try {
-            assertTrue(p.getFactory() ==
-                       ForkJoinPool.defaultForkJoinWorkerThreadFactory);
+            assertSame(ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+                       p.getFactory());
             assertTrue(p.isQuiescent());
             assertFalse(p.getAsyncMode());
-            assertTrue(p.getActiveThreadCount() == 0);
-            assertTrue(p.getStealCount() == 0);
-            assertTrue(p.getQueuedTaskCount() == 0);
-            assertTrue(p.getQueuedSubmissionCount() == 0);
+            assertEquals(0, p.getActiveThreadCount());
+            assertEquals(0, p.getStealCount());
+            assertEquals(0, p.getQueuedTaskCount());
+            assertEquals(0, p.getQueuedSubmissionCount());
             assertFalse(p.hasQueuedSubmissions());
             assertFalse(p.isShutdown());
             assertFalse(p.isTerminating());
@@ -205,7 +205,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testGetParallelism() {
         ForkJoinPool p = new ForkJoinPool(1);
         try {
-            assertTrue(p.getParallelism() == 1);
+            assertEquals(1, p.getParallelism());
         } finally {
             joinPool(p);
         }
@@ -217,9 +217,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testGetPoolSize() {
         ForkJoinPool p = new ForkJoinPool(1);
         try {
-            assertTrue(p.getActiveThreadCount() == 0);
+            assertEquals(0, p.getActiveThreadCount());
             Future<String> future = p.submit(new StringTask());
-            assertTrue(p.getPoolSize() == 1);
+            assertEquals(1, p.getPoolSize());
         } finally {
             joinPool(p);
         }
@@ -233,9 +233,10 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      */
     public void testSetUncaughtExceptionHandler() throws InterruptedException {
         MyHandler eh = new MyHandler();
-        ForkJoinPool p = new ForkJoinPool(1, new FailingThreadFactory(), eh, false);
+        ForkJoinPool p = new ForkJoinPool(1, new FailingThreadFactory(),
+                                          eh, false);
         try {
-            assert(eh == p.getUncaughtExceptionHandler());
+            assertSame(eh, p.getUncaughtExceptionHandler());
             p.execute(new FailingTask());
             Thread.sleep(MEDIUM_DELAY_MS);
             assertTrue(eh.catches > 0);
@@ -254,14 +255,14 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         ForkJoinPool p = new ForkJoinPool(2);
         try {
             p.invoke(new FibTask(20));
-            assertTrue(p.getFactory() ==
-                       ForkJoinPool.defaultForkJoinWorkerThreadFactory);
+            assertSame(ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+                       p.getFactory());
             Thread.sleep(MEDIUM_DELAY_MS);
             assertTrue(p.isQuiescent());
             assertFalse(p.getAsyncMode());
-            assertTrue(p.getActiveThreadCount() == 0);
-            assertTrue(p.getQueuedTaskCount() == 0);
-            assertTrue(p.getQueuedSubmissionCount() == 0);
+            assertEquals(0, p.getActiveThreadCount());
+            assertEquals(0, p.getQueuedTaskCount());
+            assertEquals(0, p.getQueuedSubmissionCount());
             assertFalse(p.hasQueuedSubmissions());
             assertFalse(p.isShutdown());
             assertFalse(p.isTerminating());
@@ -278,8 +279,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         ForkJoinPool p = new ForkJoinPool(1);
         try {
             ForkJoinTask<Integer> f = p.submit(new FibTask(8));
-            int r = f.get();
-            assertTrue(r == 21);
+            assertEquals(21, (int) f.get());
         } finally {
             joinPool(p);
         }
@@ -293,9 +293,10 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         try {
             p.shutdown();
             assertTrue(p.isShutdown());
-            ForkJoinTask<Integer> f = p.submit(new FibTask(8));
-            shouldThrow();
-        } catch (RejectedExecutionException success) {
+            try {
+                ForkJoinTask<Integer> f = p.submit(new FibTask(8));
+                shouldThrow();
+            } catch (RejectedExecutionException success) {}
         } finally {
             joinPool(p);
         }
@@ -311,8 +312,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             ManagedLocker locker = new ManagedLocker(lock);
             ForkJoinTask<Integer> f = new LockingFibTask(30, locker, lock);
             p.execute(f);
-            int r = f.get();
-            assertTrue(r == 832040);
+            assertEquals(832040, (int) f.get());
         } finally {
             p.shutdownNow(); // don't wait out shutdown
         }
@@ -525,8 +525,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      */
     public void testExecuteNullRunnable() {
         ExecutorService e = new ForkJoinPool(1);
+        TrackedShortRunnable task = null;
         try {
-            TrackedShortRunnable task = null;
             Future<?> future = e.submit(task);
             shouldThrow();
         } catch (NullPointerException success) {
@@ -541,8 +541,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      */
     public void testSubmitNullCallable() {
         ExecutorService e = new ForkJoinPool(1);
+        StringTask t = null;
         try {
-            StringTask t = null;
             Future<String> future = e.submit(t);
             shouldThrow();
         } catch (NullPointerException success) {

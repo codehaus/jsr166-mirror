@@ -59,9 +59,9 @@ public class CountDownLatchTest extends JSR166TestCase {
 
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(l.getCount() > 0);
+                assertTrue(l.getCount() > 0);
                 l.await();
-                threadAssertTrue(l.getCount() == 0);
+                assertEquals(0, l.getCount());
             }});
 
         t.start();
@@ -83,8 +83,8 @@ public class CountDownLatchTest extends JSR166TestCase {
 
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(l.getCount() > 0);
-                threadAssertTrue(l.await(SMALL_DELAY_MS, MILLISECONDS));
+                assertTrue(l.getCount() > 0);
+                assertTrue(l.await(SMALL_DELAY_MS, MILLISECONDS));
             }});
 
         t.start();
@@ -104,7 +104,7 @@ public class CountDownLatchTest extends JSR166TestCase {
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(l.getCount() > 0);
+                assertTrue(l.getCount() > 0);
                 l.await();
             }});
 
@@ -121,7 +121,7 @@ public class CountDownLatchTest extends JSR166TestCase {
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(l.getCount() > 0);
+                assertTrue(l.getCount() > 0);
                 l.await(MEDIUM_DELAY_MS, MILLISECONDS);
             }});
 
@@ -139,9 +139,9 @@ public class CountDownLatchTest extends JSR166TestCase {
         final CountDownLatch l = new CountDownLatch(1);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertTrue(l.getCount() > 0);
-                threadAssertFalse(l.await(SHORT_DELAY_MS, MILLISECONDS));
-                threadAssertTrue(l.getCount() > 0);
+                assertTrue(l.getCount() > 0);
+                assertFalse(l.await(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(l.getCount() > 0);
             }});
 
         t.start();

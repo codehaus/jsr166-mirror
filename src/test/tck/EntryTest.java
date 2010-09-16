@@ -87,19 +87,19 @@ public class EntryTest extends JSR166TestCase {
     public void testNotEquals() {
         Map.Entry e2 = new AbstractMap.SimpleEntry(k1, v1);
         Map.Entry e = new AbstractMap.SimpleEntry(k2, v1);
-        assertFalse(e2.equals( e));
+        assertFalse(e2.equals(e));
         e = new AbstractMap.SimpleEntry(k1, v2);
-        assertFalse(e2.equals( e));
+        assertFalse(e2.equals(e));
         e = new AbstractMap.SimpleEntry(k2, v2);
-        assertFalse(e2.equals( e));
+        assertFalse(e2.equals(e));
 
         Map.Entry s2 = new AbstractMap.SimpleImmutableEntry(k1, v1);
         Map.Entry s = new AbstractMap.SimpleImmutableEntry(k2, v1);
-        assertFalse(s2.equals( s));
+        assertFalse(s2.equals(s));
         s = new AbstractMap.SimpleImmutableEntry(k1, v2);
-        assertFalse(s2.equals( s));
+        assertFalse(s2.equals(s));
         s = new AbstractMap.SimpleImmutableEntry(k2, v2);
-        assertFalse(s2.equals( s));
+        assertFalse(s2.equals(s));
     }
 
 
@@ -113,7 +113,7 @@ public class EntryTest extends JSR166TestCase {
         assertEquals(v1, e.getValue());
         e.setValue(k2);
         assertEquals(k2, e.getValue());
-        assertFalse(e2.equals( e));
+        assertFalse(e2.equals(e));
     }
 
     /**

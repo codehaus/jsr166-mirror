@@ -235,7 +235,7 @@ public class PhaserTest extends JSR166TestCase {
         phaser.register();
         phaser.arrive();
         int p = phaser.getArrivedParties();
-        assertTrue(p == 1);
+        assertEquals(1, p);
         phaser.arriveAndDeregister();
         assertTrue(phaser.getArrivedParties() < p);
     }
@@ -252,8 +252,8 @@ public class PhaserTest extends JSR166TestCase {
         assertTrue(parent.getUnarrivedParties() > 0);
         assertTrue(root.getUnarrivedParties() > 0);
         root.arriveAndDeregister();
-        assertTrue(parent.getUnarrivedParties() == 0);
-        assertTrue(root.getUnarrivedParties() == 0);
+        assertEquals(0, parent.getUnarrivedParties());
+        assertEquals(0, root.getUnarrivedParties());
         assertTrue(root.isTerminated() && parent.isTerminated());
     }
 
@@ -283,8 +283,8 @@ public class PhaserTest extends JSR166TestCase {
         assertTrue(child.getUnarrivedParties() > 0);
         root.register();
         root.arriveAndDeregister();
-        assertTrue(parent.getUnarrivedParties() == 0);
-        assertTrue(child.getUnarrivedParties() == 0);
+        assertEquals(0, parent.getUnarrivedParties());
+        assertEquals(0, child.getUnarrivedParties());
         assertTrue(root.isTerminated());
     }
 

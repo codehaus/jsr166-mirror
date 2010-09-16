@@ -34,7 +34,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         public boolean isHeldExclusively() { return getState() == 1; }
 
         public boolean tryAcquire(int acquires) {
-            assertTrue(acquires == 1);
+            assertEquals(1, acquires);
             return compareAndSetState(0, 1);
         }
 
@@ -44,7 +44,9 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             return true;
         }
 
-        public AbstractQueuedSynchronizer.ConditionObject newCondition() { return new AbstractQueuedSynchronizer.ConditionObject(); }
+        public AbstractQueuedSynchronizer.ConditionObject newCondition() {
+            return new AbstractQueuedSynchronizer.ConditionObject();
+        }
 
     }
 
@@ -345,7 +347,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertFalse(sync.tryAcquire(1));
+                assertFalse(sync.tryAcquire(1));
             }});
 
         t.start();
@@ -642,8 +644,8 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                threadAssertFalse(sync.hasWaiters(c));
-                threadAssertEquals(0, sync.getWaitQueueLength(c));
+                assertFalse(sync.hasWaiters(c));
+                assertEquals(0, sync.getWaitQueueLength(c));
                 c.await();
                 sync.release(1);
             }});
@@ -673,8 +675,8 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                threadAssertFalse(sync.hasWaiters(c));
-                threadAssertEquals(0, sync.getWaitQueueLength(c));
+                assertFalse(sync.hasWaiters(c));
+                assertEquals(0, sync.getWaitQueueLength(c));
                 c.await();
                 sync.release(1);
             }});
@@ -682,8 +684,8 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                threadAssertTrue(sync.hasWaiters(c));
-                threadAssertEquals(1, sync.getWaitQueueLength(c));
+                assertTrue(sync.hasWaiters(c));
+                assertEquals(1, sync.getWaitQueueLength(c));
                 c.await();
                 sync.release(1);
             }});
@@ -717,7 +719,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                threadAssertTrue(sync.getWaitingThreads(c).isEmpty());
+                assertTrue(sync.getWaitingThreads(c).isEmpty());
                 c.await();
                 sync.release(1);
             }});
@@ -725,7 +727,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                threadAssertFalse(sync.getWaitingThreads(c).isEmpty());
+                assertFalse(sync.getWaitingThreads(c).isEmpty());
                 c.await();
                 sync.release(1);
             }});
@@ -932,9 +934,9 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(l.isSignalled());
+                assertFalse(l.isSignalled());
                 l.acquireSharedInterruptibly(0);
-                threadAssertTrue(l.isSignalled());
+                assertTrue(l.isSignalled());
             }});
 
         t.start();
@@ -975,7 +977,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         final BooleanLatch l = new BooleanLatch();
         Thread t = new Thread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(l.isSignalled());
+                assertFalse(l.isSignalled());
                 l.acquireSharedInterruptibly(0);
             }});
 

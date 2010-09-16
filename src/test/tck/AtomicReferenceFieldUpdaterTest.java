@@ -106,12 +106,12 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-        assertTrue(a.compareAndSet(this,one,two));
-        assertTrue(a.compareAndSet(this,two,m4));
-        assertSame(m4,a.get(this));
-        assertFalse(a.compareAndSet(this,m5,seven));
+        assertTrue(a.compareAndSet(this, one, two));
+        assertTrue(a.compareAndSet(this, two, m4));
+        assertSame(m4, a.get(this));
+        assertFalse(a.compareAndSet(this, m5, seven));
         assertFalse(seven == a.get(this));
-        assertTrue(a.compareAndSet(this,m4,seven));
+        assertTrue(a.compareAndSet(this, m4, seven));
         assertSame(seven,a.get(this));
     }
 

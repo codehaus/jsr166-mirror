@@ -37,7 +37,19 @@ public class RecursiveTaskTest extends JSR166TestCase {
 
     private <T> T testInvokeOnPool(ForkJoinPool pool, RecursiveTask<T> a) {
         try {
-            return pool.invoke(a);
+            assertFalse(a.isDone());
+            assertFalse(a.isCompletedNormally());
+            assertFalse(a.isCompletedAbnormally());
+            assertFalse(a.isCancelled());
+
+            T result = pool.invoke(a);
+
+            assertTrue(a.isDone());
+            assertTrue(a.isCompletedNormally());
+            assertFalse(a.isCompletedAbnormally());
+            assertFalse(a.isCancelled());
+            assertNull(a.getException());
+            return result;
         } finally {
             joinPool(pool);
         }
@@ -51,10 +63,10 @@ public class RecursiveTaskTest extends JSR166TestCase {
     static final Integer NoResult = Integer.valueOf(-17);
 
     // A simple recursive task for testing
-    static final class FibTask extends RecursiveTask<Integer> {
+    final class FibTask extends CheckedRecursiveTask<Integer> {
         final int number;
         FibTask(int n) { number = n; }
-        public Integer compute() {
+        public Integer realCompute() {
             int n = number;
             if (n <= 1)
                 return n;
@@ -65,7 +77,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     }
 
     // A recursive action failing in base case
-    static final class FailingFibTask extends RecursiveTask<Integer> {
+    final class FailingFibTask extends RecursiveTask<Integer> {
         final int number;
         int result;
         FailingFibTask(int n) { number = n; }
@@ -86,18 +98,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * returns value;
      */
     public void testInvoke() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 Integer r = f.invoke();
-                threadAssertTrue(r == 21);
-                threadAssertTrue(f.isDone());
-                threadAssertFalse(f.isCancelled());
-                threadAssertFalse(f.isCompletedAbnormally());
-                threadAssertTrue(f.getRawResult() == 21);
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
+                assertFalse(f.isCancelled());
+                assertFalse(f.isCompletedAbnormally());
+                assertEquals(21, (int) f.getRawResult());
                 return r;
-            }
-        };
+            }};
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
@@ -107,18 +118,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * completed tasks
      */
     public void testQuietlyInvoke() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 f.quietlyInvoke();
                 Integer r = f.getRawResult();
-                threadAssertTrue(r == 21);
-                threadAssertTrue(f.isDone());
-                threadAssertFalse(f.isCancelled());
-                threadAssertFalse(f.isCompletedAbnormally());
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
+                assertFalse(f.isCancelled());
+                assertFalse(f.isCompletedAbnormally());
                 return r;
-            }
-        };
+            }};
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
@@ -126,16 +136,15 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * join of a forked task returns when task completes
      */
     public void testForkJoin() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
+                assertSame(f, f.fork());
                 Integer r = f.join();
-                threadAssertTrue(r == 21);
-                threadAssertTrue(f.isDone());
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
                 return r;
-            }
-        };
+            }};
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
@@ -143,21 +152,15 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * get of a forked task returns when task completes
      */
     public void testForkGet() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
-                try {
-                    FibTask f = new FibTask(8);
-                    threadAssertSame(f, f.fork());
-                    Integer r = f.get();
-                    threadAssertTrue(r == 21);
-                    threadAssertTrue(f.isDone());
-                    return r;
-                } catch (Exception ex) {
-                    unexpectedException(ex);
-                }
-                return NoResult;
-            }
-        };
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() throws Exception {
+                FibTask f = new FibTask(8);
+                assertSame(f, f.fork());
+                Integer r = f.get();
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
+                return r;
+            }};
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
@@ -165,21 +168,15 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * timed get of a forked task returns when task completes
      */
     public void testForkTimedGet() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
-                try {
-                    FibTask f = new FibTask(8);
-                    threadAssertSame(f, f.fork());
-                    Integer r = f.get(5L, TimeUnit.SECONDS);
-                    threadAssertTrue(r == 21);
-                    threadAssertTrue(f.isDone());
-                    return r;
-                } catch (Exception ex) {
-                    unexpectedException(ex);
-                }
-                return NoResult;
-            }
-        };
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() throws Exception {
+                FibTask f = new FibTask(8);
+                assertSame(f, f.fork());
+                Integer r = f.get(5L, TimeUnit.SECONDS);
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
+                return r;
+            }};
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
@@ -187,17 +184,16 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * quietlyJoin of a forked task returns when task completes
      */
     public void testForkQuietlyJoin() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
+                assertSame(f, f.fork());
                 f.quietlyJoin();
                 Integer r = f.getRawResult();
-                threadAssertTrue(r == 21);
-                threadAssertTrue(f.isDone());
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
                 return r;
-            }
-        };
+            }};
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
@@ -207,18 +203,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * getQueuedTaskCount returns 0 when quiescent
      */
     public void testForkHelpQuiesce() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
+                assertSame(f, f.fork());
                 f.helpQuiesce();
                 Integer r = f.getRawResult();
-                threadAssertTrue(r == 21);
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(getQueuedTaskCount() == 0);
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
+                assertEquals(0, getQueuedTaskCount());
                 return r;
-            }
-        };
+            }};
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
@@ -227,18 +222,16 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invoke task throws exception when task completes abnormally
      */
     public void testAbnormalInvoke() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FailingFibTask f = new FailingFibTask(8);
                 try {
-                    FailingFibTask f = new FailingFibTask(8);
                     f.invoke();
                     shouldThrow();
                     return NoResult;
-                } catch (FJException success) {
-                }
+                } catch (FJException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -246,14 +239,13 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * quietlyInvoke task returns when task completes abnormally
      */
     public void testAbnormalQuietlyInvoke() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FailingFibTask f = new FailingFibTask(8);
                 f.quietlyInvoke();
-                threadAssertTrue(f.isDone());
+                assertTrue(f.isDone());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -261,19 +253,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * join of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkJoin() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FailingFibTask f = new FailingFibTask(8);
+                assertSame(f, f.fork());
                 try {
-                    FailingFibTask f = new FailingFibTask(8);
-                    threadAssertSame(f, f.fork());
                     Integer r = f.join();
                     shouldThrow();
                     return r;
-                } catch (FJException success) {
-                }
+                } catch (FJException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -281,21 +271,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * get of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkGet() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() throws Exception {
+                FailingFibTask f = new FailingFibTask(8);
+                assertSame(f, f.fork());
                 try {
-                    FailingFibTask f = new FailingFibTask(8);
-                    threadAssertSame(f, f.fork());
                     Integer r = f.get();
                     shouldThrow();
                     return r;
-                } catch (ExecutionException success) {
-                } catch (Exception ex) {
-                    unexpectedException(ex);
-                }
+                } catch (ExecutionException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -303,21 +289,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * timed get of a forked task throws exception when task completes abnormally
      */
     public void testAbnormalForkTimedGet() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() throws Exception {
+                FailingFibTask f = new FailingFibTask(8);
+                assertSame(f, f.fork());
                 try {
-                    FailingFibTask f = new FailingFibTask(8);
-                    threadAssertSame(f, f.fork());
                     Integer r = f.get(5L, TimeUnit.SECONDS);
                     shouldThrow();
                     return r;
-                } catch (ExecutionException success) {
-                } catch (Exception ex) {
-                    unexpectedException(ex);
-                }
+                } catch (ExecutionException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -325,17 +307,16 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * quietlyJoin of a forked task returns when task completes abnormally
      */
     public void testAbnormalForkQuietlyJoin() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FailingFibTask f = new FailingFibTask(8);
-                threadAssertSame(f, f.fork());
+                assertSame(f, f.fork());
                 f.quietlyJoin();
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(f.isCompletedAbnormally());
-                threadAssertTrue(f.getException() instanceof FJException);
+                assertTrue(f.isDone());
+                assertTrue(f.isCompletedAbnormally());
+                assertTrue(f.getException() instanceof FJException);
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -343,19 +324,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invoke task throws exception when task cancelled
      */
     public void testCancelledInvoke() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FibTask f = new FibTask(8);
+                assertTrue(f.cancel(true));
                 try {
-                    FibTask f = new FibTask(8);
-                    threadAssertTrue(f.cancel(true));
                     Integer r = f.invoke();
                     shouldThrow();
                     return r;
-                } catch (CancellationException success) {
-                }
+                } catch (CancellationException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -363,20 +342,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * join of a forked task throws exception when task cancelled
      */
     public void testCancelledForkJoin() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FibTask f = new FibTask(8);
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
                 try {
-                    FibTask f = new FibTask(8);
-                    threadAssertTrue(f.cancel(true));
-                    threadAssertSame(f, f.fork());
                     Integer r = f.join();
                     shouldThrow();
                     return r;
-                } catch (CancellationException success) {
-                }
+                } catch (CancellationException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -384,22 +361,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * get of a forked task throws exception when task cancelled
      */
     public void testCancelledForkGet() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() throws Exception {
+                FibTask f = new FibTask(8);
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
                 try {
-                    FibTask f = new FibTask(8);
-                    threadAssertTrue(f.cancel(true));
-                    threadAssertSame(f, f.fork());
                     Integer r = f.get();
                     shouldThrow();
                     return r;
-                } catch (CancellationException success) {
-                } catch (Exception ex) {
-                    unexpectedException(ex);
-                }
+                } catch (CancellationException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -407,22 +380,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * timed get of a forked task throws exception when task cancelled
      */
     public void testCancelledForkTimedGet() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() throws Exception {
+                FibTask f = new FibTask(8);
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
                 try {
-                    FibTask f = new FibTask(8);
-                    threadAssertTrue(f.cancel(true));
-                    threadAssertSame(f, f.fork());
                     Integer r = f.get(5L, TimeUnit.SECONDS);
                     shouldThrow();
                     return r;
-                } catch (CancellationException success) {
-                } catch (Exception ex) {
-                    unexpectedException(ex);
-                }
+                } catch (CancellationException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -430,18 +399,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * quietlyJoin of a forked task returns when task cancelled
      */
     public void testCancelledForkQuietlyJoin() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
-                threadAssertTrue(f.cancel(true));
-                threadAssertSame(f, f.fork());
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
                 f.quietlyJoin();
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(f.isCompletedAbnormally());
-                threadAssertTrue(f.getException() instanceof CancellationException);
+                assertTrue(f.isDone());
+                assertTrue(f.isCompletedAbnormally());
+                assertTrue(f.isCancelled());
+                assertTrue(f.getException() instanceof CancellationException);
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -450,12 +419,11 @@ public class RecursiveTaskTest extends JSR166TestCase {
      */
     public void testGetPool() {
         final ForkJoinPool mainPool = mainPool();
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
-                threadAssertTrue(getPool() == mainPool);
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                assertSame(mainPool, getPool());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool, a));
     }
 
@@ -463,12 +431,11 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * getPool of non-FJ task returns null
      */
     public void testGetPool2() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
-                threadAssertTrue(getPool() == null);
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                assertNull(getPool());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, a.invoke());
     }
 
@@ -476,12 +443,11 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * inForkJoinPool of executing task returns true
      */
     public void testInForkJoinPool() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
-                threadAssertTrue(inForkJoinPool());
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                assertTrue(inForkJoinPool());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -489,12 +455,11 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * inForkJoinPool of non-FJ task returns false
      */
     public void testInForkJoinPool2() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
-                threadAssertTrue(!inForkJoinPool());
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                assertTrue(!inForkJoinPool());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, a.invoke());
     }
 
@@ -502,10 +467,10 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * The value set by setRawResult is returned by getRawResult
      */
     public void testSetRawResult() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 setRawResult(NoResult);
-                threadAssertSame(NoResult, getRawResult());
+                assertSame(NoResult, getRawResult());
                 return NoResult;
             }
         };
@@ -516,20 +481,19 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * A reinitialized task may be re-invoked
      */
     public void testReinitialize() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 Integer r = f.invoke();
-                threadAssertTrue(r == 21);
-                threadAssertTrue(f.isDone());
-                threadAssertFalse(f.isCancelled());
-                threadAssertFalse(f.isCompletedAbnormally());
+                assertEquals(21, (int) r);
+                assertTrue(f.isDone());
+                assertFalse(f.isCancelled());
+                assertFalse(f.isCompletedAbnormally());
                 f.reinitialize();
                 r = f.invoke();
-                threadAssertTrue(r == 21);
+                assertEquals(21, (int) r);
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -537,19 +501,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invoke task throws exception after invoking completeExceptionally
      */
     public void testCompleteExceptionally() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FibTask f = new FibTask(8);
+                f.completeExceptionally(new FJException());
                 try {
-                    FibTask f = new FibTask(8);
-                    f.completeExceptionally(new FJException());
                     Integer r = f.invoke();
                     shouldThrow();
                     return r;
-                } catch (FJException success) {
-                }
+                } catch (FJException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -557,16 +519,15 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invoke task suppresses execution invoking complete
      */
     public void testComplete() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 f.complete(NoResult);
                 Integer r = f.invoke();
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(r == NoResult);
+                assertTrue(f.isDone());
+                assertSame(NoResult, r);
                 return r;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -574,18 +535,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(t1, t2) invokes all task arguments
      */
     public void testInvokeAll2() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 FibTask g = new FibTask(9);
                 invokeAll(f, g);
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(f.join() == 21);
-                threadAssertTrue(g.isDone());
-                threadAssertTrue(g.join() == 34);
+                assertTrue(f.isDone());
+                assertEquals(21, (int) f.join());
+                assertTrue(g.isDone());
+                assertEquals(34, (int) g.join());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -593,15 +553,14 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(tasks) with 1 argument invokes task
      */
     public void testInvokeAll1() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 invokeAll(f);
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(f.join() == 21);
+                assertTrue(f.isDone());
+                assertEquals(21, (int) f.join());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -609,21 +568,20 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(tasks) with > 2 argument invokes tasks
      */
     public void testInvokeAll3() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 FibTask g = new FibTask(9);
                 FibTask h = new FibTask(7);
                 invokeAll(f, g, h);
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(f.join() == 21);
-                threadAssertTrue(g.isDone());
-                threadAssertTrue(g.join() == 34);
-                threadAssertTrue(h.isDone());
-                threadAssertTrue(h.join() == 13);
+                assertTrue(f.isDone());
+                assertEquals(21, (int) f.join());
+                assertTrue(g.isDone());
+                assertEquals(34, (int) g.join());
+                assertTrue(h.isDone());
+                assertEquals(13, (int) h.join());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -631,8 +589,8 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(collection) invokes all tasks in the collection
      */
     public void testInvokeAllCollection() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 FibTask g = new FibTask(9);
                 FibTask h = new FibTask(7);
@@ -641,15 +599,14 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 set.add(g);
                 set.add(h);
                 invokeAll(set);
-                threadAssertTrue(f.isDone());
-                threadAssertTrue(f.join() == 21);
-                threadAssertTrue(g.isDone());
-                threadAssertTrue(g.join() == 34);
-                threadAssertTrue(h.isDone());
-                threadAssertTrue(h.join() == 13);
+                assertTrue(f.isDone());
+                assertEquals(21, (int) f.join());
+                assertTrue(g.isDone());
+                assertEquals(34, (int) g.join());
+                assertTrue(h.isDone());
+                assertEquals(13, (int) h.join());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -658,19 +615,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(t1, t2) throw exception if any task does
      */
     public void testAbnormalInvokeAll2() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FibTask f = new FibTask(8);
+                FailingFibTask g = new FailingFibTask(9);
                 try {
-                    FibTask f = new FibTask(8);
-                    FailingFibTask g = new FailingFibTask(9);
                     invokeAll(f, g);
                     shouldThrow();
                     return NoResult;
-                } catch (FJException success) {
-                }
+                } catch (FJException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -678,18 +633,16 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(tasks) with 1 argument throws exception if task does
      */
     public void testAbnormalInvokeAll1() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FailingFibTask g = new FailingFibTask(9);
                 try {
-                    FailingFibTask g = new FailingFibTask(9);
                     invokeAll(g);
                     shouldThrow();
                     return NoResult;
-                } catch (FJException success) {
-                }
+                } catch (FJException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -697,20 +650,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(tasks) with > 2 argument throws exception if any task does
      */
     public void testAbnormalInvokeAll3() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FibTask f = new FibTask(8);
+                FailingFibTask g = new FailingFibTask(9);
+                FibTask h = new FibTask(7);
                 try {
-                    FibTask f = new FibTask(8);
-                    FailingFibTask g = new FailingFibTask(9);
-                    FibTask h = new FibTask(7);
                     invokeAll(f, g, h);
                     shouldThrow();
                     return NoResult;
-                } catch (FJException success) {
-                }
+                } catch (FJException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -718,24 +669,22 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
+                FailingFibTask f = new FailingFibTask(8);
+                FibTask g = new FibTask(9);
+                FibTask h = new FibTask(7);
+                HashSet set = new HashSet();
+                set.add(f);
+                set.add(g);
+                set.add(h);
                 try {
-                    FailingFibTask f = new FailingFibTask(8);
-                    FibTask g = new FibTask(9);
-                    FibTask h = new FibTask(7);
-                    HashSet set = new HashSet();
-                    set.add(f);
-                    set.add(g);
-                    set.add(h);
                     invokeAll(set);
                     shouldThrow();
                     return NoResult;
-                } catch (FJException success) {
-                }
+                } catch (FJException success) {}
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
 
@@ -744,19 +693,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * and suppresses execution
      */
     public void testTryUnfork() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(f.tryUnfork());
+                assertSame(f, f.fork());
+                assertTrue(f.tryUnfork());
                 helpQuiesce();
-                threadAssertFalse(f.isDone());
-                threadAssertTrue(g.isDone());
+                assertFalse(f.isDone());
+                assertTrue(g.isDone());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
@@ -765,19 +713,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * there are more tasks than threads
      */
     public void testGetSurplusQueuedTaskCount() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask h = new FibTask(7);
-                threadAssertSame(h, h.fork());
+                assertSame(h, h.fork());
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(getSurplusQueuedTaskCount() > 0);
+                assertSame(f, f.fork());
+                assertTrue(getSurplusQueuedTaskCount() > 0);
                 helpQuiesce();
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
@@ -785,19 +732,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * peekNextLocalTask returns most recent unexecuted task.
      */
     public void testPeekNextLocalTask() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(peekNextLocalTask() == f);
-                threadAssertTrue(f.join() == 21);
-                threadAssertTrue(f.isDone());
+                assertSame(f, f.fork());
+                assertSame(f, peekNextLocalTask());
+                assertEquals(21, (int) f.join());
+                assertTrue(f.isDone());
                 helpQuiesce();
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
@@ -806,18 +752,17 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * without executing it
      */
     public void testPollNextLocalTask() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(pollNextLocalTask() == f);
+                assertSame(f, f.fork());
+                assertSame(f, pollNextLocalTask());
                 helpQuiesce();
-                threadAssertFalse(f.isDone());
+                assertFalse(f.isDone());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
@@ -825,19 +770,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * pollTask returns an unexecuted task without executing it
      */
     public void testPollTask() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(pollTask() == f);
+                assertSame(f, f.fork());
+                assertSame(f, pollTask());
                 helpQuiesce();
-                threadAssertFalse(f.isDone());
-                threadAssertTrue(g.isDone());
+                assertFalse(f.isDone());
+                assertTrue(g.isDone());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(singletonPool(), a));
     }
 
@@ -845,19 +789,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * peekNextLocalTask returns least recent unexecuted task in async mode
      */
     public void testPeekNextLocalTaskAsync() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(peekNextLocalTask() == g);
-                threadAssertEquals(21, (int) f.join());
+                assertSame(f, f.fork());
+                assertSame(g, peekNextLocalTask());
+                assertEquals(21, (int) f.join());
                 helpQuiesce();
-                threadAssertTrue(f.isDone());
+                assertTrue(f.isDone());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(asyncSingletonPool(), a));
     }
 
@@ -866,19 +809,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * without executing it, in async mode
      */
     public void testPollNextLocalTaskAsync() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(pollNextLocalTask() == g);
+                assertSame(f, f.fork());
+                assertSame(g, pollNextLocalTask());
                 helpQuiesce();
-                threadAssertTrue(f.isDone());
-                threadAssertFalse(g.isDone());
+                assertTrue(f.isDone());
+                assertFalse(g.isDone());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(asyncSingletonPool(), a));
     }
 
@@ -887,19 +829,18 @@ public class RecursiveTaskTest extends JSR166TestCase {
      * without executing it, in async mode
      */
     public void testPollTaskAsync() {
-        RecursiveTask<Integer> a = new RecursiveTask<Integer>() {
-            public Integer compute() {
+        RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
+            public Integer realCompute() {
                 FibTask g = new FibTask(9);
-                threadAssertSame(g, g.fork());
+                assertSame(g, g.fork());
                 FibTask f = new FibTask(8);
-                threadAssertSame(f, f.fork());
-                threadAssertTrue(pollTask() == g);
+                assertSame(f, f.fork());
+                assertSame(g, pollTask());
                 helpQuiesce();
-                threadAssertTrue(f.isDone());
-                threadAssertFalse(g.isDone());
+                assertTrue(f.isDone());
+                assertFalse(g.isDone());
                 return NoResult;
-            }
-        };
+            }};
         assertSame(NoResult, testInvokeOnPool(asyncSingletonPool(), a));
     }
 

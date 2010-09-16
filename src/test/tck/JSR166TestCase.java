@@ -7,11 +7,17 @@
  */
 
 import junit.framework.*;
-import java.util.*;
+import java.util.PropertyPermission;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.io.*;
-import java.security.*;
+import java.security.CodeSource;
+import java.security.Permission;
+import java.security.PermissionCollection;
+import java.security.Permissions;
+import java.security.Policy;
+import java.security.ProtectionDomain;
+import java.security.SecurityPermission;
 
 /**
  * Base class for JSR166 Junit TCK tests.  Defines some constants,
@@ -206,140 +212,182 @@ public class JSR166TestCase extends TestCase {
      */
     protected void setDelays() {
         SHORT_DELAY_MS = getShortDelay();
-        SMALL_DELAY_MS = SHORT_DELAY_MS * 5;
+        SMALL_DELAY_MS  = SHORT_DELAY_MS * 5;
         MEDIUM_DELAY_MS = SHORT_DELAY_MS * 10;
-        LONG_DELAY_MS = SHORT_DELAY_MS * 50;
+        LONG_DELAY_MS   = SHORT_DELAY_MS * 50;
     }
 
     /**
-     * Flag set true if any threadAssert methods fail
+     * The first exception encountered if any threadAssertXXX method fails.
      */
-    volatile boolean threadFailed;
+    private final AtomicReference<Throwable> threadFailure
+        = new AtomicReference<Throwable>(null);
 
     /**
-     * Initializes test to indicate that no thread assertions have failed
+     * Records an exception so that it can be rethrown later in the test
+     * harness thread, triggering a test case failure.  Only the first
+     * failure is recorded; subsequent calls to this method from within
+     * the same test have no effect.
      */
+    public void threadRecordFailure(Throwable t) {
+        threadFailure.compareAndSet(null, t);
+    }
+
     public void setUp() {
         setDelays();
-        threadFailed = false;
     }
 
     /**
-     * Triggers test case failure if any thread assertions have failed
+     * Triggers test case failure if any thread assertions have failed,
+     * by rethrowing, in the test harness thread, any exception recorded
+     * earlier by threadRecordFailure.
      */
-    public void tearDown() {
-        assertFalse(threadFailed);
+    public void tearDown() throws Exception {
+        Throwable t = threadFailure.get();
+        if (t != null) {
+            if (t instanceof Error)
+                throw (Error) t;
+            else if (t instanceof RuntimeException)
+                throw (RuntimeException) t;
+            else if (t instanceof Exception)
+                throw (Exception) t;
+            else
+                throw new AssertionError(t);
+        }
     }
 
     /**
-     * Fail, also setting status to indicate current testcase should fail
+     * Just like fail(reason), but additionally recording (using
+     * threadRecordFailure) any AssertionError thrown, so that the current
+     * testcase will fail.
      */
     public void threadFail(String reason) {
-        threadFailed = true;
-        fail(reason);
+        try {
+            fail(reason);
+        } catch (Throwable t) {
+            threadRecordFailure(t);
+            fail(reason);
+        }
     }
 
     /**
-     * If expression not true, set status to indicate current testcase
-     * should fail
+     * Just like assertTrue(b), but additionally recording (using
+     * threadRecordFailure) any AssertionError thrown, so that the current
+     * testcase will fail.
      */
     public void threadAssertTrue(boolean b) {
-        if (!b) {
-            threadFailed = true;
+        try {
             assertTrue(b);
+        } catch (AssertionError t) {
+            threadRecordFailure(t);
+            throw t;
         }
     }
 
     /**
-     * If expression not false, set status to indicate current testcase
-     * should fail
+     * Just like assertFalse(b), but additionally recording (using
+     * threadRecordFailure) any AssertionError thrown, so that the
+     * current testcase will fail.
      */
     public void threadAssertFalse(boolean b) {
-        if (b) {
-            threadFailed = true;
+        try {
             assertFalse(b);
+        } catch (AssertionError t) {
+            threadRecordFailure(t);
+            throw t;
         }
     }
 
     /**
-     * If argument not null, set status to indicate current testcase
-     * should fail
+     * Just like assertNull(x), but additionally recording (using
+     * threadRecordFailure) any AssertionError thrown, so that the
+     * current testcase will fail.
      */
     public void threadAssertNull(Object x) {
-        if (x != null) {
-            threadFailed = true;
+        try {
             assertNull(x);
+        } catch (AssertionError t) {
+            threadRecordFailure(t);
+            throw t;
         }
     }
 
     /**
-     * If arguments not equal, set status to indicate current testcase
-     * should fail
+     * Just like assertEquals(x, y), but additionally recording (using
+     * threadRecordFailure) any AssertionError thrown, so that the
+     * current testcase will fail.
      */
     public void threadAssertEquals(long x, long y) {
-        if (x != y) {
-            threadFailed = true;
+        try {
             assertEquals(x, y);
+        } catch (AssertionError t) {
+            threadRecordFailure(t);
+            throw t;
         }
     }
 
     /**
-     * If arguments not equal, set status to indicate current testcase
-     * should fail
+     * Just like assertEquals(x, y), but additionally recording (using
+     * threadRecordFailure) any AssertionError thrown, so that the
+     * current testcase will fail.
      */
     public void threadAssertEquals(Object x, Object y) {
-        if (x != y && (x == null || !x.equals(y))) {
-            threadFailed = true;
+        try {
             assertEquals(x, y);
+        } catch (AssertionError t) {
+            threadRecordFailure(t);
+            throw t;
         }
     }
 
     /**
-     * If arguments not identical, set status to indicate current testcase
-     * should fail
+     * Just like assertSame(x, y), but additionally recording (using
+     * threadRecordFailure) any AssertionError thrown, so that the
+     * current testcase will fail.
      */
     public void threadAssertSame(Object x, Object y) {
-        if (x != y) {
-            threadFailed = true;
+        try {
             assertSame(x, y);
+        } catch (AssertionError t) {
+            threadRecordFailure(t);
+            throw t;
         }
     }
 
     /**
-     * threadFail with message "should throw exception"
+     * Calls threadFail with message "should throw exception".
      */
     public void threadShouldThrow() {
-        threadFailed = true;
-        fail("should throw exception");
+        threadFail("should throw exception");
     }
 
     /**
-     * threadFail with message "should throw" + exceptionName
+     * Calls threadFail with message "should throw" + exceptionName.
      */
     public void threadShouldThrow(String exceptionName) {
-        threadFailed = true;
-        fail("should throw " + exceptionName);
+        threadFail("should throw " + exceptionName);
     }
 
     /**
-     * threadFail with message "Unexpected exception"
+     * Calls threadFail with message "Unexpected exception" + ex.
      */
-    public void threadUnexpectedException() {
-        threadFailed = true;
-        fail("Unexpected exception");
+    public void threadUnexpectedException(Throwable t) {
+        threadRecordFailure(t);
+        t.printStackTrace();
+        // Rethrow, wrapping in an AssertionError if necessary
+        if (t instanceof RuntimeException)
+            throw (RuntimeException) t;
+        else if (t instanceof Error)
+            throw (Error) t;
+        else {
+            AssertionError ae = new AssertionError("unexpected exception: " + t);
+            t.initCause(t);
+            throw ae;
+        }            
     }
 
     /**
-     * threadFail with message "Unexpected exception", with argument
-     */
-    public void threadUnexpectedException(Throwable ex) {
-        threadFailed = true;
-        ex.printStackTrace();
-        fail("Unexpected exception: " + ex);
-    }
-
-    /**
-     * Wait out termination of a thread pool or fail doing so
+     * Waits out termination of a thread pool or fails doing so.
      */
     public void joinPool(ExecutorService exec) {
         try {
@@ -354,28 +402,21 @@ public class JSR166TestCase extends TestCase {
 
 
     /**
-     * fail with message "should throw exception"
+     * Fails with message "should throw exception".
      */
     public void shouldThrow() {
         fail("Should throw exception");
     }
 
     /**
-     * fail with message "should throw " + exceptionName
+     * Fails with message "should throw " + exceptionName.
      */
     public void shouldThrow(String exceptionName) {
         fail("Should throw " + exceptionName);
     }
 
     /**
-     * fail with message "Unexpected exception"
-     */
-    public void unexpectedException() {
-        fail("Unexpected exception");
-    }
-
-    /**
-     * fail with message "Unexpected exception", with argument
+     * Fails with message "Unexpected exception: " + ex.
      */
     public void unexpectedException(Throwable ex) {
         ex.printStackTrace();
@@ -588,12 +629,13 @@ public class JSR166TestCase extends TestCase {
                 return realCall();
             } catch (Throwable t) {
                 threadUnexpectedException(t);
+                return null;
             }
-            return null;
         }
     }
 
-    public abstract class CheckedInterruptedCallable<T> implements Callable<T> {
+    public abstract class CheckedInterruptedCallable<T>
+        implements Callable<T> {
         protected abstract T realCall() throws Throwable;
 
         public final T call() {
@@ -765,6 +807,36 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    /**
+     * Analog of CheckedRunnable for RecursiveAction
+     */
+    public abstract class CheckedRecursiveAction extends RecursiveAction {
+        protected abstract void realCompute() throws Throwable;
+
+        public final void compute() {
+            try {
+                realCompute();
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+        }
+    }
+
+    /**
+     * Analog of CheckedCallable for RecursiveTask
+     */
+    public abstract class CheckedRecursiveTask<T> extends RecursiveTask<T> {
+        protected abstract T realCompute() throws Throwable;
+
+        public final T compute() {
+            try {
+                return realCompute();
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+                return null;
+            }
+        }
+    }
 
     /**
      * For use as RejectedExecutionHandler in constructors

@@ -270,7 +270,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertFalse(lock.writeLock().tryLock());
+                assertFalse(lock.writeLock().tryLock());
             }});
 
         t.start();
@@ -286,7 +286,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertFalse(lock.readLock().tryLock());
+                assertFalse(lock.readLock().tryLock());
             }});
 
         t.start();
@@ -302,7 +302,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.readLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertTrue(lock.readLock().tryLock());
+                assertTrue(lock.readLock().tryLock());
                 lock.readLock().unlock();
             }});
 
@@ -573,9 +573,9 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         t2.start();
         Thread.sleep(SHORT_DELAY_MS);
         assertTrue(lock.isWriteLockedByCurrentThread());
-        assertTrue(lock.getWriteHoldCount() == 1);
+        assertEquals(1, lock.getWriteHoldCount());
         lock.writeLock().lock();
-        assertTrue(lock.getWriteHoldCount() == 2);
+        assertEquals(2, lock.getWriteHoldCount());
         lock.writeLock().unlock();
         lock.writeLock().lock();
         lock.writeLock().unlock();
@@ -595,7 +595,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.readLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertTrue(lock.readLock().tryLock());
+                assertTrue(lock.readLock().tryLock());
                 lock.readLock().unlock();
             }});
 
@@ -614,7 +614,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.readLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertFalse(lock.writeLock().tryLock());
+                assertFalse(lock.writeLock().tryLock());
             }});
 
         t.start();
@@ -631,7 +631,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.readLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertTrue(lock.readLock().tryLock());
+                assertTrue(lock.readLock().tryLock());
                 lock.readLock().unlock();
             }});
 
@@ -650,7 +650,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.readLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertFalse(lock.writeLock().tryLock());
+                assertFalse(lock.writeLock().tryLock());
             }});
 
         t.start();
@@ -668,7 +668,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(lock.writeLock().tryLock(1, MILLISECONDS));
+                assertFalse(lock.writeLock().tryLock(1, MILLISECONDS));
             }});
 
         t.start();
@@ -685,7 +685,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(lock.readLock().tryLock(1, MILLISECONDS));
+                assertFalse(lock.readLock().tryLock(1, MILLISECONDS));
             }});
 
         t.start();
@@ -1224,8 +1224,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
-                threadAssertFalse(lock.hasWaiters(c));
-                threadAssertEquals(0, lock.getWaitQueueLength(c));
+                assertFalse(lock.hasWaiters(c));
+                assertEquals(0, lock.getWaitQueueLength(c));
                 c.await();
                 lock.writeLock().unlock();
             }});
@@ -1255,8 +1255,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
-                threadAssertFalse(lock.hasWaiters(c));
-                threadAssertEquals(0, lock.getWaitQueueLength(c));
+                assertFalse(lock.hasWaiters(c));
+                assertEquals(0, lock.getWaitQueueLength(c));
                 c.await();
                 lock.writeLock().unlock();
             }});
@@ -1287,7 +1287,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
-                threadAssertTrue(lock.getWaitingThreads(c).isEmpty());
+                assertTrue(lock.getWaitingThreads(c).isEmpty());
                 c.await();
                 lock.writeLock().unlock();
             }});
@@ -1295,7 +1295,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
-                threadAssertFalse(lock.getWaitingThreads(c).isEmpty());
+                assertFalse(lock.getWaitingThreads(c).isEmpty());
                 c.await();
                 lock.writeLock().unlock();
             }});

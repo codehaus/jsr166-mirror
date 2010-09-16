@@ -258,25 +258,24 @@ public class ExecutorsTest extends JSR166TestCase {
      */
     public void testDefaultThreadFactory() throws Exception {
         final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
-        Runnable r = new Runnable() {
-                public void run() {
-                    try {
-                        Thread current = Thread.currentThread();
-                        threadAssertTrue(!current.isDaemon());
-                        threadAssertTrue(current.getPriority() <= Thread.NORM_PRIORITY);
-                        ThreadGroup g = current.getThreadGroup();
-                        SecurityManager s = System.getSecurityManager();
-                        if (s != null)
-                            threadAssertTrue(g == s.getThreadGroup());
-                        else
-                            threadAssertTrue(g == egroup);
-                        String name = current.getName();
-                        threadAssertTrue(name.endsWith("thread-1"));
-                    } catch (SecurityException ok) {
-                        // Also pass if not allowed to change setting
-                    }
+        Runnable r = new CheckedRunnable() {
+            public void realRun() {
+                try {
+                    Thread current = Thread.currentThread();
+                    assertTrue(!current.isDaemon());
+                    assertTrue(current.getPriority() <= Thread.NORM_PRIORITY);
+                    ThreadGroup g = current.getThreadGroup();
+                    SecurityManager s = System.getSecurityManager();
+                    if (s != null)
+                        assertTrue(g == s.getThreadGroup());
+                    else
+                        assertTrue(g == egroup);
+                    String name = current.getName();
+                    assertTrue(name.endsWith("thread-1"));
+                } catch (SecurityException ok) {
+                    // Also pass if not allowed to change setting
                 }
-            };
+            }};
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
 
         e.execute(r);
@@ -316,8 +315,8 @@ public class ExecutorsTest extends JSR166TestCase {
                             assertTrue(g == egroup);
                         String name = current.getName();
                         assertTrue(name.endsWith("thread-1"));
-                        assertTrue(thisccl == current.getContextClassLoader());
-                        assertTrue(thisacc.equals(AccessController.getContext()));
+                        assertSame(thisccl, current.getContextClassLoader());
+                        assertEquals(thisacc, AccessController.getContext());
                     }};
                 ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
                 e.execute(r);

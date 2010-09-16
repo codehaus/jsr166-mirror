@@ -264,16 +264,16 @@ public class AtomicLongArrayTest extends JSR166TestCase {
 
     static final long COUNTDOWN = 100000;
 
-    class Counter implements Runnable {
+    class Counter extends CheckedRunnable {
         final AtomicLongArray ai;
         volatile long counts;
         Counter(AtomicLongArray a) { ai = a; }
-        public void run() {
+        public void realRun() {
             for (;;) {
                 boolean done = true;
                 for (int i = 0; i < ai.length(); ++i) {
                     long v = ai.get(i);
-                    threadAssertTrue(v >= 0);
+                    assertTrue(v >= 0);
                     if (v != 0) {
                         done = false;
                         if (ai.compareAndSet(i, v, v-1))

@@ -175,7 +175,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         ++added;
                     }
                 } catch (InterruptedException success) {
-                    assertTrue(added == 1);
+                    assertEquals(1, added);
                 }
             }});
 
@@ -252,7 +252,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
                         ++added;
                     }
                 } catch (InterruptedException success) {
-                    assertTrue(added == 1);
+                    assertEquals(1, added);
                 }
             }});
 
@@ -717,9 +717,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
         ArrayList l = new ArrayList();
         Thread.sleep(SHORT_DELAY_MS);
         q.drainTo(l, 1);
-        assertTrue(l.size() == 1);
+        assertEquals(1, l.size());
         q.drainTo(l, 1);
-        assertTrue(l.size() == 2);
+        assertEquals(2, l.size());
         assertTrue(l.contains(one));
         assertTrue(l.contains(two));
         t1.join();

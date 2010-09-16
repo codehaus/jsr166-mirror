@@ -229,7 +229,8 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     *  Cancelling a task causes timed get in another thread to throw CancellationException
+     *  Cancelling a task causes timed get in another thread to throw
+     *  CancellationException
      */
     public void testTimedGet_Cancellation() throws InterruptedException {
         final FutureTask ft =
@@ -253,7 +254,8 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     * Cancelling a task causes get in another thread to throw CancellationException
+     * Cancelling a task causes get in another thread to throw
+     * CancellationException
      */
     public void testGet_Cancellation() throws InterruptedException {
         final FutureTask ft =
@@ -296,7 +298,7 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     *  A runtime exception in task causes timed get to throw ExecutionException
+     * A runtime exception in task causes timed get to throw ExecutionException
      */
     public void testTimedGet_ExecutionException2() throws Exception {
         final FutureTask ft = new FutureTask(new Callable() {
@@ -331,7 +333,7 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     *  Interrupting a waiting timed get causes it to throw InterruptedException
+     * Interrupting a waiting timed get causes it to throw InterruptedException
      */
     public void testTimedGet_InterruptedException2() throws InterruptedException {
         final FutureTask ft = new FutureTask(new NoOpCallable());

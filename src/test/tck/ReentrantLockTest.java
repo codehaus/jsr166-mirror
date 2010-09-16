@@ -282,7 +282,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                threadAssertFalse(lock.tryLock());
+                assertFalse(lock.tryLock());
             }});
 
         t.start();
@@ -298,7 +298,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lock();
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadAssertFalse(lock.tryLock(1, MILLISECONDS));
+                assertFalse(lock.tryLock(1, MILLISECONDS));
             }});
 
         t.start();
@@ -579,8 +579,8 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                threadAssertFalse(lock.hasWaiters(c));
-                threadAssertEquals(0, lock.getWaitQueueLength(c));
+                assertFalse(lock.hasWaiters(c));
+                assertEquals(0, lock.getWaitQueueLength(c));
                 c.await();
                 lock.unlock();
             }});
@@ -610,8 +610,8 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                threadAssertFalse(lock.hasWaiters(c));
-                threadAssertEquals(0, lock.getWaitQueueLength(c));
+                assertFalse(lock.hasWaiters(c));
+                assertEquals(0, lock.getWaitQueueLength(c));
                 c.await();
                 lock.unlock();
             }});
@@ -619,8 +619,8 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                threadAssertTrue(lock.hasWaiters(c));
-                threadAssertEquals(1, lock.getWaitQueueLength(c));
+                assertTrue(lock.hasWaiters(c));
+                assertEquals(1, lock.getWaitQueueLength(c));
                 c.await();
                 lock.unlock();
             }});
@@ -654,7 +654,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                threadAssertTrue(lock.getWaitingThreads(c).isEmpty());
+                assertTrue(lock.getWaitingThreads(c).isEmpty());
                 c.await();
                 lock.unlock();
             }});
@@ -662,7 +662,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                threadAssertFalse(lock.getWaitingThreads(c).isEmpty());
+                assertFalse(lock.getWaitingThreads(c).isEmpty());
                 c.await();
                 lock.unlock();
             }});
@@ -845,9 +845,9 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t1 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                threadAssertEquals(1, lock.getHoldCount());
+                assertEquals(1, lock.getHoldCount());
                 c.await();
-                threadAssertEquals(1, lock.getHoldCount());
+                assertEquals(1, lock.getHoldCount());
                 lock.unlock();
             }});
 
@@ -855,9 +855,9 @@ public class ReentrantLockTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 lock.lock();
-                threadAssertEquals(2, lock.getHoldCount());
+                assertEquals(2, lock.getHoldCount());
                 c.await();
-                threadAssertEquals(2, lock.getHoldCount());
+                assertEquals(2, lock.getHoldCount());
                 lock.unlock();
                 lock.unlock();
             }});

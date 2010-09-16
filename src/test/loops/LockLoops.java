@@ -176,7 +176,7 @@ public final class LockLoops {
         final int loop(int n) {
             int sum = 0;
             while (n-- > 0) {
-                synchronized(this) {
+                synchronized (this) {
                     v = LoopHelpers.compute1(v);
                 }
                 sum += LoopHelpers.compute2(v);

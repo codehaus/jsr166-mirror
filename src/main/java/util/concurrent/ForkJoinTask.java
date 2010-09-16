@@ -221,7 +221,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         int s;         // the odd construction reduces lock bias effects
         while ((s = status) >= 0) {
             try {
-                synchronized(this) {
+                synchronized (this) {
                     if (UNSAFE.compareAndSwapInt(this, statusOffset, s,SIGNAL))
                         wait();
                 }
@@ -241,7 +241,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         int s;
         if ((s = status) >= 0) {
             try {
-                synchronized(this) {
+                synchronized (this) {
                     if (UNSAFE.compareAndSwapInt(this, statusOffset, s,SIGNAL))
                         wait(millis, 0);
                 }
@@ -259,7 +259,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private void externalAwaitDone() {
         int s;
         while ((s = status) >= 0) {
-            synchronized(this) {
+            synchronized (this) {
                 if (UNSAFE.compareAndSwapInt(this, statusOffset, s, SIGNAL)){
                     boolean interrupted = false;
                     while (status >= 0) {
@@ -702,7 +702,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                         long ms = nt / 1000000;
                         int ns = (int) (nt % 1000000);
                         try {
-                            synchronized(this) {
+                            synchronized (this) {
                                 if (status >= 0)
                                     wait(ms, ns);
                             }

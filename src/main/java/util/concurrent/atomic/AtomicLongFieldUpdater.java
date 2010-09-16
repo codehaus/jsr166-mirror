@@ -358,7 +358,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 
         public boolean compareAndSet(T obj, long expect, long update) {
             if (obj == null || obj.getClass() != tclass || cclass != null) fullCheck(obj);
-            synchronized(this) {
+            synchronized (this) {
                 long v = unsafe.getLong(obj, offset);
                 if (v != expect)
                     return false;
@@ -373,7 +373,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 
         public void set(T obj, long newValue) {
             if (obj == null || obj.getClass() != tclass || cclass != null) fullCheck(obj);
-            synchronized(this) {
+            synchronized (this) {
                 unsafe.putLong(obj, offset, newValue);
             }
         }
@@ -384,7 +384,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
 
         public long get(T obj) {
             if (obj == null || obj.getClass() != tclass || cclass != null) fullCheck(obj);
-            synchronized(this) {
+            synchronized (this) {
                 return unsafe.getLong(obj, offset);
             }
         }

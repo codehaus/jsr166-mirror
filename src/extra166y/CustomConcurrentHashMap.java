@@ -642,7 +642,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         int index = (hash >>> SEGMENT_SHIFT) & SEGMENT_MASK;
         Segment seg = segs[index];
         if (seg == null) {
-            synchronized(segs) {
+            synchronized (segs) {
                 seg = segs[index];
                 if (seg == null) {
                     seg = new Segment();

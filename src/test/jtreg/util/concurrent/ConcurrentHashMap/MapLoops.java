@@ -198,7 +198,7 @@ public class MapLoops {
                 barrier.await();
             }
             catch (Throwable throwable) {
-                synchronized(System.err) {
+                synchronized (System.err) {
                     System.err.println("--------------------------------");
                     throwable.printStackTrace();
                 }

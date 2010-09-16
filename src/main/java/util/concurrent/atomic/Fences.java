@@ -297,7 +297,7 @@ package java.util.concurrent.atomic;
  * because objects that are locked cannot in general be reclaimed, it
  * would suffice if all accesses of the object, in all methods of
  * class Resource (including {@code finalize}) were enclosed in {@code
- * synchronized(this)} blocks. (Further, such blocks must not include
+ * synchronized (this)} blocks. (Further, such blocks must not include
  * infinite loops, or themselves be unreachable, which fall into the
  * corner case exceptions to the "in general" disclaimer.) However,
  * method {@code reachabilityFence} remains a better option in cases

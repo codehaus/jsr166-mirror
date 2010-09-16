@@ -361,7 +361,7 @@ public class TimeUnitTest extends JSR166TestCase {
                 Object o = new Object();
 
                 TimeUnit tu = TimeUnit.MILLISECONDS;
-                synchronized(o) {
+                synchronized (o) {
                     tu.timedWait(o,MEDIUM_DELAY_MS);
                 }
             }});

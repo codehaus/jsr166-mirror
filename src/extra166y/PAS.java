@@ -26,7 +26,7 @@ class PAS {
     static ForkJoinPool defaultExecutor() {
         ForkJoinPool p = defaultExecutor; // double-check
         if (p == null) {
-            synchronized(poolLock) {
+            synchronized (poolLock) {
                 p = defaultExecutor;
                 if (p == null) {
                     // use ceil(7/8 * ncpus)

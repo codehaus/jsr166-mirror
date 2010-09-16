@@ -28,7 +28,7 @@ class Sync100M {
 
     static int loop(int x, int iters) {
         for (int i = iters; i > 0; --i) {
-            synchronized(obj) {
+            synchronized (obj) {
                 x = x * 134775813 + 1;
             }
         }

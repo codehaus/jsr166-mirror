@@ -201,7 +201,7 @@ public final class UncheckedLockLoops {
             int sum = 0;
             int x = 0;
             while (n-- > 0) {
-                synchronized(this) {
+                synchronized (this) {
                     x = setValue(LoopHelpers.compute1(getValue()));
                 }
                 sum += LoopHelpers.compute2(x);

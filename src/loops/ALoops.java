@@ -237,7 +237,7 @@ public final class ALoops {
                 int m = mask;
                 while (n-- > 0) {
                     if ((x & m) == 0) {
-                        synchronized(this) {
+                        synchronized (this) {
                             v = x = nextRandom(v);
                         }
                     }

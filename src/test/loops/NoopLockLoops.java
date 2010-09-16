@@ -75,7 +75,7 @@ public final class NoopLockLoops {
                 int x = sum + 1;
                 int n = iters;
                 while (n-- > 0) {
-                    synchronized(this) {
+                    synchronized (this) {
                         x = LoopHelpers.compute4(x);
                     }
                     sum += x;

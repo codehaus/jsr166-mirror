@@ -77,7 +77,7 @@ public final class SimpleLockLoops {
                 int x = 0;
                 int n = iters;
                 while (n-- > 0) {
-                    synchronized(lock) {
+                    synchronized (lock) {
                         int k = (sum & 3);
                         if (k > 0) {
                             x = v;

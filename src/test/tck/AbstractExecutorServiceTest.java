@@ -212,25 +212,34 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
 
 
     /**
-     *  Blocking on submit(callable) throws InterruptedException if
-     *  caller interrupted.
+     * submit(callable).get() throws InterruptedException if interrupted
      */
     public void testInterruptedSubmit() throws InterruptedException {
-        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10));
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
-            public void realRun() throws Exception {
-                p.submit(new CheckedCallable<Object>() {
-                             public Object realCall()
-                                 throws InterruptedException {
-                                 Thread.sleep(SMALL_DELAY_MS);
-                                 return null;
-                             }}).get();
-            }});
-
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        joinPool(p);
+        final CountDownLatch submitted    = new CountDownLatch(1);
+        final CountDownLatch quittingTime = new CountDownLatch(1);
+        final ExecutorService p
+            = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS,
+                                     new ArrayBlockingQueue<Runnable>(10));
+        final Callable<Void> awaiter = new CheckedCallable<Void>() {
+            public Void realCall() throws InterruptedException {
+                quittingTime.await();
+                return null;
+            }};
+        try {
+            Thread t = new Thread(new CheckedInterruptedRunnable() {
+                public void realRun() throws Exception {
+                    Future<Void> future = p.submit(awaiter);
+                    submitted.countDown();
+                    future.get();
+                }});
+            t.start();
+            submitted.await();
+            t.interrupt();
+            t.join();
+        } finally {
+            quittingTime.countDown();
+            joinPool(p);
+        }
     }
 
     /**

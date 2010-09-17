@@ -11,6 +11,7 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.HashSet;
 import junit.framework.*;
 
@@ -316,7 +317,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             public void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
-                assertNull(f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
+                assertNull(f.get(LONG_DELAY_MS, MILLISECONDS));
                 assertEquals(21, f.number);
                 assertTrue(f.isDone());
             }};
@@ -428,7 +429,13 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 try {
                     f.get();
                     shouldThrow();
-                } catch (ExecutionException success) {}
+                } catch (ExecutionException success) {
+                    Throwable cause = success.getCause();
+                    assertTrue(cause instanceof FJException);
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertSame(cause, f.getException());
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -442,9 +449,15 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 try {
-                    f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                    f.get(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
-                } catch (ExecutionException success) {}
+                } catch (ExecutionException success) {
+                    Throwable cause = success.getCause();
+                    assertTrue(cause instanceof FJException);
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertSame(cause, f.getException());
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -476,7 +489,12 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 try {
                     f.invoke();
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -493,7 +511,12 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 try {
                     f.join();
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -510,7 +533,12 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 try {
                     f.get();
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -525,9 +553,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
                 try {
-                    f.get(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
+                    f.get(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }

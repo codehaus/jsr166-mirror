@@ -110,9 +110,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      *
      * Both head and tail are permitted to lag.  In fact, failing to
      * update them every time one could is a significant optimization
-     * (fewer CASes). This is controlled by local "hops" variables
-     * that only trigger helping-CASes after experiencing multiple
-     * lags.
+     * (fewer CASes). As with LinkedTransferQueue (see the internal
+     * documentation for that class), we use a slack threshold of two;
+     * that is, we update head/tail when the current pointer appears
+     * to be two or more steps away from the first/last node.
      *
      * Since head and tail are updated concurrently and independently,
      * it is possible for tail to lag behind head (why not)?
@@ -248,13 +249,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * We don't bother to update head or tail pointers if fewer than
-     * HOPS links from "true" location.  We assume that volatile
-     * writes are significantly more expensive than volatile reads.
-     */
-    private static final int HOPS = 1;
-
-    /**
      * Try to CAS head to p. If successful, repoint old head to itself
      * as sentinel for succ(), below.
      */
@@ -283,69 +277,72 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         checkNotNull(e);
         final Node<E> newNode = new Node<E>(e);
 
-        restartFromTail:
-        for (;;) {
-            Node<E> t = tail;
-            Node<E> p = t;
-            for (int hops = 0; ; hops++) {
-                Node<E> next = succ(p);
-                if (next != null) {
-                    if (hops > HOPS && t != tail)
-                        continue restartFromTail;
-                    p = next;
-                } else if (p.casNext(null, newNode)) {
+        for (Node<E> t = tail, p = t;;) {
+            Node<E> q = p.next;
+            if (q == null) {
+                // p is last node
+                if (p.casNext(null, newNode)) {
                     // Successful CAS is the linearization point
                     // for e to become an element of this queue,
                     // and for newNode to become "live".
-                    if (hops >= HOPS)
+                    if (p != t) // hop two nodes at a time
                         casTail(t, newNode);  // Failure is OK.
                     return true;
-                } else {
-                    p = succ(p);
                 }
+                // Lost CAS race to another thread; re-read next
             }
+            else if (p == q)
+                // We have fallen off list.  If tail is unchanged, it
+                // will also be off-list, in which case we need to
+                // jump to head, from which all live nodes are always
+                // reachable.  Else the new tail is a better bet.
+                p = (t != (t = tail)) ? t : head;
+            else
+                // Check for tail updates after two hops.
+                p = (p != t && t != (t = tail)) ? t : q;
         }
     }
 
     public E poll() {
-        Node<E> h = head;
-        Node<E> p = h;
-        for (int hops = 0; ; hops++) {
-            E item = p.item;
+        restartFromHead:
+        for (;;) {
+            for (Node<E> h = head, p = h, q;;) {
+                E item = p.item;
 
-            if (item != null && p.casItem(item, null)) {
-                if (hops >= HOPS) {
-                    Node<E> q = p.next;
-                    updateHead(h, (q != null) ? q : p);
+                if (item != null && p.casItem(item, null)) {
+                    // Successful CAS is the linearization point
+                    // for item to be removed from this queue.
+                    if (p != h) // hop two nodes at a time
+                        updateHead(h, ((q = p.next) != null) ? q : p);
+                    return item;
                 }
-                return item;
+                else if ((q = p.next) == null) {
+                    updateHead(h, p);
+                    return null;
+                }
+                else if (p == q)
+                    continue restartFromHead;
+                else
+                    p = q;
             }
-            Node<E> next = succ(p);
-            if (next == null) {
-                updateHead(h, p);
-                break;
-            }
-            p = next;
         }
-        return null;
     }
 
     public E peek() {
-        Node<E> h = head;
-        Node<E> p = h;
-        E item;
+        restartFromHead:
         for (;;) {
-            item = p.item;
-            if (item != null)
-                break;
-            Node<E> next = succ(p);
-            if (next == null) {
-                break;
+            for (Node<E> h = head, p = h, q;;) {
+                E item = p.item;
+                if (item != null || (q = p.next) == null) {
+                    updateHead(h, p);
+                    return item;
+                }
+                else if (p == q)
+                    continue restartFromHead;
+                else
+                    p = q;
             }
-            p = next;
         }
-        updateHead(h, p);
-        return item;
     }
 
     /**
@@ -357,24 +354,20 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * of losing a race to a concurrent poll().
      */
     Node<E> first() {
-        Node<E> h = head;
-        Node<E> p = h;
-        Node<E> result;
+        restartFromHead:
         for (;;) {
-            E item = p.item;
-            if (item != null) {
-                result = p;
-                break;
+            for (Node<E> h = head, p = h, q;;) {
+                boolean hasItem = (p.item != null);
+                if (hasItem || (q = p.next) == null) {
+                    updateHead(h, p);
+                    return hasItem ? p : null;
+                }
+                else if (p == q)
+                    continue restartFromHead;
+                else
+                    p = q;
             }
-            Node<E> next = succ(p);
-            if (next == null) {
-                result = null;
-                break;
-            }
-            p = next;
         }
-        updateHead(h, p);
-        return result;
     }
 
     /**
@@ -424,8 +417,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         if (o == null) return false;
         for (Node<E> p = first(); p != null; p = succ(p)) {
             E item = p.item;
-            if (item != null &&
-                o.equals(item))
+            if (item != null && o.equals(item))
                 return true;
         }
         return false;
@@ -478,31 +470,29 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             throw new IllegalArgumentException();
 
         // Copy c into a private chain of Nodes
-        Node<E> splice = null, last = null;
+        Node<E> beginningOfTheEnd = null, last = null;
         for (E e : c) {
             checkNotNull(e);
             Node<E> newNode = new Node<E>(e);
-            if (splice == null)
-                splice = last = newNode;
+            if (beginningOfTheEnd == null)
+                beginningOfTheEnd = last = newNode;
             else {
                 last.lazySetNext(newNode);
                 last = newNode;
             }
         }
-        if (splice == null)
+        if (beginningOfTheEnd == null)
             return false;
 
-        // Atomically splice the chain as the tail of this collection
-        restartFromTail:
-        for (;;) {
-            for (Node<E> t = tail, p = t;;) {
-                Node<E> next = succ(p);
-                if (next != null) {
-                    if (t != tail)
-                        continue restartFromTail;
-                    p = next;
-                } else if (p.casNext(null, splice)) {
-                    if (! casTail(t, last)) {
+        // Atomically append the chain at the tail of this collection
+        for (Node<E> t = tail, p = t;;) {
+            Node<E> q = p.next;
+            if (q == null) {
+                // p is last node
+                if (p.casNext(null, beginningOfTheEnd)) {
+                    // Successful CAS is the linearization point
+                    // for all elements to be added to this queue.
+                    if (!casTail(t, last)) {
                         // Try a little harder to update tail,
                         // since we may be adding many elements.
                         t = tail;
@@ -510,10 +500,18 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                             casTail(t, last);
                     }
                     return true;
-                } else {
-                    p = succ(p);
                 }
+                // Lost CAS race to another thread; re-read next
             }
+            else if (p == q)
+                // We have fallen off list.  If tail is unchanged, it
+                // will also be off-list, in which case we need to
+                // jump to head, from which all live nodes are always
+                // reachable.  Else the new tail is a better bet.
+                p = (t != (t = tail)) ? t : head;
+            else
+                // Check for tail updates after two hops.
+                p = (p != t && t != (t = tail)) ? t : q;
         }
     }
 

@@ -26,10 +26,10 @@ import java.util.WeakHashMap;
  * start other subtasks.  As indicated by the name of this class,
  * many programs using {@code ForkJoinTask} employ only methods
  * {@link #fork} and {@link #join}, or derivatives such as {@link
- * #invokeAll}.  However, this class also provides a number of other
- * methods that can come into play in advanced usages, as well as
- * extension mechanics that allow support of new forms of fork/join
- * processing.
+ * #invokeAll(ForkJoinTask...) invokeAll}.  However, this class also
+ * provides a number of other methods that can come into play in
+ * advanced usages, as well as extension mechanics that allow
+ * support of new forms of fork/join processing.
  *
  * <p>A {@code ForkJoinTask} is a lightweight form of {@link Future}.
  * The efficiency of {@code ForkJoinTask}s stems from a set of

@@ -335,7 +335,8 @@ public class ConcurrentLinkedDeque<E>
                 else if (p == q)
                     continue restartFromHead;
                 else
-                    p = q;
+                    // Check for head updates after two hops.
+                    p = (p != h && h != (h = head)) ? h : q;
             }
         }
     }
@@ -369,7 +370,8 @@ public class ConcurrentLinkedDeque<E>
                 else if (p == q)
                     continue restartFromTail;
                 else
-                    p = q;
+                    // Check for tail updates after two hops.
+                    p = (p != t && t != (t = tail)) ? t : q;
             }
         }
     }
@@ -679,11 +681,12 @@ public class ConcurrentLinkedDeque<E>
                         return p;
                     else
                         continue restartFromHead;
-                } else if (p == q) {
-                    continue restartFromHead;
-                } else {
-                    p = q;
                 }
+                else if (p == q)
+                    continue restartFromHead;
+                else
+                    // Check for head updates after two hops.
+                    p = (p != h && h != (h = head)) ? h : q;
             }
         }
     }
@@ -707,11 +710,12 @@ public class ConcurrentLinkedDeque<E>
                         return p;
                     else
                         continue restartFromTail;
-                } else if (p == q) {
-                    continue restartFromTail;
-                } else {
-                    p = q;
                 }
+                else if (p == q)
+                    continue restartFromTail;
+                else
+                    // Check for tail updates after two hops.
+                    p = (p != t && t != (t = tail)) ? t : q;
             }
         }
     }
@@ -1075,22 +1079,22 @@ public class ConcurrentLinkedDeque<E>
             throw new IllegalArgumentException();
 
         // Copy c into a private chain of Nodes
-        Node<E> splice = null, last = null;
+        Node<E> beginningOfTheEnd = null, last = null;
         for (E e : c) {
             checkNotNull(e);
             Node<E> newNode = new Node<E>(e);
-            if (splice == null)
-                splice = last = newNode;
+            if (beginningOfTheEnd == null)
+                beginningOfTheEnd = last = newNode;
             else {
                 last.lazySetNext(newNode);
                 newNode.lazySetPrev(last);
                 last = newNode;
             }
         }
-        if (splice == null)
+        if (beginningOfTheEnd == null)
             return false;
 
-        // Atomically splice the chain as the tail of this collection
+        // Atomically append the chain at the tail of this collection
         restartFromTail:
         for (;;) {
             for (Node<E> t = tail, p = t;;) {
@@ -1099,9 +1103,11 @@ public class ConcurrentLinkedDeque<E>
                     if (p.prev == p) // NEXT_TERMINATOR
                         continue restartFromTail;
                     // p is last node
-                    splice.lazySetPrev(p); // CAS piggyback
-                    if (p.casNext(null, splice)) {
-                        if (! casTail(t, last)) {
+                    beginningOfTheEnd.lazySetPrev(p); // CAS piggyback
+                    if (p.casNext(null, beginningOfTheEnd)) {
+                        // Successful CAS is the linearization point
+                        // for all elements to be added to this queue.
+                        if (!casTail(t, last)) {
                             // Try a little harder to update tail,
                             // since we may be adding many elements.
                             t = tail;
@@ -1115,7 +1121,8 @@ public class ConcurrentLinkedDeque<E>
                 else if (p == q)
                     continue restartFromTail;
                 else
-                    p = q;
+                    // Check for tail updates after two hops.
+                    p = (p != t && t != (t = tail)) ? t : q;
             }
         }
     }
@@ -1320,7 +1327,7 @@ public class ConcurrentLinkedDeque<E>
 
         // Write out all elements in the proper order.
         for (Node<E> p = first(); p != null; p = succ(p)) {
-            Object item = p.item;
+            E item = p.item;
             if (item != null)
                 s.writeObject(item);
         }

@@ -259,10 +259,11 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testisQuiescent() throws InterruptedException {
         ForkJoinPool p = new ForkJoinPool(2);
         try {
+            assertTrue(p.isQuiescent());
             p.invoke(new FibTask(20));
             assertSame(ForkJoinPool.defaultForkJoinWorkerThreadFactory,
                        p.getFactory());
-            Thread.sleep(MEDIUM_DELAY_MS);
+            Thread.sleep(SMALL_DELAY_MS);
             assertTrue(p.isQuiescent());
             assertFalse(p.getAsyncMode());
             assertEquals(0, p.getActiveThreadCount());

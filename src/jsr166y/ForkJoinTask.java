@@ -28,10 +28,10 @@ import java.util.WeakHashMap;
  * start other subtasks.  As indicated by the name of this class,
  * many programs using {@code ForkJoinTask} employ only methods
  * {@link #fork} and {@link #join}, or derivatives such as {@link
- * #invokeAll}.  However, this class also provides a number of other
- * methods that can come into play in advanced usages, as well as
- * extension mechanics that allow support of new forms of fork/join
- * processing.
+ * #invokeAll(ForkJoinTask...) invokeAll}.  However, this class also
+ * provides a number of other methods that can come into play in
+ * advanced usages, as well as extension mechanics that allow
+ * support of new forms of fork/join processing.
  *
  * <p>A {@code ForkJoinTask} is a lightweight form of {@link Future}.
  * The efficiency of {@code ForkJoinTask}s stems from a set of
@@ -642,11 +642,26 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         setCompletion(NORMAL);
     }
 
+    /**
+     * @throws CancellationException {@inheritDoc}
+     */
     public final V get() throws InterruptedException, ExecutionException {
-        quietlyJoin();
-        if (Thread.interrupted())
-            throw new InterruptedException();
-        int s = status;
+        int s;
+        if (Thread.currentThread() instanceof ForkJoinWorkerThread) {
+            quietlyJoin();
+            s = status;
+        }
+        else {
+            while ((s = status) >= 0) {
+                synchronized (this) { // interruptible form of awaitDone
+                    if (UNSAFE.compareAndSwapInt(this, statusOffset, 
+                                                 s, SIGNAL)) {
+                        while (status >= 0)
+                            wait();
+                    }
+                }
+            }
+        }
         if (s < NORMAL) {
             Throwable ex;
             if (s == CANCELLED)
@@ -657,6 +672,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         return getRawResult();
     }
 
+    /**
+     * @throws CancellationException {@inheritDoc}
+     */
     public final V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         Thread t = Thread.currentThread();

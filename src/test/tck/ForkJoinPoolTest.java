@@ -246,7 +246,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             p.execute(new FailingTask());
             uncaughtExceptionHappened.await();
         } finally {
-            //p.shutdownNow();
+            p.shutdownNow(); // failure might have prevented processing task
             joinPool(p);
         }
     }

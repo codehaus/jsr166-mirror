@@ -644,10 +644,22 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @throws CancellationException {@inheritDoc}
      */
     public final V get() throws InterruptedException, ExecutionException {
-        quietlyJoin();
-        if (Thread.interrupted())
-            throw new InterruptedException();
-        int s = status;
+        int s;
+        if (Thread.currentThread() instanceof ForkJoinWorkerThread) {
+            quietlyJoin();
+            s = status;
+        }
+        else {
+            while ((s = status) >= 0) {
+                synchronized (this) { // interruptible form of awaitDone
+                    if (UNSAFE.compareAndSwapInt(this, statusOffset, 
+                                                 s, SIGNAL)) {
+                        while (status >= 0)
+                            wait();
+                    }
+                }
+            }
+        }
         if (s < NORMAL) {
             Throwable ex;
             if (s == CANCELLED)

@@ -21,9 +21,9 @@ import java.lang.reflect.Array;
  * Here is a complete (although naive) prime filter program:
  * <pre>
  * import java.math.BigInteger;
- * import jsr166y.forkjoin.*;
- * import static jsr166y.forkjoin.Ops.*;
- * import static jsr166y.forkjoin.ParallelLongArray.*;
+ * import jsr166y.*;
+ * import static extra166y.Ops.*;
+ * import static extra166y.ParallelLongArray.*;
  *
  * public class Sieve {
  *   public static void main(String[] args) {
@@ -47,13 +47,13 @@ import java.lang.reflect.Array;
  *   static LongPredicate notDivisibleBy(final long p) {
  *     return new LongPredicate() {
  *        public boolean op(long n) { return n &lt;= p || (n % p) != 0; }
- *     } }
+ *     }; }
  *   static LongPredicate notProbablePrime = new LongPredicate() {
  *     private static final int CERTAINTY = 8;
  *     public boolean op(long n) {
  *       return !BigInteger.valueOf(n).isProbablePrime(CERTAINTY);
  *     }
- *   }
+ *   };
  * }
  * </pre>
  */

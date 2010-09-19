@@ -46,6 +46,7 @@ public class TorusSpanningTree {
                           MIN_SIDE, MAX_SIDE, SIDE_STEP);
         ForkJoinPool pool = new ForkJoinPool(procs);
 
+        boolean checked = false;
         for (int side = MIN_SIDE; side <= MAX_SIDE; side += SIDE_STEP) {
             int n = side * side;
             Node[] graph = makeGraph(side);
@@ -56,13 +57,16 @@ public class TorusSpanningTree {
                 pool.invoke(new Driver(root));
                 long elapsed = System.nanoTime() - start;
                 double nanosPerEdge = (double) elapsed / (4 * n);
-                System.out.printf(" %7.2f", nanosPerEdge);
-                if (j == 0)
+            	System.out.printf(" %7.2f", nanosPerEdge);
+                if (!checked) {
+                    checked = true;
                     checkSpanningTree(graph, root);
-                resetAll(graph);
+                }
+                pool.invoke(new Resetter(graph, 0, graph.length));
             }
             System.out.println();
         }
+        System.out.println(pool);
         pool.shutdown();
     }
 
@@ -213,4 +217,20 @@ public class TorusSpanningTree {
         }
     }
 
+    static final class Resetter extends RecursiveAction {
+        final Node[] g;
+        final int lo, hi;
+        Resetter(Node[] g, int lo, int hi) {
+            this.g = g; this.lo = lo; this.hi = hi;
+        }
+        public void compute() {
+            int mid = (lo + hi) >>> 1;
+            if (mid == lo || getSurplusQueuedTaskCount() > 3) {
+                for (int i = lo; i < hi; ++i)
+                    g[i].reset();
+            }
+            else
+                invokeAll(new Resetter(g, lo, mid), new Resetter(g, mid, hi));
+        }
+    }
 }

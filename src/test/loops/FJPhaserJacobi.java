@@ -1,13 +1,6 @@
-/*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
- */
-
 // Barrier version of Jacobi iteration
 
 import java.util.concurrent.*;
-//import jsr166y.*;
 
 public class FJPhaserJacobi {
 
@@ -24,23 +17,24 @@ public class FJPhaserJacobi {
             if (args.length > 1)
                 steps = Integer.parseInt(args[1]);
         }
-
+        
         catch (Exception e) {
-            System.out.println("Usage: java FJPhaserJacobi <matrix size> <max steps>");
+            System.out.println("Usage: java ThreadPhaserJacobi <matrix size> <max steps>");
             return;
         }
-
+        
         ForkJoinPool fjp = new ForkJoinPool();
+        //        int granularity = (n * n / fjp.getParallelism()) / 2;
         int granularity = n * n / fjp.getParallelism();
-        dimGran = (int) Math.sqrt(granularity);
-
+        dimGran = (int)(Math.sqrt(granularity));
+      
         // allocate enough space for edges
         int dim = n+2;
         int ncells = dim * dim;
         double[][] a = new double[dim][dim];
         double[][] b = new double[dim][dim];
         // Initialize interiors to small value
-        double smallVal = 1.0/dim;
+        double smallVal = 1.0/dim; 
         for (int i = 1; i < dim-1; ++i) {
             for (int j = 1; j < dim-1; ++j)
                 a[i][j] = smallVal;
@@ -57,30 +51,30 @@ public class FJPhaserJacobi {
             Driver driver = new Driver(a, b, 1, n, 1, n, steps);
             long startTime = System.currentTimeMillis();
             fjp.invoke(driver);
-
+            
             long time = System.currentTimeMillis() - startTime;
-            double secs = (double) time / 1000.0;
-
+            double secs = ((double)time) / 1000.0;
+            
             System.out.println("Compute Time: " + secs);
             System.out.println(fjp);
 
         }
-
+        
     }
 
     static class Segment extends CyclicAction {
         double[][] A; // matrix to get old values from
         double[][] B; // matrix to put new values into
         // indices of current submatrix
-        final int loRow;
+        final int loRow;   
         final int hiRow;
         final int loCol;
         final int hiCol;
         volatile double maxDiff; // maximum difference between old and new values
 
-        Segment(double[][] A, double[][] B,
+        Segment(double[][] A, double[][] B, 
                 int loRow, int hiRow,
-                int loCol, int hiCol,
+                int loCol, int hiCol, 
                 Phaser br) {
             super(br);
             this.A = A;   this.B = B;
@@ -110,7 +104,7 @@ public class FJPhaserJacobi {
 
             return md;
         }
-
+        
     }
 
     static class MyPhaser extends Phaser {
@@ -121,7 +115,7 @@ public class FJPhaserJacobi {
         }
     }
 
-    static class Driver extends RecursiveAction {
+    static class Driver extends RecursiveAction { 
         double[][] A; // matrix to get old values from
         double[][] B; // matrix to put new values into
         final int loRow;   // indices of current submatrix
@@ -129,11 +123,11 @@ public class FJPhaserJacobi {
         final int loCol;
         final int hiCol;
         final int steps;
-        Driver(double[][] mat1, double[][] mat2,
+        Driver(double[][] mat1, double[][] mat2, 
                int firstRow, int lastRow,
                int firstCol, int lastCol,
                int steps) {
-
+            
             this.A = mat1;   this.B = mat2;
             this.loRow = firstRow; this.hiRow = lastRow;
             this.loCol = firstCol; this.hiCol = lastCol;
@@ -143,13 +137,13 @@ public class FJPhaserJacobi {
         public void compute() {
             int rows = hiRow - loRow + 1;
             int cols = hiCol - loCol + 1;
-            int rblocks = Math.round((float) rows / dimGran);
-            int cblocks = Math.round((float) cols / dimGran);
-
+            int rblocks = (int)(Math.round((float)rows / dimGran));
+            int cblocks = (int)(Math.round((float)cols / dimGran));
+            
             int n = rblocks * cblocks;
-
+            
             System.out.println("Using " + n + " segments");
-
+            
             Segment[] segs = new Segment[n];
             Phaser barrier = new MyPhaser(steps);
             int k = 0;
@@ -157,12 +151,12 @@ public class FJPhaserJacobi {
                 int lr = loRow + i * dimGran;
                 int hr = lr + dimGran;
                 if (i == rblocks-1) hr = hiRow;
-
+                
                 for (int j = 0; j < cblocks; ++j) {
                     int lc = loCol + j * dimGran;
                     int hc = lc + dimGran;
                     if (j == cblocks-1) hc = hiCol;
-
+                    
                     segs[k] = new Segment(A, B, lr, hr, lc, hc, barrier);
                     ++k;
                 }
@@ -177,3 +171,4 @@ public class FJPhaserJacobi {
         }
     }
 }
+

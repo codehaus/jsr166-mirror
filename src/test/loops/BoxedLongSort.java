@@ -7,7 +7,7 @@
 import java.util.concurrent.*;
 import java.util.*;
 
-class ScalarLongSort {
+class BoxedLongSort {
     static final long NPS = (1000L * 1000 * 1000);
 
     static int THRESHOLD;
@@ -27,18 +27,18 @@ class ScalarLongSort {
                 reps = Integer.parseInt(args[1]);
         }
         catch (Exception e) {
-            System.out.println("Usage: java ScalarLongSort threads n reps");
+            System.out.println("Usage: java BoxedLongSort threads n reps");
             return;
         }
         ForkJoinPool pool = procs == 0? new ForkJoinPool() : 
             new ForkJoinPool(procs);
-
-        long[] a = new long[n];
+        
+        Long[] a = new Long[n];
         seqRandomFill(a, 0, n);
 
         if (warmup) {
             System.out.printf("Sorting %d longs, %d replications\n", n, 1);
-            seqRandomFill(a, 0, n);
+            Collections.shuffle(Arrays.asList(a));
             long last = System.nanoTime();
             java.util.Arrays.sort(a);
             double elapsed = (double)(System.nanoTime() - last) / NPS;
@@ -53,9 +53,10 @@ class ScalarLongSort {
 
         System.out.printf("Sorting %d longs, %d replications\n", n, reps);
         for (int i = 0; i < reps; ++i) {
-            pool.invoke(new RandomFiller(a, 0, n));
+            Collections.shuffle(Arrays.asList(a));
+            //            pool.invoke(new RandomFiller(a, 0, n));
             long last = System.nanoTime();
-            pool.invoke(new Sorter(a, new long[n], 0, n));
+            pool.invoke(new Sorter(a, new Long[n], 0, n));
             double elapsed = (double)(System.nanoTime() - last) / NPS;
             System.out.printf("Parallel sort time: %7.3f\n", elapsed);
             if (i == 0)
@@ -65,7 +66,8 @@ class ScalarLongSort {
 
         System.out.printf("Sorting %d longs, %d replications\n", n, sreps);
         for (int i = 0; i < sreps; ++i) {
-            pool.invoke(new RandomFiller(a, 0, n));
+            Collections.shuffle(Arrays.asList(a));
+            //            pool.invoke(new RandomFiller(a, 0, n));
             long last = System.nanoTime();
             java.util.Arrays.sort(a);
             double elapsed = (double)(System.nanoTime() - last) / NPS;
@@ -74,17 +76,15 @@ class ScalarLongSort {
                 checkSorted(a);
         }
         System.out.println(pool);
-
-
         pool.shutdown();
     }
 
     static final class Sorter extends RecursiveAction {
-        final long[] a; 
-        final long[] w;
+        final Long[] a; 
+        final Long[] w;
         final int origin; 
         final int n;
-        Sorter(long[] a, long[] w, int origin, int n) {
+        Sorter(Long[] a, Long[] w, int origin, int n) {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
         }
 
@@ -128,10 +128,10 @@ class ScalarLongSort {
     }
 
     static final class Merger extends RecursiveAction {
-        final long[] a; final long[] w;
+        final Long[] a; final Long[] w;
         final int lo; final int ln; final int ro; final int rn; final int wo;
         Merger next;
-        Merger(long[] a, long[] w, int lo, int ln, int ro, int rn, int wo,
+        Merger(Long[] a, Long[] w, int lo, int ln, int ro, int rn, int wo,
                Merger next) {
             this.a = a;    this.w = w;
             this.lo = lo;  this.ln = ln;
@@ -154,7 +154,7 @@ class ScalarLongSort {
             while (nleft > THRESHOLD) { //  && nright > (THRESHOLD >>> 3)) {
                 int lh = nleft >>> 1;
                 int splitIndex = lo + lh;
-                long split = a[splitIndex];
+                Long split = a[splitIndex];
                 int rl = 0;
                 int rh = nright;
                 while (rl < rh) {
@@ -183,9 +183,9 @@ class ScalarLongSort {
             int rFence = ro + nright;
             int k = wo;
             while (l < lFence && r < rFence) {
-                long al = a[l];
-                long ar = a[r];
-                long t;
+                Long al = a[l];
+                Long ar = a[r];
+                Long t;
                 if (al <= ar) { ++l; t = al; } else { ++r; t = ar; }
                 w[k++] = t;
             }
@@ -206,7 +206,7 @@ class ScalarLongSort {
 
     }
 
-    static void checkSorted (long[] a)  {
+    static void checkSorted (Long[] a)  {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {
@@ -216,21 +216,21 @@ class ScalarLongSort {
         }
     }
 
-    static void seqRandomFill(long[] array, int lo, int hi) {
+    static void seqRandomFill(Long[] array, int lo, int hi) {
         ThreadLocalRandom rng = ThreadLocalRandom.current();
         for (int i = lo; i < hi; ++i)
             array[i] = rng.nextLong();
     }
 
     static final class RandomFiller extends RecursiveAction {
-        final long[] array;
+        final Long[] array;
         final int lo, hi;
-        RandomFiller(long[] array, int lo, int hi) {
+        RandomFiller(Long[] array, int lo, int hi) {
             this.array = array; this.lo = lo; this.hi = hi;
         }
         public void compute() {
             if (hi - lo <= THRESHOLD) {
-                long[] a = array;
+                Long[] a = array;
                 ThreadLocalRandom rng = ThreadLocalRandom.current();
                 for (int i = lo; i < hi; ++i)
                     a[i] = rng.nextLong();

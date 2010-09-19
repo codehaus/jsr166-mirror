@@ -103,6 +103,11 @@ public class OfferPollLoops {
 
         Thread.sleep(100); // System.gc();
         if (print)
+            System.out.print("ConcurrentLinkedDeque   ");
+        oneRun(new ConcurrentLinkedDeque<Integer>(), n, iters);
+
+        Thread.sleep(100); // System.gc();
+        if (print)
             System.out.print("LinkedBlockingQueue     ");
         oneRun(new LinkedBlockingQueue<Integer>(), n, iters);
 

@@ -4,11 +4,11 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 
-//import jsr166y.*;
-import java.util.*;
 import java.util.concurrent.*;
+import java.util.*;
+import java.util.concurrent.atomic.*;
 
-public final class NQueensCS extends RecursiveAction {
+public final class AsyncNQueensCS extends LinkedAsyncAction {
 
     static long lastStealCount;
     static int boardSize;
@@ -31,16 +31,16 @@ public final class NQueensCS extends RecursiveAction {
                 procs = Integer.parseInt(args[0]);
         }
         catch (Exception e) {
-            System.out.println("Usage: java NQueensCS <threads> ");
+            System.out.println("Usage: java AsyncNQueensCS <threads> ");
             return;
         }
         for (int reps = 0; reps < 2; ++reps) {
             ForkJoinPool g = procs == 0? new ForkJoinPool() : 
                 new ForkJoinPool(procs);
+            System.out.println("Number of procs=" + g.getParallelism());
             lastStealCount = g.getStealCount();
             for (int i = FIRST_SIZE; i <= LAST_SIZE; i++)
                 test(g, i);
-            System.out.println(g);
             g.shutdown();    
         }
     }
@@ -49,14 +49,14 @@ public final class NQueensCS extends RecursiveAction {
         boardSize = i;
         int ps = g.getParallelism();
         long start = System.nanoTime();
-        NQueensCS task = new NQueensCS(new int[0]);
+        AsyncNQueensCS task = new AsyncNQueensCS(null, new int[0]);
         g.invoke(task);
         int solutions = task.solutions;
         long time = System.nanoTime() - start;
         double secs = ((double)time) / NPS;
         if (solutions != expectedSolutions[i])
             throw new Error();
-        System.out.printf("NQueensCS %3d", i);
+        System.out.printf("AsyncNQueensCS %3d", i);
         System.out.printf(" Time: %7.3f", secs);
         long sc = g.getStealCount();
         long ns = sc - lastStealCount;
@@ -69,60 +69,43 @@ public final class NQueensCS extends RecursiveAction {
     // holds the column number of the queen in that row
 
     final int[] sofar;
-    NQueensCS nextSubtask; // to link subtasks
-    int solutions;
-    NQueensCS(int[] a) { 
+    volatile int solutions;
+    AsyncNQueensCS(AsyncNQueensCS parent, int[] a) { 
+        super(parent);
         this.sofar = a;  
     }
 
-    public final void compute() {
-        NQueensCS subtasks;
+    public final boolean exec() {
         int bs = boardSize;
-        if (sofar.length >= bs)
+        int row = sofar.length;
+        if (row >= bs)
             solutions = 1;
-        else if ((subtasks = explore(sofar, bs)) != null)
-            solutions = processSubtasks(subtasks);
-    }
-
-    private static NQueensCS explore(int[] array, int bs) {
-        int row = array.length;
-        NQueensCS s = null; // subtask list
-        outer:
-        for (int q = 0; q < bs; ++q) {
-            for (int i = 0; i < row; i++) {
-                int p = array[i];
-                if (q == p || q == p - (row - i) || q == p + (row - i))
-                    continue outer; // attacked
+        else {
+            outer:
+            for (int q = 0; q < bs; ++q) {
+                for (int i = 0; i < row; i++) {
+                    int p = sofar[i];
+                    if (q == p || q == p - (row - i) || q == p + (row - i))
+                        continue outer; // attacked
+                }
+                int[] next = Arrays.copyOf(sofar, row+1);
+                next[row] = q;
+                new AsyncNQueensCS(this, next).fork();
             }
-            NQueensCS first = s; // lag forks to ensure 1 kept
-            if (first != null)
-                first.fork();
-            int[] next = Arrays.copyOf(array, row+1);
-            next[row] = q;
-            NQueensCS subtask = new NQueensCS(next);
-            subtask.nextSubtask = first;
-            s = subtask;
         }
-        return s;
+        complete();
+        return false;
     }
 
-    private static int processSubtasks(NQueensCS s) {
-        // Always run first the task held instead of forked
-        s.compute(); 
-        int ns = s.solutions;
-        s = s.nextSubtask;
-        // Then the unstolen ones
-        while (s != null && s.tryUnfork()) {
-            s.compute();
-            ns += s.solutions;
-            s = s.nextSubtask;
-        }
-        // Then wait for the stolen ones
-        while (s != null) {
-            s.join();
-            ns += s.solutions;
-            s = s.nextSubtask;
-        }
-        return ns;
+    protected void onCompletion() {
+        LinkedAsyncAction p;
+        int n = solutions;
+        if (n != 0 && (p = getParent()) != null)
+            solutionUpdater.addAndGet((AsyncNQueensCS)p, n);
     }
+
+    static final AtomicIntegerFieldUpdater<AsyncNQueensCS> solutionUpdater =
+        AtomicIntegerFieldUpdater.newUpdater(AsyncNQueensCS.class, "solutions");
+
+
 }

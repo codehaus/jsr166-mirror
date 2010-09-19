@@ -234,6 +234,8 @@ echo FJPhaserJacobi
 $RUN FJPhaserJacobi
 echo ThreadPhaserJacobi
 $RUN ThreadPhaserJacobi
+echo Heat
+$RUN Heat
 echo TieredPhaserLoops
 $RUN TieredPhaserLoops
 echo PhaserLoops

@@ -557,7 +557,7 @@ public class ConcurrentLinkedDeque<E>
      * Guarantees that any node which was unlinked before a call to
      * this method will be unreachable from head after it returns.
      * Does not guarantee to eliminate slack, only that head will
-     * point to a node that was active after this method was invoked.
+     * point to a node that was active when this method was invoked.
      */
     private final void updateHead() {
         // We need to ensure head either already points to an active
@@ -588,7 +588,7 @@ public class ConcurrentLinkedDeque<E>
      * Guarantees that any node which was unlinked before a call to
      * this method will be unreachable from tail after it returns.
      * Does not guarantee to eliminate slack, only that tail will
-     * point to a node that was active after this method was invoked.
+     * point to a node that was active when this method was invoked.
      */
     private final void updateTail() {
         // We need to ensure tail either already points to an active

@@ -557,30 +557,29 @@ public class ConcurrentLinkedDeque<E>
      * Guarantees that any node which was unlinked before a call to
      * this method will be unreachable from head after it returns.
      * Does not guarantee to eliminate slack, only that head will
-     * point to a node that was active when this method was invoked.
+     * point to a node that was active while this method was running.
      */
     private final void updateHead() {
-        // We need to ensure head either already points to an active
-        // node, or that we or another thread updates it using casHead.
-        Node<E> h = head, p;
-        if (h.item == null && (p = h.prev) != null)
-            fullUpdateHead(h, p);
-    }
-
-    private final void fullUpdateHead(Node<E> h, Node<E> p) {
-        for (Node<E> q;;) {
-            if ((q = p.prev) == null ||
-                (q = (p = q).prev) == null) {
-                // It is possible that p is PREV_TERMINATOR,
-                // but if so, the CAS is guaranteed to fail.
-                casHead(h, p);
-                // If the CAS failed, someone else did our job for us.
-                return;
+        // Either head already points to an active node, or we keep
+        // trying to cas it to the first node until it does.
+        Node<E> h, p, q;
+        restartFromHead:
+        while ((h = head).item == null && (p = h.prev) != null) {
+            for (;;) {
+                if ((q = p.prev) == null ||
+                    (q = (p = q).prev) == null) {
+                    // It is possible that p is PREV_TERMINATOR,
+                    // but if so, the CAS is guaranteed to fail.
+                    if (casHead(h, p))
+                        return;
+                    else
+                        continue restartFromHead;
+                }
+                else if (h != head)
+                    continue restartFromHead;
+                else
+                    p = q;
             }
-            else if (h != head)
-                return;
-            else
-                p = q;
         }
     }
 
@@ -588,30 +587,29 @@ public class ConcurrentLinkedDeque<E>
      * Guarantees that any node which was unlinked before a call to
      * this method will be unreachable from tail after it returns.
      * Does not guarantee to eliminate slack, only that tail will
-     * point to a node that was active when this method was invoked.
+     * point to a node that was active while this method was running.
      */
     private final void updateTail() {
-        // We need to ensure tail either already points to an active
-        // node, or that we or another thread updates it using casTail.
-        Node<E> t = tail, p;
-        if (t.item == null && (p = t.next) != null)
-            fullUpdateTail(t, p);
-    }
-
-    private final void fullUpdateTail(Node<E> t, Node<E> p) {
-        for (Node<E> q;;) {
-            if ((q = p.next) == null ||
-                (q = (p = q).next) == null) {
-                // It is possible that p is PREV_TERMINATOR,
-                // but if so, the CAS is guaranteed to fail.
-                casTail(t, p);
-                // If the CAS failed, someone else did our job for us.
-                return;
+        // Either tail already points to an active node, or we keep
+        // trying to cas it to the last node until it does.
+        Node<E> t, p, q;
+        restartFromTail:
+        while ((t = tail).item == null && (p = t.next) != null) {
+            for (;;) {
+                if ((q = p.next) == null ||
+                    (q = (p = q).next) == null) {
+                    // It is possible that p is NEXT_TERMINATOR,
+                    // but if so, the CAS is guaranteed to fail.
+                    if (casTail(t, p))
+                        return;
+                    else
+                        continue restartFromTail;
+                }
+                else if (t != tail)
+                    continue restartFromTail;
+                else
+                    p = q;
             }
-            else if (t != tail)
-                return;
-            else
-                p = q;
         }
     }
 

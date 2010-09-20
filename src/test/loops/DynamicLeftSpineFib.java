@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 public final class DynamicLeftSpineFib extends RecursiveAction {
 
     static long lastStealCount;
-  
+
     public static void main(String[] args) throws Exception {
         int procs = 0;
         int num = 45;
@@ -21,7 +21,7 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
             return;
         }
 
-        
+
         for (int reps = 0; reps < 2; ++reps) {
             ForkJoinPool g = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
@@ -60,15 +60,15 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
     int number;
     DynamicLeftSpineFib next;
 
-    DynamicLeftSpineFib(int n, DynamicLeftSpineFib nxt) { 
-        number = n; next = nxt; 
+    DynamicLeftSpineFib(int n, DynamicLeftSpineFib nxt) {
+        number = n; next = nxt;
     }
 
     int getAnswer() {
         return number;
     }
-    public void compute() { 
-        number = fib(number); 
+    public void compute() {
+        number = fib(number);
     }
 
     static final int fib(int n) {
@@ -97,7 +97,7 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
             r += collectRights(rt);
         return r;
     }
-    
+
     static final int collectRights(DynamicLeftSpineFib rt) {
         int r = 0;
         while (rt != null) {

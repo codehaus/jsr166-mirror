@@ -755,7 +755,7 @@ public class ForkJoinWorkerThread extends Thread {
     final boolean isSuspended()   { return (runState & SUSPENDED) != 0; }
     final boolean isTrimmed()     { return (runState & TRIMMED) != 0; }
 
-    final boolean isTerminating() { 
+    final boolean isTerminating() {
         if ((runState & TERMINATING) != 0)
             return true;
         if (pool.isAtLeastTerminating()) { // propagate pool state

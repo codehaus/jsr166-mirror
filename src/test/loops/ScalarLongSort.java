@@ -30,7 +30,7 @@ class ScalarLongSort {
             System.out.println("Usage: java ScalarLongSort threads n reps");
             return;
         }
-        ForkJoinPool pool = procs == 0? new ForkJoinPool() : 
+        ForkJoinPool pool = procs == 0? new ForkJoinPool() :
             new ForkJoinPool(procs);
 
         long[] a = new long[n];
@@ -80,9 +80,9 @@ class ScalarLongSort {
     }
 
     static final class Sorter extends RecursiveAction {
-        final long[] a; 
+        final long[] a;
         final long[] w;
-        final int origin; 
+        final int origin;
         final int n;
         Sorter(long[] a, long[] w, int origin, int n) {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
@@ -111,7 +111,7 @@ class ScalarLongSort {
             }
         }
     }
-    
+
     static final class SubSorter extends RecursiveAction {
         final Sorter left;
         final Sorter right;
@@ -145,7 +145,7 @@ class ScalarLongSort {
          * and finding index of right closest to split point.
          * Uses left-spine decomposition to generate all
          * merge tasks before bottomming out at base case.
-         * 
+         *
          */
         public final void compute() {
             Merger rights = null;
@@ -169,11 +169,11 @@ class ScalarLongSort {
                 nleft = lh;
                 nright = rh;
             }
-            
+
             merge(nleft, nright);
-            if (rights != null) 
+            if (rights != null)
                 collectRights(rights);
-            
+
         }
 
         final void merge(int nleft, int nright) {
@@ -210,7 +210,7 @@ class ScalarLongSort {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {
-                throw new Error("Unsorted at " + i + ": " + 
+                throw new Error("Unsorted at " + i + ": " +
                                 a[i] + " / " + a[i+1]);
             }
         }

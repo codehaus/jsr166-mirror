@@ -47,15 +47,15 @@ public class Heat {
             return;
         }
 
-        ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+        ForkJoinPool g = procs == 0? new ForkJoinPool() :
             new ForkJoinPool(procs);
-        
+
         System.out.print("parallelism = " + g.getParallelism());
         System.out.print(" granularity = " + leafmaxcol);
         System.out.print(" rows = " + nx);
         System.out.print(" columns = " + ny);
         System.out.println(" steps = " + nt);
-    
+
         oldm = new double[nx][ny];
         newm = new double[nx][ny];
 
@@ -91,32 +91,32 @@ public class Heat {
 
     static final double dx = (xo - xu) / (nx - 1);
     static final double dy = (yo - yu) / (ny - 1);
-    static final double dt = (to - tu) / nt;	
+    static final double dt = (to - tu) / nt;
     static final double dtdxsq = dt / (dx * dx);
     static final double dtdysq = dt / (dy * dy);
 
 
     // the function being applied across the cells
-    static final double f(double x, double y) { 
-        return Math.sin(x) * Math.sin(y); 
+    static final double f(double x, double y) {
+        return Math.sin(x) * Math.sin(y);
     }
 
     // random starting values
 
-    static final double randa(double x, double t) { 
-        return 0.0; 
+    static final double randa(double x, double t) {
+        return 0.0;
     }
-    static final double randb(double x, double t) { 
-        return Math.exp(-2*t) * Math.sin(x); 
+    static final double randb(double x, double t) {
+        return Math.exp(-2*t) * Math.sin(x);
     }
-    static final double randc(double y, double t) { 
-        return 0.0; 
+    static final double randc(double y, double t) {
+        return 0.0;
     }
-    static final double randd(double y, double t) { 
-        return Math.exp(-2*t) * Math.sin(y); 
+    static final double randd(double y, double t) {
+        return Math.exp(-2*t) * Math.sin(y);
     }
-    static final double solu(double x, double y, double t) { 
-        return Math.exp(-2*t) * Math.sin(x) * Math.sin(y); 
+    static final double solu(double x, double y, double t) {
+        return Math.exp(-2*t) * Math.sin(x) * Math.sin(y);
     }
 
 
@@ -132,7 +132,7 @@ public class Heat {
             ub = upperBound;
             time = timestep;
         }
-     
+
         public void compute() {
             if (ub - lb > leafmaxcol) {
                 int mid = (lb + ub) >>> 1;
@@ -194,7 +194,7 @@ public class Heat {
 
         // the original version from cilk
         final void origcompstripe(double[][] newMat, double[][] oldMat) {
-      
+
             final int llb = (lb == 0)  ? 1 : lb;
             final int lub = (ub == nx) ? nx - 1 : ub;
 
@@ -252,7 +252,7 @@ public class Heat {
             }
 
             if (ub == nx) {
-                double[] v = m[nx - 1]; 
+                double[] v = m[nx - 1];
                 double y = yu;
                 for (int b = 0; b < ny; b++) {
                     y += dy;

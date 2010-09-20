@@ -38,34 +38,34 @@ public class MatrixMultiply {
                 procs = Integer.parseInt(args[0]);
             if (args.length > 1)
                 n = Integer.parseInt(args[1]);
-            if (args.length > 2) 
+            if (args.length > 2)
                 granularity = Integer.parseInt(args[2]);
-            if (args.length > 3) 
+            if (args.length > 3)
                 runs = Integer.parseInt(args[2]);
         }
-    
+
         catch (Exception e) {
             System.out.println(usage);
             return;
         }
-    
-        if ( ((n & (n - 1)) != 0) || 
+
+        if ( ((n & (n - 1)) != 0) ||
              ((granularity & (granularity - 1)) != 0) ||
              granularity < 2) {
             System.out.println(usage);
             return;
         }
-    
-        ForkJoinPool pool = procs == 0? new ForkJoinPool() : 
+
+        ForkJoinPool pool = procs == 0? new ForkJoinPool() :
             new ForkJoinPool(procs);
-        System.out.println("procs: " + pool.getParallelism() + 
+        System.out.println("procs: " + pool.getParallelism() +
                            " n: " + n + " granularity: " + granularity +
                            " runs: " + runs);
-    
+
         float[][] a = new float[n][n];
         float[][] b = new float[n][n];
         float[][] c = new float[n][n];
-    
+
         for (int i = 0; i < runs; ++i) {
             init(a, b, n);
             long start = System.nanoTime();
@@ -101,14 +101,14 @@ public class MatrixMultiply {
         }
     }
 
-    /** 
+    /**
      * Multiply matrices AxB by dividing into quadrants, using algorithm:
      * <pre>
-     *      A      x      B                             
+     *      A      x      B
      *
-     *  A11 | A12     B11 | B12     A11*B11 | A11*B12     A12*B21 | A12*B22 
+     *  A11 | A12     B11 | B12     A11*B11 | A11*B12     A12*B21 | A12*B22
      * |----+----| x |----+----| = |--------+--------| + |---------+-------|
-     *  A21 | A22     B21 | B21     A21*B11 | A21*B21     A22*B21 | A22*B22 
+     *  A21 | A22     B21 | B21     A21*B11 | A21*B21     A22*B21 | A22*B22
      * </pre>
      */
 
@@ -127,7 +127,7 @@ public class MatrixMultiply {
         final int cCol;
 
         final int size;      // number of elements in current quadrant
-    
+
         Multiplier(float[][] A, int aRow, int aCol,
                    float[][] B, int bRow, int bCol,
                    float[][] C, int cRow, int cCol,
@@ -156,7 +156,7 @@ public class MatrixMultiply {
                                        B, bRow+h, bCol,    // B21
                                        C, cRow,   cCol,    // C11
                                        h)),
-            
+
                     seq(new Multiplier(A, aRow,   aCol,    // A11
                                        B, bRow,   bCol+h,  // B12
                                        C, cRow,   cCol+h,  // C12
@@ -165,7 +165,7 @@ public class MatrixMultiply {
                                        B, bRow+h, bCol+h,  // B22
                                        C, cRow,   cCol+h,  // C12
                                        h)),
-          
+
                     seq(new Multiplier(A, aRow+h, aCol,    // A21
                                        B, bRow,   bCol,    // B11
                                        C, cRow+h, cCol,    // C21
@@ -174,7 +174,7 @@ public class MatrixMultiply {
                                        B, bRow+h, bCol,    // B21
                                        C, cRow+h, cCol,    // C21
                                        h)),
-          
+
                     seq(new Multiplier(A, aRow+h, aCol,    // A21
                                        B, bRow,   bCol+h,  // B12
                                        C, cRow+h, cCol+h,  // C22
@@ -187,7 +187,7 @@ public class MatrixMultiply {
             }
         }
 
-        /** 
+        /**
          * Version of matrix multiplication that steps 2 rows and columns
          * at a time. Adapted from Cilk demos.
          * Note that the results are added into C, not just set into C.
@@ -201,11 +201,11 @@ public class MatrixMultiply {
 
                     float[] a0 = A[aRow+i];
                     float[] a1 = A[aRow+i+1];
-        
-                    float s00 = 0.0F; 
-                    float s01 = 0.0F; 
-                    float s10 = 0.0F; 
-                    float s11 = 0.0F; 
+
+                    float s00 = 0.0F;
+                    float s01 = 0.0F;
+                    float s10 = 0.0F;
+                    float s11 = 0.0F;
 
                     for (int k = 0; k < size; k+=2) {
 
@@ -234,9 +234,9 @@ public class MatrixMultiply {
 
     }
 
-    static Seq2 seq(RecursiveAction task1, 
-                    RecursiveAction task2) { 
-        return new Seq2(task1, task2); 
+    static Seq2 seq(RecursiveAction task1,
+                    RecursiveAction task2) {
+        return new Seq2(task1, task2);
     }
 
     static final class Seq2 extends RecursiveAction {

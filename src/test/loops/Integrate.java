@@ -11,7 +11,7 @@ import java.util.concurrent.*;
  * This version uses a simplified hardwired function.  Inspired by a
  * <A href="http://www.cs.uga.edu/~dkl/filaments/dist.html">
  * Filaments</A> demo program.
- * 
+ *
  */
 public final class Integrate {
 
@@ -32,8 +32,8 @@ public final class Integrate {
 
     static final double start = 0.0;
     static final double end = 1536.0;
-    /* 
-     * The number of recursive calls for 
+    /*
+     * The number of recursive calls for
      * integrate from start to end.
      * (Empirically determined)
      */
@@ -63,17 +63,17 @@ public final class Integrate {
     }
 
     static void oneTest(int procs) {
-        ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+        ForkJoinPool g = procs == 0? new ForkJoinPool() :
             new ForkJoinPool(procs);
         System.out.println("Number of procs=" + g.getParallelism());
-        System.out.println("Integrating from " + start + " to " + end + 
+        System.out.println("Integrating from " + start + " to " + end +
                            " forkPolicy = " + forkArg);
         long lastTime = System.nanoTime();
         for (int i = 0; i < 20; ++i) {
             double a;
             if (forkPolicy == SERIAL)
                 a = SQuad.computeArea(g, start, end);
-            else if (forkPolicy == FORK) 
+            else if (forkPolicy == FORK)
                 a = FQuad.computeArea(g, start, end);
             else
                 a = DQuad.computeArea(g, start, end);
@@ -102,24 +102,24 @@ public final class Integrate {
         final double left;       // lower bound
         final double right;      // upper bound
         double area;
-        
+
         SQuad(double l, double r, double a) {
             this.left = l; this.right = r; this.area = a;
         }
-        
+
         public final void compute() {
             double l = left;
             double r = right;
             area = recEval(l, r, (l * l + 1.0) * l, (r * r + 1.0) * r, area);
         }
-        
+
         static final double recEval(double l, double r, double fl,
                                     double fr, double a) {
             double h = (r - l) * 0.5;
             double c = l + h;
-            double fc = (c * c + 1.0) * c; 
+            double fc = (c * c + 1.0) * c;
             double hh = h * 0.5;
-            double al = (fl + fc) * hh; 
+            double al = (fl + fc) * hh;
             double ar = (fr + fc) * hh;
             double alr = al + ar;
             if (Math.abs(alr - a) <= errorTolerance)
@@ -143,24 +143,24 @@ public final class Integrate {
         final double left;       // lower bound
         final double right;      // upper bound
         double area;
-        
+
         FQuad(double l, double r, double a) {
             this.left = l; this.right = r; this.area = a;
         }
-        
+
         public final void compute() {
             double l = left;
             double r = right;
             area = recEval(l, r, (l * l + 1.0) * l, (r * r + 1.0) * r, area);
         }
-        
+
         static final double recEval(double l, double r, double fl,
                                     double fr, double a) {
             double h = (r - l) * 0.5;
             double c = l + h;
-            double fc = (c * c + 1.0) * c; 
+            double fc = (c * c + 1.0) * c;
             double hh = h * 0.5;
-            double al = (fl + fc) * hh; 
+            double al = (fl + fc) * hh;
             double ar = (fr + fc) * hh;
             double alr = al + ar;
             if (Math.abs(alr - a) <= errorTolerance)
@@ -180,7 +180,7 @@ public final class Integrate {
 
     // ...........................
 
-    // Version using on-demand Fork 
+    // Version using on-demand Fork
     static final class DQuad extends RecursiveAction {
         static double computeArea(ForkJoinPool pool, double l, double r) {
             DQuad q = new DQuad(l, r, 0);
@@ -191,24 +191,24 @@ public final class Integrate {
         final double left;       // lower bound
         final double right;      // upper bound
         double area;
-        
+
         DQuad(double l, double r, double a) {
             this.left = l; this.right = r; this.area = a;
         }
-        
+
         public final void compute() {
             double l = left;
             double r = right;
             area = recEval(l, r, (l * l + 1.0) * l, (r * r + 1.0) * r, area);
         }
-        
+
         static final double recEval(double l, double r, double fl,
                                     double fr, double a) {
             double h = (r - l) * 0.5;
             double c = l + h;
-            double fc = (c * c + 1.0) * c; 
+            double fc = (c * c + 1.0) * c;
             double hh = h * 0.5;
-            double al = (fl + fc) * hh; 
+            double al = (fl + fc) * hh;
             double ar = (fr + fc) * hh;
             double alr = al + ar;
             if (Math.abs(alr - a) <= errorTolerance)
@@ -229,4 +229,4 @@ public final class Integrate {
 
 }
 
-  
+

@@ -174,7 +174,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
                 break;
             try {
                 p.onComplete(a, s);
-            } catch(Throwable rex) {
+            } catch (Throwable rex) {
                 p.completeExceptionally(rex);
                 return;
             }
@@ -251,7 +251,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
      * @param update the new value
      * @return true if successful
      */
-    protected final boolean compareAndSetControlState(int expect, 
+    protected final boolean compareAndSetControlState(int expect,
                                                       int update) {
         return controlStateUpdater.compareAndSet(this, expect, update);
     }

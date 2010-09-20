@@ -23,7 +23,7 @@ public final class AsyncNQueensCS extends LinkedAsyncAction {
 
     /** for time conversion */
     static final long NPS = (1000L * 1000 * 1000);
-    
+
     public static void main(String[] args) throws Exception {
         int procs = 0;
         try {
@@ -35,13 +35,13 @@ public final class AsyncNQueensCS extends LinkedAsyncAction {
             return;
         }
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+            ForkJoinPool g = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
             System.out.println("Number of procs=" + g.getParallelism());
             lastStealCount = g.getStealCount();
             for (int i = FIRST_SIZE; i <= LAST_SIZE; i++)
                 test(g, i);
-            g.shutdown();    
+            g.shutdown();
         }
     }
 
@@ -63,16 +63,16 @@ public final class AsyncNQueensCS extends LinkedAsyncAction {
         lastStealCount = sc;
         System.out.printf(" Steals/t: %5d", ns/ps);
         System.out.println();
-    }            
+    }
 
-    // Boards are represented as arrays where each cell 
+    // Boards are represented as arrays where each cell
     // holds the column number of the queen in that row
 
     final int[] sofar;
     volatile int solutions;
-    AsyncNQueensCS(AsyncNQueensCS parent, int[] a) { 
+    AsyncNQueensCS(AsyncNQueensCS parent, int[] a) {
         super(parent);
-        this.sofar = a;  
+        this.sofar = a;
     }
 
     public final boolean exec() {

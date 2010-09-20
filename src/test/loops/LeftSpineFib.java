@@ -7,7 +7,7 @@ public final class LeftSpineFib extends RecursiveAction {
     // Performance-tuning constant:
     static int sequentialThreshold;
     static long lastStealCount;
-  
+
     public static void main(String[] args) throws Exception {
         int procs = 0;
         int num = 45;
@@ -17,7 +17,7 @@ public final class LeftSpineFib extends RecursiveAction {
                 procs = Integer.parseInt(args[0]);
             if (args.length > 1)
                 num = Integer.parseInt(args[1]);
-            if (args.length > 2) 
+            if (args.length > 2)
                 sequentialThreshold = Integer.parseInt(args[2]);
         }
         catch (Exception e) {
@@ -25,9 +25,9 @@ public final class LeftSpineFib extends RecursiveAction {
             return;
         }
 
-        
+
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+            ForkJoinPool g = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
             //            g.setMaintainsParallelism(false);
             lastStealCount = g.getStealCount();

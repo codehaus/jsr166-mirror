@@ -312,7 +312,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * @param update the new value
      * @return true if successful
      */
-    protected final boolean compareAndSetControlState(int expect, 
+    protected final boolean compareAndSetControlState(int expect,
                                                       int update) {
         return controlStateUpdater.compareAndSet(this, expect, update);
     }

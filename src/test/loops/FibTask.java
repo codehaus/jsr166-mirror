@@ -4,8 +4,8 @@ import java.util.concurrent.*;
  * Recursive task-based version of Fibonacci. Computes:
  * <pre>
  * Computes fibonacci(n) = fibonacci(n-1) + fibonacci(n-2);  for n> 1
- *          fibonacci(0) = 0; 
- *          fibonacci(1) = 1.       
+ *          fibonacci(0) = 0;
+ *          fibonacci(1) = 1.
  * </pre>
  **/
 
@@ -15,7 +15,7 @@ public final class FibTask extends RecursiveTask<Integer> {
     static int sequentialThreshold;
 
     static long lastStealCount;
-  
+
     public static void main(String[] args) throws Exception {
         int procs = 0;
         int num = 45;
@@ -25,7 +25,7 @@ public final class FibTask extends RecursiveTask<Integer> {
                 procs = Integer.parseInt(args[0]);
             if (args.length > 1)
                 num = Integer.parseInt(args[1]);
-            if (args.length > 2) 
+            if (args.length > 2)
                 sequentialThreshold = Integer.parseInt(args[2]);
         }
         catch (Exception e) {
@@ -34,7 +34,7 @@ public final class FibTask extends RecursiveTask<Integer> {
         }
 
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+            ForkJoinPool g = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
             lastStealCount = g.getStealCount();
             for (int i = 0; i < 20; ++i) {
@@ -58,7 +58,7 @@ public final class FibTask extends RecursiveTask<Integer> {
         double secs = ((double)time) / NPS;
         System.out.print("FibTask " + num + " = " + result);
         System.out.printf("\tTime: %7.3f", secs);
-       
+
         long sc = g.getStealCount();
         long ns = sc - lastStealCount;
         lastStealCount = sc;
@@ -89,7 +89,7 @@ public final class FibTask extends RecursiveTask<Integer> {
             FibTask f1 = new FibTask(n - 1);
             f1.fork();
             FibTask f2 = new FibTask(n - 2);
-            return f2.compute() + f1.join(); 
+            return f2.compute() + f1.join();
         }
     }
 

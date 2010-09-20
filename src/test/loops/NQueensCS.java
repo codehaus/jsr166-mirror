@@ -23,7 +23,7 @@ public final class NQueensCS extends RecursiveAction {
 
     /** for time conversion */
     static final long NPS = (1000L * 1000 * 1000);
-    
+
     public static void main(String[] args) throws Exception {
         int procs = 0;
         try {
@@ -35,13 +35,13 @@ public final class NQueensCS extends RecursiveAction {
             return;
         }
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+            ForkJoinPool g = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
             lastStealCount = g.getStealCount();
             for (int i = FIRST_SIZE; i <= LAST_SIZE; i++)
                 test(g, i);
             System.out.println(g);
-            g.shutdown();    
+            g.shutdown();
         }
     }
 
@@ -63,16 +63,16 @@ public final class NQueensCS extends RecursiveAction {
         lastStealCount = sc;
         System.out.printf(" Steals/t: %5d", ns/ps);
         System.out.println();
-    }            
+    }
 
-    // Boards are represented as arrays where each cell 
+    // Boards are represented as arrays where each cell
     // holds the column number of the queen in that row
 
     final int[] sofar;
     NQueensCS nextSubtask; // to link subtasks
     int solutions;
-    NQueensCS(int[] a) { 
-        this.sofar = a;  
+    NQueensCS(int[] a) {
+        this.sofar = a;
     }
 
     public final void compute() {
@@ -108,7 +108,7 @@ public final class NQueensCS extends RecursiveAction {
 
     private static int processSubtasks(NQueensCS s) {
         // Always run first the task held instead of forked
-        s.compute(); 
+        s.compute();
         int ns = s.solutions;
         s = s.nextSubtask;
         // Then the unstolen ones

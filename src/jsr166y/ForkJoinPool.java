@@ -879,7 +879,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     // If originating from an external caller,
                     // propagate exception, else ignore
                     if (fail != null && runState < TERMINATING &&
-                        !(Thread.currentThread() instanceof 
+                        !(Thread.currentThread() instanceof
                           ForkJoinWorkerThread))
                         UNSAFE.throwException(fail);
                     break;
@@ -1711,7 +1711,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     final boolean isAtLeastTerminating() {
         return runState >= TERMINATING;
     }
-        
+
     /**
      * Returns {@code true} if this pool has been shut down.
      *

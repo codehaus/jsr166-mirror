@@ -661,7 +661,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         else {
             while ((s = status) >= 0) {
                 synchronized (this) { // interruptible form of awaitDone
-                    if (UNSAFE.compareAndSwapInt(this, statusOffset, 
+                    if (UNSAFE.compareAndSwapInt(this, statusOffset,
                                                  s, SIGNAL)) {
                         while (status >= 0)
                             wait();

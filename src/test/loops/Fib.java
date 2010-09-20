@@ -10,8 +10,8 @@ import java.util.concurrent.*;
  * Recursive task-based version of Fibonacci. Computes:
  * <pre>
  * Computes fibonacci(n) = fibonacci(n-1) + fibonacci(n-2);  for n> 1
- *          fibonacci(0) = 0; 
- *          fibonacci(1) = 1.       
+ *          fibonacci(0) = 0;
+ *          fibonacci(1) = 1.
  * </pre>
  **/
 
@@ -21,7 +21,7 @@ public final class Fib extends RecursiveAction {
     static int sequentialThreshold;
 
     static long lastStealCount;
-  
+
     public static void main(String[] args) throws Exception {
         int procs = 0;
         int num = 45;
@@ -31,7 +31,7 @@ public final class Fib extends RecursiveAction {
                 procs = Integer.parseInt(args[0]);
             if (args.length > 1)
                 num = Integer.parseInt(args[1]);
-            if (args.length > 2) 
+            if (args.length > 2)
                 sequentialThreshold = Integer.parseInt(args[2]);
         }
         catch (Exception e) {
@@ -40,7 +40,7 @@ public final class Fib extends RecursiveAction {
         }
 
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+            ForkJoinPool g = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
             lastStealCount = g.getStealCount();
             for (int i = 0; i < 20; ++i) {
@@ -72,7 +72,7 @@ public final class Fib extends RecursiveAction {
         long result = f.getAnswer();
         System.out.print("Fib " + num + " = " + result);
         System.out.printf("\tTime: %7.3f", secs);
-       
+
         long sc = g.getStealCount();
         long ns = sc - lastStealCount;
         lastStealCount = sc;
@@ -99,8 +99,8 @@ public final class Fib extends RecursiveAction {
             else {
                 Fib f1 = new Fib(n - 1);
                 Fib f2 = new Fib(n - 2);
-                //                forkJoin(f1, f2);  
-                invokeAll(f1, f2);  
+                //                forkJoin(f1, f2);
+                invokeAll(f1, f2);
                 number = f1.number + f2.number;
             }
         }

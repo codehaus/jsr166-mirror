@@ -20,7 +20,7 @@ public final class LU {
     static final long NPS = (1000L * 1000 * 1000);
 
     // granularity is hard-wired as compile-time constant here
-    static final int BLOCK_SIZE = 16; 
+    static final int BLOCK_SIZE = 16;
     static final boolean CHECK = false; // set true to check answer
 
     public static void main(String[] args) throws Exception {
@@ -35,7 +35,7 @@ public final class LU {
                 procs = Integer.parseInt(args[0]);
             if (args.length > 1)
                 n = Integer.parseInt(args[1]);
-            if (args.length > 2) 
+            if (args.length > 2)
                 runs = Integer.parseInt(args[2]);
         } catch (Exception e) {
             System.out.println(usage);
@@ -46,9 +46,9 @@ public final class LU {
             System.out.println(usage);
             return;
         }
-        ForkJoinPool pool = procs == 0? new ForkJoinPool() : 
+        ForkJoinPool pool = procs == 0? new ForkJoinPool() :
             new ForkJoinPool(procs);
-        System.out.println("procs: " + pool.getParallelism() + 
+        System.out.println("procs: " + pool.getParallelism() +
                            " n: " + n + " runs: " + runs);
         for (int run = 0; run < runs; ++run) {
             double[][] m = new double[n][n];
@@ -161,7 +161,7 @@ public final class LU {
                 Block W01 = new Block(W.m, W.loRow,   W.loCol+h);
                 Block W10 = new Block(W.m, W.loRow+h, W.loCol);
                 Block W11 = new Block(W.m, W.loRow+h, W.loCol+h);
-        
+
                 Seq2 s3 = seq(new Schur(h, V10, W01, M11),
                               new Schur(h, V11, W11, M11));
                 s3.fork();
@@ -219,12 +219,12 @@ public final class LU {
                 Block L10 = new Block(L.m, L.loRow+h, L.loCol);
                 Block L11 = new Block(L.m, L.loRow+h, L.loCol+h);
 
-                
-                Seq3 s1 = 
+
+                Seq3 s1 =
                     seq(new Lower(h, L00, M00),
                         new Schur(h, L10, M00, M10),
                         new Lower(h, L11, M10));
-                Seq3 s2 = 
+                Seq3 s2 =
                     seq(new Lower(h, L00, M01),
                         new Schur(h, L10, M01, M11),
                         new Lower(h, L11, M11));
@@ -277,11 +277,11 @@ public final class LU {
                 Block U10 = new Block(U.m, U.loRow+h, U.loCol);
                 Block U11 = new Block(U.m, U.loRow+h, U.loCol+h);
 
-                Seq3 s1 = 
+                Seq3 s1 =
                     seq(new Upper(h, U00, M00),
                         new Schur(h, M00, U01, M01),
                         new Upper(h, U11, M01));
-                Seq3 s2 = 
+                Seq3 s2 =
                     seq(new Upper(h, U00, M10),
                         new Schur(h, M10, U01, M11),
                         new Upper(h, U11, M11));
@@ -291,7 +291,7 @@ public final class LU {
             }
         }
     }
-    
+
 
     static final class LowerUpper extends RecursiveAction {
         final int size;
@@ -339,9 +339,9 @@ public final class LU {
         }
     }
 
-    static Seq2 seq(RecursiveAction task1, 
-                               RecursiveAction task2) { 
-        return new Seq2(task1, task2); 
+    static Seq2 seq(RecursiveAction task1,
+                               RecursiveAction task2) {
+        return new Seq2(task1, task2);
     }
 
     static final class Seq2 extends RecursiveAction {
@@ -357,17 +357,17 @@ public final class LU {
         }
     }
 
-    static Seq3 seq(RecursiveAction task1, 
+    static Seq3 seq(RecursiveAction task1,
                     RecursiveAction task2,
-                    RecursiveAction task3) { 
-        return new Seq3(task1, task2, task3); 
+                    RecursiveAction task3) {
+        return new Seq3(task1, task2, task3);
     }
 
     static final class Seq3 extends RecursiveAction {
         final RecursiveAction fst;
         final RecursiveAction snd;
         final RecursiveAction thr;
-        public Seq3(RecursiveAction task1, 
+        public Seq3(RecursiveAction task1,
                     RecursiveAction task2,
                     RecursiveAction task3) {
             fst = task1;
@@ -384,4 +384,4 @@ public final class LU {
 
 
 }
-  
+

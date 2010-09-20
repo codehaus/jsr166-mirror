@@ -30,9 +30,9 @@ class BoxedLongSort {
             System.out.println("Usage: java BoxedLongSort threads n reps");
             return;
         }
-        ForkJoinPool pool = procs == 0? new ForkJoinPool() : 
+        ForkJoinPool pool = procs == 0? new ForkJoinPool() :
             new ForkJoinPool(procs);
-        
+
         Long[] a = new Long[n];
         seqRandomFill(a, 0, n);
 
@@ -80,9 +80,9 @@ class BoxedLongSort {
     }
 
     static final class Sorter extends RecursiveAction {
-        final Long[] a; 
+        final Long[] a;
         final Long[] w;
-        final int origin; 
+        final int origin;
         final int n;
         Sorter(Long[] a, Long[] w, int origin, int n) {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
@@ -111,7 +111,7 @@ class BoxedLongSort {
             }
         }
     }
-    
+
     static final class SubSorter extends RecursiveAction {
         final Sorter left;
         final Sorter right;
@@ -145,7 +145,7 @@ class BoxedLongSort {
          * and finding index of right closest to split point.
          * Uses left-spine decomposition to generate all
          * merge tasks before bottomming out at base case.
-         * 
+         *
          */
         public final void compute() {
             Merger rights = null;
@@ -169,11 +169,11 @@ class BoxedLongSort {
                 nleft = lh;
                 nright = rh;
             }
-            
+
             merge(nleft, nright);
-            if (rights != null) 
+            if (rights != null)
                 collectRights(rights);
-            
+
         }
 
         final void merge(int nleft, int nright) {
@@ -210,7 +210,7 @@ class BoxedLongSort {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {
-                throw new Error("Unsorted at " + i + ": " + 
+                throw new Error("Unsorted at " + i + ": " +
                                 a[i] + " / " + a[i+1]);
             }
         }

@@ -21,9 +21,9 @@ public final class DynamicFib extends RecursiveAction {
             return;
         }
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool pool = procs == 0? new ForkJoinPool() : 
+            ForkJoinPool pool = procs == 0? new ForkJoinPool() :
                 new ForkJoinPool(procs);
-            for (int i = 0; i < 20; ++i) 
+            for (int i = 0; i < 20; ++i)
                 test(pool, num);
             System.out.println(pool);
             pool.shutdown();
@@ -51,13 +51,13 @@ public final class DynamicFib extends RecursiveAction {
 
     int number;     // Initialized with argument; replaced with result
     DynamicFib(int n) { number = n; }
-    public void compute() { 
-        number = fib(number); 
+    public void compute() {
+        number = fib(number);
     }
 
     static int fib(int n) {
         int res;
-        if (n <= 1) 
+        if (n <= 1)
             res = n;
         else if (getSurplusQueuedTaskCount() >= 4)
             res = seqFib(n);

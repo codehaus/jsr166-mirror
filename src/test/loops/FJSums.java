@@ -30,12 +30,12 @@ public class FJSums {
             System.out.println("Usage: java FJSums threads n reps");
             return;
         }
-        ForkJoinPool g = procs == 0? new ForkJoinPool() : 
+        ForkJoinPool g = procs == 0? new ForkJoinPool() :
             new ForkJoinPool(procs);
         System.out.println("Number of procs=" + g.getParallelism());
         // for now hardwire Cumulate threshold to 8 * #CPUs leaf tasks
         THRESHOLD = 1 + ((n + 7) >>> 3) / g.getParallelism();
-        
+
         long[] a = new long[n];
         for (int i = 0; i < n; ++i)
             a[i] = i;
@@ -46,7 +46,7 @@ public class FJSums {
             long ss = seqSum(a, 0, n);
             double elapsed = elapsedTime(last);
             System.out.printf("sum = %24d  time:  %7.3f\n", ss, elapsed);
-            if (ss != expected) 
+            if (ss != expected)
                 throw new Error("expected " + expected + " != " + ss);
         }
         for (int i = 0; i < reps; ++i) {
@@ -57,7 +57,7 @@ public class FJSums {
             long ss = s.result;
             double elapsed = elapsedTime(last);
             System.out.printf("sum = %24d  time:  %7.3f\n", ss, elapsed);
-            if (i == 0 && ss != expected) 
+            if (i == 0 && ss != expected)
                 throw new Error("expected " + expected + " != " + ss);
             System.out.print("Cum: ");
             last = System.nanoTime();
@@ -78,7 +78,7 @@ public class FJSums {
 
     static long seqSum(long[] array, int l, int h) {
         long sum = 0;
-        for (int i = l; i < h; ++i) 
+        for (int i = l; i < h; ++i)
             sum += array[i];
         return sum;
     }
@@ -89,7 +89,7 @@ public class FJSums {
             array[i] = sum += array[i];
         return sum;
     }
-    
+
     /**
      * Adapted from Applyer demo in RecursiveAction docs
      */
@@ -102,7 +102,7 @@ public class FJSums {
             this.array = array; this.lo = lo; this.hi = hi;
             this.next = next;
         }
-        
+
         protected void compute() {
             int l = lo;
             int h = hi;

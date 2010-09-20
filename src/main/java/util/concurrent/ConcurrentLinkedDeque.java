@@ -314,12 +314,16 @@ public class ConcurrentLinkedDeque<E>
         final Node<E> newNode = new Node<E>(e);
 
         restartFromHead:
-        for (;;) {
-            for (Node<E> h = head, p = h;;) {
-                Node<E> q = p.prev;
-                if (q == null) {
-                    if (p.next == p) // PREV_TERMINATOR
-                        continue restartFromHead;
+        for (;;)
+            for (Node<E> h = head, p = h, q;;) {
+                if ((q = p.prev) != null &&
+                    (q = (p = q).prev) != null)
+                    // Check for head updates every other hop.
+                    // If p == q, we are sure to follow head instead.
+                    p = (h != (h = head)) ? h : q;
+                else if (p.next == p) // PREV_TERMINATOR
+                    continue restartFromHead;
+                else {
                     // p is first node
                     newNode.lazySetNext(p); // CAS piggyback
                     if (p.casPrev(null, newNode)) {
@@ -332,13 +336,7 @@ public class ConcurrentLinkedDeque<E>
                     }
                     // Lost CAS race to another thread; re-read prev
                 }
-                else if (p == q)
-                    continue restartFromHead;
-                else
-                    // Check for head updates after two hops.
-                    p = (p != h && h != (h = head)) ? h : q;
             }
-        }
     }
 
     /**
@@ -349,12 +347,16 @@ public class ConcurrentLinkedDeque<E>
         final Node<E> newNode = new Node<E>(e);
 
         restartFromTail:
-        for (;;) {
-            for (Node<E> t = tail, p = t;;) {
-                Node<E> q = p.next;
-                if (q == null) {
-                    if (p.prev == p) // NEXT_TERMINATOR
-                        continue restartFromTail;
+        for (;;)
+            for (Node<E> t = tail, p = t, q;;) {
+                if ((q = p.next) != null &&
+                    (q = (p = q).next) != null)
+                    // Check for tail updates every other hop.
+                    // If p == q, we are sure to follow tail instead.
+                    p = (t != (t = tail)) ? t : q;
+                else if (p.prev == p) // NEXT_TERMINATOR
+                    continue restartFromTail;
+                else {
                     // p is last node
                     newNode.lazySetPrev(p); // CAS piggyback
                     if (p.casNext(null, newNode)) {
@@ -367,13 +369,7 @@ public class ConcurrentLinkedDeque<E>
                     }
                     // Lost CAS race to another thread; re-read next
                 }
-                else if (p == q)
-                    continue restartFromTail;
-                else
-                    // Check for tail updates after two hops.
-                    p = (p != t && t != (t = tail)) ? t : q;
             }
-        }
     }
 
     private final static int HOPS = 2;
@@ -496,11 +492,9 @@ public class ConcurrentLinkedDeque<E>
         // assert first != null;
         // assert next != null;
         // assert first.item == null;
-        Node<E> o = null, p = next;
-        for (int hops = 0; ; ++hops) {
-            Node<E> q;
+        for (Node<E> o = null, p = next, q;;) {
             if (p.item != null || (q = p.next) == null) {
-                if (hops >= HOPS && p.prev != p && first.casNext(next, p)) {
+                if (o != null && p.prev != p && first.casNext(next, p)) {
                     skipDeletedPredecessors(p);
                     if (first.prev == null &&
                         (p.next == null || p.item != null) &&
@@ -532,11 +526,9 @@ public class ConcurrentLinkedDeque<E>
         // assert last != null;
         // assert prev != null;
         // assert last.item == null;
-        Node<E> o = null, p = prev;
-        for (int hops = 0; ; ++hops) {
-            Node<E> q;
+        for (Node<E> o = null, p = prev, q;;) {
             if (p.item != null || (q = p.prev) == null) {
-                if (hops >= HOPS && p.next != p && last.casPrev(prev, p)) {
+                if (o != null && p.next != p && last.casPrev(prev, p)) {
                     skipDeletedSuccessors(p);
                     if (last.next == null &&
                         (p.prev == null || p.item != null) &&
@@ -562,21 +554,65 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Sets head to first node.  Guarantees that any node which was
-     * unlinked before a call to this method will be unreachable from
-     * head after it returns.
+     * Guarantees that any node which was unlinked before a call to
+     * this method will be unreachable from head after it returns.
+     * Does not guarantee to eliminate slack, only that head will
+     * point to a node that was active after this method was invoked.
      */
     private final void updateHead() {
-        first();
+        // We need to ensure head either already points to an active
+        // node, or that we or another thread updates it using casHead.
+        Node<E> h = head, p;
+        if (h.item == null && (p = h.prev) != null)
+            fullUpdateHead(h, p);
+    }
+
+    private final void fullUpdateHead(Node<E> h, Node<E> p) {
+        for (Node<E> q;;) {
+            if ((q = p.prev) == null ||
+                (q = (p = q).prev) == null) {
+                // It is possible that p is PREV_TERMINATOR,
+                // but if so, the CAS is guaranteed to fail.
+                casHead(h, p);
+                // If the CAS failed, someone else did our job for us.
+                return;
+            }
+            else if (h != head)
+                return;
+            else
+                p = q;
+        }
     }
 
     /**
-     * Sets tail to last node.  Guarantees that any node which was
-     * unlinked before a call to this method will be unreachable from
-     * tail after it returns.
+     * Guarantees that any node which was unlinked before a call to
+     * this method will be unreachable from tail after it returns.
+     * Does not guarantee to eliminate slack, only that tail will
+     * point to a node that was active after this method was invoked.
      */
     private final void updateTail() {
-        last();
+        // We need to ensure tail either already points to an active
+        // node, or that we or another thread updates it using casTail.
+        Node<E> t = tail, p;
+        if (t.item == null && (p = t.next) != null)
+            fullUpdateTail(t, p);
+    }
+
+    private final void fullUpdateTail(Node<E> t, Node<E> p) {
+        for (Node<E> q;;) {
+            if ((q = p.next) == null ||
+                (q = (p = q).next) == null) {
+                // It is possible that p is PREV_TERMINATOR,
+                // but if so, the CAS is guaranteed to fail.
+                casTail(t, p);
+                // If the CAS failed, someone else did our job for us.
+                return;
+            }
+            else if (t != tail)
+                return;
+            else
+                p = q;
+        }
     }
 
     private void skipDeletedPredecessors(Node<E> x) {
@@ -670,25 +706,21 @@ public class ConcurrentLinkedDeque<E>
      */
     Node<E> first() {
         restartFromHead:
-        for (;;) {
-            for (Node<E> h = head, p = h;;) {
-                Node<E> q = p.prev;
-                if (q == null) {
-                    if (p == h
-                        // It is possible that p is PREV_TERMINATOR,
-                        // but if so, the CAS is guaranteed to fail.
-                        || casHead(h, p))
-                        return p;
-                    else
-                        continue restartFromHead;
-                }
-                else if (p == q)
-                    continue restartFromHead;
+        for (;;)
+            for (Node<E> h = head, p = h, q;;) {
+                if ((q = p.prev) != null &&
+                    (q = (p = q).prev) != null)
+                    // Check for head updates every other hop.
+                    // If p == q, we are sure to follow head instead.
+                    p = (h != (h = head)) ? h : q;
+                else if (p == h
+                         // It is possible that p is PREV_TERMINATOR,
+                         // but if so, the CAS is guaranteed to fail.
+                         || casHead(h, p))
+                    return p;
                 else
-                    // Check for head updates after two hops.
-                    p = (p != h && h != (h = head)) ? h : q;
+                    continue restartFromHead;
             }
-        }
     }
 
     /**
@@ -699,25 +731,21 @@ public class ConcurrentLinkedDeque<E>
      */
     Node<E> last() {
         restartFromTail:
-        for (;;) {
-            for (Node<E> t = tail, p = t;;) {
-                Node<E> q = p.next;
-                if (q == null) {
-                    if (p == t
-                        // It is possible that p is NEXT_TERMINATOR,
-                        // but if so, the CAS is guaranteed to fail.
-                        || casTail(t, p))
-                        return p;
-                    else
-                        continue restartFromTail;
-                }
-                else if (p == q)
-                    continue restartFromTail;
+        for (;;)
+            for (Node<E> t = tail, p = t, q;;) {
+                if ((q = p.next) != null &&
+                    (q = (p = q).next) != null)
+                    // Check for tail updates every other hop.
+                    // If p == q, we are sure to follow tail instead.
+                    p = (t != (t = tail)) ? t : q;
+                else if (p == t
+                         // It is possible that p is NEXT_TERMINATOR,
+                         // but if so, the CAS is guaranteed to fail.
+                         || casTail(t, p))
+                    return p;
                 else
-                    // Check for tail updates after two hops.
-                    p = (p != t && t != (t = tail)) ? t : q;
+                    continue restartFromTail;
             }
-        }
     }
 
     // Minor convenience utilities
@@ -1096,12 +1124,16 @@ public class ConcurrentLinkedDeque<E>
 
         // Atomically append the chain at the tail of this collection
         restartFromTail:
-        for (;;) {
-            for (Node<E> t = tail, p = t;;) {
-                Node<E> q = p.next;
-                if (q == null) {
-                    if (p.prev == p) // NEXT_TERMINATOR
-                        continue restartFromTail;
+        for (;;)
+            for (Node<E> t = tail, p = t, q;;) {
+                if ((q = p.next) != null &&
+                    (q = (p = q).next) != null)
+                    // Check for tail updates every other hop.
+                    // If p == q, we are sure to follow tail instead.
+                    p = (t != (t = tail)) ? t : q;
+                else if (p.prev == p) // NEXT_TERMINATOR
+                    continue restartFromTail;
+                else {
                     // p is last node
                     beginningOfTheEnd.lazySetPrev(p); // CAS piggyback
                     if (p.casNext(null, beginningOfTheEnd)) {
@@ -1118,13 +1150,7 @@ public class ConcurrentLinkedDeque<E>
                     }
                     // Lost CAS race to another thread; re-read next
                 }
-                else if (p == q)
-                    continue restartFromTail;
-                else
-                    // Check for tail updates after two hops.
-                    p = (p != t && t != (t = tail)) ? t : q;
             }
-        }
     }
 
     /**

@@ -3448,7 +3448,7 @@ public class Collections {
      * @param  o the element to appear repeatedly in the returned list.
      * @return an immutable list consisting of <tt>n</tt> copies of the
      *         specified object.
-     * @throws IllegalArgumentException if n &lt; 0.
+     * @throws IllegalArgumentException if {@code n < 0}
      * @see    List#addAll(Collection)
      * @see    List#addAll(int, Collection)
      */

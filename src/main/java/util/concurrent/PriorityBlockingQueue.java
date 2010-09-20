@@ -38,9 +38,9 @@ import java.util.*;
  * tie-breaking to comparable elements. To use it, you would insert a
  * <tt>new FIFOEntry(anEntry)</tt> instead of a plain entry object.
  *
- * <pre>
- * class FIFOEntry&lt;E extends Comparable&lt;? super E&gt;&gt;
- *     implements Comparable&lt;FIFOEntry&lt;E&gt;&gt; {
+ *  <pre> {@code
+ * class FIFOEntry<E extends Comparable<? super E>>
+ *     implements Comparable<FIFOEntry<E>> {
  *   final static AtomicLong seq = new AtomicLong();
  *   final long seqNum;
  *   final E entry;
@@ -49,13 +49,13 @@ import java.util.*;
  *     this.entry = entry;
  *   }
  *   public E getEntry() { return entry; }
- *   public int compareTo(FIFOEntry&lt;E&gt; other) {
+ *   public int compareTo(FIFOEntry<E> other) {
  *     int res = entry.compareTo(other.entry);
- *     if (res == 0 &amp;&amp; other.entry != this.entry)
- *       res = (seqNum &lt; other.seqNum ? -1 : 1);
+ *     if (res == 0 && other.entry != this.entry)
+ *       res = (seqNum < other.seqNum ? -1 : 1);
  *     return res;
  *   }
- * }</pre>
+ * }}</pre>
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">

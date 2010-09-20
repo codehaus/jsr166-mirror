@@ -16,13 +16,13 @@ import java.lang.reflect.*;
  * independently subject to atomic updates. For example, a tree node
  * might be declared as
  *
- * <pre>
+ *  <pre> {@code
  * class Node {
  *   private volatile Node left, right;
  *
- *   private static final AtomicReferenceFieldUpdater&lt;Node, Node&gt; leftUpdater =
+ *   private static final AtomicReferenceFieldUpdater<Node, Node> leftUpdater =
  *     AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "left");
- *   private static AtomicReferenceFieldUpdater&lt;Node, Node&gt; rightUpdater =
+ *   private static AtomicReferenceFieldUpdater<Node, Node> rightUpdater =
  *     AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "right");
  *
  *   Node getLeft() { return left;  }
@@ -30,8 +30,7 @@ import java.lang.reflect.*;
  *     return leftUpdater.compareAndSet(this, expect, update);
  *   }
  *   // ... and so on
- * }
- * </pre>
+ * }}</pre>
  *
  * <p>Note that the guarantees of the {@code compareAndSet}
  * method in this class are weaker than in other atomic classes.

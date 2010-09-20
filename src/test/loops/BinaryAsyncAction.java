@@ -174,7 +174,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
                 break;
             try {
                 p.onComplete(a, s);
-            } catch (Throwable rex) {
+            } catch(Throwable rex) {
                 p.completeExceptionally(rex);
                 return;
             }

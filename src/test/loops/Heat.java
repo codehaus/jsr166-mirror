@@ -218,7 +218,7 @@ public class Heat {
             final int llb = (lb == 0) ? 1 : lb;
             final int lub = (ub == nx) ? nx - 1 : ub;
 
-            for (int a = llb; a < lub; a++) {	/* inner nodes */
+            for (int a = llb; a < lub; a++) {   /* inner nodes */
                 double[] ov = oldm[a];
                 double x = xu + a * dx;
                 double y = yu;

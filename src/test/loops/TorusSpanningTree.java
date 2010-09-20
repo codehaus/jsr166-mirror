@@ -57,7 +57,7 @@ public class TorusSpanningTree {
                 pool.invoke(new Driver(root));
                 long elapsed = System.nanoTime() - start;
                 double nanosPerEdge = (double) elapsed / (4 * n);
-            	System.out.printf(" %7.2f", nanosPerEdge);
+                System.out.printf(" %7.2f", nanosPerEdge);
                 if (!checked) {
                     checked = true;
                     checkSpanningTree(graph, root);

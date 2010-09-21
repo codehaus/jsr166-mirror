@@ -268,7 +268,7 @@ class Random implements java.io.Serializable {
      * @return the next pseudorandom, uniformly distributed {@code int}
      *         value between {@code 0} (inclusive) and {@code n} (exclusive)
      *         from this random number generator's sequence
-     * @exception IllegalArgumentException if n is not positive
+     * @throws IllegalArgumentException if n is not positive
      * @since 1.2
      */
 

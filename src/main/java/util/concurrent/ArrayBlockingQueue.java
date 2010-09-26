@@ -727,7 +727,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 if (i == -1)
                     throw new IllegalStateException();
                 lastRet = -1;
-                if (lastItem == items[i])
+                E x = lastItem;
+                lastItem = null;
+                if (x == items[i])
                     removeAt(i); // only remove if item still at index
             } finally {
                 lock.unlock();

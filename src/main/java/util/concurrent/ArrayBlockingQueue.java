@@ -650,7 +650,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * invocations of {@link Collection#remove(Object)} or {@link
      * Iterator#remove} occurring in other threads.
      *
-     * The returned iterator supports the optional {@link Iterator#remove}
+     * <p>The returned iterator supports the optional {@link Iterator#remove}
      * operation. However, removal of interior elements in circular
      * array based queues is an intrinsically slow and disruptive
      * operation, so should be undertaken only in exceptional

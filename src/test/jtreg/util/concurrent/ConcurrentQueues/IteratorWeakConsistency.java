@@ -58,7 +58,6 @@ public class IteratorWeakConsistency {
     void equal(Object x, Object y) {
         if (x == null ? y == null : x.equals(y)) pass();
         else fail(x + " not equal to " + y);}
-    static Class<?> thisClass = new Object(){}.getClass().getEnclosingClass();
     public static void main(String[] args) throws Throwable {
         new IteratorWeakConsistency().instanceMain(args);}
     public void instanceMain(String[] args) throws Throwable {

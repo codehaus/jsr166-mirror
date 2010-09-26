@@ -681,8 +681,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * consistent with respect to interior removes since these may
      * require slot overwrites in the process of sliding elements to
      * cover gaps. So we settle for resiliency, operating on
-     * established apparent nexts, which may miss that some elements
-     * that have moved between calls to next.
+     * established apparent nexts, which may miss some elements that
+     * have moved between calls to next.
      */
     private class Itr implements Iterator<E> {
         private int remaining; // Number of elements yet to be returned

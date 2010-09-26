@@ -377,7 +377,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Returns <tt>true</tt> if this queue contained the specified element
      * (or equivalently, if this queue changed as a result of the call).
      *
-     * Removal of interior elements in circular array based queues
+     * <p>Removal of interior elements in circular array based queues
      * is an intrinsically slow and disruptive operation, so should
      * be undertaken only in exceptional circumstances, ideally
      * only when the queue is known not to be accessible by other

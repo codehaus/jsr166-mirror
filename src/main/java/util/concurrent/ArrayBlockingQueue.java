@@ -377,6 +377,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Returns <tt>true</tt> if this queue contained the specified element
      * (or equivalently, if this queue changed as a result of the call).
      *
+     * Removal of interior elements in circular array based queues
+     * is an intrinsically slow and disruptive operation, so should
+     * be undertaken only in exceptional circumstances, ideally
+     * only when the queue is known not to be accessible by other
+     * threads.
+     *
      * @param o element to be removed from this queue, if present
      * @return <tt>true</tt> if this queue changed as a result of the call
      */
@@ -632,12 +638,24 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
 
     /**
-     * Returns an iterator over the elements in this queue in proper sequence.
-     * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
-     * will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * Returns an iterator over the elements in this queue in proper
+     * sequence.  The returned <tt>Iterator</tt> is "weakly
+     * consistent" with respect to operations at the head and tail of
+     * the queue, and will never throw {@link
+     * ConcurrentModificationException}.  It might return elements
+     * that existed upon construction of the iterator but have since
+     * been polled or taken, and might not return elements that have
+     * since been added. Further, no consistency guarantees are made
+     * with respect to "interior" removals occuring in concurrent
+     * invocations of {@link Collection#remove(Object)} or {@link
+     * Iterator#remove} occurring in other threads.
+     *
+     * The returned iterator supports the optional {@link Iterator#remove}
+     * operation. However, removal of interior elements in circular
+     * array based queues is an intrinsically slow and disruptive
+     * operation, so should be undertaken only in exceptional
+     * circumstances, ideally only when the queue is known not to be
+     * accessible by other threads.
      *
      * @return an iterator over the elements in this queue in proper sequence
      */
@@ -652,73 +670,49 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Iterator for ArrayBlockingQueue
+     * Iterator for ArrayBlockingQueue. To maintain weak consistency
+     * with respect to puts and takes, we (1) read ahead one slot, so
+     * as to not report hasNext true but then not have an element to
+     * return (2) ensure that each array slot is traversed at most
+     * once (by tracking "remaining" elements); (3) skip over null
+     * slots, which can occur if takes race ahead of iterators.
+     * However, for circular array-based queues, we cannot rely on any
+     * well established definition of what it means to be weakly
+     * consistent with respect to interior removes since these may
+     * require slot overwrites in the process of sliding elements to
+     * cover gaps. So we settle for resiliency, operating on
+     * established apparent nexts, which may miss that some elements
+     * that have moved between calls to next.
      */
     private class Itr implements Iterator<E> {
-        /**
-         * Index of element to be returned by next,
-         * or a negative number if no such.
-         */
-        private int nextIndex;
-
-        /**
-         * nextItem holds on to item fields because once we claim
-         * that an element exists in hasNext(), we must return it in
-         * the following next() call even if it was in the process of
-         * being removed when hasNext() was called.
-         */
-        private E nextItem;
-
-        /**
-         * Index of element returned by most recent call to next.
-         * Reset to -1 if this element is deleted by a call to remove.
-         */
-        private int lastRet;
+        private int remaining; // Number of elements yet to be returned
+        private int nextIndex; // Index of element to be returned by next
+        private E nextItem;    // Element to be returned by next call to next
+        private E lastItem;    // Element returned by last call to next
+        private int lastRet;   // Index of last element returned, or -1 if none
 
         Itr() {
             lastRet = -1;
-            if (count == 0)
-                nextIndex = -1;
-            else {
-                nextIndex = takeIndex;
-                nextItem = items[takeIndex];
-            }
+            if ((remaining = count) > 0)
+                nextItem = items[nextIndex = takeIndex];
         }
 
         public boolean hasNext() {
-            /*
-             * No sync. We can return true by mistake here
-             * only if this iterator passed across threads,
-             * which we don't support anyway.
-             */
-            return nextIndex >= 0;
-        }
-
-        /**
-         * Checks whether nextIndex is valid; if so setting nextItem.
-         * Stops iterator when either hits putIndex or sees null item.
-         */
-        private void checkNext() {
-            if (nextIndex == putIndex) {
-                nextIndex = -1;
-                nextItem = null;
-            } else {
-                nextItem = items[nextIndex];
-                if (nextItem == null)
-                    nextIndex = -1;
-            }
+            return remaining > 0;
         }
 
         public E next() {
+            if (remaining <= 0)
+                throw new NoSuchElementException();
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
-                if (nextIndex < 0)
-                    throw new NoSuchElementException();
                 lastRet = nextIndex;
-                E x = nextItem;
-                nextIndex = inc(nextIndex);
-                checkNext();
+                E x = lastItem = nextItem;
+                while (--remaining > 0) {
+                    if ((nextItem = items[nextIndex = inc(nextIndex)]) != null)
+                        break;
+                }
                 return x;
             } finally {
                 lock.unlock();
@@ -733,15 +727,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 if (i == -1)
                     throw new IllegalStateException();
                 lastRet = -1;
-
-                int ti = takeIndex;
-                removeAt(i);
-                // back up cursor (reset to front if was first element)
-                nextIndex = (i == ti) ? takeIndex : i;
-                checkNext();
+                if (lastItem == items[i])
+                    removeAt(i); // only remove if item still at index
             } finally {
                 lock.unlock();
             }
         }
     }
+
 }

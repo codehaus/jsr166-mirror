@@ -682,7 +682,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * require slot overwrites in the process of sliding elements to
      * cover gaps. So we settle for resiliency, operating on
      * established apparent nexts, which may miss some elements that
-     * have moved between calls to next.
+     * have moved between calls to next. Given this disclaimer, there
+     * is no need for locking in next and hasNext. It is OK to see any
+     * items array values no staler than the state upon iterator
+     * construction.
      */
     private class Itr implements Iterator<E> {
         private int remaining; // Number of elements yet to be returned
@@ -691,7 +694,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         private E lastItem;    // Element returned by last call to next
         private int lastRet;   // Index of last element returned, or -1 if none
 
-        Itr() {
+        Itr() { // must be invoked while holding main lock
             lastRet = -1;
             if ((remaining = count) > 0)
                 nextItem = items[nextIndex = takeIndex];
@@ -704,28 +707,22 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         public E next() {
             if (remaining <= 0)
                 throw new NoSuchElementException();
-            final ReentrantLock lock = ArrayBlockingQueue.this.lock;
-            lock.lock();
-            try {
-                lastRet = nextIndex;
-                E x = lastItem = nextItem;
-                while (--remaining > 0) {
-                    if ((nextItem = items[nextIndex = inc(nextIndex)]) != null)
-                        break;
-                }
-                return x;
-            } finally {
-                lock.unlock();
+            lastRet = nextIndex;
+            E x = lastItem = nextItem;
+            while (--remaining > 0) {
+                if ((nextItem = items[nextIndex = inc(nextIndex)]) != null)
+                    break;
             }
+            return x;
         }
 
         public void remove() {
+            int i = lastRet;
+            if (i == -1)
+                throw new IllegalStateException();
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
-                int i = lastRet;
-                if (i == -1)
-                    throw new IllegalStateException();
                 lastRet = -1;
                 E x = lastItem;
                 lastItem = null;

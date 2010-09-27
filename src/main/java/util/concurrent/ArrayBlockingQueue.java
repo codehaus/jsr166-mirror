@@ -702,11 +702,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         public E next() {
-            if (remaining <= 0)
-                throw new NoSuchElementException();
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
+                if (remaining <= 0)
+                    throw new NoSuchElementException();
                 lastRet = nextIndex;
                 E x = lastItem = nextItem;
                 while (--remaining > 0) {

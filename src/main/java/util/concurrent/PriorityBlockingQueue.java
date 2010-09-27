@@ -41,7 +41,7 @@ import java.util.*;
  *  <pre> {@code
  * class FIFOEntry<E extends Comparable<? super E>>
  *     implements Comparable<FIFOEntry<E>> {
- *   final static AtomicLong seq = new AtomicLong();
+ *   final static AtomicLong seq = new AtomicLong(0);
  *   final long seqNum;
  *   final E entry;
  *   public FIFOEntry(E entry) {

@@ -134,7 +134,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Shared internal API for dual stacks and queues.
      */
-    static abstract class Transferer {
+    abstract static class Transferer {
         /**
          * Performs a put or take.
          *

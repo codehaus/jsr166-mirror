@@ -71,7 +71,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         FJException() { super(); }
     }
 
-    static abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
+    abstract static class BinaryAsyncAction extends ForkJoinTask<Void> {
         private volatile int controlState;
 
         static final AtomicIntegerFieldUpdater<BinaryAsyncAction> controlStateUpdater =

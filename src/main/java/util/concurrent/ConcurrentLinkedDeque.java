@@ -183,7 +183,7 @@ public class ConcurrentLinkedDeque<E>
      * The actual representation we use is that p.next == p means to
      * goto the first node (which in turn is reached by following prev
      * pointers from head), and p.next == null && p.prev == p means
-     * that the iteration is at an end and that p is a (final static)
+     * that the iteration is at an end and that p is a (static final)
      * dummy node, NEXT_TERMINATOR, and not the last active node.
      * Finishing the iteration when encountering such a TERMINATOR is
      * good enough for read-only traversals, so such traversals can use
@@ -242,7 +242,7 @@ public class ConcurrentLinkedDeque<E>
      */
     private transient volatile Node<E> tail;
 
-    private final static Node<Object> PREV_TERMINATOR, NEXT_TERMINATOR;
+    private static final Node<Object> PREV_TERMINATOR, NEXT_TERMINATOR;
 
     static {
         PREV_TERMINATOR = new Node<Object>(null);
@@ -372,7 +372,7 @@ public class ConcurrentLinkedDeque<E>
             }
     }
 
-    private final static int HOPS = 2;
+    private static final int HOPS = 2;
 
     /**
      * Unlinks non-null node x.

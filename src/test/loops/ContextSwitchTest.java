@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.*;
 import java.util.*;
 
 public final class ContextSwitchTest {
-    final static int iters = 1000000;
+    static final int iters = 1000000;
     static AtomicReference turn = new AtomicReference();
     public static void main(String[] args) throws Exception {
         test();

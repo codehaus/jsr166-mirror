@@ -59,7 +59,7 @@ public class SingleProducerMultipleConsumerLoops {
         oneRun(new ArrayBlockingQueue<Integer>(CAPACITY, true), consumers, iters);
     }
 
-    static abstract class Stage implements Runnable {
+    abstract static class Stage implements Runnable {
         final int iters;
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;

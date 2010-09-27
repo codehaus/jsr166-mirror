@@ -77,9 +77,9 @@ class Random implements java.io.Serializable {
      */
     private final AtomicLong seed;
 
-    private final static long multiplier = 0x5DEECE66DL;
-    private final static long addend = 0xBL;
-    private final static long mask = (1L << 48) - 1;
+    private static final long multiplier = 0x5DEECE66DL;
+    private static final long addend = 0xBL;
+    private static final long mask = (1L << 48) - 1;
 
     /**
      * Creates a new random number generator. This constructor sets

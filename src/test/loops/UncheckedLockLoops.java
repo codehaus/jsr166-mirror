@@ -121,7 +121,7 @@ public final class UncheckedLockLoops {
 
     }
 
-    static abstract class LockLoop implements Runnable {
+    abstract static class LockLoop implements Runnable {
         int value;
         int checkValue;
         int iters;
@@ -211,7 +211,7 @@ public final class UncheckedLockLoops {
     }
 
     private static class ReentrantLockLoop extends LockLoop {
-        final private ReentrantLock lock = new ReentrantLock();
+        private final ReentrantLock lock = new ReentrantLock();
         final int loop(int n) {
             final ReentrantLock lock = this.lock;
             int sum = 0;
@@ -231,7 +231,7 @@ public final class UncheckedLockLoops {
     }
 
     private static class MutexLoop extends LockLoop {
-        final private Mutex lock = new Mutex();
+        private final Mutex lock = new Mutex();
         final int loop(int n) {
             final Mutex lock = this.lock;
             int sum = 0;
@@ -251,7 +251,7 @@ public final class UncheckedLockLoops {
     }
 
     private static class LongMutexLoop extends LockLoop {
-        final private LongMutex lock = new LongMutex();
+        private final LongMutex lock = new LongMutex();
         final int loop(int n) {
             final LongMutex lock = this.lock;
             int sum = 0;
@@ -271,7 +271,7 @@ public final class UncheckedLockLoops {
     }
 
     private static class FairReentrantLockLoop extends LockLoop {
-        final private ReentrantLock lock = new ReentrantLock(true);
+        private final ReentrantLock lock = new ReentrantLock(true);
         final int loop(int n) {
             final ReentrantLock lock = this.lock;
             int sum = 0;
@@ -291,7 +291,7 @@ public final class UncheckedLockLoops {
     }
 
     private static class ReentrantWriteLockLoop extends LockLoop {
-        final private Lock lock = new ReentrantReadWriteLock().writeLock();
+        private final Lock lock = new ReentrantReadWriteLock().writeLock();
         final int loop(int n) {
             final Lock lock = this.lock;
             int sum = 0;
@@ -331,7 +331,7 @@ public final class UncheckedLockLoops {
     }
 
     private static class SemaphoreLoop extends LockLoop {
-        final private Semaphore sem = new Semaphore(1, false);
+        private final Semaphore sem = new Semaphore(1, false);
         final int loop(int n) {
             final Semaphore sem = this.sem;
             int sum = 0;
@@ -350,7 +350,7 @@ public final class UncheckedLockLoops {
         }
     }
     private static class FairSemaphoreLoop extends LockLoop {
-        final private Semaphore sem = new Semaphore(1, true);
+        private final Semaphore sem = new Semaphore(1, true);
         final int loop(int n) {
             final Semaphore sem = this.sem;
             int sum = 0;
@@ -370,7 +370,7 @@ public final class UncheckedLockLoops {
     }
 
     private static class ReentrantReadWriteLockLoop extends LockLoop {
-        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final int loop(int n) {
             final Lock rlock = lock.readLock();
             final Lock wlock = lock.writeLock();
@@ -405,7 +405,7 @@ public final class UncheckedLockLoops {
 
 
     private static class FairReentrantReadWriteLockLoop extends LockLoop {
-        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         final int loop(int n) {
             final Lock rlock = lock.readLock();
             final Lock wlock = lock.writeLock();

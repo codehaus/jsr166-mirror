@@ -29,7 +29,7 @@ public class RLIBar {
     static int HoldPop;
     static int HoldLimit;
 
-    static private boolean HoldCheck() {
+    private static boolean HoldCheck() {
         try {
             HoldQ.lock();
             try {

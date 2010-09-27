@@ -1766,7 +1766,7 @@ public class Collections {
     {
         private static final long serialVersionUID = 8695801310862127406L;
 
-        final private SortedSet<E> ss;
+        private final SortedSet<E> ss;
 
         SynchronizedSortedSet(SortedSet<E> s) {
             super(s);
@@ -3317,7 +3317,7 @@ public class Collections {
     {
         private static final long serialVersionUID = 3193687207550431679L;
 
-        final private E element;
+        private final E element;
 
         SingletonSet(E e) {element = e;}
 

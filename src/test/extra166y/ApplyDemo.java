@@ -81,9 +81,9 @@ public class ApplyDemo {
      * Unsynchronized version of java.util.Random algorithm.
      */
     static final class Rand {
-        final static long multiplier = 0x5DEECE66DL;
-        final static long addend = 0xBL;
-        final static long mask = (1L << 48) - 1;
+        static final long multiplier = 0x5DEECE66DL;
+        static final long addend = 0xBL;
+        static final long mask = (1L << 48) - 1;
         long seed;
 
         Rand(long s) {

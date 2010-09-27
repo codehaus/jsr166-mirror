@@ -139,7 +139,7 @@ public class OfferPollLoops {
 
     }
 
-    static abstract class Stage implements Runnable {
+    abstract static class Stage implements Runnable {
         final int iters;
         final Queue<Integer> queue;
         final CyclicBarrier barrier;

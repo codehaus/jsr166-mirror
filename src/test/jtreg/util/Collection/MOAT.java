@@ -1182,7 +1182,7 @@ public class MOAT {
         System.out.printf("%nPassed = %d, failed = %d%n%n", passed, failed);
         if (failed > 0) throw new Exception("Some tests failed");
     }
-    private static abstract class Fun {abstract void f() throws Throwable;}
+    private abstract static class Fun {abstract void f() throws Throwable;}
     private static void THROWS(Class<? extends Throwable> k, Fun... fs) {
           for (Fun f : fs)
               try { f.f(); fail("Expected " + k.getName() + " not thrown"); }

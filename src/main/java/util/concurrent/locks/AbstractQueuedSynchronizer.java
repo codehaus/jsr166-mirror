@@ -2276,7 +2276,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * CAS waitStatus field of a node.
      */
-    private final static boolean compareAndSetWaitStatus(Node node,
+    private static final boolean compareAndSetWaitStatus(Node node,
                                                          int expect,
                                                          int update) {
         return unsafe.compareAndSwapInt(node, waitStatusOffset,
@@ -2286,7 +2286,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * CAS next field of a node.
      */
-    private final static boolean compareAndSetNext(Node node,
+    private static final boolean compareAndSetNext(Node node,
                                                    Node expect,
                                                    Node update) {
         return unsafe.compareAndSwapObject(node, nextOffset, expect, update);

@@ -833,10 +833,8 @@ public class Microscope extends JPanel {
     /**
      *  Mover is an abstract class to simplify code dealing with
      *  either user moves or auto moves.
-     **/
-
-
-    static abstract class Mover {
+     */
+    abstract static class Mover {
 
         // caller for move callbacks
         protected Microscope game;

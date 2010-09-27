@@ -501,8 +501,8 @@ public class LockStep {
         }
     }
 
-    static abstract class MapFrobber { abstract void frob(NavigableMap m); }
-    static abstract class SetFrobber { abstract void frob(NavigableSet m); }
+    abstract static class MapFrobber { abstract void frob(NavigableMap m); }
+    abstract static class SetFrobber { abstract void frob(NavigableSet m); }
 
     static MapFrobber randomAdder(NavigableMap m) {
         final Integer k = unusedKey(m);
@@ -813,7 +813,7 @@ public class LockStep {
         System.out.printf("%nPassed = %d, failed = %d%n%n", passed, failed);
         if (failed > 0) throw new Exception("Some tests failed");
     }
-    static abstract class Fun {abstract void f() throws Throwable;}
+    abstract static class Fun {abstract void f() throws Throwable;}
     static void THROWS(Class<? extends Throwable> k, Fun... fs) {
           for (Fun f : fs)
               try { f.f(); fail("Expected " + k.getName() + " not thrown"); }

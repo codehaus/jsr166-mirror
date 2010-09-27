@@ -194,7 +194,7 @@ public class Semaphore implements java.io.Serializable {
     /**
      * NonFair version
      */
-    final static class NonfairSync extends Sync {
+    static final class NonfairSync extends Sync {
         private static final long serialVersionUID = -2694183684443567898L;
 
         NonfairSync(int permits) {
@@ -209,7 +209,7 @@ public class Semaphore implements java.io.Serializable {
     /**
      * Fair version
      */
-    final static class FairSync extends Sync {
+    static final class FairSync extends Sync {
         private static final long serialVersionUID = 2014338818796000944L;
 
         FairSync(int permits) {

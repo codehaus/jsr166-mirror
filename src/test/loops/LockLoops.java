@@ -131,7 +131,7 @@ public final class LockLoops {
 
     }
 
-    static abstract class LockLoop implements Runnable {
+    abstract static class LockLoop implements Runnable {
         int v;
         int iters;
         volatile int result;
@@ -198,7 +198,7 @@ public final class LockLoops {
     }
 
     private static class NoLockVolatileLoop extends LockLoop {
-        volatile private int vv;
+        private volatile int vv;
         final int loop(int n) {
             int sum = 0;
             while (n-- > 0) {
@@ -211,7 +211,7 @@ public final class LockLoops {
     }
 
     private static class ReentrantLockLoop extends LockLoop {
-        final private ReentrantLock lock = new ReentrantLock();
+        private final ReentrantLock lock = new ReentrantLock();
         final int loop(int n) {
             int sum = 0;
             while (n-- > 0) {
@@ -229,7 +229,7 @@ public final class LockLoops {
     }
 
     private static class FairReentrantLockLoop extends LockLoop {
-        final private ReentrantLock lock = new ReentrantLock(true);
+        private final ReentrantLock lock = new ReentrantLock(true);
         final int loop(int n) {
             int sum = 0;
             while (n-- > 0) {
@@ -247,7 +247,7 @@ public final class LockLoops {
     }
 
     private static class ReentrantWriteLockLoop extends LockLoop {
-        final private Lock lock = new ReentrantReadWriteLock().writeLock();
+        private final Lock lock = new ReentrantReadWriteLock().writeLock();
         final int loop(int n) {
             int sum = 0;
             while (n-- > 0) {
@@ -265,7 +265,7 @@ public final class LockLoops {
     }
 
     private static class ReentrantReadWriteLockLoop extends LockLoop {
-        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final int loop(int n) {
             int sum = 0;
             while (n-- > 0) {
@@ -309,7 +309,7 @@ public final class LockLoops {
     }
 
     private static class SemaphoreLoop extends LockLoop {
-        final private Semaphore sem = new Semaphore(1, false);
+        private final Semaphore sem = new Semaphore(1, false);
         final int loop(int n) {
             int sum = 0;
             try {
@@ -331,7 +331,7 @@ public final class LockLoops {
         }
     }
     private static class FairSemaphoreLoop extends LockLoop {
-        final private Semaphore sem = new Semaphore(1, true);
+        private final Semaphore sem = new Semaphore(1, true);
         final int loop(int n) {
             int sum = 0;
             try {
@@ -354,7 +354,7 @@ public final class LockLoops {
     }
 
     private static class FairReentrantReadWriteLockLoop extends LockLoop {
-        final private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         final int loop(int n) {
             int sum = 0;
             while (n-- > 0) {

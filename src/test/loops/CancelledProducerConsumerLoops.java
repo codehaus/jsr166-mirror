@@ -107,7 +107,7 @@ public class CancelledProducerConsumerLoops {
         */
     }
 
-    static abstract class Stage implements Callable {
+    abstract static class Stage implements Callable {
         final BlockingQueue<Integer> queue;
         final CyclicBarrier barrier;
         final int iters;

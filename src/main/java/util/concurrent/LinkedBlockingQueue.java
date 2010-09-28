@@ -160,14 +160,14 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a node and links it at end of queue.
+     * Links node at end of queue.
      *
-     * @param x the item
+     * @param node the node
      */
-    private void enqueue(E x) {
+    private void enqueue(Node<E> node) {
         // assert putLock.isHeldByCurrentThread();
         // assert last.next == null;
-        last = last.next = new Node<E>(x);
+        last = last.next = node;
     }
 
     /**
@@ -253,7 +253,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                     throw new NullPointerException();
                 if (n == capacity)
                     throw new IllegalStateException("Queue full");
-                enqueue(e);
+                enqueue(new Node<E>(e));
                 ++n;
             }
             count.set(n);
@@ -303,6 +303,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         // Note: convention in all put/take/etc is to preset local var
         // holding count negative to indicate failure unless set.
         int c = -1;
+        Node<E> node = new Node(e);
         final ReentrantLock putLock = this.putLock;
         final AtomicInteger count = this.count;
         putLock.lockInterruptibly();
@@ -318,7 +319,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             while (count.get() == capacity) {
                 notFull.await();
             }
-            enqueue(e);
+            enqueue(node);
             c = count.getAndIncrement();
             if (c + 1 < capacity)
                 notFull.signal();
@@ -353,7 +354,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                     return false;
                 nanos = notFull.awaitNanos(nanos);
             }
-            enqueue(e);
+            enqueue(new Node<E>(e));
             c = count.getAndIncrement();
             if (c + 1 < capacity)
                 notFull.signal();
@@ -382,11 +383,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         if (count.get() == capacity)
             return false;
         int c = -1;
+        Node<E> node = new Node(e);
         final ReentrantLock putLock = this.putLock;
         putLock.lock();
         try {
             if (count.get() < capacity) {
-                enqueue(e);
+                enqueue(node);
                 c = count.getAndIncrement();
                 if (c + 1 < capacity)
                     notFull.signal();

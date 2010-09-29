@@ -105,8 +105,8 @@ echo NavigableMapCheck ConcurrentSkipListMap
 $RUN NavigableMapCheck java.util.concurrent.ConcurrentSkipListMap $TRIALS
 echo NavigableSetCheck TreeSet
 $RUN NavigableSetCheck java.util.TreeSet $TRIALS
-echo MapMicrobenchmark ConcurrentHashMap
-$RUN MapMicrobenchmark java.util.concurrent.ConcurrentHashMap
+echo MapMicroBenchmark ConcurrentHashMap
+$RUN MapMicroBenchmark java.util.concurrent.ConcurrentHashMap
 echo SetBash ConcurrentSkipListSet
 $RUN SetBash java.util.concurrent.ConcurrentSkipListSet $TRIALS 100
 echo SetBash ConcurrentHashSet

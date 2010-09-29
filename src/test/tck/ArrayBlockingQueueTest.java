@@ -479,9 +479,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 try {
+                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                    assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}

@@ -452,9 +452,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         final PriorityBlockingQueue q = new PriorityBlockingQueue(2);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                assertSame(zero, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                 try {
+                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                    assertSame(zero, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}

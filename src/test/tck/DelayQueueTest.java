@@ -492,9 +492,9 @@ public class DelayQueueTest extends JSR166TestCase {
         final PDelay pdelay = new PDelay(0);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                assertSame(pdelay, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 try {
+                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                    assertSame(pdelay, q.poll(LONG_DELAY_MS, MILLISECONDS));
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}

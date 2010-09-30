@@ -439,7 +439,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
             sb.append(e == this ? "(this Collection)" : e);
             if (! it.hasNext())
                 return sb.append(']').toString();
-            sb.append(", ");
+            sb.append(',').append(' ');
         }
     }
 

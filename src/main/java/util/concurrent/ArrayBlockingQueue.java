@@ -93,7 +93,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Returns item at index i.
      */
     final E itemAt(int i) {
-        return ArrayBlockingQueue.<E>cast(items[i]);
+        return this.<E>cast(items[i]);
     }
 
     /**
@@ -123,7 +123,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     private E extract() {
         final Object[] items = this.items;
-        E x = ArrayBlockingQueue.<E>cast(items[takeIndex]);
+        E x = this.<E>cast(items[takeIndex]);
         items[takeIndex] = null;
         takeIndex = inc(takeIndex);
         --count;
@@ -608,7 +608,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int n = 0;
             int max = count;
             while (n < max) {
-                c.add(ArrayBlockingQueue.<E>cast(items[i]));
+                c.add(this.<E>cast(items[i]));
                 items[i] = null;
                 i = inc(i);
                 ++n;
@@ -646,7 +646,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int sz = count;
             int max = (maxElements < count) ? maxElements : count;
             while (n < max) {
-                c.add(ArrayBlockingQueue.<E>cast(items[i]));
+                c.add(this.<E>cast(items[i]));
                 items[i] = null;
                 i = inc(i);
                 ++n;

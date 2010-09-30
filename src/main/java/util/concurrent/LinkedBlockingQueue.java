@@ -533,6 +533,27 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Returns {@code true} if this queue contains the specified element.
+     * More formally, returns {@code true} if and only if this queue contains
+     * at least one element {@code e} such that {@code o.equals(e)}.
+     *
+     * @param o object to be checked for containment in this queue
+     * @return {@code true} if this queue contains the specified element
+     */
+    public boolean contains(Object o) {
+        if (o == null) return false;
+        fullyLock();
+        try {
+            for (Node<E> p = head.next; p != null; p = p.next)
+                if (o.equals(p.item))
+                    return true;
+            return false;
+        } finally {
+            fullyUnlock();
+        }
+    }
+
+    /**
      * Returns an array containing all of the elements in this queue, in
      * proper sequence.
      *

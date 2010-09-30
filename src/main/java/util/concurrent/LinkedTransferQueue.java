@@ -1175,6 +1175,28 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Returns {@code true} if this queue contains the specified element.
+     * More formally, returns {@code true} if and only if this queue contains
+     * at least one element {@code e} such that {@code o.equals(e)}.
+     *
+     * @param o object to be checked for containment in this queue
+     * @return {@code true} if this queue contains the specified element
+     */
+    public boolean contains(Object o) {
+        if (o == null) return false;
+        for (Node p = head; p != null; p = succ(p)) {
+            Object item = p.item;
+            if (p.isData) {
+                if (item != null && item != p && o.equals(item))
+                    return true;
+            }
+            else if (item == null)
+                break;
+        }
+        return false;
+    }
+
+    /**
      * Always returns {@code Integer.MAX_VALUE} because a
      * {@code LinkedTransferQueue} is not capacity constrained.
      *

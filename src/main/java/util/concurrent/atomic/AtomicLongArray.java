@@ -248,7 +248,7 @@ public class AtomicLongArray implements java.io.Serializable {
             b.append(getRaw(byteOffset(i)));
             if (i == iMax)
                 return b.append(']').toString();
-            b.append(", ");
+            b.append(',').append(' ');
         }
     }
 

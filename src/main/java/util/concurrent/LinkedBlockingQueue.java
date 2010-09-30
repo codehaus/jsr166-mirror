@@ -618,7 +618,20 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     public String toString() {
         fullyLock();
         try {
-            return super.toString();
+            Node<E> p = head.next;
+            if (p == null)
+                return "[]";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append('[');
+            for (;;) {
+                E e = p.item;
+                sb.append(e == this ? "(this Collection)" : e);
+                p = p.next;
+                if (p == null)
+                    return sb.append(']').toString();
+                sb.append(',').append(' ');
+            }
         } finally {
             fullyUnlock();
         }

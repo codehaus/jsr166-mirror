@@ -55,7 +55,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private static final long serialVersionUID = -817911632652898426L;
 
     /** The queued items  */
-    final E[] items;
+    final Object[] items;
     /** items index for next take, poll or remove */
     int takeIndex;
     /** items index for next put, offer, or add. */
@@ -84,6 +84,28 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         return (++i == items.length) ? 0 : i;
     }
 
+    @SuppressWarnings("unchecked")
+    static <E> E cast(Object item) {
+        return (E) item;
+    }
+
+    /**
+     * Returns item at index i.
+     */
+    final E itemAt(int i) {
+        return ArrayBlockingQueue.<E>cast(items[i]);
+    }
+
+    /**
+     * Throws NullPointerException if argument is null.
+     *
+     * @param v the element
+     */
+    private static void checkNotNull(Object v) {
+        if (v == null)
+            throw new NullPointerException();
+    }
+
     /**
      * Inserts element at current put position, advances, and signals.
      * Call only when holding lock.
@@ -100,8 +122,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Call only when holding lock.
      */
     private E extract() {
-        final E[] items = this.items;
-        E x = items[takeIndex];
+        final Object[] items = this.items;
+        E x = ArrayBlockingQueue.<E>cast(items[takeIndex]);
         items[takeIndex] = null;
         takeIndex = inc(takeIndex);
         --count;
@@ -110,11 +132,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Utility for remove and iterator.remove: Delete item at position i.
+     * Deletes item at position i.
+     * Utility for remove and iterator.remove.
      * Call only when holding lock.
      */
     void removeAt(int i) {
-        final E[] items = this.items;
+        final Object[] items = this.items;
         // if removing front item, just advance
         if (i == takeIndex) {
             items[takeIndex] = null;
@@ -161,7 +184,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public ArrayBlockingQueue(int capacity, boolean fair) {
         if (capacity <= 0)
             throw new IllegalArgumentException();
-        this.items = (E[]) new Object[capacity];
+        this.items = new Object[capacity];
         lock = new ReentrantLock(fair);
         notEmpty = lock.newCondition();
         notFull =  lock.newCondition();
@@ -186,11 +209,24 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public ArrayBlockingQueue(int capacity, boolean fair,
                               Collection<? extends E> c) {
         this(capacity, fair);
-        if (capacity < c.size())
-            throw new IllegalArgumentException();
 
-        for (E e : c)
-            add(e);
+        final ReentrantLock lock = this.lock;
+        lock.lock(); // Lock only for visibility, not mutual exclusion
+        try {
+            int i = 0;
+            try {
+                for (E e : c) {
+                    checkNotNull(e);
+                    items[i++] = e;
+                }
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                throw new IllegalArgumentException();
+            }
+            count = i;
+            putIndex = (i == capacity) ? 0 : i;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -218,7 +254,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
-        if (e == null) throw new NullPointerException();
+        checkNotNull(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -241,7 +277,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException {@inheritDoc}
      */
     public void put(E e) throws InterruptedException {
-        if (e == null) throw new NullPointerException();
+        checkNotNull(e);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
@@ -264,7 +300,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
 
-        if (e == null) throw new NullPointerException();
+        checkNotNull(e);
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
@@ -323,7 +359,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return (count == 0) ? null : items[takeIndex];
+            return (count == 0) ? null : itemAt(takeIndex);
         } finally {
             lock.unlock();
         }
@@ -388,22 +424,17 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     public boolean remove(Object o) {
         if (o == null) return false;
-        final E[] items = this.items;
+        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            int i = takeIndex;
-            int k = 0;
-            for (;;) {
-                if (k++ >= count)
-                    return false;
+            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--) {
                 if (o.equals(items[i])) {
                     removeAt(i);
                     return true;
                 }
-                i = inc(i);
             }
-
+            return false;
         } finally {
             lock.unlock();
         }
@@ -419,17 +450,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     public boolean contains(Object o) {
         if (o == null) return false;
-        final E[] items = this.items;
+        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            int i = takeIndex;
-            int k = 0;
-            while (k++ < count) {
+            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--)
                 if (o.equals(items[i]))
                     return true;
-                i = inc(i);
-            }
             return false;
         } finally {
             lock.unlock();
@@ -450,17 +477,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @return an array containing all of the elements in this queue
      */
     public Object[] toArray() {
-        final E[] items = this.items;
+        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
+            final int count = this.count;
             Object[] a = new Object[count];
-            int k = 0;
-            int i = takeIndex;
-            while (k < count) {
-                a[k++] = items[i];
-                i = inc(i);
-            }
+            for (int i = takeIndex, k = 0; k < count; i = inc(i), k++)
+                a[k] = items[i];
             return a;
         } finally {
             lock.unlock();
@@ -503,24 +527,20 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      *         this queue
      * @throws NullPointerException if the specified array is null
      */
+    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
-        final E[] items = this.items;
+        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            if (a.length < count)
+            final int count = this.count;
+            final int len = a.length;
+            if (len < count)
                 a = (T[])java.lang.reflect.Array.newInstance(
-                    a.getClass().getComponentType(),
-                    count
-                    );
-
-            int k = 0;
-            int i = takeIndex;
-            while (k < count) {
-                a[k++] = (T)items[i];
-                i = inc(i);
-            }
-            if (a.length > count)
+                    a.getClass().getComponentType(), count);
+            for (int i = takeIndex, k = 0; k < count; i = inc(i), k++)
+                a[k] = (T) items[i];
+            if (len > count)
                 a[count] = null;
             return a;
         } finally {
@@ -532,7 +552,19 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return super.toString();
+            int k = count;
+            if (k == 0)
+                return "[]";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append('[');
+            for (int i = takeIndex; ; i = inc(i)) {
+                Object e = items[i];
+                sb.append(e == this ? "(this Collection)" : e);
+                if (--k == 0)
+                    return sb.append(']').toString();
+                sb.append(',').append(' ');
+            }
         } finally {
             lock.unlock();
         }
@@ -543,16 +575,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * The queue will be empty after this call returns.
      */
     public void clear() {
-        final E[] items = this.items;
+        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            int i = takeIndex;
-            int k = count;
-            while (k-- > 0) {
+            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--)
                 items[i] = null;
-                i = inc(i);
-            }
             count = 0;
             putIndex = 0;
             takeIndex = 0;
@@ -569,11 +597,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c) {
-        if (c == null)
-            throw new NullPointerException();
+        checkNotNull(c);
         if (c == this)
             throw new IllegalArgumentException();
-        final E[] items = this.items;
+        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -581,7 +608,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int n = 0;
             int max = count;
             while (n < max) {
-                c.add(items[i]);
+                c.add(ArrayBlockingQueue.<E>cast(items[i]));
                 items[i] = null;
                 i = inc(i);
                 ++n;
@@ -605,13 +632,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c, int maxElements) {
-        if (c == null)
-            throw new NullPointerException();
+        checkNotNull(c);
         if (c == this)
             throw new IllegalArgumentException();
         if (maxElements <= 0)
             return 0;
-        final E[] items = this.items;
+        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -620,7 +646,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int sz = count;
             int max = (maxElements < count) ? maxElements : count;
             while (n < max) {
-                c.add(items[i]);
+                c.add(ArrayBlockingQueue.<E>cast(items[i]));
                 items[i] = null;
                 i = inc(i);
                 ++n;
@@ -635,7 +661,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-
 
     /**
      * Returns an iterator over the elements in this queue in proper
@@ -660,13 +685,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @return an iterator over the elements in this queue in proper sequence
      */
     public Iterator<E> iterator() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            return new Itr();
-        } finally {
-            lock.unlock();
-        }
+        return new Itr();
     }
 
     /**
@@ -692,9 +711,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         private int lastRet;   // Index of last element returned, or -1 if none
 
         Itr() {
-            lastRet = -1;
-            if ((remaining = count) > 0)
-                nextItem = items[nextIndex = takeIndex];
+            final ReentrantLock lock = ArrayBlockingQueue.this.lock;
+            lock.lock();
+            try {
+                lastRet = -1;
+                if ((remaining = count) > 0)
+                    nextItem = itemAt(nextIndex = takeIndex);
+            } finally {
+                lock.unlock();
+            }
         }
 
         public boolean hasNext() {
@@ -710,7 +735,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 lastRet = nextIndex;
                 E x = lastItem = nextItem;
                 while (--remaining > 0) {
-                    if ((nextItem = items[nextIndex = inc(nextIndex)]) != null)
+                    if ((nextItem = itemAt(nextIndex = inc(nextIndex))) != null)
                         break;
                 }
                 return x;

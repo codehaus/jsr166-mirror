@@ -26,7 +26,9 @@ public class IteratorWeakConsistency {
         test(new LinkedTransferQueue());
         // Other concurrent queues (e.g. ArrayBlockingQueue) do not
         // currently have weakly consistent iterators.
-        // test(new ArrayBlockingQueue(20));
+        // As of 2010-09, ArrayBlockingQueue passes this test, but
+        // does not fully implement weak consistency.
+        test(new ArrayBlockingQueue(20));
     }
 
     void test(Queue q) throws Throwable {

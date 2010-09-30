@@ -788,7 +788,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 Object item = p.item;
                 if (p.isData) {
                     if (item != null && item != p) {
-                        nextItem = LinkedTransferQueue.this.<E>cast(item);
+                        nextItem = LinkedTransferQueue.<E>cast(item);
                         nextNode = p;
                         return;
                     }

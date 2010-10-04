@@ -250,20 +250,24 @@ public class JSR166TestCase extends TestCase {
                 throw (RuntimeException) t;
             else if (t instanceof Exception)
                 throw (Exception) t;
-            else
-                throw new AssertionError(t);
+            else {
+                AssertionFailedError afe =
+                    new AssertionFailedError(t.toString());
+                afe.initCause(t);
+                throw afe;
+            }
         }
     }
 
     /**
      * Just like fail(reason), but additionally recording (using
-     * threadRecordFailure) any AssertionError thrown, so that the current
-     * testcase will fail.
+     * threadRecordFailure) any AssertionFailedError thrown, so that
+     * the current testcase will fail.
      */
     public void threadFail(String reason) {
         try {
             fail(reason);
-        } catch (Throwable t) {
+        } catch (AssertionFailedError t) {
             threadRecordFailure(t);
             fail(reason);
         }
@@ -271,13 +275,13 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Just like assertTrue(b), but additionally recording (using
-     * threadRecordFailure) any AssertionError thrown, so that the current
-     * testcase will fail.
+     * threadRecordFailure) any AssertionFailedError thrown, so that
+     * the current testcase will fail.
      */
     public void threadAssertTrue(boolean b) {
         try {
             assertTrue(b);
-        } catch (AssertionError t) {
+        } catch (AssertionFailedError t) {
             threadRecordFailure(t);
             throw t;
         }
@@ -285,13 +289,13 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Just like assertFalse(b), but additionally recording (using
-     * threadRecordFailure) any AssertionError thrown, so that the
-     * current testcase will fail.
+     * threadRecordFailure) any AssertionFailedError thrown, so that
+     * the current testcase will fail.
      */
     public void threadAssertFalse(boolean b) {
         try {
             assertFalse(b);
-        } catch (AssertionError t) {
+        } catch (AssertionFailedError t) {
             threadRecordFailure(t);
             throw t;
         }
@@ -299,13 +303,13 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Just like assertNull(x), but additionally recording (using
-     * threadRecordFailure) any AssertionError thrown, so that the
-     * current testcase will fail.
+     * threadRecordFailure) any AssertionFailedError thrown, so that
+     * the current testcase will fail.
      */
     public void threadAssertNull(Object x) {
         try {
             assertNull(x);
-        } catch (AssertionError t) {
+        } catch (AssertionFailedError t) {
             threadRecordFailure(t);
             throw t;
         }
@@ -313,13 +317,13 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Just like assertEquals(x, y), but additionally recording (using
-     * threadRecordFailure) any AssertionError thrown, so that the
-     * current testcase will fail.
+     * threadRecordFailure) any AssertionFailedError thrown, so that
+     * the current testcase will fail.
      */
     public void threadAssertEquals(long x, long y) {
         try {
             assertEquals(x, y);
-        } catch (AssertionError t) {
+        } catch (AssertionFailedError t) {
             threadRecordFailure(t);
             throw t;
         }
@@ -327,27 +331,29 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Just like assertEquals(x, y), but additionally recording (using
-     * threadRecordFailure) any AssertionError thrown, so that the
-     * current testcase will fail.
+     * threadRecordFailure) any AssertionFailedError thrown, so that
+     * the current testcase will fail.
      */
     public void threadAssertEquals(Object x, Object y) {
         try {
             assertEquals(x, y);
-        } catch (AssertionError t) {
+        } catch (AssertionFailedError t) {
             threadRecordFailure(t);
             throw t;
+        } catch (Throwable t) {
+            threadUnexpectedException(t);
         }
     }
 
     /**
      * Just like assertSame(x, y), but additionally recording (using
-     * threadRecordFailure) any AssertionError thrown, so that the
-     * current testcase will fail.
+     * threadRecordFailure) any AssertionFailedError thrown, so that
+     * the current testcase will fail.
      */
     public void threadAssertSame(Object x, Object y) {
         try {
             assertSame(x, y);
-        } catch (AssertionError t) {
+        } catch (AssertionFailedError t) {
             threadRecordFailure(t);
             throw t;
         }
@@ -368,20 +374,22 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Calls threadFail with message "Unexpected exception" + ex.
+     * Records the given exception using {@link #threadRecordFailure},
+     * then rethrows the exception, wrapping it in an
+     * AssertionFailedError if necessary.
      */
     public void threadUnexpectedException(Throwable t) {
         threadRecordFailure(t);
         t.printStackTrace();
-        // Rethrow, wrapping in an AssertionError if necessary
         if (t instanceof RuntimeException)
             throw (RuntimeException) t;
         else if (t instanceof Error)
             throw (Error) t;
         else {
-            AssertionError ae = new AssertionError("unexpected exception: " + t);
+            AssertionFailedError afe =
+                new AssertionFailedError("unexpected exception: " + t);
             t.initCause(t);
-            throw ae;
+            throw afe;
         }
     }
 
@@ -414,15 +422,6 @@ public class JSR166TestCase extends TestCase {
     public void shouldThrow(String exceptionName) {
         fail("Should throw " + exceptionName);
     }
-
-    /**
-     * Fails with message "Unexpected exception: " + ex.
-     */
-    public void unexpectedException(Throwable ex) {
-        ex.printStackTrace();
-        fail("Unexpected exception: " + ex);
-    }
-
 
     /**
      * The number of elements to place in collections, arrays, etc.
@@ -713,12 +712,6 @@ public class JSR166TestCase extends TestCase {
         protected Object realCall() throws InterruptedException {
             Thread.sleep(SMALL_DELAY_MS);
             return Boolean.TRUE;
-        }
-    }
-
-    public class SmallInterruptedRunnable extends CheckedInterruptedRunnable {
-        protected void realRun() throws InterruptedException {
-            Thread.sleep(SMALL_DELAY_MS);
         }
     }
 

@@ -223,11 +223,10 @@ public class ExecutorsTest extends JSR166TestCase {
      *  Future.get on submitted tasks will time out if they compute too long.
      */
     public void testTimedCallable() throws Exception {
-        final Runnable sleeper =
-            new RunnableShouldThrow(InterruptedException.class) {
-                public void realRun() throws InterruptedException {
-                    Thread.sleep(LONG_DELAY_MS);
-                }};
+        final Runnable sleeper = new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                Thread.sleep(LONG_DELAY_MS);
+            }};
         for (ExecutorService executor :
                  new ExecutorService[] {
                      Executors.newSingleThreadExecutor(),

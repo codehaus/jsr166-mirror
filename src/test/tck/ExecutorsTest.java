@@ -399,6 +399,9 @@ public class ExecutorsTest extends JSR166TestCase {
      * Without permissions, calling privilegedCallable throws ACE
      */
     public void testprivilegedCallableWithNoPrivs() throws Exception {
+        // Avoid classloader-related SecurityExceptions in swingui.TestRunner
+        Executors.privilegedCallable(new CheckCCL());
+
         Runnable r = new CheckedRunnable() {
             public void realRun() throws Exception {
                 if (System.getSecurityManager() == null)

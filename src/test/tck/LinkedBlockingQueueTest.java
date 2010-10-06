@@ -14,12 +14,26 @@ import java.io.*;
 
 public class LinkedBlockingQueueTest extends JSR166TestCase {
 
+    public static class Unbounded extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new LinkedBlockingQueue();
+        }
+    }
+
+    public static class Bounded extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new LinkedBlockingQueue(20);
+        }
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
-        return new TestSuite(LinkedBlockingQueueTest.class);
+        return newTestSuite(LinkedBlockingQueueTest.class,
+                            new Unbounded().testSuite(),
+                            new Bounded().testSuite());
     }
 
 
@@ -456,29 +470,6 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-    /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
-     */
-    public void testTimedPollWithOffer() throws InterruptedException {
-        final LinkedBlockingQueue q = new LinkedBlockingQueue(2);
-        Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                try {
-                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (InterruptedException success) {}
-            }});
-
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();
         t.join();
     }

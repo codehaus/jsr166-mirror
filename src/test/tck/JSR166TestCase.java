@@ -116,78 +116,88 @@ public class JSR166TestCase extends TestCase {
         System.exit(0);
     }
 
+    public static TestSuite newTestSuite(Object... suiteOrClasses) {
+        TestSuite suite = new TestSuite();
+        for (Object suiteOrClass : suiteOrClasses) {
+            if (suiteOrClass instanceof TestSuite)
+                suite.addTest((TestSuite) suiteOrClass);
+            else if (suiteOrClass instanceof Class)
+                suite.addTest(new TestSuite((Class<?>) suiteOrClass));
+            else
+                throw new ClassCastException("not a test suite or class");
+        }
+        return suite;
+    }
+
     /**
-     * Collects all JSR166 unit tests as one suite
+     * Collects all JSR166 unit tests as one suite.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("JSR166 Unit Tests");
-
-        suite.addTest(ForkJoinPoolTest.suite());
-        suite.addTest(ForkJoinTaskTest.suite());
-        suite.addTest(RecursiveActionTest.suite());
-        suite.addTest(RecursiveTaskTest.suite());
-        suite.addTest(LinkedTransferQueueTest.suite());
-        suite.addTest(PhaserTest.suite());
-        suite.addTest(ThreadLocalRandomTest.suite());
-        suite.addTest(AbstractExecutorServiceTest.suite());
-        suite.addTest(AbstractQueueTest.suite());
-        suite.addTest(AbstractQueuedSynchronizerTest.suite());
-        suite.addTest(AbstractQueuedLongSynchronizerTest.suite());
-        suite.addTest(ArrayBlockingQueueTest.suite());
-        suite.addTest(ArrayDequeTest.suite());
-        suite.addTest(AtomicBooleanTest.suite());
-        suite.addTest(AtomicIntegerArrayTest.suite());
-        suite.addTest(AtomicIntegerFieldUpdaterTest.suite());
-        suite.addTest(AtomicIntegerTest.suite());
-        suite.addTest(AtomicLongArrayTest.suite());
-        suite.addTest(AtomicLongFieldUpdaterTest.suite());
-        suite.addTest(AtomicLongTest.suite());
-        suite.addTest(AtomicMarkableReferenceTest.suite());
-        suite.addTest(AtomicReferenceArrayTest.suite());
-        suite.addTest(AtomicReferenceFieldUpdaterTest.suite());
-        suite.addTest(AtomicReferenceTest.suite());
-        suite.addTest(AtomicStampedReferenceTest.suite());
-        suite.addTest(ConcurrentHashMapTest.suite());
-        suite.addTest(ConcurrentLinkedDequeTest.suite());
-        suite.addTest(ConcurrentLinkedQueueTest.suite());
-        suite.addTest(ConcurrentSkipListMapTest.suite());
-        suite.addTest(ConcurrentSkipListSubMapTest.suite());
-        suite.addTest(ConcurrentSkipListSetTest.suite());
-        suite.addTest(ConcurrentSkipListSubSetTest.suite());
-        suite.addTest(CopyOnWriteArrayListTest.suite());
-        suite.addTest(CopyOnWriteArraySetTest.suite());
-        suite.addTest(CountDownLatchTest.suite());
-        suite.addTest(CyclicBarrierTest.suite());
-        suite.addTest(DelayQueueTest.suite());
-        suite.addTest(EntryTest.suite());
-        suite.addTest(ExchangerTest.suite());
-        suite.addTest(ExecutorsTest.suite());
-        suite.addTest(ExecutorCompletionServiceTest.suite());
-        suite.addTest(FutureTaskTest.suite());
-        suite.addTest(LinkedBlockingDequeTest.suite());
-        suite.addTest(LinkedBlockingQueueTest.suite());
-        suite.addTest(LinkedListTest.suite());
-        suite.addTest(LockSupportTest.suite());
-        suite.addTest(PriorityBlockingQueueTest.suite());
-        suite.addTest(PriorityQueueTest.suite());
-        suite.addTest(ReentrantLockTest.suite());
-        suite.addTest(ReentrantReadWriteLockTest.suite());
-        suite.addTest(ScheduledExecutorTest.suite());
-        suite.addTest(ScheduledExecutorSubclassTest.suite());
-        suite.addTest(SemaphoreTest.suite());
-        suite.addTest(SynchronousQueueTest.suite());
-        suite.addTest(SystemTest.suite());
-        suite.addTest(ThreadLocalTest.suite());
-        suite.addTest(ThreadPoolExecutorTest.suite());
-        suite.addTest(ThreadPoolExecutorSubclassTest.suite());
-        suite.addTest(ThreadTest.suite());
-        suite.addTest(TimeUnitTest.suite());
-        suite.addTest(TreeMapTest.suite());
-        suite.addTest(TreeSetTest.suite());
-        suite.addTest(TreeSubMapTest.suite());
-        suite.addTest(TreeSubSetTest.suite());
-
-        return suite;
+        return newTestSuite(
+            ForkJoinPoolTest.suite(),
+            ForkJoinTaskTest.suite(),
+            RecursiveActionTest.suite(),
+            RecursiveTaskTest.suite(),
+            LinkedTransferQueueTest.suite(),
+            PhaserTest.suite(),
+            ThreadLocalRandomTest.suite(),
+            AbstractExecutorServiceTest.suite(),
+            AbstractQueueTest.suite(),
+            AbstractQueuedSynchronizerTest.suite(),
+            AbstractQueuedLongSynchronizerTest.suite(),
+            ArrayBlockingQueueTest.suite(),
+            ArrayDequeTest.suite(),
+            AtomicBooleanTest.suite(),
+            AtomicIntegerArrayTest.suite(),
+            AtomicIntegerFieldUpdaterTest.suite(),
+            AtomicIntegerTest.suite(),
+            AtomicLongArrayTest.suite(),
+            AtomicLongFieldUpdaterTest.suite(),
+            AtomicLongTest.suite(),
+            AtomicMarkableReferenceTest.suite(),
+            AtomicReferenceArrayTest.suite(),
+            AtomicReferenceFieldUpdaterTest.suite(),
+            AtomicReferenceTest.suite(),
+            AtomicStampedReferenceTest.suite(),
+            ConcurrentHashMapTest.suite(),
+            ConcurrentLinkedDequeTest.suite(),
+            ConcurrentLinkedQueueTest.suite(),
+            ConcurrentSkipListMapTest.suite(),
+            ConcurrentSkipListSubMapTest.suite(),
+            ConcurrentSkipListSetTest.suite(),
+            ConcurrentSkipListSubSetTest.suite(),
+            CopyOnWriteArrayListTest.suite(),
+            CopyOnWriteArraySetTest.suite(),
+            CountDownLatchTest.suite(),
+            CyclicBarrierTest.suite(),
+            DelayQueueTest.suite(),
+            EntryTest.suite(),
+            ExchangerTest.suite(),
+            ExecutorsTest.suite(),
+            ExecutorCompletionServiceTest.suite(),
+            FutureTaskTest.suite(),
+            LinkedBlockingDequeTest.suite(),
+            LinkedBlockingQueueTest.suite(),
+            LinkedListTest.suite(),
+            LockSupportTest.suite(),
+            PriorityBlockingQueueTest.suite(),
+            PriorityQueueTest.suite(),
+            ReentrantLockTest.suite(),
+            ReentrantReadWriteLockTest.suite(),
+            ScheduledExecutorTest.suite(),
+            ScheduledExecutorSubclassTest.suite(),
+            SemaphoreTest.suite(),
+            SynchronousQueueTest.suite(),
+            SystemTest.suite(),
+            ThreadLocalTest.suite(),
+            ThreadPoolExecutorTest.suite(),
+            ThreadPoolExecutorSubclassTest.suite(),
+            ThreadTest.suite(),
+            TimeUnitTest.suite(),
+            TreeMapTest.suite(),
+            TreeSetTest.suite(),
+            TreeSubMapTest.suite(),
+            TreeSubSetTest.suite());
     }
 
 
@@ -534,6 +544,21 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * Sleeps until the given time has elapsed.
+     * Throws AssertionFailedError if interrupted.
+     */
+    void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ie) {
+            AssertionFailedError afe =
+                new AssertionFailedError("Unexpected InterruptedException");
+            afe.initCause(ie);
+            throw afe;
+        }
+    }
+
+    /**
      * Sleeps until the timeout has elapsed, or interrupted.
      * Does <em>NOT</em> throw InterruptedException.
      */
@@ -856,6 +881,25 @@ public class JSR166TestCase extends TestCase {
     public static class NoOpREHandler implements RejectedExecutionHandler {
         public void rejectedExecution(Runnable r,
                                       ThreadPoolExecutor executor) {}
+    }
+
+    /**
+     * A CyclicBarrier that fails with AssertionFailedErrors instead
+     * of throwing checked exceptions.
+     */
+    public class CheckedBarrier extends CyclicBarrier {
+        public CheckedBarrier(int parties) { super(parties); }
+
+        public int await() {
+            try {
+                return super.await();
+            } catch (Exception e) {
+                AssertionFailedError afe =
+                    new AssertionFailedError("Unexpected exception: " + e);
+                afe.initCause(e);
+                throw afe;
+            }
+        }
     }
 
 }

@@ -14,11 +14,27 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
 public class ArrayBlockingQueueTest extends JSR166TestCase {
+
+    public static class Fair extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new ArrayBlockingQueue(20, true);
+        }
+    }
+
+    public static class NonFair extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new ArrayBlockingQueue(20, false);
+        }
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
+
     public static Test suite() {
-        return new TestSuite(ArrayBlockingQueueTest.class);
+        return newTestSuite(ArrayBlockingQueueTest.class,
+                            new Fair().testSuite(),
+                            new NonFair().testSuite());
     }
 
     /**
@@ -470,30 +486,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         t.interrupt();
         t.join();
     }
-
-    /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
-     */
-    public void testTimedPollWithOffer() throws InterruptedException {
-        final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
-        Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                try {
-                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (InterruptedException success) {}
-            }});
-
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
-        t.interrupt();
-        t.join();
-    }
-
 
     /**
      * peek returns next element, or null if empty

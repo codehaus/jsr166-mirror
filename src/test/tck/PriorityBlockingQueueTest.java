@@ -13,11 +13,27 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
 public class PriorityBlockingQueueTest extends JSR166TestCase {
+
+    public static class Generic extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new PriorityBlockingQueue();
+        }
+    }
+
+    public static class InitialCapacity extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new PriorityBlockingQueue(20);
+        }
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
+
     public static Test suite() {
-        return new TestSuite(PriorityBlockingQueueTest.class);
+        return newTestSuite(PriorityBlockingQueueTest.class,
+                            new Generic().testSuite(),
+                            new InitialCapacity().testSuite());
     }
 
     private static final int NOCAP = Integer.MAX_VALUE;
@@ -443,30 +459,6 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         t.interrupt();
         t.join();
     }
-
-    /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
-     */
-    public void testTimedPollWithOffer() throws InterruptedException {
-        final PriorityBlockingQueue q = new PriorityBlockingQueue(2);
-        Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                try {
-                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    assertSame(zero, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (InterruptedException success) {}
-            }});
-
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
-        t.interrupt();
-        t.join();
-    }
-
 
     /**
      * peek returns next element, or null if empty

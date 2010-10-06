@@ -11,12 +11,27 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
 public class LinkedBlockingDequeTest extends JSR166TestCase {
+
+    public static class Unbounded extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new LinkedBlockingDeque();
+        }
+    }
+
+    public static class Bounded extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new LinkedBlockingDeque(20);
+        }
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
-        return new TestSuite(LinkedBlockingDequeTest.class);
+        return newTestSuite(LinkedBlockingDequeTest.class,
+                            new Unbounded().testSuite(),
+                            new Bounded().testSuite());
     }
 
     /**
@@ -762,30 +777,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
-     */
-    public void testTimedPollWithOffer() throws InterruptedException {
-        final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                try {
-                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (InterruptedException success) {}
-            }});
-
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
-        t.interrupt();
-        t.join();
-    }
-
-
-    /**
      * putFirst(null) throws NPE
      */
      public void testPutFirstNull() throws InterruptedException {
@@ -1188,8 +1179,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  timed poll before a delayed offerLast fails; after offerLast succeeds;
-     *  on interruption throws
+     * timed poll before a delayed offerLast fails; after offerLast succeeds;
+     * on interruption throws
      */
     public void testTimedPollWithOfferLast() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);

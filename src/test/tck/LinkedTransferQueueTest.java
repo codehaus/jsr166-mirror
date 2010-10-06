@@ -24,12 +24,19 @@ import junit.framework.TestSuite;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class LinkedTransferQueueTest extends JSR166TestCase {
 
+    public static class Generic extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new LinkedTransferQueue();
+        }
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
-        return new TestSuite(LinkedTransferQueueTest.class);
+        return newTestSuite(LinkedTransferQueueTest.class,
+                            new Generic().testSuite());
     }
 
     void checkEmpty(LinkedTransferQueue q) throws InterruptedException {
@@ -365,29 +372,6 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         t.interrupt();
         t.join();
         checkEmpty(q);
-    }
-
-    /**
-     * timed poll before a delayed offer fails; after offer succeeds;
-     * on interruption throws
-     */
-    public void testTimedPollWithOffer() throws InterruptedException {
-        final LinkedTransferQueue q = new LinkedTransferQueue();
-        Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
-                try {
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (InterruptedException success) {}
-            }});
-
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
-        t.interrupt();
-        t.join();
     }
 
     /**

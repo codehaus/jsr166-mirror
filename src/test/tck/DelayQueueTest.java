@@ -484,25 +484,38 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
+     * timed poll before a delayed offer fails; after offer succeeds;
+     * on interruption throws
      */
     public void testTimedPollWithOffer() throws InterruptedException {
         final DelayQueue q = new DelayQueue();
         final PDelay pdelay = new PDelay(0);
+        final CheckedBarrier barrier = new CheckedBarrier(2);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+
+                barrier.await();
+                assertSame(pdelay, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+
+                Thread.currentThread().interrupt();
                 try {
-                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    assertSame(pdelay, q.poll(LONG_DELAY_MS, MILLISECONDS));
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    q.poll(SHORT_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+
+                barrier.await();
+                try {
+                    q.poll(MEDIUM_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        barrier.await();
         assertTrue(q.offer(pdelay, SHORT_DELAY_MS, MILLISECONDS));
+        barrier.await();
+        sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }

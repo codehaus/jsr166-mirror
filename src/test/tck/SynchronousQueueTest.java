@@ -14,12 +14,26 @@ import java.io.*;
 
 public class SynchronousQueueTest extends JSR166TestCase {
 
+    public static class Fair extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new SynchronousQueue(true);
+        }
+    }
+
+    public static class NonFair extends BlockingQueueTest {
+        protected BlockingQueue emptyCollection() {
+            return new SynchronousQueue(false);
+        }
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
-        return new TestSuite(SynchronousQueueTest.class);
+        return newTestSuite(SynchronousQueueTest.class,
+                            new Fair().testSuite(),
+                            new NonFair().testSuite());
     }
 
     /**
@@ -335,29 +349,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-    /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
-     */
-    public void testTimedPollWithOffer() throws InterruptedException {
-        final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                try {
-                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
-                    q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (InterruptedException success) {}
-            }});
-
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();
         t.join();
     }

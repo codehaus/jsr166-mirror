@@ -544,10 +544,11 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Returns a new started Thread running the given runnable.
+     * Returns a new started daemon Thread running the given runnable.
      */
     Thread newStartedThread(Runnable runnable) {
         Thread t = new Thread(runnable);
+        t.setDaemon(true);
         t.start();
         return t;
     }

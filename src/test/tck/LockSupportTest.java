@@ -27,17 +27,16 @@ public class LockSupportTest extends JSR166TestCase {
      */
     public void testParkBeforeUnpark() throws InterruptedException {
         final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 threadStarted.countDown();
                 LockSupport.park();
             }});
 
-        t.start();
         threadStarted.await();
         Thread.sleep(SHORT_DELAY_MS);
         LockSupport.unpark(t);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -45,7 +44,7 @@ public class LockSupportTest extends JSR166TestCase {
      */
     public void testParkUntilBeforeUnpark() throws InterruptedException {
         final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 long d = new Date().getTime() + LONG_DELAY_MS;
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
@@ -55,11 +54,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         Thread.sleep(SHORT_DELAY_MS);
         LockSupport.unpark(t);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -67,7 +65,7 @@ public class LockSupportTest extends JSR166TestCase {
      */
     public void testParkNanosBeforeUnpark() throws InterruptedException {
         final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
                 long t0 = System.nanoTime();
@@ -76,11 +74,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         Thread.sleep(SHORT_DELAY_MS);
         LockSupport.unpark(t);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -89,7 +86,7 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkAfterUnpark() throws Exception {
         final CountDownLatch threadStarted = new CountDownLatch(1);
         final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 threadStarted.countDown();
                 while (!unparked.get())
@@ -97,11 +94,10 @@ public class LockSupportTest extends JSR166TestCase {
                 LockSupport.park();
             }});
 
-        t.start();
         threadStarted.await();
         LockSupport.unpark(t);
         unparked.set(true);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -110,7 +106,7 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkUntilAfterUnpark() throws Exception {
         final CountDownLatch threadStarted = new CountDownLatch(1);
         final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 threadStarted.countDown();
                 while (!unparked.get())
@@ -122,11 +118,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         LockSupport.unpark(t);
         unparked.set(true);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -135,7 +130,7 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkNanosAfterUnpark() throws Exception {
         final CountDownLatch threadStarted = new CountDownLatch(1);
         final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 threadStarted.countDown();
                 while (!unparked.get())
@@ -146,11 +141,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         LockSupport.unpark(t);
         unparked.set(true);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -158,7 +152,7 @@ public class LockSupportTest extends JSR166TestCase {
      */
     public void testParkBeforeInterrupt() throws InterruptedException {
         final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 assertFalse(Thread.currentThread().isInterrupted());
                 threadStarted.countDown();
@@ -166,11 +160,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(Thread.currentThread().isInterrupted());
             }});
 
-        t.start();
         threadStarted.await();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -178,7 +171,7 @@ public class LockSupportTest extends JSR166TestCase {
      */
     public void testParkUntilBeforeInterrupt() throws InterruptedException {
         final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 long d = new Date().getTime() + LONG_DELAY_MS;
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
@@ -188,11 +181,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -200,7 +192,7 @@ public class LockSupportTest extends JSR166TestCase {
      */
     public void testParkNanosBeforeInterrupt() throws InterruptedException {
         final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
                 long t0 = System.nanoTime();
@@ -209,11 +201,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -222,7 +213,7 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkAfterInterrupt() throws Exception {
         final CountDownLatch threadStarted = new CountDownLatch(1);
         final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 threadStarted.countDown();
                 while (!unparked.get())
@@ -232,11 +223,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(Thread.currentThread().isInterrupted());
             }});
 
-        t.start();
         threadStarted.await();
         t.interrupt();
         unparked.set(true);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -245,7 +235,7 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkUntilAfterInterrupt() throws Exception {
         final CountDownLatch threadStarted = new CountDownLatch(1);
         final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 threadStarted.countDown();
                 while (!unparked.get())
@@ -257,11 +247,10 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         t.interrupt();
         unparked.set(true);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -270,7 +259,7 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkNanosAfterInterrupt() throws Exception {
         final CountDownLatch threadStarted = new CountDownLatch(1);
         final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
                 threadStarted.countDown();
                 while (!unparked.get())
@@ -281,18 +270,17 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
-        t.start();
         threadStarted.await();
         t.interrupt();
         unparked.set(true);
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
      * parkNanos times out if not unparked
      */
     public void testParkNanosTimesOut() throws InterruptedException {
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
                 long t0 = System.nanoTime();
@@ -300,8 +288,7 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 >= timeoutNanos);
             }});
 
-        t.start();
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
 
@@ -309,7 +296,7 @@ public class LockSupportTest extends JSR166TestCase {
      * parkUntil times out if not unparked
      */
     public void testParkUntilTimesOut() throws InterruptedException {
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 long d = new Date().getTime() + SHORT_DELAY_MS;
                 // beware of rounding
@@ -319,8 +306,7 @@ public class LockSupportTest extends JSR166TestCase {
                 assertTrue(System.nanoTime() - t0 >= timeoutNanos);
             }});
 
-        t.start();
-        joinWith(t);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -328,21 +314,12 @@ public class LockSupportTest extends JSR166TestCase {
      * Requires hotspot fix for:
      * 6763959 java.util.concurrent.locks.LockSupport.parkUntil(0) blocks forever
      */
-    public void XXXtestParkUntil0Returns() throws InterruptedException {
-        Thread t = new Thread(new CheckedRunnable() {
+    public void XXXXtestParkUntil0Returns() throws InterruptedException {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 LockSupport.parkUntil(0L);
             }});
 
-        t.start();
-        joinWith(t);
-    }
-
-    private void joinWith(Thread t) throws InterruptedException {
-        t.join(MEDIUM_DELAY_MS);
-        if (t.isAlive()) {
-            fail("Test timed out");
-            t.interrupt();
-        }
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 }

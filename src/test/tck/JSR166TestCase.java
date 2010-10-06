@@ -534,7 +534,7 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Sleep until the timeout has elapsed, or interrupted.
+     * Sleeps until the timeout has elapsed, or interrupted.
      * Does <em>NOT</em> throw InterruptedException.
      */
     void sleepTillInterrupted(long timeoutMillis) {
@@ -551,6 +551,24 @@ public class JSR166TestCase extends TestCase {
         t.setDaemon(true);
         t.start();
         return t;
+    }
+
+    /**
+     * Waits for the specified time (in milliseconds) for the thread
+     * to terminate (using {@link Thread#join(long)}), else interrupts
+     * the thread (in the hope that it may terminate later) and fails.
+     */
+    void awaitTermination(Thread t, long timeoutMillis) {
+        try {
+            t.join(timeoutMillis);
+        } catch (InterruptedException ie) {
+            threadUnexpectedException(ie);
+        } finally {
+            if (t.isAlive()) {
+                t.interrupt();
+                fail("Test timed out");
+            }
+        }
     }
 
     // Some convenient Runnable classes

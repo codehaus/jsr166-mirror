@@ -64,7 +64,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  clear removes all pairs
+     * clear removes all pairs
      */
     public void testClear() {
         NavigableMap map = map5();
@@ -74,7 +74,7 @@ public class TreeSubMapTest extends JSR166TestCase {
 
 
     /**
-     *  Maps with same contents are equal
+     * Maps with same contents are equal
      */
     public void testEquals() {
         NavigableMap map1 = map5();
@@ -87,7 +87,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsKey returns true for contained key
+     * containsKey returns true for contained key
      */
     public void testContainsKey() {
         NavigableMap map = map5();
@@ -96,7 +96,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsValue returns true for held values
+     * containsValue returns true for held values
      */
     public void testContainsValue() {
         NavigableMap map = map5();
@@ -105,8 +105,8 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the correct element at the given key,
-     *  or null if not present
+     * get returns the correct element at the given key,
+     * or null if not present
      */
     public void testGet() {
         NavigableMap map = map5();
@@ -116,7 +116,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  isEmpty is true of empty map and false for non-empty
+     * isEmpty is true of empty map and false for non-empty
      */
     public void testIsEmpty() {
         NavigableMap empty = map0();
@@ -126,7 +126,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   firstKey returns first key
+     * firstKey returns first key
      */
     public void testFirstKey() {
         NavigableMap map = map5();
@@ -134,7 +134,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   lastKey returns last key
+     * lastKey returns last key
      */
     public void testLastKey() {
         NavigableMap map = map5();
@@ -143,7 +143,7 @@ public class TreeSubMapTest extends JSR166TestCase {
 
 
     /**
-     *   keySet returns a Set containing all the keys
+     * keySet returns a Set containing all the keys
      */
     public void testKeySet() {
         NavigableMap map = map5();
@@ -157,7 +157,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   keySet is ordered
+     * keySet is ordered
      */
     public void testKeySetOrder() {
         NavigableMap map = map5();
@@ -206,7 +206,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   putAll  adds all key-value pairs from the given map
+     * putAll adds all key-value pairs from the given map
      */
     public void testPutAll() {
         NavigableMap empty = map0();
@@ -221,7 +221,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   remove removes the correct key-value pair from the map
+     * remove removes the correct key-value pair from the map
      */
     public void testRemove() {
         NavigableMap map = map5();
@@ -360,7 +360,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   size returns the correct values
+     * size returns the correct values
      */
     public void testSize() {
         NavigableMap map = map5();
@@ -584,7 +584,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  clear removes all pairs
+     * clear removes all pairs
      */
     public void testDescendingClear() {
         NavigableMap map = dmap5();
@@ -594,7 +594,7 @@ public class TreeSubMapTest extends JSR166TestCase {
 
 
     /**
-     *  Maps with same contents are equal
+     * Maps with same contents are equal
      */
     public void testDescendingEquals() {
         NavigableMap map1 = dmap5();
@@ -607,7 +607,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsKey returns true for contained key
+     * containsKey returns true for contained key
      */
     public void testDescendingContainsKey() {
         NavigableMap map = dmap5();
@@ -616,7 +616,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsValue returns true for held values
+     * containsValue returns true for held values
      */
     public void testDescendingContainsValue() {
         NavigableMap map = dmap5();
@@ -625,8 +625,8 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the correct element at the given key,
-     *  or null if not present
+     * get returns the correct element at the given key,
+     * or null if not present
      */
     public void testDescendingGet() {
         NavigableMap map = dmap5();
@@ -636,7 +636,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  isEmpty is true of empty map and false for non-empty
+     * isEmpty is true of empty map and false for non-empty
      */
     public void testDescendingIsEmpty() {
         NavigableMap empty = dmap0();
@@ -646,7 +646,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   firstKey returns first key
+     * firstKey returns first key
      */
     public void testDescendingFirstKey() {
         NavigableMap map = dmap5();
@@ -654,7 +654,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   lastKey returns last key
+     * lastKey returns last key
      */
     public void testDescendingLastKey() {
         NavigableMap map = dmap5();
@@ -663,7 +663,7 @@ public class TreeSubMapTest extends JSR166TestCase {
 
 
     /**
-     *   keySet returns a Set containing all the keys
+     * keySet returns a Set containing all the keys
      */
     public void testDescendingKeySet() {
         NavigableMap map = dmap5();
@@ -677,7 +677,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   keySet is ordered
+     * keySet is ordered
      */
     public void testDescendingKeySetOrder() {
         NavigableMap map = dmap5();
@@ -707,7 +707,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  keySet.toArray returns contains all keys
+     * keySet.toArray returns contains all keys
      */
     public void testDescendingAscendingKeySetToArray() {
         NavigableMap map = dmap5();
@@ -720,7 +720,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  descendingkeySet.toArray returns contains all keys
+     * descendingkeySet.toArray returns contains all keys
      */
     public void testDescendingDescendingKeySetToArray() {
         NavigableMap map = dmap5();
@@ -733,7 +733,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *  Values.toArray contains all values
+     * Values.toArray contains all values
      */
     public void testDescendingValuesToArray() {
         NavigableMap map = dmap5();
@@ -769,7 +769,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   putAll  adds all key-value pairs from the given map
+     * putAll adds all key-value pairs from the given map
      */
     public void testDescendingPutAll() {
         NavigableMap empty = dmap0();
@@ -785,7 +785,7 @@ public class TreeSubMapTest extends JSR166TestCase {
 
 
     /**
-     *   remove removes the correct key-value pair from the map
+     * remove removes the correct key-value pair from the map
      */
     public void testDescendingRemove() {
         NavigableMap map = dmap5();
@@ -921,7 +921,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     *   size returns the correct values
+     * size returns the correct values
      */
     public void testDescendingSize() {
         NavigableMap map = dmap5();

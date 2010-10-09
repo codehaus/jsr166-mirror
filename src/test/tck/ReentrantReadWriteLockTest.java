@@ -409,7 +409,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
-     *  Read lock succeeds if write locked by current thread even if
+     * Read lock succeeds if write locked by current thread even if
      * other threads are waiting for writelock
      */
     public void testReadHoldingWriteLock3() throws InterruptedException {
@@ -442,7 +442,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 
 
     /**
-     *  Write lock succeeds if write locked by current thread even if
+     * Write lock succeeds if write locked by current thread even if
      * other threads are waiting for writelock
      */
     public void testWriteHoldingWriteLock4() throws InterruptedException {
@@ -715,7 +715,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
-     *  read lockInterruptibly succeeds if lock free else is interruptible
+     * read lockInterruptibly succeeds if lock free else is interruptible
      */
     public void testReadLockInterruptibly() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -771,7 +771,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 
 
     /**
-     *  timed await without a signal times out
+     * timed await without a signal times out
      */
     public void testAwait_Timeout() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();

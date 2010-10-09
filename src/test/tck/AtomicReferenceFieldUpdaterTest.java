@@ -60,7 +60,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last value set or assigned
+     * get returns the last value set or assigned
      */
     public void testGetSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
@@ -78,7 +78,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last value lazySet by same thread
+     * get returns the last value lazySet by same thread
      */
     public void testGetLazySet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;

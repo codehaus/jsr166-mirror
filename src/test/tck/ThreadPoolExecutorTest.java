@@ -48,7 +48,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  execute successfully executes a runnable
+     * execute successfully executes a runnable
      */
     public void testExecute() throws InterruptedException {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -61,8 +61,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  getActiveCount increases but doesn't overestimate, when a
-     *  thread becomes active
+     * getActiveCount increases but doesn't overestimate, when a
+     * thread becomes active
      */
     public void testGetActiveCount() throws InterruptedException {
         ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -74,7 +74,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  prestartCoreThread starts a thread if under corePoolSize, else doesn't
+     * prestartCoreThread starts a thread if under corePoolSize, else doesn't
      */
     public void testPrestartCoreThread() {
         ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -89,7 +89,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  prestartAllCoreThreads starts all corePoolSize threads
+     * prestartAllCoreThreads starts all corePoolSize threads
      */
     public void testPrestartAllCoreThreads() {
         ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -102,8 +102,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   getCompletedTaskCount increases, but doesn't overestimate,
-     *   when tasks complete
+     * getCompletedTaskCount increases, but doesn't overestimate,
+     * when tasks complete
      */
     public void testGetCompletedTaskCount() throws InterruptedException {
         ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -116,7 +116,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   getCorePoolSize returns size given in constructor if not otherwise set
+     * getCorePoolSize returns size given in constructor if not otherwise set
      */
     public void testGetCorePoolSize() {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -125,7 +125,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   getKeepAliveTime returns value given in constructor if not otherwise set
+     * getKeepAliveTime returns value given in constructor if not otherwise set
      */
     public void testGetKeepAliveTime() {
         ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, 1000, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -209,8 +209,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 
 
     /**
-     *   getLargestPoolSize increases, but doesn't overestimate, when
-     *   multiple threads active
+     * getLargestPoolSize increases, but doesn't overestimate, when
+     * multiple threads active
      */
     public void testGetLargestPoolSize() throws InterruptedException {
         ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -223,8 +223,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   getMaximumPoolSize returns value given in constructor if not
-     *   otherwise set
+     * getMaximumPoolSize returns value given in constructor if not
+     * otherwise set
      */
     public void testGetMaximumPoolSize() {
         ThreadPoolExecutor p2 = new ThreadPoolExecutor(2, 2, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -233,8 +233,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   getPoolSize increases, but doesn't overestimate, when threads
-     *   become active
+     * getPoolSize increases, but doesn't overestimate, when threads
+     * become active
      */
     public void testGetPoolSize() {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -245,7 +245,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  getTaskCount increases, but doesn't overestimate, when tasks submitted
+     * getTaskCount increases, but doesn't overestimate, when tasks submitted
      */
     public void testGetTaskCount() throws InterruptedException {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -257,7 +257,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   isShutDown is false before shutdown, true after
+     * isShutDown is false before shutdown, true after
      */
     public void testIsShutdown() {
 
@@ -270,7 +270,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  isTerminated is false before termination, true after
+     * isTerminated is false before termination, true after
      */
     public void testIsTerminated() throws InterruptedException {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -285,7 +285,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  isTerminating is not true when running or when terminated
+     * isTerminating is not true when running or when terminated
      */
     public void testIsTerminating() throws InterruptedException {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -354,7 +354,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   purge removes cancelled tasks from the queue
+     * purge removes cancelled tasks from the queue
      */
     public void testPurge() {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -372,7 +372,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  shutDownNow returns a list containing tasks that were not run
+     * shutDownNow returns a list containing tasks that were not run
      */
     public void testShutDownNow() {
         ThreadPoolExecutor p1 = new ThreadPoolExecutor(1, 1, LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
@@ -683,8 +683,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  execute throws RejectedExecutionException
-     *  if saturated.
+     * execute throws RejectedExecutionException if saturated.
      */
     public void testSaturatedExecute() {
         ThreadPoolExecutor p =
@@ -706,7 +705,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  executor using CallerRunsPolicy runs task if saturated.
+     * executor using CallerRunsPolicy runs task if saturated.
      */
     public void testSaturatedExecute2() {
         RejectedExecutionHandler h = new ThreadPoolExecutor.CallerRunsPolicy();
@@ -732,7 +731,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  executor using DiscardPolicy drops task if saturated.
+     * executor using DiscardPolicy drops task if saturated.
      */
     public void testSaturatedExecute3() {
         RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardPolicy();
@@ -757,7 +756,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  executor using DiscardOldestPolicy drops oldest task if saturated.
+     * executor using DiscardOldestPolicy drops oldest task if saturated.
      */
     public void testSaturatedExecute4() {
         RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardOldestPolicy();
@@ -778,7 +777,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  execute throws RejectedExecutionException if shutdown
+     * execute throws RejectedExecutionException if shutdown
      */
     public void testRejectedExecutionExceptionOnShutdown() {
         ThreadPoolExecutor tpe =
@@ -793,7 +792,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  execute using CallerRunsPolicy drops task on shutdown
+     * execute using CallerRunsPolicy drops task on shutdown
      */
     public void testCallerRunsOnShutdown() {
         RejectedExecutionHandler h = new ThreadPoolExecutor.CallerRunsPolicy();
@@ -810,7 +809,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  execute using DiscardPolicy drops task on shutdown
+     * execute using DiscardPolicy drops task on shutdown
      */
     public void testDiscardOnShutdown() {
         RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardPolicy();
@@ -828,7 +827,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  execute using DiscardOldestPolicy drops task on shutdown
+     * execute using DiscardOldestPolicy drops task on shutdown
      */
     public void testDiscardOldestOnShutdown() {
         RejectedExecutionHandler h = new ThreadPoolExecutor.DiscardOldestPolicy();
@@ -877,8 +876,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  setMaximumPoolSize(int) throws IllegalArgumentException if
-     *  given a value less the core pool size
+     * setMaximumPoolSize(int) throws IllegalArgumentException if
+     * given a value less the core pool size
      */
     public void testMaximumPoolSizeIllegalArgumentException() {
         ThreadPoolExecutor tpe =
@@ -896,8 +895,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  setMaximumPoolSize throws IllegalArgumentException
-     *  if given a negative value
+     * setMaximumPoolSize throws IllegalArgumentException
+     * if given a negative value
      */
     public void testMaximumPoolSizeIllegalArgumentException2() {
         ThreadPoolExecutor tpe =
@@ -916,8 +915,8 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  setKeepAliveTime  throws IllegalArgumentException
-     *  when given a negative value
+     * setKeepAliveTime throws IllegalArgumentException
+     * when given a negative value
      */
     public void testKeepAliveTimeIllegalArgumentException() {
         ThreadPoolExecutor tpe =

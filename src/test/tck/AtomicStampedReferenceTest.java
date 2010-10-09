@@ -30,7 +30,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last values of reference and stamp set
+     * get returns the last values of reference and stamp set
      */
     public void testGetSet() {
         int[] mark = new int[1];
@@ -52,7 +52,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *  attemptStamp succeeds in single thread
+     * attemptStamp succeeds in single thread
      */
     public void testAttemptStamp() {
         int[] mark = new int[1];

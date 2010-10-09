@@ -37,7 +37,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  clear removes all pairs
+     * clear removes all pairs
      */
     public void testClear() {
         ConcurrentHashMap map = map5();
@@ -46,7 +46,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  Maps with same contents are equal
+     * Maps with same contents are equal
      */
     public void testEquals() {
         ConcurrentHashMap map1 = map5();
@@ -59,7 +59,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  contains returns true for contained value
+     * contains returns true for contained value
      */
     public void testContains() {
         ConcurrentHashMap map = map5();
@@ -68,7 +68,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsKey returns true for contained key
+     * containsKey returns true for contained key
      */
     public void testContainsKey() {
         ConcurrentHashMap map = map5();
@@ -77,7 +77,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsValue returns true for held values
+     * containsValue returns true for held values
      */
     public void testContainsValue() {
         ConcurrentHashMap map = map5();
@@ -86,8 +86,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   enumeration returns an enumeration containing the correct
-     *   elements
+     * enumeration returns an enumeration containing the correct
+     * elements
      */
     public void testEnumeration() {
         ConcurrentHashMap map = map5();
@@ -101,8 +101,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the correct element at the given key,
-     *  or null if not present
+     * get returns the correct element at the given key,
+     * or null if not present
      */
     public void testGet() {
         ConcurrentHashMap map = map5();
@@ -112,7 +112,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  isEmpty is true of empty map and false for non-empty
+     * isEmpty is true of empty map and false for non-empty
      */
     public void testIsEmpty() {
         ConcurrentHashMap empty = new ConcurrentHashMap();
@@ -122,7 +122,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   keys returns an enumeration containing all the keys from the map
+     * keys returns an enumeration containing all the keys from the map
      */
     public void testKeys() {
         ConcurrentHashMap map = map5();
@@ -136,7 +136,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   keySet returns a Set containing all the keys
+     * keySet returns a Set containing all the keys
      */
     public void testKeySet() {
         ConcurrentHashMap map = map5();
@@ -150,7 +150,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  keySet.toArray returns contains all keys
+     * keySet.toArray returns contains all keys
      */
     public void testKeySetToArray() {
         ConcurrentHashMap map = map5();
@@ -163,7 +163,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  Values.toArray contains all values
+     * Values.toArray contains all values
      */
     public void testValuesToArray() {
         ConcurrentHashMap map = map5();
@@ -179,7 +179,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *  entrySet.toArray contains all entries
+     * entrySet.toArray contains all entries
      */
     public void testEntrySetToArray() {
         ConcurrentHashMap map = map5();
@@ -226,7 +226,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   putAll  adds all key-value pairs from the given map
+     * putAll adds all key-value pairs from the given map
      */
     public void testPutAll() {
         ConcurrentHashMap empty = new ConcurrentHashMap();
@@ -241,7 +241,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   putIfAbsent works when the given key is not present
+     * putIfAbsent works when the given key is not present
      */
     public void testPutIfAbsent() {
         ConcurrentHashMap map = map5();
@@ -250,7 +250,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   putIfAbsent does not add the pair if the key is already present
+     * putIfAbsent does not add the pair if the key is already present
      */
     public void testPutIfAbsent2() {
         ConcurrentHashMap map = map5();
@@ -258,7 +258,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   replace fails when the given key is not present
+     * replace fails when the given key is not present
      */
     public void testReplace() {
         ConcurrentHashMap map = map5();
@@ -267,7 +267,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   replace succeeds if the key is already present
+     * replace succeeds if the key is already present
      */
     public void testReplace2() {
         ConcurrentHashMap map = map5();
@@ -298,7 +298,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
 
 
     /**
-     *   remove removes the correct key-value pair from the map
+     * remove removes the correct key-value pair from the map
      */
     public void testRemove() {
         ConcurrentHashMap map = map5();
@@ -321,7 +321,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     *   size returns the correct values
+     * size returns the correct values
      */
     public void testSize() {
         ConcurrentHashMap map = map5();

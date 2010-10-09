@@ -413,7 +413,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
-     *  timed await without a signal times out
+     * timed await without a signal times out
      */
     public void testAwait_Timeout() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();

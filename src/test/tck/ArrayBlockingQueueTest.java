@@ -161,7 +161,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  offer(null) throws NPE
+     * offer(null) throws NPE
      */
     public void testOfferNull() {
         try {
@@ -172,7 +172,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  add(null) throws NPE
+     * add(null) throws NPE
      */
     public void testAddNull() {
         try {
@@ -207,7 +207,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  addAll(null) throws NPE
+     * addAll(null) throws NPE
      */
     public void testAddAll1() {
         try {
@@ -230,7 +230,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
 
     /**
-     *  addAll of a collection with null elements throws NPE
+     * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
         try {
@@ -286,7 +286,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  put(null) throws NPE
+     * put(null) throws NPE
      */
     public void testPutNull() throws InterruptedException {
         try {
@@ -623,7 +623,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  toArray contains all elements
+     * toArray contains all elements
      */
     public void testToArray() throws InterruptedException {
         ArrayBlockingQueue q = populatedQueue(SIZE);

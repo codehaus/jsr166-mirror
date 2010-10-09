@@ -113,7 +113,7 @@ public class AbstractQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  addAll(null) throws NPE
+     * addAll(null) throws NPE
      */
     public void testAddAll1() {
         try {
@@ -136,7 +136,7 @@ public class AbstractQueueTest extends JSR166TestCase {
 
 
     /**
-     *  addAll of a collection with null elements throws NPE
+     * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
         try {

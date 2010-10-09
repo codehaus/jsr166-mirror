@@ -204,7 +204,7 @@ public class SemaphoreTest extends JSR166TestCase {
 
 
     /**
-     *  A release in one thread enables a timed acquire in another thread
+     * A release in one thread enables a timed acquire in another thread
      */
     public void testTimedAcquireReleaseInDifferentThreads()
         throws InterruptedException {
@@ -244,7 +244,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *  A waiting timed acquire blocks interruptibly
+     * A waiting timed acquire blocks interruptibly
      */
     public void testTryAcquire_InterruptedException()
         throws InterruptedException {
@@ -667,7 +667,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *  A waiting tryAcquire blocks interruptibly
+     * A waiting tryAcquire blocks interruptibly
      */
     public void testTryAcquire_InterruptedException_fair()
         throws InterruptedException {
@@ -684,7 +684,7 @@ public class SemaphoreTest extends JSR166TestCase {
     }
 
     /**
-     *  A waiting tryAcquire(n) blocks interruptibly
+     * A waiting tryAcquire(n) blocks interruptibly
      */
     public void testTryAcquireN_InterruptedException_fair()
         throws InterruptedException {

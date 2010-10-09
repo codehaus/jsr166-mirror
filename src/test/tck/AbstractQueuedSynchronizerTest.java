@@ -475,7 +475,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     }
 
     /**
-     *  Timed await without a signal times out
+     * Timed await without a signal times out
      */
     public void testAwait_Timeout() throws InterruptedException {
         final Mutex sync = new Mutex();

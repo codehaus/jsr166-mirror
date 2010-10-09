@@ -34,7 +34,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  clear removes all pairs
+     * clear removes all pairs
      */
     public void testClear() {
         TreeMap map = map5();
@@ -52,7 +52,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  Maps with same contents are equal
+     * Maps with same contents are equal
      */
     public void testEquals() {
         TreeMap map1 = map5();
@@ -65,7 +65,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsKey returns true for contained key
+     * containsKey returns true for contained key
      */
     public void testContainsKey() {
         TreeMap map = map5();
@@ -74,7 +74,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  containsValue returns true for held values
+     * containsValue returns true for held values
      */
     public void testContainsValue() {
         TreeMap map = map5();
@@ -83,8 +83,8 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the correct element at the given key,
-     *  or null if not present
+     * get returns the correct element at the given key,
+     * or null if not present
      */
     public void testGet() {
         TreeMap map = map5();
@@ -94,7 +94,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  isEmpty is true of empty map and false for non-empty
+     * isEmpty is true of empty map and false for non-empty
      */
     public void testIsEmpty() {
         TreeMap empty = new TreeMap();
@@ -104,7 +104,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   firstKey returns first key
+     * firstKey returns first key
      */
     public void testFirstKey() {
         TreeMap map = map5();
@@ -112,7 +112,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   lastKey returns last key
+     * lastKey returns last key
      */
     public void testLastKey() {
         TreeMap map = map5();
@@ -121,7 +121,7 @@ public class TreeMapTest extends JSR166TestCase {
 
 
     /**
-     *  keySet.toArray returns contains all keys
+     * keySet.toArray returns contains all keys
      */
     public void testKeySetToArray() {
         TreeMap map = map5();
@@ -134,7 +134,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  descendingkeySet.toArray returns contains all keys
+     * descendingkeySet.toArray returns contains all keys
      */
     public void testDescendingKeySetToArray() {
         TreeMap map = map5();
@@ -147,7 +147,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   keySet returns a Set containing all the keys
+     * keySet returns a Set containing all the keys
      */
     public void testKeySet() {
         TreeMap map = map5();
@@ -161,7 +161,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   keySet is ordered
+     * keySet is ordered
      */
     public void testKeySetOrder() {
         TreeMap map = map5();
@@ -199,7 +199,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   descendingKeySet is ordered
+     * descendingKeySet is ordered
      */
     public void testDescendingKeySetOrder() {
         TreeMap map = map5();
@@ -218,7 +218,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  descending iterator of descendingKeySet is ordered
+     * descending iterator of descendingKeySet is ordered
      */
     public void testDescendingKeySetDescendingIteratorOrder() {
         TreeMap map = map5();
@@ -289,7 +289,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  entrySet.toArray contains all entries
+     * entrySet.toArray contains all entries
      */
     public void testEntrySetToArray() {
         TreeMap map = map5();
@@ -303,7 +303,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *  descendingEntrySet.toArray contains all entries
+     * descendingEntrySet.toArray contains all entries
      */
     public void testDescendingEntrySetToArray() {
         TreeMap map = map5();
@@ -317,7 +317,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   putAll  adds all key-value pairs from the given map
+     * putAll adds all key-value pairs from the given map
      */
     public void testPutAll() {
         TreeMap empty = new TreeMap();
@@ -332,7 +332,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   remove removes the correct key-value pair from the map
+     * remove removes the correct key-value pair from the map
      */
     public void testRemove() {
         TreeMap map = map5();
@@ -541,7 +541,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *   size returns the correct values
+     * size returns the correct values
      */
     public void testSize() {
         TreeMap map = map5();

@@ -371,8 +371,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
+     * timed poll before a delayed offer fails; after offer succeeds;
+     * on interruption throws
      */
     public void testFairTimedPollWithOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);

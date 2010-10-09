@@ -66,7 +66,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
 
 
     /**
-     *   addAll  adds each element from the given collection
+     * addAll adds each element from the given collection
      */
     public void testAddAll() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -79,8 +79,8 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   addAllAbsent adds each element from the given collection that did not
-     *  already exist in the List
+     * addAllAbsent adds each element from the given collection that did not
+     * already exist in the List
      */
     public void testAddAllAbsent() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -93,7 +93,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   addIfAbsent will not add the element if it already exists in the list
+     * addIfAbsent will not add the element if it already exists in the list
      */
     public void testAddIfAbsent() {
         CopyOnWriteArrayList full = populatedArray(SIZE);
@@ -102,7 +102,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   addIfAbsent adds the element when it does not exist in the list
+     * addIfAbsent adds the element when it does not exist in the list
      */
     public void testAddIfAbsent2() {
         CopyOnWriteArrayList full = populatedArray(SIZE);
@@ -111,7 +111,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   clear removes all elements from the list
+     * clear removes all elements from the list
      */
     public void testClear() {
         CopyOnWriteArrayList full = populatedArray(SIZE);
@@ -121,7 +121,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
 
 
     /**
-     *  Cloned list is equal
+     * Cloned list is equal
      */
     public void testClone() {
         CopyOnWriteArrayList l1 = populatedArray(SIZE);
@@ -132,7 +132,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   contains is true for added elements
+     * contains is true for added elements
      */
     public void testContains() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -176,7 +176,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
 
 
     /**
-     *   containsAll returns true for collection with subset of elements
+     * containsAll returns true for collection with subset of elements
      */
     public void testContainsAll() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -189,7 +189,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   get returns the value at the given index
+     * get returns the value at the given index
      */
     public void testGet() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -197,7 +197,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   indexOf gives the index for the given object
+     * indexOf gives the index for the given object
      */
     public void testIndexOf() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -206,8 +206,8 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   indexOf gives the index based on the given index
-     *  at which to start searching
+     * indexOf gives the index based on the given index
+     * at which to start searching
      */
     public void testIndexOf2() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -216,7 +216,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   isEmpty returns true when empty, else false
+     * isEmpty returns true when empty, else false
      */
     public void testIsEmpty() {
         CopyOnWriteArrayList empty = new CopyOnWriteArrayList();
@@ -226,7 +226,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   iterator() returns an iterator containing the elements of the list
+     * iterator() returns an iterator containing the elements of the list
      */
     public void testIterator() {
         CopyOnWriteArrayList full = populatedArray(SIZE);
@@ -262,7 +262,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   lastIndexOf returns the index for the given object
+     * lastIndexOf returns the index for the given object
      */
     public void testLastIndexOf1() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -273,7 +273,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   lastIndexOf returns the index from the given starting point
+     * lastIndexOf returns the index from the given starting point
      */
     public void testlastIndexOf2() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -284,7 +284,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *  listIterator traverses all elements
+     * listIterator traverses all elements
      */
     public void testListIterator1() {
         CopyOnWriteArrayList full = populatedArray(SIZE);
@@ -296,7 +296,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *  listIterator only returns those elements after the given index
+     * listIterator only returns those elements after the given index
      */
     public void testListIterator2() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -308,7 +308,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   remove  removes and returns the object at the given index
+     * remove removes and returns the object at the given index
      */
     public void testRemove() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -317,7 +317,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   removeAll  removes all elements from the given collection
+     * removeAll removes all elements from the given collection
      */
     public void testRemoveAll() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -329,7 +329,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   set  changes the element at the given index
+     * set changes the element at the given index
      */
     public void testSet() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -338,7 +338,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   size returns the number of elements
+     * size returns the number of elements
      */
     public void testSize() {
         CopyOnWriteArrayList empty = new CopyOnWriteArrayList();
@@ -348,7 +348,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   toArray returns an Object array containing all elements from the list
+     * toArray returns an Object array containing all elements from the list
      */
     public void testToArray() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -360,8 +360,8 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   toArray returns an Integer array containing all elements from
-     *   the list
+     * toArray returns an Integer array containing all elements from
+     * the list
      */
     public void testToArray2() {
         CopyOnWriteArrayList full = populatedArray(3);
@@ -400,8 +400,8 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     // Exception tests
 
     /**
-     *   toArray throws an ArrayStoreException when the given array
-     *  can not store the objects inside the list
+     * toArray throws an ArrayStoreException when the given array
+     * can not store the objects inside the list
      */
     public void testToArray_ArrayStoreException() {
         try {
@@ -414,7 +414,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   get throws an IndexOutOfBoundsException on a negative index
+     * get throws an IndexOutOfBoundsException on a negative index
      */
     public void testGet1_IndexOutOfBoundsException() {
         try {
@@ -425,7 +425,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   get throws an IndexOutOfBoundsException on a too high index
+     * get throws an IndexOutOfBoundsException on a too high index
      */
     public void testGet2_IndexOutOfBoundsException() {
         try {
@@ -438,7 +438,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   set throws an IndexOutOfBoundsException on a negative index
+     * set throws an IndexOutOfBoundsException on a negative index
      */
     public void testSet1_IndexOutOfBoundsException() {
         try {
@@ -449,7 +449,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   set throws an IndexOutOfBoundsException on a too high index
+     * set throws an IndexOutOfBoundsException on a too high index
      */
     public void testSet2() {
         try {
@@ -462,7 +462,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   add throws an IndexOutOfBoundsException on a negative index
+     * add throws an IndexOutOfBoundsException on a negative index
      */
     public void testAdd1_IndexOutOfBoundsException() {
         try {
@@ -473,7 +473,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   add throws an IndexOutOfBoundsException on a too high index
+     * add throws an IndexOutOfBoundsException on a too high index
      */
     public void testAdd2_IndexOutOfBoundsException() {
         try {
@@ -486,7 +486,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   remove throws an IndexOutOfBoundsException on a negative index
+     * remove throws an IndexOutOfBoundsException on a negative index
      */
     public void testRemove1_IndexOutOfBounds() {
         try {
@@ -497,7 +497,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   remove throws an IndexOutOfBoundsException on a too high index
+     * remove throws an IndexOutOfBoundsException on a too high index
      */
     public void testRemove2_IndexOutOfBounds() {
         try {
@@ -510,7 +510,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   addAll throws an IndexOutOfBoundsException on a negative index
+     * addAll throws an IndexOutOfBoundsException on a negative index
      */
     public void testAddAll1_IndexOutOfBoundsException() {
         try {
@@ -521,7 +521,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   addAll throws an IndexOutOfBoundsException on a too high index
+     * addAll throws an IndexOutOfBoundsException on a too high index
      */
     public void testAddAll2_IndexOutOfBoundsException() {
         try {
@@ -534,7 +534,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   listIterator throws an IndexOutOfBoundsException on a negative index
+     * listIterator throws an IndexOutOfBoundsException on a negative index
      */
     public void testListIterator1_IndexOutOfBoundsException() {
         try {
@@ -545,7 +545,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   listIterator throws an IndexOutOfBoundsException on a too high index
+     * listIterator throws an IndexOutOfBoundsException on a too high index
      */
     public void testListIterator2_IndexOutOfBoundsException() {
         try {
@@ -558,7 +558,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   subList throws an IndexOutOfBoundsException on a negative index
+     * subList throws an IndexOutOfBoundsException on a negative index
      */
     public void testSubList1_IndexOutOfBoundsException() {
         try {
@@ -569,7 +569,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   subList throws an IndexOutOfBoundsException on a too high index
+     * subList throws an IndexOutOfBoundsException on a too high index
      */
     public void testSubList2_IndexOutOfBoundsException() {
         try {
@@ -581,8 +581,8 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     *   subList throws IndexOutOfBoundsException when the second index
-     *  is lower then the first
+     * subList throws IndexOutOfBoundsException when the second index
+     * is lower then the first
      */
     public void testSubList3_IndexOutOfBoundsException() {
         try {

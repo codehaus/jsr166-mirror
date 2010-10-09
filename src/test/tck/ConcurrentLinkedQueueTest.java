@@ -43,7 +43,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  Initializing from null Collection throws NPE
+     * Initializing from null Collection throws NPE
      */
     public void testConstructor3() {
         try {
@@ -265,7 +265,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  remove removes next element, or throws NSEE if empty
+     * remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
@@ -380,7 +380,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  toArray(a) contains all elements
+     * toArray(a) contains all elements
      */
     public void testToArray2() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
@@ -414,7 +414,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  iterator iterates through all elements
+     * iterator iterates through all elements
      */
     public void testIterator() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);

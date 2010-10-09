@@ -54,7 +54,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  delayed schedule of runnable successfully executes after delay
+     * delayed schedule of runnable successfully executes after delay
      */
     public void testSchedule3() throws InterruptedException {
         TrackedShortRunnable runnable = new TrackedShortRunnable();
@@ -137,7 +137,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
 
     /**
-     *  execute(null) throws NPE
+     * execute(null) throws NPE
      */
     public void testExecuteNull() throws InterruptedException {
         ScheduledThreadPoolExecutor se = null;
@@ -213,7 +213,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  scheduleAtFixedRate throws RejectedExecutionException if shutdown
+     * scheduleAtFixedRate throws RejectedExecutionException if shutdown
      */
     public void testScheduleAtFixedRate1_RejectedExecutionException() throws InterruptedException {
         ScheduledThreadPoolExecutor se = new ScheduledThreadPoolExecutor(1);
@@ -245,8 +245,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  getActiveCount increases but doesn't overestimate, when a
-     *  thread becomes active
+     * getActiveCount increases but doesn't overestimate, when a
+     * thread becomes active
      */
     public void testGetActiveCount() throws InterruptedException {
         ScheduledThreadPoolExecutor p2 = new ScheduledThreadPoolExecutor(2);
@@ -258,8 +258,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *    getCompletedTaskCount increases, but doesn't overestimate,
-     *   when tasks complete
+     * getCompletedTaskCount increases, but doesn't overestimate,
+     * when tasks complete
      */
     public void testGetCompletedTaskCount() throws InterruptedException {
         ScheduledThreadPoolExecutor p2 = new ScheduledThreadPoolExecutor(2);
@@ -271,7 +271,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  getCorePoolSize returns size given in constructor if not otherwise set
+     * getCorePoolSize returns size given in constructor if not otherwise set
      */
     public void testGetCorePoolSize() throws InterruptedException {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
@@ -280,8 +280,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *    getLargestPoolSize increases, but doesn't overestimate, when
-     *   multiple threads active
+     * getLargestPoolSize increases, but doesn't overestimate, when
+     * multiple threads active
      */
     public void testGetLargestPoolSize() throws InterruptedException {
         ScheduledThreadPoolExecutor p2 = new ScheduledThreadPoolExecutor(2);
@@ -294,8 +294,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   getPoolSize increases, but doesn't overestimate, when threads
-     *   become active
+     * getPoolSize increases, but doesn't overestimate, when threads
+     * become active
      */
     public void testGetPoolSize() throws InterruptedException {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
@@ -306,8 +306,8 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *    getTaskCount increases, but doesn't overestimate, when tasks
-     *    submitted
+     * getTaskCount increases, but doesn't overestimate, when tasks
+     * submitted
      */
     public void testGetTaskCount() throws InterruptedException {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
@@ -355,7 +355,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *   is isShutDown is false before shutdown, true after
+     * isShutDown is false before shutdown, true after
      */
     public void testIsShutdown() {
 
@@ -371,7 +371,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
 
 
     /**
-     *   isTerminated is false before termination, true after
+     * isTerminated is false before termination, true after
      */
     public void testIsTerminated() throws InterruptedException {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
@@ -385,7 +385,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  isTerminating is not true when running or when terminated
+     * isTerminating is not true when running or when terminated
      */
     public void testIsTerminating() throws InterruptedException {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
@@ -448,7 +448,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  purge removes cancelled tasks from the queue
+     * purge removes cancelled tasks from the queue
      */
     public void testPurge() throws InterruptedException {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
@@ -477,7 +477,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     *  shutDownNow returns a list containing tasks that were not run
+     * shutDownNow returns a list containing tasks that were not run
      */
     public void testShutDownNow() throws InterruptedException {
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);

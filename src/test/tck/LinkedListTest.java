@@ -174,7 +174,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  poll succeeds unless empty
+     * poll succeeds unless empty
      */
     public void testPoll() {
         LinkedList q = populatedQueue(SIZE);
@@ -185,7 +185,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  peek returns next element, or null if empty
+     * peek returns next element, or null if empty
      */
     public void testPeek() {
         LinkedList q = populatedQueue(SIZE);
@@ -214,7 +214,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  remove removes next element, or throws NSEE if empty
+     * remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         LinkedList q = populatedQueue(SIZE);
@@ -318,7 +318,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  toArray contains all elements
+     * toArray contains all elements
      */
     public void testToArray() {
         LinkedList q = populatedQueue(SIZE);
@@ -329,7 +329,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  toArray(a) contains all elements
+     * toArray(a) contains all elements
      */
     public void testToArray2() {
         LinkedList q = populatedQueue(SIZE);
@@ -365,7 +365,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  iterator iterates through all elements
+     * iterator iterates through all elements
      */
     public void testIterator() {
         LinkedList q = populatedQueue(SIZE);
@@ -379,7 +379,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  iterator ordering is FIFO
+     * iterator ordering is FIFO
      */
     public void testIteratorOrdering() {
         final LinkedList q = new LinkedList();
@@ -412,7 +412,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  Descending iterator iterates through all elements
+     * Descending iterator iterates through all elements
      */
     public void testDescendingIterator() {
         LinkedList q = populatedQueue(SIZE);
@@ -431,7 +431,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  Descending iterator ordering is reverse FIFO
+     * Descending iterator ordering is reverse FIFO
      */
     public void testDescendingIteratorOrdering() {
         final LinkedList q = new LinkedList();
@@ -494,7 +494,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  pop removes next element, or throws NSEE if empty
+     * pop removes next element, or throws NSEE if empty
      */
     public void testPop() {
         LinkedList q = populatedQueue(SIZE);
@@ -526,7 +526,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  pollLast succeeds unless empty
+     * pollLast succeeds unless empty
      */
     public void testPollLast() {
         LinkedList q = populatedQueue(SIZE);
@@ -537,7 +537,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  peekFirst returns next element, or null if empty
+     * peekFirst returns next element, or null if empty
      */
     public void testPeekFirst() {
         LinkedList q = populatedQueue(SIZE);
@@ -552,7 +552,7 @@ public class LinkedListTest extends JSR166TestCase {
 
 
     /**
-     *  peekLast returns next element, or null if empty
+     * peekLast returns next element, or null if empty
      */
     public void testPeekLast() {
         LinkedList q = populatedQueue(SIZE);
@@ -578,7 +578,7 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     *  getLast returns next element, or throws NSEE if empty
+     * getLast returns next element, or throws NSEE if empty
      */
     public void testLastElement() {
         LinkedList q = populatedQueue(SIZE);

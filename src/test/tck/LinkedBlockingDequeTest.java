@@ -108,7 +108,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  pollFirst succeeds unless empty
+     * pollFirst succeeds unless empty
      */
     public void testPollFirst() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -119,7 +119,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  pollLast succeeds unless empty
+     * pollLast succeeds unless empty
      */
     public void testPollLast() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -130,7 +130,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  peekFirst returns next element, or null if empty
+     * peekFirst returns next element, or null if empty
      */
     public void testPeekFirst() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -144,7 +144,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  peek returns next element, or null if empty
+     * peek returns next element, or null if empty
      */
     public void testPeek() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -158,7 +158,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  peekLast returns next element, or null if empty
+     * peekLast returns next element, or null if empty
      */
     public void testPeekLast() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -188,7 +188,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  getLast() returns last element, or throws NSEE if empty
+     * getLast() returns last element, or throws NSEE if empty
      */
     public void testLastElement() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -234,7 +234,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  remove removes next element, or throws NSEE if empty
+     * remove removes next element, or throws NSEE if empty
      */
     public void testRemove() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -457,7 +457,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
 
 
     /**
-     *  pop removes next element, or throws NSEE if empty
+     * pop removes next element, or throws NSEE if empty
      */
     public void testPop() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -967,8 +967,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  timed pollFirst before a delayed offerFirst fails; after offerFirst succeeds;
-     *  on interruption throws
+     * timed pollFirst before a delayed offerFirst fails; after offerFirst succeeds;
+     * on interruption throws
      */
     public void testTimedPollFirstWithOfferFirst() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
@@ -1417,7 +1417,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
 
 
     /**
-     *  Descending iterator iterates through all elements
+     * Descending iterator iterates through all elements
      */
     public void testDescendingIterator() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
@@ -1436,7 +1436,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     *  Descending iterator ordering is reverse FIFO
+     * Descending iterator ordering is reverse FIFO
      */
     public void testDescendingIteratorOrdering() {
         final LinkedBlockingDeque q = new LinkedBlockingDeque();

@@ -107,7 +107,7 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     *  Cancelling before running succeeds
+     * Cancelling before running succeeds
      */
     public void testCancelBeforeRun() {
         FutureTask task = new FutureTask(new NoOpCallable());
@@ -229,8 +229,8 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     *  Cancelling a task causes timed get in another thread to throw
-     *  CancellationException
+     * Cancelling a task causes timed get in another thread to throw
+     * CancellationException
      */
     public void testTimedGet_Cancellation() throws InterruptedException {
         final FutureTask ft =

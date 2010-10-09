@@ -176,7 +176,7 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     *  Arrive() on a registered phaser increments phase.
+     * Arrive() on a registered phaser increments phase.
      */
     public void testArrive1() {
         Phaser phaser = new Phaser(1);

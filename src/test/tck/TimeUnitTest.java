@@ -333,8 +333,8 @@ public class TimeUnitTest extends JSR166TestCase {
 
 
     /**
-     *  Timed wait without holding lock throws
-     *  IllegalMonitorStateException
+     * Timed wait without holding lock throws
+     * IllegalMonitorStateException
      */
     public void testTimedWait_IllegalMonitorException() throws Exception {
         Thread t = new Thread(new CheckedRunnable() {
@@ -395,7 +395,7 @@ public class TimeUnitTest extends JSR166TestCase {
     }
 
     /**
-     *  timedSleep throws InterruptedException when interrupted
+     * timedSleep throws InterruptedException when interrupted
      */
     public void testTimedSleep() throws InterruptedException {
         Thread t = new Thread(new CheckedInterruptedRunnable() {

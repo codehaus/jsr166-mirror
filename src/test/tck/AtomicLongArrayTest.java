@@ -161,7 +161,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     }
 
     /**
-     *  getAndSet returns previous value and sets to given value at given index
+     * getAndSet returns previous value and sets to given value at given index
      */
     public void testGetAndSet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
@@ -174,7 +174,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     }
 
     /**
-     *  getAndAdd returns previous value and adds given value
+     * getAndAdd returns previous value and adds given value
      */
     public void testGetAndAdd() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);
@@ -218,7 +218,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     }
 
     /**
-     *  addAndGet adds given value to current, and returns current value
+     * addAndGet adds given value to current, and returns current value
      */
     public void testAddAndGet() {
         AtomicLongArray ai = new AtomicLongArray(SIZE);

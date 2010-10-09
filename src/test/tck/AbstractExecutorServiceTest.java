@@ -248,8 +248,8 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     }
 
     /**
-     *  get of submitted callable throws InterruptedException if callable
-     *  interrupted
+     * get of submitted callable throws InterruptedException if callable
+     * interrupted
      */
     public void testSubmitIE() throws InterruptedException {
         final ThreadPoolExecutor p =
@@ -270,8 +270,8 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     }
 
     /**
-     *  get of submit(callable) throws ExecutionException if callable
-     *  throws exception
+     * get of submit(callable) throws ExecutionException if callable
+     * throws exception
      */
     public void testSubmitEE() throws InterruptedException {
         ThreadPoolExecutor p =

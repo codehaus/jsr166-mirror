@@ -20,7 +20,7 @@ public class SystemTest extends JSR166TestCase {
     /**
      * Worst case rounding for millisecs; set for 60 cycle millis clock.
      * This value might need to be changed on JVMs with coarser
-     *  System.currentTimeMillis clocks.
+     * System.currentTimeMillis clocks.
      */
     static final long MILLIS_ROUND = 17;
 

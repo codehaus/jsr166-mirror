@@ -595,7 +595,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     *  toArray contains all elements
+     * toArray contains all elements
      */
     public void testToArray() throws InterruptedException {
         PriorityBlockingQueue q = populatedQueue(SIZE);

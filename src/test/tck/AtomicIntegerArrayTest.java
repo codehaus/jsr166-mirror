@@ -163,7 +163,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
     /**
-     *  getAndSet returns previous value and sets to given value at given index
+     * getAndSet returns previous value and sets to given value at given index
      */
     public void testGetAndSet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
@@ -176,7 +176,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
     /**
-     *  getAndAdd returns previous value and adds given value
+     * getAndAdd returns previous value and adds given value
      */
     public void testGetAndAdd() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
@@ -220,7 +220,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
     /**
-     *  addAndGet adds given value to current, and returns current value
+     * addAndGet adds given value to current, and returns current value
      */
     public void testAddAndGet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
@@ -248,7 +248,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     }
 
     /**
-     *  incrementAndGet increments and returns current value
+     * incrementAndGet increments and returns current value
      */
     public void testIncrementAndGet() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);

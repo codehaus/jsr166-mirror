@@ -59,7 +59,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last value set or assigned
+     * get returns the last value set or assigned
      */
     public void testGetSet() {
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a;
@@ -77,7 +77,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last value lazySet by same thread
+     * get returns the last value lazySet by same thread
      */
     public void testGetLazySet() {
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a;
@@ -162,7 +162,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  getAndSet returns previous value and sets to given value
+     * getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet() {
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a;
@@ -248,7 +248,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  decrementAndGet decrements and returns current value
+     * decrementAndGet decrements and returns current value
      */
     public void testDecrementAndGet() {
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a;

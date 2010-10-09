@@ -18,7 +18,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *  constructor initializes to given reference and mark
+     * constructor initializes to given reference and mark
      */
     public void testConstructor() {
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
@@ -30,7 +30,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last values of reference and mark set
+     * get returns the last values of reference and mark set
      */
     public void testGetSet() {
         boolean[] mark = new boolean[1];

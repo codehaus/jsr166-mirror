@@ -58,7 +58,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last value set or assigned
+     * get returns the last value set or assigned
      */
     public void testGetSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;
@@ -76,7 +76,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  get returns the last value lazySet by same thread
+     * get returns the last value lazySet by same thread
      */
     public void testGetLazySet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;
@@ -160,7 +160,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     *  getAndSet returns previous value and sets to given value
+     * getAndSet returns previous value and sets to given value
      */
     public void testGetAndSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;

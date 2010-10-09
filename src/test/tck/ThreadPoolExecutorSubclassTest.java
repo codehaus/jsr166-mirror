@@ -794,7 +794,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws if workQueue is set to null
+     * Constructor throws if workQueue is null
      */
     public void testConstructorNullPointerException6() {
         try {
@@ -804,7 +804,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws if handler is set to null
+     * Constructor throws if handler is null
      */
     public void testConstructorNullPointerException7() {
         try {
@@ -815,7 +815,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws if ThreadFactory is set top null
+     * Constructor throws if ThreadFactory is null
      */
     public void testConstructorNullPointerException8() {
         try {

@@ -25,7 +25,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * execute successfully executes a runnable
      */
     public void testExecute() throws InterruptedException {
-        TrackedShortRunnable runnable =new TrackedShortRunnable();
+        TrackedShortRunnable runnable = new TrackedShortRunnable();
         ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
         p1.execute(runnable);
         assertFalse(runnable.done);

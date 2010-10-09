@@ -78,7 +78,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      * execute successfully executes a runnable
      */
     public void testExecute() throws InterruptedException {
-        TrackedShortRunnable runnable =new TrackedShortRunnable();
+        TrackedShortRunnable runnable = new TrackedShortRunnable();
         CustomExecutor p1 = new CustomExecutor(1);
         p1.execute(runnable);
         assertFalse(runnable.done);

@@ -531,9 +531,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      */
     public void testExecuteNullRunnable() {
         ExecutorService e = new ForkJoinPool(1);
-        TrackedShortRunnable task = null;
         try {
-            Future<?> future = e.submit(task);
+            Future<?> future = e.submit((Runnable) null);
             shouldThrow();
         } catch (NullPointerException success) {
         } finally {
@@ -547,9 +546,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      */
     public void testSubmitNullCallable() {
         ExecutorService e = new ForkJoinPool(1);
-        StringTask t = null;
         try {
-            Future<String> future = e.submit(t);
+            Future<String> future = e.submit((Callable) null);
             shouldThrow();
         } catch (NullPointerException success) {
         } finally {

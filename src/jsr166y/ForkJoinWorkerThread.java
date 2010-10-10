@@ -937,10 +937,14 @@ public class ForkJoinWorkerThread extends Thread {
         // currentJoin only written by this thread; only need ordered store
         ForkJoinTask<?> prevJoin = currentJoin;
         UNSAFE.putOrderedObject(this, currentJoinOffset, joinMe);
-        if (sp != base)
-            localHelpJoinTask(joinMe);
-        if (joinMe.status >= 0)
-            pool.awaitJoin(joinMe, this);
+        if (isTerminating())                // cancel if shutting down
+            joinMe.cancelIgnoringExceptions();
+        else {
+            if (sp != base)
+                localHelpJoinTask(joinMe);
+            if (joinMe.status >= 0)
+                pool.awaitJoin(joinMe, this);
+        }
         UNSAFE.putOrderedObject(this, currentJoinOffset, prevJoin);
     }
 
@@ -978,11 +982,11 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Unless terminating, tries to locate and help perform tasks for
-     * a stealer of the given task, or in turn one of its stealers.
-     * Traces currentSteal->currentJoin links looking for a thread
-     * working on a descendant of the given task and with a non-empty
-     * queue to steal back and execute tasks from.
+     * Tries to locate and help perform tasks for a stealer of the
+     * given task, or in turn one of its stealers.  Traces
+     * currentSteal->currentJoin links looking for a thread working on
+     * a descendant of the given task and with a non-empty queue to
+     * steal back and execute tasks from.
      *
      * The implementation is very branchy to cope with potential
      * inconsistencies or loops encountering chains that are stale,
@@ -998,10 +1002,6 @@ public class ForkJoinWorkerThread extends Thread {
         int n;
         if (joinMe.status < 0)                // already done
             return;
-        if ((runState & TERMINATING) != 0) {  // cancel if shutting down
-            joinMe.cancelIgnoringExceptions();
-            return;
-        }
         if ((ws = pool.workers) == null || (n = ws.length) <= 1)
             return;                           // need at least 2 workers
 

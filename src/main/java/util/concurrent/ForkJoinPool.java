@@ -1019,6 +1019,10 @@ public class ForkJoinPool extends AbstractExecutorService {
         int retries = 2 + (parallelism >> 2); // #helpJoins before blocking
         while (joinMe.status >= 0) {
             int wc;
+            if (runState >= TERMINATING) {
+                joinMe.cancelIgnoringExceptions();
+                break;
+            }
             worker.helpJoinTask(joinMe);
             if (joinMe.status < 0)
                 break;
@@ -1296,17 +1300,13 @@ public class ForkJoinPool extends AbstractExecutorService {
     // Execution methods
 
     /**
-     * Common code for execute, invoke and submit
+     * Submits task and creates, starts, or resumes some workers if necessary
      */
     private <T> void doSubmit(ForkJoinTask<T> task) {
-        if (task == null)
-            throw new NullPointerException();
-        if (runState >= SHUTDOWN)
-            throw new RejectedExecutionException();
         submissionQueue.offer(task);
         int c; // try to increment event count -- CAS failure OK
         UNSAFE.compareAndSwapInt(this, eventCountOffset, c = eventCount, c+1);
-        helpMaintainParallelism(); // create, start, or resume some workers
+        helpMaintainParallelism();
     }
 
     /**
@@ -1319,8 +1319,33 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> T invoke(ForkJoinTask<T> task) {
-        doSubmit(task);
-        return task.join();
+        if (task == null)
+            throw new NullPointerException();
+        if (runState >= SHUTDOWN)
+            throw new RejectedExecutionException();
+        Thread t = Thread.currentThread();
+        if ((t instanceof ForkJoinWorkerThread) &&
+            ((ForkJoinWorkerThread)t).pool == this)
+            return task.invoke();  // bypass submit if in same pool
+        else {
+            doSubmit(task);
+            return task.join();
+        }
+    }
+
+    /**
+     * Unless terminating, forks task if within an ongoing FJ
+     * computation in the current pool, else submits as external task.
+     */
+    private <T> void forkOrSubmit(ForkJoinTask<T> task) {
+        if (runState >= SHUTDOWN)
+            throw new RejectedExecutionException();
+        Thread t = Thread.currentThread();
+        if ((t instanceof ForkJoinWorkerThread) &&
+            ((ForkJoinWorkerThread)t).pool == this)
+            task.fork();
+        else
+            doSubmit(task);
     }
 
     /**
@@ -1332,7 +1357,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public void execute(ForkJoinTask<?> task) {
-        doSubmit(task);
+        if (task == null)
+            throw new NullPointerException();
+        forkOrSubmit(task);
     }
 
     // AbstractExecutorService methods
@@ -1343,12 +1370,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public void execute(Runnable task) {
+        if (task == null)
+            throw new NullPointerException();
         ForkJoinTask<?> job;
         if (task instanceof ForkJoinTask<?>) // avoid re-wrap
             job = (ForkJoinTask<?>) task;
         else
             job = ForkJoinTask.adapt(task, null);
-        doSubmit(job);
+        forkOrSubmit(job);
     }
 
     /**
@@ -1361,7 +1390,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> ForkJoinTask<T> submit(ForkJoinTask<T> task) {
-        doSubmit(task);
+        if (task == null)
+            throw new NullPointerException();
+        forkOrSubmit(task);
         return task;
     }
 
@@ -1371,8 +1402,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
+        if (task == null)
+            throw new NullPointerException();
         ForkJoinTask<T> job = ForkJoinTask.adapt(task);
-        doSubmit(job);
+        forkOrSubmit(job);
         return job;
     }
 
@@ -1382,8 +1415,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> ForkJoinTask<T> submit(Runnable task, T result) {
+        if (task == null)
+            throw new NullPointerException();
         ForkJoinTask<T> job = ForkJoinTask.adapt(task, result);
-        doSubmit(job);
+        forkOrSubmit(job);
         return job;
     }
 
@@ -1393,12 +1428,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public ForkJoinTask<?> submit(Runnable task) {
+        if (task == null)
+            throw new NullPointerException();
         ForkJoinTask<?> job;
         if (task instanceof ForkJoinTask<?>) // avoid re-wrap
             job = (ForkJoinTask<?>) task;
         else
             job = ForkJoinTask.adapt(task, null);
-        doSubmit(job);
+        forkOrSubmit(job);
         return job;
     }
 

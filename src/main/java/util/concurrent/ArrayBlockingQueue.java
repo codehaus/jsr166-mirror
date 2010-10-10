@@ -84,6 +84,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         return (++i == items.length) ? 0 : i;
     }
 
+    /**
+     * Circularly decrement i.
+     */
+    final int dec(int i) {
+        return ((i == 0) ? items.length : i) - 1;
+    }
+
     @SuppressWarnings("unchecked")
     static <E> E cast(Object item) {
         return (E) item;
@@ -754,8 +761,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 lastRet = -1;
                 E x = lastItem;
                 lastItem = null;
-                if (x == items[i])
-                    removeAt(i); // only remove if item still at index
+                // only remove if item still at index
+                if (x == items[i]) {
+                    boolean removingHead = (i == takeIndex);
+                    removeAt(i);
+                    if (!removingHead)
+                        nextIndex = dec(nextIndex);
+                }
             } finally {
                 lock.unlock();
             }

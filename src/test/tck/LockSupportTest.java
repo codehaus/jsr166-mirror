@@ -156,8 +156,10 @@ public class LockSupportTest extends JSR166TestCase {
             public void realRun() {
                 assertFalse(Thread.currentThread().isInterrupted());
                 threadStarted.countDown();
-                LockSupport.park();
-                assertTrue(Thread.currentThread().isInterrupted());
+                do {
+                    LockSupport.park();
+                    // park may return spuriously
+                } while (! Thread.currentThread().isInterrupted());
             }});
 
         threadStarted.await();
@@ -176,8 +178,12 @@ public class LockSupportTest extends JSR166TestCase {
                 long d = new Date().getTime() + LONG_DELAY_MS;
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
                 long t0 = System.nanoTime();
+                assertFalse(Thread.currentThread().isInterrupted());
                 threadStarted.countDown();
-                LockSupport.parkUntil(d);
+                do {
+                    LockSupport.parkUntil(d);
+                    // parkUntil may return spuriously
+                } while (! Thread.currentThread().isInterrupted());
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
@@ -196,8 +202,12 @@ public class LockSupportTest extends JSR166TestCase {
             public void realRun() {
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
                 long t0 = System.nanoTime();
+                assertFalse(Thread.currentThread().isInterrupted());
                 threadStarted.countDown();
-                LockSupport.parkNanos(nanos);
+                do {
+                    LockSupport.parkNanos(nanos);
+                    // parkNanos may return spuriously
+                } while (! Thread.currentThread().isInterrupted());
                 assertTrue(System.nanoTime() - t0 < nanos);
             }});
 
@@ -243,8 +253,10 @@ public class LockSupportTest extends JSR166TestCase {
                 long d = new Date().getTime() + LONG_DELAY_MS;
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
                 long t0 = System.nanoTime();
+                assertTrue(Thread.currentThread().isInterrupted());
                 LockSupport.parkUntil(d);
                 assertTrue(System.nanoTime() - t0 < nanos);
+                assertTrue(Thread.currentThread().isInterrupted());
             }});
 
         threadStarted.await();
@@ -266,8 +278,10 @@ public class LockSupportTest extends JSR166TestCase {
                     Thread.yield();
                 long nanos = LONG_DELAY_MS * 1000L * 1000L;
                 long t0 = System.nanoTime();
+                assertTrue(Thread.currentThread().isInterrupted());
                 LockSupport.parkNanos(nanos);
                 assertTrue(System.nanoTime() - t0 < nanos);
+                assertTrue(Thread.currentThread().isInterrupted());
             }});
 
         threadStarted.await();
@@ -282,10 +296,14 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkNanosTimesOut() throws InterruptedException {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
-                final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                LockSupport.parkNanos(timeoutNanos);
-                assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                for (;;) {
+                    long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+                    long t0 = System.nanoTime();
+                    LockSupport.parkNanos(timeoutNanos);
+                    // parkNanos may return spuriously
+                    if (System.nanoTime() - t0 >= timeoutNanos)
+                        return;
+                }
             }});
 
         awaitTermination(t, MEDIUM_DELAY_MS);
@@ -298,12 +316,16 @@ public class LockSupportTest extends JSR166TestCase {
     public void testParkUntilTimesOut() throws InterruptedException {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
-                long d = new Date().getTime() + SHORT_DELAY_MS;
-                // beware of rounding
-                long timeoutNanos = (SHORT_DELAY_MS - 1) * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                LockSupport.parkUntil(d);
-                assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                for (;;) {
+                    long d = new Date().getTime() + SHORT_DELAY_MS;
+                    // beware of rounding
+                    long timeoutNanos = (SHORT_DELAY_MS - 1) * 1000L * 1000L;
+                    long t0 = System.nanoTime();
+                    LockSupport.parkUntil(d);
+                    // parkUntil may return spuriously
+                    if (System.nanoTime() - t0 >= timeoutNanos)
+                        return;
+                }
             }});
 
         awaitTermination(t, MEDIUM_DELAY_MS);

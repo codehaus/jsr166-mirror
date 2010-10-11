@@ -131,7 +131,7 @@ public class JSR166TestCase extends TestCase {
                 System.out.printf("%n%s: %d%n", toString(), elapsedMillis);
         }
     }
-    
+
     /**
      * Runs all JSR166 unit tests using junit.textui.TestRunner
      */
@@ -805,6 +805,15 @@ public class JSR166TestCase extends TestCase {
         protected void realRun() throws InterruptedException {
             Thread.sleep(MEDIUM_DELAY_MS);
         }
+    }
+
+    public Runnable possiblyInterruptedRunnable(final long timeoutMillis) {
+        return new CheckedRunnable() {
+            protected void realRun() {
+                try {
+                    Thread.sleep(timeoutMillis);
+                } catch (InterruptedException ok) {}
+            }};
     }
 
     public class MediumPossiblyInterruptedRunnable extends CheckedRunnable {

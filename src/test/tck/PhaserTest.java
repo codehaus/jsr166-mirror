@@ -8,7 +8,9 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -445,17 +447,27 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testArriveAndAwaitAdvance2() throws InterruptedException {
         final Phaser phaser = new Phaser(2);
-        Thread th = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final AtomicBoolean advanced = new AtomicBoolean(false);
+        final AtomicBoolean checkedInterruptStatus = new AtomicBoolean(false);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                threadStarted.countDown();
                 phaser.arriveAndAwaitAdvance();
+                advanced.set(true);
+                assertTrue(Thread.currentThread().isInterrupted());
+                while (!checkedInterruptStatus.get())
+                    Thread.yield();
             }});
 
-        Thread.sleep(SMALL_DELAY_MS);
-        th.interrupt();
-        Thread.sleep(SMALL_DELAY_MS);
+        assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+        t.interrupt();
         phaser.arrive();
-        assertFalse(th.isInterrupted());
-        th.join();
+        while (!advanced.get())
+            Thread.yield();
+        assertTrue(t.isInterrupted());
+        checkedInterruptStatus.set(true);
+        awaitTermination(t, SMALL_DELAY_MS);
     }
 
     /**

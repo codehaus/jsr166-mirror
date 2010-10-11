@@ -181,42 +181,68 @@ public class ExecutorsTest extends JSR166TestCase {
      * a newSingleThreadScheduledExecutor successfully runs delayed task
      */
     public void testNewSingleThreadScheduledExecutor() throws Exception {
-        TrackedCallable callable = new TrackedCallable();
-        ScheduledExecutorService p1 = Executors.newSingleThreadScheduledExecutor();
-        Future f = p1.schedule(callable, SHORT_DELAY_MS, MILLISECONDS);
-        assertFalse(callable.done);
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(callable.done);
-        assertEquals(Boolean.TRUE, f.get());
-        joinPool(p1);
+        ScheduledExecutorService p = Executors.newSingleThreadScheduledExecutor();
+        try {
+            final CountDownLatch done = new CountDownLatch(1);
+            final Runnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.countDown();
+                }};
+            Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
+                                  SHORT_DELAY_MS, MILLISECONDS);
+            assertFalse(f.isDone());
+            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(f.isDone());
+            assertEquals(Boolean.TRUE, f.get());
+        } finally {
+            joinPool(p);
+        }
     }
 
     /**
      * a newScheduledThreadPool successfully runs delayed task
      */
     public void testnewScheduledThreadPool() throws Exception {
-        TrackedCallable callable = new TrackedCallable();
-        ScheduledExecutorService p1 = Executors.newScheduledThreadPool(2);
-        Future f = p1.schedule(callable, SHORT_DELAY_MS, MILLISECONDS);
-        assertFalse(callable.done);
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(callable.done);
-        assertEquals(Boolean.TRUE, f.get());
-        joinPool(p1);
+        ScheduledExecutorService p = Executors.newScheduledThreadPool(2);
+        try {
+            final CountDownLatch done = new CountDownLatch(1);
+            final Runnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.countDown();
+                }};
+            Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
+                                  SHORT_DELAY_MS, MILLISECONDS);
+            assertFalse(f.isDone());
+            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(f.isDone());
+            assertEquals(Boolean.TRUE, f.get());
+        } finally {
+            joinPool(p);
+        }
     }
 
     /**
      * an unconfigurable newScheduledThreadPool successfully runs delayed task
      */
     public void testunconfigurableScheduledExecutorService() throws Exception {
-        TrackedCallable callable = new TrackedCallable();
-        ScheduledExecutorService p1 = Executors.unconfigurableScheduledExecutorService(Executors.newScheduledThreadPool(2));
-        Future f = p1.schedule(callable, SHORT_DELAY_MS, MILLISECONDS);
-        assertFalse(callable.done);
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(callable.done);
-        assertEquals(Boolean.TRUE, f.get());
-        joinPool(p1);
+        ScheduledExecutorService p =
+            Executors.unconfigurableScheduledExecutorService
+            (Executors.newScheduledThreadPool(2));
+        try {
+            final CountDownLatch done = new CountDownLatch(1);
+            final Runnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.countDown();
+                }};
+            Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
+                                  SHORT_DELAY_MS, MILLISECONDS);
+            assertFalse(f.isDone());
+            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(f.isDone());
+            assertEquals(Boolean.TRUE, f.get());
+        } finally {
+            joinPool(p);
+        }
     }
 
     /**

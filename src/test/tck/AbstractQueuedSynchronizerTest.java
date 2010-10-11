@@ -951,7 +951,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     /**
      * acquireSharedTimed returns after release
      */
-    public void testAsquireSharedTimed() throws InterruptedException {
+    public void testAcquireSharedTimed() throws InterruptedException {
         final BooleanLatch l = new BooleanLatch();
 
         Thread t = new Thread(new CheckedRunnable() {

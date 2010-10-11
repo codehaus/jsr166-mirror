@@ -97,6 +97,39 @@ public class JSR166TestCase extends TestCase {
         Boolean.getBoolean("jsr166.useSecurityManager");
 
     /**
+     * If true, report on stdout all "slow" tests, that is, ones that
+     * take more than profileThreshold milliseconds to execute.
+     */
+    private static final boolean profileTests =
+        Boolean.getBoolean("jsr166.profileTests");
+
+    /**
+     * The number of milliseconds that tests are permitted for
+     * execution without being reported, when profileTests is set.
+     */
+    private static final long profileThreshold =
+        Long.getLong("jsr166.profileThreshold", 100);
+
+    protected void runTest() throws Throwable {
+        if (profileTests)
+            runTestProfiled();
+        else
+            super.runTest();
+    }
+
+    protected void runTestProfiled() throws Throwable {
+        long t0 = System.nanoTime();
+        try {
+            super.runTest();
+        } finally {
+            long elapsedMillis =
+                (System.nanoTime() - t0) / (1000L * 1000L);
+            if (elapsedMillis >= profileThreshold)
+                System.out.printf("%n%s: %d%n", toString(), elapsedMillis);
+        }
+    }
+    
+    /**
      * Runs all JSR166 unit tests using junit.textui.TestRunner
      */
     public static void main(String[] args) {
@@ -796,7 +829,34 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    public interface TrackedRunnable extends Runnable {
+        boolean isDone();
+    }
+
+    public static TrackedRunnable trackedRunnable(final long timeoutMillis) {
+        return new TrackedRunnable() {
+                private volatile boolean done = false;
+                public boolean isDone() { return done; }
+                public void run() {
+                    try {
+                        Thread.sleep(timeoutMillis);
+                        done = true;
+                    } catch (InterruptedException ok) {}
+                }
+            };
+    }
+
     public static class TrackedShortRunnable implements Runnable {
+        public volatile boolean done = false;
+        public void run() {
+            try {
+                Thread.sleep(SHORT_DELAY_MS);
+                done = true;
+            } catch (InterruptedException ok) {}
+        }
+    }
+
+    public static class TrackedSmallRunnable implements Runnable {
         public volatile boolean done = false;
         public void run() {
             try {

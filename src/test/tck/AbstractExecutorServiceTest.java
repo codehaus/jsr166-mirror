@@ -589,10 +589,10 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
         try {
             List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
-            l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
+            l.add(Executors.callable(possiblyInterruptedRunnable(2 * SHORT_DELAY_MS), TEST_STRING));
             l.add(new StringTask());
             List<Future<String>> futures =
-                e.invokeAll(l, SMALL_DELAY_MS, MILLISECONDS);
+                e.invokeAll(l, SHORT_DELAY_MS, MILLISECONDS);
             assertEquals(3, futures.size());
             Iterator<Future<String>> it = futures.iterator();
             Future<String> f1 = it.next();
@@ -601,6 +601,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             assertTrue(f1.isDone());
             assertFalse(f1.isCancelled());
             assertTrue(f2.isDone());
+            assertFalse(f2.isCancelled());
             assertTrue(f3.isDone());
             assertTrue(f3.isCancelled());
         } finally {

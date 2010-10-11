@@ -316,9 +316,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         try {
             ReentrantLock lock = new ReentrantLock();
             ManagedLocker locker = new ManagedLocker(lock);
-            ForkJoinTask<Integer> f = new LockingFibTask(30, locker, lock);
+            ForkJoinTask<Integer> f = new LockingFibTask(20, locker, lock);
             p.execute(f);
-            assertEquals(832040, (int) f.get());
+            assertEquals(6765, (int) f.get());
         } finally {
             p.shutdownNow(); // don't wait out shutdown
         }
@@ -330,9 +330,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testPollSubmission() {
         SubFJP p = new SubFJP();
         try {
-            ForkJoinTask a = p.submit(new MediumRunnable());
-            ForkJoinTask b = p.submit(new MediumRunnable());
-            ForkJoinTask c = p.submit(new MediumRunnable());
+            ForkJoinTask a = p.submit(new ShortRunnable());
+            ForkJoinTask b = p.submit(new ShortRunnable());
+            ForkJoinTask c = p.submit(new ShortRunnable());
             ForkJoinTask r = p.pollSubmission();
             assertTrue(r == a || r == b || r == c);
             assertFalse(r.isDone());
@@ -347,9 +347,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testDrainTasksTo() {
         SubFJP p = new SubFJP();
         try {
-            ForkJoinTask a = p.submit(new MediumRunnable());
-            ForkJoinTask b = p.submit(new MediumRunnable());
-            ForkJoinTask c = p.submit(new MediumRunnable());
+            ForkJoinTask a = p.submit(new ShortRunnable());
+            ForkJoinTask b = p.submit(new ShortRunnable());
+            ForkJoinTask c = p.submit(new ShortRunnable());
             ArrayList<ForkJoinTask> al = new ArrayList();
             p.drainTasksTo(al);
             assertTrue(al.size() > 0);
@@ -371,11 +371,11 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testExecuteRunnable() throws Throwable {
         ExecutorService e = new ForkJoinPool(1);
         try {
-            TrackedShortRunnable task = new TrackedShortRunnable();
-            assertFalse(task.done);
+            TrackedRunnable task = trackedRunnable(SHORT_DELAY_MS);
+            assertFalse(task.isDone());
             Future<?> future = e.submit(task);
             future.get();
-            assertTrue(task.done);
+            assertTrue(task.isDone());
         } finally {
             joinPool(e);
         }

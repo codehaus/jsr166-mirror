@@ -60,15 +60,13 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             finally { lock.unlock() ; }
         }
         public void run() {
-            boolean runme;
             lock.lock();
             try {
-                runme = !done;
-                if (!runme)
-                    thread = Thread.currentThread();
+                if (done)
+                    return;
+                thread = Thread.currentThread();
             }
             finally { lock.unlock() ; }
-            if (!runme) return;
             V v = null;
             Exception e = null;
             try {

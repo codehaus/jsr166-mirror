@@ -788,7 +788,7 @@ public class DelayQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             NanoDelay e = (NanoDelay)(q.take());
             long tt = e.getTriggerTime();
-            assertTrue(tt <= System.nanoTime());
+            assertTrue(tt - System.nanoTime() <= 0);
             if (i != 0)
                 assertTrue(tt >= last);
             last = tt;

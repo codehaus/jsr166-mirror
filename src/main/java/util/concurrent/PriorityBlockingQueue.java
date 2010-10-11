@@ -14,11 +14,11 @@ import java.util.*;
  * the same ordering rules as class {@link PriorityQueue} and supplies
  * blocking retrieval operations.  While this queue is logically
  * unbounded, attempted additions may fail due to resource exhaustion
- * (causing <tt>OutOfMemoryError</tt>). This class does not permit
- * <tt>null</tt> elements.  A priority queue relying on {@linkplain
+ * (causing {@code OutOfMemoryError}). This class does not permit
+ * {@code null} elements.  A priority queue relying on {@linkplain
  * Comparable natural ordering} also does not permit insertion of
  * non-comparable objects (doing so results in
- * <tt>ClassCastException</tt>).
+ * {@code ClassCastException}).
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -26,7 +26,7 @@ import java.util.*;
  * #iterator()} is <em>not</em> guaranteed to traverse the elements of
  * the PriorityBlockingQueue in any particular order. If you need
  * ordered traversal, consider using
- * <tt>Arrays.sort(pq.toArray())</tt>.  Also, method <tt>drainTo</tt>
+ * {@code Arrays.sort(pq.toArray())}.  Also, method {@code drainTo}
  * can be used to <em>remove</em> some or all elements in priority
  * order and place them in another collection.
  *
@@ -36,7 +36,7 @@ import java.util.*;
  * secondary key to break ties in primary priority values.  For
  * example, here is a class that applies first-in-first-out
  * tie-breaking to comparable elements. To use it, you would insert a
- * <tt>new FIFOEntry(anEntry)</tt> instead of a plain entry object.
+ * {@code new FIFOEntry(anEntry)} instead of a plain entry object.
  *
  *  <pre> {@code
  * class FIFOEntry<E extends Comparable<? super E>>
@@ -127,7 +127,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     private transient volatile int allocationSpinLock;
 
     /**
-     * Creates a <tt>PriorityBlockingQueue</tt> with the default
+     * Creates a {@code PriorityBlockingQueue} with the default
      * initial capacity (11) that orders its elements according to
      * their {@linkplain Comparable natural ordering}.
      */
@@ -136,12 +136,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>PriorityBlockingQueue</tt> with the specified
+     * Creates a {@code PriorityBlockingQueue} with the specified
      * initial capacity that orders its elements according to their
      * {@linkplain Comparable natural ordering}.
      *
      * @param initialCapacity the initial capacity for this priority queue
-     * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
+     * @throws IllegalArgumentException if {@code initialCapacity} is less
      *         than 1
      */
     public PriorityBlockingQueue(int initialCapacity) {
@@ -149,7 +149,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>PriorityBlockingQueue</tt> with the specified initial
+     * Creates a {@code PriorityBlockingQueue} with the specified initial
      * capacity that orders its elements according to the specified
      * comparator.
      *
@@ -157,7 +157,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param  comparator the comparator that will be used to order this
      *         priority queue.  If {@code null}, the {@linkplain Comparable
      *         natural ordering} of the elements will be used.
-     * @throws IllegalArgumentException if <tt>initialCapacity</tt> is less
+     * @throws IllegalArgumentException if {@code initialCapacity} is less
      *         than 1
      */
     public PriorityBlockingQueue(int initialCapacity,
@@ -169,7 +169,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Creates a <tt>PriorityBlockingQueue</tt> containing the elements
+     * Creates a {@code PriorityBlockingQueue} containing the elements
      * in the specified collection.  If the specified collection is a
      * {@link SortedSet} or a {@link PriorityQueue},  this
      * priority queue will be ordered according to the same ordering.
@@ -402,7 +402,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Inserts the specified element into this priority queue.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as specified by {@link Collection#add})
+     * @return {@code true} (as specified by {@link Collection#add})
      * @throws ClassCastException if the specified element cannot be compared
      *         with elements currently in the priority queue according to the
      *         priority queue's ordering
@@ -416,7 +416,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Inserts the specified element into this priority queue.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as specified by {@link Queue#offer})
+     * @return {@code true} (as specified by {@link Queue#offer})
      * @throws ClassCastException if the specified element cannot be compared
      *         with elements currently in the priority queue according to the
      *         priority queue's ordering
@@ -465,7 +465,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param e the element to add
      * @param timeout This parameter is ignored as the method never blocks
      * @param unit This parameter is ignored as the method never blocks
-     * @return <tt>true</tt>
+     * @return {@code true} always
      * @throws ClassCastException if the specified element cannot be compared
      *         with elements currently in the priority queue according to the
      *         priority queue's ordering
@@ -527,11 +527,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Returns the comparator used to order the elements in this queue,
-     * or <tt>null</tt> if this queue uses the {@linkplain Comparable
+     * or {@code null} if this queue uses the {@linkplain Comparable
      * natural ordering} of its elements.
      *
      * @return the comparator used to order the elements in this queue,
-     *         or <tt>null</tt> if this queue uses the natural
+     *         or {@code null} if this queue uses the natural
      *         ordering of its elements
      */
     public Comparator<? super E> comparator() {
@@ -551,9 +551,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Always returns <tt>Integer.MAX_VALUE</tt> because
-     * a <tt>PriorityBlockingQueue</tt> is not capacity constrained.
-     * @return <tt>Integer.MAX_VALUE</tt>
+     * Always returns {@code Integer.MAX_VALUE} because
+     * a {@code PriorityBlockingQueue} is not capacity constrained.
+     * @return {@code Integer.MAX_VALUE} always
      */
     public int remainingCapacity() {
         return Integer.MAX_VALUE;
@@ -593,7 +593,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * result of the call).
      *
      * @param o element to be removed from this queue, if present
-     * @return <tt>true</tt> if this queue changed as a result of the call
+     * @return {@code true} if this queue changed as a result of the call
      */
     public boolean remove(Object o) {
         boolean removed = false;
@@ -636,7 +636,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * at least one element {@code e} such that {@code o.equals(e)}.
      *
      * @param o object to be checked for containment in this queue
-     * @return <tt>true</tt> if this queue contains the specified element
+     * @return {@code true} if this queue contains the specified element
      */
     public boolean contains(Object o) {
         int index;
@@ -776,22 +776,22 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * <p>If this queue fits in the specified array with room to spare
      * (i.e., the array has more elements than this queue), the element in
      * the array immediately following the end of the queue is set to
-     * <tt>null</tt>.
+     * {@code null}.
      *
      * <p>Like the {@link #toArray()} method, this method acts as bridge between
      * array-based and collection-based APIs.  Further, this method allows
      * precise control over the runtime type of the output array, and may,
      * under certain circumstances, be used to save allocation costs.
      *
-     * <p>Suppose <tt>x</tt> is a queue known to contain only strings.
+     * <p>Suppose {@code x} is a queue known to contain only strings.
      * The following code can be used to dump the queue into a newly
-     * allocated array of <tt>String</tt>:
+     * allocated array of {@code String}:
      *
      * <pre>
      *     String[] y = x.toArray(new String[0]);</pre>
      *
-     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
-     * <tt>toArray()</tt>.
+     * Note that {@code toArray(new Object[0])} is identical in function to
+     * {@code toArray()}.
      *
      * @param a the array into which the elements of the queue are to
      *          be stored, if it is big enough; otherwise, a new array of the
@@ -821,7 +821,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue. The
      * iterator does not return the elements in any particular order.
-     * The returned <tt>Iterator</tt> is a "weakly consistent"
+     * The returned {@code Iterator} is a "weakly consistent"
      * iterator that will never throw {@link
      * ConcurrentModificationException}, and guarantees to traverse
      * elements as they existed upon construction of the iterator, and

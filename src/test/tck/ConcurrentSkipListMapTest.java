@@ -980,7 +980,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * Submaps of submaps subdivide correctly
      */
     public void testRecursiveSubMaps() throws Exception {
-        int mapSize = 1000;
+        int mapSize = expensiveTests ? 1000 : 100;
         Class cl = ConcurrentSkipListMap.class;
         NavigableMap<Integer, Integer> map = newMap(cl);
         bs = new BitSet(mapSize);

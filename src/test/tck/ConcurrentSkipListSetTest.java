@@ -659,7 +659,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * Subsets of subsets subdivide correctly
      */
     public void testRecursiveSubSets() throws Exception {
-        int setSize = 1000;
+        int setSize = expensiveTests ? 1000 : 100;
         Class cl = ConcurrentSkipListSet.class;
 
         NavigableSet<Integer> set = newSet(cl);

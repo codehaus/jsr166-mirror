@@ -191,7 +191,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             initElementsFromCollection(ss);
         }
         else if (c instanceof PriorityBlockingQueue<?>) {
-            PriorityBlockingQueue<? extends E> pq = 
+            PriorityBlockingQueue<? extends E> pq =
                 (PriorityBlockingQueue<? extends E>) c;
             this.comparator = (Comparator<? super E>) pq.comparator();
             initFromPriorityBlockingQueue(pq);
@@ -243,7 +243,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.unlock(); // must release and then re-acquire main lock
         Object[] newArray = null;
         if (allocationSpinLock == 0 &&
-            UNSAFE.compareAndSwapInt(this, allocationSpinLockOffset, 
+            UNSAFE.compareAndSwapInt(this, allocationSpinLockOffset,
                                      0, 1)) {
             try {
                 int newCap = oldCap + ((oldCap < 64) ?
@@ -524,7 +524,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
         return result;
     }
-    
+
     /**
      * Returns the comparator used to order the elements in this queue,
      * or <tt>null</tt> if this queue uses the {@linkplain Comparable
@@ -904,9 +904,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
     private static final long allocationSpinLockOffset =
-        objectFieldOffset(UNSAFE, "allocationSpinLock", 
+        objectFieldOffset(UNSAFE, "allocationSpinLock",
                           PriorityBlockingQueue.class);
-    
+
     static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
                                   String field, Class<?> klazz) {
         try {

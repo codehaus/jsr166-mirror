@@ -25,16 +25,18 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * execute successfully executes a runnable
      */
     public void testExecute() throws InterruptedException {
-        TrackedShortRunnable runnable = new TrackedShortRunnable();
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        p1.execute(runnable);
-        assertFalse(runnable.done);
-        Thread.sleep(SHORT_DELAY_MS);
-        try { p1.shutdown(); } catch (SecurityException ok) { return; }
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(runnable.done);
-        try { p1.shutdown(); } catch (SecurityException ok) { return; }
-        joinPool(p1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final CountDownLatch done = new CountDownLatch(1);
+        final Runnable task = new CheckedRunnable() {
+            public void realRun() {
+                done.countDown();
+            }};
+        try {
+            p.execute(task);
+            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+        } finally {
+            joinPool(p);
+        }
     }
 
 
@@ -42,44 +44,97 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * delayed schedule of callable successfully executes after delay
      */
     public void testSchedule1() throws Exception {
-        TrackedCallable callable = new TrackedCallable();
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        Future f = p1.schedule(callable, SHORT_DELAY_MS, MILLISECONDS);
-        assertFalse(callable.done);
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(callable.done);
-        assertEquals(Boolean.TRUE, f.get());
-        try { p1.shutdown(); } catch (SecurityException ok) { return; }
-        joinPool(p1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final long t0 = System.nanoTime();
+        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final CountDownLatch done = new CountDownLatch(1);
+        try {
+            Callable task = new CheckedCallable<Boolean>() {
+                public Boolean realCall() {
+                    done.countDown();
+                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                    return Boolean.TRUE;
+                }};
+            Future f = p.schedule(task, SHORT_DELAY_MS, MILLISECONDS);
+            assertEquals(Boolean.TRUE, f.get());
+            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+            assertTrue(done.await(0L, MILLISECONDS));
+        } finally {
+            joinPool(p);
+        }
     }
 
     /**
      * delayed schedule of runnable successfully executes after delay
      */
-    public void testSchedule3() throws InterruptedException {
-        TrackedShortRunnable runnable = new TrackedShortRunnable();
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        p1.schedule(runnable, SMALL_DELAY_MS, MILLISECONDS);
-        Thread.sleep(SHORT_DELAY_MS);
-        assertFalse(runnable.done);
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(runnable.done);
-        try { p1.shutdown(); } catch (SecurityException ok) { return; }
-        joinPool(p1);
+    public void testSchedule3() throws Exception {
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final long t0 = System.nanoTime();
+        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final CountDownLatch done = new CountDownLatch(1);
+        try {
+            Runnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.countDown();
+                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                }};
+            Future f = p.schedule(task, SHORT_DELAY_MS, MILLISECONDS);
+            assertNull(f.get());
+            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+            assertTrue(done.await(0L, MILLISECONDS));
+        } finally {
+            joinPool(p);
+        }
     }
 
     /**
      * scheduleAtFixedRate executes runnable after given initial delay
      */
-    public void testSchedule4() throws InterruptedException {
-        TrackedShortRunnable runnable = new TrackedShortRunnable();
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        ScheduledFuture h = p1.scheduleAtFixedRate(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, MILLISECONDS);
-        assertFalse(runnable.done);
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(runnable.done);
-        h.cancel(true);
-        joinPool(p1);
+    public void testSchedule4() throws Exception {
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final long t0 = System.nanoTime();
+        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final CountDownLatch done = new CountDownLatch(1);
+        try {
+            Runnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.countDown();
+                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                }};
+            ScheduledFuture f =
+                p.scheduleAtFixedRate(task, SHORT_DELAY_MS,
+                                      SHORT_DELAY_MS, MILLISECONDS);
+            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+            f.cancel(true);
+        } finally {
+            joinPool(p);
+        }
+    }
+
+    /**
+     * scheduleWithFixedDelay executes runnable after given initial delay
+     */
+    public void testSchedule5() throws InterruptedException {
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final long t0 = System.nanoTime();
+        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final CountDownLatch done = new CountDownLatch(1);
+        try {
+            Runnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.countDown();
+                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                }};
+            ScheduledFuture f =
+                p.scheduleWithFixedDelay(task, SHORT_DELAY_MS,
+                                         SHORT_DELAY_MS, MILLISECONDS);
+            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+            f.cancel(true);
+        } finally {
+            joinPool(p);
+        }
     }
 
     static class RunnableCounter implements Runnable {
@@ -88,27 +143,13 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     * scheduleWithFixedDelay executes runnable after given initial delay
-     */
-    public void testSchedule5() throws InterruptedException {
-        TrackedShortRunnable runnable = new TrackedShortRunnable();
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        ScheduledFuture h = p1.scheduleWithFixedDelay(runnable, SHORT_DELAY_MS, SHORT_DELAY_MS, MILLISECONDS);
-        assertFalse(runnable.done);
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertTrue(runnable.done);
-        h.cancel(true);
-        joinPool(p1);
-    }
-
-    /**
      * scheduleAtFixedRate executes series of tasks at given rate
      */
     public void testFixedRateSequence() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         RunnableCounter counter = new RunnableCounter();
         ScheduledFuture h =
-            p1.scheduleAtFixedRate(counter, 0, 1, MILLISECONDS);
+            p.scheduleAtFixedRate(counter, 0, 1, MILLISECONDS);
         Thread.sleep(SMALL_DELAY_MS);
         h.cancel(true);
         int c = counter.count.get();
@@ -116,23 +157,23 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         // an execution per SHORT delay, but no more than one SHORT more
         assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
         assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
-        joinPool(p1);
+        joinPool(p);
     }
 
     /**
      * scheduleWithFixedDelay executes series of tasks with given period
      */
     public void testFixedDelaySequence() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         RunnableCounter counter = new RunnableCounter();
         ScheduledFuture h =
-            p1.scheduleWithFixedDelay(counter, 0, 1, MILLISECONDS);
+            p.scheduleWithFixedDelay(counter, 0, 1, MILLISECONDS);
         Thread.sleep(SMALL_DELAY_MS);
         h.cancel(true);
         int c = counter.count.get();
         assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
         assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
-        joinPool(p1);
+        joinPool(p);
     }
 
 
@@ -249,12 +290,23 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * thread becomes active
      */
     public void testGetActiveCount() throws InterruptedException {
-        ScheduledThreadPoolExecutor p2 = new ScheduledThreadPoolExecutor(2);
-        assertEquals(0, p2.getActiveCount());
-        p2.execute(new SmallRunnable());
-        Thread.sleep(SHORT_DELAY_MS);
-        assertEquals(1, p2.getActiveCount());
-        joinPool(p2);
+        final ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(2);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
+        try {
+            assertEquals(0, p.getActiveCount());
+            p.execute(new CheckedRunnable() {
+                public void realRun() throws InterruptedException {
+                    threadStarted.countDown();
+                    assertEquals(1, p.getActiveCount());
+                    done.await();
+                }});
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(1, p.getActiveCount());
+        } finally {
+            done.countDown();
+            joinPool(p);
+        }
     }
 
     /**
@@ -262,21 +314,37 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * when tasks complete
      */
     public void testGetCompletedTaskCount() throws InterruptedException {
-        ScheduledThreadPoolExecutor p2 = new ScheduledThreadPoolExecutor(2);
-        assertEquals(0, p2.getCompletedTaskCount());
-        p2.execute(new SmallRunnable());
-        Thread.sleep(MEDIUM_DELAY_MS);
-        assertEquals(1, p2.getCompletedTaskCount());
-        joinPool(p2);
+        final ThreadPoolExecutor p = new ScheduledThreadPoolExecutor(2);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch threadProceed = new CountDownLatch(1);
+        final CountDownLatch threadDone = new CountDownLatch(1);
+        try {
+            assertEquals(0, p.getCompletedTaskCount());
+            p.execute(new CheckedRunnable() {
+                public void realRun() throws InterruptedException {
+                    threadStarted.countDown();
+                    assertEquals(0, p.getCompletedTaskCount());
+                    threadProceed.await();
+                    threadDone.countDown();
+                }});
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(0, p.getCompletedTaskCount());
+            threadProceed.countDown();
+            threadDone.await();
+            Thread.sleep(SHORT_DELAY_MS);
+            assertEquals(1, p.getCompletedTaskCount());
+        } finally {
+            joinPool(p);
+        }
     }
 
     /**
      * getCorePoolSize returns size given in constructor if not otherwise set
      */
     public void testGetCorePoolSize() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        assertEquals(1, p1.getCorePoolSize());
-        joinPool(p1);
+        ThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        assertEquals(1, p.getCorePoolSize());
+        joinPool(p);
     }
 
     /**
@@ -284,13 +352,26 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * multiple threads active
      */
     public void testGetLargestPoolSize() throws InterruptedException {
-        ScheduledThreadPoolExecutor p2 = new ScheduledThreadPoolExecutor(2);
-        assertEquals(0, p2.getLargestPoolSize());
-        p2.execute(new SmallRunnable());
-        p2.execute(new SmallRunnable());
-        Thread.sleep(SHORT_DELAY_MS);
-        assertEquals(2, p2.getLargestPoolSize());
-        joinPool(p2);
+        final int THREADS = 3;
+        final ThreadPoolExecutor p = new ScheduledThreadPoolExecutor(THREADS);
+        final CountDownLatch threadsStarted = new CountDownLatch(THREADS);
+        final CountDownLatch done = new CountDownLatch(1);
+        try {
+            assertEquals(0, p.getLargestPoolSize());
+            for (int i = 0; i < THREADS; i++)
+                p.execute(new CheckedRunnable() {
+                    public void realRun() throws InterruptedException {
+                        threadsStarted.countDown();
+                        done.await();
+                        assertEquals(THREADS, p.getLargestPoolSize());
+                    }});
+            assertTrue(threadsStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(THREADS, p.getLargestPoolSize());
+        } finally {
+            done.countDown();
+            joinPool(p);
+            assertEquals(THREADS, p.getLargestPoolSize());
+        }
     }
 
     /**
@@ -298,11 +379,23 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * become active
      */
     public void testGetPoolSize() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        assertEquals(0, p1.getPoolSize());
-        p1.execute(new SmallRunnable());
-        assertEquals(1, p1.getPoolSize());
-        joinPool(p1);
+        final ThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
+        try {
+            assertEquals(0, p.getPoolSize());
+            p.execute(new CheckedRunnable() {
+                public void realRun() throws InterruptedException {
+                    threadStarted.countDown();
+                    assertEquals(1, p.getPoolSize());
+                    done.await();
+                }});
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(1, p.getPoolSize());
+        } finally {
+            done.countDown();
+            joinPool(p);
+        }
     }
 
     /**
@@ -310,13 +403,24 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * submitted
      */
     public void testGetTaskCount() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        assertEquals(0, p1.getTaskCount());
-        for (int i = 0; i < 5; i++)
-            p1.execute(new SmallRunnable());
-        Thread.sleep(SHORT_DELAY_MS);
-        assertEquals(5, p1.getTaskCount());
-        joinPool(p1);
+        final ThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
+        final int TASKS = 5;
+        try {
+            assertEquals(0, p.getTaskCount());
+            for (int i = 0; i < TASKS; i++)
+                p.execute(new CheckedRunnable() {
+                    public void realRun() throws InterruptedException {
+                        threadStarted.countDown();
+                        done.await();
+                    }});
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(TASKS, p.getTaskCount());
+        } finally {
+            done.countDown();
+            joinPool(p);
+        }
     }
 
     /**
@@ -359,14 +463,14 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      */
     public void testIsShutdown() {
 
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         try {
-            assertFalse(p1.isShutdown());
+            assertFalse(p.isShutdown());
         }
         finally {
-            try { p1.shutdown(); } catch (SecurityException ok) { return; }
+            try { p.shutdown(); } catch (SecurityException ok) { return; }
         }
-        assertTrue(p1.isShutdown());
+        assertTrue(p.isShutdown());
     }
 
 
@@ -374,50 +478,76 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * isTerminated is false before termination, true after
      */
     public void testIsTerminated() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        final ThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
+        assertFalse(p.isTerminated());
         try {
-            p1.execute(new SmallRunnable());
+            p.execute(new CheckedRunnable() {
+                public void realRun() throws InterruptedException {
+                    threadStarted.countDown();
+                    assertFalse(p.isTerminated());
+                    done.await();
+                }});
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            done.countDown();
         } finally {
-            try { p1.shutdown(); } catch (SecurityException ok) { return; }
+            try { p.shutdown(); } catch (SecurityException ok) { return; }
         }
-        assertTrue(p1.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
-        assertTrue(p1.isTerminated());
+        assertTrue(p.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
+        assertTrue(p.isTerminated());
     }
 
     /**
      * isTerminating is not true when running or when terminated
      */
     public void testIsTerminating() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        assertFalse(p1.isTerminating());
+        final ThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
         try {
-            p1.execute(new SmallRunnable());
-            assertFalse(p1.isTerminating());
+            assertFalse(p.isTerminating());
+            p.execute(new CheckedRunnable() {
+                public void realRun() throws InterruptedException {
+                    threadStarted.countDown();
+                    assertFalse(p.isTerminating());
+                    done.await();
+                }});
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertFalse(p.isTerminating());
+            done.countDown();
         } finally {
-            try { p1.shutdown(); } catch (SecurityException ok) { return; }
+            try { p.shutdown(); } catch (SecurityException ok) { return; }
         }
-
-        assertTrue(p1.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
-        assertTrue(p1.isTerminated());
-        assertFalse(p1.isTerminating());
+        assertTrue(p.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
+        assertTrue(p.isTerminated());
+        assertFalse(p.isTerminating());
     }
 
     /**
      * getQueue returns the work queue, which contains queued tasks
      */
     public void testGetQueue() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++) {
-            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, MILLISECONDS);
-        }
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
         try {
-            Thread.sleep(SHORT_DELAY_MS);
-            BlockingQueue<Runnable> q = p1.getQueue();
-            assertTrue(q.contains(tasks[4]));
+            ScheduledFuture[] tasks = new ScheduledFuture[5];
+            for (int i = 0; i < tasks.length; i++) {
+                Runnable r = new CheckedRunnable() {
+                    public void realRun() throws InterruptedException {
+                        threadStarted.countDown();
+                        done.await();
+                    }};
+                tasks[i] = p.schedule(r, 1, MILLISECONDS);
+            }
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            BlockingQueue<Runnable> q = p.getQueue();
+            assertTrue(q.contains(tasks[tasks.length - 1]));
             assertFalse(q.contains(tasks[0]));
         } finally {
-            joinPool(p1);
+            done.countDown();
+            joinPool(p);
         }
     }
 
@@ -425,25 +555,33 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * remove(task) removes queued task, and fails to remove active task
      */
     public void testRemove() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        final ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++) {
-            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), 1, MILLISECONDS);
-        }
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
         try {
-            Thread.sleep(SHORT_DELAY_MS);
-            BlockingQueue<Runnable> q = p1.getQueue();
-            assertFalse(p1.remove((Runnable)tasks[0]));
+            for (int i = 0; i < tasks.length; i++) {
+                Runnable r = new CheckedRunnable() {
+                    public void realRun() throws InterruptedException {
+                        threadStarted.countDown();
+                        done.await();
+                    }};
+                tasks[i] = p.schedule(r, 1, MILLISECONDS);
+            }
+            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            BlockingQueue<Runnable> q = p.getQueue();
+            assertFalse(p.remove((Runnable)tasks[0]));
             assertTrue(q.contains((Runnable)tasks[4]));
             assertTrue(q.contains((Runnable)tasks[3]));
-            assertTrue(p1.remove((Runnable)tasks[4]));
-            assertFalse(p1.remove((Runnable)tasks[4]));
+            assertTrue(p.remove((Runnable)tasks[4]));
+            assertFalse(p.remove((Runnable)tasks[4]));
             assertFalse(q.contains((Runnable)tasks[4]));
             assertTrue(q.contains((Runnable)tasks[3]));
-            assertTrue(p1.remove((Runnable)tasks[3]));
+            assertTrue(p.remove((Runnable)tasks[3]));
             assertFalse(q.contains((Runnable)tasks[3]));
         } finally {
-            joinPool(p1);
+            done.countDown();
+            joinPool(p);
         }
     }
 
@@ -451,28 +589,30 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * purge removes cancelled tasks from the queue
      */
     public void testPurge() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++) {
-            tasks[i] = p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
+        for (int i = 0; i < tasks.length; i++) {
+            tasks[i] = p.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
         }
         try {
-            int max = 5;
+            int max = tasks.length;
             if (tasks[4].cancel(true)) --max;
             if (tasks[3].cancel(true)) --max;
             // There must eventually be an interference-free point at
             // which purge will not fail. (At worst, when queue is empty.)
             int k;
             for (k = 0; k < SMALL_DELAY_MS; ++k) {
-                p1.purge();
-                long count = p1.getTaskCount();
+                p.purge();
+                long count = p.getTaskCount();
                 if (count >= 0 && count <= max)
                     break;
                 Thread.sleep(1);
             }
             assertTrue(k < SMALL_DELAY_MS);
         } finally {
-            joinPool(p1);
+            for (ScheduledFuture task : tasks)
+                task.cancel(true);
+            joinPool(p);
         }
     }
 
@@ -480,18 +620,18 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * shutDownNow returns a list containing tasks that were not run
      */
     public void testShutDownNow() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         for (int i = 0; i < 5; i++)
-            p1.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
+            p.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
         List l;
         try {
-            l = p1.shutdownNow();
+            l = p.shutdownNow();
         } catch (SecurityException ok) {
             return;
         }
-        assertTrue(p1.isShutdown());
+        assertTrue(p.isShutdown());
         assertTrue(l.size() > 0 && l.size() <= 5);
-        joinPool(p1);
+        joinPool(p);
     }
 
     /**
@@ -499,24 +639,27 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * tasks at shutdown
      */
     public void testShutDown1() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        assertTrue(p1.getExecuteExistingDelayedTasksAfterShutdownPolicy());
-        assertFalse(p1.getContinueExistingPeriodicTasksAfterShutdownPolicy());
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
+        assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
 
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++)
-            tasks[i] = p1.schedule(new NoOpRunnable(), SHORT_DELAY_MS, MILLISECONDS);
-        try { p1.shutdown(); } catch (SecurityException ok) { return; }
-        BlockingQueue q = p1.getQueue();
-        for (Iterator it = q.iterator(); it.hasNext();) {
-            ScheduledFuture t = (ScheduledFuture)it.next();
-            assertFalse(t.isCancelled());
+        for (int i = 0; i < tasks.length; i++)
+            tasks[i] = p.schedule(new NoOpRunnable(),
+                                  SHORT_DELAY_MS, MILLISECONDS);
+        try { p.shutdown(); } catch (SecurityException ok) { return; }
+        BlockingQueue<Runnable> q = p.getQueue();
+        for (ScheduledFuture task : tasks) {
+            assertFalse(task.isDone());
+            assertFalse(task.isCancelled());
+            assertTrue(q.contains(task));
         }
-        assertTrue(p1.isShutdown());
-        Thread.sleep(SMALL_DELAY_MS);
-        for (int i = 0; i < 5; ++i) {
-            assertTrue(tasks[i].isDone());
-            assertFalse(tasks[i].isCancelled());
+        assertTrue(p.isShutdown());
+        assertTrue(p.awaitTermination(SMALL_DELAY_MS, MILLISECONDS));
+        assertTrue(p.isTerminated());
+        for (ScheduledFuture task : tasks) {
+            assertTrue(task.isDone());
+            assertFalse(task.isCancelled());
         }
     }
 
@@ -526,61 +669,75 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * delayed tasks are cancelled at shutdown
      */
     public void testShutDown2() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        p1.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        p.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < 5; i++)
-            tasks[i] = p1.schedule(new NoOpRunnable(), SHORT_DELAY_MS, MILLISECONDS);
-        try { p1.shutdown(); } catch (SecurityException ok) { return; }
-        assertTrue(p1.isShutdown());
-        BlockingQueue q = p1.getQueue();
+        for (int i = 0; i < tasks.length; i++)
+            tasks[i] = p.schedule(new NoOpRunnable(),
+                                  SHORT_DELAY_MS, MILLISECONDS);
+        BlockingQueue q = p.getQueue();
+        assertEquals(tasks.length, q.size());
+        try { p.shutdown(); } catch (SecurityException ok) { return; }
+        assertTrue(p.isShutdown());
         assertTrue(q.isEmpty());
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(p1.isTerminated());
+        assertTrue(p.awaitTermination(SMALL_DELAY_MS, MILLISECONDS));
+        assertTrue(p.isTerminated());
+        for (ScheduledFuture task : tasks) {
+            assertTrue(task.isDone());
+            assertTrue(task.isCancelled());
+        }
     }
-
 
     /**
      * If setContinueExistingPeriodicTasksAfterShutdownPolicy is set false,
-     * periodic tasks are not cancelled at shutdown
+     * periodic tasks are cancelled at shutdown
      */
     public void testShutDown3() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
-        p1.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        p.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
         ScheduledFuture task =
-            p1.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, MILLISECONDS);
-        try { p1.shutdown(); } catch (SecurityException ok) { return; }
-        assertTrue(p1.isShutdown());
-        BlockingQueue q = p1.getQueue();
-        assertTrue(q.isEmpty());
-        Thread.sleep(SHORT_DELAY_MS);
-        assertTrue(p1.isTerminated());
+            p.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, MILLISECONDS);
+        try { p.shutdown(); } catch (SecurityException ok) { return; }
+        assertTrue(p.isShutdown());
+        BlockingQueue q = p.getQueue();
+        assertTrue(p.getQueue().isEmpty());
+        assertTrue(task.isDone());
+        assertTrue(task.isCancelled());
+        assertTrue(p.awaitTermination(SMALL_DELAY_MS, MILLISECONDS));
+        assertTrue(p.isTerminated());
     }
 
     /**
      * if setContinueExistingPeriodicTasksAfterShutdownPolicy is true,
-     * periodic tasks are cancelled at shutdown
+     * periodic tasks are not cancelled at shutdown
      */
     public void testShutDown4() throws InterruptedException {
-        ScheduledThreadPoolExecutor p1 = new ScheduledThreadPoolExecutor(1);
+        ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
+        p.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
+        final CountDownLatch counter = new CountDownLatch(2);
         try {
-            p1.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
+            final Runnable r = new CheckedRunnable() {
+                public void realRun() {
+                    counter.countDown();
+                }};
             ScheduledFuture task =
-                p1.scheduleAtFixedRate(new NoOpRunnable(), 1, 1, MILLISECONDS);
+                p.scheduleAtFixedRate(r, 1, 1, MILLISECONDS);
+            assertFalse(task.isDone());
             assertFalse(task.isCancelled());
-            try { p1.shutdown(); } catch (SecurityException ok) { return; }
+            try { p.shutdown(); } catch (SecurityException ok) { return; }
             assertFalse(task.isCancelled());
-            assertFalse(p1.isTerminated());
-            assertTrue(p1.isShutdown());
-            Thread.sleep(SHORT_DELAY_MS);
+            assertFalse(p.isTerminated());
+            assertTrue(p.isShutdown());
+            assertTrue(counter.await(SMALL_DELAY_MS, MILLISECONDS));
             assertFalse(task.isCancelled());
-            assertTrue(task.cancel(true));
+            assertTrue(task.cancel(false));
             assertTrue(task.isDone());
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(p1.isTerminated());
+            assertTrue(task.isCancelled());
+            assertTrue(p.awaitTermination(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(p.isTerminated());
         }
         finally {
-            joinPool(p1);
+            joinPool(p);
         }
     }
 

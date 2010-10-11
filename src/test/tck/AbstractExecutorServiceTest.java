@@ -170,53 +170,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     }
 
     /**
-     * submit(runnable) throws RejectedExecutionException if
-     * executor is saturated.
-     */
-    public void testExecute1() {
-        ThreadPoolExecutor p =
-            new ThreadPoolExecutor(1, 1,
-                                   60, TimeUnit.SECONDS,
-                                   new ArrayBlockingQueue<Runnable>(1));
-        try {
-            for (int i = 0; i < 2; ++i)
-                p.submit(new MediumRunnable());
-            for (int i = 0; i < 2; ++i) {
-                try {
-                    p.submit(new MediumRunnable());
-                    shouldThrow();
-                } catch (RejectedExecutionException success) {}
-            }
-        } finally {
-            joinPool(p);
-        }
-    }
-
-    /**
-     * submit(callable) throws RejectedExecutionException
-     * if executor is saturated.
-     */
-    public void testExecute2() {
-        ThreadPoolExecutor p =
-            new ThreadPoolExecutor(1, 1,
-                                   60, TimeUnit.SECONDS,
-                                   new ArrayBlockingQueue<Runnable>(1));
-        try {
-            for (int i = 0; i < 2; ++i)
-                p.submit(new MediumRunnable());
-            for (int i = 0; i < 2; ++i) {
-                try {
-                    p.submit(new SmallCallable());
-                    shouldThrow();
-                } catch (RejectedExecutionException success) {}
-            }
-        } finally {
-            joinPool(p);
-        }
-    }
-
-
-    /**
      * submit(callable).get() throws InterruptedException if interrupted
      */
     public void testInterruptedSubmit() throws InterruptedException {
@@ -248,28 +201,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     }
 
     /**
-     * get of submitted callable throws InterruptedException if callable
-     * interrupted
-     */
-    public void testSubmitIE() throws InterruptedException {
-        final ThreadPoolExecutor p =
-            new ThreadPoolExecutor(1, 1,
-                                   60, TimeUnit.SECONDS,
-                                   new ArrayBlockingQueue<Runnable>(10));
-
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
-            public void realRun() throws Exception {
-                p.submit(new SmallCallable()).get();
-            }});
-
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-        joinPool(p);
-    }
-
-    /**
      * get of submit(callable) throws ExecutionException if callable
      * throws exception
      */
@@ -294,8 +225,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     /**
      * invokeAny(null) throws NPE
      */
-    public void testInvokeAny1()
-        throws InterruptedException, ExecutionException {
+    public void testInvokeAny1() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
             e.invokeAny(null);
@@ -309,8 +239,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     /**
      * invokeAny(empty collection) throws IAE
      */
-    public void testInvokeAny2()
-        throws InterruptedException, ExecutionException {
+    public void testInvokeAny2() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
             e.invokeAny(new ArrayList<Callable<String>>());

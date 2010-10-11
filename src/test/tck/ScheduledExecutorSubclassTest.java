@@ -721,6 +721,8 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public void testShutDown2() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
         p.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        assertFalse(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
+        assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
         ScheduledFuture[] tasks = new ScheduledFuture[5];
         for (int i = 0; i < tasks.length; i++)
             tasks[i] = p.schedule(new NoOpRunnable(),
@@ -745,7 +747,11 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testShutDown3() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
+        assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
+        assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
         p.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
+        assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
         ScheduledFuture task =
             p.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, MILLISECONDS);
         try { p.shutdown(); } catch (SecurityException ok) { return; }
@@ -764,9 +770,11 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testShutDown4() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
-        p.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
         final CountDownLatch counter = new CountDownLatch(2);
         try {
+            p.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
+            assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
+            assertTrue(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
             final Runnable r = new CheckedRunnable() {
                 public void realRun() {
                     counter.countDown();

@@ -330,19 +330,19 @@ public class PhaserTest extends JSR166TestCase {
     public void testAwaitAdvance3() throws InterruptedException {
         final Phaser phaser = new Phaser();
         phaser.register();
+        final CountDownLatch threadStarted = new CountDownLatch(1);
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 phaser.register();
-                sleepTillInterrupted(LONG_DELAY_MS);
+                threadStarted.countDown();
                 phaser.awaitAdvance(phaser.arrive());
+                assertTrue(Thread.currentThread().isInterrupted());
             }});
-        Thread.sleep(SMALL_DELAY_MS);
+        assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
         t.interrupt();
-        Thread.sleep(SMALL_DELAY_MS);
         phaser.arrive();
-        assertFalse(t.isInterrupted());
-        t.join();
+        awaitTermination(t, SMALL_DELAY_MS);
     }
 
     /**

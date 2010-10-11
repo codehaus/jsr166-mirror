@@ -355,13 +355,13 @@ public class CyclicBarrierTest extends JSR166TestCase {
      * Reset of a barrier after timeout reinitializes it.
      */
     public void testResetAfterTimeout() throws Exception {
-        final CyclicBarrier start = new CyclicBarrier(3);
+        final CyclicBarrier start = new CyclicBarrier(2);
         final CyclicBarrier barrier = new CyclicBarrier(3);
         for (int i = 0; i < 2; i++) {
             Thread t1 = new ThreadShouldThrow(TimeoutException.class) {
                     public void realRun() throws Exception {
                         start.await();
-                        barrier.await(MEDIUM_DELAY_MS, MILLISECONDS);
+                        barrier.await(SHORT_DELAY_MS, MILLISECONDS);
                     }};
 
             Thread t2 = new ThreadShouldThrow(BrokenBarrierException.class) {
@@ -372,7 +372,6 @@ public class CyclicBarrierTest extends JSR166TestCase {
 
             t1.start();
             t2.start();
-            start.await();
             t1.join();
             t2.join();
             assertTrue(barrier.isBroken());

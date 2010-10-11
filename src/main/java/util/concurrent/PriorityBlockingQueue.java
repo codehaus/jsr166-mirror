@@ -876,7 +876,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         throws java.io.IOException {
         lock.lock();
         try {
-            q = new PriorityQueue<E>(size, comparator);
+            int n = size; // avoid zero capacity argument
+            q = new PriorityQueue<E>(n == 0 ? 1 : n, comparator);
             q.addAll(this);
             s.defaultWriteObject();
             q = null;

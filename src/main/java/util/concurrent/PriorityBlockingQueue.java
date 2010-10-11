@@ -111,7 +111,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * A plain PriorityQueue used only for serialization,
      * to maintain compatibility with previous versions
-     * of this class. Non-null only during serialization/deserialization
+     * of this class. Non-null only during serialization/deserialization.
      */
     private PriorityQueue q;
 
@@ -270,7 +270,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Mechanics for poll(), call only while holding lock
+     * Mechanics for poll().  Call only while holding lock.
      */
     private E internalPoll() {
         int s = size - 1;

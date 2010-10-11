@@ -414,6 +414,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Inserts the specified element into this priority queue.
+     * As the queue is unbounded, this method will never return {@code false}.
      *
      * @param e the element to add
      * @return {@code true} (as specified by {@link Queue#offer})
@@ -445,8 +446,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element into this priority queue. As the queue is
-     * unbounded this method will never block.
+     * Inserts the specified element into this priority queue.
+     * As the queue is unbounded, this method will never block.
      *
      * @param e the element to add
      * @throws ClassCastException if the specified element cannot be compared
@@ -459,8 +460,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element into this priority queue. As the queue is
-     * unbounded this method will never block.
+     * Inserts the specified element into this priority queue.
+     * As the queue is unbounded, this method will never block or
+     * return {@code false}.
      *
      * @param e the element to add
      * @param timeout This parameter is ignored as the method never blocks

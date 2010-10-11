@@ -775,24 +775,20 @@ public class DelayQueueTest extends JSR166TestCase {
      * Delayed actions do not occur until their delay elapses
      */
     public void testDelay() throws InterruptedException {
-        DelayQueue q = new DelayQueue();
-        NanoDelay[] elements = new NanoDelay[SIZE];
-        for (int i = 0; i < SIZE; ++i) {
-            elements[i] = new NanoDelay(1000000000L + 1000000L * (SIZE - i));
-        }
-        for (int i = 0; i < SIZE; ++i) {
-            q.add(elements[i]);
-        }
+        DelayQueue<NanoDelay> q = new DelayQueue<NanoDelay>();
+        for (int i = 0; i < SIZE; ++i)
+            q.add(new NanoDelay(1000000L * (SIZE - i)));
 
         long last = 0;
         for (int i = 0; i < SIZE; ++i) {
-            NanoDelay e = (NanoDelay)(q.take());
+            NanoDelay e = q.take();
             long tt = e.getTriggerTime();
-            assertTrue(tt - System.nanoTime() <= 0);
+            assertTrue(System.nanoTime() - tt >= 0);
             if (i != 0)
                 assertTrue(tt >= last);
             last = tt;
         }
+        assertTrue(q.isEmpty());
     }
 
     /**

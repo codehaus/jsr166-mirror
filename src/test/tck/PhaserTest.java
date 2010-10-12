@@ -377,16 +377,25 @@ public class PhaserTest extends JSR166TestCase {
         phaser.register();
         List<Thread> threads = new ArrayList<Thread>();
         for (int i = 0; i < 8; i++) {
+            final CountDownLatch latch = new CountDownLatch(1);
+            final boolean goesFirst = ((i & 1) == 0);
             threads.add(newStartedThread(new CheckedRunnable() {
-                public void realRun() {
-                    sleepTillInterrupted(SHORT_DELAY_MS);
+                public void realRun() throws InterruptedException {
+                    if (goesFirst)
+                        latch.countDown();
+                    else
+                        assertTrue(latch.await(SMALL_DELAY_MS, MILLISECONDS));
                     phaser.arrive();
                 }}));
+            if (goesFirst)
+                assertTrue(latch.await(SMALL_DELAY_MS, MILLISECONDS));
+            else
+                latch.countDown();
             phase = phaser.awaitAdvance(phaser.arrive());
             assertEquals(phase, phaser.getPhase());
         }
         for (Thread thread : threads)
-            thread.join();
+            awaitTermination(thread, SMALL_DELAY_MS);
     }
 
     /**
@@ -394,40 +403,24 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testAwaitAdvance6() throws InterruptedException {
         final Phaser phaser = new Phaser(3);
-        /*
-         * Start new thread. This thread waits a small amount of time
-         * and waits for the other two parties to arrive.  The party
-         * in the main thread arrives quickly so at best this thread
-         * waits for the second thread's party to arrive
-         */
-        Thread t1 = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
-                sleepTillInterrupted(SMALL_DELAY_MS);
-                int phase = phaser.awaitAdvance(phaser.arrive());
-                /*
-                 * This point is reached when force termination is called in which phase = -1
-                 */
-                assertTrue(phase < 0);
-                assertTrue(phaser.isTerminated());
-            }});
-        /*
-         * This thread will cause the first thread run to wait, in doing so
-         * the main thread will force termination in which the first thread
-         * should exit peacefully as this one
-         */
-        Thread t2 = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
-                sleepTillInterrupted(MEDIUM_DELAY_MS);
-                int p1 = phaser.arrive();
-                int phase = phaser.awaitAdvance(p1);
-                assertTrue(phase < 0);
-                assertTrue(phaser.isTerminated());
-            }});
-
-        phaser.arrive();
+        final CountDownLatch threadsStarted = new CountDownLatch(2);
+        final List<Thread> threads = new ArrayList<Thread>();
+        for (int i = 0; i < 2; i++) {
+            Runnable r = new CheckedRunnable() {
+                public void realRun() {
+                    int p1 = phaser.arrive();
+                    assertTrue(p1 >= 0);
+                    threadsStarted.countDown();
+                    int phase = phaser.awaitAdvance(p1);
+                    assertTrue(phase < 0);
+                    assertTrue(phaser.isTerminated());
+                }};
+            threads.add(newStartedThread(r));
+        }
+        threadsStarted.await();
         phaser.forceTermination();
-        t1.join();
-        t2.join();
+        for (Thread thread : threads)
+            awaitTermination(thread, SMALL_DELAY_MS);
     }
 
     /**

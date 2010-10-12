@@ -1145,7 +1145,7 @@ public class ConcurrentLinkedDeque<E>
                     beginningOfTheEnd.lazySetPrev(p); // CAS piggyback
                     if (p.casNext(null, beginningOfTheEnd)) {
                         // Successful CAS is the linearization point
-                        // for all elements to be added to this queue.
+                        // for all elements to be added to this deque.
                         if (!casTail(t, last)) {
                             // Try a little harder to update tail,
                             // since we may be adding many elements.

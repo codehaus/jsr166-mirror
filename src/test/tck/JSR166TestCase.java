@@ -746,7 +746,7 @@ public class JSR166TestCase extends TestCase {
 
     public Callable<String> latchAwaitingStringTask(final CountDownLatch latch) {
         return new CheckedCallable<String>() {
-            public String realCall() {
+            protected String realCall() {
                 try {
                     latch.await();
                 } catch (InterruptedException quittingTime) {}

@@ -44,7 +44,7 @@ public class ComodifiedRemove {
         Object o2 = new Integer(2);
         list.add(o2);
 
-        try{
+        try {
             e.remove();
         } catch (ConcurrentModificationException cme) {
             return;

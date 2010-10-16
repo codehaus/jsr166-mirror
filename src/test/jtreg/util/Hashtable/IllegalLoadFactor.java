@@ -38,7 +38,7 @@ public class IllegalLoadFactor {
 
       public static void main(String argv[]) throws Exception {
           boolean testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               Hashtable bad1 = new Hashtable(100, -3);
           }
@@ -49,7 +49,7 @@ public class IllegalLoadFactor {
               throw new Exception("Hashtable, negative load factor");
 
           testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               Hashtable bad1 = new Hashtable(100, Float.NaN);
           }
@@ -60,7 +60,7 @@ public class IllegalLoadFactor {
               throw new Exception("Hashtable, NaN load factor");
 
           testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               HashMap bad1 = new HashMap(100, -3);
           }
@@ -71,7 +71,7 @@ public class IllegalLoadFactor {
               throw new Exception("HashMap, negative load factor");
 
           testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               HashMap bad1 = new HashMap(100, Float.NaN);
           }
@@ -83,7 +83,7 @@ public class IllegalLoadFactor {
 
 
           testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               HashSet bad1 = new HashSet(100, -3);
           }
@@ -94,7 +94,7 @@ public class IllegalLoadFactor {
               throw new Exception("HashSet, negative load factor");
 
           testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               HashSet bad1 = new HashSet(100, Float.NaN);
           }
@@ -105,7 +105,7 @@ public class IllegalLoadFactor {
               throw new Exception("HashSet, NaN load factor");
 
           testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               WeakHashMap bad1 = new WeakHashMap(100, -3);
           }
@@ -116,7 +116,7 @@ public class IllegalLoadFactor {
               throw new Exception("WeakHashMap, negative load factor");
 
           testSucceeded = false;
-          try{
+          try {
               // this should generate an IllegalArgumentException
               WeakHashMap bad1 = new WeakHashMap(100, Float.NaN);
           }

@@ -39,7 +39,7 @@ public class IllegalConstructorArgs {
       public static void main(String argv[]) {
           int testSucceeded=0;
 
-        try{
+        try {
            // this should generate an IllegalArgumentException
            Vector bad1 = new Vector(-100, 10);
         }

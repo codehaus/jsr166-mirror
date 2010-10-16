@@ -37,7 +37,7 @@ public class ComodifiedRemoveAllElements {
         v.addElement(null);
         Iterator it = v.iterator();
         v.removeAllElements();
-        try{
+        try {
             it.next();
         } catch (ConcurrentModificationException cme) {
             return;

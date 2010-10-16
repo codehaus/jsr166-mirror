@@ -32,7 +32,7 @@ public class RLMap implements Map {
     public int size() {
         rl.lock(); try {return m.size();} finally { rl.unlock(); }
     }
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         rl.lock(); try {return m.isEmpty();} finally { rl.unlock(); }
     }
 
@@ -43,7 +43,7 @@ public class RLMap implements Map {
     public boolean containsKey(Object key) {
         rl.lock(); try {return m.containsKey(key);} finally { rl.unlock(); }
     }
-    public boolean containsValue(Object value){
+    public boolean containsValue(Object value) {
         rl.lock(); try {return m.containsValue(value);} finally { rl.unlock(); }
     }
 

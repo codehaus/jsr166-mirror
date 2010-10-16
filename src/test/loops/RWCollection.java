@@ -30,73 +30,114 @@ public final class RWCollection<E> implements Collection<E> {
 
     public final int size() {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try {return c.size();} finally { l.unlock(); }
+        l.lock();
+        try { return c.size(); }
+        finally { l.unlock(); }
     }
-    public final boolean isEmpty(){
+
+    public final boolean isEmpty() {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try {return c.isEmpty();} finally { l.unlock(); }
+        l.lock();
+        try { return c.isEmpty(); }
+        finally { l.unlock(); }
     }
 
     public final boolean contains(Object o) {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try {return c.contains(o);} finally { l.unlock(); }
+        l.lock();
+        try { return c.contains(o); }
+        finally { l.unlock(); }
     }
 
     public final boolean equals(Object o) {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try {return c.equals(o);} finally { l.unlock(); }
+        l.lock();
+        try { return c.equals(o); }
+        finally { l.unlock(); }
     }
+
     public final int hashCode() {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try {return c.hashCode();} finally { l.unlock(); }
+        l.lock();
+        try { return c.hashCode(); }
+        finally { l.unlock(); }
     }
+
     public final String toString() {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try {return c.toString();} finally { l.unlock(); }
+        l.lock();
+        try { return c.toString(); }
+        finally { l.unlock(); }
     }
 
     public final Iterator<E> iterator() {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try {return c.iterator();} finally { l.unlock(); }
+        l.lock();
+        try { return c.iterator(); }
+        finally { l.unlock(); }
     }
 
     public final Object[] toArray() {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try  {return c.toArray();} finally { l.unlock(); }
+        l.lock();
+        try { return c.toArray(); }
+        finally { l.unlock(); }
     }
+
     public final <T> T[] toArray(T[] a) {
         final ReentrantReadWriteLock.ReadLock l =  rwl.readLock();
-        l.lock(); try  {return (T[])c.toArray(a);} finally { l.unlock(); }
+        l.lock();
+        try { return (T[])c.toArray(a); }
+        finally { l.unlock(); }
     }
 
     public final boolean add(E e) {
         final ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
-        l.lock(); try  {return c.add(e);} finally { l.unlock(); }
+        l.lock();
+        try { return c.add(e); }
+        finally { l.unlock(); }
     }
+
     public final boolean remove(Object o) {
         final ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
-        l.lock(); try  {return c.remove(o);} finally { l.unlock(); }
+        l.lock();
+        try { return c.remove(o); }
+        finally { l.unlock(); }
     }
 
     public final boolean containsAll(Collection<?> coll) {
         final ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
-        l.lock(); try  {return c.containsAll(coll);} finally { l.unlock(); }
+        l.lock();
+        try { return c.containsAll(coll); }
+        finally { l.unlock(); }
     }
+
     public final boolean addAll(Collection<? extends E> coll) {
         final ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
-        l.lock(); try  {return c.addAll(coll);} finally { l.unlock(); }
+        l.lock();
+        try { return c.addAll(coll); }
+        finally { l.unlock(); }
     }
+
     public final boolean removeAll(Collection<?> coll) {
         final ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
-        l.lock(); try  {return c.removeAll(coll);} finally { l.unlock(); }
+        l.lock();
+        try { return c.removeAll(coll); }
+        finally { l.unlock(); }
     }
+
     public final boolean retainAll(Collection<?> coll) {
         final ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
-        l.lock(); try  {return c.retainAll(coll);} finally { l.unlock(); }
+        l.lock();
+        try { return c.retainAll(coll); }
+        finally { l.unlock(); }
     }
+
     public final void clear() {
         final ReentrantReadWriteLock.WriteLock l =  rwl.writeLock();
-        l.lock(); try  {c.clear();} finally { l.unlock(); }
+        l.lock();
+        try { c.clear(); }
+        finally { l.unlock(); }
     }
 
 }

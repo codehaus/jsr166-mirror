@@ -26,7 +26,7 @@ public final class Integrate {
     static String forkArg = "dynamic";
 
     // the function to integrate
-    static double computeFunction(double x)  {
+    static double computeFunction(double x) {
         return (x * x + 1.0) * x;
     }
 

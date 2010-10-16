@@ -221,7 +221,7 @@ public class RLIBar {
             if (false && j == 2) {
                 System.out.print("Hold activated ...");
                 HoldQ.lock();
-                try  {
+                try {
                     Hold = true;
                     while (Hold) HoldQCond.await();
                 }

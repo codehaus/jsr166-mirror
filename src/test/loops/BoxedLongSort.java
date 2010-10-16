@@ -88,7 +88,7 @@ class BoxedLongSort {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
         }
 
-        public void compute()  {
+        public void compute() {
             int l = origin;
             if (n <= THRESHOLD)
                 Arrays.sort(a, l, l+n);
@@ -206,7 +206,7 @@ class BoxedLongSort {
 
     }
 
-    static void checkSorted (Long[] a)  {
+    static void checkSorted (Long[] a) {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {

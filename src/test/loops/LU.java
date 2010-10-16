@@ -12,8 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * LU matrix decomposition demo
  * Based on those in Cilk and Hood
- **/
-
+ */
 public final class LU {
 
     /** for time conversion */

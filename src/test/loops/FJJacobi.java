@@ -15,8 +15,7 @@ public class FJJacobi {
     /**
      * The maximum number of matrix cells
      * at which to stop recursing down and instead directly update.
-     **/
-
+     */
     static final double EPSILON = 0.0001;  // convergence criterion
 
     public static void main(String[] args) throws Exception {

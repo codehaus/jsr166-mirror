@@ -11,8 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Divide and Conquer matrix multiply demo
- **/
-
+ */
 public class MatrixMultiply {
 
     /** for time conversion */
@@ -20,10 +19,11 @@ public class MatrixMultiply {
 
     static final int DEFAULT_GRANULARITY = 32;
 
-    /** The quadrant size at which to stop recursing down
+    /**
+     * The quadrant size at which to stop recursing down
      * and instead directly multiply the matrices.
      * Must be a power of two. Minimum value is 2.
-     **/
+     */
     static int granularity = DEFAULT_GRANULARITY;
 
     public static void main(String[] args) throws Exception {
@@ -193,8 +193,7 @@ public class MatrixMultiply {
          * Note that the results are added into C, not just set into C.
          * This works well here because Java array elements
          * are created with all zero values.
-         **/
-
+         */
         void multiplyStride2() {
             for (int j = 0; j < size; j+=2) {
                 for (int i = 0; i < size; i +=2) {

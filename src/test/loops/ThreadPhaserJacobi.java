@@ -17,8 +17,7 @@ public class ThreadPhaserJacobi {
     /**
      * The maximum submatrix length (both row-wise and column-wise)
      * for any Segment
-     **/
-
+     */
     static final double EPSILON = 0.0001;  // convergence criterion
 
     static int dimGran;

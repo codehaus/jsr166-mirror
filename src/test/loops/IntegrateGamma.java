@@ -66,20 +66,20 @@ public class IntegrateGamma {
       classes declared as static within Integrate
     */
 
-    /** A function to be integrated **/
+    /** A function to be integrated */
     static interface Function {
         double compute(double x);
     }
 
     /**
      * Sample from filaments demo.
-     * Computes (2*n-1)*(x^(2*n-1)) for all odd values
-     **/
+     * Computes (2*n-1)*(x^(2*n-1)) for all odd values.
+     */
     static class SampleFunction implements Function {
         final int n;
         SampleFunction(int n) { this.n = n; }
 
-        public double compute(double x)  {
+        public double compute(double x) {
             double power = x;
             double xsq = x * x;
             double val = power;
@@ -124,7 +124,7 @@ public class IntegrateGamma {
          *  and from the center point to the upper bound. If this
          *  differs from the value from lower to upper by more than
          *  the error tolerance, recurse on each half.
-         **/
+         */
         final class Quad extends RecursiveAction {
             final double left;       // lower bound
             final double right;      // upper bound

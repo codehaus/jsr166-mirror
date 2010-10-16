@@ -13,8 +13,7 @@ import java.util.concurrent.*;
  *          fibonacci(0) = 0;
  *          fibonacci(1) = 1.
  * </pre>
- **/
-
+ */
 public final class Fib extends RecursiveAction {
 
     // Performance-tuning constant:

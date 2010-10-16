@@ -150,7 +150,7 @@ public class Heat {
         }
 
 
-        /** Update all cells **/
+        /** Updates all cells. */
         final void compstripe(double[][] newMat, double[][] oldMat) {
 
             // manually mangled to reduce array indexing
@@ -213,7 +213,7 @@ public class Heat {
         }
 
 
-        /** Initialize all cells **/
+        /** Initializes all cells. */
         final void init() {
             final int llb = (lb == 0) ? 1 : lb;
             final int lub = (ub == nx) ? nx - 1 : ub;
@@ -232,7 +232,7 @@ public class Heat {
 
         }
 
-        /** Fill in edges with boundary values **/
+        /** Fills in edges with boundary values. */
         final void edges(double [][] m, int llb, int lub, double t) {
 
             for (int a = llb; a < lub; a++) {

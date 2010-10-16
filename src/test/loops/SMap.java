@@ -29,7 +29,7 @@ public class SMap implements Map {
     public synchronized int size() {
         return m.size();
     }
-    public synchronized boolean isEmpty(){
+    public synchronized boolean isEmpty() {
         return m.isEmpty();
     }
 
@@ -40,7 +40,7 @@ public class SMap implements Map {
     public synchronized boolean containsKey(Object key) {
         return m.containsKey(key);
     }
-    public synchronized boolean containsValue(Object value){
+    public synchronized boolean containsValue(Object value) {
         return m.containsValue(value);
     }
 

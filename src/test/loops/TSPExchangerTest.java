@@ -672,7 +672,7 @@ public class TSPExchangerTest {
         }
 
         /**
-         *  Returns the cached distance between a pair of cities
+         * Returns the cached distance between a pair of cities.
          */
         int distanceBetween(int i, int j) {
             return distances[i][j];
@@ -682,7 +682,7 @@ public class TSPExchangerTest {
         static final double PSCALE = (double) 0x80000000L;
 
         /**
-         * Return distance for points scaled in [0,1). This simplifies
+         * Returns distance for points scaled in [0,1). This simplifies
          * checking results.  The expected optimal TSP for random
          * points is believed to be around 0.76 * sqrt(N). For papers
          * discussing this, see

@@ -19,9 +19,8 @@ import java.util.concurrent.*;
  * Microscope</a> version for instructions.
  * <p>
  * The code has been mangled beyond recognition
- * as a test of ForkJoin
- **/
-
+ * as a test of ForkJoin.
+ */
 public class Microscope extends JPanel {
 
     static final CountDownLatch cd = new CountDownLatch(1);
@@ -230,7 +229,7 @@ public class Microscope extends JPanel {
             boardPanel.repaint();
     }
 
-    public void init()  {
+    public void init() {
         initializeBoard();
         if (autostart) {
             startMover(auto);
@@ -438,8 +437,7 @@ public class Microscope extends JPanel {
 
     /**
      *  Player is just a glorified enumeration
-     **/
-
+     */
     static final class Player {
 
         public static final int EMPTY = 0;
@@ -480,8 +478,7 @@ public class Microscope extends JPanel {
      * Boards are not immutable, but are never passed around across
      * threads (instead new ones are constructed), so don't
      * need any synch.
-     **/
-
+     */
     static final class Board   {
 
         /*
@@ -584,7 +581,7 @@ public class Microscope extends JPanel {
         public void occupy(Player player, int row, int col) {
             long m = 1L << (row + col * RANKS);
             long nm = ~m;
-            if (player.code_ == Player.BLUE)  {
+            if (player.code_ == Player.BLUE) {
                 blue_ |= m;
                 green_ &= nm;
             }
@@ -699,10 +696,8 @@ public class Microscope extends JPanel {
 
     /**
      * Moves represent transitions across Board states
-     **/
-
-
-    static final class Move  {
+     */
+    static final class Move {
 
         static final int NO_VALUE = -1;     // row/col value if not yet set
         static final int PASS_VALUE = -2;   // special value for pass moves
@@ -821,7 +816,7 @@ public class Microscope extends JPanel {
         synchronized void commit() { // update board to reflect move
             if (!committed) {
                 committed = true;
-                if (isLegal() && !isPass())  {
+                if (isLegal() && !isPass()) {
                     if (isJump()) board_.occupy(Player.Empty, fromRow, fromCol);
                     board_.take(player_, toRow, toCol);
                 }
@@ -853,9 +848,8 @@ public class Microscope extends JPanel {
     }
 
     /**
-     *  User builds moves via instructions/clicks by users
-     **/
-
+     * User builds moves via instructions/clicks by users
+     */
     static class User extends Mover {
 
         private Move current;
@@ -909,9 +903,8 @@ public class Microscope extends JPanel {
 
 
     /**
-     *     AutoMover constructs Finders that compute actual moves
-     **/
-
+     * AutoMover constructs Finders that compute actual moves
+     */
     static class AutoMover extends Mover {
 
         boolean cancelled = false;
@@ -932,7 +925,7 @@ public class Microscope extends JPanel {
 
 
         public synchronized void cancel() {
-            if (placing())  {
+            if (placing()) {
                 currentFinder.cancel(false);
                 stopPlacing();
             }
@@ -964,8 +957,7 @@ public class Microscope extends JPanel {
      * since most expansions are duplicates of others. It could also
      * be changed to prune moves, although this is unlikely to work
      * well without better partial evaluation functions.
-     **/
-
+     */
     static class Finder extends RecursiveAction {
 
         static final int NOMOVE = Integer.MIN_VALUE;
@@ -1070,9 +1062,8 @@ public class Microscope extends JPanel {
 
         /**
          * Join all subtasks and evaluate moves. Default is sub-finder version.
-         * Overridden in RootFinder
-         **/
-
+         * Overridden in RootFinder.
+         */
         void collect(Finder forked) {
             int best = NOMOVE;
             while (forked != null) {
@@ -1103,9 +1094,8 @@ public class Microscope extends JPanel {
         }
 
         /**
-         * Cancel all forked subtasks in list
-         **/
-
+         * Cancels all forked subtasks in list.
+         */
         void cancelAll(Finder forked) {
             while (forked != null) {
                 forked.cancel(false);
@@ -1117,8 +1107,7 @@ public class Microscope extends JPanel {
 
     /**
      * Root Finder class -- wait out other finders and issue callback to game.
-     **/
-
+     */
     static class RootFinder extends Finder {
         final AutoMover automover;
         final Player player;
@@ -1136,7 +1125,7 @@ public class Microscope extends JPanel {
         /**
          * This differs from default version by recording
          * and calling back with best move
-         **/
+         */
         void collect(Finder forked) {
             int best = NOMOVE;
             Finder bestFinder = null;

@@ -640,7 +640,7 @@ public class Executors {
         FinalizableDelegatedExecutorService(ExecutorService executor) {
             super(executor);
         }
-        protected void finalize()  {
+        protected void finalize() {
             super.shutdown();
         }
     }

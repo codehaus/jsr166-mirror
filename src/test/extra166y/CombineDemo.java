@@ -291,7 +291,7 @@ class CombineDemo {
         return u;
     }
 
-    static void checkSorted(ParallelArray<Long> pa)  {
+    static void checkSorted(ParallelArray<Long> pa) {
         int n = pa.size();
         for (int i = 0; i < n - 1; i++) {
             if (pa.get(i).compareTo(pa.get(i+1)) >= 0) {

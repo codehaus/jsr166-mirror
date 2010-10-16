@@ -23,7 +23,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
         return new TestSuite(ParallelArrayAsListTest.class);
     }
 
-    static List populatedArray(int n){
+    static List populatedArray(int n) {
         List a = ParallelArray.createEmpty(n, Object.class, ParallelArray.defaultExecutor()).asList();
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; ++i)
@@ -34,7 +34,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
 
-    static List emptyArray(){
+    static List emptyArray() {
         List a = ParallelArray.createEmpty(1, Object.class, ParallelArray.defaultExecutor()).asList();
         return a;
     }
@@ -62,7 +62,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 
 
     /**
-     *   addAll  adds each element from the given collection
+     * addAll adds each element from the given collection
      */
     public void testAddAll() {
         List full = populatedArray(3);
@@ -75,7 +75,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   clear removes all elements from the list
+     * clear removes all elements from the list
      */
     public void testClear() {
         List full = populatedArray(SIZE);
@@ -86,7 +86,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 
 
     /**
-     *   contains is true for added elements
+     * contains is true for added elements
      */
     public void testContains() {
         List full = populatedArray(3);
@@ -130,7 +130,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
 
 
     /**
-     *   containsAll returns true for collection with subset of elements
+     * containsAll returns true for collection with subset of elements
      */
     public void testContainsAll() {
         List full = populatedArray(3);
@@ -143,7 +143,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   get returns the  value at the given index
+     * get returns the  value at the given index
      */
     public void testGet() {
         List full = populatedArray(3);
@@ -151,7 +151,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   indexOf gives the index for the given object
+     * indexOf gives the index for the given object
      */
     public void testIndexOf() {
         List full = populatedArray(3);
@@ -160,7 +160,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   isEmpty returns true when empty, else false
+     * isEmpty returns true when empty, else false
      */
     public void testIsEmpty() {
         List empty = emptyArray();
@@ -170,7 +170,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   iterator() returns an iterator containing the elements of the list
+     * iterator() returns an iterator containing the elements of the list
      */
     public void testIterator() {
         List full = populatedArray(SIZE);
@@ -205,7 +205,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   lastIndexOf returns the index for the given object
+     * lastIndexOf returns the index for the given object
      */
     public void testLastIndexOf1() {
         List full = populatedArray(3);
@@ -216,7 +216,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *  listIterator traverses all elements
+     * listIterator traverses all elements
      */
     public void testListIterator1() {
         List full = populatedArray(SIZE);
@@ -228,7 +228,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *  listIterator only returns those elements after the given index
+     * listIterator only returns those elements after the given index
      */
     public void testListIterator2() {
         List full = populatedArray(3);
@@ -240,7 +240,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   remove  removes and returns the object at the given index
+     * remove removes and returns the object at the given index
      */
     public void testRemove() {
         List full = populatedArray(3);
@@ -249,7 +249,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   removeAll  removes all elements from the given collection
+     * removeAll removes all elements from the given collection
      */
     public void testRemoveAll() {
         List full = populatedArray(3);
@@ -261,7 +261,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   set  changes the element at the given index
+     * set changes the element at the given index
      */
     public void testSet() {
         List full = populatedArray(3);
@@ -270,7 +270,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   size returns the number of elements
+     * size returns the number of elements
      */
     public void testSize() {
         List empty = emptyArray();
@@ -280,7 +280,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   toArray returns an Object array containing all elements from the list
+     * toArray returns an Object array containing all elements from the list
      */
     public void testToArray() {
         List full = populatedArray(3);
@@ -292,8 +292,8 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     }
 
     /**
-     *   toArray returns an Integer array containing all elements from
-     *   the list
+     * toArray returns an Integer array containing all elements from
+     * the list
      */
     public void testToArray2() {
         List full = populatedArray(3);
@@ -332,8 +332,8 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
     // Exception tests
 
     /**
-     *   toArray throws an ArrayStoreException when the given array
-     *  can not store the objects inside the list
+     * toArray throws an ArrayStoreException when the given array
+     * can not store the objects inside the list
      */
     public void testToArray_ArrayStoreException() {
         try {
@@ -342,22 +342,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdadasd");
             c.toArray(new Long[5]);
             shouldThrow();
-        } catch (ArrayStoreException e){}
+        } catch (ArrayStoreException e) {}
     }
 
     /**
-     *   get throws an IndexOutOfBoundsException on a negative index
+     * get throws an IndexOutOfBoundsException on a negative index
      */
     public void testGet1_IndexOutOfBoundsException() {
         try {
             List c = emptyArray();
             c.get(-1);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   get throws an IndexOutOfBoundsException on a too high index
+     * get throws an IndexOutOfBoundsException on a too high index
      */
     public void testGet2_IndexOutOfBoundsException() {
         try {
@@ -366,22 +366,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdad");
             c.get(100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   set throws an IndexOutOfBoundsException on a negative index
+     * set throws an IndexOutOfBoundsException on a negative index
      */
     public void testSet1_IndexOutOfBoundsException() {
         try {
             List c = emptyArray();
             c.set(-1,"qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   set throws an IndexOutOfBoundsException on a too high index
+     * set throws an IndexOutOfBoundsException on a too high index
      */
     public void testSet2() {
         try {
@@ -390,22 +390,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdad");
             c.set(100, "qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   add throws an IndexOutOfBoundsException on a negative index
+     * add throws an IndexOutOfBoundsException on a negative index
      */
     public void testAdd1_IndexOutOfBoundsException() {
         try {
             List c = emptyArray();
             c.add(-1,"qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   add throws an IndexOutOfBoundsException on a too high index
+     * add throws an IndexOutOfBoundsException on a too high index
      */
     public void testAdd2_IndexOutOfBoundsException() {
         try {
@@ -414,22 +414,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasdasd");
             c.add(100, "qwerty");
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   remove throws an IndexOutOfBoundsException on a negative index
+     * remove throws an IndexOutOfBoundsException on a negative index
      */
     public void testRemove1_IndexOutOfBounds() {
         try {
             List c = emptyArray();
             c.remove(-1);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   remove throws an IndexOutOfBoundsException on a too high index
+     * remove throws an IndexOutOfBoundsException on a too high index
      */
     public void testRemove2_IndexOutOfBounds() {
         try {
@@ -438,22 +438,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("adasdasd");
             c.remove(100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   addAll throws an IndexOutOfBoundsException on a negative index
+     * addAll throws an IndexOutOfBoundsException on a negative index
      */
     public void testAddAll1_IndexOutOfBoundsException() {
         try {
             List c = emptyArray();
             c.addAll(-1,new LinkedList());
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   addAll throws an IndexOutOfBoundsException on a too high index
+     * addAll throws an IndexOutOfBoundsException on a too high index
      */
     public void testAddAll2_IndexOutOfBoundsException() {
         try {
@@ -462,22 +462,22 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasdasd");
             c.addAll(100, new LinkedList());
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   listIterator throws an IndexOutOfBoundsException on a negative index
+     * listIterator throws an IndexOutOfBoundsException on a negative index
      */
     public void testListIterator1_IndexOutOfBoundsException() {
         try {
             List c = emptyArray();
             c.listIterator(-1);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   listIterator throws an IndexOutOfBoundsException on a too high index
+     * listIterator throws an IndexOutOfBoundsException on a too high index
      */
     public void testListIterator2_IndexOutOfBoundsException() {
         try {
@@ -486,11 +486,11 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasdas");
             c.listIterator(100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   subList throws an IndexOutOfBoundsException on a negative index
+     * subList throws an IndexOutOfBoundsException on a negative index
      */
     public void testSubList1_IndexOutOfBoundsException() {
         try {
@@ -498,11 +498,11 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.subList(-1,100);
 
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   subList throws an IndexOutOfBoundsException on a too high index
+     * subList throws an IndexOutOfBoundsException on a too high index
      */
     public void testSubList2_IndexOutOfBoundsException() {
         try {
@@ -510,12 +510,12 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.add("asdasd");
             c.subList(1,100);
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
     /**
-     *   subList throws IndexOutOfBoundsException when the second index
-     *  is lower then the first
+     * subList throws IndexOutOfBoundsException when the second index
+     * is lower then the first
      */
     public void testSubList3_IndexOutOfBoundsException() {
         try {
@@ -523,7 +523,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase{
             c.subList(3,1);
 
             shouldThrow();
-        } catch (IndexOutOfBoundsException e){}
+        } catch (IndexOutOfBoundsException e) {}
     }
 
 

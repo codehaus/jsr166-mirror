@@ -258,7 +258,7 @@ public class LinkedList<E>
      * @return the last element in this list
      * @throws NoSuchElementException if this list is empty
      */
-    public E getLast()  {
+    public E getLast() {
         final Node<E> l = last;
         if (l == null)
             throw new NoSuchElementException();

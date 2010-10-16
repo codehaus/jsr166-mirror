@@ -411,7 +411,7 @@ package java.util.concurrent.atomic;
  *
  *   <ul>
  *     <li><em>p</em>, a reference to an object
- *     <li><em>f</em>, an invocation of  {@code orderAccesses(p)}
+ *     <li><em>f</em>, an invocation of {@code orderAccesses(p)}
  *   </ul>
  *   If:
  *   <ul>

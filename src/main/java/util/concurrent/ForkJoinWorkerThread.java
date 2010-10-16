@@ -748,10 +748,10 @@ public class ForkJoinWorkerThread extends Thread {
     // Run State management
 
     // status check methods used mainly by ForkJoinPool
-    final boolean isRunning()     { return runState == 0; }
-    final boolean isTerminated()  { return (runState & TERMINATED) != 0; }
-    final boolean isSuspended()   { return (runState & SUSPENDED) != 0; }
-    final boolean isTrimmed()     { return (runState & TRIMMED) != 0; }
+    final boolean isRunning()    { return runState == 0; }
+    final boolean isTerminated() { return (runState & TERMINATED) != 0; }
+    final boolean isSuspended()  { return (runState & SUSPENDED) != 0; }
+    final boolean isTrimmed()    { return (runState & TRIMMED) != 0; }
 
     final boolean isTerminating() {
         if ((runState & TERMINATING) != 0)

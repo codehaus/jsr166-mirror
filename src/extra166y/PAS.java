@@ -1657,7 +1657,7 @@ class PAS {
             this.gran = gran;
         }
 
-        public void compute()  {
+        public void compute() {
             int l = origin;
             int g = gran;
             if (n > g) {
@@ -1693,7 +1693,7 @@ class PAS {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
             this.gran = gran;
         }
-        public void compute()  {
+        public void compute() {
             int l = origin;
             int g = gran;
             if (n > g) {
@@ -1730,7 +1730,7 @@ class PAS {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
             this.gran = gran;
         }
-        public void compute()  {
+        public void compute() {
             int l = origin;
             int g = gran;
             if (n > g) {
@@ -1766,7 +1766,7 @@ class PAS {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
             this.gran = gran;
         }
-        public void compute()  {
+        public void compute() {
             int l = origin;
             int g = gran;
             if (n > g) {
@@ -1804,7 +1804,7 @@ class PAS {
             this.gran = gran;
         }
 
-        public void compute()  {
+        public void compute() {
             int l = origin;
             int g = gran;
             if (n > g) {
@@ -1840,7 +1840,7 @@ class PAS {
             this.a = a; this.w = w; this.origin = origin; this.n = n;
             this.gran = gran;
         }
-        public void compute()  {
+        public void compute() {
             int l = origin;
             int g = gran;
             if (n > g) {
@@ -2341,7 +2341,8 @@ class PAS {
                 while (cmp.compare(pivot, a[right]) < 0)
                     --right;
                 int c;
-                while (left < right && (c = cmp.compare(pivot, a[left])) >= 0){
+                while (left < right &&
+                       (c = cmp.compare(pivot, a[left])) >= 0) {
                     if (c != 0)
                         sameLefts = false;
                     ++left;
@@ -2459,7 +2460,8 @@ class PAS {
                 while (cmp.compare(pivot, a[right]) < 0)
                     --right;
                 int c;
-                while (left < right && (c = cmp.compare(pivot, a[left])) >= 0){
+                while (left < right &&
+                       (c = cmp.compare(pivot, a[left])) >= 0) {
                     if (c != 0)
                         sameLefts = false;
                     ++left;
@@ -2518,7 +2520,8 @@ class PAS {
                 while (cmp.compare(pivot, a[right]) < 0)
                     --right;
                 int c;
-                while (left < right && (c = cmp.compare(pivot, a[left])) >= 0){
+                while (left < right &&
+                       (c = cmp.compare(pivot, a[left])) >= 0) {
                     if (c != 0)
                         sameLefts = false;
                     ++left;

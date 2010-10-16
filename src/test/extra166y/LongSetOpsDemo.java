@@ -288,7 +288,7 @@ class LongSetOpsDemo {
         return u;
     }
 
-    static void checkSorted(ParallelLongArray pa)  {
+    static void checkSorted(ParallelLongArray pa) {
         int n = pa.size();
         for (int i = 0; i < n - 1; i++) {
             if (pa.get(i) >= pa.get(i+1)) {

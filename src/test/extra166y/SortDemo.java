@@ -54,7 +54,7 @@ class SortDemo {
         System.out.printf("ParallelArray.sort time:     %7.3f\n", elapsed);
     }
 
-    static void checkSorted(Long[] a)  {
+    static void checkSorted(Long[] a) {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i].compareTo(a[i+1]) > 0) {

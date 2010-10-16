@@ -18,7 +18,7 @@ package java.util.concurrent.atomic;
  * @author Doug Lea
  * @param <V> The type of object referred to by this reference
  */
-public class AtomicStampedReference<V>  {
+public class AtomicStampedReference<V> {
 
     private static class Pair<T> {
         final T reference;

@@ -970,7 +970,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     private static class COWIterator<E> implements ListIterator<E> {
-        /** Snapshot of the array **/
+        /** Snapshot of the array */
         private final Object[] snapshot;
         /** Index of element to be returned by subsequent call to next.  */
         private int cursor;

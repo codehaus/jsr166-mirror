@@ -917,7 +917,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * @throws NoSuchElementException {@inheritDoc}
      */
-    public E getLast()  {
+    public E getLast() {
         return screenNullResult(peekLast());
     }
 

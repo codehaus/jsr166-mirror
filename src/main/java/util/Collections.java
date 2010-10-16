@@ -1482,12 +1482,12 @@ public class Collections {
 
                 UnmodifiableEntry(Map.Entry<? extends K, ? extends V> e) {this.e = e;}
 
-                public K getKey()         {return e.getKey();}
-                public V getValue()  {return e.getValue();}
+                public K getKey()        {return e.getKey();}
+                public V getValue()      {return e.getValue();}
                 public V setValue(V value) {
                     throw new UnsupportedOperationException();
                 }
-                public int hashCode()     {return e.hashCode();}
+                public int hashCode()    {return e.hashCode();}
                 public boolean equals(Object o) {
                     if (!(o instanceof Map.Entry))
                         return false;
@@ -1495,7 +1495,7 @@ public class Collections {
                     return eq(e.getKey(),   t.getKey()) &&
                            eq(e.getValue(), t.getValue());
                 }
-                public String toString()  {return e.toString();}
+                public String toString() {return e.toString();}
             }
         }
     }

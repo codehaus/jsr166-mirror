@@ -44,7 +44,7 @@ class ParallelArraySortDemo {
         fjpool.shutdown();
     }
 
-    static void checkSorted(Long[] a)  {
+    static void checkSorted(Long[] a) {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i].compareTo(a[i+1]) > 0) {

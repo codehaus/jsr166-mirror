@@ -126,7 +126,7 @@ import java.util.*;
  *          }
  *          // Downgrade by acquiring read lock before releasing write lock
  *          rwl.readLock().lock();
- *        } finally  {
+ *        } finally {
  *          rwl.writeLock().unlock(); // Unlock write, still hold read
  *        }
  *     }
@@ -186,7 +186,8 @@ import java.util.*;
  * @author Doug Lea
  *
  */
-public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializable  {
+public class ReentrantReadWriteLock
+        implements ReadWriteLock, java.io.Serializable {
     private static final long serialVersionUID = -6992448646407690164L;
     /** Inner class providing readlock */
     private final ReentrantReadWriteLock.ReadLock readerLock;
@@ -673,7 +674,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * The lock returned by method {@link ReentrantReadWriteLock#readLock}.
      */
-    public static class ReadLock implements Lock, java.io.Serializable  {
+    public static class ReadLock implements Lock, java.io.Serializable {
         private static final long serialVersionUID = -5992448646407690164L;
         private final Sync sync;
 
@@ -879,7 +880,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
     /**
      * The lock returned by method {@link ReentrantReadWriteLock#writeLock}.
      */
-    public static class WriteLock implements Lock, java.io.Serializable  {
+    public static class WriteLock implements Lock, java.io.Serializable {
         private static final long serialVersionUID = -4992448646407690164L;
         private final Sync sync;
 

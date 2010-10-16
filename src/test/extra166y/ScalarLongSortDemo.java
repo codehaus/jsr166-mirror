@@ -45,7 +45,7 @@ class ScalarLongSortDemo {
         fjpool.shutdown();
     }
 
-    static void checkSorted(long[] a)  {
+    static void checkSorted(long[] a) {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {

@@ -1558,7 +1558,8 @@ public class TreeMap<K,V>
                 if (!inRange(key))
                     return false;
                 TreeMap.Entry<K,V> node = m.getEntry(key);
-                if (node!=null && valEquals(node.getValue(),entry.getValue())){
+                if (node!=null && valEquals(node.getValue(),
+                                            entry.getValue())) {
                     m.deleteEntry(node);
                     return true;
                 }
@@ -1723,7 +1724,7 @@ public class TreeMap<K,V>
                                        false,     toKey, inclusive);
         }
 
-        public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive){
+        public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive) {
             if (!inRange(fromKey, inclusive))
                 throw new IllegalArgumentException("fromKey out of range");
             return new AscendingSubMap(m,
@@ -1804,7 +1805,7 @@ public class TreeMap<K,V>
                                         toEnd, hi,    hiInclusive);
         }
 
-        public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive){
+        public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive) {
             if (!inRange(fromKey, inclusive))
                 throw new IllegalArgumentException("fromKey out of range");
             return new DescendingSubMap(m,

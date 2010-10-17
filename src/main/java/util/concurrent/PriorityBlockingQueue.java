@@ -215,7 +215,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             PriorityBlockingQueue<? extends E> pq =
                 (PriorityBlockingQueue<? extends E>) c;
             this.comparator = (Comparator<? super E>) pq.comparator();
-            screen = false; 
+            screen = false;
             if (pq.getClass() == PriorityBlockingQueue.class) // exact match
                 heapify = false;
         }
@@ -240,7 +240,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * (but normally expand by about 50%), giving up (allowing retry)
      * on contention (which we expect to be rare). Call only while
      * holding lock.
-     * 
+     *
      * @param array the heap array
      * @param oldCap the length of the array
      */
@@ -291,7 +291,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             Comparator<? super E> cmp = comparator;
             if (cmp == null)
                 siftDownComparable(0, x, array, n);
-            else 
+            else
                 siftDownUsingComparator(0, x, array, n, cmp);
             size = n;
         }
@@ -350,7 +350,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param array the heap array
      * @param n heap size
      */
-    private static <T> void siftDownComparable(int k, T x, Object[] array, 
+    private static <T> void siftDownComparable(int k, T x, Object[] array,
                                                int n) {
         Comparable<? super T> key = (Comparable<? super T>)x;
         int half = n >>> 1;           // loop while a non-leaf
@@ -595,7 +595,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             E moved = (E) array[n];
             array[n] = null;
             Comparator<? super E> cmp = comparator;
-            if (cmp == null) 
+            if (cmp == null)
                 siftDownComparable(i, moved, array, n);
             else
                 siftDownUsingComparator(i, moved, array, n, cmp);
@@ -924,12 +924,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-        try { 
+        try {
             s.defaultReadObject();
             this.queue = new Object[q.size()];
             comparator = q.comparator();
             addAll(q);
-        } finally { 
+        } finally {
             q = null;
         }
     }

@@ -24,7 +24,7 @@ import java.util.*;
  * will result in the operation blocking; attempts to {@code take} an
  * element from an empty queue will similarly block.
  *
- * <p> This class supports an optional fairness policy for ordering
+ * <p>This class supports an optional fairness policy for ordering
  * waiting producer and consumer threads.  By default, this ordering
  * is not guaranteed. However, a queue constructed with fairness set
  * to {@code true} grants threads access in FIFO order. Fairness

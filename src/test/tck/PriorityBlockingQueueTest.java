@@ -822,7 +822,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                 assertTrue(q.offer(new Integer(j)));
             ArrayList l = new ArrayList();
             q.drainTo(l, i);
-            int k = (i < SIZE)? i : SIZE;
+            int k = (i < SIZE) ? i : SIZE;
             assertEquals(l.size(), k);
             assertEquals(q.size(), SIZE-k);
             for (int j = 0; j < k; ++j)

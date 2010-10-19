@@ -917,7 +917,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = populatedQueue(SIZE);
             ArrayList l = new ArrayList();
             q.drainTo(l, i);
-            int k = (i < SIZE)? i : SIZE;
+            int k = (i < SIZE) ? i : SIZE;
             assertEquals(q.size(), SIZE-k);
             assertEquals(l.size(), k);
         }

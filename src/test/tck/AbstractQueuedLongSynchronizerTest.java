@@ -61,7 +61,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         public boolean isSignalled() { return getState() != 0; }
 
         public long tryAcquireShared(long ignore) {
-            return isSignalled()? 1 : -1;
+            return isSignalled() ? 1 : -1;
         }
 
         public boolean tryReleaseShared(long ignore) {

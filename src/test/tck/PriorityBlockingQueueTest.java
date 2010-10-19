@@ -813,7 +813,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(c, n) empties first max {n, size} elements of queue into c
+     * drainTo(c, n) empties first min(n, size) elements of queue into c
      */
     public void testDrainToN() {
         PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE*2);

@@ -807,7 +807,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(c, n) empties first max {n, size} elements of queue into c
+     * drainTo(c, n) empties first min(n, size) elements of queue into c
      */
     public void testDrainToN() {
         LinkedTransferQueue q = new LinkedTransferQueue();

@@ -910,7 +910,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(c, n) empties first max {n, size} elements of queue into c
+     * drainTo(c, n) empties first min(n, size) elements of queue into c
      */
     public void testDrainToN() {
         for (int i = 0; i < SIZE + 2; ++i) {

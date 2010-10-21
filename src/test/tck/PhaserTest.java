@@ -386,9 +386,95 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * awaitAdvance continues waiting if interrupted
+     * awaitAdvance continues waiting if interrupted before waiting
      */
-    public void testAwaitAdvance3() throws InterruptedException {
+    public void testAwaitAdvanceAfterInterrupt() throws InterruptedException {
+        final Phaser phaser = new Phaser();
+        assertEquals(0, phaser.register());
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                Thread.currentThread().interrupt();
+                assertEquals(0, phaser.register());
+                assertEquals(0, phaser.arrive());
+                threadStarted.countDown();
+                assertTrue(Thread.currentThread().isInterrupted());
+                assertEquals(1, phaser.awaitAdvance(0));
+                assertTrue(Thread.currentThread().isInterrupted());
+            }});
+
+        assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+        waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
+        assertEquals(0, phaser.arrive());
+        awaitTermination(t, SMALL_DELAY_MS);
+
+        Thread.currentThread().interrupt();
+        assertEquals(1, phaser.awaitAdvance(0));
+        assertTrue(Thread.interrupted());
+    }
+
+    /**
+     * awaitAdvance continues waiting if interrupted while waiting
+     */
+    public void testAwaitAdvanceBeforeInterrupt() throws InterruptedException {
+        final Phaser phaser = new Phaser();
+        assertEquals(0, phaser.register());
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertEquals(0, phaser.register());
+                assertEquals(0, phaser.arrive());
+                threadStarted.countDown();
+                assertFalse(Thread.currentThread().isInterrupted());
+                assertEquals(1, phaser.awaitAdvance(0));
+                assertTrue(Thread.currentThread().isInterrupted());
+            }});
+
+        assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+        waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
+        t.interrupt();
+        assertEquals(0, phaser.arrive());
+        awaitTermination(t, SMALL_DELAY_MS);
+
+        Thread.currentThread().interrupt();
+        assertEquals(1, phaser.awaitAdvance(0));
+        assertTrue(Thread.interrupted());
+    }
+
+    /**
+     * arriveAndAwaitAdvance continues waiting if interrupted before waiting
+     */
+    public void testArriveAndAwaitAdvanceAfterInterrupt()
+            throws InterruptedException {
+        final Phaser phaser = new Phaser();
+        assertEquals(0, phaser.register());
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                Thread.currentThread().interrupt();
+                assertEquals(0, phaser.register());
+                threadStarted.countDown();
+                assertTrue(Thread.currentThread().isInterrupted());
+                assertEquals(1, phaser.arriveAndAwaitAdvance());
+                assertTrue(Thread.currentThread().isInterrupted());
+            }});
+
+        assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+        waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
+        Thread.currentThread().interrupt();
+        assertEquals(1, phaser.arriveAndAwaitAdvance());
+        assertTrue(Thread.interrupted());
+        awaitTermination(t, SMALL_DELAY_MS);
+    }
+
+    /**
+     * arriveAndAwaitAdvance continues waiting if interrupted while waiting
+     */
+    public void testArriveAndAwaitAdvanceBeforeInterrupt()
+            throws InterruptedException {
         final Phaser phaser = new Phaser();
         assertEquals(0, phaser.register());
         final CountDownLatch threadStarted = new CountDownLatch(1);
@@ -397,12 +483,17 @@ public class PhaserTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 assertEquals(0, phaser.register());
                 threadStarted.countDown();
-                assertEquals(1, phaser.awaitAdvance(phaser.arrive()));
+                assertFalse(Thread.currentThread().isInterrupted());
+                assertEquals(1, phaser.arriveAndAwaitAdvance());
                 assertTrue(Thread.currentThread().isInterrupted());
             }});
+
         assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+        waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
         t.interrupt();
-        assertEquals(0, phaser.arrive());
+        Thread.currentThread().interrupt();
+        assertEquals(1, phaser.arriveAndAwaitAdvance());
+        assertTrue(Thread.interrupted());
         awaitTermination(t, SMALL_DELAY_MS);
     }
 
@@ -498,35 +589,6 @@ public class PhaserTest extends JSR166TestCase {
             phaser.arriveAndAwaitAdvance();
             shouldThrow();
         } catch (IllegalStateException success) {}
-    }
-
-    /**
-     * Interrupted arriveAndAwaitAdvance does not throw InterruptedException
-     */
-    public void testArriveAndAwaitAdvance2() throws InterruptedException {
-        final Phaser phaser = new Phaser(2);
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        final AtomicBoolean advanced = new AtomicBoolean(false);
-        final AtomicBoolean checkedInterruptStatus = new AtomicBoolean(false);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                threadStarted.countDown();
-                assertEquals(1, phaser.arriveAndAwaitAdvance());
-                assertState(phaser, 1, 2, 2);
-                advanced.set(true);
-                assertTrue(Thread.currentThread().isInterrupted());
-                while (!checkedInterruptStatus.get())
-                    Thread.yield();
-            }});
-
-        assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
-        t.interrupt();
-        assertEquals(0, phaser.arrive());
-        while (!advanced.get())
-            Thread.yield();
-        assertTrue(t.isInterrupted());
-        checkedInterruptStatus.set(true);
-        awaitTermination(t, SMALL_DELAY_MS);
     }
 
     /**

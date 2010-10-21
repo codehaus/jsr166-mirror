@@ -605,6 +605,24 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * Waits up to the specified number of milliseconds for the given
+     * thread to enter a wait state: BLOCKED, WAITING, or TIMED_WAITING.
+     */
+    void waitForThreadToEnterWaitState(Thread thread, long timeoutMillis) {
+        long timeoutNanos = timeoutMillis * 1000L * 1000L;
+        long t0 = System.nanoTime();
+        for (;;) {
+            Thread.State s = thread.getState();
+            if (s == Thread.State.BLOCKED ||
+                s == Thread.State.WAITING ||
+                s == Thread.State.TIMED_WAITING ||
+                System.nanoTime() - t0 > timeoutNanos)
+                return;
+            Thread.yield();
+        }
+    }
+
+    /**
      * Returns a new started daemon Thread running the given runnable.
      */
     Thread newStartedThread(Runnable runnable) {

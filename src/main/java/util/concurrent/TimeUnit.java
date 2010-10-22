@@ -24,12 +24,12 @@ package java.util.concurrent;
  * java.util.concurrent.locks.Lock lock} is not available:
  *
  * <pre>  Lock lock = ...;
- *  if ( lock.tryLock(50L, TimeUnit.MILLISECONDS) ) ...
+ *  if (lock.tryLock(50L, TimeUnit.MILLISECONDS)) ...
  * </pre>
  * while this code will timeout in 50 seconds:
  * <pre>
  *  Lock lock = ...;
- *  if ( lock.tryLock(50L, TimeUnit.SECONDS) ) ...
+ *  if (lock.tryLock(50L, TimeUnit.SECONDS)) ...
  * </pre>
  *
  * Note however, that there is no guarantee that a particular timeout
@@ -270,12 +270,14 @@ public enum TimeUnit {
      * method (see {@link BlockingQueue#poll BlockingQueue.poll})
      * using:
      *
-     * <pre>  public synchronized Object poll(long timeout, TimeUnit unit) throws InterruptedException {
-     *    while (empty) {
-     *      unit.timedWait(this, timeout);
-     *      ...
-     *    }
-     *  }</pre>
+     *  <pre> {@code
+     * public synchronized Object poll(long timeout, TimeUnit unit)
+     *     throws InterruptedException {
+     *   while (empty) {
+     *     unit.timedWait(this, timeout);
+     *     ...
+     *   }
+     * }}</pre>
      *
      * @param obj the object to wait on
      * @param timeout the maximum time to wait. If less than

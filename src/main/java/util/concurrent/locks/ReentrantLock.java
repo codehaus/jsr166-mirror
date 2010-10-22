@@ -411,7 +411,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * @throws NullPointerException if the time unit is null
      *
      */
-    public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
+    public boolean tryLock(long timeout, TimeUnit unit)
+            throws InterruptedException {
         return sync.tryAcquireNanos(1, unit.toNanos(timeout));
     }
 

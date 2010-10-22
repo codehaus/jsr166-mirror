@@ -604,7 +604,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * cast key as Comparable, which may cause ClassCastException,
      * which is propagated back to caller.
      */
-    private Comparable<? super K> comparable(Object key) throws ClassCastException {
+    private Comparable<? super K> comparable(Object key)
+            throws ClassCastException {
         if (key == null)
             throw new NullPointerException();
         if (comparator != null)
@@ -2306,7 +2307,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         return list;
     }
 
-    static final class KeySet<E> extends AbstractSet<E> implements NavigableSet<E> {
+    static final class KeySet<E>
+            extends AbstractSet<E> implements NavigableSet<E> {
         private final ConcurrentNavigableMap<E,Object> m;
         KeySet(ConcurrentNavigableMap<E,Object> map) { m = map; }
         public int size() { return m.size(); }

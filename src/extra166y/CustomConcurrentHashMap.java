@@ -1414,7 +1414,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
             if (!(o instanceof Map.Entry))
                 return false;
             Map.Entry<?,?> e = (Map.Entry<?,?>)o;
-            return CustomConcurrentHashMap.this.remove(e.getKey(), e.getValue());
+            return CustomConcurrentHashMap.this.remove(e.getKey(),
+                                                       e.getValue());
         }
         public int size() {
             return CustomConcurrentHashMap.this.size();
@@ -2114,7 +2115,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     static abstract class WeakKeySelfValueNode
         extends WeakKeyNode {
-        WeakKeySelfValueNode(int locator, Object key, CustomConcurrentHashMap cchm) {
+        WeakKeySelfValueNode(int locator, Object key,
+                             CustomConcurrentHashMap cchm) {
             super(locator, key, cchm);
         }
         public final Object getValue() { return get(); }
@@ -2134,7 +2136,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static final class LinkedWeakKeySelfValueNode
         extends WeakKeySelfValueNode {
         volatile Node linkage;
-        LinkedWeakKeySelfValueNode(int locator, Object key, CustomConcurrentHashMap cchm,
+        LinkedWeakKeySelfValueNode(int locator, Object key,
+                                   CustomConcurrentHashMap cchm,
                                    Node linkage) {
             super(locator, key, cchm);
             this.linkage = linkage;
@@ -2163,7 +2166,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static abstract class WeakKeyStrongValueNode
         extends WeakKeyNode {
         volatile Object value;
-        WeakKeyStrongValueNode(int locator, Object key, Object value, CustomConcurrentHashMap cchm) {
+        WeakKeyStrongValueNode(int locator, Object key, Object value,
+                               CustomConcurrentHashMap cchm) {
             super(locator, key, cchm);
             this.value = value;
         }
@@ -2174,7 +2178,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static final class TerminalWeakKeyStrongValueNode
         extends WeakKeyStrongValueNode {
         TerminalWeakKeyStrongValueNode(int locator,
-                                       Object key, Object value, CustomConcurrentHashMap cchm) {
+                                       Object key, Object value,
+                                       CustomConcurrentHashMap cchm) {
             super(locator, key, value, cchm);
         }
         public final Node getLinkage() { return null; }
@@ -2185,7 +2190,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         extends WeakKeyStrongValueNode {
         volatile Node linkage;
         LinkedWeakKeyStrongValueNode(int locator,
-                                     Object key, Object value, CustomConcurrentHashMap cchm,
+                                     Object key, Object value,
+                                     CustomConcurrentHashMap cchm,
                                      Node linkage) {
             super(locator, key, value, cchm);
             this.linkage = linkage;
@@ -2410,7 +2416,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     static abstract class SoftKeySelfValueNode
         extends SoftKeyNode {
-        SoftKeySelfValueNode(int locator, Object key, CustomConcurrentHashMap cchm) {
+        SoftKeySelfValueNode(int locator, Object key,
+                             CustomConcurrentHashMap cchm) {
             super(locator, key, cchm);
         }
         public final Object getValue() { return get(); }
@@ -2419,7 +2426,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     static final class TerminalSoftKeySelfValueNode
         extends SoftKeySelfValueNode {
-        TerminalSoftKeySelfValueNode(int locator, Object key, CustomConcurrentHashMap cchm) {
+        TerminalSoftKeySelfValueNode(int locator, Object key,
+                                     CustomConcurrentHashMap cchm) {
             super(locator, key, cchm);
         }
         public final Node getLinkage() { return null; }
@@ -2429,7 +2437,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static final class LinkedSoftKeySelfValueNode
         extends SoftKeySelfValueNode {
         volatile Node linkage;
-        LinkedSoftKeySelfValueNode(int locator, Object key, CustomConcurrentHashMap cchm,
+        LinkedSoftKeySelfValueNode(int locator, Object key,
+                                   CustomConcurrentHashMap cchm,
                                    Node linkage) {
             super(locator, key, cchm);
             this.linkage = linkage;
@@ -2458,7 +2467,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static abstract class SoftKeyStrongValueNode
         extends SoftKeyNode {
         volatile Object value;
-        SoftKeyStrongValueNode(int locator, Object key, Object value, CustomConcurrentHashMap cchm) {
+        SoftKeyStrongValueNode(int locator, Object key, Object value,
+                               CustomConcurrentHashMap cchm) {
             super(locator, key, cchm);
             this.value = value;
         }
@@ -2469,7 +2479,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static final class TerminalSoftKeyStrongValueNode
         extends SoftKeyStrongValueNode {
         TerminalSoftKeyStrongValueNode(int locator,
-                                       Object key, Object value, CustomConcurrentHashMap cchm) {
+                                       Object key, Object value,
+                                       CustomConcurrentHashMap cchm) {
             super(locator, key, value, cchm);
         }
         public final Node getLinkage() { return null; }
@@ -2480,7 +2491,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         extends SoftKeyStrongValueNode {
         volatile Node linkage;
         LinkedSoftKeyStrongValueNode(int locator,
-                                     Object key, Object value, CustomConcurrentHashMap cchm,
+                                     Object key, Object value,
+                                     CustomConcurrentHashMap cchm,
                                      Node linkage) {
             super(locator, key, value, cchm);
             this.linkage = linkage;

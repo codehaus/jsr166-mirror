@@ -568,8 +568,8 @@ public class Exchanger<V> {
      * dormant until one of two things happens:
      * <ul>
      * <li>Some other thread enters the exchange; or
-     * <li>Some other thread {@linkplain Thread#interrupt interrupts} the current
-     * thread.
+     * <li>Some other thread {@linkplain Thread#interrupt interrupts}
+     * the current thread.
      * </ul>
      * <p>If the current thread:
      * <ul>

@@ -839,7 +839,8 @@ public class ReentrantReadWriteLock
          * @throws NullPointerException if the time unit is null
          *
          */
-        public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
+        public boolean tryLock(long timeout, TimeUnit unit)
+                throws InterruptedException {
             return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
         }
 
@@ -1080,7 +1081,8 @@ public class ReentrantReadWriteLock
          * @throws NullPointerException if the time unit is null
          *
          */
-        public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
+        public boolean tryLock(long timeout, TimeUnit unit)
+                throws InterruptedException {
             return sync.tryAcquireNanos(1, unit.toNanos(timeout));
         }
 

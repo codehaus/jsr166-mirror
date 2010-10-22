@@ -1055,11 +1055,11 @@ public class TreeMap<K,V>
         public Comparator<? super E> comparator() { return m.comparator(); }
         public E pollFirst() {
             Map.Entry<E,Object> e = m.pollFirstEntry();
-            return e == null? null : e.getKey();
+            return (e == null) ? null : e.getKey();
         }
         public E pollLast() {
             Map.Entry<E,Object> e = m.pollLastEntry();
-            return e == null? null : e.getKey();
+            return (e == null) ? null : e.getKey();
         }
         public boolean remove(Object o) {
             int oldSize = size();
@@ -1203,7 +1203,7 @@ public class TreeMap<K,V>
      * Return SimpleImmutableEntry for entry, or null if null
      */
     static <K,V> Map.Entry<K,V> exportEntry(TreeMap.Entry<K,V> e) {
-        return e == null? null :
+        return (e == null) ? null :
             new AbstractMap.SimpleImmutableEntry<K,V>(e);
     }
 
@@ -1211,7 +1211,7 @@ public class TreeMap<K,V>
      * Return key for entry, or null if null
      */
     static <K,V> K keyOrNull(TreeMap.Entry<K,V> e) {
-        return e == null? null : e.key;
+        return (e == null) ? null : e.key;
     }
 
     /**
@@ -1411,11 +1411,11 @@ public class TreeMap<K,V>
         }
 
         public final V get(Object key) {
-            return !inRange(key)? null :  m.get(key);
+            return !inRange(key) ? null :  m.get(key);
         }
 
         public final V remove(Object key) {
-            return !inRange(key)? null  : m.remove(key);
+            return !inRange(key) ? null  : m.remove(key);
         }
 
         public final Map.Entry<K,V> ceilingEntry(K key) {

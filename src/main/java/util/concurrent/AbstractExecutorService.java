@@ -129,7 +129,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
             // Record exceptions so that if we fail to obtain any
             // result, we can throw the last exception we got.
             ExecutionException ee = null;
-            long lastTime = (timed)? System.nanoTime() : 0;
+            long lastTime = timed ? System.nanoTime() : 0;
             Iterator<? extends Callable<T>> it = tasks.iterator();
 
             // Start one task for sure; the rest incrementally

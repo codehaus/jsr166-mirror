@@ -86,7 +86,7 @@ public abstract class AbstractParallelAnyArray {
      */
     public int anyIndex() {
         if (!hasFilter())
-            return (origin < fence)? origin : -1;
+            return (origin < fence) ? origin : -1;
         AtomicInteger result = new AtomicInteger(-1);
         PAS.FJSelectAny f = new PAS.FJSelectAny
             (this, origin, fence, null, result);

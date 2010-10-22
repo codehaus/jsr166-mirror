@@ -35,7 +35,7 @@ public class CommonOps {
         return new Reducer<T>() {
             public T op(T a, T b) {
                 return (a != null &&
-                        (b == null || a.compareTo(b) >= 0))? a : b;
+                        (b == null || a.compareTo(b) >= 0)) ? a : b;
             }
         };
     }
@@ -49,7 +49,7 @@ public class CommonOps {
         return new Reducer<T>() {
             public T op(T a, T b) {
                 return (a != null &&
-                        (b == null || a.compareTo(b) <= 0))? a : b;
+                        (b == null || a.compareTo(b) <= 0)) ? a : b;
             }
         };
     }
@@ -64,7 +64,7 @@ public class CommonOps {
         return new Reducer<T>() {
             public T op(T a, T b) {
                 return (a != null &&
-                        (b == null || comparator.compare(a, b) >= 0))? a : b;
+                        (b == null || comparator.compare(a, b) >= 0)) ? a : b;
             }
         };
     }
@@ -79,7 +79,7 @@ public class CommonOps {
         return new Reducer<T>() {
             public T op(T a, T b) {
                 return (a != null &&
-                        (b == null || comparator.compare(a, b) <= 0))? a : b;
+                        (b == null || comparator.compare(a, b) <= 0)) ? a : b;
             }
         };
     }
@@ -112,7 +112,7 @@ public class CommonOps {
         public Object op(Object a, Object b) {
             return (a != null &&
                     (b == null ||
-                     ((Comparable)a).compareTo((Comparable)b) >= 0))? a : b;
+                     ((Comparable)a).compareTo((Comparable)b) >= 0)) ? a : b;
         }
     }
 
@@ -130,7 +130,7 @@ public class CommonOps {
         public Object op(Object a, Object b) {
             return (a != null &&
                     (b == null ||
-                     ((Comparable)a).compareTo((Comparable)b) <= 0))? a : b;
+                     ((Comparable)a).compareTo((Comparable)b) <= 0)) ? a : b;
         }
     }
 
@@ -187,7 +187,7 @@ public class CommonOps {
         (final DoubleComparator comparator) {
         return new DoubleReducer() {
                 public double op(double a, double b) {
-                    return (comparator.compare(a, b) >= 0)? a : b;
+                    return (comparator.compare(a, b) >= 0) ? a : b;
                 }
             };
     }
@@ -200,7 +200,7 @@ public class CommonOps {
         (final DoubleComparator comparator) {
         return new DoubleReducer() {
                 public double op(double a, double b) {
-                    return (comparator.compare(a, b) <= 0)? a : b;
+                    return (comparator.compare(a, b) <= 0) ? a : b;
                 }
             };
     }
@@ -216,7 +216,7 @@ public class CommonOps {
         static final NaturalLongComparator comparator = new
             NaturalLongComparator();
         public int compare(long a, long b) {
-            return a < b? -1 : ((a > b)? 1 : 0);
+            return (a < b) ? -1 : ((a > b) ? 1 : 0);
         }
     }
 
@@ -232,7 +232,7 @@ public class CommonOps {
         implements LongReducer {
         public static final NaturalLongMaxReducer max =
             new NaturalLongMaxReducer();
-        public long op(long a, long b) { return a >= b? a : b; }
+        public long op(long a, long b) { return (a >= b) ? a : b; }
     }
 
     /**
@@ -246,7 +246,7 @@ public class CommonOps {
         implements LongReducer {
         public static final NaturalLongMinReducer min =
             new NaturalLongMinReducer();
-        public long op(long a, long b) { return a <= b? a : b; }
+        public long op(long a, long b) { return (a <= b) ? a : b; }
     }
 
     /**
@@ -257,7 +257,7 @@ public class CommonOps {
         (final LongComparator comparator) {
         return new LongReducer() {
                 public long op(long a, long b) {
-                    return (comparator.compare(a, b) >= 0)? a : b;
+                    return (comparator.compare(a, b) >= 0) ? a : b;
                 }
             };
     }
@@ -270,7 +270,7 @@ public class CommonOps {
         (final LongComparator comparator) {
         return new LongReducer() {
                 public long op(long a, long b) {
-                    return (comparator.compare(a, b) <= 0)? a : b;
+                    return (comparator.compare(a, b) <= 0) ? a : b;
                 }
             };
     }

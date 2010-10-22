@@ -1112,8 +1112,8 @@ public class Microscope extends JPanel {
         final AutoMover automover;
         final Player player;
         RootFinder(Board board, Player p, int level, AutoMover automover) {
-            super( (p.isBlue()? (board.getBlue()| Board.BLUEBIT) : board.getGreen()),
-                   (p.isBlue()? board.getGreen() : (board.getBlue()| Board.BLUEBIT)),
+            super( (p.isBlue() ? (board.getBlue()| Board.BLUEBIT) : board.getGreen()),
+                   (p.isBlue() ? board.getGreen() : (board.getBlue()| Board.BLUEBIT)),
                    level,
                    null);
 
@@ -1172,8 +1172,8 @@ public class Microscope extends JPanel {
 
                 long nextOurs = bestFinder.theirs;
                 long nextTheirs = bestFinder.ours;
-                long blue = (player.isBlue())? nextOurs : nextTheirs;
-                long green = (player.isBlue())? nextTheirs: nextOurs;
+                long blue = player.isBlue() ? nextOurs : nextTheirs;
+                long green = player.isBlue() ? nextTheirs: nextOurs;
                 move = new Move(player, new Board(blue, green), true);
             }
             automover.relay(move);

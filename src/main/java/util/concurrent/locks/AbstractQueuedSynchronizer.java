@@ -236,7 +236,7 @@ import sun.misc.Unsafe;
  *     boolean isSignalled() { return getState() != 0; }
  *
  *     protected int tryAcquireShared(int ignore) {
- *       return isSignalled()? 1 : -1;
+ *       return isSignalled() ? 1 : -1;
  *     }
  *
  *     protected boolean tryReleaseShared(int ignore) {

@@ -161,7 +161,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * seems not to vary with number of CPUs (beyond 2) so is just
      * a constant.
      */
-    static final int maxTimedSpins = (NCPUS < 2)? 0 : 32;
+    static final int maxTimedSpins = (NCPUS < 2) ? 0 : 32;
 
     /**
      * The number of times to spin before blocking in untimed waits.
@@ -306,7 +306,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              */
 
             SNode s = null; // constructed/reused as needed
-            int mode = (e == null)? REQUEST : DATA;
+            int mode = (e == null) ? REQUEST : DATA;
 
             for (;;) {
                 SNode h = head;
@@ -324,7 +324,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                         }
                         if ((h = head) != null && h.next == s)
                             casHead(h, s.next);     // help s's fulfiller
-                        return mode == REQUEST? m.item : s.item;
+                        return (mode == REQUEST) ? m.item : s.item;
                     }
                 } else if (!isFulfilling(h.mode)) { // try to fulfill
                     if (h.isCancelled())            // already cancelled
@@ -340,7 +340,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             SNode mn = m.next;
                             if (m.tryMatch(s)) {
                                 casHead(s, mn);     // pop both s and m
-                                return (mode == REQUEST)? m.item : s.item;
+                                return (mode == REQUEST) ? m.item : s.item;
                             } else                  // lost match
                                 s.casNext(m, mn);   // help unlink
                         }
@@ -391,11 +391,11 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              * and don't wait at all, so are trapped in transfer
              * method rather than calling awaitFulfill.
              */
-            long lastTime = (timed)? System.nanoTime() : 0;
+            long lastTime = timed ? System.nanoTime() : 0;
             Thread w = Thread.currentThread();
             SNode h = head;
-            int spins = (shouldSpin(s)?
-                         (timed? maxTimedSpins : maxUntimedSpins) : 0);
+            int spins = (shouldSpin(s) ?
+                         (timed ? maxTimedSpins : maxUntimedSpins) : 0);
             for (;;) {
                 if (w.isInterrupted())
                     s.tryCancel();
@@ -412,7 +412,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     }
                 }
                 if (spins > 0)
-                    spins = shouldSpin(s)? (spins-1) : 0;
+                    spins = shouldSpin(s) ? (spins-1) : 0;
                 else if (s.waiter == null)
                     s.waiter = w; // establish waiter so can park next iter
                 else if (!timed)
@@ -645,7 +645,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             s.item = s;
                         s.waiter = null;
                     }
-                    return (x != null)? x : e;
+                    return (x != null) ? x : e;
 
                 } else {                            // complementary-mode
                     QNode m = h.next;               // node to fulfill
@@ -662,7 +662,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
                     advanceHead(h, m);              // successfully fulfilled
                     LockSupport.unpark(m.waiter);
-                    return (x != null)? x : e;
+                    return (x != null) ? x : e;
                 }
             }
         }
@@ -678,10 +678,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         Object awaitFulfill(QNode s, Object e, boolean timed, long nanos) {
             /* Same idea as TransferStack.awaitFulfill */
-            long lastTime = (timed)? System.nanoTime() : 0;
+            long lastTime = timed ? System.nanoTime() : 0;
             Thread w = Thread.currentThread();
             int spins = ((head.next == s) ?
-                         (timed? maxTimedSpins : maxUntimedSpins) : 0);
+                         (timed ? maxTimedSpins : maxUntimedSpins) : 0);
             for (;;) {
                 if (w.isInterrupted())
                     s.tryCancel(e);
@@ -796,7 +796,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *        access; otherwise the order is unspecified.
      */
     public SynchronousQueue(boolean fair) {
-        transferer = (fair)? new TransferQueue() : new TransferStack();
+        transferer = fair ? new TransferQueue() : new TransferStack();
     }
 
     /**

@@ -51,7 +51,7 @@ public abstract class ParallelLongArrayWithMapping<U> extends AbstractParallelAn
      */
     public U any() {
         int i = anyIndex();
-        return (i < 0)? null : (U)oget(i);
+        return (i < 0) ? null : (U)oget(i);
     }
 
     /**

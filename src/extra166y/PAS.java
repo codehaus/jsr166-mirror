@@ -1491,7 +1491,7 @@ class PAS {
                 if ((filtered && !pap.isSelected(k)) ||
                     (x = src[k]) == null)
                     continue;
-                int hc = byIdentity? System.identityHashCode(x): x.hashCode();
+                int hc = byIdentity ? System.identityHashCode(x) : x.hashCode();
                 int hash = hash(hc);
                 long entry = (((long)hash) << 32) + (k + 1);
                 int idx = hash & mask;
@@ -2673,7 +2673,7 @@ class PAS {
                         op.pushUp(par, par.left, par.right);
                         int refork =
                             ((pb & CUMULATE) == 0 &&
-                             par.lo == op.origin)? CUMULATE : 0;
+                             par.lo == op.origin) ? CUMULATE : 0;
                         int nextPhase = pb|cb|refork;
                         if (pb == nextPhase ||
                             phaseUpdater.compareAndSet(par, pb, nextPhase)) {

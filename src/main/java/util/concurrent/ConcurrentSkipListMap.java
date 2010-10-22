@@ -792,7 +792,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     continue;
                 } else if (c == 0) {
                     Object v = n.value;
-                    return (v != null)? (V)v : getUsingFindNode(key);
+                    return (v != null) ? (V)v : getUsingFindNode(key);
                 } else
                     bound = n;
             }
@@ -810,7 +810,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if ((k = n.key) != null) {
                 if ((c = key.compareTo(k)) == 0) {
                     Object v = n.value;
-                    return (v != null)? (V)v : getUsingFindNode(key);
+                    return (v != null) ? (V)v : getUsingFindNode(key);
                 } else if (c < 0)
                     break;
             }
@@ -1220,7 +1220,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 Node<K,V> n = b.next;
                 for (;;) {
                     if (n == null)
-                        return (b.isBaseHeader())? null : b;
+                        return b.isBaseHeader() ? null : b;
                     Node<K,V> f = n.next;            // inconsistent read
                     if (n != b.next)
                         break;
@@ -1338,7 +1338,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             Node<K,V> n = b.next;
             for (;;) {
                 if (n == null)
-                    return ((rel & LT) == 0 || b.isBaseHeader())? null : b;
+                    return ((rel & LT) == 0 || b.isBaseHeader()) ? null : b;
                 Node<K,V> f = n.next;
                 if (n != b.next)                  // inconsistent read
                     break;
@@ -1354,7 +1354,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     (c <  0 && (rel & LT) == 0))
                     return n;
                 if ( c <= 0 && (rel & LT) != 0)
-                    return (b.isBaseHeader())? null : b;
+                    return b.isBaseHeader() ? null : b;
                 b = n;
                 n = f;
             }
@@ -1708,7 +1708,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (n.getValidValue() != null)
                 ++count;
         }
-        return (count >= Integer.MAX_VALUE)? Integer.MAX_VALUE : (int)count;
+        return (count >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count;
     }
 
     /**
@@ -2063,7 +2063,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K lowerKey(K key) {
         Node<K,V> n = findNear(key, LT);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -2087,7 +2087,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K floorKey(K key) {
         Node<K,V> n = findNear(key, LT|EQ);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -2109,7 +2109,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K ceilingKey(K key) {
         Node<K,V> n = findNear(key, GT|EQ);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -2133,7 +2133,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K higherKey(K key) {
         Node<K,V> n = findNear(key, GT);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -2323,11 +2323,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public E last() { return m.lastKey(); }
         public E pollFirst() {
             Map.Entry<E,Object> e = m.pollFirstEntry();
-            return e == null? null : e.getKey();
+            return (e == null) ? null : e.getKey();
         }
         public E pollLast() {
             Map.Entry<E,Object> e = m.pollLastEntry();
-            return e == null? null : e.getKey();
+            return (e == null) ? null : e.getKey();
         }
         public Iterator<E> iterator() {
             if (m instanceof ConcurrentSkipListMap)
@@ -2674,9 +2674,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     rel &= ~m.LT;
             }
             if (tooLow(key))
-                return ((rel & m.LT) != 0)? null : lowestEntry();
+                return ((rel & m.LT) != 0) ? null : lowestEntry();
             if (tooHigh(key))
-                return ((rel & m.LT) != 0)? highestEntry() : null;
+                return ((rel & m.LT) != 0) ? highestEntry() : null;
             for (;;) {
                 Node<K,V> n = m.findNear(key, rel);
                 if (n == null || !inBounds(n.key))
@@ -2747,7 +2747,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public V remove(Object key) {
             K k = (K)key;
-            return (!inBounds(k))? null : m.remove(k);
+            return (!inBounds(k)) ? null : m.remove(k);
         }
 
         public int size() {
@@ -2758,7 +2758,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 if (n.getValidValue() != null)
                     ++count;
             }
-            return count >= Integer.MAX_VALUE? Integer.MAX_VALUE : (int)count;
+            return count >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)count;
         }
 
         public boolean isEmpty() {
@@ -2936,27 +2936,27 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public K firstKey() {
-            return isDescending? highestKey() : lowestKey();
+            return isDescending ? highestKey() : lowestKey();
         }
 
         public K lastKey() {
-            return isDescending? lowestKey() : highestKey();
+            return isDescending ? lowestKey() : highestKey();
         }
 
         public Map.Entry<K,V> firstEntry() {
-            return isDescending? highestEntry() : lowestEntry();
+            return isDescending ? highestEntry() : lowestEntry();
         }
 
         public Map.Entry<K,V> lastEntry() {
-            return isDescending? lowestEntry() : highestEntry();
+            return isDescending ? lowestEntry() : highestEntry();
         }
 
         public Map.Entry<K,V> pollFirstEntry() {
-            return isDescending? removeHighest() : removeLowest();
+            return isDescending ? removeHighest() : removeLowest();
         }
 
         public Map.Entry<K,V> pollLastEntry() {
-            return isDescending? removeLowest() : removeHighest();
+            return isDescending ? removeLowest() : removeHighest();
         }
 
         /* ---------------- Submap Views -------------- */

@@ -590,7 +590,7 @@ public class ReentrantReadWriteLock
 
         final Thread getOwner() {
             // Must read state before owner to ensure memory consistency
-            return ((exclusiveCount(getState()) == 0)?
+            return ((exclusiveCount(getState()) == 0) ?
                     null :
                     getExclusiveOwnerThread());
         }

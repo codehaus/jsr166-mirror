@@ -48,7 +48,7 @@ class LoopHelpers {
      */
     public static int compute3(int x) {
         int t = (x % 127773) * 16807 - (x / 127773) * 2836;
-        return (t > 0)? t : t + 0x7fffffff;
+        return (t > 0) ? t : t + 0x7fffffff;
     }
 
     /**

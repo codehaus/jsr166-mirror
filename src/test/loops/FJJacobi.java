@@ -92,7 +92,7 @@ public class FJJacobi {
                 reinitialize();
             }
             double m = maxDiff;
-            return (md > m)? md : m;
+            return (md > m) ? md : m;
         }
 
     }
@@ -118,8 +118,8 @@ public class FJJacobi {
 
         public void compute() {
             boolean AtoB = (steps++ & 1) == 0;
-            double[][] a = (AtoB)? A : B;
-            double[][] b = (AtoB)? B : A;
+            double[][] a = AtoB ? A : B;
+            double[][] b = AtoB ? B : A;
 
             double md = 0.0; // local for computing max diff
 

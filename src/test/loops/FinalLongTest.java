@@ -51,8 +51,8 @@ public class FinalLongTest {
                 //                if (k < 0 || k >= LEN) k = 1;
                 //                int l = (k+1) & (LEN-1);
                 //                if (l < 0 || l >= LEN) l = 0;
-                //                int k = (s & 1) == 0? 0 : 1;
-                //                int l = (k == 0)? 1 : 0;
+                //                int k = (s & 1) == 0 ? 0 : 1;
+                //                int l = (k == 0) ? 1 : 0;
                 if ((s & (LEN-1)) == 0) {
                     n3 = n1;
                     n0 = new Long(s);

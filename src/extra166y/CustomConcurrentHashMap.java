@@ -56,7 +56,7 @@ import sun.misc.Unsafe;
  *            return x instanceof Person && k.name.equals(((Person)x).name);
  *          }
  *          public int hash(Object x) {
- *             return (x instanceof Person)? ((Person)x).name.hashCode() : 0;
+ *             return (x instanceof Person) ? ((Person)x).name.hashCode() : 0;
  *          }
  *        },
  *      STRONG, EQUALS, 0);
@@ -1010,7 +1010,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
             if (seg != null && seg.getTableForTraversal() != null)
                 sum += seg.count;
         }
-        return sum >= Integer.MAX_VALUE? Integer.MAX_VALUE : (int)sum;
+        return (sum >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) sum;
     }
 
     /**
@@ -1158,7 +1158,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * <pre>
      * map.compute(word, new RemappingFunction&lt;String,Integer&gt;() {
      *   public Integer remap(String k, Integer v) {
-     *     return v == null? 1 : v + 1;
+     *     return (v == null) ? 1 : v + 1;
      *   }});
      * </pre>
      *
@@ -1975,7 +1975,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedWeakReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)
@@ -2043,7 +2043,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedSoftReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)
@@ -2123,7 +2123,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     static final class TerminalWeakKeySelfValueNode
         extends WeakKeySelfValueNode {
-        TerminalWeakKeySelfValueNode(int locator, Object key, CustomConcurrentHashMap cchm) {
+        TerminalWeakKeySelfValueNode(int locator, Object key,
+                                     CustomConcurrentHashMap cchm) {
             super(locator, key, cchm);
         }
         public final Node getLinkage() { return null; }
@@ -2275,7 +2276,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedWeakReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)
@@ -2338,7 +2339,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedSoftReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)
@@ -2570,7 +2571,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedWeakReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)
@@ -2633,7 +2634,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedSoftReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)
@@ -2861,7 +2862,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedWeakReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)
@@ -2918,7 +2919,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         volatile EmbeddedSoftReference valueRef;
         final CustomConcurrentHashMap cchm;
         IntKeySoftValueNode(int locator, Object key, Object value,
-                               CustomConcurrentHashMap cchm) {
+                            CustomConcurrentHashMap cchm) {
             super(locator, key);
             this.cchm = cchm;
             if (value != null)
@@ -2929,7 +2930,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
         public final Object getValue() {
             EmbeddedSoftReference vr = valueRef;
-            return vr == null? null : vr.get();
+            return (vr == null) ? null : vr.get();
         }
         public final void setValue(Object value) {
             if (value == null)

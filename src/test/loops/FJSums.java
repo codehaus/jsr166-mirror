@@ -30,7 +30,7 @@ public class FJSums {
             System.out.println("Usage: java FJSums threads n reps");
             return;
         }
-        ForkJoinPool g = procs == 0? new ForkJoinPool() :
+        ForkJoinPool g = (procs == 0) ? new ForkJoinPool() :
             new ForkJoinPool(procs);
         System.out.println("Number of procs=" + g.getParallelism());
         // for now hardwire Cumulate threshold to 8 * #CPUs leaf tasks
@@ -255,7 +255,7 @@ public class FJSums {
                         par.out = par.left.out + par.right.out;
                         int refork =
                             ((pb & CUMULATE) == 0 &&
-                             par.lo == 0)? CUMULATE : 0;
+                             par.lo == 0) ? CUMULATE : 0;
                         int nextPhase = pb|cb|refork;
                         if (pb == nextPhase ||
                             phaseUpdater.compareAndSet(par, pb, nextPhase)) {

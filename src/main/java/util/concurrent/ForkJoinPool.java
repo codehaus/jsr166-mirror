@@ -705,7 +705,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final void workerTerminated(ForkJoinWorkerThread w) {
         forgetWorker(w);
-        decrementWorkerCounts(w.isTrimmed()? 0 : ONE_RUNNING, ONE_TOTAL);
+        decrementWorkerCounts(w.isTrimmed() ? 0 : ONE_RUNNING, ONE_TOTAL);
         while (w.stealCount != 0) // collect final count
             tryAccumulateStealCount(w);
         tryTerminate(false);
@@ -791,7 +791,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             if (tryAccumulateStealCount(w)) { // transfer while idle
                 boolean untimed = (w.nextWaiter != 0L ||
                                    (workerCounts & RUNNING_COUNT_MASK) <= 1);
-                long startTime = untimed? 0 : System.nanoTime();
+                long startTime = untimed ? 0 : System.nanoTime();
                 Thread.interrupted();         // clear/ignore interrupt
                 if (eventCount != ec || w.isTerminating())
                     break;                    // recheck after clear

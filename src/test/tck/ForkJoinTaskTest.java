@@ -25,8 +25,12 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         return new TestSuite(ForkJoinTaskTest.class);
     }
 
+    // Runs with "mainPool" use > 1 thread. singletonPool tests use 1
+    static final int mainPoolSize = 
+        Math.max(2, Runtime.getRuntime().availableProcessors());
+
     private static ForkJoinPool mainPool() {
-        return new ForkJoinPool();
+        return new ForkJoinPool(mainPoolSize);
     }
 
     private static ForkJoinPool singletonPool() {
@@ -965,4 +969,528 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             }};
         testInvokeOnPool(asyncSingletonPool(), a);
     }
+
+    // versions for singleton pools
+
+    /**
+     * invoke returns when task completes normally.
+     * isCompletedAbnormally and isCancelled return false for normally
+     * completed tasks. getRawResult of a RecursiveAction returns null;
+     */
+    public void testInvokeSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                assertNull(f.invoke());
+                assertEquals(21, f.number);
+                assertTrue(f.isDone());
+                assertFalse(f.isCancelled());
+                assertFalse(f.isCompletedAbnormally());
+                assertNull(f.getRawResult());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * quietlyInvoke task returns when task completes normally.
+     * isCompletedAbnormally and isCancelled return false for normally
+     * completed tasks
+     */
+    public void testQuietlyInvokeSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                f.quietlyInvoke();
+                assertEquals(21, f.number);
+                assertTrue(f.isDone());
+                assertFalse(f.isCancelled());
+                assertFalse(f.isCompletedAbnormally());
+                assertNull(f.getRawResult());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * join of a forked task returns when task completes
+     */
+    public void testForkJoinSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                assertSame(f, f.fork());
+                assertNull(f.join());
+                assertEquals(21, f.number);
+                assertTrue(f.isDone());
+                assertNull(f.getRawResult());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * get of a forked task returns when task completes
+     */
+    public void testForkGetSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws Exception {
+                AsyncFib f = new AsyncFib(8);
+                assertSame(f, f.fork());
+                assertNull(f.get());
+                assertEquals(21, f.number);
+                assertTrue(f.isDone());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * timed get of a forked task returns when task completes
+     */
+    public void testForkTimedGetSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws Exception {
+                AsyncFib f = new AsyncFib(8);
+                assertSame(f, f.fork());
+                assertNull(f.get(LONG_DELAY_MS, MILLISECONDS));
+                assertEquals(21, f.number);
+                assertTrue(f.isDone());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * timed get with null time unit throws NPE
+     */
+    public void testForkTimedGetNPESingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws Exception {
+                AsyncFib f = new AsyncFib(8);
+                assertSame(f, f.fork());
+                try {
+                    f.get(5L, null);
+                    shouldThrow();
+                } catch (NullPointerException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * quietlyJoin of a forked task returns when task completes
+     */
+    public void testForkQuietlyJoinSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                assertSame(f, f.fork());
+                f.quietlyJoin();
+                assertEquals(21, f.number);
+                assertTrue(f.isDone());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+
+    /**
+     * helpQuiesce returns when tasks are complete.
+     * getQueuedTaskCount returns 0 when quiescent
+     */
+    public void testForkHelpQuiesceSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                assertSame(f, f.fork());
+                f.helpQuiesce();
+                assertEquals(21, f.number);
+                assertTrue(f.isDone());
+                assertEquals(0, getQueuedTaskCount());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+
+    /**
+     * invoke task throws exception when task completes abnormally
+     */
+    public void testAbnormalInvokeSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                try {
+                    f.invoke();
+                    shouldThrow();
+                } catch (FJException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * quietlyInvoke task returns when task completes abnormally
+     */
+    public void testAbnormalQuietlyInvokeSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                f.quietlyInvoke();
+                assertTrue(f.isDone());
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * join of a forked task throws exception when task completes abnormally
+     */
+    public void testAbnormalForkJoinSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                assertSame(f, f.fork());
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (FJException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * get of a forked task throws exception when task completes abnormally
+     */
+    public void testAbnormalForkGetSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws Exception {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                assertSame(f, f.fork());
+                try {
+                    f.get();
+                    shouldThrow();
+                } catch (ExecutionException success) {
+                    Throwable cause = success.getCause();
+                    assertTrue(cause instanceof FJException);
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertSame(cause, f.getException());
+                }
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * timed get of a forked task throws exception when task completes abnormally
+     */
+    public void testAbnormalForkTimedGetSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws Exception {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                assertSame(f, f.fork());
+                try {
+                    f.get(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (ExecutionException success) {
+                    Throwable cause = success.getCause();
+                    assertTrue(cause instanceof FJException);
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertSame(cause, f.getException());
+                }
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * quietlyJoin of a forked task returns when task completes abnormally
+     */
+    public void testAbnormalForkQuietlyJoinSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                assertSame(f, f.fork());
+                f.quietlyJoin();
+                assertTrue(f.isDone());
+                assertTrue(f.isCompletedAbnormally());
+                assertTrue(f.getException() instanceof FJException);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invoke task throws exception when task cancelled
+     */
+    public void testCancelledInvokeSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                assertTrue(f.cancel(true));
+                try {
+                    f.invoke();
+                    shouldThrow();
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * join of a forked task throws exception when task cancelled
+     */
+    public void testCancelledForkJoinSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * get of a forked task throws exception when task cancelled
+     */
+    public void testCancelledForkGetSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws Exception {
+                AsyncFib f = new AsyncFib(8);
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
+                try {
+                    f.get();
+                    shouldThrow();
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * timed get of a forked task throws exception when task cancelled
+     */
+    public void testCancelledForkTimedGetSingleton() throws Exception {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws Exception {
+                AsyncFib f = new AsyncFib(8);
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
+                try {
+                    f.get(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (CancellationException success) {
+                    assertTrue(f.isDone());
+                    assertTrue(f.isCancelled());
+                    assertTrue(f.isCompletedAbnormally());
+                    assertTrue(f.getException() instanceof CancellationException);
+                }
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * quietlyJoin of a forked task returns when task cancelled
+     */
+    public void testCancelledForkQuietlyJoinSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                assertTrue(f.cancel(true));
+                assertSame(f, f.fork());
+                f.quietlyJoin();
+                assertTrue(f.isDone());
+                assertTrue(f.isCompletedAbnormally());
+                assertTrue(f.isCancelled());
+                assertTrue(f.getException() instanceof CancellationException);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invoke task throws exception after invoking completeExceptionally
+     */
+    public void testCompleteExceptionallySingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                f.completeExceptionally(new FJException());
+                try {
+                    f.invoke();
+                    shouldThrow();
+                } catch (FJException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(t1, t2) invokes all task arguments
+     */
+    public void testInvokeAll2Singleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                invokeAll(f, g);
+                assertTrue(f.isDone());
+                assertEquals(21, f.number);
+                assertTrue(g.isDone());
+                assertEquals(34, g.number);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(tasks) with 1 argument invokes task
+     */
+    public void testInvokeAll1Singleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                invokeAll(f);
+                assertTrue(f.isDone());
+                assertEquals(21, f.number);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(tasks) with > 2 argument invokes tasks
+     */
+    public void testInvokeAll3Singleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                AsyncFib h = new AsyncFib(7);
+                invokeAll(f, g, h);
+                assertTrue(f.isDone());
+                assertEquals(21, f.number);
+                assertTrue(g.isDone());
+                assertEquals(34, g.number);
+                assertTrue(h.isDone());
+                assertEquals(13, h.number);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(collection) invokes all tasks in the collection
+     */
+    public void testInvokeAllCollectionSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                AsyncFib h = new AsyncFib(7);
+                HashSet set = new HashSet();
+                set.add(f);
+                set.add(g);
+                set.add(h);
+                invokeAll(set);
+                assertTrue(f.isDone());
+                assertEquals(21, f.number);
+                assertTrue(g.isDone());
+                assertEquals(34, g.number);
+                assertTrue(h.isDone());
+                assertEquals(13, h.number);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+
+    /**
+     * invokeAll(tasks) with any null task throws NPE
+     */
+    public void testInvokeAllNPESingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                AsyncFib h = null;
+                try {
+                    invokeAll(f, g, h);
+                    shouldThrow();
+                } catch (NullPointerException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(t1, t2) throw exception if any task does
+     */
+    public void testAbnormalInvokeAll2Singleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                FailingAsyncFib g = new FailingAsyncFib(9);
+                try {
+                    invokeAll(f, g);
+                    shouldThrow();
+                } catch (FJException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(tasks) with 1 argument throws exception if task does
+     */
+    public void testAbnormalInvokeAll1Singleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FailingAsyncFib g = new FailingAsyncFib(9);
+                try {
+                    invokeAll(g);
+                    shouldThrow();
+                } catch (FJException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(tasks) with > 2 argument throws exception if any task does
+     */
+    public void testAbnormalInvokeAll3Singleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                FailingAsyncFib g = new FailingAsyncFib(9);
+                AsyncFib h = new AsyncFib(7);
+                try {
+                    invokeAll(f, g, h);
+                    shouldThrow();
+                } catch (FJException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * invokeAll(collection)  throws exception if any task does
+     */
+    public void testAbnormalInvokeAllCollectionSingleton() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FailingAsyncFib f = new FailingAsyncFib(8);
+                AsyncFib g = new AsyncFib(9);
+                AsyncFib h = new AsyncFib(7);
+                HashSet set = new HashSet();
+                set.add(f);
+                set.add(g);
+                set.add(h);
+                try {
+                    invokeAll(set);
+                    shouldThrow();
+                } catch (FJException success) {}
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
 }

@@ -1014,11 +1014,16 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param joinMe the task to join
      * @param worker the current worker thread
+     * @param timed true if wait should time out
+     * @param nanos timeout value if timed
      */
-    final void awaitJoin(ForkJoinTask<?> joinMe, ForkJoinWorkerThread worker) {
+    final void awaitJoin(ForkJoinTask<?> joinMe, ForkJoinWorkerThread worker,
+                         boolean timed, long nanos) {
+        long startTime = timed? System.nanoTime() : 0L;
         int retries = 2 + (parallelism >> 2); // #helpJoins before blocking
         while (joinMe.status >= 0) {
             int wc;
+            long nt = 0L;
             if (runState >= TERMINATING) {
                 joinMe.cancelIgnoringExceptions();
                 break;
@@ -1028,6 +1033,9 @@ public class ForkJoinPool extends AbstractExecutorService {
                 break;
             else if (retries > 0)
                 --retries;
+            else if (timed &&
+                     (nt = nanos - (System.nanoTime() - startTime)) <= 0L)
+                break;
             else if (((wc = workerCounts) & RUNNING_COUNT_MASK) != 0 &&
                      UNSAFE.compareAndSwapInt(this, workerCountsOffset,
                                               wc, wc - ONE_RUNNING)) {
@@ -1036,11 +1044,27 @@ public class ForkJoinPool extends AbstractExecutorService {
                        (h = eventWaiters) != 0L && // help release others
                        (int)(h >>> EVENT_COUNT_SHIFT) != eventCount)
                     releaseEventWaiters();
-                if (stat >= 0 &&
-                    ((workerCounts & RUNNING_COUNT_MASK) == 0 ||
-                     (stat =
-                      joinMe.internalAwaitDone(JOIN_TIMEOUT_MILLIS)) >= 0))
-                    helpMaintainParallelism(); // timeout or no running workers
+                if (stat >= 0) {
+                    if ((workerCounts & RUNNING_COUNT_MASK) != 0) {
+                        long ms; int ns;
+                        if (!timed) {
+                            ms = JOIN_TIMEOUT_MILLIS;
+                            ns = 0;
+                        }
+                        else { // at most JOIN_TIMEOUT_MILLIS per wait
+                            ms = nt / 1000000;
+                            if (ms > JOIN_TIMEOUT_MILLIS) {
+                                ms = JOIN_TIMEOUT_MILLIS;
+                                ns = 0;
+                            }
+                            else
+                                ns = (int) (nt % 1000000);
+                        }
+                        stat = joinMe.internalAwaitDone(ms, ns);
+                    }
+                    if (stat >= 0) // timeout or no running workers
+                        helpMaintainParallelism();
+                }
                 do {} while (!UNSAFE.compareAndSwapInt
                              (this, workerCountsOffset,
                               c = workerCounts, c + ONE_RUNNING));

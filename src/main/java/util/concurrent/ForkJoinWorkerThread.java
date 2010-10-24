@@ -9,6 +9,7 @@ package java.util.concurrent;
 import java.util.Random;
 import java.util.Collection;
 import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * A thread managed by a {@link ForkJoinPool}.  This class is
@@ -930,8 +931,10 @@ public class ForkJoinWorkerThread extends Thread {
      * Possibly runs some tasks and/or blocks, until task is done.
      *
      * @param joinMe the task to join
+     * @param timed true if use timed wait
+     * @param nanos wait time if timed
      */
-    final void joinTask(ForkJoinTask<?> joinMe) {
+    final void joinTask(ForkJoinTask<?> joinMe, boolean timed, long nanos) {
         // currentJoin only written by this thread; only need ordered store
         ForkJoinTask<?> prevJoin = currentJoin;
         UNSAFE.putOrderedObject(this, currentJoinOffset, joinMe);
@@ -941,7 +944,7 @@ public class ForkJoinWorkerThread extends Thread {
             if (sp != base)
                 localHelpJoinTask(joinMe);
             if (joinMe.status >= 0)
-                pool.awaitJoin(joinMe, this);
+                pool.awaitJoin(joinMe, this, timed, nanos);
         }
         UNSAFE.putOrderedObject(this, currentJoinOffset, prevJoin);
     }

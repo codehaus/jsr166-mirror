@@ -26,7 +26,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
     // Runs with "mainPool" use > 1 thread. singletonPool tests use 1
-    static final int mainPoolSize = 
+    static final int mainPoolSize =
         Math.max(2, Runtime.getRuntime().availableProcessors());
 
     private static ForkJoinPool mainPool() {

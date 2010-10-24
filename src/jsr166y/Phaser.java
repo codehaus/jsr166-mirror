@@ -109,9 +109,9 @@ import java.util.concurrent.locks.LockSupport;
  * <p><b>Sample usages:</b>
  *
  * <p>A {@code Phaser} may be used instead of a {@code CountDownLatch}
- * to control a one-shot action serving a variable number of
- * parties. The typical idiom is for the method setting this up to
- * first register, then start the actions, then deregister, as in:
+ * to control a one-shot action serving a variable number of parties.
+ * The typical idiom is for the method setting this up to first
+ * register, then start the actions, then deregister, as in:
  *
  *  <pre> {@code
  * void runTasks(List<Runnable> tasks) {
@@ -184,7 +184,7 @@ import java.util.concurrent.locks.LockSupport;
  * <p>To create a set of tasks using a tree of phasers,
  * you could use code of the following form, assuming a
  * Task class with a constructor accepting a phaser that
- * it registers for upon construction:
+ * it registers with upon construction:
  *
  *  <pre> {@code
  * void build(Task[] actions, int lo, int hi, Phaser ph) {
@@ -206,8 +206,6 @@ import java.util.concurrent.locks.LockSupport;
  * expected barrier synchronization rates. A value as low as four may
  * be appropriate for extremely small per-barrier task bodies (thus
  * high rates), or up to hundreds for extremely large ones.
- *
- * </pre>
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of parties to 65535. Attempts to register additional
@@ -348,7 +346,7 @@ public class Phaser {
     }
 
     /**
-     * Creates a new phaser with the given numbers of registered
+     * Creates a new phaser with the given number of registered
      * unarrived parties, initial phase number 0, and no parent.
      *
      * @param parties the number of parties required to trip barrier
@@ -380,7 +378,7 @@ public class Phaser {
     }
 
     /**
-     * Creates a new phaser with the given parent and numbers of
+     * Creates a new phaser with the given parent and number of
      * registered unarrived parties. If parent is non-null, this phaser
      * is registered with the parent and its initial phase number is
      * the same as that of parent phaser.
@@ -418,10 +416,11 @@ public class Phaser {
     /**
      * Adds the given number of new unarrived parties to this phaser.
      *
-     * @param parties the number of parties required to trip barrier
+     * @param parties the number of additional parties required to trip barrier
      * @return the arrival phase number to which this registration applied
      * @throws IllegalStateException if attempting to register more
      * than the maximum supported number of parties
+     * @throws IllegalArgumentException if {@code parties < 0}
      */
     public int bulkRegister(int parties) {
         if (parties < 0)
@@ -563,10 +562,10 @@ public class Phaser {
      * Arrives at the barrier and awaits others. Equivalent in effect
      * to {@code awaitAdvance(arrive())}.  If you need to await with
      * interruption or timeout, you can arrange this with an analogous
-     * construction using one of the other forms of the awaitAdvance
-     * method.  If instead you need to deregister upon arrival use
-     * {@code arriveAndDeregister}. It is an unenforced usage error
-     * for an unregistered party to invoke this method.
+     * construction using one of the other forms of the {@code
+     * awaitAdvance} method.  If instead you need to deregister upon
+     * arrival, use {@link #arriveAndDeregister}. It is an unenforced
+     * usage error for an unregistered party to invoke this method.
      *
      * @return the arrival phase number, or a negative number if terminated
      * @throws IllegalStateException if not terminated and the number
@@ -829,6 +828,7 @@ public class Phaser {
         volatile boolean wasInterrupted = false;
         volatile Thread thread; // nulled to cancel wait
         QNode next;
+
         QNode(Phaser phaser, int phase, boolean interruptible,
               boolean timed, long startTime, long nanos) {
             this.phaser = phaser;
@@ -839,12 +839,14 @@ public class Phaser {
             this.nanos = nanos;
             thread = Thread.currentThread();
         }
+
         public boolean isReleasable() {
             return (thread == null ||
                     phaser.getPhase() != phase ||
                     (interruptible && wasInterrupted) ||
                     (timed && (nanos - (System.nanoTime() - startTime)) <= 0));
         }
+
         public boolean block() {
             if (Thread.interrupted()) {
                 wasInterrupted = true;
@@ -861,6 +863,7 @@ public class Phaser {
             }
             return isReleasable();
         }
+
         void signal() {
             Thread t = thread;
             if (t != null) {
@@ -868,16 +871,17 @@ public class Phaser {
                 LockSupport.unpark(t);
             }
         }
+
         boolean doWait() {
             if (thread != null) {
                 try {
                     ForkJoinPool.managedBlock(this);
                 } catch (InterruptedException ie) {
+                    wasInterrupted = true; // can't currently happen
                 }
             }
             return wasInterrupted;
         }
-
     }
 
     /**
@@ -919,8 +923,8 @@ public class Phaser {
                 node = new QNode(this, phase, false, false, 0, 0);
             else if (!queued)
                 queued = tryEnqueue(node);
-            else
-                interrupted = node.doWait();
+            else if (node.doWait())
+                interrupted = true;
         }
         if (node != null)
             node.thread = null;
@@ -946,8 +950,8 @@ public class Phaser {
                 node = new QNode(this, phase, true, false, 0, 0);
             else if (!queued)
                 queued = tryEnqueue(node);
-            else
-                interrupted = node.doWait();
+            else if (node.doWait())
+                interrupted = true;
         }
         if (node != null)
             node.thread = null;
@@ -978,8 +982,8 @@ public class Phaser {
                 node = new QNode(this, phase, true, true, startTime, nanos);
             else if (!queued)
                 queued = tryEnqueue(node);
-            else
-                interrupted = node.doWait();
+            else if (node.doWait())
+                interrupted = true;
         }
         if (node != null)
             node.thread = null;

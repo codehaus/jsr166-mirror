@@ -418,7 +418,7 @@ public class Phaser {
      * @return the arrival phase number to which this registration applied
      * @throws IllegalStateException if attempting to register more
      * than the maximum supported number of parties
-     * @throws IllegalArgumentException if {@code parties < 0)
+     * @throws IllegalArgumentException if {@code parties < 0}
      */
     public int bulkRegister(int parties) {
         if (parties < 0)
@@ -875,6 +875,7 @@ public class Phaser {
                 try {
                     ForkJoinPool.managedBlock(this);
                 } catch (InterruptedException ie) {
+                    wasInterrupted = true; // can't currently happen
                 }
             }
             return wasInterrupted;
@@ -920,8 +921,8 @@ public class Phaser {
                 node = new QNode(this, phase, false, false, 0, 0);
             else if (!queued)
                 queued = tryEnqueue(node);
-            else
-                interrupted = node.doWait();
+            else if (node.doWait())
+                interrupted = true;
         }
         if (node != null)
             node.thread = null;
@@ -947,8 +948,8 @@ public class Phaser {
                 node = new QNode(this, phase, true, false, 0, 0);
             else if (!queued)
                 queued = tryEnqueue(node);
-            else
-                interrupted = node.doWait();
+            else if (node.doWait())
+                interrupted = true;
         }
         if (node != null)
             node.thread = null;
@@ -979,8 +980,8 @@ public class Phaser {
                 node = new QNode(this, phase, true, true, startTime, nanos);
             else if (!queued)
                 queued = tryEnqueue(node);
-            else
-                interrupted = node.doWait();
+            else if (node.doWait())
+                interrupted = true;
         }
         if (node != null)
             node.thread = null;

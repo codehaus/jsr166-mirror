@@ -292,7 +292,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         t.start();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
         checkEmpty(q);
     }
 
@@ -355,7 +355,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         Thread.sleep(SMALL_DELAY_MS);
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
         checkEmpty(q);
     }
 
@@ -765,7 +765,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(l.get(i), i);
         }
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
         assertTrue(q.size() + l.size() >= SIZE);
     }
 
@@ -835,7 +835,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertSame(one, q.poll(LONG_DELAY_MS, MILLISECONDS));
         assertEquals(q.getWaitingConsumerCount(), 0);
         assertFalse(q.hasWaitingConsumer());
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -867,7 +867,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertEquals(1, q.size());
         assertEquals(SIZE, (int) q.poll());
         assertTrue(q.isEmpty());
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -922,7 +922,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         assertTrue(q.offer(three));
         assertSame(four, q.poll());
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -942,7 +942,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         assertEquals(SIZE, (int) q.take());
         checkEmpty(q);
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -987,7 +987,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         assertSame(hotPotato, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
         checkEmpty(q);
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -1010,7 +1010,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         assertSame(q.take(), hotPotato);
         checkEmpty(q);
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -1068,7 +1068,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertSame(four, q.poll());
         assertSame(five, q.poll());
         checkEmpty(q);
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**

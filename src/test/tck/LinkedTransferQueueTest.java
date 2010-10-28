@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -1053,13 +1054,16 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
+                long t0 = System.nanoTime();
                 assertFalse(q.tryTransfer(new Object(),
                                           SHORT_DELAY_MS, MILLISECONDS));
+                long elapsed = NANOSECONDS.toMillis(System.nanoTime() - t0);
+                assertTrue(elapsed >= SHORT_DELAY_MS);
             }});
 
-        Thread.sleep(SMALL_DELAY_MS);
         checkEmpty(q);
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        checkEmpty(q);
     }
 
     /**

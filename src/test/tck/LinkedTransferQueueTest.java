@@ -274,21 +274,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * take blocks interruptibly when empty
-     */
-    public void testTakeFromEmpty() throws InterruptedException {
-        final LinkedTransferQueue q = new LinkedTransferQueue();
-        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
-            public void realRun() throws InterruptedException {
-                q.take();
-            }});
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-    /**
-     * Take removes existing elements until empty, then blocks interruptibly
+     * take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() throws InterruptedException {
         final LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
@@ -342,8 +328,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             long t0 = System.nanoTime();
             assertEquals(i, (int) q.poll(LONG_DELAY_MS, MILLISECONDS));
-            long millisElapsed = (System.nanoTime() - t0)/(1024 * 1024);
-            assertTrue(millisElapsed < SMALL_DELAY_MS);
+            assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
         }
         assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
         checkEmpty(q);
@@ -360,8 +345,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 for (int i = 0; i < SIZE; ++i) {
                     long t0 = System.nanoTime();
                     assertEquals(i, (int) q.poll(LONG_DELAY_MS, MILLISECONDS));
-                    long millisElapsed = (System.nanoTime() - t0)/(1024 * 1024);
-                    assertTrue(millisElapsed < SMALL_DELAY_MS);
+                    assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
                 }
                 try {
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
@@ -1057,8 +1041,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 long t0 = System.nanoTime();
                 assertFalse(q.tryTransfer(new Object(),
                                           SHORT_DELAY_MS, MILLISECONDS));
-                long elapsed = NANOSECONDS.toMillis(System.nanoTime() - t0);
-                assertTrue(elapsed >= SHORT_DELAY_MS);
+                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
             }});
 
         checkEmpty(q);

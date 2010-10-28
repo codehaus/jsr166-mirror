@@ -71,6 +71,31 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
+    /**
+     * take blocks interruptibly when empty
+     */
+    public void testTakeFromEmptyBlocksInterruptibly()
+            throws InterruptedException {
+        final BlockingQueue q = emptyCollection();
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                long t0 = System.nanoTime();
+                threadStarted.countDown();
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+            }});
+        threadStarted.await();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(t.isAlive());
+        t.interrupt();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        assertFalse(t.isAlive());
+    }
+
     /** For debugging. */
     public void XXXXtestFails() {
         fail(emptyCollection().getClass().toString());

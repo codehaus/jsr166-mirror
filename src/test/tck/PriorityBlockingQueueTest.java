@@ -366,22 +366,6 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * take blocks interruptibly when empty
-     */
-    public void testTakeFromEmpty() throws InterruptedException {
-        final PriorityBlockingQueue q = new PriorityBlockingQueue(2);
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
-            public void realRun() throws InterruptedException {
-                q.take();
-            }});
-
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-    /**
      * Take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() throws InterruptedException {

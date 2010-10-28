@@ -11,6 +11,7 @@ import java.util.PropertyPermission;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.PermissionCollection;
@@ -622,6 +623,15 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    /**
+     * Returns the number of milliseconds since time given by
+     * startNanoTime, which must have been previously returned from a
+     * call to {@link System.nanoTime()}.
+     */
+    long millisElapsedSince(long startNanoTime) {
+        return NANOSECONDS.toMillis(System.nanoTime() - startNanoTime);
+    }
+    
     /**
      * Returns a new started daemon Thread running the given runnable.
      */

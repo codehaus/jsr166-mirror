@@ -391,17 +391,26 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * take blocks interruptibly when empty
      */
-    public void testTakeFromEmpty() throws InterruptedException {
-        final DelayQueue q = new DelayQueue();
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
-            public void realRun() throws InterruptedException {
-                q.take();
-            }};
-
-        t.start();
+    public void testTakeFromEmptyBlocksInterruptibly()
+            throws InterruptedException {
+        final BlockingQueue q = new DelayQueue();
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                long t0 = System.nanoTime();
+                threadStarted.countDown();
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException expected) {}
+                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+            }});
+        threadStarted.await();
         Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(t.isAlive());
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**

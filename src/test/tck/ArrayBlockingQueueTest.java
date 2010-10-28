@@ -393,22 +393,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * take blocks interruptibly when empty
-     */
-    public void testTakeFromEmpty() throws InterruptedException {
-        final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
-            public void realRun() throws InterruptedException {
-                q.take();
-            }};
-
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-    /**
      * Take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() throws InterruptedException {

@@ -218,24 +218,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
         t.join();
     }
 
-
-    /**
-     * take blocks interruptibly when empty
-     */
-    public void testTakeFromEmpty() throws InterruptedException {
-        final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
-            public void realRun() throws InterruptedException {
-                q.take();
-            }});
-
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-
     /**
      * put blocks interruptibly if no active taker
      */

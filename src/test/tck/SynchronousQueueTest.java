@@ -303,7 +303,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * timed pool with zero timeout times out if no active taker
+     * timed poll with zero timeout times out if no active taker
      */
     public void testTimedPoll0() throws InterruptedException {
         SynchronousQueue q = new SynchronousQueue();
@@ -311,7 +311,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * timed pool with nonzero timeout times out if no active taker
+     * timed poll with nonzero timeout times out if no active taker
      */
     public void testTimedPoll() throws InterruptedException {
         SynchronousQueue q = new SynchronousQueue();

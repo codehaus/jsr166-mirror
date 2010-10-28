@@ -309,7 +309,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * timed pool with zero timeout succeeds when non-empty, else times out
+     * timed poll with zero timeout succeeds when non-empty, else times out
      */
     public void testTimedPoll0() throws InterruptedException {
         LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
@@ -321,7 +321,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * timed pool with nonzero timeout succeeds when non-empty, else times out
+     * timed poll with nonzero timeout succeeds when non-empty, else times out
      */
     public void testTimedPoll() throws InterruptedException {
         LinkedTransferQueue<Integer> q = populatedQueue(SIZE);

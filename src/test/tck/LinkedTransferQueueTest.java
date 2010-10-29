@@ -1095,7 +1095,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * tryTransfer gives up after the timeout and return false
+     * tryTransfer gives up after the timeout and returns false
      */
     public void testTryTransfer6() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();

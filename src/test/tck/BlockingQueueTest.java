@@ -111,7 +111,7 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
                     q.take();
                     shouldThrow();
                 } catch (InterruptedException success) {}
-                assertTrue(millisElapsedSince(t0) < SHORT_DELAY_MS);
+                assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
             }});
 
         awaitTermination(t, MEDIUM_DELAY_MS);

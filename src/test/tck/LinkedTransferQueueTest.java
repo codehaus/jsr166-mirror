@@ -910,15 +910,14 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 threadStarted.countDown();
-                q.transfer(SIZE);
+                q.transfer(five);
                 checkEmpty(q);
             }});
 
         threadStarted.await();
         waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
-        assertTrue(t.isAlive());
         assertEquals(1, q.size());
-        assertEquals(SIZE, (int) q.poll());
+        assertSame(five, q.poll());
         checkEmpty(q);
         awaitTermination(t, MEDIUM_DELAY_MS);
     }

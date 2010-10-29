@@ -739,6 +739,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         LinkedTransferQueue r = (LinkedTransferQueue) in.readObject();
 
         assertEquals(q.size(), r.size());
+        assertEquals(q.toString(), r.toString());
+        assertTrue(Arrays.equals(q.toArray(), r.toArray()));
         while (!q.isEmpty()) {
             assertEquals(q.remove(), r.remove());
         }
@@ -930,24 +932,23 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
 
         Thread first = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Integer i = SIZE + 1;
-                q.transfer(i);
-                assertTrue(!q.contains(i));
+                q.transfer(four);
+                assertTrue(!q.contains(four));
                 assertEquals(1, q.size());
             }});
 
         Thread interruptedThread = newStartedThread(
             new CheckedInterruptedRunnable() {
                 public void realRun() throws InterruptedException {
-                    while (q.size() == 0)
+                    while (q.isEmpty())
                         Thread.yield();
-                    q.transfer(SIZE);
+                    q.transfer(five);
                 }});
 
         while (q.size() < 2)
             Thread.yield();
         assertEquals(2, q.size());
-        assertEquals(SIZE + 1, (int) q.poll());
+        assertSame(four, q.poll());
         first.join();
         assertEquals(1, q.size());
         interruptedThread.interrupt();
@@ -1105,9 +1106,9 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 assertFalse(q.tryTransfer(new Object(),
                                           SHORT_DELAY_MS, MILLISECONDS));
                 assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+                checkEmpty(q);
             }});
 
-        checkEmpty(q);
         awaitTermination(t, MEDIUM_DELAY_MS);
         checkEmpty(q);
     }
@@ -1126,7 +1127,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                 checkEmpty(q);
             }});
 
-        Thread.sleep(SHORT_DELAY_MS);
+        while (q.size() != 2)
+            Thread.yield();
         assertEquals(2, q.size());
         assertSame(four, q.poll());
         assertSame(five, q.poll());
@@ -1142,7 +1144,9 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         final LinkedTransferQueue q = new LinkedTransferQueue();
         assertTrue(q.offer(four));
         assertEquals(1, q.size());
+        long t0 = System.nanoTime();
         assertFalse(q.tryTransfer(five, SHORT_DELAY_MS, MILLISECONDS));
+        assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
         assertEquals(1, q.size());
         assertSame(four, q.poll());
         assertNull(q.poll());

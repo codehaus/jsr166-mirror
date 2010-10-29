@@ -616,9 +616,14 @@ public class JSR166TestCase extends TestCase {
             Thread.State s = thread.getState();
             if (s == Thread.State.BLOCKED ||
                 s == Thread.State.WAITING ||
-                s == Thread.State.TIMED_WAITING ||
-                System.nanoTime() - t0 > timeoutNanos)
+                s == Thread.State.TIMED_WAITING)
                 return;
+            else if (s == Thread.State.TERMINATED)
+                fail("Unexpected thread termination");
+            else if (System.nanoTime() - t0 > timeoutNanos) {
+                threadAssertTrue(thread.isAlive());
+                return;
+            }
             Thread.yield();
         }
     }

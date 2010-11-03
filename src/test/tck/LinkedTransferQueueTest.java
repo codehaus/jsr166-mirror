@@ -575,10 +575,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     /**
      * toArray(null) throws NullPointerException
      */
-    public void testToArray_BadArg() {
+    public void testToArray_NullArg() {
         LinkedTransferQueue q = populatedQueue(SIZE);
         try {
-            Object o[] = q.toArray(null);
+            q.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

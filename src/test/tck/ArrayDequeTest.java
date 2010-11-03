@@ -643,13 +643,13 @@ public class ArrayDequeTest extends JSR166TestCase {
     }
 
     /**
-     * toArray(null) throws NPE
+     * toArray(null) throws NullPointerException
      */
-    public void testToArray_BadArg() {
+    public void testToArray_NullArg() {
         ArrayDeque l = new ArrayDeque();
         l.add(new Object());
         try {
-            Object o[] = l.toArray(null);
+            l.toArray(null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

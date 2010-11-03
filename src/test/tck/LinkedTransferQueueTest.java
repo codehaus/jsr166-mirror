@@ -584,12 +584,12 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray(incompatible array type) throws CCE
+     * toArray(incompatible array type) throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
         LinkedTransferQueue q = populatedQueue(SIZE);
         try {
-            Object o[] = q.toArray(new String[10]);
+            q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }

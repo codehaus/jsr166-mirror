@@ -669,12 +669,12 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
     }
 
     /**
-     * toArray() with incompatible array type throws ArrayStoreException
+     * toArray(incompatible array type) throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
         ConcurrentLinkedDeque q = populatedDeque(SIZE);
         try {
-            Object o[] = q.toArray(new String[10]);
+            q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }

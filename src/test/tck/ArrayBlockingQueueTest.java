@@ -639,12 +639,12 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray with incompatible array type throws CCE
+     * toArray(incompatible array type) throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
-            Object o[] = q.toArray(new String[10]);
+            q.toArray(new String[10]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
     }

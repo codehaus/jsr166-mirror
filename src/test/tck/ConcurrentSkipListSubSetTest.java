@@ -397,26 +397,24 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     }
 
     /**
-     * toArray contains all elements
+     * toArray contains all elements in sorted order
      */
     public void testToArray() {
         NavigableSet q = populatedSet(SIZE);
         Object[] o = q.toArray();
-        Arrays.sort(o);
         for (int i = 0; i < o.length; i++)
-            assertEquals(o[i], q.pollFirst());
+            assertSame(o[i], q.pollFirst());
     }
 
     /**
-     * toArray(a) contains all elements
+     * toArray(a) contains all elements in sorted order
      */
     public void testToArray2() {
         NavigableSet q = populatedSet(SIZE);
         Integer[] ints = new Integer[SIZE];
-        ints = (Integer[])q.toArray(ints);
-        Arrays.sort(ints);
+        assertSame(ints, q.toArray(ints));
         for (int i = 0; i < ints.length; i++)
-            assertEquals(ints[i], q.pollFirst());
+            assertSame(ints[i], q.pollFirst());
     }
 
     /**
@@ -917,7 +915,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public void testDescendingToArray2() {
         NavigableSet q = populatedSet(SIZE);
         Integer[] ints = new Integer[SIZE];
-        ints = (Integer[])q.toArray(ints);
+        assertSame(ints, q.toArray(ints));
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertEquals(ints[i], q.pollFirst());

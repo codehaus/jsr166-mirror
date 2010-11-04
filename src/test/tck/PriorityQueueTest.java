@@ -408,7 +408,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         Object[] o = q.toArray();
         Arrays.sort(o);
         for (int i = 0; i < o.length; i++)
-            assertEquals(o[i], q.poll());
+            assertSame(o[i], q.poll());
     }
 
     /**
@@ -417,10 +417,10 @@ public class PriorityQueueTest extends JSR166TestCase {
     public void testToArray2() {
         PriorityQueue q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        ints = (Integer[])q.toArray(ints);
+        assertSame(ints, q.toArray(ints));
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
-            assertEquals(ints[i], q.poll());
+            assertSame(ints[i], q.poll());
     }
 
     /**

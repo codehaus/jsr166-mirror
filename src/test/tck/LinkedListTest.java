@@ -318,26 +318,24 @@ public class LinkedListTest extends JSR166TestCase {
     }
 
     /**
-     * toArray contains all elements
+     * toArray contains all elements in FIFO order
      */
     public void testToArray() {
         LinkedList q = populatedQueue(SIZE);
         Object[] o = q.toArray();
-        Arrays.sort(o);
         for (int i = 0; i < o.length; i++)
-            assertEquals(o[i], q.poll());
+            assertSame(o[i], q.poll());
     }
 
     /**
-     * toArray(a) contains all elements
+     * toArray(a) contains all elements in FIFO order
      */
     public void testToArray2() {
         LinkedList q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        ints = (Integer[])q.toArray(ints);
-        Arrays.sort(ints);
+        assertSame(ints, q.toArray(ints));
         for (int i = 0; i < ints.length; i++)
-            assertEquals(ints[i], q.poll());
+            assertSame(ints[i], q.poll());
     }
 
     /**

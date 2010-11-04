@@ -550,25 +550,25 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray() contains all elements
+     * toArray() contains all elements in FIFO order
      */
-    public void testToArray() throws InterruptedException {
+    public void testToArray() {
         LinkedTransferQueue q = populatedQueue(SIZE);
         Object[] o = q.toArray();
         for (int i = 0; i < o.length; i++) {
-            assertEquals(o[i], q.take());
+            assertSame(o[i], q.poll());
         }
     }
 
     /**
-     * toArray(a) contains all elements
+     * toArray(a) contains all elements in FIFO order
      */
-    public void testToArray2() throws InterruptedException {
+    public void testToArray2() {
         LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        ints = q.toArray(ints);
+        assertSame(ints, q.toArray(ints));
         for (int i = 0; i < ints.length; i++) {
-            assertEquals(ints[i], q.take());
+            assertSame(ints[i], q.poll());
         }
     }
 

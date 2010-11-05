@@ -41,8 +41,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private ArrayBlockingQueue populatedQueue(int n) {
-        ArrayBlockingQueue q = new ArrayBlockingQueue(n);
+    private ArrayBlockingQueue<Integer> populatedQueue(int n) {
+        ArrayBlockingQueue<Integer> q = new ArrayBlockingQueue<Integer>(n);
         assertTrue(q.isEmpty());
         for (int i = 0; i < n; i++)
             assertTrue(q.offer(new Integer(i)));
@@ -620,9 +620,10 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * toArray(a) contains all elements in FIFO order
      */
     public void testToArray2() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
+        ArrayBlockingQueue<Integer> q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.poll());
     }

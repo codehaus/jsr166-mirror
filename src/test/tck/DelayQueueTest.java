@@ -109,8 +109,8 @@ public class DelayQueueTest extends JSR166TestCase {
      * Create a queue of given size containing consecutive
      * PDelays 0 ... n.
      */
-    private DelayQueue populatedQueue(int n) {
-        DelayQueue q = new DelayQueue();
+    private DelayQueue<PDelay> populatedQueue(int n) {
+        DelayQueue<PDelay> q = new DelayQueue<PDelay>();
         assertTrue(q.isEmpty());
         for (int i = n-1; i >= 0; i-=2)
             assertTrue(q.offer(new PDelay(i)));
@@ -683,9 +683,10 @@ public class DelayQueueTest extends JSR166TestCase {
      * toArray(a) contains all elements
      */
     public void testToArray2() {
-        DelayQueue q = populatedQueue(SIZE);
+        DelayQueue<PDelay> q = populatedQueue(SIZE);
         PDelay[] ints = new PDelay[SIZE];
-        assertSame(ints, q.toArray(ints));
+        PDelay[] array = q.toArray(ints);
+        assertSame(ints, array);
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.remove());

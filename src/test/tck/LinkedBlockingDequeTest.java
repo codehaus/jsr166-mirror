@@ -38,8 +38,9 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * Create a deque of given size containing consecutive
      * Integers 0 ... n.
      */
-    private LinkedBlockingDeque populatedDeque(int n) {
-        LinkedBlockingDeque q = new LinkedBlockingDeque(n);
+    private LinkedBlockingDeque<Integer> populatedDeque(int n) {
+        LinkedBlockingDeque<Integer> q =
+            new LinkedBlockingDeque<Integer>(n);
         assertTrue(q.isEmpty());
         for (int i = 0; i < n; i++)
             assertTrue(q.offer(new Integer(i)));
@@ -1307,9 +1308,10 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * toArray(a) contains all elements in FIFO order
      */
     public void testToArray2() {
-        LinkedBlockingDeque q = populatedDeque(SIZE);
+        LinkedBlockingDeque<Integer> q = populatedDeque(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.remove());
     }

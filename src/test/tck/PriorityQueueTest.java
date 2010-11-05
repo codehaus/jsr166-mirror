@@ -29,8 +29,8 @@ public class PriorityQueueTest extends JSR166TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private PriorityQueue populatedQueue(int n) {
-        PriorityQueue q = new PriorityQueue(n);
+    private PriorityQueue<Integer> populatedQueue(int n) {
+        PriorityQueue<Integer> q = new PriorityQueue<Integer>(n);
         assertTrue(q.isEmpty());
         for (int i = n-1; i >= 0; i-=2)
             assertTrue(q.offer(new Integer(i)));
@@ -415,9 +415,10 @@ public class PriorityQueueTest extends JSR166TestCase {
      * toArray(a) contains all elements
      */
     public void testToArray2() {
-        PriorityQueue q = populatedQueue(SIZE);
+        PriorityQueue<Integer> q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.poll());

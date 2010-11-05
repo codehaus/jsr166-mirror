@@ -27,8 +27,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      * Create a set of given size containing consecutive
      * Integers 0 ... n.
      */
-    private NavigableSet populatedSet(int n) {
-        TreeSet q = new TreeSet();
+    private NavigableSet<Integer> populatedSet(int n) {
+        TreeSet<Integer> q = new TreeSet<Integer>();
         assertTrue(q.isEmpty());
 
         for (int i = n-1; i >= 0; i-=2)
@@ -407,9 +407,10 @@ public class TreeSubSetTest extends JSR166TestCase {
      * toArray(a) contains all elements in sorted order
      */
     public void testToArray2() {
-        NavigableSet q = populatedSet(SIZE);
+        NavigableSet<Integer> q = populatedSet(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.pollFirst());
     }

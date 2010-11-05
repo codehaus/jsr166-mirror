@@ -41,8 +41,9 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private LinkedBlockingQueue populatedQueue(int n) {
-        LinkedBlockingQueue q = new LinkedBlockingQueue(n);
+    private LinkedBlockingQueue<Integer> populatedQueue(int n) {
+        LinkedBlockingQueue<Integer> q =
+            new LinkedBlockingQueue<Integer>(n);
         assertTrue(q.isEmpty());
         for (int i = 0; i < n; i++)
             assertTrue(q.offer(new Integer(i)));
@@ -620,9 +621,10 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
      * toArray(a) contains all elements in FIFO order
      */
     public void testToArray2() throws InterruptedException {
-        LinkedBlockingQueue q = populatedQueue(SIZE);
+        LinkedBlockingQueue<Integer> q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.poll());
     }

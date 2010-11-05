@@ -566,7 +566,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     public void testToArray2() {
         LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         for (int i = 0; i < ints.length; i++) {
             assertSame(ints[i], q.poll());
         }

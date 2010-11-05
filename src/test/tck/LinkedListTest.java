@@ -23,8 +23,8 @@ public class LinkedListTest extends JSR166TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private LinkedList populatedQueue(int n) {
-        LinkedList q = new LinkedList();
+    private LinkedList<Integer> populatedQueue(int n) {
+        LinkedList<Integer> q = new LinkedList<Integer>();
         assertTrue(q.isEmpty());
         for (int i = 0; i < n; ++i)
             assertTrue(q.offer(new Integer(i)));
@@ -331,9 +331,10 @@ public class LinkedListTest extends JSR166TestCase {
      * toArray(a) contains all elements in FIFO order
      */
     public void testToArray2() {
-        LinkedList q = populatedQueue(SIZE);
+        LinkedList<Integer> q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.poll());
     }

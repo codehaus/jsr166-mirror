@@ -49,8 +49,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * Create a queue of given size containing consecutive
      * Integers 0 ... n.
      */
-    private PriorityBlockingQueue populatedQueue(int n) {
-        PriorityBlockingQueue q = new PriorityBlockingQueue(n);
+    private PriorityBlockingQueue<Integer> populatedQueue(int n) {
+        PriorityBlockingQueue<Integer> q =
+            new PriorityBlockingQueue<Integer>(n);
         assertTrue(q.isEmpty());
         for (int i = n-1; i >= 0; i-=2)
             assertTrue(q.offer(new Integer(i)));
@@ -593,9 +594,10 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * toArray(a) contains all elements
      */
     public void testToArray2() throws InterruptedException {
-        PriorityBlockingQueue q = populatedQueue(SIZE);
+        PriorityBlockingQueue<Integer> q = populatedQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        assertSame(ints, q.toArray(ints));
+        Integer[] array = q.toArray(ints);
+        assertSame(ints, array);
         Arrays.sort(ints);
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.take());

@@ -68,7 +68,7 @@ public class IteratorWeakConsistency {
             }
             check(found4);
         } catch (Throwable t) { unexpected(t); }
-        
+
     }
 
     //--------------------- Infrastructure ---------------------------

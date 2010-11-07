@@ -25,6 +25,8 @@ public class PhaserTest extends JSR166TestCase {
         return new TestSuite(PhaserTest.class);
     }
 
+    private static final int maxParties = 65535;
+    
     /** Checks state of phaser. */
     protected void assertState(Phaser phaser,
                                int phase, int parties, int unarrived) {
@@ -52,18 +54,20 @@ public class PhaserTest extends JSR166TestCase {
      * Empty constructor builds a new Phaser with no parent, no registered
      * parties and initial phase number of 0
      */
-    public void testConstructor1() {
+    public void testConstructorDefaultValues() {
         Phaser phaser = new Phaser();
         assertNull(phaser.getParent());
+        assertEquals(0, phaser.getRegisteredParties());
         assertEquals(0, phaser.getArrivedParties());
+        assertEquals(0, phaser.getUnarrivedParties());
         assertEquals(0, phaser.getPhase());
     }
 
     /**
-     * A negative party number for the constructor throws illegal argument
-     * exception
+     * Constructing with a negative number of parties throws
+     * IllegalArgumentException
      */
-    public void testConstructor2() {
+    public void testConstructorNegativeParties() {
         try {
             new Phaser(-1);
             shouldThrow();
@@ -71,23 +75,42 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * The parent being input into the constructor should equal the original
-     * parent when being returned
+     * Constructing with a negative number of parties throws
+     * IllegalArgumentException
      */
-    public void testConstructor3() {
-        Phaser parent = new Phaser();
-        assertEquals(parent, new Phaser(parent).getParent());
-    }
-
-    /**
-     * A negative party number for the constructor throws illegal argument
-     * exception
-     */
-    public void testConstructor4() {
+    public void testConstructorNegativeParties2() {
         try {
             new Phaser(new Phaser(), -1);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
+    }
+
+    /**
+     * Constructing with a number of parties > 65535 throws
+     * IllegalArgumentException
+     */
+    public void testConstructorPartiesExceedsLimit() {
+        new Phaser(maxParties);
+        try {
+            new Phaser(maxParties + 1);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+
+        new Phaser(new Phaser(), maxParties);
+        try {
+            new Phaser(new Phaser(), maxParties + 1);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+    }
+
+    /**
+     * The parent provided to the constructor should be returned from
+     * a later call to getParent
+     */
+    public void testConstructor3() {
+        Phaser parent = new Phaser();
+        assertSame(parent, new Phaser(parent).getParent());
+        assertNull(new Phaser(null).getParent());
     }
 
     /**
@@ -96,12 +119,13 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testConstructor5() {
         Phaser parent = new Phaser();
-        assertEquals(parent, new Phaser(parent, 0).getParent());
+        assertSame(parent, new Phaser(parent, 0).getParent());
+        assertNull(new Phaser(null, 0).getParent());
     }
 
     /**
-     * register() will increment the number of unarrived parties by one and not
-     * affect its arrived parties
+     * register() will increment the number of unarrived parties by
+     * one and not affect its arrived parties
      */
     public void testRegister1() {
         Phaser phaser = new Phaser();
@@ -115,7 +139,6 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testRegister2() {
         Phaser phaser = new Phaser(0);
-        int maxParties = (1 << 16) - 1;
         assertState(phaser, 0, 0, 0);
         assertEquals(0, phaser.bulkRegister(maxParties - 10));
         assertState(phaser, 0, maxParties - 10, maxParties - 10);
@@ -126,6 +149,11 @@ public class PhaserTest extends JSR166TestCase {
         assertState(phaser, 0, maxParties, maxParties);
         try {
             phaser.register();
+            shouldThrow();
+        } catch (IllegalStateException success) {}
+
+        try {
+            phaser.bulkRegister(Integer.MAX_VALUE);
             shouldThrow();
         } catch (IllegalStateException success) {}
     }

@@ -241,19 +241,20 @@ public class Phaser {
      */
     private volatile long state;
 
-    private static final int ushortMask = 0xffff;
+    private static final int ushortBits = 16;
+    private static final int ushortMask = (1 << ushortBits) - 1;
     private static final int phaseMask  = 0x7fffffff;
 
     private static int unarrivedOf(long s) {
-        return (int) (s & ushortMask);
+        return ((int) s) & ushortMask;
     }
 
     private static int partiesOf(long s) {
-        return ((int) s) >>> 16;
+        return ((int) s) >>> ushortBits;
     }
 
     private static int phaseOf(long s) {
-        return (int) (s >>> 32);
+        return (int) (s >>> (2 * ushortBits));
     }
 
     private static int arrivedOf(long s) {
@@ -261,13 +262,14 @@ public class Phaser {
     }
 
     private static long stateFor(int phase, int parties, int unarrived) {
-        return ((((long) phase) << 32) | (((long) parties) << 16) |
+        return ((((long) phase) << (2 * ushortBits)) |
+                (((long) parties) << ushortBits) |
                 (long) unarrived);
     }
 
     private static long trippedStateFor(int phase, int parties) {
         long lp = (long) parties;
-        return (((long) phase) << 32) | (lp << 16) | lp;
+        return (((long) phase) << (2 * ushortBits)) | (lp << ushortBits) | lp;
     }
 
     /**
@@ -380,7 +382,7 @@ public class Phaser {
      * or greater than the maximum number of parties supported
      */
     public Phaser(Phaser parent, int parties) {
-        if (parties < 0 || parties > ushortMask)
+        if (parties >>> ushortBits != 0)
             throw new IllegalArgumentException("Illegal number of parties");
         int phase;
         this.parent = parent;
@@ -446,7 +448,7 @@ public class Phaser {
             int parties = p + registrations;
             if (u == 0 && p != 0)  // if tripped, wait for advance
                 untimedWait(phase);
-            else if (parties > ushortMask)
+            else if (parties >>> ushortBits != 0)
                 throw new IllegalStateException(badBounds(parties, unarrived));
             else if (par == null || phaseOf(root.state) == phase) {
                 long next = stateFor(phase, parties, unarrived);

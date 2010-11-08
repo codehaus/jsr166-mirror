@@ -26,7 +26,7 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     private static final int maxParties = 65535;
-    
+
     /** Checks state of phaser. */
     protected void assertState(Phaser phaser,
                                int phase, int parties, int unarrived) {

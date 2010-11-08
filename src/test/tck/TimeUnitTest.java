@@ -384,7 +384,7 @@ public class TimeUnitTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 TimeUnit tu = TimeUnit.MILLISECONDS;
                 tu.timedJoin(s, MEDIUM_DELAY_MS);
-            }});;
+            }});
         s.start();
         t.start();
         Thread.sleep(SHORT_DELAY_MS);

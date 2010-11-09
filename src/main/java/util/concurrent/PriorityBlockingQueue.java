@@ -552,15 +552,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public int size() {
-        int n;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            n = size;
+            return size;
         } finally {
             lock.unlock();
         }
-        return n;
     }
 
     /**

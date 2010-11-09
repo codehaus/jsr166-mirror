@@ -191,9 +191,10 @@ public class ExecutorsTest extends JSR166TestCase {
             Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
                                   SHORT_DELAY_MS, MILLISECONDS);
             assertFalse(f.isDone());
-            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(done.await(MEDIUM_DELAY_MS, MILLISECONDS));
+            assertSame(Boolean.TRUE, f.get(SMALL_DELAY_MS, MILLISECONDS));
+            assertSame(Boolean.TRUE, f.get());
             assertTrue(f.isDone());
-            assertEquals(Boolean.TRUE, f.get());
         } finally {
             joinPool(p);
         }
@@ -213,9 +214,10 @@ public class ExecutorsTest extends JSR166TestCase {
             Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
                                   SHORT_DELAY_MS, MILLISECONDS);
             assertFalse(f.isDone());
-            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(done.await(MEDIUM_DELAY_MS, MILLISECONDS));
+            assertSame(Boolean.TRUE, f.get(SMALL_DELAY_MS, MILLISECONDS));
+            assertSame(Boolean.TRUE, f.get());
             assertTrue(f.isDone());
-            assertEquals(Boolean.TRUE, f.get());
         } finally {
             joinPool(p);
         }
@@ -237,9 +239,10 @@ public class ExecutorsTest extends JSR166TestCase {
             Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
                                   SHORT_DELAY_MS, MILLISECONDS);
             assertFalse(f.isDone());
-            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertTrue(done.await(MEDIUM_DELAY_MS, MILLISECONDS));
+            assertSame(Boolean.TRUE, f.get(SMALL_DELAY_MS, MILLISECONDS));
+            assertSame(Boolean.TRUE, f.get());
             assertTrue(f.isDone());
-            assertEquals(Boolean.TRUE, f.get());
         } finally {
             joinPool(p);
         }

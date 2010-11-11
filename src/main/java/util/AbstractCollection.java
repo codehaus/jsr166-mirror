@@ -290,9 +290,8 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @see #contains(Object)
      */
     public boolean containsAll(Collection<?> c) {
-        Iterator<?> it = c.iterator();
-        while (it.hasNext())
-            if (!contains(it.next()))
+        for (Object e : c)
+            if (!contains(e))
                 return false;
         return true;
     }
@@ -317,11 +316,9 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      */
     public boolean addAll(Collection<? extends E> c) {
         boolean modified = false;
-        Iterator<? extends E> it = c.iterator();
-        while (it.hasNext()) {
-            if (add(it.next()))
+        for (E e : c)
+            if (add(e))
                 modified = true;
-        }
         return modified;
     }
 

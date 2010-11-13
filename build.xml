@@ -108,7 +108,7 @@
              fork="true">
 
       <include name="**/*.java"/>
-      <compilerarg value="-XDignore.symbol.file"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
 
 <!--
       <exclude name="java/lang/**"/>
@@ -149,7 +149,7 @@
     <mkdir dir="${build.javadocs.dir}"/>
 
     <javadoc destdir="${build.javadocs.dir}"
-                link="http://java.sun.com/javase/6/docs/api/"
+                link="http://download.oracle.com/javase/6/docs/api/"
             overview="${src.dir}/intro.html"
             sourcepath="${src.dir}:${jdksrc.dir}"
     >
@@ -214,7 +214,7 @@
     <mkdir dir="${dist.javadocs.dir}"/>
 
     <javadoc destdir="${dist.javadocs.dir}"
-            link="http://java.sun.com/javase/6/docs/api/"
+            link="http://download.oracle.com/javase/6/docs/api/"
             overview="${src.dir}/intro.html"
 
             sourcepath="${src.dir}:${jdksrc.dir}"
@@ -511,7 +511,7 @@
     <mkdir dir="${build.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
-             link="http://java.sun.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/6/docs/api/"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="yes">
@@ -554,7 +554,7 @@
     <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166xjavadocs.dir}"
-                link="http://java.sun.com/javase/6/docs/api/"
+                link="http://download.oracle.com/javase/6/docs/api/"
               source="${build.sourcelevel}">
 
       <packageset dir="${topsrc.dir}" defaultexcludes="yes">
@@ -591,6 +591,7 @@
 
       <include name="**/*.java"/>
       <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="${bootclasspath.args}"/>
 
 <!--       <compilerarg line="-Xlint -Xmaxwarns 1000"/> -->
@@ -622,7 +623,7 @@
     <mkdir dir="${build.jsr166yjavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
-                link="http://java.sun.com/javase/6/docs/api/"
+                link="http://download.oracle.com/javase/6/docs/api/"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
@@ -663,7 +664,7 @@
     <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
-                link="http://java.sun.com/javase/6/docs/api/"
+                link="http://download.oracle.com/javase/6/docs/api/"
               source="${build.sourcelevel}"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
             >
@@ -701,6 +702,7 @@
 
       <include name="**/*.java"/>
       <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="${bootclasspath.args}"/>
 
 <!--       <compilerarg line="-Xlint -Xmaxwarns 1000"/> -->
@@ -732,7 +734,7 @@
     <mkdir dir="${build.extra166yjavadocs.dir}"/>
 
     <javadoc destdir="${build.extra166yjavadocs.dir}"
-                link="http://java.sun.com/javase/6/docs/api/"
+                link="http://download.oracle.com/javase/6/docs/api/"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
     >
       <packageset dir="${topsrc.dir}" defaultexcludes="no">
@@ -773,7 +775,7 @@
     <mkdir dir="${dist.extra166yjavadocs.dir}"/>
 
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
-                link="http://java.sun.com/javase/6/docs/api/"
+                link="http://download.oracle.com/javase/6/docs/api/"
               source="${build.sourcelevel}"
             sourcepath="${topsrc.dir}:${jdksrc.dir}"
             >

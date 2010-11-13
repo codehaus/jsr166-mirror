@@ -236,7 +236,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * simple. The most common usage is to construct a new object
          * serving as an initial mapped value.
          *
-         * @param key the (nonnull) key
+         * @param key the (non-null) key
          * @return a value, or null if none
          */
         V map(K key);
@@ -1069,7 +1069,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * If the specified key is not already associated with a value,
      * computes its value using the given mappingFunction, and if
-     * nonnull, enters it into the map.  This is equivalent to
+     * non-null, enters it into the map.  This is equivalent to
      *
      * <pre>
      *   if (map.containsKey(key))

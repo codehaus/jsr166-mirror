@@ -3050,7 +3050,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Creates a new submap.
          * @param least inclusive least value, or <tt>null</tt> if from start
          * @param fence exclusive upper bound or <tt>null</tt> if to end
-         * @throws IllegalArgumentException if least and fence nonnull
+         * @throws IllegalArgumentException if least and fence non-null
          *  and least greater than fence
          */
         ConcurrentSkipListSubMap(ConcurrentSkipListMap<K,V> map,

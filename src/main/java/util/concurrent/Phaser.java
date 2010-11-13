@@ -836,7 +836,7 @@ public class Phaser {
      * Possibly blocks and waits for phase to advance unless aborted.
      *
      * @param phase current phase
-     * @param node if nonnull, the wait node to track interrupt and timeout;
+     * @param node if non-null, the wait node to track interrupt and timeout;
      * if null, denotes noninterruptible wait
      * @return current phase
      */

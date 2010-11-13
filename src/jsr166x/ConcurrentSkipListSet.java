@@ -487,7 +487,7 @@ public class ConcurrentSkipListSet<E>
          * @param fromElement inclusive least value, or <tt>null</tt> if from start
          * @param toElement exclusive upper bound or <tt>null</tt> if to end
          * @throws IllegalArgumentException if fromElement and toElement
-         * nonnull and fromElement greater than toElement
+         * non-null and fromElement greater than toElement
          */
         ConcurrentSkipListSubSet(ConcurrentSkipListMap<E,Object> map,
                                  E fromElement, E toElement) {

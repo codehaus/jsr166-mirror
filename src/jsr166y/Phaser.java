@@ -880,7 +880,7 @@ public class Phaser {
             if (!node.interruptible && node.wasInterrupted)
                 Thread.currentThread().interrupt();
         }
-        if (p == phase && parent != null)
+        if (p == phase)
             p = (int)(reconcileState() >>> PHASE_SHIFT);
         if (p != phase)
             releaseWaiters(phase);

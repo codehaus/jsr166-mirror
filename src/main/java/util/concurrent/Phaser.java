@@ -341,11 +341,10 @@ public class Phaser {
 
     /**
      * Returns message string for bounds exceptions on arrival.
-     * Declared out of-line from doArrive to reduce string op bulk.
+     * Declared out of line from doArrive to reduce string op bulk.
      */
     private String badArrive() {
-        return ("Attempted arrival of unregistered party for " +
-                this.toString());
+        return "Attempted arrival of unregistered party for " + toString();
     }
 
     /**
@@ -373,11 +372,11 @@ public class Phaser {
     }
 
     /**
-     * Returns message string for bounds exceptions on registration
+     * Returns message string for out of bounds exceptions on registration.
      */
     private String badRegister() {
-        return ("Attempt to register more than " + MAX_COUNT + " parties for "+
-                this.toString());
+        return "Attempt to register more than " +
+            MAX_COUNT + " parties for " + toString();
     }
 
     /**
@@ -770,11 +769,11 @@ public class Phaser {
     }
 
     /**
-     * Returns a string identifying this phaser, as well as its
-     * state.  The state, in brackets, includes the String {@code
-     * "phase = "} followed by the phase number, {@code "parties = "}
-     * followed by the number of registered parties, and {@code
-     * "arrived = "} followed by the number of arrived parties.
+     * Returns a string identifying this phaser, as well as its state.
+     * The state, in brackets, includes the String {@code "phase = "}
+     * followed by the phase number, {@code "parties = "} followed by
+     * the number of registered parties, and {@code "arrived = "}
+     * followed by the number of arrived parties.
      *
      * @return a string identifying this barrier, as well as its state
      */
@@ -787,7 +786,7 @@ public class Phaser {
     }
 
     /**
-     * Removes and signals threads from queue for phase
+     * Removes and signals threads from queue for phase.
      */
     private void releaseWaiters(int phase) {
         AtomicReference<QNode> head = queueFor(phase);
@@ -830,7 +829,7 @@ public class Phaser {
      * block. The value trades off good-citizenship vs big unnecessary
      * slowdowns.
      */
-    static final int SPINS_PER_ARRIVAL = NCPU < 2? 1 : 1 << 8;
+    static final int SPINS_PER_ARRIVAL = (NCPU < 2) ? 1 : 1 << 8;
 
     /**
      * Possibly blocks and waits for phase to advance unless aborted.

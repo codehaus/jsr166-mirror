@@ -1128,7 +1128,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         // Finish now if all threads terminated; else in some subsequent call
         if ((workerCounts >>> TOTAL_COUNT_SHIFT) == 0) {
             advanceRunLevel(TERMINATED);
-            termination.arrive();
+            termination.forceTermination();
         }
         return true;
     }
@@ -1796,10 +1796,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     public boolean awaitTermination(long timeout, TimeUnit unit)
         throws InterruptedException {
         try {
-            return termination.awaitAdvanceInterruptibly(0, timeout, unit) > 0;
+            termination.awaitAdvanceInterruptibly(0, timeout, unit);
         } catch (TimeoutException ex) {
             return false;
         }
+        return true;
     }
 
     /**

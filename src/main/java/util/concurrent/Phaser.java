@@ -374,7 +374,7 @@ public class Phaser {
     }
 
     /**
-     * Returns message string for bounds exceptions on registration
+     * Returns message string for out of bounds exceptions on registration.
      */
     private String badRegister(long s) {
         return "Attempt to register more than " +
@@ -382,8 +382,7 @@ public class Phaser {
     }
 
     /**
-     * Recursively resolves lagged phase propagation from root if
-     * necessary.
+     * Recursively resolves lagged phase propagation from root if necessary.
      */
     private long reconcileState() {
         Phaser par = parent;
@@ -838,13 +837,13 @@ public class Phaser {
      * block. The value trades off good-citizenship vs big unnecessary
      * slowdowns.
      */
-    static final int SPINS_PER_ARRIVAL = NCPU < 2? 1 : 1 << 8;
+    static final int SPINS_PER_ARRIVAL = (NCPU < 2) ? 1 : 1 << 8;
 
     /**
      * Possibly blocks and waits for phase to advance unless aborted.
      *
      * @param phase current phase
-     * @param node if nonnull, the wait node to track interrupt and timeout;
+     * @param node if non-null, the wait node to track interrupt and timeout;
      * if null, denotes noninterruptible wait
      * @return current phase
      */

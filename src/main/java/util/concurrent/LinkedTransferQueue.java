@@ -797,7 +797,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 lastPred = r;    // next lastPred is old lastRet
             else if ((b = lastPred) == null || b.isMatched())
                 lastPred = null; // at start of list
-            else {               
+            else {
                 Node s, n;       // help with removal of lastPred.next
                 while ((s = b.next) != null &&
                        s != b && s.isMatched() &&
@@ -821,7 +821,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                         nextNode = s;
                         return;
                     }
-                } 
+                }
                 else if (item == null)
                     break;
                 // assert s.isMatched();

@@ -649,20 +649,26 @@ public class Phaser {
     }
 
     /**
-     * Forces this barrier to enter termination state. Counts of
-     * arrived and registered parties are unaffected. If this phaser
-     * has a parent, it too is terminated. This method may be useful
-     * for coordinating recovery after one or more tasks encounter
-     * unexpected exceptions.
+     * Forces this barrier to enter termination state.  Counts of
+     * arrived and registered parties are unaffected.  If this phaser
+     * is a member of a tiered set of phasers, then all of the phasers
+     * in the set are terminated.  If this phaser is already
+     * terminated, this method has no effect.  This method may be
+     * useful for coordinating recovery after one or more tasks
+     * encounter unexpected exceptions.
      */
     public void forceTermination() {
-        Phaser r = root;    // force at root then reconcile
+        // Only need to change root state
+        final Phaser root = this.root;
         long s;
-        while ((s = r.state) >= 0)
-            UNSAFE.compareAndSwapLong(r, stateOffset, s, s | TERMINATION_PHASE);
-        reconcileState();
-        releaseWaiters(0); // signal all threads
-        releaseWaiters(1);
+        while ((s = root.state) >= 0) {
+            if (UNSAFE.compareAndSwapLong(root, stateOffset,
+                                          s, s | TERMINATION_PHASE)) {
+                releaseWaiters(0); // signal all threads
+                releaseWaiters(1);
+                return;
+            }
+        }
     }
 
     /**

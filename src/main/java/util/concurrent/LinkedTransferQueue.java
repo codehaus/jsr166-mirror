@@ -806,6 +806,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
 
             this.lastRet = prev;
+
             for (Node p = prev, s, n;;) {
                 s = (p == null) ? head : p.next;
                 if (s == null)

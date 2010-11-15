@@ -672,24 +672,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns an iterator over the elements in this queue in proper
-     * sequence.  The returned {@code Iterator} is "weakly
-     * consistent" with respect to operations at the head and tail of
-     * the queue, and will never throw {@link
-     * ConcurrentModificationException}.  It might return elements
-     * that existed upon construction of the iterator but have since
-     * been polled or taken, and might not return elements that have
-     * since been added. Further, no consistency guarantees are made
-     * with respect to "interior" removals occuring in concurrent
-     * invocations of {@link Collection#remove(Object)} or {@link
-     * Iterator#remove} occurring in other threads.
-     *
-     * <p>The returned iterator supports the optional {@link Iterator#remove}
-     * operation. However, removal of interior elements in circular
-     * array based queues is an intrinsically slow and disruptive
-     * operation, so should be undertaken only in exceptional
-     * circumstances, ideally only when the queue is known not to be
-     * accessible by other threads.
+     * Returns an iterator over the elements in this queue in proper sequence.
+     * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
+     * will never throw {@link ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed to)
+     * reflect any modifications subsequent to construction.
      *
      * @return an iterator over the elements in this queue in proper sequence
      */
@@ -701,9 +689,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Iterator for ArrayBlockingQueue. To maintain weak consistency
      * with respect to puts and takes, we (1) read ahead one slot, so
      * as to not report hasNext true but then not have an element to
-     * return (2) ensure that each array slot is traversed at most
-     * once (by tracking "remaining" elements); (3) skip over null
-     * slots, which can occur if takes race ahead of iterators.
+     * return -- however we later recheck this slot to use the most
+     * current value; (2) ensure that each array slot is traversed at
+     * most once (by tracking "remaining" elements); (3) skip over
+     * null slots, which can occur if takes race ahead of iterators.
      * However, for circular array-based queues, we cannot rely on any
      * well established definition of what it means to be weakly
      * consistent with respect to interior removes since these may
@@ -742,11 +731,16 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 if (remaining <= 0)
                     throw new NoSuchElementException();
                 lastRet = nextIndex;
-                E x = lastItem = nextItem;
-                while (--remaining > 0) {
-                    if ((nextItem = itemAt(nextIndex = inc(nextIndex))) != null)
-                        break;
+                E x = itemAt(nextIndex);  // check for fresher value
+                if (x == null) {
+                    x = nextItem;         // we are forced to report old value
+                    lastItem = null;      // but ensure remove fails
                 }
+                else
+                    lastItem = x;
+                while (--remaining > 0 && // skip over nulls
+                       (nextItem = itemAt(nextIndex = inc(nextIndex))) == null)
+                    ;
                 return x;
             } finally {
                 lock.unlock();
@@ -764,7 +758,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 E x = lastItem;
                 lastItem = null;
                 // only remove if item still at index
-                if (x == items[i]) {
+                if (x != null && x == items[i]) {
                     boolean removingHead = (i == takeIndex);
                     removeAt(i);
                     if (!removingHead)

@@ -34,9 +34,15 @@ import java.util.concurrent.*;
 import static java.util.concurrent.Executors.*;
 
 public class AutoShutdown {
-    private static void waitForFinalizersToRun() throws Throwable {
-        System.gc(); System.runFinalization(); Thread.sleep(10);
-        System.gc(); System.runFinalization(); Thread.sleep(10);
+    private static void waitForFinalizersToRun() {
+        for (int i = 0; i < 2; i++) {
+            System.gc();
+            final CountDownLatch fin = new CountDownLatch(1);
+            new Object() { protected void finalize() { fin.countDown(); }};
+            System.gc();
+            try { fin.await(); }
+            catch (InterruptedException ie) { throw new Error(ie); }
+        }
     }
 
     private static void realMain(String[] args) throws Throwable {

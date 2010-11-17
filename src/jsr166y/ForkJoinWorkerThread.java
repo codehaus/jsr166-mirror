@@ -940,17 +940,14 @@ public class ForkJoinWorkerThread extends Thread {
         UNSAFE.putOrderedObject(this, currentJoinOffset, joinMe);
         if (isTerminating())                // cancel if shutting down
             joinMe.cancelIgnoringExceptions();
-        else {
-            if (sp != base)
-                localHelpJoinTask(joinMe);
-            if (joinMe.status >= 0)
-                pool.awaitJoin(joinMe, this, timed, nanos);
-        }
+        else 
+            pool.awaitJoin(joinMe, this, timed, nanos);
         UNSAFE.putOrderedObject(this, currentJoinOffset, prevJoin);
     }
 
     /**
      * Run tasks in local queue until given task is done.
+     * Not currently used because it complicates semantics.
      *
      * @param joinMe the task to join
      */

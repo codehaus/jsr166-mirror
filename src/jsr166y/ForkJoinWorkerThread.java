@@ -1012,7 +1012,7 @@ public class ForkJoinWorkerThread extends Thread {
                 for (int j = 0; ; ++j) {      // search array
                     if (j < n) {
                         ForkJoinTask<?> vs;
-                        if ((v = ws[j]) != null &&
+                        if ((v = ws[j]) != null && v != this &&
                             (vs = v.currentSteal) != null) {
                             if (joinMe.status < 0 || task.status < 0)
                                 return;       // stale or done

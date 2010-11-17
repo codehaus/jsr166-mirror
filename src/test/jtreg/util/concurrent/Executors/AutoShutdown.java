@@ -35,24 +35,31 @@ import static java.util.concurrent.Executors.*;
 
 public class AutoShutdown {
     private static void waitForFinalizersToRun() {
-        for (int i = 0; i < 2; i++) {
-            System.gc();
-            final CountDownLatch fin = new CountDownLatch(1);
-            new Object() { protected void finalize() { fin.countDown(); }};
-            System.gc();
-            try { fin.await(); }
-            catch (InterruptedException ie) { throw new Error(ie); }
-        }
+        for (int i = 0; i < 2; i++)
+            tryWaitForFinalizersToRun();
+    }
+
+    private static void tryWaitForFinalizersToRun() {
+        System.gc();
+        final CountDownLatch fin = new CountDownLatch(1);
+        new Object() { protected void finalize() { fin.countDown(); }};
+        System.gc();
+        try { fin.await(); }
+        catch (InterruptedException ie) { throw new Error(ie); }
     }
 
     private static void realMain(String[] args) throws Throwable {
         Runnable trivialRunnable = new Runnable() { public void run() {}};
         int count0 = Thread.activeCount();
-        newSingleThreadExecutor().execute(trivialRunnable);
-        newSingleThreadExecutor(defaultThreadFactory()).execute(trivialRunnable);
+        Executor e1 = newSingleThreadExecutor();
+        Executor e2 = newSingleThreadExecutor(defaultThreadFactory());
+        e1.execute(trivialRunnable);
+        e2.execute(trivialRunnable);
         Thread.sleep(100);
         equal(Thread.activeCount(), count0 + 2);
-        waitForFinalizersToRun();
+        e1 = e2 = null;
+        for (int i = 0; i < 10 && Thread.activeCount() > count0; i++)
+            tryWaitForFinalizersToRun();
         equal(Thread.activeCount(), count0);
     }
 

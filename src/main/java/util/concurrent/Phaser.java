@@ -254,11 +254,11 @@ public class Phaser {
     // The following unpacking methods are usually manually inlined
 
     private static int unarrivedOf(long s) {
-        return ((int) s) & UNARRIVED_MASK;
+        return (int)s & UNARRIVED_MASK;
     }
 
     private static int partiesOf(long s) {
-        return (((int) s) & PARTIES_MASK) >>> PARTIES_SHIFT;
+        return (int)s >>> PARTIES_SHIFT;
     }
 
     private static int phaseOf(long s) {
@@ -308,7 +308,7 @@ public class Phaser {
             int phase, unarrived;
             if ((phase = (int)((s = state) >>> PHASE_SHIFT)) < 0)
                 return phase;
-            else if ((unarrived = ((int)s) & UNARRIVED_MASK) == 0)
+            else if ((unarrived = (int)s & UNARRIVED_MASK) == 0)
                 checkBadArrive(s);
             else if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
                 if (unarrived == 1) {
@@ -364,8 +364,8 @@ public class Phaser {
             long s = par == null? state : reconcileState();
             if ((phase = (int)(s >>> PHASE_SHIFT)) < 0)
                 return phase;
-            if ((parties = (((int)s) & PARTIES_MASK) >>> PARTIES_SHIFT) != 0 &&
-                (((int)s) & UNARRIVED_MASK) == 0)
+            if ((parties = (int)s >>> PARTIES_SHIFT) != 0 &&
+                ((int)s & UNARRIVED_MASK) == 0)
                 internalAwaitAdvance(phase, null); // wait for onAdvance
             else if (parties + registrations > MAX_PARTIES)
                 throw new IllegalStateException(badRegister(s));
@@ -398,7 +398,7 @@ public class Phaser {
                 return s;
             long pState = par.parent == null? par.state : par.reconcileState();
             if (state == s) {
-                if ((rPhase < 0 || (((int)s) & UNARRIVED_MASK) == 0) &&
+                if ((rPhase < 0 || ((int)s & UNARRIVED_MASK) == 0) &&
                     ((pPhase = (int)(pState >>> PHASE_SHIFT)) < 0 ||
                      pPhase == ((phase + 1) & MAX_PHASE)))
                     UNSAFE.compareAndSwapLong
@@ -872,7 +872,7 @@ public class Phaser {
                 releaseWaiters(phase);
                 return p;
             }
-            else if ((unarrived = ((int)s) & UNARRIVED_MASK) == 0 &&
+            else if ((unarrived = (int)s & UNARRIVED_MASK) == 0 &&
                      (par = current.parent) != null) {
                 current = par;       // if all arrived, use parent
                 par = par.parent;

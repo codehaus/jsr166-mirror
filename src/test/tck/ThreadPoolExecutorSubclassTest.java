@@ -539,8 +539,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             assertFalse(p.isTerminating());
             p.execute(new CheckedRunnable() {
                 public void realRun() throws InterruptedException {
-                    threadStarted.countDown();
                     assertFalse(p.isTerminating());
+                    threadStarted.countDown();
                     done.await();
                 }});
             assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));

@@ -62,7 +62,6 @@ public class AutoShutdown {
         e1.execute(trivialRunnable);
         e2.execute(trivialRunnable);
         phaser.arriveAndAwaitAdvance();
-        Thread.sleep(1000);
         equal(Thread.activeCount(), count0 + 2);
         e1 = e2 = null;
         for (int i = 0; i < 10 && Thread.activeCount() > count0; i++)

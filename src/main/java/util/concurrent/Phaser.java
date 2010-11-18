@@ -356,16 +356,16 @@ public class Phaser {
      * @param registrations number to add to both parties and unarrived fields
      */
     private int doRegister(int registrations) {
-        long adj = (long)registrations; // adjustment to state
-        adj |= adj << PARTIES_SHIFT;
-        Phaser par = parent;
+        // adjustment to state
+        long adj = ((long)registrations << PARTIES_SHIFT) | registrations;
+        final Phaser parent = this.parent;
         for (;;) {
-            int phase, parties;
-            long s = par == null? state : reconcileState();
-            if ((phase = (int)(s >>> PHASE_SHIFT)) < 0)
+            long s = (parent == null) ? state : reconcileState();
+            int phase = (int)(s >>> PHASE_SHIFT);
+            if (phase < 0)
                 return phase;
-            if ((parties = (int)s >>> PARTIES_SHIFT) != 0 &&
-                ((int)s & UNARRIVED_MASK) == 0)
+            int parties = (int)s >>> PARTIES_SHIFT;
+            if (parties != 0 && ((int)s & UNARRIVED_MASK) == 0)
                 internalAwaitAdvance(phase, null); // wait for onAdvance
             else if (parties + registrations > MAX_PARTIES)
                 throw new IllegalStateException(badRegister(s));

@@ -426,7 +426,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
 
 
     /**
-     * A submitted privileged action to completion
+     * A submitted privileged action runs to completion
      */
     public void testSubmitPrivilegedAction() throws Throwable {
         Policy savedPolicy = null;
@@ -459,7 +459,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     }
 
     /**
-     * A submitted a privileged exception action runs to completion
+     * A submitted privileged exception action runs to completion
      */
     public void testSubmitPrivilegedExceptionAction() throws Throwable {
         Policy savedPolicy = null;

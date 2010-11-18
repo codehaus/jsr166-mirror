@@ -374,8 +374,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             TrackedRunnable task = trackedRunnable(SHORT_DELAY_MS);
             assertFalse(task.isDone());
             Future<?> future = e.submit(task);
-            future.get();
+            assertNull(future.get());
             assertTrue(task.isDone());
+            assertFalse(future.isCancelled());
         } finally {
             joinPool(e);
         }
@@ -389,8 +390,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         ExecutorService e = new ForkJoinPool(1);
         try {
             Future<String> future = e.submit(new StringTask());
-            String result = future.get();
-            assertSame(TEST_STRING, result);
+            assertSame(TEST_STRING, future.get());
+            assertTrue(future.isDone());
+            assertFalse(future.isCancelled());
         } finally {
             joinPool(e);
         }
@@ -403,8 +405,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         ExecutorService e = new ForkJoinPool(1);
         try {
             Future<?> future = e.submit(new NoOpRunnable());
-            future.get();
+            assertNull(future.get());
             assertTrue(future.isDone());
+            assertFalse(future.isCancelled());
         } finally {
             joinPool(e);
         }
@@ -417,8 +420,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         ExecutorService e = new ForkJoinPool(1);
         try {
             Future<String> future = e.submit(new NoOpRunnable(), TEST_STRING);
-            String result = future.get();
-            assertSame(TEST_STRING, result);
+            assertSame(TEST_STRING, future.get());
+            assertTrue(future.isDone());
+            assertFalse(future.isCancelled());
         } finally {
             joinPool(e);
         }

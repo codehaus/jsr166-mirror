@@ -940,9 +940,47 @@ public class ForkJoinWorkerThread extends Thread {
         UNSAFE.putOrderedObject(this, currentJoinOffset, joinMe);
         if (isTerminating())                // cancel if shutting down
             joinMe.cancelIgnoringExceptions();
-        else
-            pool.awaitJoin(joinMe, this, timed, nanos);
+        else {
+            if (sp != base)
+                localHelpJoinTask(joinMe);
+            if (joinMe.status >= 0)
+                pool.awaitJoin(joinMe, this, timed, nanos);
+        }
         UNSAFE.putOrderedObject(this, currentJoinOffset, prevJoin);
+    }
+
+    /**
+     * Run tasks in local queue until given task is done.
+     * Not currently used because it complicates semantics.
+     *
+     * @param joinMe the task to join
+     */
+    private void localHelpJoinTask(ForkJoinTask<?> joinMe) {
+        int s;
+        ForkJoinTask<?>[] q;
+        while (joinMe.status >= 0 && (s = sp) != base && (q = queue) != null) {
+            int i = (q.length - 1) & --s;
+            long u = (i << qShift) + qBase; // raw offset
+            ForkJoinTask<?> t = q[i];
+            if (t == null)  // lost to a stealer
+                break;
+            if (UNSAFE.compareAndSwapObject(q, u, t, null)) {
+                /*
+                 * This recheck (and similarly in helpJoinTask)
+                 * handles cases where joinMe is independently
+                 * cancelled or forced even though there is other work
+                 * available. Back out of the pop by putting t back
+                 * into slot before we commit by writing sp.
+                 */
+                if (joinMe.status < 0) {
+                    UNSAFE.putObjectVolatile(q, u, t);
+                    break;
+                }
+                sp = s;
+                // UNSAFE.putOrderedInt(this, spOffset, s);
+                t.quietlyExec();
+            }
+        }
     }
 
     /**
@@ -978,7 +1016,8 @@ public class ForkJoinWorkerThread extends Thread {
                 for (int j = 0; ; ++j) {      // search array
                     if (j < n) {
                         ForkJoinTask<?> vs;
-                        if ((v = ws[j]) != null && v != this &&
+                        if ((v = ws[j]) != null &&
+                            (v != this || base == sp) &&
                             (vs = v.currentSteal) != null) {
                             if (joinMe.status < 0 || task.status < 0)
                                 return;       // stale or done

@@ -940,8 +940,12 @@ public class ForkJoinWorkerThread extends Thread {
         UNSAFE.putOrderedObject(this, currentJoinOffset, joinMe);
         if (isTerminating())                // cancel if shutting down
             joinMe.cancelIgnoringExceptions();
-        else
-            pool.awaitJoin(joinMe, this, timed, nanos);
+        else {
+            if (sp != base)
+                localHelpJoinTask(joinMe);
+            if (joinMe.status >= 0)
+                pool.awaitJoin(joinMe, this, timed, nanos);
+        }
         UNSAFE.putOrderedObject(this, currentJoinOffset, prevJoin);
     }
 
@@ -1012,7 +1016,8 @@ public class ForkJoinWorkerThread extends Thread {
                 for (int j = 0; ; ++j) {      // search array
                     if (j < n) {
                         ForkJoinTask<?> vs;
-                        if ((v = ws[j]) != null && v != this &&
+                        if ((v = ws[j]) != null &&
+                            (v != this || base == sp) &&
                             (vs = v.currentSteal) != null) {
                             if (joinMe.status < 0 || task.status < 0)
                                 return;       // stale or done

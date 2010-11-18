@@ -673,7 +673,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
-     * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
+     * The returned {@code Iterator} is a "weakly consistent" iterator that
      * will never throw {@link ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)

@@ -37,10 +37,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * A SynchronousQueue is both empty and full
+     * Any SynchronousQueue is both empty and full
      */
-    public void testEmptyFull() {
-        SynchronousQueue q = new SynchronousQueue();
+    public void testEmptyFull(SynchronousQueue q) {
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
         assertEquals(0, q.remainingCapacity());
@@ -48,14 +47,17 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
+     * A non-fair SynchronousQueue is both empty and full
+     */
+    public void testEmptyFull() {
+        testEmptyFull(new SynchronousQueue());
+    }
+
+    /**
      * A fair SynchronousQueue is both empty and full
      */
     public void testFairEmptyFull() {
-        SynchronousQueue q = new SynchronousQueue(true);
-        assertTrue(q.isEmpty());
-        assertEquals(0, q.size());
-        assertEquals(0, q.remainingCapacity());
-        assertFalse(q.offer(zero));
+        testEmptyFull(new SynchronousQueue(true));
     }
 
     /**
@@ -204,18 +206,40 @@ public class SynchronousQueueTest extends JSR166TestCase {
     /**
      * timed offer times out if elements not taken
      */
-    public void testTimedOffer() throws InterruptedException {
-        final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+    public void testTimedOffer(final SynchronousQueue q)
+            throws InterruptedException {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
+                long t0 = System.nanoTime();
                 assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
-                q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+                pleaseInterrupt.countDown();
+                t0 = System.nanoTime();
+                try {
+                    q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
             }});
 
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        assertTrue(pleaseInterrupt.await(MEDIUM_DELAY_MS, MILLISECONDS));
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+    }
+
+    /**
+     * timed offer times out if elements not taken
+     */
+    public void testTimedOffer() throws InterruptedException {
+        testTimedOffer(new SynchronousQueue());
+    }
+
+    /**
+     * timed offer times out if elements not taken
+     */
+    public void testFairTimedOffer() throws InterruptedException {
+        testTimedOffer(new SynchronousQueue(true));
     }
 
     /**
@@ -261,24 +285,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * timed offer times out if elements not taken
-     */
-    public void testFairTimedOffer() throws InterruptedException {
-        final SynchronousQueue q = new SynchronousQueue(true);
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
-            public void realRun() throws InterruptedException {
-                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
-                q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
-            }});
-
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-
-    /**
      * take blocks interruptibly when empty
      */
     public void testFairTakeFromEmpty() throws InterruptedException {
@@ -295,7 +301,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * poll fails unless active taker
+     * poll return null if no active putter
      */
     public void testPoll() {
         SynchronousQueue q = new SynchronousQueue();
@@ -303,7 +309,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * timed poll with zero timeout times out if no active taker
+     * timed poll with zero timeout times out if no active putter
      */
     public void testTimedPoll0() throws InterruptedException {
         SynchronousQueue q = new SynchronousQueue();
@@ -311,11 +317,38 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * timed poll with nonzero timeout times out if no active taker
+     * timed poll with nonzero timeout times out if no active putter
      */
     public void testTimedPoll() throws InterruptedException {
         SynchronousQueue q = new SynchronousQueue();
+        long t0 = System.nanoTime();
         assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+        assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+    }
+
+    /**
+     * Interrupted timed poll throws InterruptedException instead of
+     * returning timeout status
+     */
+    public void testInterruptedTimedPoll(final SynchronousQueue q)
+            throws InterruptedException {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                long t0 = System.nanoTime();
+                threadStarted.countDown();
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+                assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
+            }});
+
+        threadStarted.await();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -323,16 +356,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testInterruptedTimedPoll() throws InterruptedException {
-        final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
-            public void realRun() throws InterruptedException {
-                q.poll(SMALL_DELAY_MS, MILLISECONDS);
-            }});
-
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
+        testInterruptedTimedPoll(new SynchronousQueue());
     }
 
     /**
@@ -340,44 +364,46 @@ public class SynchronousQueueTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testFairInterruptedTimedPoll() throws InterruptedException {
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
-            public void realRun() throws InterruptedException {
-                SynchronousQueue q = new SynchronousQueue(true);
-                q.poll(SMALL_DELAY_MS, MILLISECONDS);
-            }});
-
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
+        testInterruptedTimedPoll(new SynchronousQueue(true));
     }
 
     /**
-     * timed poll before a delayed offer fails; after offer succeeds;
-     * on interruption throws
+     * timed poll before a delayed offer times out, returning null;
+     * after offer succeeds; on interruption throws
      */
     public void testFairTimedPollWithOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseOffer = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
+                long t0 = System.nanoTime();
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+
+                pleaseOffer.countDown();
+                t0 = System.nanoTime();
+                assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
+                assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
+
+                t0 = System.nanoTime();
                 try {
-                    assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-                    assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
-                    threadShouldThrow();
+                    shouldThrow();
                 } catch (InterruptedException success) {}
+                assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
             }});
 
-        t.start();
-        Thread.sleep(SMALL_DELAY_MS);
-        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
+        assertTrue(pleaseOffer.await(MEDIUM_DELAY_MS, MILLISECONDS));
+        long t0 = System.nanoTime();
+        assertTrue(q.offer(zero, LONG_DELAY_MS, MILLISECONDS));
+        assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
+        
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
-
     /**
-     * peek returns null
+     * peek() returns null if no active putter
      */
     public void testPeek() {
         SynchronousQueue q = new SynchronousQueue();
@@ -385,7 +411,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * element throws NSEE
+     * element() throws NSEE if no active putter
      */
     public void testElement() {
         SynchronousQueue q = new SynchronousQueue();
@@ -396,7 +422,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * remove throws NSEE if no active taker
+     * remove() throws NSEE if no active putter
      */
     public void testRemove() {
         SynchronousQueue q = new SynchronousQueue();

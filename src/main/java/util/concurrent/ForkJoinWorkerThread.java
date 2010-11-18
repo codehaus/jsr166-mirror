@@ -940,7 +940,7 @@ public class ForkJoinWorkerThread extends Thread {
         UNSAFE.putOrderedObject(this, currentJoinOffset, joinMe);
         if (isTerminating())                // cancel if shutting down
             joinMe.cancelIgnoringExceptions();
-        else 
+        else
             pool.awaitJoin(joinMe, this, timed, nanos);
         UNSAFE.putOrderedObject(this, currentJoinOffset, prevJoin);
     }

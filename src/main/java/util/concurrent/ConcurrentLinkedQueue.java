@@ -37,7 +37,7 @@ import java.util.Queue;
  * reflecting the state of the queue at some point at or since the
  * creation of the iterator.  They do <em>not</em> throw {@link
  * java.util.ConcurrentModificationException}, and may proceed concurrently
- * with other operations.  Elements contained in the queue since the creation 
+ * with other operations.  Elements contained in the queue since the creation
  * of the iterator will be returned exactly once.
  *
  * <p>Beware that, unlike in most collections, the {@code size} method

@@ -32,6 +32,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.Executors.*;
+import java.util.concurrent.Phaser; 
 
 public class AutoShutdown {
     private static void waitForFinalizersToRun() {
@@ -49,13 +50,19 @@ public class AutoShutdown {
     }
 
     private static void realMain(String[] args) throws Throwable {
-        Runnable trivialRunnable = new Runnable() { public void run() {}};
+        final Phaser phaser = new Phaser(3);
+        Runnable trivialRunnable = new Runnable() {
+            public void run() {
+                phaser.arriveAndAwaitAdvance();
+            }
+        }; 
         int count0 = Thread.activeCount();
         Executor e1 = newSingleThreadExecutor();
         Executor e2 = newSingleThreadExecutor(defaultThreadFactory());
         e1.execute(trivialRunnable);
         e2.execute(trivialRunnable);
-        Thread.sleep(100);
+        phaser.arriveAndAwaitAdvance();
+        Thread.sleep(1000); 
         equal(Thread.activeCount(), count0 + 2);
         e1 = e2 = null;
         for (int i = 0; i < 10 && Thread.activeCount() > count0; i++)

@@ -1144,8 +1144,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * tryTransfer attempts to enqueue into the q and fails returning
-     * false not enqueueing and the successive poll is null
+     * tryTransfer attempts to enqueue into the queue and fails
+     * returning false not enqueueing and the successive poll is null
      */
     public void testTryTransfer8() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();

@@ -1072,12 +1072,13 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * tryTransfer waits the amount given if interrupted, and
-     * throws interrupted exception
+     * tryTransfer waits the amount given, and throws
+     * InterruptedException when interrupted.
      */
     public void testTryTransfer5() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();
         final CountDownLatch threadStarted = new CountDownLatch(1);
+        assertTrue(q.isEmpty());
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
@@ -1088,9 +1089,12 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
                     shouldThrow();
                 } catch (InterruptedException success) {}
                 assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+                assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
             }});
 
         threadStarted.await();
+        while (q.isEmpty())
+            Thread.yield();
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);

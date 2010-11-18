@@ -284,11 +284,17 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
     public void testRemoveElement() {
         ConcurrentLinkedQueue q = populatedQueue(SIZE);
         for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.remove(new Integer(i)));
+            assertTrue(q.contains(i));
+            assertTrue(q.remove(i));
+            assertFalse(q.contains(i));
+            assertTrue(q.contains(i-1));
         }
         for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.remove(new Integer(i)));
-            assertFalse(q.remove(new Integer(i+1)));
+            assertTrue(q.contains(i));
+            assertTrue(q.remove(i));
+            assertFalse(q.contains(i));
+            assertFalse(q.remove(i+1));
+            assertFalse(q.contains(i+1));
         }
         assertTrue(q.isEmpty());
     }

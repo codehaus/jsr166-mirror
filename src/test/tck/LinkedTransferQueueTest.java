@@ -448,12 +448,18 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testRemoveElement() throws InterruptedException {
         LinkedTransferQueue q = populatedQueue(SIZE);
-        for (int i = 1; i < SIZE; i += 2) {
+        for (int i = 1; i < SIZE; i+=2) {
+            assertTrue(q.contains(i));
             assertTrue(q.remove(i));
+            assertFalse(q.contains(i));
+            assertTrue(q.contains(i-1));
         }
-        for (int i = 0; i < SIZE; i += 2) {
+        for (int i = 0; i < SIZE; i+=2) {
+            assertTrue(q.contains(i));
             assertTrue(q.remove(i));
-            assertFalse(q.remove(i + 1));
+            assertFalse(q.contains(i));
+            assertFalse(q.remove(i+1));
+            assertFalse(q.contains(i+1));
         }
         checkEmpty(q);
     }

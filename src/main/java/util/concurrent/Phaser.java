@@ -356,6 +356,7 @@ public class Phaser {
      * @param registrations number to add to both parties and unarrived fields
      */
     private int doRegister(int registrations) {
+        // assert registrations > 0;
         // adjustment to state
         long adj = ((long)registrations << PARTIES_SHIFT) | registrations;
         final Phaser parent = this.parent;
@@ -367,7 +368,7 @@ public class Phaser {
             int parties = (int)s >>> PARTIES_SHIFT;
             if (parties != 0 && ((int)s & UNARRIVED_MASK) == 0)
                 internalAwaitAdvance(phase, null); // wait for onAdvance
-            else if (parties + registrations > MAX_PARTIES)
+            else if (registrations > MAX_PARTIES - parties)
                 throw new IllegalStateException(badRegister(s));
             else if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s + adj))
                 return phase;
@@ -505,8 +506,6 @@ public class Phaser {
     public int bulkRegister(int parties) {
         if (parties < 0)
             throw new IllegalArgumentException();
-        if (parties > MAX_PARTIES)
-            throw new IllegalStateException(badRegister(state));
         if (parties == 0)
             return getPhase();
         return doRegister(parties);

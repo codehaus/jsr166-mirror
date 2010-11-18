@@ -402,7 +402,7 @@ public class DelayQueueTest extends JSR166TestCase {
                 try {
                     q.take();
                     shouldThrow();
-                } catch (InterruptedException expected) {}
+                } catch (InterruptedException success) {}
                 assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
             }});
         threadStarted.await();

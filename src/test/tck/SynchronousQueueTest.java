@@ -397,7 +397,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         long t0 = System.nanoTime();
         assertTrue(q.offer(zero, LONG_DELAY_MS, MILLISECONDS));
         assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
-        
+
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);
     }

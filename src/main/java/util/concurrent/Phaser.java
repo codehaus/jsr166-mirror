@@ -304,30 +304,31 @@ public class Phaser {
      */
     private int doArrive(long adj) {
         for (;;) {
-            long s;
-            int phase, unarrived;
-            if ((phase = (int)((s = state) >>> PHASE_SHIFT)) < 0)
+            long s = state;
+            int phase = (int)(s >>> PHASE_SHIFT);
+            if (phase < 0)
                 return phase;
-            else if ((unarrived = (int)s & UNARRIVED_MASK) == 0)
+            int unarrived = (int)s & UNARRIVED_MASK;
+            if (unarrived == 0)
                 checkBadArrive(s);
             else if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
                 if (unarrived == 1) {
-                    Phaser par;
                     long p = s & LPARTIES_MASK; // unshifted parties field
                     long lu = p >>> PARTIES_SHIFT;
                     int u = (int)lu;
                     int nextPhase = (phase + 1) & MAX_PHASE;
                     long next = ((long)nextPhase << PHASE_SHIFT) | p | lu;
-                    if ((par = parent) == null) {
+                    final Phaser parent = this.parent;
+                    if (parent == null) {
                         if (onAdvance(phase, u))
                             next |= TERMINATION_PHASE; // obliterate phase
                         UNSAFE.compareAndSwapLong(this, stateOffset, s, next);
                         releaseWaiters(phase);
                     }
                     else {
-                        par.doArrive(u == 0?
-                                     ONE_ARRIVAL|ONE_PARTY : ONE_ARRIVAL);
-                        if ((int)(par.state >>> PHASE_SHIFT) != nextPhase ||
+                        parent.doArrive((u == 0) ?
+                                        ONE_ARRIVAL|ONE_PARTY : ONE_ARRIVAL);
+                        if ((int)(parent.state >>> PHASE_SHIFT) != nextPhase ||
                             ((int)(state >>> PHASE_SHIFT) != nextPhase &&
                              !UNSAFE.compareAndSwapLong(this, stateOffset,
                                                         s, next)))

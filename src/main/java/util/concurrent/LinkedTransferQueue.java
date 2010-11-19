@@ -8,7 +8,6 @@ package java.util.concurrent;
 
 import java.util.AbstractQueue;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -1143,15 +1142,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns an iterator over the elements in this queue in proper
-     * sequence, from head to tail.
+     * Returns an iterator over the elements in this queue in proper sequence.
+     * The elements will be returned in order from first (head) to last (tail).
      *
      * <p>The returned iterator is a "weakly consistent" iterator that
-     * will never throw
-     * {@link ConcurrentModificationException ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed
-     * to) reflect any modifications subsequent to construction.
+     * will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}, and guarantees to traverse
+     * elements as they existed upon construction of the iterator, and
+     * may (but is not guaranteed to) reflect any modifications
+     * subsequent to construction.
      *
      * @return an iterator over the elements in this queue in proper sequence
      */

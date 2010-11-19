@@ -849,8 +849,9 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue. The
      * iterator does not return the elements in any particular order.
-     * The returned {@code Iterator} is a "weakly consistent"
-     * iterator that will never throw {@link
+     *
+     * <p>The returned iterator is a "weakly consistent" iterator that
+     * will never throw {@link java.util.ConcurrentModificationException
      * ConcurrentModificationException}, and guarantees to traverse
      * elements as they existed upon construction of the iterator, and
      * may (but is not guaranteed to) reflect any modifications

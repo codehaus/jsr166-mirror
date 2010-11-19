@@ -9,7 +9,6 @@ package java.util.concurrent;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -1231,12 +1230,12 @@ public class ConcurrentLinkedDeque<E>
      * Returns an iterator over the elements in this deque in proper sequence.
      * The elements will be returned in order from first (head) to last (tail).
      *
-     * <p>The returned {@code Iterator} is a "weakly consistent" iterator that
+     * <p>The returned iterator is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * ConcurrentModificationException}, and guarantees to traverse
+     * elements as they existed upon construction of the iterator, and
+     * may (but is not guaranteed to) reflect any modifications
+     * subsequent to construction.
      *
      * @return an iterator over the elements in this deque in proper sequence
      */
@@ -1249,12 +1248,12 @@ public class ConcurrentLinkedDeque<E>
      * sequential order.  The elements will be returned in order from
      * last (tail) to first (head).
      *
-     * <p>The returned {@code Iterator} is a "weakly consistent" iterator that
+     * <p>The returned iterator is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * ConcurrentModificationException}, and guarantees to traverse
+     * elements as they existed upon construction of the iterator, and
+     * may (but is not guaranteed to) reflect any modifications
+     * subsequent to construction.
      *
      * @return an iterator over the elements in this deque in reverse order
      */

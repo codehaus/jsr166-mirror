@@ -245,8 +245,7 @@ public class Phaser {
     private static final int  PARTIES_SHIFT  = 16;
     private static final int  PHASE_SHIFT    = 32;
     private static final int  UNARRIVED_MASK = 0xffff;
-    private static final int  PARTIES_MASK   = 0xffff0000;
-    private static final long LPARTIES_MASK  = 0xffff0000L; // long version
+    private static final long PARTIES_MASK   = 0xffff0000L; // for masking long
     private static final long ONE_ARRIVAL    = 1L;
     private static final long ONE_PARTY      = 1L << PARTIES_SHIFT;
     private static final long TERMINATION_PHASE  = -1L << PHASE_SHIFT;
@@ -313,7 +312,7 @@ public class Phaser {
                 checkBadArrive(s);
             else if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
                 if (unarrived == 1) {
-                    long p = s & LPARTIES_MASK; // unshifted parties field
+                    long p = s & PARTIES_MASK; // unshifted parties field
                     long lu = p >>> PARTIES_SHIFT;
                     int u = (int)lu;
                     int nextPhase = (phase + 1) & MAX_PHASE;
@@ -389,29 +388,27 @@ public class Phaser {
      */
     private long reconcileState() {
         Phaser par = parent;
-        if (par == null)
-            return state;
-        Phaser rt = root;
-        for (;;) {
-            long s, u;
-            int phase, rPhase, pPhase;
-            if ((phase = (int)((s = state)>>> PHASE_SHIFT)) < 0 ||
-                (rPhase = (int)(rt.state >>> PHASE_SHIFT)) == phase)
-                return s;
-            long pState = par.parent == null? par.state : par.reconcileState();
-            if (state == s) {
-                if ((rPhase < 0 || ((int)s & UNARRIVED_MASK) == 0) &&
-                    ((pPhase = (int)(pState >>> PHASE_SHIFT)) < 0 ||
-                     pPhase == ((phase + 1) & MAX_PHASE)))
-                    UNSAFE.compareAndSwapLong
-                        (this, stateOffset, s,
-                         (((long) pPhase) << PHASE_SHIFT) |
-                         (u = s & LPARTIES_MASK) |
-                         (u >>> PARTIES_SHIFT)); // reset unarrived to parties
-                else
-                    releaseWaiters(phase); // help release others
+        long s = state;
+        if (par != null) {
+            Phaser rt = root;
+            int phase, rPhase;
+            while ((phase = (int)(s >>> PHASE_SHIFT)) >= 0 &&
+                   (rPhase = (int)(rt.state >>> PHASE_SHIFT)) != phase) {
+                if ((int)(par.state >>> PHASE_SHIFT) != rPhase)
+                    par.reconcileState();
+                else if (rPhase < 0 || ((int)s & UNARRIVED_MASK) == 0) {
+                    long u = s & PARTIES_MASK; // reset unarrived to parties
+                    long next = ((((long) rPhase) << PHASE_SHIFT) | u |
+                                 (u >>> PARTIES_SHIFT));
+                    if (state == s &&
+                        UNSAFE.compareAndSwapLong(this, stateOffset,
+                                                  s, s = next))
+                        break;
+                }
+                s = state;
             }
         }
+        return s;
     }
 
     /**
@@ -679,7 +676,7 @@ public class Phaser {
      * @return the phase number, or a negative value if terminated
      */
     public final int getPhase() {
-        return (int)((parent==null? state : reconcileState()) >>> PHASE_SHIFT);
+        return (int)(root.state >>> PHASE_SHIFT);
     }
 
     /**
@@ -688,7 +685,7 @@ public class Phaser {
      * @return the number of parties
      */
     public int getRegisteredParties() {
-        return partiesOf(parent==null? state : reconcileState());
+        return partiesOf(state);
     }
 
     /**
@@ -736,7 +733,7 @@ public class Phaser {
      * @return {@code true} if this barrier has been terminated
      */
     public boolean isTerminated() {
-        return (parent == null? state : reconcileState()) < 0;
+        return root.state < 0L;
     }
 
     /**
@@ -814,20 +811,6 @@ public class Phaser {
         }
     }
 
-    /**
-     * Tries to enqueue given node in the appropriate wait queue.
-     *
-     * @return true if successful
-     */
-    private boolean tryEnqueue(int phase, QNode node) {
-        releaseWaiters(phase-1); // ensure old queue clean
-        AtomicReference<QNode> head = queueFor(phase);
-        QNode q = head.get();
-        return ((q == null || q.phase == phase) &&
-                (int)(root.state >>> PHASE_SHIFT) == phase &&
-                head.compareAndSet(node.next = q, node));
-    }
-
     /** The number of CPUs, for spin control */
     private static final int NCPU = Runtime.getRuntime().availableProcessors();
 
@@ -859,25 +842,21 @@ public class Phaser {
         boolean queued = false;      // true when node is enqueued
         int lastUnarrived = -1;      // to increase spins upon change
         int spins = SPINS_PER_ARRIVAL;
-        for (;;) {
-            int p, unarrived;
+        long s;
+        int p;
+        while ((p = (int)((s = current.state) >>> PHASE_SHIFT)) == phase) {
             Phaser par;
-            long s = current.state;
-            if ((p = (int)(s >>> PHASE_SHIFT)) != phase) {
-                if (node != null)
-                    node.onRelease();
-                releaseWaiters(phase);
-                return p;
+            int unarrived = (int)s & UNARRIVED_MASK;
+            if (unarrived != lastUnarrived) {
+                if (lastUnarrived == -1) // ensure old queue clean
+                    releaseWaiters(phase-1);
+                if ((lastUnarrived = unarrived) < NCPU)
+                    spins += SPINS_PER_ARRIVAL;
             }
-            else if ((unarrived = (int)s & UNARRIVED_MASK) == 0 &&
-                     (par = current.parent) != null) {
+            else if (unarrived == 0 && (par = current.parent) != null) {
                 current = par;       // if all arrived, use parent
                 par = par.parent;
                 lastUnarrived = -1;
-            }
-            else if (unarrived != lastUnarrived) {
-                if ((lastUnarrived = unarrived) < NCPU)
-                    spins += SPINS_PER_ARRIVAL;
             }
             else if (spins > 0) {
                 if (--spins == (SPINS_PER_ARRIVAL >>> 1))
@@ -886,11 +865,22 @@ public class Phaser {
             else if (node == null)   // must be noninterruptible
                 node = new QNode(this, phase, false, false, 0L);
             else if (node.isReleasable()) {
-                if ((int)(reconcileState() >>> PHASE_SHIFT) == phase)
+                if ((p = (int)(root.state >>> PHASE_SHIFT)) != phase)
+                    break;
+                else
                     return phase;    // aborted
             }
-            else if (!queued)
-                queued = tryEnqueue(phase, node);
+            else if (!queued) {      // push onto queue
+                AtomicReference<QNode> head = queueFor(phase);
+                QNode q = head.get();
+                if (q == null || q.phase == phase) {
+                    node.next = q;
+                    if ((p = (int)(root.state >>> PHASE_SHIFT)) != phase)
+                        break;       // recheck to avoid stale enqueue
+                    else
+                        queued = head.compareAndSet(q, node);
+                }
+            }
             else {
                 try {
                     ForkJoinPool.managedBlock(node);
@@ -899,6 +889,10 @@ public class Phaser {
                 }
             }
         }
+        releaseWaiters(phase);
+        if (node != null)
+            node.onRelease();
+        return p;
     }
 
     /**

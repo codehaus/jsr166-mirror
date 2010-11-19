@@ -800,7 +800,7 @@ public class Phaser {
     // Waiting mechanics
 
     /**
-     * Removes and signals threads from queue for phase
+     * Removes and signals threads from queue for phase.
      */
     private void releaseWaiters(int phase) {
         AtomicReference<QNode> head = queueFor(phase);

@@ -573,14 +573,11 @@ public class Phaser {
      * if terminated or argument is negative
      */
     public int awaitAdvance(int phase) {
-        int p;
         if (phase < 0)
             return phase;
-        else if ((p = (int)((parent == null? state : reconcileState())
-                            >>> PHASE_SHIFT)) == phase)
-            return internalAwaitAdvance(phase, null);
-        else
-            return p;
+        long s = (parent == null) ? state : reconcileState();
+        int p = (int)(s >>> PHASE_SHIFT);
+        return (p != phase) ? p : internalAwaitAdvance(phase, null);
     }
 
     /**
@@ -599,11 +596,11 @@ public class Phaser {
      */
     public int awaitAdvanceInterruptibly(int phase)
         throws InterruptedException {
-        int p;
         if (phase < 0)
             return phase;
-        if ((p = (int)((parent == null? state : reconcileState())
-                       >>> PHASE_SHIFT)) == phase) {
+        long s = (parent == null) ? state : reconcileState();
+        int p = (int)(s >>> PHASE_SHIFT);
+        if (p == phase) {
             QNode node = new QNode(this, phase, true, false, 0L);
             p = internalAwaitAdvance(phase, node);
             if (node.wasInterrupted)
@@ -635,12 +632,12 @@ public class Phaser {
     public int awaitAdvanceInterruptibly(int phase,
                                          long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
-        long nanos = unit.toNanos(timeout);
-        int p;
         if (phase < 0)
             return phase;
-        if ((p = (int)((parent == null? state : reconcileState())
-                       >>> PHASE_SHIFT)) == phase) {
+        long s = (parent == null) ? state : reconcileState();
+        int p = (int)(s >>> PHASE_SHIFT);
+        if (p == phase) {
+            long nanos = unit.toNanos(timeout);
             QNode node = new QNode(this, phase, true, true, nanos);
             p = internalAwaitAdvance(phase, node);
             if (node.wasInterrupted)

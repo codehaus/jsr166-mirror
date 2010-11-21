@@ -94,6 +94,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertNull(a.getException());
         assertSame(expected, a.getRawResult());
         assertSame(expected, a.join());
+        assertFalse(a.cancel(false));
+        assertFalse(a.cancel(true));
         try {
             assertSame(expected, a.get());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
@@ -109,6 +111,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertTrue(a.isCompletedAbnormally());
         assertTrue(a.getException() instanceof CancellationException);
         assertNull(a.getRawResult());
+        assertTrue(a.cancel(false));
+        assertTrue(a.cancel(true));
 
         try {
             a.join();
@@ -136,6 +140,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertTrue(a.isCompletedAbnormally());
         assertSame(t, a.getException());
         assertNull(a.getRawResult());
+        assertFalse(a.cancel(false));
+        assertFalse(a.cancel(true));
 
         try {
             a.join();

@@ -90,6 +90,8 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertNull(a.getException());
         assertSame(expected, a.getRawResult());
         assertSame(expected, a.join());
+        assertFalse(a.cancel(false));
+        assertFalse(a.cancel(true));
         try {
             assertSame(expected, a.get());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
@@ -152,6 +154,8 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertTrue(a.isCompletedAbnormally());
         assertSame(t, a.getException());
         assertNull(a.getRawResult());
+        assertFalse(a.cancel(false));
+        assertFalse(a.cancel(true));
 
         try {
             a.join();

@@ -145,7 +145,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    void checkTaskThrew(RecursiveTask a, Throwable t) {
+    void checkCompletedAbnormally(RecursiveTask a, Throwable t) {
         assertTrue(a.isDone());
         assertFalse(a.isCancelled());
         assertFalse(a.isCompletedNormally());
@@ -344,7 +344,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     f.invoke();
                     shouldThrow();
                 } catch (FJException success) {
-                    checkTaskThrew(f, success);
+                    checkCompletedAbnormally(f, success);
                 }
                 return NoResult;
             }};
@@ -360,7 +360,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 FailingFibTask f = new FailingFibTask(8);
                 f.quietlyInvoke();
                 assertTrue(f.getException() instanceof FJException);
-                checkTaskThrew(f, f.getException());
+                checkCompletedAbnormally(f, f.getException());
                 return NoResult;
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
@@ -378,7 +378,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     Integer r = f.join();
                     shouldThrow();
                 } catch (FJException success) {
-                    checkTaskThrew(f, success);
+                    checkCompletedAbnormally(f, success);
                 }
                 return NoResult;
             }};
@@ -397,7 +397,9 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     Integer r = f.get();
                     shouldThrow();
                 } catch (ExecutionException success) {
-                    checkTaskThrew(f, success.getCause());
+                    Throwable cause = success.getCause();
+                    assertTrue(cause instanceof FJException);
+                    checkCompletedAbnormally(f, cause);
                 }
                 return NoResult;
             }};
@@ -416,7 +418,9 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     Integer r = f.get(5L, SECONDS);
                     shouldThrow();
                 } catch (ExecutionException success) {
-                    checkTaskThrew(f, success.getCause());
+                    Throwable cause = success.getCause();
+                    assertTrue(cause instanceof FJException);
+                    checkCompletedAbnormally(f, cause);
                 }
                 return NoResult;
             }};
@@ -433,7 +437,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 f.quietlyJoin();
                 assertTrue(f.getException() instanceof FJException);
-                checkTaskThrew(f, f.getException());
+                checkCompletedAbnormally(f, f.getException());
                 return NoResult;
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
@@ -577,7 +581,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
     public void testInForkJoinPool2() {
         RecursiveTask<Integer> a = new CheckedRecursiveTask<Integer>() {
             public Integer realCompute() {
-                assertTrue(!inForkJoinPool());
+                assertFalse(inForkJoinPool());
                 return NoResult;
             }};
         assertSame(NoResult, a.invoke());
@@ -633,7 +637,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                         f.invoke();
                         shouldThrow();
                     } catch (FJException success) {
-                        checkTaskThrew(f, success);
+                        checkCompletedAbnormally(f, success);
                     }
                     f.reinitialize();
                     checkNotDone(f);
@@ -655,7 +659,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     Integer r = f.invoke();
                     shouldThrow();
                 } catch (FJException success) {
-                    checkTaskThrew(f, success);
+                    checkCompletedAbnormally(f, success);
                 }
                 return NoResult;
             }};
@@ -785,7 +789,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     invokeAll(f, g);
                     shouldThrow();
                 } catch (FJException success) {
-                    checkTaskThrew(g, success);
+                    checkCompletedAbnormally(g, success);
                 }
                 return NoResult;
             }};
@@ -803,7 +807,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     invokeAll(g);
                     shouldThrow();
                 } catch (FJException success) {
-                    checkTaskThrew(g, success);
+                    checkCompletedAbnormally(g, success);
                 }
                 return NoResult;
             }};
@@ -823,7 +827,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     invokeAll(f, g, h);
                     shouldThrow();
                 } catch (FJException success) {
-                    checkTaskThrew(g, success);
+                    checkCompletedAbnormally(g, success);
                 }
                 return NoResult;
             }};
@@ -847,7 +851,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                     invokeAll(set);
                     shouldThrow();
                 } catch (FJException success) {
-                    checkTaskThrew(f, success);
+                    checkCompletedAbnormally(f, success);
                 }
                 return NoResult;
             }};
@@ -889,6 +893,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertTrue(getSurplusQueuedTaskCount() > 0);
                 helpQuiesce();
+                assertEquals(0, getSurplusQueuedTaskCount());
                 checkCompletedNormally(f, 21);
                 checkCompletedNormally(g, 34);
                 checkCompletedNormally(h, 13);

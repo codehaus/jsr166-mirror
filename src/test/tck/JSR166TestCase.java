@@ -289,7 +289,7 @@ public class JSR166TestCase extends TestCase {
      * earlier by threadRecordFailure.
      */
     public void tearDown() throws Exception {
-        Throwable t = threadFailure.getAndSet(null); 
+        Throwable t = threadFailure.getAndSet(null);
         if (t != null) {
             if (t instanceof Error)
                 throw (Error) t;

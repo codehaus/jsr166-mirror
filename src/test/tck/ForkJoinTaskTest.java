@@ -438,7 +438,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     assertTrue(cause instanceof FJException);
                     assertTrue(f.isDone());
                     assertTrue(f.isCompletedAbnormally());
-                    assertSame(cause.getClass(), f.getException().getClass());
+                    assertSame(cause, f.getException());
                 }
             }};
         testInvokeOnPool(mainPool(), a);
@@ -460,7 +460,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     assertTrue(cause instanceof FJException);
                     assertTrue(f.isDone());
                     assertTrue(f.isCompletedAbnormally());
-                    assertSame(cause.getClass(), f.getException().getClass());
+                    assertSame(cause, f.getException());
                 }
             }};
         testInvokeOnPool(mainPool(), a);
@@ -1166,7 +1166,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     assertTrue(cause instanceof FJException);
                     assertTrue(f.isDone());
                     assertTrue(f.isCompletedAbnormally());
-                    assertSame(cause.getClass(), f.getException().getClass());
+                    assertSame(cause, f.getException());
                 }
             }};
         testInvokeOnPool(singletonPool(), a);
@@ -1188,7 +1188,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     assertTrue(cause instanceof FJException);
                     assertTrue(f.isDone());
                     assertTrue(f.isCompletedAbnormally());
-                    assertSame(cause.getClass(), f.getException().getClass());
+                    assertSame(cause, f.getException());
                 }
             }};
         testInvokeOnPool(singletonPool(), a);

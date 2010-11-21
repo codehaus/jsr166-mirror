@@ -510,12 +510,17 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Attempts to cancel execution of this task. This attempt will
-     * fail if the task has already completed, has already been
-     * cancelled, or could not be cancelled for some other reason. If
-     * successful, and this task has not started when {@code cancel}
-     * is called, execution of this task is suppressed, {@link
-     * #isCancelled} will report true, and {@link #join} will result
-     * in a {@code CancellationException} being thrown.
+     * fail if the task has already completed or could not be
+     * cancelled for some other reason. If successful, and this task
+     * has not started when {@code cancel} is called, execution of
+     * this task is suppressed, {@link #isCancelled} will report true,
+     * and {@link #join} will result in a {@code CancellationException}
+     * being thrown.
+     *
+     * <p>After this method returns, subsequent calls to {@link
+     * #isDone} will always return {@code true}.  Subsequent calls to
+     * {@link #isCancelled} will always return {@code true} if this
+     * method returned {@code true}.
      *
      * <p>This method may be overridden in subclasses, but if so, must
      * still ensure that these minimal properties hold. In particular,

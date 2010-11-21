@@ -512,8 +512,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * Attempts to cancel execution of this task. This attempt will
      * fail if the task has already completed, has already been
      * cancelled, or could not be cancelled for some other reason. If
-     * successful, and this task has not started when cancel is
-     * called, execution of this task is suppressed, {@link
+     * successful, and this task has not started when {@code cancel}
+     * is called, execution of this task is suppressed, {@link
      * #isCancelled} will report true, and {@link #join} will result
      * in a {@code CancellationException} being thrown.
      *
@@ -527,8 +527,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * invoke {@link #completeExceptionally}.
      *
      * @param mayInterruptIfRunning this value is ignored in the
-     * default implementation because tasks are not
-     * cancelled via interruption
+     * default implementation because tasks are not cancelled via
+     * interruption
      *
      * @return {@code true} if this task is now cancelled
      */

@@ -198,7 +198,7 @@ class ComparableTimSort {
      * @param lo the index of the first element in the range to be sorted
      * @param hi the index after the last element in the range to be sorted
      * @param start the index of the first element in the range that is
-     *        not already known to be sorted (@code lo <= start <= hi}
+     *        not already known to be sorted ({@code lo <= start <= hi})
      */
     @SuppressWarnings("fallthrough")
     private static void binarySort(Object[] a, int lo, int hi, int start) {
@@ -266,7 +266,7 @@ class ComparableTimSort {
      * @param a the array in which a run is to be counted and possibly reversed
      * @param lo index of the first element in the run
      * @param hi index after the last element that may be contained in the run.
-              It is required that @code{lo < hi}.
+              It is required that {@code lo < hi}.
      * @return  the length of the run beginning at the specified position in
      *          the specified array
      */

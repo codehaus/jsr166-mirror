@@ -230,7 +230,7 @@ class TimSort<T> {
      * @param lo the index of the first element in the range to be sorted
      * @param hi the index after the last element in the range to be sorted
      * @param start the index of the first element in the range that is
-     *        not already known to be sorted (@code lo <= start <= hi}
+     *        not already known to be sorted ({@code lo <= start <= hi})
      * @param c comparator to used for the sort
      */
     @SuppressWarnings("fallthrough")
@@ -299,7 +299,7 @@ class TimSort<T> {
      * @param a the array in which a run is to be counted and possibly reversed
      * @param lo index of the first element in the run
      * @param hi index after the last element that may be contained in the run.
-              It is required that @code{lo < hi}.
+              It is required that {@code lo < hi}.
      * @param c the comparator to used for the sort
      * @return  the length of the run beginning at the specified position in
      *          the specified array

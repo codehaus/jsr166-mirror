@@ -11,6 +11,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import java.util.HashSet;
 
 public class RecursiveActionTest extends JSR166TestCase {
@@ -39,22 +41,118 @@ public class RecursiveActionTest extends JSR166TestCase {
 
     private void testInvokeOnPool(ForkJoinPool pool, RecursiveAction a) {
         try {
-            assertFalse(a.isDone());
-            assertFalse(a.isCompletedNormally());
-            assertFalse(a.isCompletedAbnormally());
-            assertFalse(a.isCancelled());
-            assertNull(a.getException());
+            checkNotDone(a);
 
             assertNull(pool.invoke(a));
 
-            assertTrue(a.isDone());
-            assertTrue(a.isCompletedNormally());
-            assertFalse(a.isCompletedAbnormally());
-            assertFalse(a.isCancelled());
-            assertNull(a.getException());
+            checkCompletedNormally(a);
         } finally {
             joinPool(pool);
         }
+    }
+
+    void checkNotDone(RecursiveAction a) {
+        assertFalse(a.isDone());
+        assertFalse(a.isCompletedNormally());
+        assertFalse(a.isCompletedAbnormally());
+        assertFalse(a.isCancelled());
+        assertNull(a.getException());
+        assertNull(a.getRawResult());
+
+        if (! (Thread.currentThread() instanceof ForkJoinWorkerThread)) {
+            Thread.currentThread().interrupt();
+            try {
+                a.get();
+                shouldThrow();
+            } catch (InterruptedException success) {
+            } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+            Thread.currentThread().interrupt();
+            try {
+                a.get(5L, SECONDS);
+                shouldThrow();
+            } catch (InterruptedException success) {
+            } catch (Throwable fail) { threadUnexpectedException(fail); }
+        }
+
+        try {
+            a.get(0L, SECONDS);
+            shouldThrow();
+        } catch (TimeoutException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+    }
+
+    void checkCompletedNormally(RecursiveAction a) {
+        assertTrue(a.isDone());
+        assertFalse(a.isCancelled());
+        assertTrue(a.isCompletedNormally());
+        assertFalse(a.isCompletedAbnormally());
+        assertNull(a.getException());
+        assertNull(a.getRawResult());
+        assertNull(a.join());
+        try {
+            assertNull(a.get());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+        try {
+            assertNull(a.get(5L, SECONDS));
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+    }
+
+    void checkCancelled(RecursiveAction a) {
+        assertTrue(a.isDone());
+        assertTrue(a.isCancelled());
+        assertFalse(a.isCompletedNormally());
+        assertTrue(a.isCompletedAbnormally());
+        assertTrue(a.getException() instanceof CancellationException);
+        assertNull(a.getRawResult());
+
+        try {
+            a.join();
+            shouldThrow();
+        } catch (CancellationException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        try {
+            a.get();
+            shouldThrow();
+        } catch (CancellationException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        try {
+            a.get(5L, SECONDS);
+            shouldThrow();
+        } catch (CancellationException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+    }
+
+    void checkTaskThrew(RecursiveAction a, Throwable t) {
+        assertTrue(a.isDone());
+        assertFalse(a.isCancelled());
+        assertFalse(a.isCompletedNormally());
+        assertTrue(a.isCompletedAbnormally());
+        assertSame(t, a.getException());
+        assertNull(a.getRawResult());
+
+        try {
+            a.join();
+            shouldThrow();
+        } catch (Throwable expected) {
+            assertSame(t, expected);
+        }
+
+        try {
+            a.get();
+            shouldThrow();
+        } catch (ExecutionException success) {
+            assertSame(t, success.getCause());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        try {
+            a.get(5L, SECONDS);
+            shouldThrow();
+        } catch (ExecutionException success) {
+            assertSame(t, success.getCause());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
     static final class FJException extends RuntimeException {
@@ -108,10 +206,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FibAction f = new FibAction(8);
                 assertNull(f.invoke());
                 assertEquals(21, f.result);
-                assertTrue(f.isDone());
-                assertFalse(f.isCancelled());
-                assertFalse(f.isCompletedAbnormally());
-                assertNull(f.getRawResult());
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -127,10 +222,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FibAction f = new FibAction(8);
                 f.quietlyInvoke();
                 assertEquals(21, f.result);
-                assertTrue(f.isDone());
-                assertFalse(f.isCancelled());
-                assertFalse(f.isCompletedAbnormally());
-                assertNull(f.getRawResult());
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -145,8 +237,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertNull(f.join());
                 assertEquals(21, f.result);
-                assertTrue(f.isDone());
-                assertNull(f.getRawResult());
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -161,7 +252,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertNull(f.get());
                 assertEquals(21, f.result);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -174,9 +265,9 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void realCompute() throws Exception {
                 FibAction f = new FibAction(8);
                 assertSame(f, f.fork());
-                assertNull(f.get(5L, TimeUnit.SECONDS));
+                assertNull(f.get(5L, SECONDS));
                 assertEquals(21, f.result);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -207,7 +298,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 f.quietlyJoin();
                 assertEquals(21, f.result);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -224,8 +315,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 f.helpQuiesce();
                 assertEquals(21, f.result);
-                assertTrue(f.isDone());
                 assertEquals(0, getQueuedTaskCount());
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -241,7 +332,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.invoke();
                     shouldThrow();
-                } catch (FJException success) {}
+                } catch (FJException success) {
+                    checkTaskThrew(f, success);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -254,7 +347,8 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void realCompute() {
                 FailingFibAction f = new FailingFibAction(8);
                 f.quietlyInvoke();
-                assertTrue(f.isDone());
+                assertTrue(f.getException() instanceof FJException);
+                checkTaskThrew(f, f.getException());
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -270,7 +364,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.join();
                     shouldThrow();
-                } catch (FJException success) {}
+                } catch (FJException success) {
+                    checkTaskThrew(f, success);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -286,7 +382,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.get();
                     shouldThrow();
-                } catch (ExecutionException success) {}
+                } catch (ExecutionException success) {
+                    checkTaskThrew(f, success.getCause());
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -302,7 +400,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.get(5L, TimeUnit.SECONDS);
                     shouldThrow();
-                } catch (ExecutionException success) {}
+                } catch (ExecutionException success) {
+                    checkTaskThrew(f, success.getCause());
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -316,9 +416,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FailingFibAction f = new FailingFibAction(8);
                 assertSame(f, f.fork());
                 f.quietlyJoin();
-                assertTrue(f.isDone());
-                assertTrue(f.isCompletedAbnormally());
                 assertTrue(f.getException() instanceof FJException);
+                checkTaskThrew(f, f.getException());
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -334,7 +433,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.invoke();
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    checkCancelled(f);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -351,7 +452,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.join();
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    checkCancelled(f);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -368,7 +471,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.get();
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    checkCancelled(f);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -383,9 +488,11 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
                 try {
-                    f.get(5L, TimeUnit.SECONDS);
+                    f.get(5L, SECONDS);
                     shouldThrow();
-                } catch (CancellationException success) {}
+                } catch (CancellationException success) {
+                    checkCancelled(f);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -400,10 +507,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
                 f.quietlyJoin();
-                assertTrue(f.isDone());
-                assertTrue(f.isCompletedAbnormally());
-                assertTrue(f.isCancelled());
-                assertTrue(f.getException() instanceof CancellationException);
+                checkCancelled(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -476,9 +580,8 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void realCompute() {
                 ForkJoinWorkerThread w =
                     (ForkJoinWorkerThread)(Thread.currentThread());
-                int idx = w.getPoolIndex();
-                assertTrue(idx >= 0);
-                assertTrue(idx < mainPool.getPoolSize());
+                assertTrue(w.getPoolIndex() >= 0);
+                assertTrue(w.getPoolIndex() < mainPool.getPoolSize());
             }};
         testInvokeOnPool(mainPool, a);
     }
@@ -502,14 +605,15 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new CheckedRecursiveAction() {
             public void realCompute() {
                 FibAction f = new FibAction(8);
-                assertNull(f.invoke());
-                assertEquals(21, f.result);
-                assertTrue(f.isDone());
-                assertFalse(f.isCancelled());
-                assertFalse(f.isCompletedAbnormally());
-                f.reinitialize();
-                assertNull(f.invoke());
-                assertEquals(21, f.result);
+                checkNotDone(f);
+
+                for (int i = 0; i < 3; i++) {
+                    assertNull(f.invoke());
+                    assertEquals(21, f.result);
+                    checkCompletedNormally(f);
+                    f.reinitialize();
+                    checkNotDone(f);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -525,7 +629,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     f.invoke();
                     shouldThrow();
-                } catch (FJException success) {}
+                } catch (FJException success) {
+                    checkTaskThrew(f, success);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -539,8 +645,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FibAction f = new FibAction(8);
                 f.complete(null);
                 assertNull(f.invoke());
-                assertTrue(f.isDone());
                 assertEquals(0, f.result);
+                checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -554,9 +660,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FibAction f = new FibAction(8);
                 FibAction g = new FibAction(9);
                 invokeAll(f, g);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
                 assertEquals(21, f.result);
-                assertTrue(g.isDone());
+                checkCompletedNormally(g);
                 assertEquals(34, g.result);
             }};
         testInvokeOnPool(mainPool(), a);
@@ -570,7 +676,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void realCompute() {
                 FibAction f = new FibAction(8);
                 invokeAll(f);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
                 assertEquals(21, f.result);
             }};
         testInvokeOnPool(mainPool(), a);
@@ -586,11 +692,11 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FibAction g = new FibAction(9);
                 FibAction h = new FibAction(7);
                 invokeAll(f, g, h);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
                 assertEquals(21, f.result);
-                assertTrue(g.isDone());
+                checkCompletedNormally(g);
                 assertEquals(34, g.result);
-                assertTrue(h.isDone());
+                checkCompletedNormally(g);
                 assertEquals(13, h.result);
             }};
         testInvokeOnPool(mainPool(), a);
@@ -610,11 +716,11 @@ public class RecursiveActionTest extends JSR166TestCase {
                 set.add(g);
                 set.add(h);
                 invokeAll(set);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
                 assertEquals(21, f.result);
-                assertTrue(g.isDone());
+                checkCompletedNormally(g);
                 assertEquals(34, g.result);
-                assertTrue(h.isDone());
+                checkCompletedNormally(g);
                 assertEquals(13, h.result);
             }};
         testInvokeOnPool(mainPool(), a);
@@ -649,7 +755,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     invokeAll(f, g);
                     shouldThrow();
-                } catch (FJException success) {}
+                } catch (FJException success) {
+                    checkTaskThrew(g, success);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -664,7 +772,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     invokeAll(g);
                     shouldThrow();
-                } catch (FJException success) {}
+                } catch (FJException success) {
+                    checkTaskThrew(g, success);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -681,7 +791,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     invokeAll(f, g, h);
                     shouldThrow();
-                } catch (FJException success) {}
+                } catch (FJException success) {
+                    checkTaskThrew(g, success);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -702,7 +814,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 try {
                     invokeAll(set);
                     shouldThrow();
-                } catch (FJException success) {}
+                } catch (FJException success) {
+                    checkTaskThrew(f, success);
+                }
             }};
         testInvokeOnPool(mainPool(), a);
     }
@@ -720,8 +834,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertTrue(f.tryUnfork());
                 helpQuiesce();
-                assertFalse(f.isDone());
-                assertTrue(g.isDone());
+                checkNotDone(f);
+                checkCompletedNormally(g);
             }};
         testInvokeOnPool(singletonPool(), a);
     }
@@ -741,6 +855,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertTrue(getSurplusQueuedTaskCount() > 0);
                 helpQuiesce();
+                checkCompletedNormally(f);
+                checkCompletedNormally(g);
+                checkCompletedNormally(h);
             }};
         testInvokeOnPool(singletonPool(), a);
     }
@@ -757,8 +874,10 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertSame(f, peekNextLocalTask());
                 assertNull(f.join());
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
                 helpQuiesce();
+                checkCompletedNormally(f);
+                checkCompletedNormally(g);
             }};
         testInvokeOnPool(singletonPool(), a);
     }
@@ -776,14 +895,14 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertSame(f, pollNextLocalTask());
                 helpQuiesce();
-                assertFalse(f.isDone());
+                checkNotDone(f);
+                checkCompletedNormally(g);
             }};
         testInvokeOnPool(singletonPool(), a);
     }
 
     /**
-     * pollTask returns an unexecuted task
-     * without executing it
+     * pollTask returns an unexecuted task without executing it
      */
     public void testPollTask() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -794,8 +913,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertSame(f, pollTask());
                 helpQuiesce();
-                assertFalse(f.isDone());
-                assertTrue(g.isDone());
+                checkNotDone(f);
+                checkCompletedNormally(g);
             }};
         testInvokeOnPool(singletonPool(), a);
     }
@@ -813,14 +932,15 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(g, peekNextLocalTask());
                 assertNull(f.join());
                 helpQuiesce();
-                assertTrue(f.isDone());
+                checkCompletedNormally(f);
+                checkCompletedNormally(g);
             }};
         testInvokeOnPool(asyncSingletonPool(), a);
     }
 
     /**
-     * pollNextLocalTask returns least recent unexecuted task
-     * without executing it, in async mode
+     * pollNextLocalTask returns least recent unexecuted task without
+     * executing it, in async mode
      */
     public void testPollNextLocalTaskAsync() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -831,15 +951,15 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertSame(g, pollNextLocalTask());
                 helpQuiesce();
-                assertTrue(f.isDone());
-                assertFalse(g.isDone());
+                checkCompletedNormally(f);
+                checkNotDone(g);
             }};
         testInvokeOnPool(asyncSingletonPool(), a);
     }
 
     /**
-     * pollTask returns an unexecuted task
-     * without executing it, in async mode
+     * pollTask returns an unexecuted task without executing it, in
+     * async mode
      */
     public void testPollTaskAsync() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -850,8 +970,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 assertSame(g, pollTask());
                 helpQuiesce();
-                assertTrue(f.isDone());
-                assertFalse(g.isDone());
+                checkCompletedNormally(f);
+                checkNotDone(g);
             }};
         testInvokeOnPool(asyncSingletonPool(), a);
     }

@@ -517,8 +517,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * and {@link #join} will result in a {@code CancellationException}
      * being thrown.
      *
-     * <p>After this method returns, subsequent calls to {@link
-     * #isDone} will always return {@code true}.  Subsequent calls to
+     * <p>After this method returns, unless there is a subsequent call
+     * to {@link #reinitialize}, subsequent calls to {@link #isDone}
+     * will always return {@code true}, and subsequent calls to
      * {@link #isCancelled} will always return {@code true} if this
      * method returned {@code true}.
      *

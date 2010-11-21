@@ -12,14 +12,15 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
- * A thread managed by a {@link ForkJoinPool}.  This class is
- * subclassable solely for the sake of adding functionality -- there
- * are no overridable methods dealing with scheduling or execution.
- * However, you can override initialization and termination methods
- * surrounding the main task processing loop.  If you do create such a
- * subclass, you will also need to supply a custom {@link
- * ForkJoinPool.ForkJoinWorkerThreadFactory} to use it in a {@code
- * ForkJoinPool}.
+ * A thread managed by a {@link ForkJoinPool}, which executes
+ * {@link ForkJoinTask}s.
+ * This class is subclassable solely for the sake of adding
+ * functionality -- there are no overridable methods dealing with
+ * scheduling or execution.  However, you can override initialization
+ * and termination methods surrounding the main task processing loop.
+ * If you do create such a subclass, you will also need to supply a
+ * custom {@link ForkJoinPool.ForkJoinWorkerThreadFactory} to use it
+ * in a {@code ForkJoinPool}.
  *
  * @since 1.7
  * @author Doug Lea
@@ -398,7 +399,7 @@ public class ForkJoinWorkerThread extends Thread {
     /**
      * This method is required to be public, but should never be
      * called explicitly. It performs the main run loop to execute
-     * ForkJoinTasks.
+     * {@link ForkJoinTask}s.
      */
     public void run() {
         Throwable exception = null;

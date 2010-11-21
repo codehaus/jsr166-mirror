@@ -692,6 +692,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FibAction g = new FibAction(9);
                 FibAction h = new FibAction(7);
                 invokeAll(f, g, h);
+                assertTrue(f.isDone());
+                assertTrue(g.isDone());
+                assertTrue(h.isDone());
                 checkCompletedNormally(f);
                 assertEquals(21, f.result);
                 checkCompletedNormally(g);
@@ -716,6 +719,9 @@ public class RecursiveActionTest extends JSR166TestCase {
                 set.add(g);
                 set.add(h);
                 invokeAll(set);
+                assertTrue(f.isDone());
+                assertTrue(g.isDone());
+                assertTrue(h.isDone());
                 checkCompletedNormally(f);
                 assertEquals(21, f.result);
                 checkCompletedNormally(g);

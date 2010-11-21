@@ -687,8 +687,8 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 FibTask f = new FibTask(8);
                 FibTask g = new FibTask(9);
                 invokeAll(f, g);
-                checkCompletesNormally(f, 21);
-                checkCompletesNormally(g, 34);
+                checkCompletedNormally(f, 21);
+                checkCompletedNormally(g, 34);
                 return NoResult;
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
@@ -702,7 +702,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
             public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 invokeAll(f);
-                checkCompletesNormally(f, 21);
+                checkCompletedNormally(f, 21);
                 return NoResult;
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
@@ -718,9 +718,12 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 FibTask g = new FibTask(9);
                 FibTask h = new FibTask(7);
                 invokeAll(f, g, h);
-                checkCompletesNormally(f, 21);
-                checkCompletesNormally(g, 34);
-                checkCompletesNormally(h, 13);
+                assertTrue(f.isDone());
+                assertTrue(g.isDone());
+                assertTrue(h.isDone());
+                checkCompletedNormally(f, 21);
+                checkCompletedNormally(g, 34);
+                checkCompletedNormally(h, 13);
                 return NoResult;
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
@@ -740,9 +743,12 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 set.add(g);
                 set.add(h);
                 invokeAll(set);
-                checkCompletesNormally(f, 21);
-                checkCompletesNormally(g, 34);
-                checkCompletesNormally(h, 13);
+                assertTrue(f.isDone());
+                assertTrue(g.isDone());
+                assertTrue(h.isDone());
+                checkCompletedNormally(f, 21);
+                checkCompletedNormally(g, 34);
+                checkCompletedNormally(h, 13);
                 return NoResult;
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));

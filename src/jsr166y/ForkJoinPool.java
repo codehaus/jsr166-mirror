@@ -496,8 +496,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private volatile long eventWaiters;
 
-    private static final int  EVENT_COUNT_SHIFT = 32;
-    private static final long WAITER_ID_MASK    = (1L << 16) - 1L;
+    private static final int EVENT_COUNT_SHIFT = 32;
+    private static final int WAITER_ID_MASK    = (1 << 16) - 1;
 
     /**
      * A counter for events that may wake up worker threads:
@@ -737,7 +737,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         int ec = eventCount;
         boolean releasedOne = false;
         ForkJoinWorkerThread w; int id;
-        while ((id = ((int)(h & WAITER_ID_MASK)) - 1) >= 0 &&
+        while ((id = (((int)h) & WAITER_ID_MASK) - 1) >= 0 &&
                (int)(h >>> EVENT_COUNT_SHIFT) != ec &&
                id < n && (w = ws[id]) != null) {
             if (UNSAFE.compareAndSwapLong(this, eventWaitersOffset,
@@ -775,7 +775,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         long nh = (((long)ec) << EVENT_COUNT_SHIFT) | ((long)(w.poolIndex+1));
         long h;
         while ((runState < SHUTDOWN || !tryTerminate(false)) &&
-               (((int)((h = eventWaiters) & WAITER_ID_MASK)) == 0 ||
+               (((int)(h = eventWaiters) & WAITER_ID_MASK) == 0 ||
                 (int)(h >>> EVENT_COUNT_SHIFT) == ec) &&
                eventCount == ec) {
             if (UNSAFE.compareAndSwapLong(this, eventWaitersOffset,
@@ -934,7 +934,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             }
             else if ((h = eventWaiters) != 0L) {
                 long nh;
-                int id = ((int)(h & WAITER_ID_MASK)) - 1;
+                int id = (((int)h) & WAITER_ID_MASK) - 1;
                 if (id >= 0 && id < n && (w = ws[id]) != null &&
                     (nh = w.nextWaiter) != 0L && // keep at least one worker
                     UNSAFE.compareAndSwapLong(this, eventWaitersOffset, h, nh))

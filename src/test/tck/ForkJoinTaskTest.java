@@ -719,6 +719,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         RecursiveAction a = new CheckedRecursiveAction() {
             public void realCompute() {
                 setRawResult(null);
+                assertNull(getRawResult());
             }};
         assertNull(a.invoke());
     }

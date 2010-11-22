@@ -326,7 +326,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * #isDone} returning {@code true}.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.

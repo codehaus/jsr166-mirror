@@ -260,7 +260,7 @@ public class JSR166TestCase extends TestCase {
         SHORT_DELAY_MS = getShortDelay();
         SMALL_DELAY_MS  = SHORT_DELAY_MS * 5;
         MEDIUM_DELAY_MS = SHORT_DELAY_MS * 10;
-        LONG_DELAY_MS   = SHORT_DELAY_MS * 50;
+        LONG_DELAY_MS   = SHORT_DELAY_MS * 200;
     }
 
     /**
@@ -447,7 +447,7 @@ public class JSR166TestCase extends TestCase {
         try {
             exec.shutdown();
             assertTrue("ExecutorService did not terminate in a timely manner",
-                       exec.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
+                       exec.awaitTermination(2 * LONG_DELAY_MS, MILLISECONDS));
         } catch (SecurityException ok) {
             // Allowed in case test doesn't have privs
         } catch (InterruptedException ie) {

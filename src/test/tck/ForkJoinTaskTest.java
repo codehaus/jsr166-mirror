@@ -93,7 +93,23 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertFalse(a.isCompletedAbnormally());
         assertNull(a.getException());
         assertSame(expected, a.getRawResult());
-        assertSame(expected, a.join());
+
+        {
+            Thread.currentThread().interrupt();
+            long t0 = System.nanoTime();
+            assertSame(expected, a.join());
+            assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
+            assertTrue(Thread.interrupted());
+        }
+
+        {
+            Thread.currentThread().interrupt();
+            long t0 = System.nanoTime();
+            a.quietlyJoin();        // should be no-op
+            assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
+            assertTrue(Thread.interrupted());
+        }
+
         assertFalse(a.cancel(false));
         assertFalse(a.cancel(true));
         try {
@@ -115,10 +131,18 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertTrue(a.cancel(true));
 
         try {
+            Thread.currentThread().interrupt();
             a.join();
             shouldThrow();
         } catch (CancellationException success) {
+            assertTrue(Thread.interrupted());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        {
+            long t0 = System.nanoTime();
+            a.quietlyJoin();        // should be no-op
+            assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
+        }
 
         try {
             a.get();
@@ -144,10 +168,18 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertFalse(a.cancel(true));
 
         try {
+            Thread.currentThread().interrupt();
             a.join();
             shouldThrow();
         } catch (Throwable expected) {
+            assertTrue(Thread.interrupted());
             assertSame(t, expected);
+        }
+
+        {
+            long t0 = System.nanoTime();
+            a.quietlyJoin();        // should be no-op
+            assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
         }
 
         try {

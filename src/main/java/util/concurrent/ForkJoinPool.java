@@ -586,7 +586,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     // are usually manually inlined by callers
 
     /**
-     * Increments running count part of workerCounts
+     * Increments running count part of workerCounts.
      */
     final void incrementRunningCount() {
         int c;
@@ -596,7 +596,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Tries to increment running count part of workerCounts
+     * Tries to increment running count part of workerCounts.
      */
     final boolean tryIncrementRunningCount() {
         int c;
@@ -606,7 +606,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Tries to decrement running count unless already zero
+     * Tries to decrement running count unless already zero.
      */
     final boolean tryDecrementRunningCount() {
         int wc = workerCounts;

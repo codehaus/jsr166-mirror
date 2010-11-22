@@ -349,7 +349,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     /**
      * invoke returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally
-     * completed tasks. getRawResult of a RecursiveAction returns null;
+     * completed tasks; getRawResult returns null.
      */
     public void testInvoke() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -1075,7 +1075,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     /**
      * invoke returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally
-     * completed tasks. getRawResult of a RecursiveAction returns null;
+     * completed tasks; getRawResult returns null.
      */
     public void testInvokeSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {

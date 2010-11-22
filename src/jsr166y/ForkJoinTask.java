@@ -110,6 +110,16 @@ import java.util.concurrent.TimeoutException;
  * result in exceptions or errors, possibly including
  * {@code ClassCastException}.
  *
+ * <p>Method {@link #join} and its variants are appropriate for use
+ * only when completion dependencies are acyclic; that is, the
+ * parallel computation can be described as a directed acyclic graph
+ * (DAG). Otherwise, executions may encounter a form of deadlock as
+ * tasks cyclically wait for each other.  However, this framework
+ * supports other methods and techniques (for example the use of
+ * {@link Phaser}, {@link #helpQuiesce}, and {@link #complete}) that
+ * may be of use in constructing custom subclasses for problems that
+ * are not statically structured as DAGs.
+ *
  * <p>Most base support methods are {@code final}, to prevent
  * overriding of implementations that are intrinsically tied to the
  * underlying lightweight task scheduling framework.  Developers
@@ -330,10 +340,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns the result of the computation when it {@link #isDone is done}.
-     * This method differs from {@link #get()} in that
+     * Returns the result of the computation when it {@link #isDone is
+     * done}.  This method differs from {@link #get()} in that
      * abnormal completion results in {@code RuntimeException} or
-     * {@code Error}, not {@code ExecutionException}.
+     * {@code Error}, not {@code ExecutionException}, and that
+     * interrupts of the calling thread do <em>not</em> cause the
+     * method to abruptly return by throwing {@code
+     * InterruptedException}.
      *
      * @return the computed result
      */
@@ -375,7 +388,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * unprocessed.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -403,7 +416,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * normally or exceptionally, or left unprocessed.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -458,7 +471,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * unprocessed.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -510,25 +523,28 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Attempts to cancel execution of this task. This attempt will
-     * fail if the task has already completed, has already been
-     * cancelled, or could not be cancelled for some other reason. If
-     * successful, and this task has not started when cancel is
-     * called, execution of this task is suppressed, {@link
-     * #isCancelled} will report true, and {@link #join} will result
-     * in a {@code CancellationException} being thrown.
+     * fail if the task has already completed or could not be
+     * cancelled for some other reason. If successful, and this task
+     * has not started when {@code cancel} is called, execution of
+     * this task is suppressed. After this method returns
+     * successfully, unless there is an intervening call to {@link
+     * #reinitialize}, subsequent calls to {@link #isCancelled},
+     * {@link #isDone}, and {@code cancel} will return {@code true}
+     * and calls to {@link #join} and related methods will result in
+     * {@code CancellationException}.
      *
      * <p>This method may be overridden in subclasses, but if so, must
-     * still ensure that these minimal properties hold. In particular,
-     * the {@code cancel} method itself must not throw exceptions.
+     * still ensure that these properties hold. In particular, the
+     * {@code cancel} method itself must not throw exceptions.
      *
      * <p>This method is designed to be invoked by <em>other</em>
      * tasks. To terminate the current task, you can just return or
      * throw an unchecked exception from its computation method, or
      * invoke {@link #completeExceptionally}.
      *
-     * @param mayInterruptIfRunning this value is ignored in the
-     * default implementation because tasks are not
-     * cancelled via interruption
+     * @param mayInterruptIfRunning this value has no effect in the
+     * default implementation because interrupts are not used to
+     * control cancellation.
      *
      * @return {@code true} if this task is now cancelled
      */
@@ -813,7 +829,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * processed.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -878,7 +894,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * were not, stolen.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -897,7 +913,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * fork other tasks.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -920,7 +936,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * exceeded.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -978,7 +994,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * otherwise.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -997,7 +1013,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * be useful otherwise.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.
@@ -1020,7 +1036,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * otherwise.
      *
      * <p>This method may be invoked only from within {@code
-     * ForkJoinTask} computations (as may be determined using method
+     * ForkJoinPool} computations (as may be determined using method
      * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
      * result in exceptions or errors, possibly including {@code
      * ClassCastException}.

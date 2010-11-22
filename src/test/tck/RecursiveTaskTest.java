@@ -602,7 +602,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
                 return NoResult;
             }
         };
-        a.invoke();
+        assertSame(NoResult, a.invoke());
     }
 
     /**

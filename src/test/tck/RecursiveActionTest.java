@@ -247,6 +247,76 @@ public class RecursiveActionTest extends JSR166TestCase {
     }
 
     /**
+     * join/quietlyJoin of a forked task ignores interrupts
+     */
+    public void testJoinIgnoresInterrupts() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FibAction f = new FibAction(8);
+
+                // test join()
+                assertSame(f, f.fork());
+                Thread.currentThread().interrupt();
+                assertNull(f.join());
+                assertTrue(Thread.interrupted());
+                assertEquals(21, f.result);
+                checkCompletedNormally(f);
+
+                f.reinitialize();
+                f.cancel(true);
+                assertSame(f, f.fork());
+                Thread.currentThread().interrupt();
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (CancellationException success) {
+                    assertTrue(Thread.interrupted());
+                    checkCancelled(f);
+                }
+
+                f.reinitialize();
+                f.completeExceptionally(new FJException());
+                assertSame(f, f.fork());
+                Thread.currentThread().interrupt();
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (FJException success) {
+                    assertTrue(Thread.interrupted());
+                    checkCompletedAbnormally(f, success);
+                }
+
+                // test quietlyJoin()
+                f.reinitialize();
+                assertSame(f, f.fork());
+                Thread.currentThread().interrupt();
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                assertEquals(21, f.result);
+                checkCompletedNormally(f);
+
+                f.reinitialize();
+                f.cancel(true);
+                assertSame(f, f.fork());
+                Thread.currentThread().interrupt();
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                checkCancelled(f);
+
+                f.reinitialize();
+                f.completeExceptionally(new FJException());
+                assertSame(f, f.fork());
+                Thread.currentThread().interrupt();
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                checkCompletedAbnormally(f, f.getException());
+            }};
+        testInvokeOnPool(mainPool(), a);
+        a.reinitialize();
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
      * get of a forked task returns when task completes
      */
     public void testForkGet() {

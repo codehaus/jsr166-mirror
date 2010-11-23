@@ -9,6 +9,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +61,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         assertNull(a.getException());
         assertNull(a.getRawResult());
 
-        if (! (Thread.currentThread() instanceof ForkJoinWorkerThread)) {
+        if (! ForkJoinTask.inForkJoinPool()) {
             Thread.currentThread().interrupt();
             try {
                 a.get();
@@ -351,7 +352,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 // test join() ------------
 
                 f = fibActions[0];
-                assertFalse(f.inForkJoinPool());
+                assertFalse(ForkJoinTask.inForkJoinPool());
                 Thread.currentThread().interrupt();
                 assertNull(f.join());
                 assertTrue(Thread.interrupted());

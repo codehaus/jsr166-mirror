@@ -8,6 +8,7 @@ import junit.framework.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +60,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertNull(a.getException());
         assertNull(a.getRawResult());
 
-        if (! (Thread.currentThread() instanceof ForkJoinWorkerThread)) {
+        if (! ForkJoinTask.inForkJoinPool()) {
             Thread.currentThread().interrupt();
             try {
                 a.get();

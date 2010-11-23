@@ -247,7 +247,7 @@ public class RecursiveActionTest extends JSR166TestCase {
     }
 
     /**
-     * join/quietlyJoin of a forked task ignores interrupts
+     * join/quietlyJoin of a forked task succeeds in the presence of interrupts
      */
     public void testJoinIgnoresInterrupts() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -258,7 +258,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 Thread.currentThread().interrupt();
                 assertNull(f.join());
-                assertTrue(Thread.interrupted());
+                Thread.interrupted();
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
 
@@ -270,7 +270,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                     f.join();
                     shouldThrow();
                 } catch (CancellationException success) {
-                    assertTrue(Thread.interrupted());
+                    Thread.interrupted();
                     checkCancelled(f);
                 }
 
@@ -282,7 +282,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                     f.join();
                     shouldThrow();
                 } catch (FJException success) {
-                    assertTrue(Thread.interrupted());
+                    Thread.interrupted();
                     checkCompletedAbnormally(f, success);
                 }
 
@@ -291,7 +291,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 Thread.currentThread().interrupt();
                 f.quietlyJoin();
-                assertTrue(Thread.interrupted());
+                Thread.interrupted();
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
 
@@ -300,7 +300,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 Thread.currentThread().interrupt();
                 f.quietlyJoin();
-                assertTrue(Thread.interrupted());
+                Thread.interrupted();
                 checkCancelled(f);
 
                 f.reinitialize();
@@ -308,7 +308,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertSame(f, f.fork());
                 Thread.currentThread().interrupt();
                 f.quietlyJoin();
-                assertTrue(Thread.interrupted());
+                Thread.interrupted();
                 checkCompletedAbnormally(f, f.getException());
             }};
         testInvokeOnPool(mainPool(), a);

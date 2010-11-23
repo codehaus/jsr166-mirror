@@ -1078,7 +1078,7 @@ public class ForkJoinWorkerThread extends Thread {
                         break outer;
                     }
                 }
-                
+
                 // Try to descend to find v's stealer
                 ForkJoinTask<?> next = v.currentJoin;
                 if (task.status < 0 || next == null || next == task ||

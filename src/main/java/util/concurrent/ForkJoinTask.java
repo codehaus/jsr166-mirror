@@ -842,11 +842,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Returns {@code true} if the current thread is executing as a
-     * ForkJoinPool computation.
+     * Returns {@code true} if the current thread is a {@link
+     * ForkJoinWorkerThread} executing as a ForkJoinPool computation.
      *
-     * @return {@code true} if the current thread is executing as a
-     * ForkJoinPool computation, or false otherwise
+     * @return {@code true} if the current thread is a {@link
+     * ForkJoinWorkerThread} executing as a ForkJoinPool computation,
+     * or {@code false} otherwise
      */
     public static boolean inForkJoinPool() {
         return Thread.currentThread() instanceof ForkJoinWorkerThread;

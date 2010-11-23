@@ -1774,8 +1774,11 @@ public class ForkJoinPool extends AbstractExecutorService {
      * commenced but not yet completed.  This method may be useful for
      * debugging. A return of {@code true} reported a sufficient
      * period after shutdown may indicate that submitted tasks have
-     * ignored or suppressed interruption, causing this executor not
-     * to properly terminate.
+     * ignored or suppressed interruption, or are waiting for IO,
+     * causing this executor not to properly terminate. (See the
+     * advisory notes for class {@link ForkJoinTask} stating that
+     * tasks should not normally entail blocking operations.  But if
+     * they do, they must abort them on interrupt.)
      *
      * @return {@code true} if terminating but not yet terminated
      */

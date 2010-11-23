@@ -278,7 +278,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Blocks a non-worker-thread until completion or interruption or timeout
+     * Blocks a non-worker-thread until completion or interruption or timeout.
      */
     private void externalInterruptibleAwaitDone(boolean timed, long nanos)
         throws InterruptedException {

@@ -6,6 +6,7 @@
 
 import junit.framework.*;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -314,6 +315,102 @@ public class RecursiveActionTest extends JSR166TestCase {
         testInvokeOnPool(mainPool(), a);
         a.reinitialize();
         testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * join/quietlyJoin of a forked task when not in ForkJoinPool
+     * succeeds in the presence of interrupts
+     */
+    public void testJoinIgnoresInterruptsOutsideForkJoinPool() {
+        final SynchronousQueue<FibAction[]> sq =
+            new SynchronousQueue<FibAction[]>();
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() throws InterruptedException {
+                FibAction[] fibActions = new FibAction[6];
+                for (int i = 0; i < fibActions.length; i++)
+                    fibActions[i] = new FibAction(8);
+
+                fibActions[1].cancel(false);
+                fibActions[2].completeExceptionally(new FJException());
+                fibActions[4].cancel(true);
+                fibActions[5].completeExceptionally(new FJException());
+
+                for (int i = 0; i < fibActions.length; i++)
+                    fibActions[i].fork();
+
+                sq.put(fibActions);
+
+                helpQuiesce();
+            }};
+
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                FibAction[] fibActions = sq.take();
+                FibAction f;
+
+                // test join() ------------
+
+                f = fibActions[0];
+                assertFalse(f.inForkJoinPool());
+                Thread.currentThread().interrupt();
+                assertNull(f.join());
+                assertTrue(Thread.interrupted());
+                assertEquals(21, f.result);
+                checkCompletedNormally(f);
+
+                f = fibActions[1];
+                Thread.currentThread().interrupt();
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (CancellationException success) {
+                    assertTrue(Thread.interrupted());
+                    checkCancelled(f);
+                }
+
+                f = fibActions[2];
+                Thread.currentThread().interrupt();
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (FJException success) {
+                    assertTrue(Thread.interrupted());
+                    checkCompletedAbnormally(f, success);
+                }
+
+                // test quietlyJoin() ---------
+
+                f = fibActions[3];
+                Thread.currentThread().interrupt();
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                assertEquals(21, f.result);
+                checkCompletedNormally(f);
+
+                f = fibActions[4];
+                Thread.currentThread().interrupt();
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                checkCancelled(f);
+
+                f = fibActions[5];
+                Thread.currentThread().interrupt();
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                assertTrue(f.getException() instanceof FJException);
+                checkCompletedAbnormally(f, f.getException());
+            }};
+
+        Thread t;
+
+        t = newStartedThread(r);
+        testInvokeOnPool(mainPool(), a);
+        awaitTermination(t, LONG_DELAY_MS);
+
+        a.reinitialize();
+        t = newStartedThread(r);
+        testInvokeOnPool(singletonPool(), a);
+        awaitTermination(t, LONG_DELAY_MS);
     }
 
     /**

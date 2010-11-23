@@ -985,8 +985,10 @@ public class ForkJoinWorkerThread extends Thread {
             int s;
             if (joinMe.status < 0)
                 return running;
-            else if ((runState & TERMINATING) != 0)
+            else if ((runState & TERMINATING) != 0) {
                 joinMe.cancelIgnoringExceptions();
+                return running;
+            }
             else if ((s = sp) == base || (q = queue) == null)
                 break;                            // queue empty
             else {
@@ -1002,8 +1004,7 @@ public class ForkJoinWorkerThread extends Thread {
                          UNSAFE.compareAndSwapObject(q, u, t, null)) {
                     sp = s; // putOrderedInt may encourage more timely write
                     // UNSAFE.putOrderedInt(this, spOffset, s);
-                    if (t.status >= 0)
-                        t.quietlyExec();
+                    t.quietlyExec();
                 }
             }
         }
@@ -1072,16 +1073,17 @@ public class ForkJoinWorkerThread extends Thread {
                                                     currentStealOffset, ps);
                         }
                     }
+                    else if ((runState & TERMINATING) != 0) {
+                        joinMe.cancelIgnoringExceptions();
+                        break outer;
+                    }
                 }
-
+                
                 // Try to descend to find v's stealer
                 ForkJoinTask<?> next = v.currentJoin;
-                if (task.status < 0 || next == null || next == task)
-                    break;                       // stale, dead-end, or cyclic
-                if ((runState & TERMINATING) != 0)
-                    joinMe.cancelIgnoringExceptions();
-                if (joinMe.status < 0)
-                    break;
+                if (task.status < 0 || next == null || next == task ||
+                    joinMe.status < 0)
+                    break;                 // done, stale, dead-end, or cyclic
                 task = next;
                 thread = v;
             }

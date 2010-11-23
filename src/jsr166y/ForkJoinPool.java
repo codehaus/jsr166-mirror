@@ -586,7 +586,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     // are usually manually inlined by callers
 
     /**
-     * Increments running count part of workerCounts
+     * Increments running count part of workerCounts.
      */
     final void incrementRunningCount() {
         int c;
@@ -596,7 +596,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Tries to increment running count part of workerCounts
+     * Tries to increment running count part of workerCounts.
      */
     final boolean tryIncrementRunningCount() {
         int c;
@@ -606,7 +606,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Tries to decrement running count unless already zero
+     * Tries to decrement running count unless already zero.
      */
     final boolean tryDecrementRunningCount() {
         int wc = workerCounts;
@@ -1058,8 +1058,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                 long h = eventWaiters;
                 if (h != 0L && (int)(h >>> EVENT_COUNT_SHIFT) != eventCount)
                     releaseEventWaiters();
-                if (joinMe.status < 0)
-                    break;
                 if ((workerCounts & RUNNING_COUNT_MASK) != 0) {
                     long ms; int ns;
                     if (!timed) {
@@ -1078,9 +1076,10 @@ public class ForkJoinPool extends AbstractExecutorService {
                         else
                             ns = (int) (nt % 1000000);
                     }
-                    if (joinMe.internalAwaitDone(ms, ns) < 0)
-                        break;
+                    joinMe.internalAwaitDone(ms, ns);
                 }
+                if (joinMe.status < 0)
+                    break;
             }
             helpMaintainParallelism();
         }

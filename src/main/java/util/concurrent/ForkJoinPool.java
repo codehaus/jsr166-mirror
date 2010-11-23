@@ -1058,8 +1058,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                 long h = eventWaiters;
                 if (h != 0L && (int)(h >>> EVENT_COUNT_SHIFT) != eventCount)
                     releaseEventWaiters();
-                if (joinMe.status < 0)
-                    break;
                 if ((workerCounts & RUNNING_COUNT_MASK) != 0) {
                     long ms; int ns;
                     if (!timed) {
@@ -1078,9 +1076,10 @@ public class ForkJoinPool extends AbstractExecutorService {
                         else
                             ns = (int) (nt % 1000000);
                     }
-                    if (joinMe.internalAwaitDone(ms, ns) < 0)
-                        break;
+                    joinMe.internalAwaitDone(ms, ns);
                 }
+                if (joinMe.status < 0)
+                    break;
             }
             helpMaintainParallelism();
         }

@@ -86,9 +86,9 @@ import java.util.concurrent.locks.LockSupport;
  * #forceTermination} is also available to abruptly release waiting
  * threads and allow them to terminate.
  *
- * <p> <b>Tiering.</b> Phasers may be <em>tiered</em> (i.e., arranged
- * in tree structures) to reduce contention. Phasers with large
- * numbers of parties that would otherwise experience heavy
+ * <p> <b>Tiering.</b> Phasers may be <em>tiered</em> (i.e.,
+ * constructed in tree structures) to reduce contention. Phasers with
+ * large numbers of parties that would otherwise experience heavy
  * synchronization contention costs may instead be set up so that
  * groups of sub-phasers share a common parent.  This may greatly
  * increase throughput even though it incurs greater per-operation
@@ -353,20 +353,20 @@ public class Phaser {
     /**
      * Implementation of register, bulkRegister
      *
-     * @param registrations number to add to both parties and unarrived fields
+     * @param registrations number to add to both parties and
+     * unarrived fields. Must be greater than zero.
      */
     private int doRegister(int registrations) {
-        // assert registrations > 0;
         // adjustment to state
         long adj = ((long)registrations << PARTIES_SHIFT) | registrations;
         final Phaser parent = this.parent;
         for (;;) {
             long s = (parent == null) ? state : reconcileState();
+            int parties = (int)s >>> PARTIES_SHIFT;
             int phase = (int)(s >>> PHASE_SHIFT);
             if (phase < 0)
                 return phase;
-            int parties = (int)s >>> PARTIES_SHIFT;
-            if (parties != 0 && ((int)s & UNARRIVED_MASK) == 0)
+            else if (parties != 0 && ((int)s & UNARRIVED_MASK) == 0)
                 internalAwaitAdvance(phase, null); // wait for onAdvance
             else if (registrations > MAX_PARTIES - parties)
                 throw new IllegalStateException(badRegister(s));
@@ -433,10 +433,7 @@ public class Phaser {
     }
 
     /**
-     * Creates a new phaser with the given parent, without any
-     * initially registered parties. If parent is non-null this phaser
-     * is registered with the parent and its initial phase number is
-     * the same as that of parent phaser.
+     * Equivalent to {@link #Phaser(Phaser, int) Phaser(parent, 0)}.
      *
      * @param parent the parent phaser
      */
@@ -446,9 +443,20 @@ public class Phaser {
 
     /**
      * Creates a new phaser with the given parent and number of
-     * registered unarrived parties. If parent is non-null, this phaser
-     * is registered with the parent and its initial phase number is
-     * the same as that of parent phaser.
+     * registered unarrived parties. If parent is non-null, this
+     * phaser is registered with the parent and its initial phase
+     * number is the same as that of parent phaser.  If the number of
+     * parties is zero, the parent phaser will not proceed until this
+     * child phaser registers parties and advances, or this child
+     * phaser deregisters with its parent, or the parent is otherwise
+     * terminated.  This child Phaser will be deregistered from its
+     * parent automatically upon any invocation of the child's {@link
+     * #arriveAndDeregister} method that results in the child's number
+     * of registered parties becoming zero. (Although rarely
+     * appropriate, this child may also explicity deregister from its
+     * parent using {@code getParent().arriveAndDeregister()}.)  After
+     * deregistration, the child cannot re-register. (Instead, you can
+     * create a new child Phaser.)
      *
      * @param parent the parent phaser
      * @param parties the number of parties required to trip barrier
@@ -465,7 +473,7 @@ public class Phaser {
             this.root = r;
             this.evenQ = r.evenQ;
             this.oddQ = r.oddQ;
-            phase = parent.register();
+            phase = parent.doRegister(1);
         }
         else {
             this.root = this;

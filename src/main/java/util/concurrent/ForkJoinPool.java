@@ -728,14 +728,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Releases workers blocked on a count not equal to current count.
      * Normally called after precheck that eventWaiters isn't zero to
      * avoid wasted array checks. Gives up upon a change in count or
-     * upon releasing two workers, letting others take over.
+     * upon releasing four workers, letting others take over.
      */
     private void releaseEventWaiters() {
         ForkJoinWorkerThread[] ws = workers;
         int n = ws.length;
         long h = eventWaiters;
         int ec = eventCount;
-        boolean releasedOne = false;
+        int releases = 4;
         ForkJoinWorkerThread w; int id;
         while ((id = (((int)h) & WAITER_ID_MASK) - 1) >= 0 &&
                (int)(h >>> EVENT_COUNT_SHIFT) != ec &&
@@ -743,9 +743,8 @@ public class ForkJoinPool extends AbstractExecutorService {
             if (UNSAFE.compareAndSwapLong(this, eventWaitersOffset,
                                           h,  w.nextWaiter)) {
                 LockSupport.unpark(w);
-                if (releasedOne) // exit on second release
+                if (--releases == 0)
                     break;
-                releasedOne = true;
             }
             if (eventCount != ec)
                 break;

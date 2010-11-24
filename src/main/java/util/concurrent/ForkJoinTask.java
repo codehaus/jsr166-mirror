@@ -238,13 +238,16 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * only by pool.
      */
     final void internalAwaitDone(long millis, int nanos) {
-        if (status >= 0) {
+        int s = status;
+        if ((s == 0 &&
+             UNSAFE.compareAndSwapInt(this, statusOffset, 0, SIGNAL)) ||
+            s > 0)  {
             try {     // the odd construction reduces lock bias effects
                 synchronized (this) {
-                    if (status > 0 ||
-                        UNSAFE.compareAndSwapInt(this, statusOffset,
-                                                 0, SIGNAL))
+                    if (status > 0)
                         wait(millis, nanos);
+                    else
+                        notifyAll();
                 }
             } catch (InterruptedException ie) {
                 cancelIfTerminating();
@@ -259,16 +262,21 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         if (status >= 0) {
             boolean interrupted = false;
             synchronized(this) {
-                int s;
-                while ((s = status) >= 0) {
-                    if (s == 0 &&
-                        !UNSAFE.compareAndSwapInt(this, statusOffset,
-                                                  0, SIGNAL))
-                        continue;
-                    try {
-                        wait();
-                    } catch (InterruptedException ie) {
-                        interrupted = true;
+                for (;;) {
+                    int s = status;
+                    if (s == 0)
+                        UNSAFE.compareAndSwapInt(this, statusOffset,
+                                                 0, SIGNAL);
+                    else if (s < 0) {
+                        notifyAll();
+                        break;
+                    }
+                    else {
+                        try {
+                            wait();
+                        } catch (InterruptedException ie) {
+                            interrupted = true;
+                        }
                     }
                 }
             }
@@ -287,13 +295,16 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         if (status >= 0) {
             long startTime = timed ? System.nanoTime() : 0L;
             synchronized(this) {
-                int s;
-                while ((s = status) >= 0) {
+                for (;;) {
                     long nt;
-                    if (s == 0 &&
-                        !UNSAFE.compareAndSwapInt(this, statusOffset,
-                                                  0, SIGNAL))
-                        continue;
+                    int s = status;
+                    if (s == 0)
+                        UNSAFE.compareAndSwapInt(this, statusOffset,
+                                                 0, SIGNAL);
+                    else if (s < 0) {
+                        notifyAll();
+                        break;
+                    }
                     else if (!timed)
                         wait();
                     else if ((nt = nanos - (System.nanoTime()-startTime)) > 0L)

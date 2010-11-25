@@ -40,16 +40,18 @@ public class DoubleCumulateDemo {
             System.out.printf("seq  :  %9.5f\n", elapsed);
         }
 
-        ForkJoinPool fjp = new ForkJoinPool(2);
-        for (int i = 2; i <= NCPU; i <<= 1) {
-            fjp.setParallelism(i);
-            oneRun(fjp, array, i, reps, tests);
+        for (int sweeps = 0; sweeps < 2; ++sweeps) {
+            for (int i = 2; i <= NCPU; i <<= 1) {
+                ForkJoinPool fjp = new ForkJoinPool(i);
+                oneRun(fjp, array, i, reps, tests);
+                fjp.shutdown();
+            }
+            for (int i = NCPU; i >= 1; i >>>= 1) {
+                ForkJoinPool fjp = new ForkJoinPool(i);
+                oneRun(fjp, array, i, reps, tests);
+                fjp.shutdown();
+            }
         }
-        for (int i = NCPU; i >= 1; i >>>= 1) {
-            fjp.setParallelism(i);
-            oneRun(fjp, array, i, reps, tests);
-        }
-        fjp.shutdown();
     }
 
     static void oneRun(ForkJoinPool fjp,

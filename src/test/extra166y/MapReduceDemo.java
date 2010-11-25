@@ -53,7 +53,7 @@ public class MapReduceDemo {
         Rand[] array = new Rand[n];
         for (int i = 0; i < n; ++i)
             array[i] = new Rand(i+1);
-        ForkJoinPool fjp = new ForkJoinPool(1);
+        ForkJoinPool fjp = new ForkJoinPool();
         ParallelArray<Rand> pa = ParallelArray.createUsingHandoff(array, fjp);
         final GetNext getNext = new GetNext();
         final Accum accum = new Accum();
@@ -78,7 +78,7 @@ public class MapReduceDemo {
             for (int i = 2; i <= NCPU; i <<= 1) {
                 resetSeeds(array, rseed);
                 long sum = 0;
-                fjp.setParallelism(i);
+                //                fjp.setParallelism(i);
                 last = System.nanoTime();
                 for (int k = 0; k < reps; ++k) {
                     sum += pa.withMapping(getNext).reduce(accum, zero);
@@ -89,13 +89,13 @@ public class MapReduceDemo {
                 now = System.nanoTime();
                 elapsed = (double)(now - last) / NPS;
                 last = now;
-                System.out.printf("poolSize %3d:  %7.3f\n", i, elapsed);
+                System.out.printf("poolSize %3d:  %7.3f\n", fjp.getParallelism(), elapsed);
                 if (sum != seqsum) throw new Error("checksum");
             }
             for (int i = NCPU; i >= 1; i >>>= 1) {
                 resetSeeds(array, rseed);
                 long sum = 0;
-                fjp.setParallelism(i);
+                //                fjp.setParallelism(i);
                 last = System.nanoTime();
                 for (int k = 0; k < reps; ++k) {
                     sum += pa.withMapping(getNext).reduce(accum, zero);
@@ -106,7 +106,7 @@ public class MapReduceDemo {
                 now = System.nanoTime();
                 elapsed = (double)(now - last) / NPS;
                 last = now;
-                System.out.printf("poolSize %3d:  %7.3f\n", i, elapsed);
+                System.out.printf("poolSize %3d:  %7.3f\n", fjp.getParallelism(), elapsed);
                 if (sum != seqsum) throw new Error("checksum");
             }
         }

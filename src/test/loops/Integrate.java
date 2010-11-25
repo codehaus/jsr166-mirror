@@ -169,7 +169,6 @@ public final class Integrate {
             q.fork();
             ar = recEval(c, r, fc, fr, ar);
             if (!q.tryUnfork()) {
-                //                q.quietlyHelpJoin();
                 q.quietlyJoin();
                 return ar + q.area;
             }
@@ -218,7 +217,6 @@ public final class Integrate {
                 (q = new DQuad(l, c, al)).fork();
             ar = recEval(c, r, fc, fr, ar);
             if (q != null && !q.tryUnfork()) {
-                //                q.quietlyHelpJoin();
                 q.quietlyJoin();
                 return ar + q.area;
             }

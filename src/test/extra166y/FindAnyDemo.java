@@ -81,10 +81,9 @@ public class FindAnyDemo {
             System.out.printf("seq:    %7.3f\n", elapsed);
         }
         Thread.sleep(100);
-        ForkJoinPool fjp = new ForkJoinPool(1);
+        ForkJoinPool fjp = new ForkJoinPool();
         ParallelArray<Rand> pa = ParallelArray.createUsingHandoff(array, fjp);
         for (int i = 1; i <= NCPU; i <<= 1) {
-            fjp.setParallelism(i);
             last = System.nanoTime();
             for (int k = 0; k < 2; ++k) {
                 for (int reps = 0; reps < 9; ++reps) {

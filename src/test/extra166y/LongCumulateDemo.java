@@ -39,18 +39,18 @@ public class LongCumulateDemo {
             System.out.printf("seq  :  %9.5f\n", elapsed);
         }
 
-        ForkJoinPool fjp = new ForkJoinPool(2);
         for (int sweeps = 0; sweeps < 2; ++sweeps) {
             for (int i = 2; i <= NCPU; i <<= 1) {
-                fjp.setParallelism(i);
+                ForkJoinPool fjp = new ForkJoinPool(i);
                 oneRun(fjp, array, i, reps, tests);
+                fjp.shutdown();
             }
             for (int i = NCPU; i >= 1; i >>>= 1) {
-                fjp.setParallelism(i);
+                ForkJoinPool fjp = new ForkJoinPool(i);
                 oneRun(fjp, array, i, reps, tests);
+                fjp.shutdown();
             }
         }
-        fjp.shutdown();
     }
 
     static void oneRun(ForkJoinPool fjp,

@@ -13,8 +13,8 @@ class SortDemo {
     static final Random rng = new Random();
     static final long NPS = (1000L * 1000 * 1000);
 
-    public static void main(String[] args) throws Exception {
-        int n = 1 << 20;
+    public static void main (String[] args) throws Exception {
+        int n = 1 << 22;
         int sreps = 4;
         int reps = 20;
         Long[] a = new Long[n];

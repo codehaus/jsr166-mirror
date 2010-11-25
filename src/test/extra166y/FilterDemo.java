@@ -82,7 +82,7 @@ public class FilterDemo {
         }
         int pass = 0;
         int ps = 2;
-        ForkJoinPool fjp = new ForkJoinPool(ps);
+        ForkJoinPool fjp = new ForkJoinPool();
         ParallelArray<Rand> pa = ParallelArray.createUsingHandoff(array, fjp);
         for (;;) {
             last = System.nanoTime();
@@ -111,7 +111,7 @@ public class FilterDemo {
                     ps >>>= 1;
             }
             //            pa.apply(nextRand);
-            fjp.setParallelism(ps);
+            //            fjp.setParallelism(ps);
         }
         fjp.shutdownNow();
         fjp.awaitTermination(1, TimeUnit.SECONDS);

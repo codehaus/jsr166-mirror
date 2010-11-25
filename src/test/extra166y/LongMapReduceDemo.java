@@ -35,6 +35,15 @@ public class LongMapReduceDemo {
             x ^= x << 13;
             x ^= x >>> 7;
             x ^= (x << 17);
+            x ^= x << 13;
+            x ^= x >>> 7;
+            x ^= (x << 17);
+            x ^= x << 13;
+            x ^= x >>> 7;
+            x ^= (x << 17);
+            x ^= x << 13;
+            x ^= x >>> 7;
+            x ^= (x << 17);
             return x;
         }
     }
@@ -50,11 +59,11 @@ public class LongMapReduceDemo {
 
     public static void main(String[] args) throws Exception {
         int n = 1 << 18;
-        int reps = 1 << 8;
+        int reps = 1 << 10;
         long[] array = new long[n];
         for (int i = 0; i < n; ++i)
             array[i] = i + 1L;
-        ForkJoinPool fjp = new ForkJoinPool(1);
+        ForkJoinPool fjp = new ForkJoinPool();
         ParallelLongArray pa = ParallelLongArray.createUsingHandoff(array, fjp);
         final GetNext getNext = new GetNext();
         final Accum accum = new Accum();
@@ -76,10 +85,9 @@ public class LongMapReduceDemo {
             elapsed = (double)(now - last) / NPS;
             last = now;
             System.out.printf("sequential:    %7.3f\n", elapsed);
-            for (int i = 2; i <= NCPU; i <<= 1) {
+            for (int i = NCPU; i >= 1; i >>>= 1) {
                 resetSeeds(array, rseed);
                 long sum = 0;
-                fjp.setParallelism(i);
                 last = System.nanoTime();
                 for (int k = 0; k < reps; ++k) {
                     sum += pa.withMapping(getNext).reduce(accum, zero);
@@ -93,10 +101,10 @@ public class LongMapReduceDemo {
                 System.out.printf("poolSize %3d:  %7.3f\n", fjp.getParallelism(), elapsed);
                 if (sum != seqsum) throw new Error("checksum");
             }
-            for (int i = NCPU; i >= 1; i >>>= 1) {
+            for (int i = 2; i <= NCPU; i <<= 1) {
                 resetSeeds(array, rseed);
                 long sum = 0;
-                fjp.setParallelism(i);
+                //                fjp.setParallelism(i);
                 last = System.nanoTime();
                 for (int k = 0; k < reps; ++k) {
                     sum += pa.withMapping(getNext).reduce(accum, zero);

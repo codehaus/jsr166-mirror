@@ -1681,7 +1681,7 @@ class PAS {
                               l+h, n-h, l, g, null).compute();
             }
             else
-                oquickSort(a, cmp, l, l+n-1);
+                Arrays.sort(a, l, l+n, cmp);
         }
     }
 
@@ -1717,7 +1717,7 @@ class PAS {
                                l+h, n-h, l, g, null).compute();
             }
             else
-                ocquickSort(a, l, l+n-1);
+                Arrays.sort(a, l, l+n);
         }
     }
 
@@ -2306,124 +2306,6 @@ class PAS {
     static final int INSERTION_SORT_THRESHOLD = 8;
 
     // versions of quicksort with comparators
-
-    static void oquickSort(Object[] a, Comparator cmp, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    Object t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && cmp.compare(t, a[j]) < 0) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (cmp.compare(a[lo], a[mid]) > 0) {
-                Object t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (cmp.compare(a[mid], a[hi]) > 0) {
-                Object t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (cmp.compare(a[lo], a[mid]) > 0) {
-                    Object u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-
-            Object pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            boolean sameLefts = true;
-            for (;;) {
-                while (cmp.compare(pivot, a[right]) < 0)
-                    --right;
-                int c;
-                while (left < right &&
-                       (c = cmp.compare(pivot, a[left])) >= 0) {
-                    if (c != 0)
-                        sameLefts = false;
-                    ++left;
-                }
-                if (left < right) {
-                    Object t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (sameLefts && right == hi - 1)
-                return;
-            if (left - lo <= hi - right) {
-                oquickSort(a, cmp, lo, left);
-                lo = left + 1;
-            }
-            else {
-                oquickSort(a, cmp, right, hi);
-                hi = left;
-            }
-        }
-    }
-
-    static void ocquickSort(Comparable[] a, int lo, int hi) {
-        for (;;) {
-            if (hi - lo <= INSERTION_SORT_THRESHOLD) {
-                for (int i = lo + 1; i <= hi; i++) {
-                    Comparable t = a[i];
-                    int j = i - 1;
-                    while (j >= lo && t.compareTo(a[j]) < 0) {
-                        a[j+1] = a[j];
-                        --j;
-                    }
-                    a[j+1] = t;
-                }
-                return;
-            }
-
-            int mid = (lo + hi) >>> 1;
-            if (a[lo].compareTo(a[mid]) > 0) {
-                Comparable t = a[lo]; a[lo] = a[mid]; a[mid] = t;
-            }
-            if (a[mid].compareTo(a[hi]) > 0) {
-                Comparable t = a[mid]; a[mid] = a[hi]; a[hi] = t;
-                if (a[lo].compareTo(a[mid]) > 0) {
-                    Comparable u = a[lo]; a[lo] = a[mid]; a[mid] = u;
-                }
-            }
-            Comparable pivot = a[mid];
-            int left = lo+1;
-            int right = hi-1;
-            boolean sameLefts = true;
-            for (;;) {
-                while (pivot.compareTo(a[right]) < 0)
-                    --right;
-                int c;
-                while (left < right && (c = pivot.compareTo(a[left])) >= 0) {
-                    if (c != 0)
-                        sameLefts = false;
-                    ++left;
-                }
-                if (left < right) {
-                    Comparable t = a[left]; a[left] = a[right]; a[right] = t;
-                    --right;
-                }
-                else break;
-            }
-
-            if (sameLefts && right == hi - 1)
-                return;
-            if (left - lo <= hi - right) {
-                ocquickSort(a, lo, left);
-                lo = left + 1;
-            }
-            else {
-                ocquickSort(a, right, hi);
-                hi = left;
-            }
-        }
-    }
 
 
     static void dquickSort(double[] a, DoubleComparator cmp, int lo, int hi) {

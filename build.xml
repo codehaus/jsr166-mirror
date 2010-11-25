@@ -281,6 +281,7 @@
 
       <compilerarg value="${bootclasspath.args}"/>
       <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
 
       <classpath refid="test.classpath"/>
 
@@ -298,6 +299,7 @@
 
       <compilerarg value="${bootclasspath.args}"/>
       <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
 
       <classpath refid="test.classpath"/>
 
@@ -314,6 +316,7 @@
 
       <compilerarg value="${bootclasspath.args}"/>
       <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
 
       <classpath refid="test.classpath"/>
 
@@ -454,6 +457,7 @@
 
       <compilerarg line="${build.args}"/>
       <classpath refid="loops.classpath"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
 
     </javac>
 
@@ -483,6 +487,7 @@
 
       <include name="**/*.java"/>
       <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
 
     </javac>
 

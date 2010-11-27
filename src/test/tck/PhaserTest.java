@@ -329,7 +329,7 @@ public class PhaserTest extends JSR166TestCase {
         Phaser parent = new Phaser();
         Phaser child = new Phaser(parent);
         assertState(child, 0, 0, 0);
-        assertState(parent, 0, 1, 1);
+        assertState(parent, 0, 0, 0);
         assertEquals(0, child.register());
         assertState(child, 0, 1, 1);
         assertState(parent, 0, 1, 1);
@@ -362,8 +362,8 @@ public class PhaserTest extends JSR166TestCase {
         Phaser root = new Phaser();
         Phaser parent = new Phaser(root);
         Phaser child = new Phaser(parent);
-        assertState(root, 0, 1, 1);
-        assertState(parent, 0, 1, 1);
+        assertState(root, 0, 0, 0);
+        assertState(parent, 0, 0, 0);
         assertState(child, 0, 0, 0);
         assertEquals(0, child.register());
         assertState(root, 0, 1, 1);

@@ -18,7 +18,7 @@ import java.util.concurrent.locks.LockSupport;
  * but supporting more flexible usage.
  *
  * <p> <b>Registration.</b> Unlike the case for other barriers, the
- * number of parties <em>registered</em> to synchronize on a phaser
+ * number of parties <em>registered</em> to synchronize on a Phaser
  * may vary over time.  Tasks may be registered at any time (using
  * methods {@link #register}, {@link #bulkRegister}, or forms of
  * constructors establishing initial numbers of parties), and
@@ -76,13 +76,13 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p> <b>Termination.</b> A {@code Phaser} may enter a
  * <em>termination</em> state in which all synchronization methods
- * immediately return without updating phaser state or waiting for
+ * immediately return without updating Phaser state or waiting for
  * advance, and indicating (via a negative phase value) that execution
  * is complete.  Termination is triggered when an invocation of {@code
  * onAdvance} returns {@code true}. The default implementation returns
  * {@code true} if a deregistration has caused the number of
  * registered parties to become zero.  As illustrated below, when
- * phasers control actions with a fixed number of iterations, it is
+ * Phasers control actions with a fixed number of iterations, it is
  * often convenient to override this method to cause termination when
  * the current phase number reaches a threshold. Method {@link
  * #forceTermination} is also available to abruptly release waiting
@@ -97,7 +97,7 @@ import java.util.concurrent.locks.LockSupport;
  * overhead.
  *
  * <p><b>Monitoring.</b> While synchronization methods may be invoked
- * only by registered parties, the current state of a phaser may be
+ * only by registered parties, the current state of a Phaser may be
  * monitored by any caller.  At any given moment there are {@link
  * #getRegisteredParties} parties in total, of which {@link
  * #getArrivedParties} have arrived at the current phase ({@link
@@ -183,9 +183,9 @@ import java.util.concurrent.locks.LockSupport;
  * }}</pre>
  *
  *
- * <p>To create a set of tasks using a tree of phasers,
+ * <p>To create a set of tasks using a tree of Phasers,
  * you could use code of the following form, assuming a
- * Task class with a constructor accepting a phaser that
+ * Task class with a constructor accepting a Phaser that
  * it registers with upon construction:
  *
  *  <pre> {@code
@@ -212,7 +212,7 @@ import java.util.concurrent.locks.LockSupport;
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of parties to 65535. Attempts to register additional
  * parties result in {@code IllegalStateException}. However, you can and
- * should create tiered phasers to accommodate arbitrarily large sets
+ * should create tiered Phasers to accommodate arbitrarily large sets
  * of participants.
  *
  * @since 1.7
@@ -383,7 +383,7 @@ public class Phaser {
                     return phase;
             }
             else if (parties != 0)               // wait for onAdvance
-                internalAwaitAdvance(phase, null);
+                root.internalAwaitAdvance(phase, null);
             else {                               // 1st registration of child
                 synchronized(this) {             // register parent first
                     if (reconcileState() == s) { // recheck under lock
@@ -428,16 +428,16 @@ public class Phaser {
     }
 
     /**
-     * Creates a new phaser without any initially registered parties,
+     * Creates a new Phaser without any initially registered parties,
      * initial phase number 0, and no parent. Any thread using this
-     * phaser will need to first register for it.
+     * Phaser will need to first register for it.
      */
     public Phaser() {
         this(null, 0);
     }
 
     /**
-     * Creates a new phaser with the given number of registered
+     * Creates a new Phaser with the given number of registered
      * unarrived parties, initial phase number 0, and no parent.
      *
      * @param parties the number of parties required to trip barrier
@@ -449,27 +449,27 @@ public class Phaser {
     }
 
     /**
-     * Creates a new phaser with the given parent, and without any
-     * initially registered parties.  Any thread using this phaser
-     * will need to first register for it, at which point, if the
-     * given parent is non-null, this phaser will also be registered
-     * with the parent.
-     *
      * Equivalent to {@link #Phaser(Phaser, int) Phaser(parent, 0)}.
      *
-     * @param parent the parent phaser
+     * @param parent the parent Phaser
      */
     public Phaser(Phaser parent) {
         this(parent, 0);
     }
 
     /**
-     * Creates a new phaser with the given parent and number of
-     * registered unarrived parties. If parent is non-null and
-     * the number of parties is non-zero, this phaser is registered
-     * with the parent.
+     * Creates a new Phaser with the given parent and number of
+     * registered unarrived parties. Registration and deregistration
+     * of this child Phaser with its parent are managed automatically.
+     * If the given parent is non-null, whenever this child Phaser has
+     * any registered parties (as established in this constructor,
+     * {@link #register}, or {@link #bulkRegister}), this child Phaser
+     * is registered with its parent. Whenever the number of
+     * registered parties becomes zero as the result of an invocation
+     * of {@link #arriveAndDeregister}, this child Phaser is
+     * deregistered from its parent.
      *
-     * @param parent the parent phaser
+     * @param parent the parent Phaser
      * @param parties the number of parties required to trip barrier
      * @throws IllegalArgumentException if parties less than zero
      * or greater than the maximum number of parties supported
@@ -477,32 +477,30 @@ public class Phaser {
     public Phaser(Phaser parent, int parties) {
         if (parties >>> PARTIES_SHIFT != 0)
             throw new IllegalArgumentException("Illegal number of parties");
-        int phase;
+        long s = ((long) parties) | (((long) parties) << PARTIES_SHIFT);
         this.parent = parent;
         if (parent != null) {
             Phaser r = parent.root;
             this.root = r;
             this.evenQ = r.evenQ;
             this.oddQ = r.oddQ;
-            phase = (parties == 0) ? parent.getPhase() : parent.doRegister(1);
+            if (parties != 0)
+                s |= ((long)(parent.doRegister(1))) << PHASE_SHIFT;
         }
         else {
             this.root = this;
             this.evenQ = new AtomicReference<QNode>();
             this.oddQ = new AtomicReference<QNode>();
-            phase = 0;
         }
-        long p = (long)parties;
-        this.state = (((long)phase) << PHASE_SHIFT) | p | (p << PARTIES_SHIFT);
+        this.state = s;
     }
 
     /**
-     * Adds a new unarrived party to this phaser.  If an ongoing
+     * Adds a new unarrived party to this Phaser.  If an ongoing
      * invocation of {@link #onAdvance} is in progress, this method
-     * may wait until its completion before registering.  If this
-     * phaser has a parent, and this phaser previously had no
-     * registered parties, this phaser is also registered with its
-     * parent.
+     * may await its completion before returning.  If this Phaser has
+     * a parent, and this Phaser previously had no registered parties,
+     * this Phaser is also registered with its parent.
      *
      * @return the arrival phase number to which this registration applied
      * @throws IllegalStateException if attempting to register more
@@ -513,13 +511,12 @@ public class Phaser {
     }
 
     /**
-     * Adds the given number of new unarrived parties to this phaser.
+     * Adds the given number of new unarrived parties to this Phaser.
      * If an ongoing invocation of {@link #onAdvance} is in progress,
-     * this method may wait until its completion before registering.
-     * If this phaser has a parent, and the given number of parities
-     * is greater than zero, and this phaser previously had no
-     * registered parties, this phaser is also registered with its
-     * parent.
+     * this method may await its completion before returning.  If this
+     * Phaser has a parent, and the given number of parities is
+     * greater than zero, and this Phaser previously had no registered
+     * parties, this Phaser is also registered with its parent.
      *
      * @param parties the number of additional parties required to trip barrier
      * @return the arrival phase number to which this registration applied
@@ -530,18 +527,18 @@ public class Phaser {
     public int bulkRegister(int parties) {
         if (parties < 0)
             throw new IllegalArgumentException();
-        else if (parties == 0)
+        if (parties == 0)
             return getPhase();
         return doRegister(parties);
     }
 
     /**
-     * Arrives at the barrier, but does not wait for others.  (You can
-     * in turn wait for others via {@link #awaitAdvance}).  It is a
-     * usage error for an unregistered party to invoke this
-     * method. However, it is possible that this error will result in
-     * an {code IllegalStateException} only when some <em>other</em>
-     * party arrives.
+     * Arrives at the barrier, without waiting for others to arrive.
+     *
+     * <p>It is a usage error for an unregistered party to invoke this
+     * method.  However, this error may result in an {@code
+     * IllegalStateException} only upon some subsequent operation on
+     * this Phaser, if ever.
      *
      * @return the arrival phase number, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
@@ -553,14 +550,16 @@ public class Phaser {
 
     /**
      * Arrives at the barrier and deregisters from it without waiting
-     * for others. Deregistration reduces the number of parties
-     * required to trip the barrier in future phases.  If this phaser
-     * has a parent, and deregistration causes this phaser to have
-     * zero parties, this phaser also arrives at and is deregistered
-     * from its parent.  It is a usage error for an unregistered party
-     * to invoke this method. However, it is possible that this error
-     * will result in an {code IllegalStateException} only when some
-     * <em>other</em> party arrives.
+     * for others to arrive. Deregistration reduces the number of
+     * parties required to trip the barrier in future phases.  If this
+     * Phaser has a parent, and deregistration causes this Phaser to
+     * have zero parties, this Phaser is also deregistered from its
+     * parent.
+     *
+     * <p>It is a usage error for an unregistered party to invoke this
+     * method.  However, this error may result in an {@code
+     * IllegalStateException} only upon some subsequent operation on
+     * this Phaser, if ever.
      *
      * @return the arrival phase number, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
@@ -576,11 +575,12 @@ public class Phaser {
      * interruption or timeout, you can arrange this with an analogous
      * construction using one of the other forms of the {@code
      * awaitAdvance} method.  If instead you need to deregister upon
-     * arrival, use {@link #arriveAndDeregister}.  It is a usage error
-     * for an unregistered party to invoke this method. However, it is
-     * possible that this error will result in an {code
-     * IllegalStateException} only when some <em>other</em> party
-     * arrives.
+     * arrival, use {@code awaitAdvance(arriveAndDeregister())}.
+     *
+     * <p>It is a usage error for an unregistered party to invoke this
+     * method.  However, this error may result in an {@code
+     * IllegalStateException} only upon some subsequent operation on
+     * this Phaser, if ever.
      *
      * @return the arrival phase number, or a negative number if terminated
      * @throws IllegalStateException if not terminated and the number
@@ -603,11 +603,14 @@ public class Phaser {
      * if terminated or argument is negative
      */
     public int awaitAdvance(int phase) {
+        Phaser r;
+        int p = (int)(state >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
-        long s = (parent == null) ? state : reconcileState();
-        int p = (int)(s >>> PHASE_SHIFT);
-        return (p != phase) ? p : internalAwaitAdvance(phase, null);
+        if (p == phase &&
+            (p = (int)((r = root).state >>> PHASE_SHIFT)) == phase)
+            return r.internalAwaitAdvance(phase, null);
+        return p;
     }
 
     /**
@@ -626,13 +629,14 @@ public class Phaser {
      */
     public int awaitAdvanceInterruptibly(int phase)
         throws InterruptedException {
+        Phaser r;
+        int p = (int)(state >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
-        long s = (parent == null) ? state : reconcileState();
-        int p = (int)(s >>> PHASE_SHIFT);
-        if (p == phase) {
+        if (p == phase &&
+            (p = (int)((r = root).state >>> PHASE_SHIFT)) == phase) {
             QNode node = new QNode(this, phase, true, false, 0L);
-            p = internalAwaitAdvance(phase, node);
+            p = r.internalAwaitAdvance(phase, node);
             if (node.wasInterrupted)
                 throw new InterruptedException();
         }
@@ -662,14 +666,15 @@ public class Phaser {
     public int awaitAdvanceInterruptibly(int phase,
                                          long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
+        long nanos = unit.toNanos(timeout);
+        Phaser r;
+        int p = (int)(state >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
-        long s = (parent == null) ? state : reconcileState();
-        int p = (int)(s >>> PHASE_SHIFT);
-        if (p == phase) {
-            long nanos = unit.toNanos(timeout);
+        if (p == phase &&
+            (p = (int)((r = root).state >>> PHASE_SHIFT)) == phase) {
             QNode node = new QNode(this, phase, true, true, nanos);
-            p = internalAwaitAdvance(phase, node);
+            p = r.internalAwaitAdvance(phase, node);
             if (node.wasInterrupted)
                 throw new InterruptedException();
             else if (p == phase)
@@ -680,9 +685,9 @@ public class Phaser {
 
     /**
      * Forces this barrier to enter termination state.  Counts of
-     * arrived and registered parties are unaffected.  If this phaser
-     * is a member of a tiered set of phasers, then all of the phasers
-     * in the set are terminated.  If this phaser is already
+     * arrived and registered parties are unaffected.  If this Phaser
+     * is a member of a tiered set of Phasers, then all of the Phasers
+     * in the set are terminated.  If this Phaser is already
      * terminated, this method has no effect.  This method may be
      * useful for coordinating recovery after one or more tasks
      * encounter unexpected exceptions.
@@ -728,7 +733,11 @@ public class Phaser {
      * @return the number of arrived parties
      */
     public int getArrivedParties() {
-        return arrivedOf(parent==null? state : reconcileState());
+        long s = state;
+        int u = unarrivedOf(s); // only reconcile if possibly needed
+        return (u != 0 || parent == null) ?
+            partiesOf(s) - u :
+            arrivedOf(reconcileState());
     }
 
     /**
@@ -738,23 +747,24 @@ public class Phaser {
      * @return the number of unarrived parties
      */
     public int getUnarrivedParties() {
-        return unarrivedOf(parent==null? state : reconcileState());
+        int u = unarrivedOf(state);
+        return (u != 0 || parent == null) ? u : unarrivedOf(reconcileState());
     }
 
     /**
-     * Returns the parent of this phaser, or {@code null} if none.
+     * Returns the parent of this Phaser, or {@code null} if none.
      *
-     * @return the parent of this phaser, or {@code null} if none
+     * @return the parent of this Phaser, or {@code null} if none
      */
     public Phaser getParent() {
         return parent;
     }
 
     /**
-     * Returns the root ancestor of this phaser, which is the same as
-     * this phaser if it has no parent.
+     * Returns the root ancestor of this Phaser, which is the same as
+     * this Phaser if it has no parent.
      *
-     * @return the root ancestor of this phaser
+     * @return the root ancestor of this Phaser
      */
     public Phaser getRoot() {
         return root;
@@ -781,7 +791,7 @@ public class Phaser {
      * propagated to the party attempting to trip the barrier, in
      * which case no advance occurs.
      *
-     * <p>The arguments to this method provide the state of the phaser
+     * <p>The arguments to this method provide the state of the Phaser
      * prevailing for the current transition.  The effects of invoking
      * arrival, registration, and waiting methods on this Phaser from
      * within {@code onAdvance} are unspecified and should not be
@@ -813,7 +823,7 @@ public class Phaser {
     }
 
     /**
-     * Returns a string identifying this phaser, as well as its
+     * Returns a string identifying this Phaser, as well as its
      * state.  The state, in brackets, includes the String {@code
      * "phase = "} followed by the phase number, {@code "parties = "}
      * followed by the number of registered parties, and {@code
@@ -872,6 +882,7 @@ public class Phaser {
 
     /**
      * Possibly blocks and waits for phase to advance unless aborted.
+     * Call only from root node.
      *
      * @param phase current phase
      * @param node if non-null, the wait node to track interrupt and timeout;
@@ -879,25 +890,18 @@ public class Phaser {
      * @return current phase
      */
     private int internalAwaitAdvance(int phase, QNode node) {
-        Phaser current = this;       // to eventually wait at root if tiered
         boolean queued = false;      // true when node is enqueued
         int lastUnarrived = -1;      // to increase spins upon change
         int spins = SPINS_PER_ARRIVAL;
         long s;
         int p;
-        while ((p = (int)((s = current.state) >>> PHASE_SHIFT)) == phase) {
-            Phaser par;
+        while ((p = (int)((s = state) >>> PHASE_SHIFT)) == phase) {
             int unarrived = (int)s & UNARRIVED_MASK;
             if (unarrived != lastUnarrived) {
                 if (lastUnarrived == -1) // ensure old queue clean
                     releaseWaiters(phase-1);
                 if ((lastUnarrived = unarrived) < NCPU)
                     spins += SPINS_PER_ARRIVAL;
-            }
-            else if (unarrived == 0 && (par = current.parent) != null) {
-                current = par;       // if all arrived, use parent
-                par = par.parent;
-                lastUnarrived = -1;
             }
             else if (spins > 0) {
                 if (--spins == (SPINS_PER_ARRIVAL >>> 1))
@@ -906,17 +910,15 @@ public class Phaser {
             else if (node == null)   // must be noninterruptible
                 node = new QNode(this, phase, false, false, 0L);
             else if (node.isReleasable()) {
-                if ((p = (int)(root.state >>> PHASE_SHIFT)) != phase)
-                    break;
-                else
-                    return phase;    // aborted
+                p = (int)(state >>> PHASE_SHIFT);
+                break;               // aborted
             }
             else if (!queued) {      // push onto queue
                 AtomicReference<QNode> head = queueFor(phase);
                 QNode q = head.get();
                 if (q == null || q.phase == phase) {
                     node.next = q;
-                    if ((p = (int)(root.state >>> PHASE_SHIFT)) != phase)
+                    if ((p = (int)(state >>> PHASE_SHIFT)) != phase)
                         break;       // recheck to avoid stale enqueue
                     else
                         queued = head.compareAndSet(q, node);
@@ -930,9 +932,15 @@ public class Phaser {
                 }
             }
         }
-        releaseWaiters(phase);
-        if (node != null)
-            node.onRelease();
+
+        if (node != null) {
+            if (node.thread != null)
+                node.thread = null; // disable unpark() in node.signal
+            if (!node.interruptible && node.wasInterrupted)
+                Thread.currentThread().interrupt();
+        }
+        if (p != phase)
+            releaseWaiters(phase);
         return p;
     }
 
@@ -1005,14 +1013,6 @@ public class Phaser {
                 LockSupport.unpark(t);
             }
         }
-
-        void onRelease() { // actions upon return from internalAwaitAdvance
-            if (!interruptible && wasInterrupted)
-                Thread.currentThread().interrupt();
-            if (thread != null)
-                thread = null;
-        }
-
     }
 
     // Unsafe mechanics

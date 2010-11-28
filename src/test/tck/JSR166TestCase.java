@@ -7,6 +7,8 @@
  */
 
 import junit.framework.*;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.PropertyPermission;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1004,6 +1006,33 @@ public class JSR166TestCase extends TestCase {
                 afe.initCause(e);
                 throw afe;
             }
+        }
+    }
+
+    public void checkEmpty(BlockingQueue q) {
+        try {
+            assertTrue(q.isEmpty());
+            assertEquals(0, q.size());
+            assertNull(q.peek());
+            assertNull(q.poll());
+            assertNull(q.poll(0, MILLISECONDS));
+            assertEquals(q.toString(), "[]");
+            assertTrue(Arrays.equals(q.toArray(), new Object[0]));
+            assertFalse(q.iterator().hasNext());
+            try {
+                q.element();
+                shouldThrow();
+            } catch (NoSuchElementException success) {}
+            try {
+                q.iterator().next();
+                shouldThrow();
+            } catch (NoSuchElementException success) {}
+            try {
+                q.remove();
+                shouldThrow();
+            } catch (NoSuchElementException success) {}
+        } catch (InterruptedException ie) {
+            threadUnexpectedException(ie);
         }
     }
 

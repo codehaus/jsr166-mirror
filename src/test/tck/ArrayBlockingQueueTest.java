@@ -453,22 +453,30 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testInterruptedTimedPoll() throws InterruptedException {
-        Thread t = new Thread(new CheckedRunnable() {
+        final BlockingQueue<Integer> q = populatedQueue(SIZE);
+        final CountDownLatch aboutToWait = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                ArrayBlockingQueue q = populatedQueue(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));;
+                    long t0 = System.nanoTime();
+                    assertEquals(i, (int) q.poll(LONG_DELAY_MS, MILLISECONDS));
+                    assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
                 }
+                long t0 = System.nanoTime();
+                aboutToWait.countDown();
                 try {
-                    q.poll(SMALL_DELAY_MS, MILLISECONDS);
+                    q.poll(MEDIUM_DELAY_MS, MILLISECONDS);
                     shouldThrow();
-                } catch (InterruptedException success) {}
+                } catch (InterruptedException success) {
+                    assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
+                }
             }});
 
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        aboutToWait.await();
+        waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        checkEmpty(q);
     }
 
     /**

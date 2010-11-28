@@ -261,7 +261,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private void externalAwaitDone() {
         if (status >= 0) {
             boolean interrupted = false;
-            synchronized(this) {
+            synchronized (this) {
                 for (;;) {
                     int s = status;
                     if (s == 0)
@@ -294,7 +294,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             throw new InterruptedException();
         if (status >= 0) {
             long startTime = timed ? System.nanoTime() : 0L;
-            synchronized(this) {
+            synchronized (this) {
                 for (;;) {
                     long nt;
                     int s = status;

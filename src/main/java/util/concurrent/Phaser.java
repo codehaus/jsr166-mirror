@@ -385,7 +385,7 @@ public class Phaser {
             else if (parties != 0)               // wait for onAdvance
                 root.internalAwaitAdvance(phase, null);
             else {                               // 1st registration of child
-                synchronized(this) {             // register parent first
+                synchronized (this) {            // register parent first
                     if (reconcileState() == s) { // recheck under lock
                         parent.doRegister(1);    // OK if throws IllegalState
                         for (;;) {               // simpler form of outer loop

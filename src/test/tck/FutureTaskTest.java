@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import java.util.*;
 
 public class FutureTaskTest extends JSR166TestCase {
@@ -18,6 +19,68 @@ public class FutureTaskTest extends JSR166TestCase {
     }
     public static Test suite() {
         return new TestSuite(FutureTaskTest.class);
+    }
+
+    void checkNotDone(Future<?> f) {
+        assertFalse(f.isDone());
+        assertFalse(f.isCancelled());
+    }
+
+    <T> void checkCompletedNormally(Future<T> f, T expected) {
+        assertTrue(f.isDone());
+        assertFalse(f.isCancelled());
+
+        try {
+            assertSame(expected, f.get());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+        try {
+            assertSame(expected, f.get(5L, SECONDS));
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        assertFalse(f.cancel(false));
+        assertFalse(f.cancel(true));
+    }
+
+    void checkCancelled(Future<?> f) {
+        assertTrue(f.isDone());
+        assertTrue(f.isCancelled());
+
+        try {
+            f.get();
+            shouldThrow();
+        } catch (CancellationException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        try {
+            f.get(5L, SECONDS);
+            shouldThrow();
+        } catch (CancellationException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        assertFalse(f.cancel(false));
+        assertFalse(f.cancel(true));
+    }
+
+    void checkCompletedAbnormally(Future<?> f, Throwable t) {
+        assertTrue(f.isDone());
+        assertFalse(f.isCancelled());
+
+        try {
+            f.get();
+            shouldThrow();
+        } catch (ExecutionException success) {
+            assertSame(t, success.getCause());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        try {
+            f.get(5L, SECONDS);
+            shouldThrow();
+        } catch (ExecutionException success) {
+            assertSame(t, success.getCause());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+
+        assertFalse(f.cancel(false));
+        assertFalse(f.cancel(true));
     }
 
     /**
@@ -57,7 +120,7 @@ public class FutureTaskTest extends JSR166TestCase {
         FutureTask task = new FutureTask(new NoOpCallable());
         task.run();
         assertTrue(task.isDone());
-        assertFalse(task.isCancelled());
+        checkCompletedNormally(task, Boolean.TRUE);
     }
 
     /**
@@ -66,7 +129,7 @@ public class FutureTaskTest extends JSR166TestCase {
     public void testRunAndReset() {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         assertTrue(task.runAndReset());
-        assertFalse(task.isDone());
+        checkNotDone(task);
     }
 
     /**
@@ -76,10 +139,8 @@ public class FutureTaskTest extends JSR166TestCase {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
         assertFalse(task.runAndReset());
-        assertTrue(task.isDone());
-        assertTrue(task.isCancelled());
+        checkCancelled(task);
     }
-
 
 
     /**
@@ -89,6 +150,7 @@ public class FutureTaskTest extends JSR166TestCase {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.set(one);
         assertSame(task.get(), one);
+        checkCompletedNormally(task, one);
     }
 
     /**
@@ -103,6 +165,7 @@ public class FutureTaskTest extends JSR166TestCase {
             shouldThrow();
         } catch (ExecutionException success) {
             assertSame(success.getCause(), nse);
+            checkCompletedAbnormally(task, nse);
         }
     }
 
@@ -113,8 +176,7 @@ public class FutureTaskTest extends JSR166TestCase {
         FutureTask task = new FutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
         task.run();
-        assertTrue(task.isDone());
-        assertTrue(task.isCancelled());
+        checkCancelled(task);
     }
 
     /**
@@ -124,8 +186,7 @@ public class FutureTaskTest extends JSR166TestCase {
         FutureTask task = new FutureTask(new NoOpCallable());
         assertTrue(task.cancel(true));
         task.run();
-        assertTrue(task.isDone());
-        assertTrue(task.isCancelled());
+        checkCancelled(task);
     }
 
     /**
@@ -135,97 +196,100 @@ public class FutureTaskTest extends JSR166TestCase {
         FutureTask task = new FutureTask(new NoOpCallable());
         task.run();
         assertFalse(task.cancel(false));
-        assertTrue(task.isDone());
-        assertFalse(task.isCancelled());
+        checkCompletedNormally(task, Boolean.TRUE);
     }
 
     /**
      * cancel(true) interrupts a running task
      */
     public void testCancelInterrupt() throws InterruptedException {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
         final FutureTask task =
-            new FutureTask(new CheckedInterruptedCallable<Object>() {
-                public Object realCall() throws InterruptedException {
-                    Thread.sleep(SMALL_DELAY_MS);
-                    return Boolean.TRUE;
+            new FutureTask(new CheckedCallable<Object>() {
+                public Object realCall() {
+                    threadStarted.countDown();
+                    long t0 = System.nanoTime();
+                    for (;;) {
+                        if (Thread.interrupted())
+                            return Boolean.TRUE;
+                        if (millisElapsedSince(t0) > MEDIUM_DELAY_MS)
+                            fail("interrupt not delivered");
+                        Thread.yield();
+                    }
                 }});
 
-        Thread t = new Thread(task);
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        Thread t = newStartedThread(task);
+        threadStarted.await();
         assertTrue(task.cancel(true));
-        t.join();
-        assertTrue(task.isDone());
-        assertTrue(task.isCancelled());
+        checkCancelled(task);
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        checkCancelled(task);
     }
-
 
     /**
      * cancel(false) does not interrupt a running task
      */
     public void testCancelNoInterrupt() throws InterruptedException {
-        final FutureTask task =
-            new FutureTask(new CheckedCallable<Object>() {
-                public Object realCall() throws InterruptedException {
-                    Thread.sleep(MEDIUM_DELAY_MS);
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch cancelled = new CountDownLatch(1);
+        final FutureTask<Boolean> task =
+            new FutureTask<Boolean>(new CheckedCallable<Boolean>() {
+                public Boolean realCall() throws InterruptedException {
+                    threadStarted.countDown();
+                    cancelled.await(MEDIUM_DELAY_MS, MILLISECONDS);
+                    assertFalse(Thread.interrupted());
                     return Boolean.TRUE;
                 }});
 
-        Thread t = new Thread(task);
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        Thread t = newStartedThread(task);
+        threadStarted.await();
         assertTrue(task.cancel(false));
-        t.join();
-        assertTrue(task.isDone());
-        assertTrue(task.isCancelled());
+        checkCancelled(task);
+        cancelled.countDown();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        checkCancelled(task);
     }
 
     /**
      * set in one thread causes get in another thread to retrieve value
      */
     public void testGet1() throws InterruptedException {
-        final FutureTask ft =
+        final FutureTask task =
             new FutureTask(new CheckedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
                     return Boolean.TRUE;
                 }});
-        Thread t = new Thread(new CheckedRunnable() {
+        checkNotDone(task);
+
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                assertSame(Boolean.TRUE, ft.get());
+                assertSame(Boolean.TRUE, task.get());
             }});
 
-        assertFalse(ft.isDone());
-        assertFalse(ft.isCancelled());
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        ft.run();
-        t.join();
-        assertTrue(ft.isDone());
-        assertFalse(ft.isCancelled());
+        task.run();
+        checkCompletedNormally(task, Boolean.TRUE);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
      * set in one thread causes timed get in another thread to retrieve value
      */
     public void testTimedGet1() throws InterruptedException {
-        final FutureTask ft =
+        final FutureTask task =
             new FutureTask(new CheckedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
                     return Boolean.TRUE;
                 }});
-        Thread t = new Thread(new CheckedRunnable() {
+        checkNotDone(task);
+
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                assertSame(Boolean.TRUE, ft.get(SMALL_DELAY_MS, MILLISECONDS));
+                assertSame(Boolean.TRUE, task.get(SMALL_DELAY_MS, MILLISECONDS));
             }});
 
-        assertFalse(ft.isDone());
-        assertFalse(ft.isCancelled());
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        ft.run();
-        t.join();
-        assertTrue(ft.isDone());
-        assertFalse(ft.isCancelled());
+        task.run();
+        checkCompletedNormally(task, Boolean.TRUE);
+        awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
     /**
@@ -233,24 +297,28 @@ public class FutureTaskTest extends JSR166TestCase {
      * CancellationException
      */
     public void testTimedGet_Cancellation() throws InterruptedException {
-        final FutureTask ft =
+        final CountDownLatch threadStarted = new CountDownLatch(2);
+        final FutureTask task =
             new FutureTask(new CheckedInterruptedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
-                    Thread.sleep(SMALL_DELAY_MS);
+                    threadStarted.countDown();
+                    Thread.sleep(LONG_DELAY_MS);
                     return Boolean.TRUE;
                 }});
 
         Thread t1 = new ThreadShouldThrow(CancellationException.class) {
             public void realRun() throws Exception {
-                ft.get(MEDIUM_DELAY_MS, MILLISECONDS);
+                threadStarted.countDown();
+                task.get(MEDIUM_DELAY_MS, MILLISECONDS);
             }};
-        Thread t2 = new Thread(ft);
+        Thread t2 = new Thread(task);
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        ft.cancel(true);
-        t1.join();
-        t2.join();
+        threadStarted.await();
+        task.cancel(true);
+        awaitTermination(t1, MEDIUM_DELAY_MS);
+        awaitTermination(t2, MEDIUM_DELAY_MS);
+        checkCancelled(task);
     }
 
     /**
@@ -258,24 +326,28 @@ public class FutureTaskTest extends JSR166TestCase {
      * CancellationException
      */
     public void testGet_Cancellation() throws InterruptedException {
-        final FutureTask ft =
+        final CountDownLatch threadStarted = new CountDownLatch(2);
+        final FutureTask task =
             new FutureTask(new CheckedInterruptedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
-                    Thread.sleep(SMALL_DELAY_MS);
+                    threadStarted.countDown();
+                    Thread.sleep(LONG_DELAY_MS);
                     return Boolean.TRUE;
                 }});
+
         Thread t1 = new ThreadShouldThrow(CancellationException.class) {
             public void realRun() throws Exception {
-                ft.get();
+                threadStarted.countDown();
+                task.get();
             }};
-
-        Thread t2 = new Thread(ft);
+        Thread t2 = new Thread(task);
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        ft.cancel(true);
-        t1.join();
-        t2.join();
+        threadStarted.await();
+        task.cancel(true);
+        awaitTermination(t1, MEDIUM_DELAY_MS);
+        awaitTermination(t2, MEDIUM_DELAY_MS);
+        checkCancelled(task);
     }
 
 
@@ -283,17 +355,18 @@ public class FutureTaskTest extends JSR166TestCase {
      * A runtime exception in task causes get to throw ExecutionException
      */
     public void testGet_ExecutionException() throws InterruptedException {
-        final FutureTask ft = new FutureTask(new Callable() {
+        final FutureTask task = new FutureTask(new Callable() {
             public Object call() {
                 return 5/0;
             }});
 
-        ft.run();
+        task.run();
         try {
-            ft.get();
+            task.get();
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof ArithmeticException);
+            checkCompletedAbnormally(task, success.getCause());
         }
     }
 
@@ -301,17 +374,18 @@ public class FutureTaskTest extends JSR166TestCase {
      * A runtime exception in task causes timed get to throw ExecutionException
      */
     public void testTimedGet_ExecutionException2() throws Exception {
-        final FutureTask ft = new FutureTask(new Callable() {
+        final FutureTask task = new FutureTask(new Callable() {
             public Object call() {
                 return 5/0;
             }});
 
-        ft.run();
+        task.run();
         try {
-            ft.get(SHORT_DELAY_MS, MILLISECONDS);
+            task.get(SHORT_DELAY_MS, MILLISECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof ArithmeticException);
+            checkCompletedAbnormally(task, success.getCause());
         }
     }
 
@@ -320,32 +394,36 @@ public class FutureTaskTest extends JSR166TestCase {
      * Interrupting a waiting get causes it to throw InterruptedException
      */
     public void testGet_InterruptedException() throws InterruptedException {
-        final FutureTask ft = new FutureTask(new NoOpCallable());
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final FutureTask task = new FutureTask(new NoOpCallable());
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws Exception {
-                ft.get();
+                threadStarted.countDown();
+                task.get();
             }});
 
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        threadStarted.await();
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        checkNotDone(task);
     }
 
     /**
      * Interrupting a waiting timed get causes it to throw InterruptedException
      */
     public void testTimedGet_InterruptedException2() throws InterruptedException {
-        final FutureTask ft = new FutureTask(new NoOpCallable());
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final FutureTask task = new FutureTask(new NoOpCallable());
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws Exception {
-                ft.get(LONG_DELAY_MS,MILLISECONDS);
+                threadStarted.countDown();
+                task.get(LONG_DELAY_MS, MILLISECONDS);
             }});
 
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        threadStarted.await();
         t.interrupt();
-        t.join();
+        awaitTermination(t, MEDIUM_DELAY_MS);
+        checkNotDone(task);
     }
 
     /**
@@ -353,8 +431,8 @@ public class FutureTaskTest extends JSR166TestCase {
      */
     public void testGet_TimeoutException() throws Exception {
         try {
-            FutureTask ft = new FutureTask(new NoOpCallable());
-            ft.get(1,MILLISECONDS);
+            FutureTask task = new FutureTask(new NoOpCallable());
+            task.get(1, MILLISECONDS);
             shouldThrow();
         } catch (TimeoutException success) {}
     }

@@ -328,15 +328,17 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      * pollSubmission returns unexecuted submitted task, if present
      */
     public void testPollSubmission() {
+        final CountDownLatch done = new CountDownLatch(1);
         SubFJP p = new SubFJP();
         try {
-            ForkJoinTask a = p.submit(new ShortRunnable());
-            ForkJoinTask b = p.submit(new ShortRunnable());
-            ForkJoinTask c = p.submit(new ShortRunnable());
+            ForkJoinTask a = p.submit(awaiter(done));
+            ForkJoinTask b = p.submit(awaiter(done));
+            ForkJoinTask c = p.submit(awaiter(done));
             ForkJoinTask r = p.pollSubmission();
             assertTrue(r == a || r == b || r == c);
             assertFalse(r.isDone());
         } finally {
+            done.countDown();
             joinPool(p);
         }
     }
@@ -345,11 +347,12 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      * drainTasksTo transfers unexecuted submitted tasks, if present
      */
     public void testDrainTasksTo() {
+        final CountDownLatch done = new CountDownLatch(1);
         SubFJP p = new SubFJP();
         try {
-            ForkJoinTask a = p.submit(new ShortRunnable());
-            ForkJoinTask b = p.submit(new ShortRunnable());
-            ForkJoinTask c = p.submit(new ShortRunnable());
+            ForkJoinTask a = p.submit(awaiter(done));
+            ForkJoinTask b = p.submit(awaiter(done));
+            ForkJoinTask c = p.submit(awaiter(done));
             ArrayList<ForkJoinTask> al = new ArrayList();
             p.drainTasksTo(al);
             assertTrue(al.size() > 0);
@@ -358,6 +361,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
                 assertFalse(r.isDone());
             }
         } finally {
+            done.countDown();
             joinPool(p);
         }
     }
@@ -375,7 +379,9 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             assertFalse(task.isDone());
             Future<?> future = e.submit(task);
             assertNull(future.get());
+            assertNull(future.get(MEDIUM_DELAY_MS, MILLISECONDS));
             assertTrue(task.isDone());
+            assertTrue(future.isDone());
             assertFalse(future.isCancelled());
         } finally {
             joinPool(e);

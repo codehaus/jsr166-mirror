@@ -789,6 +789,13 @@ public class JSR166TestCase extends TestCase {
             }};
     }
 
+    public Runnable awaiter(final CountDownLatch latch) {
+        return new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                latch.await();
+            }};
+    }
+
     public static class NPETask implements Callable<String> {
         public String call() { throw new NullPointerException(); }
     }

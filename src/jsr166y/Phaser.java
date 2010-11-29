@@ -963,7 +963,7 @@ public class Phaser {
             this.interruptible = interruptible;
             this.nanos = nanos;
             this.timed = timed;
-            this.lastTime = timed? System.nanoTime() : 0L;
+            this.lastTime = timed ? System.nanoTime() : 0L;
             thread = Thread.currentThread();
         }
 

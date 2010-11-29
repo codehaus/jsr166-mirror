@@ -30,7 +30,7 @@ class BoxedLongSort {
             System.out.println("Usage: java BoxedLongSort threads n reps");
             return;
         }
-        ForkJoinPool pool = procs == 0? new ForkJoinPool() :
+        ForkJoinPool pool = (procs == 0) ? new ForkJoinPool() :
             new ForkJoinPool(procs);
 
         Long[] a = new Long[n];

@@ -684,8 +684,8 @@ public class LinkedBlockingDeque<E>
             final ReentrantLock lock = LinkedBlockingDeque.this.lock;
             lock.lock();
             try {
-                next = (next == null)? first : next.next;
-                nextItem = (next == null)? null : next.item;
+                next = (next == null) ? first : next.next;
+                nextItem = (next == null) ? null : next.item;
             } finally {
                 lock.unlock();
             }

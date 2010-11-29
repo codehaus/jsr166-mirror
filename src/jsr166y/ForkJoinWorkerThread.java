@@ -357,7 +357,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     protected void onStart() {
         int rs = seedGenerator.nextInt();
-        seed = rs == 0? 1 : rs; // seed must be nonzero
+        seed = (rs == 0) ? 1 : rs; // seed must be nonzero
 
         // Allocate name string and arrays in this thread
         String pid = Integer.toString(pool.getPoolNumber());

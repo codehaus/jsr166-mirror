@@ -38,7 +38,7 @@ public class IntegrateGamma {
             return;
         }
 
-        ForkJoinPool g = procs == 0? new ForkJoinPool() :
+        ForkJoinPool g = (procs == 0) ? new ForkJoinPool() :
             new ForkJoinPool(procs);
 
         System.out.println("Integrating from " + start + " to " + end + " exponent: " + exp + " parallelism " + g.getParallelism());

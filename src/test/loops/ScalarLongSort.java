@@ -30,7 +30,7 @@ class ScalarLongSort {
             System.out.println("Usage: java ScalarLongSort threads n reps");
             return;
         }
-        ForkJoinPool pool = procs == 0? new ForkJoinPool() :
+        ForkJoinPool pool = (procs == 0) ? new ForkJoinPool() :
             new ForkJoinPool(procs);
 
         long[] a = new long[n];

@@ -572,7 +572,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     if (p.casItem(item, e)) { // match
                         for (Node q = p; q != h;) {
                             Node n = q.next;  // update by 2 unless singleton
-                            if (head == h && casHead(h, n == null? q : n)) {
+                            if (head == h && casHead(h, n == null ? q : n)) {
                                 h.forgetNext();
                                 break;
                             }                 // advance and retry

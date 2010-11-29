@@ -56,7 +56,7 @@ public class MatrixMultiply {
             return;
         }
 
-        ForkJoinPool pool = procs == 0? new ForkJoinPool() :
+        ForkJoinPool pool = (procs == 0) ? new ForkJoinPool() :
             new ForkJoinPool(procs);
         System.out.println("procs: " + pool.getParallelism() +
                            " n: " + n + " granularity: " + granularity +

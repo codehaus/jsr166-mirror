@@ -21,7 +21,7 @@ public final class DynamicFib extends RecursiveAction {
             return;
         }
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool pool = procs == 0? new ForkJoinPool() :
+            ForkJoinPool pool = (procs == 0) ? new ForkJoinPool() :
                 new ForkJoinPool(procs);
             for (int i = 0; i < 20; ++i)
                 test(pool, num);

@@ -1031,7 +1031,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final void awaitJoin(ForkJoinTask<?> joinMe, ForkJoinWorkerThread worker,
                          boolean timed, long nanos) {
-        long startTime = timed? System.nanoTime() : 0L;
+        long startTime = timed ? System.nanoTime() : 0L;
         int retries = 2 + (parallelism >> 2); // #helpJoins before blocking
         boolean running = true;               // false when count decremented
         while (joinMe.status >= 0) {

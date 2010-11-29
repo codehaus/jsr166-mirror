@@ -35,7 +35,7 @@ public final class AsyncNQueensCS extends LinkedAsyncAction {
             return;
         }
         for (int reps = 0; reps < 2; ++reps) {
-            ForkJoinPool g = procs == 0? new ForkJoinPool() :
+            ForkJoinPool g = (procs == 0) ? new ForkJoinPool() :
                 new ForkJoinPool(procs);
             System.out.println("Number of procs=" + g.getParallelism());
             lastStealCount = g.getStealCount();

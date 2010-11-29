@@ -47,7 +47,7 @@ public class Heat {
             return;
         }
 
-        ForkJoinPool g = procs == 0? new ForkJoinPool() :
+        ForkJoinPool g = (procs == 0) ? new ForkJoinPool() :
             new ForkJoinPool(procs);
 
         System.out.print("parallelism = " + g.getParallelism());

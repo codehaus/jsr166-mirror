@@ -865,7 +865,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 }
                 if (c == 0) {
                     Object v = r.node.value;
-                    return (v != null)? (V)v : getUsingFindNode(key);
+                    return (v != null) ? (V)v : getUsingFindNode(key);
                 }
                 bound = rk;
             }
@@ -878,7 +878,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                         int c = key.compareTo(nk);
                         if (c == 0) {
                             Object v = n.value;
-                            return (v != null)? (V)v : getUsingFindNode(key);
+                            return (v != null) ? (V)v : getUsingFindNode(key);
                         }
                         if (c < 0)
                             return null;
@@ -1246,7 +1246,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 findFirst(); // retry
             clearIndexToFirst();
             K key = n.key;
-            return (keyOnly)? key : new SnapshotEntry<K,V>(key, (V)v);
+            return keyOnly ? key : new SnapshotEntry<K,V>(key, (V)v);
         }
     }
 
@@ -1306,7 +1306,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 Node<K,V> n = b.next;
                 for (;;) {
                     if (n == null)
-                        return (b.isBaseHeader())? null : b;
+                        return b.isBaseHeader() ? null : b;
                     Node<K,V> f = n.next;            // inconsistent read
                     if (n != b.next)
                         break;
@@ -1368,7 +1368,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     if (head.right == null)
                         tryReduceLevel();
                 }
-                return (keyOnly)? key : new SnapshotEntry<K,V>(key, (V)v);
+                return keyOnly ? key : new SnapshotEntry<K,V>(key, (V)v);
             }
         }
     }
@@ -1432,7 +1432,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             Node<K,V> n = b.next;
             for (;;) {
                 if (n == null)
-                    return ((rel & LT) == 0 || b.isBaseHeader())? null : b;
+                    return ((rel & LT) == 0 || b.isBaseHeader()) ? null : b;
                 Node<K,V> f = n.next;
                 if (n != b.next)                  // inconsistent read
                     break;
@@ -1448,7 +1448,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     (c <  0 && (rel & LT) == 0))
                     return n;
                 if ( c <= 0 && (rel & LT) != 0)
-                    return (b.isBaseHeader())? null : b;
+                    return b.isBaseHeader() ? null : b;
                 b = n;
                 n = f;
             }
@@ -1476,14 +1476,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Return ceiling, or first node if key is <tt>null</tt>
      */
     Node<K,V> findCeiling(K key) {
-        return (key == null)? findFirst() : findNear(key, GT|EQ);
+        return (key == null) ? findFirst() : findNear(key, GT|EQ);
     }
 
     /**
      * Return lower node, or last node if key is <tt>null</tt>
      */
     Node<K,V> findLower(K key) {
-        return (key == null)? findLast() : findNear(key, LT);
+        return (key == null) ? findLast() : findNear(key, LT);
     }
 
     /**
@@ -1513,7 +1513,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             K k = n.key;
             V v = n.getValidValue();
             if (v != null)
-                return keyOnly? k : new SnapshotEntry<K,V>(k, v);
+                return keyOnly ? k : new SnapshotEntry<K,V>(k, v);
         }
     }
 
@@ -1534,7 +1534,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return null;
             V v = doRemove(k, null);
             if (v != null)
-                return (keyOnly)? k : new SnapshotEntry<K,V>(k, v);
+                return keyOnly ? k : new SnapshotEntry<K,V>(k, v);
         }
     }
 
@@ -1555,7 +1555,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return null;
             V v = doRemove(k, null);
             if (v != null)
-                return (keyOnly)? k : new SnapshotEntry<K,V>(k, v);
+                return keyOnly ? k : new SnapshotEntry<K,V>(k, v);
         }
     }
 
@@ -1883,7 +1883,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (n.getValidValue() != null)
                 ++count;
         }
-        return (count >= Integer.MAX_VALUE)? Integer.MAX_VALUE : (int)count;
+        return (count >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int)count;
     }
 
     /**
@@ -2343,7 +2343,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K ceilingKey(K key) {
         Node<K,V> n = findNear(key, GT|EQ);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -2376,7 +2376,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K lowerKey(K key) {
         Node<K,V> n = findNear(key, LT);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -2410,7 +2410,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K floorKey(K key) {
         Node<K,V> n = findNear(key, LT|EQ);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -2443,7 +2443,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public K higherKey(K key) {
         Node<K,V> n = findNear(key, GT);
-        return (n == null)? null : n.key;
+        return (n == null) ? null : n.key;
     }
 
     /**
@@ -3128,7 +3128,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public V get(Object key) {
             K k = (K)key;
-            return ((!inHalfOpenRange(k)) ? null : m.get(k));
+            return (!inHalfOpenRange(k)) ? null : m.get(k);
         }
 
         public V put(K key, V value) {
@@ -3138,7 +3138,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public V remove(Object key) {
             K k = (K)key;
-            return (!inHalfOpenRange(k))? null : m.remove(k);
+            return (!inHalfOpenRange(k)) ? null : m.remove(k);
         }
 
         public int size() {
@@ -3149,7 +3149,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 if (n.getValidValue() != null)
                     ++count;
             }
-            return count >= Integer.MAX_VALUE? Integer.MAX_VALUE : (int)count;
+            return (count >= Integer.MAX_VALUE) ?
+                Integer.MAX_VALUE : (int)count;
         }
 
         public boolean isEmpty() {

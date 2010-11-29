@@ -63,7 +63,7 @@ public final class Integrate {
     }
 
     static void oneTest(int procs) {
-        ForkJoinPool g = procs == 0? new ForkJoinPool() :
+        ForkJoinPool g = (procs == 0) ? new ForkJoinPool() :
             new ForkJoinPool(procs);
         System.out.println("Number of procs=" + g.getParallelism());
         System.out.println("Integrating from " + start + " to " + end +

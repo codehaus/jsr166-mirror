@@ -258,6 +258,7 @@ public class PhaserTest extends JSR166TestCase {
         }
         assertEquals(0, phaser.arriveAndDeregister());
         assertTerminated(phaser);
+        assertEquals(1, phaser.getPhase() + Integer.MIN_VALUE);
     }
 
     /**
@@ -289,6 +290,7 @@ public class PhaserTest extends JSR166TestCase {
         Phaser phaser = new Phaser(1);
         phaser.forceTermination();
         assertTerminated(phaser, 1, 1);
+        assertEquals(0, phaser.getPhase() + Integer.MIN_VALUE);
         assertTrue(phaser.arrive() < 0);
         assertTrue(phaser.register() < 0);
         assertTrue(phaser.arriveAndDeregister() < 0);
@@ -373,6 +375,7 @@ public class PhaserTest extends JSR166TestCase {
         assertTerminated(child);
         assertTerminated(parent);
         assertTerminated(root);
+        assertEquals(1, root.getPhase() + Integer.MIN_VALUE);
     }
 
     /**
@@ -391,6 +394,7 @@ public class PhaserTest extends JSR166TestCase {
         assertState(phaser, 1, 1, 1);
         assertEquals(1, phaser.arriveAndDeregister());
         assertTerminated(phaser);
+        assertEquals(2, phaser.getPhase() + Integer.MIN_VALUE);
         awaitTermination(t, SHORT_DELAY_MS);
     }
 
@@ -594,12 +598,14 @@ public class PhaserTest extends JSR166TestCase {
                     assertTrue(phaser.awaitAdvance(0) < 0);
                     assertTrue(phaser.isTerminated());
                     assertTrue(phaser.getPhase() < 0);
+                    assertEquals(0, phaser.getPhase() + Integer.MIN_VALUE);
                     assertEquals(3, phaser.getRegisteredParties());
                 }};
             threads.add(newStartedThread(r));
         }
         threadsStarted.await();
         phaser.forceTermination();
+        assertEquals(0, phaser.getPhase() + Integer.MIN_VALUE);
         for (Thread thread : threads)
             awaitTermination(thread, SMALL_DELAY_MS);
         assertTrue(phaser.isTerminated());

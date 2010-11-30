@@ -485,11 +485,12 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         try {
             p.execute(new CheckedRunnable() {
                 public void realRun() throws InterruptedException {
-                    threadStarted.countDown();
                     assertFalse(p.isTerminated());
+                    threadStarted.countDown();
                     done.await();
                 }});
             assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            assertFalse(p.isTerminating());
             done.countDown();
         } finally {
             try { p.shutdown(); } catch (SecurityException ok) { return; }

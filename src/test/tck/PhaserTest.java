@@ -38,16 +38,18 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /** Checks state of terminated phaser. */
-    protected void assertTerminated(Phaser phaser, int parties, int unarrived) {
+    protected void assertTerminated(Phaser phaser,
+                                    int maxPhase, int parties, int unarrived) {
         assertTrue(phaser.isTerminated());
-        assertTrue(phaser.getPhase() < 0);
-        assertEquals(parties, phaser.getRegisteredParties());
-        assertEquals(unarrived, phaser.getUnarrivedParties());
-        assertEquals(parties - unarrived, phaser.getArrivedParties());
+        int expectedPhase = maxPhase + Integer.MIN_VALUE;
+        assertState(phaser, expectedPhase, parties, unarrived);
+        assertEquals(expectedPhase, phaser.register());
+        assertEquals(expectedPhase, phaser.arrive());
+        assertEquals(expectedPhase, phaser.arriveAndDeregister());
     }
 
-    protected void assertTerminated(Phaser phaser) {
-        assertTerminated(phaser, 0, 0);
+    protected void assertTerminated(Phaser phaser, int maxPhase) {
+        assertTerminated(phaser, maxPhase, 0, 0);
     }
 
     /**
@@ -257,8 +259,7 @@ public class PhaserTest extends JSR166TestCase {
             assertState(phaser, 0, 1, 1);
         }
         assertEquals(0, phaser.arriveAndDeregister());
-        assertTerminated(phaser);
-        assertEquals(1, phaser.getPhase() + Integer.MIN_VALUE);
+        assertTerminated(phaser, 1);
     }
 
     /**
@@ -289,7 +290,7 @@ public class PhaserTest extends JSR166TestCase {
     public void testArrive3() {
         Phaser phaser = new Phaser(1);
         phaser.forceTermination();
-        assertTerminated(phaser, 1, 1);
+        assertTerminated(phaser, 0, 1, 1);
         assertEquals(0, phaser.getPhase() + Integer.MIN_VALUE);
         assertTrue(phaser.arrive() < 0);
         assertTrue(phaser.register() < 0);
@@ -336,8 +337,8 @@ public class PhaserTest extends JSR166TestCase {
         assertState(child, 0, 1, 1);
         assertState(parent, 0, 1, 1);
         assertEquals(0, child.arriveAndDeregister());
-        assertTerminated(child);
-        assertTerminated(parent);
+        assertTerminated(child, 1);
+        assertTerminated(parent, 1);
     }
 
     /**
@@ -372,10 +373,9 @@ public class PhaserTest extends JSR166TestCase {
         assertState(parent, 0, 1, 1);
         assertState(child, 0, 1, 1);
         assertEquals(0, child.arriveAndDeregister());
-        assertTerminated(child);
-        assertTerminated(parent);
-        assertTerminated(root);
-        assertEquals(1, root.getPhase() + Integer.MIN_VALUE);
+        assertTerminated(child, 1);
+        assertTerminated(parent, 1);
+        assertTerminated(root, 1);
     }
 
     /**
@@ -393,8 +393,7 @@ public class PhaserTest extends JSR166TestCase {
         assertEquals(1, phaser.arriveAndDeregister());
         assertState(phaser, 1, 1, 1);
         assertEquals(1, phaser.arriveAndDeregister());
-        assertTerminated(phaser);
-        assertEquals(2, phaser.getPhase() + Integer.MIN_VALUE);
+        assertTerminated(phaser, 2);
         awaitTermination(t, SHORT_DELAY_MS);
     }
 

@@ -42,7 +42,8 @@ public class PhaserTest extends JSR166TestCase {
                                     int maxPhase, int parties, int unarrived) {
         assertTrue(phaser.isTerminated());
         int expectedPhase = maxPhase + Integer.MIN_VALUE;
-        assertState(phaser, expectedPhase, parties, unarrived);
+        assertEquals(expectedPhase, phaser.getPhase());
+        assertEquals(parties, phaser.getRegisteredParties());
         assertEquals(expectedPhase, phaser.register());
         assertEquals(expectedPhase, phaser.arrive());
         assertEquals(expectedPhase, phaser.arriveAndDeregister());

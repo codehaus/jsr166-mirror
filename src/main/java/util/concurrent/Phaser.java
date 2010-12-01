@@ -273,12 +273,12 @@ public class Phaser {
 
     private static int unarrivedOf(long s) {
         int counts = (int)s;
-        return (counts == EMPTY)? 0 : counts & UNARRIVED_MASK;
+        return (counts == EMPTY) ? 0 : counts & UNARRIVED_MASK;
     }
 
     private static int partiesOf(long s) {
         int counts = (int)s;
-        return (counts == EMPTY)? 0 : counts >>> PARTIES_SHIFT;
+        return (counts == EMPTY) ? 0 : counts >>> PARTIES_SHIFT;
     }
 
     private static int phaseOf(long s) {
@@ -287,7 +287,7 @@ public class Phaser {
 
     private static int arrivedOf(long s) {
         int counts = (int)s;
-        return (counts == EMPTY)? 0 :
+        return (counts == EMPTY) ? 0 :
             (counts >>> PARTIES_SHIFT) - (counts & UNARRIVED_MASK);
     }
 
@@ -411,7 +411,7 @@ public class Phaser {
                     break;
             }
             else {
-                synchronized(this) {                // 1st sub registration
+                synchronized (this) {               // 1st sub registration
                     if (state == s) {               // recheck under lock
                         par.doRegister(1);
                         do {                        // force current phase
@@ -524,7 +524,7 @@ public class Phaser {
             this.evenQ = new AtomicReference<QNode>();
             this.oddQ = new AtomicReference<QNode>();
         }
-        this.state = (parties == 0)? ((long) EMPTY) :
+        this.state = (parties == 0) ? ((long) EMPTY) :
             ((((long) phase) << PHASE_SHIFT) |
              (((long) parties) << PARTIES_SHIFT) |
              ((long) parties));

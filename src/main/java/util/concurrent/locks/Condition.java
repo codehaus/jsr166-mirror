@@ -430,12 +430,12 @@ public interface Condition {
      *
      * <p><b>Implementation Considerations</b>
      *
-     * <p>The current thread is assumed to hold the lock associated
-     * with this {@code Condition} when this method is called.  It is
-     * up to the implementation to determine if this is the case and
-     * if not, how to respond. Typically, an exception will be thrown
-     * (such as {@link IllegalMonitorStateException}) and the
-     * implementation must document that fact.
+     * <p>An implementation may (and typically does) require that the
+     * current thread hold the lock associated with this {@code
+     * Condition} when this method is called. Implementations must
+     * document this precondition and any actions taken if the lock is
+     * not held. Typically, an exception such as {@link
+     * IllegalMonitorStateException} will be thrown.
      */
     void signal();
 
@@ -448,12 +448,12 @@ public interface Condition {
      *
      * <p><b>Implementation Considerations</b>
      *
-     * <p>The current thread is assumed to hold the lock associated
-     * with this {@code Condition} when this method is called.  It is
-     * up to the implementation to determine if this is the case and
-     * if not, how to respond. Typically, an exception will be thrown
-     * (such as {@link IllegalMonitorStateException}) and the
-     * implementation must document that fact.
+     * <p>An implementation may (and typically does) require that the
+     * current thread hold the lock associated with this {@code
+     * Condition} when this method is called. Implementations must
+     * document this precondition and any actions taken if the lock is
+     * not held. Typically, an exception such as {@link
+     * IllegalMonitorStateException} will be thrown.
      */
     void signalAll();
 }

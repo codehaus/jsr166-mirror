@@ -255,10 +255,12 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new CheckedRecursiveAction() {
             public void realCompute() {
                 FibAction f = new FibAction(8);
+                final Thread myself = Thread.currentThread();
 
                 // test join()
                 assertSame(f, f.fork());
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 assertNull(f.join());
                 Thread.interrupted();
                 assertEquals(21, f.result);
@@ -267,7 +269,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 f.reinitialize();
                 f.cancel(true);
                 assertSame(f, f.fork());
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 try {
                     f.join();
                     shouldThrow();
@@ -279,7 +282,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 f.reinitialize();
                 f.completeExceptionally(new FJException());
                 assertSame(f, f.fork());
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 try {
                     f.join();
                     shouldThrow();
@@ -291,7 +295,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 // test quietlyJoin()
                 f.reinitialize();
                 assertSame(f, f.fork());
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 f.quietlyJoin();
                 Thread.interrupted();
                 assertEquals(21, f.result);
@@ -300,7 +305,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 f.reinitialize();
                 f.cancel(true);
                 assertSame(f, f.fork());
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 f.quietlyJoin();
                 Thread.interrupted();
                 checkCancelled(f);
@@ -308,7 +314,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 f.reinitialize();
                 f.completeExceptionally(new FJException());
                 assertSame(f, f.fork());
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 f.quietlyJoin();
                 Thread.interrupted();
                 checkCompletedAbnormally(f, f.getException());
@@ -348,19 +355,22 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 FibAction[] fibActions = sq.take();
                 FibAction f;
+                final Thread myself = Thread.currentThread();
 
                 // test join() ------------
 
                 f = fibActions[0];
                 assertFalse(ForkJoinTask.inForkJoinPool());
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 assertNull(f.join());
                 assertTrue(Thread.interrupted());
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
 
                 f = fibActions[1];
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 try {
                     f.join();
                     shouldThrow();
@@ -370,7 +380,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 }
 
                 f = fibActions[2];
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 try {
                     f.join();
                     shouldThrow();
@@ -382,20 +393,23 @@ public class RecursiveActionTest extends JSR166TestCase {
                 // test quietlyJoin() ---------
 
                 f = fibActions[3];
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 f.quietlyJoin();
                 assertTrue(Thread.interrupted());
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
 
                 f = fibActions[4];
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 f.quietlyJoin();
                 assertTrue(Thread.interrupted());
                 checkCancelled(f);
 
                 f = fibActions[5];
-                Thread.currentThread().interrupt();
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
                 f.quietlyJoin();
                 assertTrue(Thread.interrupted());
                 assertTrue(f.getException() instanceof FJException);
@@ -755,7 +769,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         RecursiveAction a = new CheckedRecursiveAction() {
             public void realCompute() {
                 ForkJoinWorkerThread w =
-                    (ForkJoinWorkerThread)(Thread.currentThread());
+                    (ForkJoinWorkerThread) Thread.currentThread();
                 assertTrue(w.getPoolIndex() >= 0);
                 assertTrue(w.getPoolIndex() < mainPool.getPoolSize());
             }};

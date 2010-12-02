@@ -32,7 +32,8 @@ public class PhaseOverflow {
 
     void testLeaf() throws Throwable {
         Phaser phaser = new Phaser();
-        stateField.setLong(phaser, (Integer.MAX_VALUE - 1L) << 32 );
+        // this is extremely dependent on internal representation
+        stateField.setLong(phaser, ((Integer.MAX_VALUE - 1L) << 32) | 1L);
         checkState(phaser, Integer.MAX_VALUE - 1, 0, 0);
         phaser.register();
         checkState(phaser, Integer.MAX_VALUE - 1, 1, 1);
@@ -48,7 +49,40 @@ public class PhaseOverflow {
 
     void testTiered() throws Throwable {
         Phaser root = new Phaser();
-        stateField.setLong(root, (Integer.MAX_VALUE - 1L) << 32 );
+        // this is extremely dependent on internal representation
+        stateField.setLong(root, ((Integer.MAX_VALUE - 1L) << 32) | 1L);
+        checkState(root, Integer.MAX_VALUE - 1, 0, 0);
+        Phaser p1 = new Phaser(root, 1);
+        checkState(root, Integer.MAX_VALUE - 1, 1, 1);
+        checkState(p1, Integer.MAX_VALUE - 1, 1, 1);
+        Phaser p2 = new Phaser(root, 2);
+        checkState(root, Integer.MAX_VALUE - 1, 2, 2);
+        checkState(p2, Integer.MAX_VALUE - 1, 2, 2);
+        int ph = Integer.MAX_VALUE - 1;
+        for (int k = 0; k < 5; k++) {
+            checkState(root, ph, 2, 2);
+            checkState(p1, ph, 1, 1);
+            checkState(p2, ph, 2, 2);
+            p1.arrive();
+            checkState(root, ph, 2, 1);
+            checkState(p1, ph, 1, 0);
+            checkState(p2, ph, 2, 2);
+            p2.arrive();
+            checkState(root, ph, 2, 1);
+            checkState(p1, ph, 1, 0);
+            checkState(p2, ph, 2, 1);
+            p2.arrive();
+            ph = phaseInc(ph);
+            checkState(root, ph, 2, 2);
+            checkState(p1, ph, 1, 1);
+            checkState(p2, ph, 2, 2);
+        }
+        equal(3, ph);
+    }
+
+    void xtestTiered() throws Throwable {
+        Phaser root = new Phaser();
+        stateField.setLong(root, ((Integer.MAX_VALUE - 1L) << 32) | 1L);
         checkState(root, Integer.MAX_VALUE - 1, 0, 0);
         Phaser p1 = new Phaser(root, 1);
         checkState(root, Integer.MAX_VALUE - 1, 1, 1);

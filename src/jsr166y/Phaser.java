@@ -549,7 +549,7 @@ public class Phaser {
      * Adds the given number of new unarrived parties to this phaser.
      * If an ongoing invocation of {@link #onAdvance} is in progress,
      * this method may await its completion before returning.  If this
-     * phaser has a parent, and the given number of parities is
+     * phaser has a parent, and the given number of parties is
      * greater than zero, and this phaser previously had no registered
      * parties, this phaser is also registered with its parent.
      *

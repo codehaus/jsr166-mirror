@@ -583,6 +583,53 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
+     * awaitAdvance returns the current phase in child phasers
+     */
+    public void testAwaitAdvanceTieredPhaser() throws Exception {
+        final Phaser parent = new Phaser();
+        final List<Phaser> zeroPartyChildren = new ArrayList<Phaser>(3);
+        final List<Phaser> onePartyChildren = new ArrayList<Phaser>(3);
+        for (int i = 0; i < 3; i++) {
+            zeroPartyChildren.add(new Phaser(parent, 0));
+            onePartyChildren.add(new Phaser(parent, 1));
+        }
+        final List<Phaser> phasers = new ArrayList<Phaser>();
+        phasers.addAll(zeroPartyChildren);
+        phasers.addAll(onePartyChildren);
+        phasers.add(parent);
+        for (Phaser phaser : phasers) {
+            assertEquals(-42, phaser.awaitAdvance(-42));
+            assertEquals(-42, phaser.awaitAdvanceInterruptibly(-42));
+            assertEquals(-42, phaser.awaitAdvanceInterruptibly(-42, SMALL_DELAY_MS, MILLISECONDS));
+        }
+
+        for (Phaser child : onePartyChildren)
+            assertEquals(0, child.arrive());
+        for (Phaser phaser : phasers) {
+            assertEquals(-42, phaser.awaitAdvance(-42));
+            assertEquals(-42, phaser.awaitAdvanceInterruptibly(-42));
+            assertEquals(-42, phaser.awaitAdvanceInterruptibly(-42, SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(1, phaser.awaitAdvance(0));
+            assertEquals(1, phaser.awaitAdvanceInterruptibly(0));
+            assertEquals(1, phaser.awaitAdvanceInterruptibly(0, SMALL_DELAY_MS, MILLISECONDS));
+        }
+
+        for (Phaser child : onePartyChildren)
+            assertEquals(1, child.arrive());
+        for (Phaser phaser : phasers) {
+            assertEquals(-42, phaser.awaitAdvance(-42));
+            assertEquals(-42, phaser.awaitAdvanceInterruptibly(-42));
+            assertEquals(-42, phaser.awaitAdvanceInterruptibly(-42, SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(2, phaser.awaitAdvance(0));
+            assertEquals(2, phaser.awaitAdvanceInterruptibly(0));
+            assertEquals(2, phaser.awaitAdvanceInterruptibly(0, SMALL_DELAY_MS, MILLISECONDS));
+            assertEquals(2, phaser.awaitAdvance(1));
+            assertEquals(2, phaser.awaitAdvanceInterruptibly(1));
+            assertEquals(2, phaser.awaitAdvanceInterruptibly(1, SMALL_DELAY_MS, MILLISECONDS));
+        }
+    }
+
+    /**
      * awaitAdvance returns when the phaser is externally terminated
      */
     public void testAwaitAdvance6() throws InterruptedException {

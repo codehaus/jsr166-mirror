@@ -277,8 +277,7 @@ public class Phaser {
     }
 
     private static int partiesOf(long s) {
-        int counts = (int)s;
-        return (counts == EMPTY) ? 0 : counts >>> PARTIES_SHIFT;
+        return (int)s >>> PARTIES_SHIFT;
     }
 
     private static int phaseOf(long s) {

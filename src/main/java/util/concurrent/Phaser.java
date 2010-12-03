@@ -743,7 +743,8 @@ public class Phaser {
         while ((s = root.state) >= 0) {
             long next = (s & ~(long)(MAX_PARTIES)) | TERMINATION_BIT;
             if (UNSAFE.compareAndSwapLong(root, stateOffset, s, next)) {
-                releaseWaiters(0); // signal all threads
+                // signal all threads
+                releaseWaiters(0);
                 releaseWaiters(1);
                 return;
             }

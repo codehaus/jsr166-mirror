@@ -96,6 +96,16 @@ import java.util.concurrent.locks.LockSupport;
  * increase throughput even though it incurs greater per-operation
  * overhead.
  *
+ * <p>In a tree of tiered phasers, registration and deregistration of
+ * child phasers with their parent are managed automatically.
+ * Whenever the number of registered parties of a child phaser becomes
+ * non-zero (as established in the {@link #Phaser(Phaser,int)}
+ * constructor, {@link #register}, or {@link #bulkRegister}), this
+ * child phaser is registered with its parent.  Whenever the number of
+ * registered parties becomes zero as the result of an invocation of
+ * {@link #arriveAndDeregister}, this child phaser is deregistered
+ * from its parent.
+ *
  * <p><b>Monitoring.</b> While synchronization methods may be invoked
  * only by registered parties, the current state of a phaser may be
  * monitored by any caller.  At any given moment there are {@link
@@ -489,15 +499,9 @@ public class Phaser {
 
     /**
      * Creates a new phaser with the given parent and number of
-     * registered unarrived parties. Registration and deregistration
-     * of this child phaser with its parent are managed automatically.
-     * If the given parent is non-null, whenever this child phaser has
-     * any registered parties (as established in this constructor,
-     * {@link #register}, or {@link #bulkRegister}), this child phaser
-     * is registered with its parent. Whenever the number of
-     * registered parties becomes zero as the result of an invocation
-     * of {@link #arriveAndDeregister}, this child phaser is
-     * deregistered from its parent.
+     * registered unarrived parties.  If the given parent is non-null
+     * and the given number of parties is greater than zero, this
+     * child phaser is registered with its parent.
      *
      * @param parent the parent phaser
      * @param parties the number of parties required to advance to the
@@ -534,7 +538,7 @@ public class Phaser {
      * invocation of {@link #onAdvance} is in progress, this method
      * may await its completion before returning.  If this phaser has
      * a parent, and this phaser previously had no registered parties,
-     * this phaser is also registered with its parent.
+     * this child phaser is also registered with its parent.
      *
      * @return the arrival phase number to which this registration applied
      * @throws IllegalStateException if attempting to register more
@@ -550,7 +554,7 @@ public class Phaser {
      * this method may await its completion before returning.  If this
      * phaser has a parent, and the given number of parties is
      * greater than zero, and this phaser previously had no registered
-     * parties, this phaser is also registered with its parent.
+     * parties, this child phaser is also registered with its parent.
      *
      * @param parties the number of additional parties required to
      * advance to the next phase

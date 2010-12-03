@@ -511,10 +511,10 @@ public class Phaser {
         int phase = 0;
         this.parent = parent;
         if (parent != null) {
-            Phaser r = parent.root;
-            this.root = r;
-            this.evenQ = r.evenQ;
-            this.oddQ = r.oddQ;
+            final Phaser root = parent.root;
+            this.root = root;
+            this.evenQ = root.evenQ;
+            this.oddQ = root.oddQ;
             if (parties != 0)
                 phase = parent.doRegister(1);
         }
@@ -523,7 +523,7 @@ public class Phaser {
             this.evenQ = new AtomicReference<QNode>();
             this.oddQ = new AtomicReference<QNode>();
         }
-        this.state = (parties == 0) ? ((long) EMPTY) :
+        this.state = (parties == 0) ? (long) EMPTY :
             ((((long) phase) << PHASE_SHIFT) |
              (((long) parties) << PARTIES_SHIFT) |
              ((long) parties));

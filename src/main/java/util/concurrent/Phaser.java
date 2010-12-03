@@ -620,7 +620,8 @@ public class Phaser {
      * IllegalStateException} only upon some subsequent operation on
      * this phaser, if ever.
      *
-     * @return the arrival phase number, or a negative number if terminated
+     * @return the arrival phase number, or the (negative)
+     * {@linkplain #getPhase() current phase} if terminated
      * @throws IllegalStateException if not terminated and the number
      * of unarrived parties would become negative
      */

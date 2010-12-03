@@ -27,19 +27,18 @@ public class PhaserTest extends JSR166TestCase {
 
     private static final int maxParties = 65535;
 
-    /** Checks state of phaser. */
+    /** Checks state of unterminated phaser. */
     protected void assertState(Phaser phaser,
                                int phase, int parties, int unarrived) {
         assertEquals(phase, phaser.getPhase());
         assertEquals(parties, phaser.getRegisteredParties());
         assertEquals(unarrived, phaser.getUnarrivedParties());
         assertEquals(parties - unarrived, phaser.getArrivedParties());
-        assertTrue((phaser.getPhase() >= 0) ^ phaser.isTerminated());
+        assertFalse(phaser.isTerminated());
     }
 
     /** Checks state of terminated phaser. */
-    protected void assertTerminated(Phaser phaser,
-                                    int maxPhase, int parties, int unarrived) {
+    protected void assertTerminated(Phaser phaser, int maxPhase, int parties) {
         assertTrue(phaser.isTerminated());
         int expectedPhase = maxPhase + Integer.MIN_VALUE;
         assertEquals(expectedPhase, phaser.getPhase());
@@ -50,7 +49,7 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     protected void assertTerminated(Phaser phaser, int maxPhase) {
-        assertTerminated(phaser, maxPhase, 0, 0);
+        assertTerminated(phaser, maxPhase, 0);
     }
 
     /**
@@ -291,7 +290,7 @@ public class PhaserTest extends JSR166TestCase {
     public void testArrive3() {
         Phaser phaser = new Phaser(1);
         phaser.forceTermination();
-        assertTerminated(phaser, 0, 1, 1);
+        assertTerminated(phaser, 0, 1);
         assertEquals(0, phaser.getPhase() + Integer.MIN_VALUE);
         assertTrue(phaser.arrive() < 0);
         assertTrue(phaser.register() < 0);

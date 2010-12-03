@@ -636,8 +636,9 @@ public class Phaser {
      * @param phase an arrival phase number, or negative value if
      * terminated; this argument is normally the value returned by a
      * previous call to {@code arrive} or {@code arriveAndDeregister}.
-     * @return the next arrival phase number, or a negative value
-     * if terminated or argument is negative
+     * @return the next arrival phase number, or the argument if it is
+     * negative, or the (negative) {@linkplain #getPhase() current phase}
+     * if terminated
      */
     public int awaitAdvance(int phase) {
         if (phase < 0)
@@ -663,8 +664,9 @@ public class Phaser {
      * @param phase an arrival phase number, or negative value if
      * terminated; this argument is normally the value returned by a
      * previous call to {@code arrive} or {@code arriveAndDeregister}.
-     * @return the next arrival phase number, or a negative value
-     * if terminated or argument is negative
+     * @return the next arrival phase number, or the argument if it is
+     * negative, or the (negative) {@linkplain #getPhase() current phase}
+     * if terminated
      * @throws InterruptedException if thread interrupted while waiting
      */
     public int awaitAdvanceInterruptibly(int phase)
@@ -701,8 +703,9 @@ public class Phaser {
      *        {@code unit}
      * @param unit a {@code TimeUnit} determining how to interpret the
      *        {@code timeout} parameter
-     * @return the next arrival phase number, or a negative value
-     * if terminated or argument is negative
+     * @return the next arrival phase number, or the argument if it is
+     * negative, or the (negative) {@linkplain #getPhase() current phase}
+     * if terminated
      * @throws InterruptedException if thread interrupted while waiting
      * @throws TimeoutException if timed out while waiting
      */

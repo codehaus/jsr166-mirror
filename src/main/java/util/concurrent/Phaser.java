@@ -640,13 +640,14 @@ public class Phaser {
      * if terminated or argument is negative
      */
     public int awaitAdvance(int phase) {
-        Phaser rt;
-        int p = (int)(state >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
+        int p = (int)(state >>> PHASE_SHIFT);
         if (p == phase) {
-            if ((p = (int)((rt = root).state >>> PHASE_SHIFT)) == phase)
-                return rt.internalAwaitAdvance(phase, null);
+            final Phaser root = this.root;
+            p = (int)(root.state >>> PHASE_SHIFT);
+            if (p == phase)
+                return root.internalAwaitAdvance(phase, null);
             reconcileState();
         }
         return p;
@@ -668,14 +669,15 @@ public class Phaser {
      */
     public int awaitAdvanceInterruptibly(int phase)
         throws InterruptedException {
-        Phaser rt;
-        int p = (int)(state >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
+        int p = (int)(state >>> PHASE_SHIFT);
         if (p == phase) {
-            if ((p = (int)((rt = root).state >>> PHASE_SHIFT)) == phase) {
+            final Phaser root = this.root;
+            p = (int)(root.state >>> PHASE_SHIFT);
+            if (p == phase) {
                 QNode node = new QNode(this, phase, true, false, 0L);
-                p = rt.internalAwaitAdvance(phase, node);
+                p = root.internalAwaitAdvance(phase, node);
                 if (node.wasInterrupted)
                     throw new InterruptedException();
             }
@@ -707,15 +709,16 @@ public class Phaser {
     public int awaitAdvanceInterruptibly(int phase,
                                          long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
-        long nanos = unit.toNanos(timeout);
-        Phaser rt;
-        int p = (int)(state >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
+        long nanos = unit.toNanos(timeout);
+        int p = (int)(state >>> PHASE_SHIFT);
         if (p == phase) {
-            if ((p = (int)((rt = root).state >>> PHASE_SHIFT)) == phase) {
+            final Phaser root = this.root;
+            p = (int)(root.state >>> PHASE_SHIFT);
+            if (p == phase) {
                 QNode node = new QNode(this, phase, true, true, nanos);
-                p = rt.internalAwaitAdvance(phase, node);
+                p = root.internalAwaitAdvance(phase, node);
                 if (node.wasInterrupted)
                     throw new InterruptedException();
                 else if (p == phase)

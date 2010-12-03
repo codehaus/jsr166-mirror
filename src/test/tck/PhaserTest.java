@@ -605,11 +605,10 @@ public class PhaserTest extends JSR166TestCase {
         }
         threadsStarted.await();
         phaser.forceTermination();
+        assertTrue(phaser.isTerminated());
         assertEquals(0, phaser.getPhase() + Integer.MIN_VALUE);
         for (Thread thread : threads)
             awaitTermination(thread, SMALL_DELAY_MS);
-        assertTrue(phaser.isTerminated());
-        assertTrue(phaser.getPhase() < 0);
         assertEquals(3, phaser.getRegisteredParties());
     }
 

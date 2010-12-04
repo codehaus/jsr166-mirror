@@ -764,7 +764,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Get value for key using findNode
+     * Gets value for key using findNode.
      * @param okey the key
      * @return the value, or null if absent
      */

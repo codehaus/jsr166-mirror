@@ -77,17 +77,17 @@ import java.util.concurrent.locks.LockSupport;
  * <p> <b>Termination.</b> A phaser may enter a <em>termination</em>
  * state, that may be checked using method {@link #isTerminated}. Upon
  * termination, all synchronization methods immediately return without
- * waiting for advance, as indicated by a negative return
- * value. Similarly, attempts to register upon termination have no
- * effect.  Termination is triggered when an invocation of {@code
- * onAdvance} returns {@code true}. The default implementation returns
- * {@code true} if a deregistration has caused the number of
- * registered parties to become zero.  As illustrated below, when
- * phasers control actions with a fixed number of iterations, it is
- * often convenient to override this method to cause termination when
- * the current phase number reaches a threshold. Method {@link
- * #forceTermination} is also available to abruptly release waiting
- * threads and allow them to terminate.
+ * waiting for advance, as indicated by a negative return value.
+ * Similarly, attempts to register upon termination have no effect.
+ * Termination is triggered when an invocation of {@code onAdvance}
+ * returns {@code true}. The default implementation returns {@code
+ * true} if a deregistration has caused the number of registered
+ * parties to become zero.  As illustrated below, when phasers control
+ * actions with a fixed number of iterations, it is often convenient
+ * to override this method to cause termination when the current phase
+ * number reaches a threshold. Method {@link #forceTermination} is
+ * also available to abruptly release waiting threads and allow them
+ * to terminate.
  *
  * <p> <b>Tiering.</b> Phasers may be <em>tiered</em> (i.e.,
  * constructed in tree structures) to reduce contention. Phasers with
@@ -541,7 +541,7 @@ public class Phaser {
      *
      * @return the arrival phase number to which this registration
      * applied.  If this value is negative, then this phaser has
-     * terminated, in which casem registration has no effect.
+     * terminated, in which case registration has no effect.
      * @throws IllegalStateException if attempting to register more
      * than the maximum supported number of parties
      */
@@ -563,7 +563,7 @@ public class Phaser {
      * advance to the next phase
      * @return the arrival phase number to which this registration
      * applied.  If this value is negative, then this phaser has
-     * terminated, in which casem registration has no effect.
+     * terminated, in which case registration has no effect.
      * @throws IllegalStateException if attempting to register more
      * than the maximum supported number of parties
      * @throws IllegalArgumentException if {@code parties < 0}
@@ -682,7 +682,8 @@ public class Phaser {
      */
     public int awaitAdvance(int phase) {
         final Phaser root = this.root;
-        int p = (int)((root == this? state : reconcileState()) >>> PHASE_SHIFT);
+        long s = (root == this) ? state : reconcileState();
+        int p = (int)(s >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
         if (p == phase)
@@ -708,7 +709,8 @@ public class Phaser {
     public int awaitAdvanceInterruptibly(int phase)
         throws InterruptedException {
         final Phaser root = this.root;
-        int p = (int)((root == this? state : reconcileState()) >>> PHASE_SHIFT);
+        long s = (root == this) ? state : reconcileState();
+        int p = (int)(s >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
         if (p == phase) {
@@ -745,7 +747,8 @@ public class Phaser {
         throws InterruptedException, TimeoutException {
         long nanos = unit.toNanos(timeout);
         final Phaser root = this.root;
-        int p = (int)((root == this? state : reconcileState()) >>> PHASE_SHIFT);
+        long s = (root == this) ? state : reconcileState();
+        int p = (int)(s >>> PHASE_SHIFT);
         if (phase < 0)
             return phase;
         if (p == phase) {

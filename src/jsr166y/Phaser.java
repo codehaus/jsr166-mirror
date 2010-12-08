@@ -260,10 +260,8 @@ public class Phaser {
      * parent.
      *
      * The phase of a subphaser is allowed to lag that of its
-     * ancestors until it is actually accessed.  Method reconcileState
-     * is usually attempted only only when the number of unarrived
-     * parties appears to be zero, which indicates a potential lag in
-     * updating phase after the root advanced.
+     * ancestors until it is actually accessed -- see method
+     * reconcileState.
      */
     private volatile long state;
 
@@ -271,6 +269,7 @@ public class Phaser {
     private static final int  MAX_PHASE       = 0x7fffffff;
     private static final int  PARTIES_SHIFT   = 16;
     private static final int  PHASE_SHIFT     = 32;
+    private static final long PHASE_MASK      = -1L << PHASE_SHIFT;
     private static final int  UNARRIVED_MASK  = 0xffff;      // to mask ints
     private static final long PARTIES_MASK    = 0xffff0000L; // to mask longs
     private static final long TERMINATION_BIT = 1L << 63;
@@ -436,29 +435,31 @@ public class Phaser {
 
     /**
      * Resolves lagged phase propagation from root if necessary.
+     * Reconciliation normally occurs when root has advanced but
+     * subphasers have not yet done so, in which case they must finish
+     * their own advance by setting unarrived to parties (or if
+     * parties is zero, resetting to unregistered EMPTY state).
+     * However, this method may also be called when "floating"
+     * subphasers with possibly some unarrived parties are merely
+     * catching up to current phase, in which case counts are
+     * unaffected.
+     *
+     * @return reconciled state
      */
     private long reconcileState() {
-        Phaser rt = root;
+        final Phaser root = this.root;
         long s = state;
-        if (rt != this) {
-            int phase;
-            while ((phase = (int)(rt.state >>> PHASE_SHIFT)) !=
-                   (int)(s >>> PHASE_SHIFT)) {
-                // assert phase < 0 || unarrivedOf(s) == 0
-                long t;                             // to reread s
-                long p = s & PARTIES_MASK;          // unshifted parties field
-                long n = (((long) phase) << PHASE_SHIFT) | p;
-                if (phase >= 0) {
-                    if (p == 0L)
-                        n |= EMPTY;                 // reset to empty
-                    else
-                        n |= p >>> PARTIES_SHIFT;   // set unarr to parties
-                }
-                if ((t = state) == s &&
-                    UNSAFE.compareAndSwapLong(this, stateOffset, s, s = n))
-                    break;
-                s = t;
-            }
+        if (root != this) {
+            int phase, u, p;
+            // CAS root phase with current parties; possibly trip unarrived
+            while ((phase = (int)(root.state >>> PHASE_SHIFT)) !=
+                   (int)(s >>> PHASE_SHIFT) &&
+                   !UNSAFE.compareAndSwapLong
+                   (this, stateOffset, s,
+                    s = ((((long) phase) << PHASE_SHIFT) | (s & PARTIES_MASK) |
+                         ((p = (int)s >>> PARTIES_SHIFT) == 0 ? EMPTY :
+                          (u = (int)s & UNARRIVED_MASK) == 0 ? p : u))))
+                s = state;
         }
         return s;
     }
@@ -776,8 +777,8 @@ public class Phaser {
         final Phaser root = this.root;
         long s;
         while ((s = root.state) >= 0) {
-            long next = (s & ~((long)UNARRIVED_MASK)) | TERMINATION_BIT;
-            if (UNSAFE.compareAndSwapLong(root, stateOffset, s, next)) {
+            if (UNSAFE.compareAndSwapLong(root, stateOffset,
+                                          s, s | TERMINATION_BIT)) {
                 // signal all threads
                 releaseWaiters(0);
                 releaseWaiters(1);
@@ -810,7 +811,8 @@ public class Phaser {
 
     /**
      * Returns the number of registered parties that have arrived at
-     * the current phase of this phaser.
+     * the current phase of this phaser. If this phaser has terminated,
+     * the returned value is meaningless and arbitrary.
      *
      * @return the number of arrived parties
      */
@@ -820,7 +822,8 @@ public class Phaser {
 
     /**
      * Returns the number of registered parties that have not yet
-     * arrived at the current phase of this phaser.
+     * arrived at the current phase of this phaser. If this phaser has
+     * terminated, the returned value is meaningless and arbitrary.
      *
      * @return the number of unarrived parties
      */

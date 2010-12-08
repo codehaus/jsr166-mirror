@@ -260,10 +260,8 @@ public class Phaser {
      * parent.
      *
      * The phase of a subphaser is allowed to lag that of its
-     * ancestors until it is actually accessed.  Method reconcileState
-     * is usually attempted only only when the number of unarrived
-     * parties appears to be zero, which indicates a potential lag in
-     * updating phase after the root advanced.
+     * ancestors until it is actually accessed -- see method
+     * reconcileState.
      */
     private volatile long state;
 
@@ -437,21 +435,31 @@ public class Phaser {
 
     /**
      * Resolves lagged phase propagation from root if necessary.
+     * Reconciliation normally occurs when root has advanced but
+     * subphasers have not yet done so, in which case they must finish
+     * their own advance by setting unarrived to parties (or if
+     * parties is zero, resetting to unregistered EMPTY state).
+     * However, this method may also be called when "floating"
+     * subphasers with possibly some unarrived parties are merely
+     * catching up to current phase, in which case counts are
+     * unaffected.
+     *
+     * @return reconciled state
      */
     private long reconcileState() {
         final Phaser root = this.root;
         long s = state;
         if (root != this) {
-            for (long rs; ((rs = root.state) ^ s) >>> PHASE_SHIFT != 0;) {
-                // assert rs < 0 || (s != state) || unarrivedOf(s) == 0;
-                long lp = s & PARTIES_MASK;
-                long n = (rs & PHASE_MASK) | lp;
-                if (rs >= 0)
-                    n |= (lp == 0L) ? EMPTY : (lp >>> PARTIES_SHIFT);
-                if (s == (s = state) &&
-                    UNSAFE.compareAndSwapLong(this, stateOffset, s, n))
-                    return n;
-            }
+            int phase, u, p;
+            // CAS root phase with current parties; possibly trip unarrived
+            while ((phase = (int)(root.state >>> PHASE_SHIFT)) !=
+                   (int)(s >>> PHASE_SHIFT) &&
+                   !UNSAFE.compareAndSwapLong
+                   (this, stateOffset, s,
+                    s = ((((long) phase) << PHASE_SHIFT) | (s & PARTIES_MASK) |
+                         ((p = (int)s >>> PARTIES_SHIFT) == 0 ? EMPTY :
+                          (u = (int)s & UNARRIVED_MASK) == 0 ? p : u))))
+                s = state;
         }
         return s;
     }
@@ -769,8 +777,8 @@ public class Phaser {
         final Phaser root = this.root;
         long s;
         while ((s = root.state) >= 0) {
-            long next = (s & ~((long)UNARRIVED_MASK)) | TERMINATION_BIT;
-            if (UNSAFE.compareAndSwapLong(root, stateOffset, s, next)) {
+            if (UNSAFE.compareAndSwapLong(root, stateOffset,
+                                          s, s | TERMINATION_BIT)) {
                 // signal all threads
                 releaseWaiters(0);
                 releaseWaiters(1);
@@ -803,7 +811,8 @@ public class Phaser {
 
     /**
      * Returns the number of registered parties that have arrived at
-     * the current phase of this phaser.
+     * the current phase of this phaser. If this phaser has terminated,
+     * the returned value is meaningless and arbitrary.
      *
      * @return the number of arrived parties
      */
@@ -813,7 +822,8 @@ public class Phaser {
 
     /**
      * Returns the number of registered parties that have not yet
-     * arrived at the current phase of this phaser.
+     * arrived at the current phase of this phaser. If this phaser has
+     * terminated, the returned value is meaningless and arbitrary.
      *
      * @return the number of unarrived parties
      */

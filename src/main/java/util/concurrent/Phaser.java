@@ -271,6 +271,7 @@ public class Phaser {
     private static final int  MAX_PHASE       = 0x7fffffff;
     private static final int  PARTIES_SHIFT   = 16;
     private static final int  PHASE_SHIFT     = 32;
+    private static final long PHASE_MASK      = -1L << PHASE_SHIFT;
     private static final int  UNARRIVED_MASK  = 0xffff;      // to mask ints
     private static final long PARTIES_MASK    = 0xffff0000L; // to mask longs
     private static final long TERMINATION_BIT = 1L << 63;
@@ -438,26 +439,18 @@ public class Phaser {
      * Resolves lagged phase propagation from root if necessary.
      */
     private long reconcileState() {
-        Phaser rt = root;
+        final Phaser root = this.root;
         long s = state;
-        if (rt != this) {
-            int phase;
-            while ((phase = (int)(rt.state >>> PHASE_SHIFT)) !=
-                   (int)(s >>> PHASE_SHIFT)) {
-                // assert phase < 0 || unarrivedOf(s) == 0
-                long t;                             // to reread s
-                long p = s & PARTIES_MASK;          // unshifted parties field
-                long n = (((long) phase) << PHASE_SHIFT) | p;
-                if (phase >= 0) {
-                    if (p == 0L)
-                        n |= EMPTY;                 // reset to empty
-                    else
-                        n |= p >>> PARTIES_SHIFT;   // set unarr to parties
-                }
-                if ((t = state) == s &&
-                    UNSAFE.compareAndSwapLong(this, stateOffset, s, s = n))
-                    break;
-                s = t;
+        if (root != this) {
+            for (long rs; ((rs = root.state) ^ s) >>> PHASE_SHIFT != 0;) {
+                // assert rs < 0 || (s != state) || unarrivedOf(s) == 0;
+                long lp = s & PARTIES_MASK;
+                long n = (rs & PHASE_MASK) | lp;
+                if (rs >= 0)
+                    n |= (lp == 0L) ? EMPTY : (lp >>> PARTIES_SHIFT);
+                if (s == (s = state) &&
+                    UNSAFE.compareAndSwapLong(this, stateOffset, s, n))
+                    return n;
             }
         }
         return s;

@@ -389,7 +389,7 @@ public class Phaser {
     private int doRegister(int registrations) {
         // adjustment to state
         long adj = ((long)registrations << PARTIES_SHIFT) | registrations;
-        Phaser par = parent;
+        final Phaser parent = this.parent;
         int phase;
         for (;;) {
             long s = state;
@@ -401,7 +401,7 @@ public class Phaser {
             else if ((phase = (int)(s >>> PHASE_SHIFT)) < 0)
                 break;
             else if (counts != EMPTY) {             // not 1st registration
-                if (par == null || reconcileState() == s) {
+                if (parent == null || reconcileState() == s) {
                     if (unarrived == 0)             // wait out advance
                         root.internalAwaitAdvance(phase, null);
                     else if (UNSAFE.compareAndSwapLong(this, stateOffset,
@@ -409,7 +409,7 @@ public class Phaser {
                         break;
                 }
             }
-            else if (par == null) {                 // 1st root registration
+            else if (parent == null) {              // 1st root registration
                 long next = ((long)phase << PHASE_SHIFT) | adj;
                 if (UNSAFE.compareAndSwapLong(this, stateOffset, s, next))
                     break;
@@ -417,7 +417,7 @@ public class Phaser {
             else {
                 synchronized (this) {               // 1st sub registration
                     if (state == s) {               // recheck under lock
-                        par.doRegister(1);
+                        parent.doRegister(1);
                         do {                        // force current phase
                             phase = (int)(root.state >>> PHASE_SHIFT);
                             // assert phase < 0 || (int)state == EMPTY;

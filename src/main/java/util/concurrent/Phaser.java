@@ -291,7 +291,7 @@ public class Phaser {
     }
 
     private static int phaseOf(long s) {
-        return (int) (s >>> PHASE_SHIFT);
+        return (int)(s >>> PHASE_SHIFT);
     }
 
     private static int arrivedOf(long s) {
@@ -363,7 +363,7 @@ public class Phaser {
             else if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
                 if (unarrived == 0) {
                     long n = s & PARTIES_MASK;  // base of next state
-                    int nextUnarrived = ((int)n) >>> PARTIES_SHIFT;
+                    int nextUnarrived = (int)n >>> PARTIES_SHIFT;
                     if (root != this)
                         return parent.doArrive(nextUnarrived == 0);
                     if (onAdvance(phase, nextUnarrived))
@@ -411,7 +411,7 @@ public class Phaser {
                 }
             }
             else if (par == null) {                 // 1st root registration
-                long next = (((long) phase) << PHASE_SHIFT) | adj;
+                long next = ((long)phase << PHASE_SHIFT) | adj;
                 if (UNSAFE.compareAndSwapLong(this, stateOffset, s, next))
                     break;
             }
@@ -424,7 +424,7 @@ public class Phaser {
                             // assert phase < 0 || (int)state == EMPTY;
                         } while (!UNSAFE.compareAndSwapLong
                                  (this, stateOffset, state,
-                                  (((long) phase) << PHASE_SHIFT) | adj));
+                                  ((long)phase << PHASE_SHIFT) | adj));
                         break;
                     }
                 }
@@ -456,7 +456,8 @@ public class Phaser {
                    (int)(s >>> PHASE_SHIFT) &&
                    !UNSAFE.compareAndSwapLong
                    (this, stateOffset, s,
-                    s = ((((long) phase) << PHASE_SHIFT) | (s & PARTIES_MASK) |
+                    s = (((long)phase << PHASE_SHIFT) |
+                         (s & PARTIES_MASK) |
                          ((p = (int)s >>> PARTIES_SHIFT) == 0 ? EMPTY :
                           (u = (int)s & UNARRIVED_MASK) == 0 ? p : u))))
                 s = state;
@@ -525,10 +526,10 @@ public class Phaser {
             this.evenQ = new AtomicReference<QNode>();
             this.oddQ = new AtomicReference<QNode>();
         }
-        this.state = (parties == 0) ? (long) EMPTY :
-            ((((long) phase) << PHASE_SHIFT) |
-             (((long) parties) << PARTIES_SHIFT) |
-             ((long) parties));
+        this.state = (parties == 0) ? (long)EMPTY :
+            ((long)phase << PHASE_SHIFT) |
+            ((long)parties << PARTIES_SHIFT) |
+            ((long)parties);
     }
 
     /**
@@ -652,7 +653,7 @@ public class Phaser {
                 if (root != this)
                     return parent.arriveAndAwaitAdvance();
                 long n = s & PARTIES_MASK;  // base of next state
-                int nextUnarrived = ((int)n) >>> PARTIES_SHIFT;
+                int nextUnarrived = (int)n >>> PARTIES_SHIFT;
                 if (onAdvance(phase, nextUnarrived))
                     n |= TERMINATION_BIT;
                 else if (nextUnarrived == 0)

@@ -158,6 +158,9 @@ public class PhaserTest extends JSR166TestCase {
             phaser.bulkRegister(Integer.MAX_VALUE);
             shouldThrow();
         } catch (IllegalStateException success) {}
+
+        assertEquals(0, phaser.bulkRegister(0));
+        assertState(phaser, 0, maxParties, maxParties);
     }
 
     /**
@@ -201,6 +204,8 @@ public class PhaserTest extends JSR166TestCase {
      */
     public void testBulkRegister2() {
         Phaser phaser = new Phaser();
+        assertEquals(0, phaser.bulkRegister(0));
+        assertState(phaser, 0, 0, 0);
         assertEquals(0, phaser.bulkRegister(20));
         assertState(phaser, 0, 20, 20);
     }

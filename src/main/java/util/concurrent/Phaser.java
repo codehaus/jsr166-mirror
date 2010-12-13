@@ -237,15 +237,15 @@ public class Phaser {
      */
 
     /**
-     * Primary state representation, holding four fields:
+     * Primary state representation, holding four bit-fields:
      *
-     * * unarrived -- the number of parties yet to hit barrier (bits  0-15)
-     * * parties -- the number of parties to wait              (bits 16-31)
-     * * phase -- the generation of the barrier                (bits 32-62)
-     * * terminated -- set if barrier is terminated            (bit  63 / sign)
+     * unarrived  -- the number of parties yet to hit barrier (bits  0-15)
+     * parties    -- the number of parties to wait            (bits 16-31)
+     * phase      -- the generation of the barrier            (bits 32-62)
+     * terminated -- set if barrier is terminated             (bit  63 / sign)
      *
      * Except that a phaser with no registered parties is
-     * distinguished with the otherwise illegal state of having zero
+     * distinguished by the otherwise illegal state of having zero
      * parties and one unarrived parties (encoded as EMPTY below).
      *
      * To efficiently maintain atomicity, these values are packed into

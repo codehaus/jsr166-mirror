@@ -266,10 +266,9 @@ public class Phaser {
     private volatile long state;
 
     private static final int  MAX_PARTIES     = 0xffff;
-    private static final int  MAX_PHASE       = 0x7fffffff;
+    private static final int  MAX_PHASE       = Integer.MAX_VALUE;
     private static final int  PARTIES_SHIFT   = 16;
     private static final int  PHASE_SHIFT     = 32;
-    private static final long PHASE_MASK      = -1L << PHASE_SHIFT;
     private static final int  UNARRIVED_MASK  = 0xffff;      // to mask ints
     private static final long PARTIES_MASK    = 0xffff0000L; // to mask longs
     private static final long TERMINATION_BIT = 1L << 63;

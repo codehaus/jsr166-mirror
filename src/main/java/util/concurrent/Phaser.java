@@ -371,7 +371,7 @@ public class Phaser {
                         n |= EMPTY;
                     else
                         n |= nextUnarrived;
-                    n |= ((long)((phase + 1) & MAX_PHASE)) << PHASE_SHIFT;
+                    n |= (long)((phase + 1) & MAX_PHASE) << PHASE_SHIFT;
                     UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
                     releaseWaiters(phase);
                 }

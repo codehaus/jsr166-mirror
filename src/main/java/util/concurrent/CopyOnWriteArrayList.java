@@ -826,13 +826,12 @@ public class CopyOnWriteArrayList<E>
         s.defaultWriteObject();
 
         Object[] elements = getArray();
-        int len = elements.length;
         // Write out array length
-        s.writeInt(len);
+        s.writeInt(elements.length);
 
         // Write out all elements in the proper order.
-        for (int i = 0; i < len; i++)
-            s.writeObject(elements[i]);
+        for (Object element : elements)
+            s.writeObject(element);
     }
 
     /**

@@ -813,7 +813,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Save the state of the list to a stream (i.e., serialize it).
+     * Saves the state of the list to a stream (that is, serializes it).
      *
      * @serialData The length of the array backing the list is emitted
      *               (int), followed by all of its elements (each an Object)
@@ -823,7 +823,6 @@ public class CopyOnWriteArrayList<E>
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException{
 
-        // Write out element count, and any hidden stuff
         s.defaultWriteObject();
 
         Object[] elements = getArray();
@@ -837,13 +836,13 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Reconstitute the list from a stream (i.e., deserialize it).
+     * Reconstitutes the list from a stream (that is, deserializes it).
+     *
      * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
 
-        // Read in size, and any hidden stuff
         s.defaultReadObject();
 
         // bind to new lock

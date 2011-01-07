@@ -251,21 +251,79 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     * set in one thread causes get in another thread to retrieve value
+     * run in one thread causes get in another thread to retrieve value
      */
-    public void testGet1() throws InterruptedException {
+    public void testGetRun() throws InterruptedException {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+
         final FutureTask task =
             new FutureTask(new CheckedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
                     return Boolean.TRUE;
                 }});
-        checkNotDone(task);
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
+                threadStarted.countDown();
                 assertSame(Boolean.TRUE, task.get());
             }});
 
+        threadStarted.await();
+        checkNotDone(task);
+        assertTrue(t.isAlive());
+        task.run();
+        checkCompletedNormally(task, Boolean.TRUE);
+        awaitTermination(t, MEDIUM_DELAY_MS);
+    }
+
+    /**
+     * set in one thread causes get in another thread to retrieve value
+     */
+    public void testGetSet() throws InterruptedException {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+
+        final PublicFutureTask task =
+            new PublicFutureTask(new CheckedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
+                    return Boolean.TRUE;
+                }});
+
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws Exception {
+                threadStarted.countDown();
+                assertSame(Boolean.FALSE, task.get());
+            }});
+
+        threadStarted.await();
+        checkNotDone(task);
+        assertTrue(t.isAlive());
+        task.set(Boolean.FALSE);
+        checkCompletedNormally(task, Boolean.FALSE);
+        awaitTermination(t, MEDIUM_DELAY_MS);
+    }
+
+    /**
+     * run in one thread causes timed get in another thread to retrieve value
+     */
+    public void testTimedGetRun() throws InterruptedException {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+
+        final FutureTask task =
+            new FutureTask(new CheckedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
+                    return Boolean.TRUE;
+                }});
+
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws Exception {
+                threadStarted.countDown();
+                assertSame(Boolean.TRUE,
+                           task.get(MEDIUM_DELAY_MS, MILLISECONDS));
+            }});
+
+        threadStarted.await();
+        checkNotDone(task);
+        assertTrue(t.isAlive());
         task.run();
         checkCompletedNormally(task, Boolean.TRUE);
         awaitTermination(t, MEDIUM_DELAY_MS);
@@ -274,21 +332,27 @@ public class FutureTaskTest extends JSR166TestCase {
     /**
      * set in one thread causes timed get in another thread to retrieve value
      */
-    public void testTimedGet1() throws InterruptedException {
-        final FutureTask task =
-            new FutureTask(new CheckedCallable<Object>() {
+    public void testTimedGetSet() throws InterruptedException {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+
+        final PublicFutureTask task =
+            new PublicFutureTask(new CheckedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
                     return Boolean.TRUE;
                 }});
-        checkNotDone(task);
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                assertSame(Boolean.TRUE, task.get(SMALL_DELAY_MS, MILLISECONDS));
+                threadStarted.countDown();
+                assertSame(Boolean.FALSE,
+                           task.get(MEDIUM_DELAY_MS, MILLISECONDS));
             }});
 
-        task.run();
-        checkCompletedNormally(task, Boolean.TRUE);
+        threadStarted.await();
+        checkNotDone(task);
+        assertTrue(t.isAlive());
+        task.set(Boolean.FALSE);
+        checkCompletedNormally(task, Boolean.FALSE);
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
 

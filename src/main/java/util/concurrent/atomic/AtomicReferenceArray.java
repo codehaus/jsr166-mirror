@@ -45,7 +45,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
 
     /**
      * Creates a new AtomicReferenceArray of the given length, with all
-     * elements initially zero.
+     * elements initially null.
      *
      * @param length the length of the array
      */

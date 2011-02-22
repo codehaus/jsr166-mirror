@@ -162,7 +162,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertFalse(a.isCancelled());
         assertFalse(a.isCompletedNormally());
         assertTrue(a.isCompletedAbnormally());
-        assertSame(t, a.getException());
+        assertSame(t.getClass(), a.getException().getClass());
         assertNull(a.getRawResult());
         assertFalse(a.cancel(false));
         assertFalse(a.cancel(true));
@@ -172,7 +172,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             a.join();
             shouldThrow();
         } catch (Throwable expected) {
-            assertSame(t, expected);
+            assertSame(t.getClass(), expected.getClass());
         }
         Thread.interrupted();
 
@@ -186,14 +186,14 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             a.get();
             shouldThrow();
         } catch (ExecutionException success) {
-            assertSame(t, success.getCause());
+            assertSame(t.getClass(), success.getCause().getClass());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
 
         try {
             a.get(5L, SECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
-            assertSame(t, success.getCause());
+            assertSame(t.getClass(), success.getCause().getClass());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
@@ -205,7 +205,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      * differently than supplied Recursive forms.
      */
 
-    static final class FJException extends RuntimeException {
+    public static final class FJException extends RuntimeException {
         FJException() { super(); }
     }
 

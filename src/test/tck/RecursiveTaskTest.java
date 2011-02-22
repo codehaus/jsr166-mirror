@@ -153,7 +153,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertFalse(a.isCancelled());
         assertFalse(a.isCompletedNormally());
         assertTrue(a.isCompletedAbnormally());
-        assertSame(t, a.getException());
+        assertSame(t.getClass(), a.getException().getClass());
         assertNull(a.getRawResult());
         assertFalse(a.cancel(false));
         assertFalse(a.cancel(true));
@@ -162,26 +162,26 @@ public class RecursiveTaskTest extends JSR166TestCase {
             a.join();
             shouldThrow();
         } catch (Throwable expected) {
-            assertSame(t, expected);
+            assertSame(t.getClass(), expected.getClass());
         }
 
         try {
             a.get();
             shouldThrow();
         } catch (ExecutionException success) {
-            assertSame(t, success.getCause());
+            assertSame(t.getClass(), success.getCause().getClass());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
 
         try {
             a.get(5L, SECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
-            assertSame(t, success.getCause());
+            assertSame(t.getClass(), success.getCause().getClass());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    static final class FJException extends RuntimeException {
-        FJException() { super(); }
+    public static final class FJException extends RuntimeException {
+        public FJException() { super(); }
     }
 
     // An invalid return value for Fib

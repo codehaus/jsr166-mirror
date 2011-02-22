@@ -164,7 +164,6 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         try {
             assertSame(ForkJoinPool.defaultForkJoinWorkerThreadFactory,
                        p.getFactory());
-            assertTrue(p.isQuiescent());
             assertFalse(p.getAsyncMode());
             assertEquals(0, p.getActiveThreadCount());
             assertEquals(0, p.getStealCount());

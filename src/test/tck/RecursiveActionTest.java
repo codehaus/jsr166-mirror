@@ -134,7 +134,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         assertFalse(a.isCancelled());
         assertFalse(a.isCompletedNormally());
         assertTrue(a.isCompletedAbnormally());
-        assertSame(t, a.getException());
+        assertSame(t.getClass(), a.getException().getClass());
         assertNull(a.getRawResult());
         assertFalse(a.cancel(false));
         assertFalse(a.cancel(true));
@@ -143,26 +143,27 @@ public class RecursiveActionTest extends JSR166TestCase {
             a.join();
             shouldThrow();
         } catch (Throwable expected) {
-            assertSame(t, expected);
+            assertSame(expected.getClass(), t.getClass());
         }
 
         try {
             a.get();
             shouldThrow();
         } catch (ExecutionException success) {
-            assertSame(t, success.getCause());
+            assertSame(t.getClass(), success.getCause().getClass());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
 
         try {
             a.get(5L, SECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
-            assertSame(t, success.getCause());
+            assertSame(t.getClass(), success.getCause().getClass());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    static final class FJException extends RuntimeException {
-        FJException() { super(); }
+    public static final class FJException extends RuntimeException {
+        public FJException() { super(); }
+        public FJException(Throwable cause) { super(cause); }
     }
 
     // A simple recursive action for testing
@@ -771,7 +772,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 ForkJoinWorkerThread w =
                     (ForkJoinWorkerThread) Thread.currentThread();
                 assertTrue(w.getPoolIndex() >= 0);
-                assertTrue(w.getPoolIndex() < mainPool.getPoolSize());
+                // pool size can shrink after assigning index, so cannot check
+                // assertTrue(w.getPoolIndex() < mainPool.getPoolSize());
             }};
         testInvokeOnPool(mainPool, a);
     }

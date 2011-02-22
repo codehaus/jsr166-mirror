@@ -771,6 +771,10 @@ public class ForkJoinPool extends AbstractExecutorService {
             long d = ctl; // return true if lost to a deq, to force rescan
             return (int)d != (int)c && ((d - c) & AC_MASK) >= 0L;
         }
+        if (parallelism + (int)(c >> AC_SHIFT) == 1 &&
+            blockedCount == 0 && quiescerCount == 0)
+            idleAwaitWork(w, v);               // quiescent -- maybe shrink
+
         boolean rescanned = false;
         for (int sc;;) {
             if (w.eventCount != v)
@@ -804,9 +808,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                 else
                     Thread.interrupted();          // clear before park
             }
-            else if (parallelism + (int)(ctl >> AC_SHIFT) == 0 &&
-                     blockedCount == 0 && quiescerCount == 0)
-                idleAwaitWork(w, v);               // quiescent -- maybe shrink
             else {
                 w.parked = true;                   // must recheck
                 if (w.eventCount != v) {

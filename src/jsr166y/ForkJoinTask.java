@@ -282,8 +282,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                     if (s == 0)
                         UNSAFE.compareAndSwapInt(this, statusOffset,
                                                  0, SIGNAL);
-                    else
+                    else {
                         wait(millis);
+                        if (millis > 0L)
+                            break;
+                    }
                 }
             }
         }

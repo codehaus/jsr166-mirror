@@ -290,7 +290,7 @@ public class ConcurrentLinkedDeque<E>
         }
 
         // Unsafe mechanics
-        
+
         private static final sun.misc.Unsafe UNSAFE;
         private static final long prevOffset;
         private static final long itemOffset;

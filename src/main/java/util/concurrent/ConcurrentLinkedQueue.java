@@ -774,13 +774,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     private boolean casTail(Node<E> cmp, Node<E> val) {
         return UNSAFE.compareAndSwapObject(this, tailOffset, cmp, val);
     }
-    
+
     private boolean casHead(Node<E> cmp, Node<E> val) {
         return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
     }
-    
+
     // Unsafe mechanics
-    
+
     private static final sun.misc.Unsafe UNSAFE;
     private static final long headOffset;
     private static final long tailOffset;

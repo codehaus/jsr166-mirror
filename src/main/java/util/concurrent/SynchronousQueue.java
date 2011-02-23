@@ -253,7 +253,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             private static final sun.misc.Unsafe UNSAFE;
             private static final long matchOffset;
             private static final long nextOffset;
-            
+
             static {
                 try {
                     UNSAFE = sun.misc.Unsafe.getUnsafe();
@@ -545,12 +545,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             boolean isOffList() {
                 return next == this;
             }
-            
+
             // Unsafe mechanics
             private static final sun.misc.Unsafe UNSAFE;
             private static final long itemOffset;
             private static final long nextOffset;
-            
+
             static {
                 try {
                     UNSAFE = sun.misc.Unsafe.getUnsafe();

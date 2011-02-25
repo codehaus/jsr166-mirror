@@ -15,19 +15,43 @@ subprojects {
   //apply plugin: 'osgi'
   //apply plugin: 'maven'
   sourceCompatibility = 6
-  // Without the -XDignore.symbol.file=true option there are 8 errors.
+  // Without the -XDignore.symbol.file=true option there are compilation errors.
   compileJava.options.compilerArgs = [ '-Xlint' , '-XDignore.symbol.file=true' ]
   repositories { mavenCentral ( ) }
-  dependencies { testCompile 'junit:junit:4.8.2' }
   defaultTasks 'build'  
 }
 
+//  In order to test the JSR166 material we have to create a jar so that it can be prepended it to the
+//  bootclasspath of the JVM executing the tests.  This is necessary as the JSR 166 code believes it is part
+//  of the Java core, thus it must be loaded by the bootstrap loader and not the system loader -- loading
+//  with the system loader leads to a number of security exceptions.  A project is not allowed to depend on
+//  itself so we cannot use the standard Java lifecycle.  Hence break out the TCK as a separate project to
+//  aloow for the appropirate dependencies.
+
 project ( ':jsr166' ) {
-  sourceSets {
-    main { java { srcDir '../src/main/java' } }
-    test { java { srcDir '../src/test/tck' } }
-  }
+  sourceSets { main { java { srcDir '../src/main/java' } } }
 }
+
+//  Compiling these other materials is a bit tricky as we should be using the jsr166.jar above rather than
+//  the versions of the classes in the Java core.  In fact it only actually matters for compiling tests just
+//  now, but this is a fluke.  So we have to ensure that the jsr166.jar is prepended to the bootstrap
+//  classpath for compiling.
+
+project ( ':jsr166tck' ) {
+  sourceSets { main { java { srcDir '../src/test/tck' } } }
+  dependencies { compile project ( ':jsr166' ) , 'junit:junit:4.8.2' }
+  println compileJava.classpath.class
+  //compileJava.bootstrapClasspath.add ( file ( 'build/lib/jsr166-0.4.40.jar' ) )
+  //println test.classpath.asPath
+  //test.classpath =test.classpath.filter { file -> file.path.endsWith ( 'build/classes/main' ) }
+  //println test.classpath.asPath
+  /*
+  task ( run , type : JavaExec , dependsOn : 'classes' ) {
+    
+  }
+  */
+}
+
 
 project ( ':jsr166x' ) {
   sourceSets { main { java { srcDir '../src/jsr166x' } } }
@@ -44,10 +68,11 @@ project ( ':extra166y' ) {
   }
   dependencies {
     compile project ( ':jsr166y' )
-    testCompile project ( path : ':jsr166' , configuration : 'testCompile' )
+    // The tests depend on classes in the TCK.
+    testCompile project ( ':jsr166tck' )
   }
 }
 
-task clobber ( description : 'Clean all the Gradle subproject directories since they are all transient.' ) << {
-  [ 'jsr166' , 'jsr166x' , 'jsr166y' , 'extra166y' ].each { item -> ant.delete ( dir : item ) }
+task clobber ( description : 'Clean all the Gradle subproject directories since they are transient.  All the permanent material is not in the subproject directories.' ) << {
+  childProjects.keySet ( ).each { item -> delete ( item ) }
 }

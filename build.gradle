@@ -1,0 +1,53 @@
+// -*- mode:groovy; coding:utf-8; -*-
+
+//  A Gradle build for the JSR 166 artefacts.  This build replaces the Ant build.
+//
+//  Copyright © 2011 Russel Winder
+
+//  Author:  Russel Winder <russel@russel.org.uk>
+
+allprojects {
+  version = ( new File ( 'version.properties' ) ).text.trim ( )  
+}
+
+subprojects {
+  apply plugin: 'java'
+  //apply plugin: 'osgi'
+  //apply plugin: 'maven'
+  sourceCompatibility = 6
+  // Without the -XDignore.symbol.file=true option there are 8 errors.
+  compileJava.options.compilerArgs = [ '-Xlint' , '-XDignore.symbol.file=true' ]
+  repositories { mavenCentral ( ) }
+  dependencies { testCompile 'junit:junit:4.8.2' }
+  defaultTasks 'build'  
+}
+
+project ( ':jsr166' ) {
+  sourceSets {
+    main { java { srcDir '../src/main/java' } }
+    test { java { srcDir '../src/test/tck' } }
+  }
+}
+
+project ( ':jsr166x' ) {
+  sourceSets { main { java { srcDir '../src/jsr166x' } } }
+}
+
+project ( ':jsr166y' ) {
+  sourceSets { main { java { srcDir '../src/jsr166y' } } }
+}
+
+project ( ':extra166y' ) {
+  sourceSets {
+    main { java { srcDir '../src/extra166y' } }
+    test { java { srcDir '../src/test/extra166y' } }
+  }
+  dependencies {
+    compile project ( ':jsr166y' )
+    testCompile project ( path : ':jsr166' , configuration : 'testCompile' )
+  }
+}
+
+task clobber ( description : 'Clean all the Gradle subproject directories since they are all transient.' ) << {
+  [ 'jsr166' , 'jsr166x' , 'jsr166y' , 'extra166y' ].each { item -> ant.delete ( dir : item ) }
+}

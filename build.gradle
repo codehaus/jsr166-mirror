@@ -18,7 +18,16 @@ subprojects {
   // Without the -XDignore.symbol.file=true option there are compilation errors.
   compileJava.options.compilerArgs = [ '-Xlint' , '-XDignore.symbol.file=true' ]
   repositories { mavenCentral ( ) }
-  defaultTasks 'build'  
+  defaultTasks 'build'
+  //
+  //  Gradle currently has facility to append to the bootclasspath but not prepend, which is what is needed
+  //  since some of the JSR166 classes replace ones in the Java distribution so the JSR 166 classes must
+  //  appear earlier in the classpath than the Java distribution ones.  This means we have to provide the
+  //  whole of the bootclasspath, which is going to be a nightmare to handle in a truly platform independent
+  //  way :-(
+  //
+  bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-0.4.40.jar' , '/usr/lib/jvm/java-6-openjdk/jre/lib/rt.jar' )
+  bootClasspath = bootClasspathCollection.asPath
 }
 
 //  In order to test the JSR166 material we have to create a jar so that it can be prepended it to the
@@ -26,39 +35,41 @@ subprojects {
 //  of the Java core, thus it must be loaded by the bootstrap loader and not the system loader -- loading
 //  with the system loader leads to a number of security exceptions.  A project is not allowed to depend on
 //  itself so we cannot use the standard Java lifecycle.  Hence break out the TCK as a separate project to
-//  aloow for the appropirate dependencies.
+//  allow for the appropirate dependencies.
 
 project ( ':jsr166' ) {
-  sourceSets { main { java { srcDir '../src/main/java' } } }
+  sourceSets { main { java { srcDir '../src/main' } } }
 }
 
 //  Compiling these other materials is a bit tricky as we should be using the jsr166.jar above rather than
-//  the versions of the classes in the Java core.  In fact it only actually matters for compiling tests just
-//  now, but this is a fluke.  So we have to ensure that the jsr166.jar is prepended to the bootstrap
-//  classpath for compiling.
+//  the versions of the classes in the Java core.  Remeber we have to include it in teh bootclasspath not
+//  the classpath.  However, it seems the we have to depend on the jar in the classpath so that it is
+//  guaranteed to be available as a jar for use in the bootclasspath.
+
+//  To save hassle we simply handle the TCK source as main code to get the jar for :extra166y:test needs and
+//  as tests to run the TCL again JSR166.  Sever duplication but it seems the only way of trivially using
+//  Gradle.
 
 project ( ':jsr166tck' ) {
-  sourceSets { main { java { srcDir '../src/test/tck' } } }
-  dependencies { compile project ( ':jsr166' ) , 'junit:junit:4.8.2' }
-  println compileJava.classpath.class
-  //compileJava.bootstrapClasspath.add ( file ( 'build/lib/jsr166-0.4.40.jar' ) )
-  //println test.classpath.asPath
-  //test.classpath =test.classpath.filter { file -> file.path.endsWith ( 'build/classes/main' ) }
-  //println test.classpath.asPath
-  /*
-  task ( run , type : JavaExec , dependsOn : 'classes' ) {
-    
+  sourceSets {
+    main { java { srcDir '../src/test/tck' } }
+    test { java { srcDir '../src/test/tck' } }
   }
-  */
+  dependencies { compile project ( ':jsr166' ) , 'junit:junit:4.8.2' }
+  compileJava.options.bootClasspath = bootClasspath
+  test.bootstrapClasspath = bootClasspathCollection
 }
-
 
 project ( ':jsr166x' ) {
   sourceSets { main { java { srcDir '../src/jsr166x' } } }
+  dependencies { compile project ( ':jsr166' ) }
+  compileJava.options.bootClasspath = bootClasspath
 }
 
 project ( ':jsr166y' ) {
   sourceSets { main { java { srcDir '../src/jsr166y' } } }
+  dependencies { compile project ( ':jsr166' ) }
+  compileJava.options.bootClasspath = bootClasspath
 }
 
 project ( ':extra166y' ) {
@@ -66,10 +77,11 @@ project ( ':extra166y' ) {
     main { java { srcDir '../src/extra166y' } }
     test { java { srcDir '../src/test/extra166y' } }
   }
+  compileJava.options.bootClasspath = bootClasspath
+  test.bootstrapClasspath = bootClasspathCollection
   dependencies {
-    compile project ( ':jsr166y' )
-    // The tests depend on classes in the TCK.
-    testCompile project ( ':jsr166tck' )
+    compile project ( ':jsr166' ) , project ( ':jsr166y' )
+    testCompile project ( ':jsr166tck' )  // The extra166y tests depend on classes in the TCK.
   }
 }
 

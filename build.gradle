@@ -7,13 +7,17 @@
 //  Author:  Russel Winder <russel@russel.org.uk>
 
 allprojects {
-  version = ( new File ( 'version.properties' ) ).text.trim ( )  
+  group = 'org.codehaus.jsr166'
+  versionRoot = ( new File ( 'version.properties' ) ).text.trim ( ) 
+  version = versionRoot + '-SNAPSHOT'
+  bundleVersion = versionRoot + '.SNAPSHOT'
+  projectWebsite = 'http://jsr166.codehaus.org'
 }
 
 subprojects {
   apply plugin: 'java'
-  //apply plugin: 'osgi'
-  //apply plugin: 'maven'
+  apply plugin: 'osgi'
+  apply plugin: 'maven'
   sourceCompatibility = 6
   // Without the -XDignore.symbol.file=true option there are compilation errors.
   compileJava.options.compilerArgs = [ '-Xlint' , '-XDignore.symbol.file=true' ]
@@ -26,8 +30,26 @@ subprojects {
   //  whole of the bootclasspath, which is going to be a nightmare to handle in a truly platform independent
   //  way :-(
   //
-  bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-0.4.40.jar' , '/usr/lib/jvm/java-6-openjdk/jre/lib/rt.jar' )
+  bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-6-openjdk/jre/lib/rt.jar' )
   bootClasspath = bootClasspathCollection.asPath
+  //
+  def theVendor = 'Doug Lea'
+  jar {
+    manifest {
+      version = bundleVersion
+      instruction 'Bundle-Vendor' , theVendor
+      instruction 'Bundle-Description' , group
+      instruction 'Bundle-DocURL' , projectWebsite
+      instruction 'Built-By' , System.properties.'user.name'
+      instruction 'Specification-Version' , bundleVersion
+      instruction 'Specification-Vendor' , theVendor
+      instruction 'Implementation-Version' , bundleVersion
+      instruction 'Implementation-Vendor' , theVendor
+      instruction 'provider' , theVendor
+      instruction 'Export-Package' , "*;version=${version}"
+      instruction 'Import-Package', '*;resolution:=optional'
+    }
+  }
 }
 
 //  In order to test the JSR166 material we have to create a jar so that it can be prepended it to the
@@ -39,6 +61,15 @@ subprojects {
 
 project ( ':jsr166' ) {
   sourceSets { main { java { srcDir '../src/main' } } }
+  jar {
+    manifest { 
+      name = 'jsr166'
+      symbolicName = 'jsr166'
+      instruction 'Extension-Name' , 'jsr166'
+      instruction 'Specification-Title' , 'JSR166'
+      instruction 'Implementation-Title' , 'JSR166'
+    }
+  }
 }
 
 //  Compiling these other materials is a bit tricky as we should be using the jsr166.jar above rather than
@@ -58,18 +89,47 @@ project ( ':jsr166tck' ) {
   dependencies { compile project ( ':jsr166' ) , 'junit:junit:4.8.2' }
   compileJava.options.bootClasspath = bootClasspath
   test.bootstrapClasspath = bootClasspathCollection
+  jar {
+    manifest { 
+      name = 'jsr166tck'
+      symbolicName = 'jsr166tck'
+      instruction 'Extension-Name' , 'jsr166x'
+      instruction 'Specification-Title' , 'JSR166 TCK'
+      instruction 'Implementation-Title' , 'JSR166 TCK'
+    }
+  }
 }
 
 project ( ':jsr166x' ) {
   sourceSets { main { java { srcDir '../src/jsr166x' } } }
   dependencies { compile project ( ':jsr166' ) }
   compileJava.options.bootClasspath = bootClasspath
+  def theTitle = 'JSR166x'
+  jar {
+    manifest { 
+      name = 'jsr166x'
+      symbolicName = 'jsr166x'
+      instruction 'Extension-Name' , 'jsr166x'
+      instruction 'Specification-Title' , 'JSR166x'
+      instruction 'Implementation-Title' , 'JSR166x'
+    }
+  }
 }
 
 project ( ':jsr166y' ) {
   sourceSets { main { java { srcDir '../src/jsr166y' } } }
   dependencies { compile project ( ':jsr166' ) }
   compileJava.options.bootClasspath = bootClasspath
+  def theTitle = 'JSR166y'
+  jar {
+    manifest { 
+      name = 'jsr166y'
+      symbolicName = 'jsr166y'
+      instruction 'Extension-Name' , 'jsr166y'
+      instruction 'Specification-Title' , 'JSR166y'
+      instruction 'Implementation-Title' , 'JSR166y'
+    }
+  }
 }
 
 project ( ':extra166y' ) {
@@ -82,6 +142,16 @@ project ( ':extra166y' ) {
   dependencies {
     compile project ( ':jsr166' ) , project ( ':jsr166y' )
     testCompile project ( ':jsr166tck' )  // The extra166y tests depend on classes in the TCK.
+  }
+  def theTitle = 'Extra166y'
+  jar {
+    manifest { 
+      name = 'extra166y'
+      symbolicName = 'extra166y'
+      instruction 'Extension-Name' , 'extra166y'
+      instruction 'Specification-Title' , 'Extra166y'
+      instruction 'Implementation-Title' , 'Extra166y'
+    }
   }
 }
 

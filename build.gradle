@@ -25,7 +25,7 @@ subprojects {
   defaultTasks 'build'
   //
   //  Gradle currently has facility to append to the bootclasspath but not prepend, which is what is needed
-  //  since some of the JSR166 classes replace ones in the Java distribution so the JSR 166 classes must
+  //  since some of the JSR166 classes replace ones in the Java distribution, so the JSR 166 classes must
   //  appear earlier in the classpath than the Java distribution ones.  This means we have to provide the
   //  whole of the bootclasspath, which is going to be a nightmare to handle in a truly platform independent
   //  way :-(
@@ -52,7 +52,7 @@ subprojects {
   }
 }
 
-//  In order to test the JSR166 material we have to create a jar so that it can be prepended it to the
+//  In order to test the JSR166 material we have to create a jar so that it can be prepended to the
 //  bootclasspath of the JVM executing the tests.  This is necessary as the JSR 166 code believes it is part
 //  of the Java core, thus it must be loaded by the bootstrap loader and not the system loader -- loading
 //  with the system loader leads to a number of security exceptions.  A project is not allowed to depend on
@@ -73,7 +73,7 @@ project ( ':jsr166' ) {
 }
 
 //  Compiling these other materials is a bit tricky as we should be using the jsr166.jar above rather than
-//  the versions of the classes in the Java core.  Remeber we have to include it in teh bootclasspath not
+//  the versions of the classes in the Java core.  Remember we have to include it in the bootclasspath not
 //  the classpath.  However, it seems the we have to depend on the jar in the classpath so that it is
 //  guaranteed to be available as a jar for use in the bootclasspath.
 
@@ -93,7 +93,7 @@ project ( ':jsr166tck' ) {
     manifest { 
       name = 'jsr166tck'
       symbolicName = 'jsr166tck'
-      instruction 'Extension-Name' , 'jsr166x'
+      instruction 'Extension-Name' , 'jsr166tck'
       instruction 'Specification-Title' , 'JSR166 TCK'
       instruction 'Implementation-Title' , 'JSR166 TCK'
     }

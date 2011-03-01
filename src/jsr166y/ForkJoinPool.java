@@ -478,9 +478,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * negative, there is at least one waiting worker, and when e is
      * negative, the pool is terminating.  To deal with these possibly
      * negative fields, we use casts in and out of "short" and/or
-     * signed shifts to maintain signedness.  Note: AC_SHIFT is
-     * redundantly declared in ForkJoinWorkerThread in order to
-     * integrate a surplus-threads check.
+     * signed shifts to maintain signedness.
      */
     volatile long ctl;
 
@@ -1735,7 +1733,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Returns an estimate of the number of tasks submitted to this
-     * pool that have not yet begun executing.  This meThod may take
+     * pool that have not yet begun executing.  This method may take
      * time proportional to the number of submissions.
      *
      * @return the number of queued submissions

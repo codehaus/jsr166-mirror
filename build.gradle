@@ -87,7 +87,7 @@ project ( ':jsr166tck' ) {
     main { java { srcDir '../src/test/tck' } }
     test { java { srcDir '../src/test/tck' } }
   }
-  dependencies { 'junit:junit:4.8.2' }
+  dependencies { compile 'junit:junit:4.8.2' }
   compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
   test.bootstrapClasspath = bootClasspathCollection
@@ -140,9 +140,11 @@ project ( ':extra166y' ) {
   compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
   test.bootstrapClasspath = bootClasspathCollection
+  //  It seems that the jars are never not rebuilt -- something in the manifest means that the jars are
+  //  rebuilt on every run.  Do not therefore depend on the jars, but instead on the compiled classes.
   dependencies {
-    compile project ( ':jsr166y' )
-    testCompile project ( ':jsr166tck' )  // The extra166y tests depend on classes in the TCK.
+    compile files ( project ( ':jsr166y' ).sourceSets.main.classesDir )
+    testCompile files ( project ( ':jsr166tck' ).sourceSets.main.classesDir )  // The extra166y tests depend on classes in the TCK.
   }
   jar {
     manifest { 

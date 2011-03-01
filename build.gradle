@@ -77,16 +77,18 @@ project ( ':jsr166' ) {
 //  the classpath.  However, it seems the we have to depend on the jar in the classpath so that it is
 //  guaranteed to be available as a jar for use in the bootclasspath.
 
-//  To save hassle we simply handle the TCK source as main code to get the jar for :extra166y:test needs and
-//  as tests to run the TCL again JSR166.  Sever duplication but it seems the only way of trivially using
-//  Gradle.
+//  To save hassle in defining the TCK project, we simply duplicate the compilation in both compileJava and
+//  test tasks.  This saves having to replicate all the test processing which Gradle knows how to do at the
+//  expense of double the compilation and double the disk space.  It also means that :extra166y:test can
+//  just depend on the jsr166tck.jar for the dependencies it needs.
 
 project ( ':jsr166tck' ) {
   sourceSets {
     main { java { srcDir '../src/test/tck' } }
     test { java { srcDir '../src/test/tck' } }
   }
-  dependencies { compile project ( ':jsr166' ) , 'junit:junit:4.8.2' }
+  dependencies { 'junit:junit:4.8.2' }
+  compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
   test.bootstrapClasspath = bootClasspathCollection
   jar {
@@ -102,9 +104,8 @@ project ( ':jsr166tck' ) {
 
 project ( ':jsr166x' ) {
   sourceSets { main { java { srcDir '../src/jsr166x' } } }
-  dependencies { compile project ( ':jsr166' ) }
+  compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
-  def theTitle = 'JSR166x'
   jar {
     manifest { 
       name = 'jsr166x'
@@ -118,9 +119,8 @@ project ( ':jsr166x' ) {
 
 project ( ':jsr166y' ) {
   sourceSets { main { java { srcDir '../src/jsr166y' } } }
-  dependencies { compile project ( ':jsr166' ) }
+  compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
-  def theTitle = 'JSR166y'
   jar {
     manifest { 
       name = 'jsr166y'
@@ -137,13 +137,13 @@ project ( ':extra166y' ) {
     main { java { srcDir '../src/extra166y' } }
     test { java { srcDir '../src/test/extra166y' } }
   }
+  compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
   test.bootstrapClasspath = bootClasspathCollection
   dependencies {
-    compile project ( ':jsr166' ) , project ( ':jsr166y' )
+    compile project ( ':jsr166y' )
     testCompile project ( ':jsr166tck' )  // The extra166y tests depend on classes in the TCK.
   }
-  def theTitle = 'Extra166y'
   jar {
     manifest { 
       name = 'extra166y'

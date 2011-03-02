@@ -7,7 +7,7 @@
 //  Author:  Russel Winder <russel@russel.org.uk>
 
 allprojects {
-  group = 'org.codehaus.jsr166'
+  group = 'org.codehaus.jsr166-mirror'
   versionRoot = ( new File ( 'version.properties' ) ).text.trim ( ) 
   version = versionRoot + '-SNAPSHOT'
   bundleVersion = versionRoot + '.SNAPSHOT'
@@ -33,6 +33,12 @@ subprojects {
   bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-6-openjdk/jre/lib/rt.jar' )
   bootClasspath = bootClasspathCollection.asPath
   //
+  configurations {
+    deployJars
+  }
+  dependencies {
+    deployJars 'org.apache.maven.wagon:wagon-http-lightweight:1.0-beta-6'
+  }
   def theVendor = 'Doug Lea'
   jar {
     manifest {
@@ -49,6 +55,24 @@ subprojects {
       instruction 'Export-Package' , "*;version=${version}"
       instruction 'Import-Package', '*;resolution:=optional'
     }
+  }
+
+  try {
+    uploadArchives {
+      repositories.mavenDeployer {
+        uniqueVersion = false
+        configuration = configurations.deployJars
+        repository ( url : 'https://dav.codehaus.org/repository/jsr166-mirror/' ) {
+          authentication ( userName : gant_repoUserName , password : jsr166mirror_repoPassword )
+        }
+        snapshotRepository ( url : 'https://dav.codehaus.org/snapshots.repository/jsr166-mirror/' ) {
+          authentication ( userName: gant_repoUserName , password : jsr166mirror_repoPassword )
+        }
+      }
+    }
+  }
+  catch ( Exception e ) { 
+    //  If jsr166mirror_repoUserName and/or jsr166mirror_repoPassword are not defined, do nothing.
   }
 }
 

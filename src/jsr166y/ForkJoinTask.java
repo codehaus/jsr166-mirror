@@ -384,13 +384,13 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * periods. However, since we do not know when the last joiner
      * completes, we must use weak references and expunge them. We do
      * so on each operation (hence full locking). Also, some thread in
-     * any ForkJoinPool will call helpExpunge when its pool becomes
-     * isQuiescent.
+     * any ForkJoinPool will call helpExpungeStaleExceptions when its
+     * pool becomes isQuiescent.
      */
     static final class ExceptionNode extends WeakReference<ForkJoinTask<?>>{
         final Throwable ex;
         ExceptionNode next;
-        final long thrower;
+        final long thrower;  // use id not ref to avoid weak cycles
         ExceptionNode(ForkJoinTask<?> task, Throwable ex, ExceptionNode next) {
             super(task, exceptionTableRefQueue);
             this.ex = ex;
@@ -406,7 +406,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int setExceptionalCompletion(Throwable ex) {
         int h = System.identityHashCode(this);
-        ReentrantLock lock = exceptionTableLock;
+        final ReentrantLock lock = exceptionTableLock;
         lock.lock();
         try {
             expungeStaleExceptions();
@@ -431,7 +431,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private void clearExceptionalCompletion() {
         int h = System.identityHashCode(this);
-        ReentrantLock lock = exceptionTableLock;
+        final ReentrantLock lock = exceptionTableLock;
         lock.lock();
         try {
             ExceptionNode[] t = exceptionTable;
@@ -476,7 +476,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             return null;
         int h = System.identityHashCode(this);
         ExceptionNode e;
-        ReentrantLock lock = exceptionTableLock;
+        final ReentrantLock lock = exceptionTableLock;
         lock.lock();
         try {
             expungeStaleExceptions();
@@ -542,11 +542,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * If lock is available, poll any stale refs and remove them.
+     * If lock is available, poll stale refs and remove them.
      * Called from ForkJoinPool when pools become quiescent.
      */
     static final void helpExpungeStaleExceptions() {
-        ReentrantLock lock = exceptionTableLock;
+        final ReentrantLock lock = exceptionTableLock;
         if (lock.tryLock()) {
             try {
                 expungeStaleExceptions();

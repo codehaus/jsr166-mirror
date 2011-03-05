@@ -62,17 +62,26 @@ subprojects {
       repositories.mavenDeployer {
         uniqueVersion = false
         configuration = configurations.deployJars
+        
         repository ( url : 'https://dav.codehaus.org/repository/jsr166-mirror/' ) {
-          authentication ( userName : gant_repoUserName , password : jsr166mirror_repoPassword )
+          authentication ( userName : codehausUsername , password : codehausPassword )
         }
         snapshotRepository ( url : 'https://dav.codehaus.org/snapshots.repository/jsr166-mirror/' ) {
-          authentication ( userName: gant_repoUserName , password : jsr166mirror_repoPassword )
+          authentication ( userName: codehausUsername , password : codehausPassword )
         }
+        /*
+        repository ( url : 'https://nexus.codehaus.org/service/local/staging/deploy/maven2/' ) {
+          authentication ( userName : codehausUsername , password : codehausPassword )
+        }
+        snapshotRepository ( url : 'https://nexus.codehaus.org/content/repositories/snapshots/' ) {
+          authentication ( userName : codehausUsername , password : codehausPassword )
+        }
+        */
       }
     }
   }
   catch ( Exception e ) { 
-    //  If jsr166mirror_repoUserName and/or jsr166mirror_repoPassword are not defined, do nothing.
+    //  If codehausUsername and/or codehausPassword are not defined, do nothing.
   }
 }
 
@@ -167,8 +176,8 @@ project ( ':extra166y' ) {
   //  It seems that the jars are never not rebuilt -- something in the manifest means that the jars are
   //  rebuilt on every run.  Do not therefore depend on the jars, but instead on the compiled classes.
   dependencies {
-    compile files ( project ( ':jsr166y' ).sourceSets.main.classesDir )
-    testCompile files ( project ( ':jsr166tck' ).sourceSets.main.classesDir )  // The extra166y tests depend on classes in the TCK.
+    compile files ( project ( ':jsr166y' ).sourceSets.main.classes )
+    testCompile files ( project ( ':jsr166tck' ).sourceSets.main.classes )  // The extra166y tests depend on classes in the TCK.
   }
   jar {
     manifest { 

@@ -714,7 +714,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private boolean scan(ForkJoinWorkerThread w, int a) {
         int g = scanGuard; // mask 0 avoids useless scans if only one active
-        int m = parallelism == 1 - a? 0 : g & SMASK;
+        int m = (parallelism == 1 - a && blockedCount == 0) ? 0 : g & SMASK;
         ForkJoinWorkerThread[] ws = workers;
         if (ws == null || ws.length <= m)         // staleness check
             return false;

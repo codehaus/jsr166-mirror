@@ -1,7 +1,7 @@
 The software comprising JSR166 was written by Doug Lea with assistance
 from members of JCP JSR-166 Expert roup and released to the public
 domain, as explained at:
-http://creativecommons.org/licenses/publicdomain, excepting portions
+http://creativecommons.org/publicdomain/zero/1.0/, excepting portions
 of the class java.util.concurrent.CopyOnWriteArrayList, which were
 adapted from class java.util.ArrayList, written by Sun Microsystems,
 Inc, which are used with kind permission, and subject to the

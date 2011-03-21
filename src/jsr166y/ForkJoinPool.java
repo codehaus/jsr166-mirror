@@ -1146,7 +1146,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         ws[k] = w;
                         nextWorkerIndex = k + 1;
                         int m = g & SMASK;
-                        g = k >= m? ((m << 1) + 1) & SMASK : g + (SG_UNIT<<1);
+                        g = k > m? ((m << 1) + 1) & SMASK : g + (SG_UNIT<<1);
                     }
                 } finally {
                     scanGuard = g;

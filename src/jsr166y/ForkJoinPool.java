@@ -864,7 +864,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                 w.parked = false;
                 if (w.eventCount != v)
                     break;
-                else if (System.nanoTime() - startTime < SHRINK_RATE)
+                else if (System.nanoTime() - startTime < 
+                         SHRINK_RATE - (SHRINK_RATE / 10)) // timing slop
                     Thread.interrupted();          // spurious wakeup
                 else if (UNSAFE.compareAndSwapLong(this, ctlOffset,
                                                    currentCtl, prevCtl)) {
@@ -1146,7 +1147,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         ws[k] = w;
                         nextWorkerIndex = k + 1;
                         int m = g & SMASK;
-                        g = k >= m? ((m << 1) + 1) & SMASK : g + (SG_UNIT<<1);
+                        g = k > m? ((m << 1) + 1) & SMASK : g + (SG_UNIT<<1);
                     }
                 } finally {
                     scanGuard = g;

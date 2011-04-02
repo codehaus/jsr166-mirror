@@ -195,3 +195,7 @@ project ( ':extra166y' ) {
 task clobber ( description : 'Clean all the Gradle subproject directories since they are transient.  All the permanent material is not in the subproject directories.' ) << {
   childProjects.keySet ( ).each { item -> delete ( item ) }
 }
+
+task wrapper ( type : Wrapper ) {
+    gradleVersion = '1.0-milestone-1'
+}

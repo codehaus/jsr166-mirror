@@ -795,7 +795,8 @@ public class ForkJoinPool extends AbstractExecutorService {
             else if (w.eventCount != v)
                 return true;                      // update next time
         }
-        if ((int)c != 0 && parallelism + (int)(nc >> AC_SHIFT) == 0 &&
+        if ((!shutdown || !tryTerminate(false)) &&
+            (int)c != 0 && parallelism + (int)(nc >> AC_SHIFT) == 0 &&
             blockedCount == 0 && quiescerCount == 0)
             idleAwaitWork(w, nc, c, v);           // quiescent
         for (boolean rescanned = false;;) {

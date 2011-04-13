@@ -1,7 +1,7 @@
 /*
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
- * http://creativecommhons.org/publicdomain/zero/1.0/
+ * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 package java.util.concurrent;
@@ -86,7 +86,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * but reduce the levels of indirection. Additionally,
      * volatile-writes of table elements and entry "next" fields
      * within locked operations use the cheaper "lazySet" forms of
-     * writes (via putOrderedObject) because these write are always
+     * writes (via putOrderedObject) because these writes are always
      * followed by lock releases that maintain sequential consistency
      * of table updates.
      *

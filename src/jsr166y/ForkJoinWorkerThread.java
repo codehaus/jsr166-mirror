@@ -332,7 +332,7 @@ public class ForkJoinWorkerThread extends Thread {
     protected void onStart() {
         queue = new ForkJoinTask<?>[INITIAL_QUEUE_CAPACITY];
         int r = pool.workerSeedGenerator.nextInt();
-        seed = (r == 0)? 1 : r; //  must be nonzero
+        seed = (r == 0) ? 1 : r; //  must be nonzero
     }
 
     /**
@@ -695,7 +695,7 @@ public class ForkJoinWorkerThread extends Thread {
                         Thread.yield();        // for politeness
                 }
                 else
-                    retries = helpJoinTask(joinMe)? MAX_HELP : retries - 1;
+                    retries = helpJoinTask(joinMe) ? MAX_HELP : retries - 1;
             }
             else {
                 retries = MAX_HELP;           // restart if not done
@@ -926,7 +926,7 @@ public class ForkJoinWorkerThread extends Thread {
                     p.addActiveCount(1);
                 }
                 if ((t = (v != this) ? v.deqTask() :
-                     locallyFifo? locallyDeqTask() : popTask()) != null) {
+                     locallyFifo ? locallyDeqTask() : popTask()) != null) {
                     currentSteal = t;
                     t.doExec();
                     currentSteal = ps;

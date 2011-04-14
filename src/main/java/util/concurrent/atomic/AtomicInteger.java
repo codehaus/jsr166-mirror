@@ -28,10 +28,10 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     private static final long valueOffset;
 
     static {
-      try {
-        valueOffset = unsafe.objectFieldOffset
-            (AtomicInteger.class.getDeclaredField("value"));
-      } catch (Exception ex) { throw new Error(ex); }
+        try {
+            valueOffset = unsafe.objectFieldOffset
+                (AtomicInteger.class.getDeclaredField("value"));
+        } catch (Exception ex) { throw new Error(ex); }
     }
 
     private volatile int value;

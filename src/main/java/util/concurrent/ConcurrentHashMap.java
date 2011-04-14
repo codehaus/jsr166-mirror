@@ -214,7 +214,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     @SuppressWarnings("unchecked")
     static final <K,V> HashEntry<K,V> entryAt(HashEntry<K,V>[] tab, int i) {
-        return tab == null? null :
+        return (tab == null) ? null :
             (HashEntry<K,V>) UNSAFE.getObjectVolatile
             (tab, ((long)i << TSHIFT) + TBASE);
     }
@@ -669,7 +669,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     @SuppressWarnings("unchecked")
     static final <K,V> HashEntry<K,V> entryForHash(Segment<K,V> seg, int h) {
         HashEntry<K,V>[] tab;
-        return seg == null || (tab = seg.table) == null? null :
+        return (seg == null || (tab = seg.table) == null) ? null :
             (HashEntry<K,V>) UNSAFE.getObjectVolatile
             (tab, ((long)(((tab.length - 1) & h)) << TSHIFT) + TBASE);
     }
@@ -997,13 +997,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified key or value is null
      */
     public V put(K key, V value) {
-        Segment<K,V> s;
         if (value == null)
             throw new NullPointerException();
         int hash = hash(key.hashCode());
         int j = (hash >>> segmentShift) & segmentMask;
-        return ((s = segmentAt(segments, j)) == null? ensureSegment(j) : s).
-            put(key, hash, value, false);
+        Segment<K,V> s = segmentAt(segments, j);
+        if (s == null)
+            s = ensureSegment(j);
+        return s.put(key, hash, value, false);
     }
 
     /**
@@ -1014,13 +1015,14 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified key or value is null
      */
     public V putIfAbsent(K key, V value) {
-        Segment<K,V> s;
         if (value == null)
             throw new NullPointerException();
         int hash = hash(key.hashCode());
         int j = (hash >>> segmentShift) & segmentMask;
-        return ((s = segmentAt(segments, j)) == null? ensureSegment(j) : s).
-            put(key, hash, value, true);
+        Segment<K,V> s = segmentAt(segments, j);
+        if (s == null)
+            s = ensureSegment(j);
+        return s.put(key, hash, value, true);
     }
 
     /**

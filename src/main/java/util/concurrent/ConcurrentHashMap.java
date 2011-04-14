@@ -1224,9 +1224,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         final HashEntry<K,V> nextEntry() {
-            HashEntry<K,V> e = lastReturned = nextEntry;
+            HashEntry<K,V> e = nextEntry;
             if (e == null)
                 throw new NoSuchElementException();
+            lastReturned = e; // cannot assign until after null check
             if ((nextEntry = e.next) == null)
                 advance();
             return e;

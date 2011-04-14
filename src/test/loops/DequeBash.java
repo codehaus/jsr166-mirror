@@ -81,7 +81,7 @@ public class DequeBash {
             if ((i & 8191) == 0)
                 testRemove(deque);
 
-         }
+        }
 
         // Stupid tests for clear, toString
         deque.clear();

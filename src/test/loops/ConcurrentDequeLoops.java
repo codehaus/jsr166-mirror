@@ -54,7 +54,7 @@ public class ConcurrentDequeLoops {
                 i = k;
         }
         pool.shutdown();
-   }
+    }
 
     static class Stage implements Callable<Integer> {
         final Deque<Integer> queue;

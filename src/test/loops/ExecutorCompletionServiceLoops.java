@@ -32,7 +32,7 @@ public class ExecutorCompletionServiceLoops {
             Thread.sleep(100);
         }
         pool.shutdown();
-   }
+    }
 
     static class Task implements Callable<Integer> {
         public Integer call() {

@@ -240,9 +240,9 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     /**
      * schedule callable throws RejectedExecutionException if shutdown
      */
-     public void testSchedule3_RejectedExecutionException() throws InterruptedException {
-         ScheduledThreadPoolExecutor se = new ScheduledThreadPoolExecutor(1);
-         try {
+    public void testSchedule3_RejectedExecutionException() throws InterruptedException {
+        ScheduledThreadPoolExecutor se = new ScheduledThreadPoolExecutor(1);
+        try {
             se.shutdown();
             se.schedule(new NoOpCallable(),
                         MEDIUM_DELAY_MS, MILLISECONDS);
@@ -250,7 +250,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         } catch (RejectedExecutionException success) {
         } catch (SecurityException ok) {
         }
-         joinPool(se);
+        joinPool(se);
     }
 
     /**

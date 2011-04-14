@@ -291,17 +291,17 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     /**
      * schedule callable throws RejectedExecutionException if shutdown
      */
-     public void testSchedule3_RejectedExecutionException() {
-         CustomExecutor se = new CustomExecutor(1);
-         try {
-             se.shutdown();
-             se.schedule(new NoOpCallable(),
-                         MEDIUM_DELAY_MS, MILLISECONDS);
-             shouldThrow();
-         } catch (RejectedExecutionException success) {
-         } catch (SecurityException ok) {
-         }
-         joinPool(se);
+    public void testSchedule3_RejectedExecutionException() {
+        CustomExecutor se = new CustomExecutor(1);
+        try {
+            se.shutdown();
+            se.schedule(new NoOpCallable(),
+                        MEDIUM_DELAY_MS, MILLISECONDS);
+            shouldThrow();
+        } catch (RejectedExecutionException success) {
+        } catch (SecurityException ok) {
+        }
+        joinPool(se);
     }
 
     /**

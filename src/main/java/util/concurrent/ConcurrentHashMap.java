@@ -303,12 +303,11 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         transient int count;
 
         /**
-         * The total number of insertions and removals in this
-         * segment.  Even though this may overflows 32 bits, it
-         * provides sufficient accuracy for stability checks in CHM
-         * isEmpty() and size() methods.  Accessed only either within
-         * locks or among other volatile reads that maintain
-         * visibility.
+         * The total number of mutative operations in this segment.
+         * Even though this may overflows 32 bits, it provides
+         * sufficient accuracy for stability checks in CHM isEmpty()
+         * and size() methods.  Accessed only either within locks or
+         * among other volatile reads that maintain visibility.
          */
         transient int modCount;
 
@@ -347,8 +346,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         if ((k = e.key) == key ||
                             (e.hash == hash && key.equals(k))) {
                             oldValue = e.value;
-                            if (!onlyIfAbsent)
+                            if (!onlyIfAbsent) {
                                 e.value = value;
+                                ++modCount;
+                            }
                             break;
                         }
                         e = e.next;
@@ -445,7 +446,10 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         /**
          * Scans for a node containing given key while trying to
          * acquire lock, creating and returning one if not found. Upon
-         * return, guarantees that lock is held.
+         * return, guarantees that lock is held. UNlike in most
+         * methods, calls to method equals are not screened: Since
+         * traversal speed doesn't matter, we might as well help warm
+         * up the associated code and accesses as well.
          *
          * @return a new node if key not found, else null
          */
@@ -562,6 +566,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         (e.hash == hash && key.equals(k))) {
                         if (oldValue.equals(e.value)) {
                             e.value = newValue;
+                            ++modCount;
                             replaced = true;
                         }
                         break;
@@ -585,6 +590,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         (e.hash == hash && key.equals(k))) {
                         oldValue = e.value;
                         e.value = value;
+                        ++modCount;
                         break;
                     }
                 }
@@ -920,12 +926,12 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @throws NullPointerException if the specified value is null
      */
     public boolean containsValue(Object value) {
-        // Same idea as size() but using hashes as checksum
+        // Same idea as size()
         if (value == null)
             throw new NullPointerException();
         final Segment<K,V>[] segments = this.segments;
         boolean found = false;
-        long last = 0L;
+        long last = 0;
         int retries = -1;
         try {
             outer: for (;;) {
@@ -933,7 +939,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     for (int j = 0; j < segments.length; ++j)
                         ensureSegment(j).lock(); // force creation
                 }
-                long sum = 0L;
+                long hashSum = 0L;
+                int sum = 0;
                 for (int j = 0; j < segments.length; ++j) {
                     HashEntry<K,V>[] tab;
                     Segment<K,V> seg = segmentAt(segments, j);
@@ -946,9 +953,9 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                                     found = true;
                                     break outer;
                                 }
-                                sum += e.hash;
                             }
                         }
+                        sum += seg.modCount;
                     }
                 }
                 if (retries > 0 && sum == last)

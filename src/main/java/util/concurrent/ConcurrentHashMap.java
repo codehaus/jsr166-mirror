@@ -951,7 +951,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                         }
                     }
                 }
-                if (sum == last)
+                if (retries > 0 && sum == last)
                     break;
                 last = sum;
             }

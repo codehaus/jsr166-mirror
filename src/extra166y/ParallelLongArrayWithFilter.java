@@ -52,9 +52,9 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
     * Replaces elements with the results of applying the given
     * mapping to each index and current element value
     * @param op the op
-     * @return this (to simplify use in expressions)
+    * @return this (to simplify use in expressions)
     */
-   public ParallelLongArrayWithFilter replaceWithMappedIndex(IntAndLongToLong op) {
+    public ParallelLongArrayWithFilter replaceWithMappedIndex(IntAndLongToLong op) {
         ex.invoke(new PAS.FJLBinaryIndexMap
                   (this, origin, fence, null, op));
         return this;

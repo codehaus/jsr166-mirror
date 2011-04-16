@@ -1014,7 +1014,7 @@ public class LinkedBlockingDeque<E>
         /**
          * The next node to return in next()
          */
-         Node<E> next;
+        Node<E> next;
 
         /**
          * nextItem holds on to item fields because once we claim that

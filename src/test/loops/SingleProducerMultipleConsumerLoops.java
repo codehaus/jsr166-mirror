@@ -49,7 +49,7 @@ public class SingleProducerMultipleConsumerLoops {
         }
 
         pool.shutdown();
-   }
+    }
 
     static void warmup() throws Exception {
         print = false;

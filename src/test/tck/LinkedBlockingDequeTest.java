@@ -772,25 +772,25 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     /**
      * putFirst(null) throws NPE
      */
-     public void testPutFirstNull() throws InterruptedException {
+    public void testPutFirstNull() throws InterruptedException {
         try {
             LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
             q.putFirst(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * all elements successfully putFirst are contained
      */
-     public void testPutFirst() throws InterruptedException {
-         LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-         for (int i = 0; i < SIZE; ++i) {
-             Integer I = new Integer(i);
-             q.putFirst(I);
-             assertTrue(q.contains(I));
-         }
-         assertEquals(0, q.remainingCapacity());
+    public void testPutFirst() throws InterruptedException {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            Integer I = new Integer(i);
+            q.putFirst(I);
+            assertTrue(q.contains(I));
+        }
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**
@@ -985,25 +985,25 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     /**
      * putLast(null) throws NPE
      */
-     public void testPutLastNull() throws InterruptedException {
+    public void testPutLastNull() throws InterruptedException {
         try {
             LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
             q.putLast(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * all elements successfully putLast are contained
      */
-     public void testPutLast() throws InterruptedException {
-         LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-         for (int i = 0; i < SIZE; ++i) {
-             Integer I = new Integer(i);
-             q.putLast(I);
-             assertTrue(q.contains(I));
-         }
-         assertEquals(0, q.remainingCapacity());
+    public void testPutLast() throws InterruptedException {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            Integer I = new Integer(i);
+            q.putLast(I);
+            assertTrue(q.contains(I));
+        }
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**

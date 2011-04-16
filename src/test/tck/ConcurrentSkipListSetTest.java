@@ -846,7 +846,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      */
     void check(NavigableSet<Integer> set,
                       final int min, final int max, final boolean ascending) {
-       class ReferenceSet {
+        class ReferenceSet {
             int lower(int element) {
                 return ascending ?
                     lowerAscending(element) : higherAscending(element);

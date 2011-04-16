@@ -294,7 +294,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             q.put(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * all elements successfully put are contained

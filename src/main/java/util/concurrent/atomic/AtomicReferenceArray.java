@@ -167,7 +167,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @return the String representation of the current values of array
      */
     public String toString() {
-           int iMax = array.length - 1;
+        int iMax = array.length - 1;
         if (iMax == -1)
             return "[]";
 

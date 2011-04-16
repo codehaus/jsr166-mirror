@@ -296,25 +296,25 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     /**
      * put(null) throws NPE
      */
-     public void testPutNull() {
+    public void testPutNull() {
         try {
             PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
             q.put(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * all elements successfully put are contained
      */
-     public void testPut() {
-         PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
-         for (int i = 0; i < SIZE; ++i) {
-             Integer I = new Integer(i);
-             q.put(I);
-             assertTrue(q.contains(I));
-         }
-         assertEquals(SIZE, q.size());
+    public void testPut() {
+        PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            Integer I = new Integer(i);
+            q.put(I);
+            assertTrue(q.contains(I));
+        }
+        assertEquals(SIZE, q.size());
     }
 
     /**

@@ -277,13 +277,13 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     /**
      * put(null) throws NPE
      */
-     public void testPutNull() throws InterruptedException {
+    public void testPutNull() throws InterruptedException {
         try {
             LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
             q.put(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * all elements successfully put are contained

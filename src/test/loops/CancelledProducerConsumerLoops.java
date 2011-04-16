@@ -32,7 +32,7 @@ public class CancelledProducerConsumerLoops {
             Thread.sleep(100);
         }
         pool.shutdown();
-   }
+    }
 
     static void oneRun(BlockingQueue<Integer> q, int npairs, int iters) throws Exception {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();

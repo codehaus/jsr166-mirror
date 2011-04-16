@@ -159,7 +159,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             q.put(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * put blocks interruptibly if no active taker

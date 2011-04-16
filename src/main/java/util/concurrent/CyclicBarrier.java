@@ -175,21 +175,21 @@ public class CyclicBarrier {
                 throw new InterruptedException();
             }
 
-           int index = --count;
-           if (index == 0) {  // tripped
-               boolean ranAction = false;
-               try {
-                   final Runnable command = barrierCommand;
-                   if (command != null)
-                       command.run();
-                   ranAction = true;
-                   nextGeneration();
-                   return 0;
-               } finally {
-                   if (!ranAction)
-                       breakBarrier();
-               }
-           }
+            int index = --count;
+            if (index == 0) {  // tripped
+                boolean ranAction = false;
+                try {
+                    final Runnable command = barrierCommand;
+                    if (command != null)
+                        command.run();
+                    ranAction = true;
+                    nextGeneration();
+                    return 0;
+                } finally {
+                    if (!ranAction)
+                        breakBarrier();
+                }
+            }
 
             // loop until tripped, broken, interrupted, or timed out
             for (;;) {

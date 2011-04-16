@@ -504,7 +504,7 @@ public class ExecutorsTest extends JSR166TestCase {
                 Executors.privilegedCallable(new CheckCCL()).call();
             }};
 
-         runWithPermissions(r,
+        runWithPermissions(r,
                            new RuntimePermission("getClassLoader"),
                            new RuntimePermission("setContextClassLoader"));
     }

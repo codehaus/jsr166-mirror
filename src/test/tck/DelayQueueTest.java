@@ -318,25 +318,25 @@ public class DelayQueueTest extends JSR166TestCase {
     /**
      * put(null) throws NPE
      */
-     public void testPutNull() {
+    public void testPutNull() {
         try {
             DelayQueue q = new DelayQueue();
             q.put(null);
             shouldThrow();
         } catch (NullPointerException success) {}
-     }
+    }
 
     /**
      * all elements successfully put are contained
      */
-     public void testPut() {
-         DelayQueue q = new DelayQueue();
-         for (int i = 0; i < SIZE; ++i) {
-             PDelay I = new PDelay(i);
-             q.put(I);
-             assertTrue(q.contains(I));
-         }
-         assertEquals(SIZE, q.size());
+    public void testPut() {
+        DelayQueue q = new DelayQueue();
+        for (int i = 0; i < SIZE; ++i) {
+            PDelay I = new PDelay(i);
+            q.put(I);
+            assertTrue(q.contains(I));
+        }
+        assertEquals(SIZE, q.size());
     }
 
     /**

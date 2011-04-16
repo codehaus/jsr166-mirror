@@ -42,7 +42,7 @@ public class UnboundedQueueFillEmptyLoops {
         oneRun(klass, maxSize);
 
         if (total == 0) System.out.print(" ");
-   }
+    }
 
     static void oneRun(Class klass, int n) throws Exception {
         Queue<Integer> q = (Queue<Integer>) klass.newInstance();

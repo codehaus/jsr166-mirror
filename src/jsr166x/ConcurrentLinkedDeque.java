@@ -490,10 +490,10 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified collection or any
      *         of its elements are null
      */
-     public ConcurrentLinkedDeque(Collection<? extends E> c) {
-         this();
-         addAll(c);
-     }
+    public ConcurrentLinkedDeque(Collection<? extends E> c) {
+        this();
+        addAll(c);
+    }
 
     /**
      * Inserts the specified element at the front of this deque.

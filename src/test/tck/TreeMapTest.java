@@ -961,7 +961,7 @@ public class TreeMapTest extends JSR166TestCase {
      */
     void check(NavigableMap<Integer, Integer> map,
                       final int min, final int max, final boolean ascending) {
-       class ReferenceSet {
+        class ReferenceSet {
             int lower(int key) {
                 return ascending ? lowerAscending(key) : higherAscending(key);
             }

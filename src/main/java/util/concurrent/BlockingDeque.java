@@ -371,8 +371,10 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if an element was removed as a result of this call
      * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this deque (optional)
-     * @throws NullPointerException if the specified element is null (optional)
+     *         is incompatible with this deque
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     * @throws NullPointerException if the specified element is null
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
      */
     boolean removeFirstOccurrence(Object o);
 
@@ -387,8 +389,10 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if an element was removed as a result of this call
      * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this deque (optional)
-     * @throws NullPointerException if the specified element is null (optional)
+     *         is incompatible with this deque
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     * @throws NullPointerException if the specified element is null
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
      */
     boolean removeLastOccurrence(Object o);
 
@@ -562,8 +566,10 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
      * @param o element to be removed from this deque, if present
      * @return <tt>true</tt> if this deque changed as a result of the call
      * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this deque (optional)
-     * @throws NullPointerException if the specified element is null (optional)
+     *         is incompatible with this deque
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     * @throws NullPointerException if the specified element is null
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
      */
     boolean remove(Object o);
 
@@ -575,8 +581,10 @@ public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
      * @param o object to be checked for containment in this deque
      * @return <tt>true</tt> if this deque contains the specified element
      * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this deque (optional)
-     * @throws NullPointerException if the specified element is null (optional)
+     *         is incompatible with this deque
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     * @throws NullPointerException if the specified element is null
+     *         (<a href="Collection.html#optional-restrictions">optional</a>)
      */
     public boolean contains(Object o);
 

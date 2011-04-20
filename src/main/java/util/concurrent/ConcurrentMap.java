@@ -75,10 +75,10 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         is not supported by this map
      * @throws ClassCastException if the key or value is of an inappropriate
      *         is incompatible with this deque
-     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      * @throws NullPointerException if the specified key or value is null,
      *         and this map does not permit null keys or values
-     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      */
     boolean remove(Object key, Object value);
 

@@ -613,10 +613,10 @@ public class CopyOnWriteArrayList<E>
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws ClassCastException if the class of an element of this list
      *         is incompatible with the specified collection
-     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      * @throws NullPointerException if this list contains a null element and the
      *         specified collection does not permit null elements
-     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      *         or if the specified collection is null
      * @see #remove(Object)
      */
@@ -655,10 +655,10 @@ public class CopyOnWriteArrayList<E>
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws ClassCastException if the class of an element of this list
      *         is incompatible with the specified collection
-     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      * @throws NullPointerException if this list contains a null element and the
      *         specified collection does not permit null elements
-     *         (<a href="Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      *         or if the specified collection is null
      * @see #remove(Object)
      */

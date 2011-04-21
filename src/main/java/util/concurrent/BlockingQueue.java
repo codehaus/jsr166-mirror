@@ -274,7 +274,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @param o element to be removed from this queue, if present
      * @return <tt>true</tt> if this queue changed as a result of the call
      * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this deque
+     *         is incompatible with this queue
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      * @throws NullPointerException if the specified element is null
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
@@ -289,7 +289,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @param o object to be checked for containment in this queue
      * @return <tt>true</tt> if this queue contains the specified element
      * @throws ClassCastException if the class of the specified element
-     *         is incompatible with this deque
+     *         is incompatible with this queue
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      * @throws NullPointerException if the specified element is null
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)

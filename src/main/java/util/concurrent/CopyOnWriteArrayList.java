@@ -616,7 +616,7 @@ public class CopyOnWriteArrayList<E>
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      * @throws NullPointerException if this list contains a null element and the
      *         specified collection does not permit null elements
-     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>),
      *         or if the specified collection is null
      * @see #remove(Object)
      */
@@ -658,7 +658,7 @@ public class CopyOnWriteArrayList<E>
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      * @throws NullPointerException if this list contains a null element and the
      *         specified collection does not permit null elements
-     *         (<a href="../Collection.html#optional-restrictions">optional</a>)
+     *         (<a href="../Collection.html#optional-restrictions">optional</a>),
      *         or if the specified collection is null
      * @see #remove(Object)
      */

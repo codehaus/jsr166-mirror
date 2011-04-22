@@ -446,7 +446,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         /**
          * Scans for a node containing given key while trying to
          * acquire lock, creating and returning one if not found. Upon
-         * return, guarantees that lock is held. UNlike in most
+         * return, guarantees that lock is held. Unlike in most
          * methods, calls to method equals are not screened: Since
          * traversal speed doesn't matter, we might as well help warm
          * up the associated code and accesses as well.

@@ -35,11 +35,11 @@ import java.util.Queue;
  * asynchronous nature of these deques, determining the current number
  * of elements requires a traversal of the elements, and so may report
  * inaccurate results if this collection is modified during traversal.
- * Additionally, the bulk operations <tt>addAll</tt>,
- * <tt>removeAll</tt>, <tt>retainAll</tt>, <tt>containsAll</tt>,
- * <tt>equals</tt>, and <tt>toArray</tt> are <em>not</em> guaranteed
+ * Additionally, the bulk operations {@code addAll},
+ * {@code removeAll}, {@code retainAll}, {@code containsAll},
+ * {@code equals}, and {@code toArray} are <em>not</em> guaranteed
  * to be performed atomically. For example, an iterator operating
- * concurrently with an <tt>addAll</tt> operation might view only some
+ * concurrently with an {@code addAll} operation might view only some
  * of the added elements.
  *
  * <p>This class and its iterator implement all of the <em>optional</em>

@@ -958,7 +958,6 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     for (int j = 0; j < segments.length; ++j)
                         ensureSegment(j).lock(); // force creation
                 }
-                long hashSum = 0L;
                 int sum = 0;
                 for (int j = 0; j < segments.length; ++j) {
                     HashEntry<K,V>[] tab;

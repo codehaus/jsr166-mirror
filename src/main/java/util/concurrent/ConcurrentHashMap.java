@@ -950,7 +950,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             throw new NullPointerException();
         final Segment<K,V>[] segments = this.segments;
         boolean found = false;
-        long last = 0;
+        long last = 0L;   // previous sum
         int retries = -1;
         try {
             outer: for (;;) {
@@ -958,7 +958,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
                     for (int j = 0; j < segments.length; ++j)
                         ensureSegment(j).lock(); // force creation
                 }
-                int sum = 0;
+                long sum = 0L;
                 for (int j = 0; j < segments.length; ++j) {
                     HashEntry<K,V>[] tab;
                     Segment<K,V> seg = segmentAt(segments, j);

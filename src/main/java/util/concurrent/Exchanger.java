@@ -275,7 +275,9 @@ public class Exchanger<V> {
      * extra space.
      */
     private static final class Slot extends AtomicReference<Object> {
-        // Improve likelihood of isolation on <= 64 byte cache lines
+        // Improve likelihood of isolation on <= 128 byte cache lines.
+        // We used to target 64 byte cache lines, but some x86s (including
+        // i7 under some BIOSes) actually use 128 byte cache lines.
         long q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, qa, qb, qc, qd, qe;
     }
 

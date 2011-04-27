@@ -159,7 +159,7 @@
  * A {@code CopyOnWriteArrayList} is preferable to a synchronized
  * {@code ArrayList} when the expected number of reads and traversals
  * greatly outnumber the number of updates to a list.
-
+ *
  * <p>The "Concurrent" prefix used with some classes in this package
  * is a shorthand indicating several differences from similar
  * "synchronized" classes.  For example {@code java.util.Hashtable} and

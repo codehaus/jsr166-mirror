@@ -2250,7 +2250,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * <tt>fromKey</tt> and <tt>toKey</tt> are equal, the returned sorted map
      * is empty.)  The returned sorted map is backed by this map, so changes
      * in the returned sorted map are reflected in this map, and vice-versa.
-
+     *
      * @param fromKey low endpoint (inclusive) of the subMap.
      * @param toKey high endpoint (exclusive) of the subMap.
      *

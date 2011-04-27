@@ -665,7 +665,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     // Hash-based segment and entry accesses
 
     /**
-     * Get the segment for the given hash
+     * Gets the segment for the given hash code.
      */
     @SuppressWarnings("unchecked")
     private Segment<K,V> segmentForHash(int h) {
@@ -674,7 +674,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Gets the table entry for the given segment and hash
+     * Gets the table entry for the given segment and hash code.
      */
     @SuppressWarnings("unchecked")
     static final <K,V> HashEntry<K,V> entryForHash(Segment<K,V> seg, int h) {
@@ -1232,7 +1232,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         /**
-         * Set nextEntry to first node of next non-empty table
+         * Sets nextEntry to first node of next non-empty table
          * (in backwards order, to simplify checks).
          */
         final void advance() {
@@ -1301,7 +1301,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         /**
-         * Set our entry's value and write through to the map. The
+         * Sets our entry's value and writes through to the map. The
          * value to return is somewhat arbitrary here. Since a
          * WriteThroughEntry does not necessarily track asynchronous
          * changes, the most recent "previous" value could be
@@ -1397,8 +1397,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Serialization Support -------------- */
 
     /**
-     * Save the state of the <tt>ConcurrentHashMap</tt> instance to a
-     * stream (i.e., serialize it).
+     * Saves the state of the <tt>ConcurrentHashMap</tt> instance to a
+     * stream (i.e., serializes it).
      * @param s the stream
      * @serialData
      * the key (Object) and value (Object)
@@ -1433,8 +1433,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Reconstitute the <tt>ConcurrentHashMap</tt> instance from a
-     * stream (i.e., deserialize it).
+     * Reconstitutes the <tt>ConcurrentHashMap</tt> instance from a
+     * stream (i.e., deserializes it).
      * @param s the stream
      */
     @SuppressWarnings("unchecked")

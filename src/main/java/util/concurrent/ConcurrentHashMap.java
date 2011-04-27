@@ -996,7 +996,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * full compatibility with class {@link java.util.Hashtable},
      * which supported this method prior to introduction of the
      * Java Collections framework.
-
+     *
      * @param  value a value to search for
      * @return <tt>true</tt> if and only if some key maps to the
      *         <tt>value</tt> argument in this table as

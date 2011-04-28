@@ -840,40 +840,33 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         // Try a few times to get accurate count. On failure due to
         // continuous async changes in table, resort to locking.
         final Segment<K,V>[] segments = this.segments;
-        int size;
-        boolean overflow; // true if size overflows 32 bits
-        long sum;         // sum of modCounts
-        long last = 0L;   // previous sum
-        int retries = -1; // first iteration isn't retry
-        try {
-            for (;;) {
-                if (retries++ == RETRIES_BEFORE_LOCK) {
-                    for (int j = 0; j < segments.length; ++j)
-                        ensureSegment(j).lock(); // force creation
+        final int segmentCount = segments.length;
+
+        long previousSum = 0L;
+        for (int retries = -1; retries < RETRIES_BEFORE_LOCK; retries++) {
+            long sum = 0L;    // sum of modCounts
+            long size = 0L;
+            for (int i = 0; i < segmentCount; i++) {
+                Segment<K,V> segment = segmentAt(segments, i);
+                if (segment != null) {
+                    sum += segment.modCount;
+                    size += segment.count;
                 }
-                sum = 0L;
-                size = 0;
-                overflow = false;
-                for (int j = 0; j < segments.length; ++j) {
-                    Segment<K,V> seg = segmentAt(segments, j);
-                    if (seg != null) {
-                        sum += seg.modCount;
-                        int c = seg.count;
-                        if (c < 0 || (size += c) < 0)
-                            overflow = true;
-                    }
-                }
-                if (sum == last)
-                    break;
-                last = sum;
             }
-        } finally {
-            if (retries > RETRIES_BEFORE_LOCK) {
-                for (int j = 0; j < segments.length; ++j)
-                    segmentAt(segments, j).unlock();
-            }
+            if (sum == previousSum)
+                return ((size >>> 31) == 0) ? (int) size : Integer.MAX_VALUE;
+            previousSum = sum;
         }
-        return overflow ? Integer.MAX_VALUE : size;
+
+        long size = 0L;
+        for (int i = 0; i < segmentCount; i++) {
+            Segment<K,V> segment = ensureSegment(i);
+            segment.lock();
+            size += segment.count;
+        }
+        for (int i = 0; i < segmentCount; i++)
+            segments[i].unlock();
+        return ((size >>> 31) == 0) ? (int) size : Integer.MAX_VALUE;
     }
 
     /**
@@ -949,44 +942,43 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         if (value == null)
             throw new NullPointerException();
         final Segment<K,V>[] segments = this.segments;
-        boolean found = false;
-        long last = 0L;   // previous sum
-        int retries = -1;
+        long previousSum = 0L;
+        int lockCount = 0;
         try {
-            outer: for (;;) {
-                if (retries++ == RETRIES_BEFORE_LOCK) {
-                    for (int j = 0; j < segments.length; ++j)
-                        ensureSegment(j).lock(); // force creation
-                }
-                long sum = 0L;
-                for (int j = 0; j < segments.length; ++j) {
-                    HashEntry<K,V>[] tab;
-                    Segment<K,V> seg = segmentAt(segments, j);
-                    if (seg != null && (tab = seg.table) != null) {
+            for (int retries = -1; ; retries++) {
+                long sum = 0L;    // sum of modCounts
+                for (int j = 0; j < segments.length; j++) {
+                    Segment<K,V> segment;
+                    if (retries == RETRIES_BEFORE_LOCK) {
+                        segment = ensureSegment(j);
+                        segment.lock();
+                        lockCount++;
+                    } else {
+                        segment = segmentAt(segments, j);
+                        if (segment == null)
+                            continue;
+                    }
+                    HashEntry<K,V>[] tab = segment.table;
+                    if (tab != null) {
                         for (int i = 0 ; i < tab.length; i++) {
                             HashEntry<K,V> e;
                             for (e = entryAt(tab, i); e != null; e = e.next) {
                                 V v = e.value;
-                                if (v != null && value.equals(v)) {
-                                    found = true;
-                                    break outer;
-                                }
+                                if (v != null && value.equals(v))
+                                    return true;
                             }
                         }
-                        sum += seg.modCount;
+                        sum += segment.modCount;
                     }
                 }
-                if (retries > 0 && sum == last)
-                    break;
-                last = sum;
+                if ((retries >= 0 && sum == previousSum) || lockCount > 0)
+                    return false;
+                previousSum = sum;
             }
         } finally {
-            if (retries > RETRIES_BEFORE_LOCK) {
-                for (int j = 0; j < segments.length; ++j)
-                    segmentAt(segments, j).unlock();
-            }
+            for (int j = 0; j < lockCount; j++)
+                segments[j].unlock();
         }
-        return found;
     }
 
     /**

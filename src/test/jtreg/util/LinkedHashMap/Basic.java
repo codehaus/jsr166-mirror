@@ -82,12 +82,12 @@ public class Basic {
         Map m = new LinkedHashMap();
         for (int i=0; i<mapSize; i++)
             if (m.put(new Integer(i), new Integer(2*i)) != null)
-                throw new Exception("put returns non-null value erroenously.");
+                throw new Exception("put returns non-null value erroneously.");
         for (int i=0; i<2*mapSize; i++)
             if (m.containsValue(new Integer(i)) != (i%2==0))
                 throw new Exception("contains value "+i);
         if (m.put(nil, nil) == null)
-            throw new Exception("put returns a null value erroenously.");
+            throw new Exception("put returns a null value erroneously.");
         Map m2 = new LinkedHashMap(); m2.putAll(m);
         if (!m.equals(m2))
             throw new Exception("Clone not equal to original. (1)");

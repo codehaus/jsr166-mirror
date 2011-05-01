@@ -6,11 +6,13 @@
 
 //  Author:  Russel Winder <russel@russel.org.uk>
 
+isSnapshot = true
+
 allprojects {
   group = 'org.codehaus.jsr166-mirror'
   versionRoot = ( new File ( 'version.properties' ) ).text.trim ( ) 
-  version = versionRoot + '-SNAPSHOT'
-  bundleVersion = versionRoot + '.SNAPSHOT'
+  version = versionRoot + ( isSnapshot ? '-SNAPSHOT' : '' )
+  bundleVersion = versionRoot + ( isSnapshot ? '.SNAPSHOT' : '' )
   projectWebsite = 'http://jsr166.codehaus.org'
 }
 
@@ -54,6 +56,18 @@ subprojects {
       instruction 'provider' , theVendor
       instruction 'Export-Package' , "*;version=${version}"
       instruction 'Import-Package', '*;resolution:=optional'
+    }
+    task javadocArtifact ( type  : Jar , dependsOn : 'javadoc' ) {
+      classifier = 'javadoc'
+      from docsDir
+    }
+    task sourceArtifact ( type : Jar ) {
+      classifier = 'sources'
+      from sourceSets.main.allSource
+    }
+    artifacts {
+      archives ( javadocArtifact )
+      archives ( sourceArtifact )
     }
   }
 

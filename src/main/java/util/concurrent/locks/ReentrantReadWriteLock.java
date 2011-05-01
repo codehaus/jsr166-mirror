@@ -51,8 +51,8 @@ import java.util.*;
  * will block unless both the read lock and write lock are free (which
  * implies there are no waiting threads).  (Note that the non-blocking
  * {@link ReadLock#tryLock()} and {@link WriteLock#tryLock()} methods
- * do not honor this fair setting and will acquire the lock if it is
- * possible, regardless of waiting threads.)
+ * do not honor this fair setting and will immediately acquire the lock
+ * if it is possible, regardless of waiting threads.)
  * <p>
  * </dl>
  *

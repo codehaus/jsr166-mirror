@@ -33,7 +33,7 @@ import java.util.*;
  * <dt><b><i>Fair mode</i></b>
  * <dd> When constructed as fair, threads contend for entry using an
  * approximately arrival-order policy. When the currently held lock
- * is released either the longest-waiting single writer thread will
+ * is released, either the longest-waiting single writer thread will
  * be assigned the write lock, or if there is a group of reader threads
  * waiting longer than all waiting writer threads, that group will be
  * assigned the read lock.

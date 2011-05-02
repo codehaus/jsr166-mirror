@@ -351,6 +351,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             }});
 
         Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(t1.isAlive());
+        assertTrue(t2.isAlive());
         releaseWriteLock(lock);
         awaitTermination(t1, LONG_DELAY_MS);
         awaitTermination(t2, LONG_DELAY_MS);

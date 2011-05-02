@@ -259,6 +259,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
+        releaseLock(lock.writeLock());
     }
 
 

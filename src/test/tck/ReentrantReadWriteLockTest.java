@@ -846,17 +846,22 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testAwait_Interrupt() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
+        final CountDownLatch locked = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
-                c.await();
-                lock.writeLock().unlock();
+                assertTrue(lock.isWriteLocked());
+                locked.countDown();
+                try { c.await(); }
+                finally { lock.writeLock().unlock(); }
             }});
 
-        Thread.sleep(SHORT_DELAY_MS);
+        locked.await();
+        while (lock.isWriteLocked())
+            Thread.yield();
         t.interrupt();
-        t.join(SHORT_DELAY_MS);
-        assertFalse(t.isAlive());
+        awaitTermination(t, LONG_DELAY_MS);
+        assertFalse(lock.isWriteLocked());
     }
 
     /**
@@ -865,17 +870,22 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testAwaitNanos_Interrupt() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
+        final CountDownLatch locked = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
-                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
-                lock.writeLock().unlock();
+                assertTrue(lock.isWriteLocked());
+                locked.countDown();
+                try { c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS)); }
+                finally { lock.writeLock().unlock(); }
             }});
 
-        Thread.sleep(SHORT_DELAY_MS);
+        locked.await();
+        while (lock.isWriteLocked())
+            Thread.yield();
         t.interrupt();
-        t.join(SHORT_DELAY_MS);
-        assertFalse(t.isAlive());
+        awaitTermination(t, LONG_DELAY_MS);
+        assertFalse(lock.isWriteLocked());
     }
 
     /**
@@ -884,18 +894,23 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testAwaitUntil_Interrupt() throws InterruptedException {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         final Condition c = lock.writeLock().newCondition();
+        final CountDownLatch locked = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lock();
+                assertTrue(lock.isWriteLocked());
+                locked.countDown();
                 java.util.Date d = new java.util.Date();
-                c.awaitUntil(new java.util.Date(d.getTime() + 10000));
-                lock.writeLock().unlock();
+                try { c.awaitUntil(new java.util.Date(d.getTime() + 10000)); }
+                finally { lock.writeLock().unlock(); }
             }});
 
-        Thread.sleep(SHORT_DELAY_MS);
+        locked.await();
+        while (lock.isWriteLocked())
+            Thread.yield();
         t.interrupt();
-        t.join(SHORT_DELAY_MS);
-        assertFalse(t.isAlive());
+        awaitTermination(t, LONG_DELAY_MS);
+        assertFalse(lock.isWriteLocked());
     }
 
     /**

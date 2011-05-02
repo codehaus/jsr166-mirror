@@ -63,7 +63,7 @@ subprojects {
     }
     task sourceArtifact ( type : Jar ) {
       classifier = 'sources'
-      from sourceSets.main.allSource
+      //  specification of the file set in the per module specification to allow for variant structuring.
     }
     artifacts {
       archives ( javadocArtifact )
@@ -117,6 +117,7 @@ project ( ':jsr166' ) {
       instruction 'Implementation-Title' , 'JSR166'
     }
   }
+  sourceArtifact { from sourceSets.main.allSource }
 }
 
 //  Compiling these other materials is a bit tricky as we should be using the jsr166.jar above rather than
@@ -148,6 +149,7 @@ project ( ':jsr166tck' ) {
       instruction 'Implementation-Title' , 'JSR166 TCK'
     }
   }
+  sourceArtifact { from sourceSets.main.allSource }
 }
 
 project ( ':jsr166x' ) {
@@ -163,6 +165,7 @@ project ( ':jsr166x' ) {
       instruction 'Implementation-Title' , 'JSR166x'
     }
   }
+  sourceArtifact { into ( 'jsr166x' ) { from sourceSets.main.allSource } }
 }
 
 project ( ':jsr166y' ) {
@@ -178,6 +181,7 @@ project ( ':jsr166y' ) {
       instruction 'Implementation-Title' , 'JSR166y'
     }
   }
+  sourceArtifact { into ( 'jsr166y' ) { from sourceSets.main.allSource } }
 }
 
 project ( ':extra166y' ) {
@@ -204,6 +208,7 @@ project ( ':extra166y' ) {
       instruction 'Implementation-Title' , 'Extra166y'
     }
   }
+  sourceArtifact { into ( 'extra166y' ) { from sourceSets.main.allSource } }
 }
 
 task clobber ( description : 'Clean all the Gradle subproject directories since they are transient.  All the permanent material is not in the subproject directories.' ) << {

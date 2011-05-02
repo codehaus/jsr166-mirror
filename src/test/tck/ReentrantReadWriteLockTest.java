@@ -59,6 +59,15 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
+     * Releases lock, checking that it had a hold count of 1.
+     */
+    void releaseLock(ReentrantReadWriteLock.WriteLock lock) {
+        assertTrue(lock.isHeldByCurrentThread());
+        lock.unlock();
+        assertFalse(lock.isHeldByCurrentThread());
+    }
+
+    /**
      * Constructor sets given fairness, and is in unlocked state
      */
     public void testConstructor() {
@@ -194,16 +203,12 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lockInterruptibly();
-                lock.writeLock().unlock();
-                lock.writeLock().lockInterruptibly();
-                lock.writeLock().unlock();
             }});
 
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
-        lock.writeLock().unlock();
         t.join();
+        releaseLock(lock.writeLock());
     }
 
     /**

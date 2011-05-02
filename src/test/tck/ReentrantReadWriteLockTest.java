@@ -59,12 +59,13 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
-     * Releases lock, checking that it had a hold count of 1.
+     * Releases write lock, checking that it had a hold count of 1.
      */
-    void releaseLock(ReentrantReadWriteLock.WriteLock lock) {
-        assertTrue(lock.isHeldByCurrentThread());
-        lock.unlock();
-        assertFalse(lock.isHeldByCurrentThread());
+    void releaseWriteLock(ReentrantReadWriteLock lock) {
+        ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+        assertTrue(writeLock.isHeldByCurrentThread());
+        writeLock.unlock();
+        assertFalse(writeLock.isHeldByCurrentThread());
     }
 
     /**
@@ -208,7 +209,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, LONG_DELAY_MS);
-        releaseLock(lock.writeLock());
+        releaseWriteLock(lock);
     }
 
     /**
@@ -225,7 +226,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, LONG_DELAY_MS);
-        releaseLock(lock.writeLock());
+        releaseWriteLock(lock);
     }
 
     /**
@@ -242,7 +243,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, LONG_DELAY_MS);
-        releaseLock(lock.writeLock());
+        releaseWriteLock(lock);
     }
 
     /**
@@ -259,7 +260,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, LONG_DELAY_MS);
-        releaseLock(lock.writeLock());
+        releaseWriteLock(lock);
     }
 
 
@@ -275,7 +276,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             }});
 
         awaitTermination(t, LONG_DELAY_MS);
-        lock.writeLock().unlock();
+        releaseWriteLock(lock);
     }
 
     /**
@@ -290,7 +291,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             }});
 
         awaitTermination(t, LONG_DELAY_MS);
-        lock.writeLock().unlock();
+        releaseWriteLock(lock);
     }
 
     /**
@@ -350,7 +351,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             }});
 
         Thread.sleep(SHORT_DELAY_MS);
-        lock.writeLock().unlock();
+        releaseWriteLock(lock);
         awaitTermination(t1, LONG_DELAY_MS);
         awaitTermination(t2, LONG_DELAY_MS);
     }
@@ -667,7 +668,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, LONG_DELAY_MS);
-        releaseLock(lock.writeLock());
+        releaseWriteLock(lock);
     }
 
     /**
@@ -684,7 +685,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         Thread.sleep(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, LONG_DELAY_MS);
-        releaseLock(lock.writeLock());
+        releaseWriteLock(lock);
     }
 
     /**

@@ -631,6 +631,14 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * Waits up to LONG_DELAY_MS for the given thread to enter a wait
+     * state: BLOCKED, WAITING, or TIMED_WAITING.
+     */
+    void waitForThreadToEnterWaitState(Thread thread) {
+        waitForThreadToEnterWaitState(thread, LONG_DELAY_MS);
+    }
+
+    /**
      * Returns the number of milliseconds since time given by
      * startNanoTime, which must have been previously returned from a
      * call to {@link System.nanoTime()}.
@@ -665,6 +673,15 @@ public class JSR166TestCase extends TestCase {
                 fail("Test timed out");
             }
         }
+    }
+
+    /**
+     * Waits for LONG_DELAY_MS milliseconds for the thread to
+     * terminate (using {@link Thread#join(long)}), else interrupts
+     * the thread (in the hope that it may terminate later) and fails.
+     */
+    void awaitTermination(Thread t) {
+        awaitTermination(t, LONG_DELAY_MS);
     }
 
     // Some convenient Runnable classes

@@ -131,16 +131,16 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         assertFalse(sync.hasQueuedThreads());
         sync.acquire(1);
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasQueuedThreads());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasQueuedThreads());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasQueuedThreads());
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.hasQueuedThreads());
         t1.join();
         t2.join();
@@ -168,20 +168,20 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         assertFalse(sync.isQueued(t2));
         sync.acquire(1);
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.isQueued(t1));
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.isQueued(t1));
         assertTrue(sync.isQueued(t2));
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.isQueued(t1));
         assertTrue(sync.isQueued(t2));
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.isQueued(t1));
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.isQueued(t2));
         t1.join();
         t2.join();
@@ -197,17 +197,17 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         assertNull(sync.getFirstQueuedThread());
         sync.acquire(1);
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(t1, sync.getFirstQueuedThread());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(t1, sync.getFirstQueuedThread());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(t2, sync.getFirstQueuedThread());
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertNull(sync.getFirstQueuedThread());
         t1.join();
         t2.join();
@@ -224,16 +224,16 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         assertFalse(sync.hasContended());
         sync.acquire(1);
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasContended());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasContended());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasContended());
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasContended());
         t1.join();
         t2.join();
@@ -250,18 +250,18 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         assertTrue(sync.getQueuedThreads().isEmpty());
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getQueuedThreads().contains(t1));
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getQueuedThreads().contains(t1));
         assertTrue(sync.getQueuedThreads().contains(t2));
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.getQueuedThreads().contains(t1));
         assertTrue(sync.getQueuedThreads().contains(t2));
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getQueuedThreads().isEmpty());
         t1.join();
         t2.join();
@@ -278,18 +278,18 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getExclusiveQueuedThreads().contains(t1));
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getExclusiveQueuedThreads().contains(t1));
         assertTrue(sync.getExclusiveQueuedThreads().contains(t2));
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.getExclusiveQueuedThreads().contains(t1));
         assertTrue(sync.getExclusiveQueuedThreads().contains(t2));
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getExclusiveQueuedThreads().isEmpty());
         t1.join();
         t2.join();
@@ -306,16 +306,16 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         sync.acquire(1);
         assertTrue(sync.getSharedQueuedThreads().isEmpty());
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getSharedQueuedThreads().isEmpty());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getSharedQueuedThreads().isEmpty());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getSharedQueuedThreads().isEmpty());
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.getSharedQueuedThreads().isEmpty());
         t1.join();
         t2.join();
@@ -333,7 +333,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -385,12 +385,12 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire(1);
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 sync.release(1);
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.isHeldExclusively());
         t.join();
         assertFalse(sync.isHeldExclusively());
@@ -406,9 +406,9 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         Thread t = new Thread(new InterruptedSyncRunnable(sync));
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.release(1);
         t.join();
     }
@@ -421,7 +421,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         sync.acquireInterruptibly(1);
         Thread t = new Thread(new InterruptedSyncRunnable(sync));
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         assertTrue(sync.isHeldExclusively());
         t.join();
@@ -511,7 +511,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         c.signal();
         sync.release(1);
@@ -651,13 +651,13 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         assertTrue(sync.hasWaiters(c));
         assertEquals(1, sync.getWaitQueueLength(c));
         c.signal();
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         assertFalse(sync.hasWaiters(c));
         assertEquals(0, sync.getWaitQueueLength(c));
@@ -691,15 +691,15 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         assertTrue(sync.hasWaiters(c));
         assertEquals(2, sync.getWaitQueueLength(c));
         c.signalAll();
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         assertFalse(sync.hasWaiters(c));
         assertEquals(0, sync.getWaitQueueLength(c));
@@ -736,16 +736,16 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         assertTrue(sync.getWaitingThreads(c).isEmpty());
         sync.release(1);
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         assertTrue(sync.hasWaiters(c));
         assertTrue(sync.getWaitingThreads(c).contains(t1));
         assertTrue(sync.getWaitingThreads(c).contains(t2));
         c.signalAll();
         sync.release(1);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         assertFalse(sync.hasWaiters(c));
         assertTrue(sync.getWaitingThreads(c).isEmpty());
@@ -772,7 +772,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         sync.acquire(1);
         c.signal();
@@ -794,7 +794,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
         assertFalse(t.isAlive());
@@ -813,7 +813,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
         assertFalse(t.isAlive());
@@ -833,7 +833,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
         assertFalse(t.isAlive());
@@ -861,7 +861,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         sync.acquire(1);
         c.signalAll();
         sync.release(1);
@@ -941,7 +941,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
         t.start();
         assertFalse(l.isSignalled());
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         l.releaseShared(0);
         assertTrue(l.isSignalled());
         t.join();
@@ -964,7 +964,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
         t.start();
         assertFalse(l.isSignalled());
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         l.releaseShared(0);
         assertTrue(l.isSignalled());
         t.join();
@@ -1000,7 +1000,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(l.isSignalled());
         t.interrupt();
         t.join();
@@ -1019,7 +1019,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(l.isSignalled());
         t.join();
     }

@@ -1074,7 +1074,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         threadStarted.await();
         while (q.isEmpty())
             Thread.yield();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);
         checkEmpty(q);

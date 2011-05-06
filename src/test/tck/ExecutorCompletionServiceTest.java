@@ -119,7 +119,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
             assertNull(ecs.poll());
             Callable c = new StringTask();
             ecs.submit(c);
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
             for (;;) {
                 Future f = ecs.poll();
                 if (f != null) {

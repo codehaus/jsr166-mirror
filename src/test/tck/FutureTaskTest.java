@@ -366,7 +366,7 @@ public class FutureTaskTest extends JSR166TestCase {
             new FutureTask(new CheckedInterruptedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
                     threadStarted.countDown();
-                    Thread.sleep(LONG_DELAY_MS);
+                    delay(LONG_DELAY_MS);
                     return Boolean.TRUE;
                 }});
 
@@ -395,7 +395,7 @@ public class FutureTaskTest extends JSR166TestCase {
             new FutureTask(new CheckedInterruptedCallable<Object>() {
                 public Object realCall() throws InterruptedException {
                     threadStarted.countDown();
-                    Thread.sleep(LONG_DELAY_MS);
+                    delay(LONG_DELAY_MS);
                     return Boolean.TRUE;
                 }});
 

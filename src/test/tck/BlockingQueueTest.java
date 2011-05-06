@@ -90,7 +90,7 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(t.isAlive());
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);

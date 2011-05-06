@@ -75,7 +75,7 @@ public class ExchangerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -91,7 +91,7 @@ public class ExchangerTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -123,19 +123,19 @@ public class ExchangerTest extends JSR166TestCase {
         Thread t2 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertSame(one, e.exchange(two));
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 assertSame(three, e.exchange(one));
             }});
         Thread t3 = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 assertSame(one, e.exchange(three));
             }});
 
         t1.start();
         t2.start();
         t3.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t1.interrupt();
         t1.join();
         t2.join();

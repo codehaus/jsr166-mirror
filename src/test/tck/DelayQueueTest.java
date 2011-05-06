@@ -353,7 +353,7 @@ public class DelayQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         q.take();
         t.interrupt();
         t.join();
@@ -373,7 +373,7 @@ public class DelayQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -406,7 +406,7 @@ public class DelayQueueTest extends JSR166TestCase {
                 assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
             }});
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(t.isAlive());
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);
@@ -430,7 +430,7 @@ public class DelayQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -487,7 +487,7 @@ public class DelayQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -773,7 +773,7 @@ public class DelayQueueTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SHORT_DELAY_MS);
+                delay(SHORT_DELAY_MS);
                 q.put(new PDelay(1));
             }});
 

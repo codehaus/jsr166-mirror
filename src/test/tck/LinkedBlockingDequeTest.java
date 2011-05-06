@@ -617,7 +617,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
         assertEquals(SIZE, q.size());
@@ -641,10 +641,10 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(q.remainingCapacity(), 0);
         assertEquals(0, q.take());
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
         assertEquals(q.remainingCapacity(), 0);
@@ -667,7 +667,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -699,7 +699,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -811,7 +811,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
         assertEquals(SIZE, q.size());
@@ -835,10 +835,10 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(q.remainingCapacity(), 0);
         assertEquals(capacity - 1, q.take());
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
         assertEquals(q.remainingCapacity(), 0);
@@ -861,7 +861,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -887,7 +887,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }};
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -908,7 +908,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -954,7 +954,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -976,7 +976,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         assertTrue(q.offerFirst(zero, SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();
         t.join();
@@ -1024,7 +1024,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
         assertEquals(SIZE, q.size());
@@ -1048,10 +1048,10 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(q.remainingCapacity(), 0);
         assertEquals(0, q.take());
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
         assertEquals(q.remainingCapacity(), 0);
@@ -1074,7 +1074,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -1100,7 +1100,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }};
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -1121,7 +1121,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -1166,7 +1166,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -1188,7 +1188,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         assertTrue(q.offerLast(zero, SHORT_DELAY_MS, MILLISECONDS));
         t.interrupt();
         t.join();
@@ -1508,7 +1508,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 assertSame(one, q.take());
             }});
 
@@ -1530,7 +1530,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 q.put(one);
             }});
 

@@ -120,7 +120,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
 
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t1.interrupt();
         t1.join();
         t2.join();
@@ -143,7 +143,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
 
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t1.interrupt();
         t1.join();
         t2.join();
@@ -222,7 +222,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
 
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         c.reset();
         t1.join();
         t2.join();
@@ -277,7 +277,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
 
         t.start();
         for (int i = 0; i < 4; i++) {
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
             t.interrupt();
         }
         done.set(true);

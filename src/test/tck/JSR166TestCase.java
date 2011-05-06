@@ -443,6 +443,27 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * Delays, via Thread.sleep for the given millisecond delay, but
+     * if the sleep is shorter than specified, may re-sleep or yield
+     * until time elapses.
+     */
+    public static void delay(long ms) throws InterruptedException {
+        long startTime = System.nanoTime();
+        long ns = ms * 1000 * 1000; 
+        for (;;) {
+            if (ms > 0L)
+                Thread.sleep(ms);
+            else // too short to sleep
+                Thread.yield();
+            long d = ns - (System.nanoTime() - startTime);
+            if (d > 0L)
+                ms = d / (1000 * 1000); 
+            else
+                break;
+        }
+    }
+
+    /**
      * Waits out termination of a thread pool or fails doing so.
      */
     public void joinPool(ExecutorService exec) {
@@ -588,7 +609,7 @@ public class JSR166TestCase extends TestCase {
      */
     void sleep(long millis) {
         try {
-            Thread.sleep(millis);
+            delay(millis);
         } catch (InterruptedException ie) {
             AssertionFailedError afe =
                 new AssertionFailedError("Unexpected InterruptedException");
@@ -823,46 +844,46 @@ public class JSR166TestCase extends TestCase {
 
     public class ShortRunnable extends CheckedRunnable {
         protected void realRun() throws Throwable {
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
         }
     }
 
     public class ShortInterruptedRunnable extends CheckedInterruptedRunnable {
         protected void realRun() throws InterruptedException {
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
         }
     }
 
     public class SmallRunnable extends CheckedRunnable {
         protected void realRun() throws Throwable {
-            Thread.sleep(SMALL_DELAY_MS);
+            delay(SMALL_DELAY_MS);
         }
     }
 
     public class SmallPossiblyInterruptedRunnable extends CheckedRunnable {
         protected void realRun() {
             try {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
             } catch (InterruptedException ok) {}
         }
     }
 
     public class SmallCallable extends CheckedCallable {
         protected Object realCall() throws InterruptedException {
-            Thread.sleep(SMALL_DELAY_MS);
+            delay(SMALL_DELAY_MS);
             return Boolean.TRUE;
         }
     }
 
     public class MediumRunnable extends CheckedRunnable {
         protected void realRun() throws Throwable {
-            Thread.sleep(MEDIUM_DELAY_MS);
+            delay(MEDIUM_DELAY_MS);
         }
     }
 
     public class MediumInterruptedRunnable extends CheckedInterruptedRunnable {
         protected void realRun() throws InterruptedException {
-            Thread.sleep(MEDIUM_DELAY_MS);
+            delay(MEDIUM_DELAY_MS);
         }
     }
 
@@ -870,7 +891,7 @@ public class JSR166TestCase extends TestCase {
         return new CheckedRunnable() {
             protected void realRun() {
                 try {
-                    Thread.sleep(timeoutMillis);
+                    delay(timeoutMillis);
                 } catch (InterruptedException ok) {}
             }};
     }
@@ -878,7 +899,7 @@ public class JSR166TestCase extends TestCase {
     public class MediumPossiblyInterruptedRunnable extends CheckedRunnable {
         protected void realRun() {
             try {
-                Thread.sleep(MEDIUM_DELAY_MS);
+                delay(MEDIUM_DELAY_MS);
             } catch (InterruptedException ok) {}
         }
     }
@@ -886,7 +907,7 @@ public class JSR166TestCase extends TestCase {
     public class LongPossiblyInterruptedRunnable extends CheckedRunnable {
         protected void realRun() {
             try {
-                Thread.sleep(LONG_DELAY_MS);
+                delay(LONG_DELAY_MS);
             } catch (InterruptedException ok) {}
         }
     }
@@ -910,7 +931,7 @@ public class JSR166TestCase extends TestCase {
                 public boolean isDone() { return done; }
                 public void run() {
                     try {
-                        Thread.sleep(timeoutMillis);
+                        delay(timeoutMillis);
                         done = true;
                     } catch (InterruptedException ok) {}
                 }
@@ -921,7 +942,7 @@ public class JSR166TestCase extends TestCase {
         public volatile boolean done = false;
         public void run() {
             try {
-                Thread.sleep(SHORT_DELAY_MS);
+                delay(SHORT_DELAY_MS);
                 done = true;
             } catch (InterruptedException ok) {}
         }
@@ -931,7 +952,7 @@ public class JSR166TestCase extends TestCase {
         public volatile boolean done = false;
         public void run() {
             try {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 done = true;
             } catch (InterruptedException ok) {}
         }
@@ -941,7 +962,7 @@ public class JSR166TestCase extends TestCase {
         public volatile boolean done = false;
         public void run() {
             try {
-                Thread.sleep(MEDIUM_DELAY_MS);
+                delay(MEDIUM_DELAY_MS);
                 done = true;
             } catch (InterruptedException ok) {}
         }
@@ -951,7 +972,7 @@ public class JSR166TestCase extends TestCase {
         public volatile boolean done = false;
         public void run() {
             try {
-                Thread.sleep(LONG_DELAY_MS);
+                delay(LONG_DELAY_MS);
                 done = true;
             } catch (InterruptedException ok) {}
         }
@@ -968,7 +989,7 @@ public class JSR166TestCase extends TestCase {
         public volatile boolean done = false;
         public Object call() {
             try {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 done = true;
             } catch (InterruptedException ok) {}
             return Boolean.TRUE;

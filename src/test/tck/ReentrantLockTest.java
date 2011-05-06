@@ -120,16 +120,16 @@ public class ReentrantLockTest extends JSR166TestCase {
         assertFalse(lock.hasQueuedThreads());
         lock.lock();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.hasQueuedThreads());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.hasQueuedThreads());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.hasQueuedThreads());
         lock.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(lock.hasQueuedThreads());
         t1.join();
         t2.join();
@@ -145,16 +145,16 @@ public class ReentrantLockTest extends JSR166TestCase {
         assertEquals(0, lock.getQueueLength());
         lock.lock();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(2, lock.getQueueLength());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         lock.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(0, lock.getQueueLength());
         t1.join();
         t2.join();
@@ -170,16 +170,16 @@ public class ReentrantLockTest extends JSR166TestCase {
         assertEquals(0, lock.getQueueLength());
         lock.lock();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(2, lock.getQueueLength());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         lock.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(0, lock.getQueueLength());
         t1.join();
         t2.join();
@@ -207,20 +207,20 @@ public class ReentrantLockTest extends JSR166TestCase {
         assertFalse(sync.hasQueuedThread(t2));
         sync.lock();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasQueuedThread(t1));
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(sync.hasQueuedThread(t1));
         assertTrue(sync.hasQueuedThread(t2));
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.hasQueuedThread(t1));
         assertTrue(sync.hasQueuedThread(t2));
         sync.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.hasQueuedThread(t1));
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(sync.hasQueuedThread(t2));
         t1.join();
         t2.join();
@@ -238,18 +238,18 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lock();
         assertTrue(lock.getQueuedThreads().isEmpty());
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.getQueuedThreads().contains(t1));
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.getQueuedThreads().contains(t1));
         assertTrue(lock.getQueuedThreads().contains(t2));
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(lock.getQueuedThreads().contains(t1));
         assertTrue(lock.getQueuedThreads().contains(t2));
         lock.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.getQueuedThreads().isEmpty());
         t1.join();
         t2.join();
@@ -268,7 +268,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -334,12 +334,12 @@ public class ReentrantLockTest extends JSR166TestCase {
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 lock.unlock();
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.isLocked());
         t.join();
         assertFalse(lock.isLocked());
@@ -354,9 +354,9 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lock();
         Thread t = new Thread(new InterruptedLockRunnable(lock));
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.unlock();
         t.join();
     }
@@ -369,7 +369,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.lockInterruptibly();
         Thread t = new Thread(new InterruptedLockRunnable(lock));
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         assertTrue(lock.isLocked());
         assertTrue(lock.isHeldByCurrentThread());
@@ -449,7 +449,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         c.signal();
         lock.unlock();
@@ -586,13 +586,13 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         assertTrue(lock.hasWaiters(c));
         assertEquals(1, lock.getWaitQueueLength(c));
         c.signal();
         lock.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         assertFalse(lock.hasWaiters(c));
         assertEquals(0, lock.getWaitQueueLength(c));
@@ -626,15 +626,15 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         assertTrue(lock.hasWaiters(c));
         assertEquals(2, lock.getWaitQueueLength(c));
         c.signalAll();
         lock.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         assertFalse(lock.hasWaiters(c));
         assertEquals(0, lock.getWaitQueueLength(c));
@@ -671,16 +671,16 @@ public class ReentrantLockTest extends JSR166TestCase {
         assertTrue(lock.getWaitingThreads(c).isEmpty());
         lock.unlock();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         assertTrue(lock.hasWaiters(c));
         assertTrue(lock.getWaitingThreads(c).contains(t1));
         assertTrue(lock.getWaitingThreads(c).contains(t2));
         c.signalAll();
         lock.unlock();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         assertFalse(lock.hasWaiters(c));
         assertTrue(lock.getWaitingThreads(c).isEmpty());
@@ -729,7 +729,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         thread.start();
 
         while (!thread.lockStarted) {
-            Thread.sleep(100);
+            delay(100);
         }
 
         lock.lock();
@@ -759,7 +759,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
         assertFalse(t.isAlive());
@@ -778,7 +778,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
         assertFalse(t.isAlive());
@@ -798,7 +798,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
         assertFalse(t.isAlive());
@@ -826,7 +826,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         c.signalAll();
         lock.unlock();
@@ -864,7 +864,7 @@ public class ReentrantLockTest extends JSR166TestCase {
 
         t1.start();
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         lock.lock();
         c.signalAll();
         lock.unlock();

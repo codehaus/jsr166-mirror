@@ -342,16 +342,18 @@ public class LockSupportTest extends JSR166TestCase {
     }
 
     /**
-     * parkUntil(0) returns immediately
+     * parkUntil(0) returns immediately.
+     *
      * Requires hotspot fix for:
      * 6763959 java.util.concurrent.locks.LockSupport.parkUntil(0) blocks forever
+     * which is in jdk7-b118 and 6u25.
      */
-    public void XXXXtestParkUntil0Returns() throws InterruptedException {
+    public void testParkUntil0Returns() throws InterruptedException {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 LockSupport.parkUntil(0L);
             }});
 
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
     }
 }

@@ -332,6 +332,16 @@ public class LockSupportTest extends JSR166TestCase {
     }
 
     /**
+     * getBlocker(null) throws NullPointerException
+     */
+    public void testGetBlockerNull() {
+        try {
+            LockSupport.getBlocker(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
      * parkUntil(0) returns immediately
      * Requires hotspot fix for:
      * 6763959 java.util.concurrent.locks.LockSupport.parkUntil(0) blocks forever

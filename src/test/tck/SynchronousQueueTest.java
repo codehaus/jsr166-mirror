@@ -172,7 +172,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -196,9 +196,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(0, q.take());
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -253,7 +253,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -277,9 +277,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(0, q.take());
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -295,7 +295,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -346,7 +346,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
@@ -573,7 +573,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 assertSame(one, q.take());
             }});
 
@@ -595,7 +595,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SHORT_DELAY_MS);
+                delay(SHORT_DELAY_MS);
                 q.put(one);
             }});
 
@@ -665,7 +665,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
         t.start();
         ArrayList l = new ArrayList();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         q.drainTo(l);
         assertTrue(l.size() <= 1);
         if (l.size() > 0)
@@ -714,7 +714,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         t1.start();
         t2.start();
         ArrayList l = new ArrayList();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         q.drainTo(l, 1);
         assertEquals(1, l.size());
         q.drainTo(l, 1);

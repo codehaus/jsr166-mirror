@@ -330,7 +330,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(q.size(), size);
         q.take();
         t.interrupt();
@@ -351,7 +351,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -383,7 +383,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -698,7 +698,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(SMALL_DELAY_MS);
+                delay(SMALL_DELAY_MS);
                 q.put(one);
             }});
 

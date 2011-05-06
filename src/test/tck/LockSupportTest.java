@@ -34,7 +34,7 @@ public class LockSupportTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         LockSupport.unpark(t);
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
@@ -55,7 +55,7 @@ public class LockSupportTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         LockSupport.unpark(t);
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
@@ -75,7 +75,7 @@ public class LockSupportTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         LockSupport.unpark(t);
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
@@ -163,7 +163,7 @@ public class LockSupportTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
@@ -188,7 +188,7 @@ public class LockSupportTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
@@ -212,7 +212,7 @@ public class LockSupportTest extends JSR166TestCase {
             }});
 
         threadStarted.await();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         awaitTermination(t, MEDIUM_DELAY_MS);
     }

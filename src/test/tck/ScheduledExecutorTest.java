@@ -150,7 +150,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         RunnableCounter counter = new RunnableCounter();
         ScheduledFuture h =
             p.scheduleAtFixedRate(counter, 0, 1, MILLISECONDS);
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         h.cancel(true);
         int c = counter.count.get();
         // By time scaling conventions, we must have at least
@@ -168,7 +168,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         RunnableCounter counter = new RunnableCounter();
         ScheduledFuture h =
             p.scheduleWithFixedDelay(counter, 0, 1, MILLISECONDS);
-        Thread.sleep(SMALL_DELAY_MS);
+        delay(SMALL_DELAY_MS);
         h.cancel(true);
         int c = counter.count.get();
         assertTrue(c >= SMALL_DELAY_MS / SHORT_DELAY_MS);
@@ -331,7 +331,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             assertEquals(0, p.getCompletedTaskCount());
             threadProceed.countDown();
             threadDone.await();
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
             assertEquals(1, p.getCompletedTaskCount());
         } finally {
             joinPool(p);
@@ -607,7 +607,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
                 long count = p.getTaskCount();
                 if (count >= 0 && count <= max)
                     break;
-                Thread.sleep(1);
+                delay(1);
             }
             assertTrue(k < SMALL_DELAY_MS);
         } finally {

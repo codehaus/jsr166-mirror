@@ -290,7 +290,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             assertEquals(0, p.getCompletedTaskCount());
             threadProceed.countDown();
             threadDone.await();
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
             assertEquals(1, p.getCompletedTaskCount());
         } finally {
             joinPool(p);
@@ -1251,7 +1251,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         try {
             TrackedNoOpRunnable r = new TrackedNoOpRunnable();
             p.execute(r);
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
             assertTrue(r.done);
             assertTrue(p.beforeCalled);
             assertTrue(p.afterCalled);
@@ -1742,7 +1742,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             for (int i = 0; i < (MEDIUM_DELAY_MS/10); i++) {
                 if (p.getPoolSize() == 0)
                     break;
-                Thread.sleep(10);
+                delay(10);
             }
             assertEquals(0, p.getPoolSize());
         } finally {
@@ -1766,7 +1766,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
                     threadStarted.countDown();
                     assertTrue(p.getPoolSize() >= 1);
                 }});
-            Thread.sleep(SMALL_DELAY_MS);
+            delay(SMALL_DELAY_MS);
             assertTrue(p.getPoolSize() >= 1);
         } finally {
             joinPool(p);

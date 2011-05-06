@@ -169,7 +169,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         s.release();
         s.release();
         s.acquire();
@@ -193,7 +193,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         s.release();
         s.release();
         s.acquireUninterruptibly();
@@ -238,7 +238,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -255,7 +255,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -270,16 +270,16 @@ public class SemaphoreTest extends JSR166TestCase {
         assertFalse(lock.hasQueuedThreads());
         lock.acquireUninterruptibly();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.hasQueuedThreads());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.hasQueuedThreads());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.hasQueuedThreads());
         lock.release();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(lock.hasQueuedThreads());
         t1.join();
         t2.join();
@@ -295,16 +295,16 @@ public class SemaphoreTest extends JSR166TestCase {
         assertEquals(0, lock.getQueueLength());
         lock.acquireUninterruptibly();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(2, lock.getQueueLength());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         lock.release();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(0, lock.getQueueLength());
         t1.join();
         t2.join();
@@ -321,18 +321,18 @@ public class SemaphoreTest extends JSR166TestCase {
         lock.acquireUninterruptibly();
         assertTrue(lock.getQueuedThreads().isEmpty());
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.getQueuedThreads().contains(t1));
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.getQueuedThreads().contains(t1));
         assertTrue(lock.getQueuedThreads().contains(t2));
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertFalse(lock.getQueuedThreads().contains(t1));
         assertTrue(lock.getQueuedThreads().contains(t2));
         lock.release();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertTrue(lock.getQueuedThreads().isEmpty());
         t1.join();
         t2.join();
@@ -531,7 +531,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         s.release();
         s.release();
         s.release();
@@ -556,7 +556,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         s.release(2);
         s.acquire(2);
         s.release(1);
@@ -577,7 +577,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         s.release(6);
         s.acquire(2);
         s.acquire(2);
@@ -644,7 +644,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -661,7 +661,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -678,7 +678,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -695,7 +695,7 @@ public class SemaphoreTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
     }
@@ -710,16 +710,16 @@ public class SemaphoreTest extends JSR166TestCase {
         assertEquals(0, lock.getQueueLength());
         lock.acquireUninterruptibly();
         t1.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         t2.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(2, lock.getQueueLength());
         t1.interrupt();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(1, lock.getQueueLength());
         lock.release();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(0, lock.getQueueLength());
         t1.join();
         t2.join();

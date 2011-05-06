@@ -66,7 +66,7 @@ public class CountDownLatchTest extends JSR166TestCase {
 
         t.start();
         assertEquals(l.getCount(), 2);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         l.countDown();
         assertEquals(l.getCount(), 1);
         l.countDown();
@@ -89,7 +89,7 @@ public class CountDownLatchTest extends JSR166TestCase {
 
         t.start();
         assertEquals(l.getCount(), 2);
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         l.countDown();
         assertEquals(l.getCount(), 1);
         l.countDown();
@@ -126,7 +126,7 @@ public class CountDownLatchTest extends JSR166TestCase {
             }});
 
         t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        delay(SHORT_DELAY_MS);
         assertEquals(l.getCount(), 1);
         t.interrupt();
         t.join();

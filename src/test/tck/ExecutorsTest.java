@@ -254,7 +254,7 @@ public class ExecutorsTest extends JSR166TestCase {
     public void testTimedCallable() throws Exception {
         final Runnable sleeper = new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(LONG_DELAY_MS);
+                delay(LONG_DELAY_MS);
             }};
         for (ExecutorService executor :
                  new ExecutorService[] {
@@ -313,7 +313,7 @@ public class ExecutorsTest extends JSR166TestCase {
         }
 
         try {
-            Thread.sleep(SHORT_DELAY_MS);
+            delay(SHORT_DELAY_MS);
         } finally {
             joinPool(e);
         }
@@ -349,7 +349,7 @@ public class ExecutorsTest extends JSR166TestCase {
                 ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
                 e.execute(r);
                 e.shutdown();
-                Thread.sleep(SHORT_DELAY_MS);
+                delay(SHORT_DELAY_MS);
                 joinPool(e);
             }};
 

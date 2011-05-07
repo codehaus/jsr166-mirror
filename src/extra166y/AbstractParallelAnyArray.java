@@ -1133,6 +1133,16 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
+    static final class AndPredicate<T> implements Predicate<T> {
+        final Predicate<? super T> first;
+        final Predicate<? super T> second;
+        AndPredicate(Predicate<? super T> first, 
+                     Predicate<? super T> second) {
+            this.first = first; this.second = second;
+        }
+        public final boolean op(T x) { return first.op(x) && second.op(x); }
+    }
+
     // Filtered (but unmapped) classes
     static final class OFPap<T> extends ParallelArrayWithFilter<T> {
         final Predicate<? super T> selector;
@@ -1149,7 +1159,7 @@ public abstract class AbstractParallelAnyArray {
         public ParallelArrayWithFilter<T> withFilter
             (Predicate<? super T> selector) {
             return new OFPap<T>(ex, origin, fence, array,
-                                CommonOps.andPredicate(this.selector, selector));
+                                new AndPredicate(this.selector, selector));
         }
 
         public ParallelArrayWithFilter<T> withIndexedFilter

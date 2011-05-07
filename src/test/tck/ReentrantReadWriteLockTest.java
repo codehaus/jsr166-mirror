@@ -376,12 +376,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                 lock.writeLock().lock();
                 lock.writeLock().unlock();
             }});
-
-        awaitTermination(t1);
-        waitForQueuedThread(lock, t2);
-        assertNotWriteLocked(lock);
+        delay(SHORT_DELAY_MS);
         lock.readLock().unlock();
+        awaitTermination(t1);
         awaitTermination(t2);
+        assertNotWriteLocked(lock);
     }
 
     /**

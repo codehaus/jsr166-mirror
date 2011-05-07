@@ -478,6 +478,20 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    /**
+     * Checks that thread does not terminate within timeoutMillis
+     * milliseconds (that is, Thread.join times out).
+     */
+    public void assertThreadJoinTimesOut(Thread thread, long timeoutMillis) {
+        try {
+            long startTime = System.nanoTime();
+            thread.join(timeoutMillis);
+            assertTrue(thread.isAlive());
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
+        } catch (InterruptedException ie) {
+            fail("Unexpected InterruptedException");
+        }
+    }
 
     /**
      * Fails with message "should throw exception".

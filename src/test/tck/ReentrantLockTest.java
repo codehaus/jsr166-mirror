@@ -262,12 +262,11 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testInterruptedException2() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.tryLock(MEDIUM_DELAY_MS,MILLISECONDS);
             }});
 
-        t.start();
         delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join();
@@ -280,12 +279,11 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testTryLockWhenLocked() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 assertFalse(lock.tryLock());
             }});
 
-        t.start();
         t.join();
         lock.unlock();
     }
@@ -296,12 +294,11 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testTryLock_Timeout() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertFalse(lock.tryLock(1, MILLISECONDS));
             }});
 
-        t.start();
         t.join();
         lock.unlock();
     }
@@ -331,14 +328,13 @@ public class ReentrantLockTest extends JSR166TestCase {
         assertTrue(lock.isLocked());
         lock.unlock();
         assertFalse(lock.isLocked());
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 delay(SMALL_DELAY_MS);
                 lock.unlock();
             }});
 
-        t.start();
         delay(SHORT_DELAY_MS);
         assertTrue(lock.isLocked());
         t.join();
@@ -352,8 +348,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testLockInterruptibly1() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-        Thread t = new Thread(new InterruptedLockRunnable(lock));
-        t.start();
+        Thread t = newStartedThread(new InterruptedLockRunnable(lock));
         delay(SHORT_DELAY_MS);
         t.interrupt();
         delay(SHORT_DELAY_MS);
@@ -367,8 +362,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testLockInterruptibly2() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lockInterruptibly();
-        Thread t = new Thread(new InterruptedLockRunnable(lock));
-        t.start();
+        Thread t = newStartedThread(new InterruptedLockRunnable(lock));
         delay(SHORT_DELAY_MS);
         t.interrupt();
         assertTrue(lock.isLocked());
@@ -441,14 +435,13 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testAwait() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 c.await();
                 lock.unlock();
             }});
 
-        t.start();
         delay(SHORT_DELAY_MS);
         lock.lock();
         c.signal();
@@ -576,7 +569,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testHasWaiters() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 assertFalse(lock.hasWaiters(c));
@@ -585,7 +578,6 @@ public class ReentrantLockTest extends JSR166TestCase {
                 lock.unlock();
             }});
 
-        t.start();
         delay(SHORT_DELAY_MS);
         lock.lock();
         assertTrue(lock.hasWaiters(c));
@@ -607,7 +599,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testGetWaitQueueLength() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t1 = new Thread(new CheckedRunnable() {
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 assertFalse(lock.hasWaiters(c));
@@ -616,7 +608,9 @@ public class ReentrantLockTest extends JSR166TestCase {
                 lock.unlock();
             }});
 
-        Thread t2 = new Thread(new CheckedRunnable() {
+        delay(SHORT_DELAY_MS);
+
+        Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 assertTrue(lock.hasWaiters(c));
@@ -625,9 +619,6 @@ public class ReentrantLockTest extends JSR166TestCase {
                 lock.unlock();
             }});
 
-        t1.start();
-        delay(SHORT_DELAY_MS);
-        t2.start();
         delay(SHORT_DELAY_MS);
         lock.lock();
         assertTrue(lock.hasWaiters(c));
@@ -752,13 +743,12 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testAwait_Interrupt() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 c.await();
             }});
 
-        t.start();
         delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
@@ -771,13 +761,12 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testAwaitNanos_Interrupt() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
             }});
 
-        t.start();
         delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
@@ -790,14 +779,13 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testAwaitUntil_Interrupt() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 java.util.Date d = new java.util.Date();
                 c.awaitUntil(new java.util.Date(d.getTime() + 10000));
             }});
 
-        t.start();
         delay(SHORT_DELAY_MS);
         t.interrupt();
         t.join(SHORT_DELAY_MS);
@@ -810,22 +798,20 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testSignalAll() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t1 = new Thread(new CheckedRunnable() {
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 c.await();
                 lock.unlock();
             }});
 
-        Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 c.await();
                 lock.unlock();
             }});
 
-        t1.start();
-        t2.start();
         delay(SHORT_DELAY_MS);
         lock.lock();
         c.signalAll();
@@ -842,7 +828,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testAwaitLockCount() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t1 = new Thread(new CheckedRunnable() {
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 assertEquals(1, lock.getHoldCount());
@@ -851,7 +837,7 @@ public class ReentrantLockTest extends JSR166TestCase {
                 lock.unlock();
             }});
 
-        Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
                 lock.lock();
@@ -862,8 +848,6 @@ public class ReentrantLockTest extends JSR166TestCase {
                 lock.unlock();
             }});
 
-        t1.start();
-        t2.start();
         delay(SHORT_DELAY_MS);
         lock.lock();
         c.signalAll();

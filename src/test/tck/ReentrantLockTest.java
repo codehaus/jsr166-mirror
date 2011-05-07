@@ -789,35 +789,65 @@ public class ReentrantLockTest extends JSR166TestCase {
      * awaitNanos is interruptible
      */
     public void testAwaitNanos_Interrupt() throws InterruptedException {
-        final ReentrantLock lock = new ReentrantLock();
+        final PublicReentrantLock lock = new PublicReentrantLock();
         final Condition c = lock.newCondition();
+        final CountDownLatch locked = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
+                assertTrue(lock.isLocked());
+                assertTrue(lock.isHeldByCurrentThread());
+                assertHasNoWaiters(lock, c);
+                locked.countDown();
+                try {
+                    c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
+                } finally {
+                    assertTrue(lock.isLocked());
+                    assertTrue(lock.isHeldByCurrentThread());
+                    assertHasNoWaiters(lock, c);
+                    lock.unlock();
+                    assertFalse(Thread.interrupted());
+                }
             }});
 
-        delay(SHORT_DELAY_MS);
+        locked.await();
+        assertHasWaiters(lock, c, t);
         t.interrupt();
         awaitTermination(t);
+        assertFalse(lock.isLocked());
     }
 
     /**
      * awaitUntil is interruptible
      */
     public void testAwaitUntil_Interrupt() throws InterruptedException {
-        final ReentrantLock lock = new ReentrantLock();
+        final PublicReentrantLock lock = new PublicReentrantLock();
         final Condition c = lock.newCondition();
+        final CountDownLatch locked = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
+                assertTrue(lock.isLocked());
+                assertTrue(lock.isHeldByCurrentThread());
+                assertHasNoWaiters(lock, c);
+                locked.countDown();
                 java.util.Date d = new java.util.Date();
-                c.awaitUntil(new java.util.Date(d.getTime() + 10000));
+                try {
+                    c.awaitUntil(new java.util.Date(d.getTime() + 10000));
+                } finally {
+                    assertTrue(lock.isLocked());
+                    assertTrue(lock.isHeldByCurrentThread());
+                    assertHasNoWaiters(lock, c);
+                    lock.unlock();
+                    assertFalse(Thread.interrupted());
+                }
             }});
 
-        delay(SHORT_DELAY_MS);
+        locked.await();
+        assertHasWaiters(lock, c, t);
         t.interrupt();
         awaitTermination(t);
+        assertFalse(lock.isLocked());
     }
 
     /**

@@ -59,6 +59,28 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
+     * Checks that condition c has no waiters.
+     */
+    void assertHasNoWaiters(PublicReentrantLock lock, Condition c) {
+        assertHasWaiters(lock, c, new Thread[] {});
+    }
+
+    /**
+     * Checks that condition c has exactly the given waiter threads.
+     */
+    void assertHasWaiters(PublicReentrantLock lock, Condition c,
+                          Thread... threads) {
+        lock.lock();
+        assertEquals(threads.length > 0, lock.hasWaiters(c));
+        assertEquals(threads.length, lock.getWaitQueueLength(c));
+        assertEquals(threads.length == 0, lock.getWaitingThreads(c).isEmpty());
+        assertEquals(threads.length, lock.getWaitingThreads(c).size());
+        assertEquals(new HashSet<Thread>(lock.getWaitingThreads(c)),
+                     new HashSet<Thread>(Arrays.asList(threads)));
+        lock.unlock();
+    }
+
+    /**
      * Constructor sets given fairness
      */
     public void testConstructor() {
@@ -735,17 +757,32 @@ public class ReentrantLockTest extends JSR166TestCase {
      * await is interruptible
      */
     public void testAwait_Interrupt() throws InterruptedException {
-        final ReentrantLock lock = new ReentrantLock();
+        final PublicReentrantLock lock = new PublicReentrantLock();
         final Condition c = lock.newCondition();
+        final CountDownLatch locked = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.lock();
-                c.await();
+                assertTrue(lock.isLocked());
+                assertTrue(lock.isHeldByCurrentThread());
+                assertHasNoWaiters(lock, c);
+                locked.countDown();
+                try {
+                    c.await();
+                } finally {
+                    assertTrue(lock.isLocked());
+                    assertTrue(lock.isHeldByCurrentThread());
+                    assertHasNoWaiters(lock, c);
+                    lock.unlock();
+                    assertFalse(Thread.interrupted());
+                }
             }});
 
-        delay(SHORT_DELAY_MS);
+        locked.await();
+        assertHasWaiters(lock, c, t);
         t.interrupt();
         awaitTermination(t);
+        assertFalse(lock.isLocked());
     }
 
     /**

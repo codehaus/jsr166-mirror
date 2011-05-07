@@ -449,7 +449,7 @@ public class JSR166TestCase extends TestCase {
      */
     public static void delay(long ms) throws InterruptedException {
         long startTime = System.nanoTime();
-        long ns = ms * 1000 * 1000; 
+        long ns = ms * 1000 * 1000;
         for (;;) {
             if (ms > 0L)
                 Thread.sleep(ms);
@@ -457,7 +457,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.yield();
             long d = ns - (System.nanoTime() - startTime);
             if (d > 0L)
-                ms = d / (1000 * 1000); 
+                ms = d / (1000 * 1000);
             else
                 break;
         }

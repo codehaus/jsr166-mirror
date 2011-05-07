@@ -251,7 +251,7 @@ public class LockSupport {
      * @since 1.6
      */
     public static Object getBlocker(Thread t) {
-        if (t == null) 
+        if (t == null)
             throw new NullPointerException();
         return unsafe.getObjectVolatile(t, parkBlockerOffset);
     }

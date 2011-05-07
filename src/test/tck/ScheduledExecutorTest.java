@@ -459,7 +459,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     * isShutDown is false before shutdown, true after
+     * isShutdown is false before shutdown, true after
      */
     public void testIsShutdown() {
 
@@ -617,7 +617,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     * shutDownNow returns a list containing tasks that were not run
+     * shutdownNow returns a list containing tasks that were not run
      */
     public void testShutdownNow() {
         ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
@@ -639,7 +639,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * In default setting, shutdown cancels periodic but not delayed
      * tasks at shutdown
      */
-    public void testShutDown1() throws InterruptedException {
+    public void testShutdown1() throws InterruptedException {
         ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
         assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
@@ -669,7 +669,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * If setExecuteExistingDelayedTasksAfterShutdownPolicy is false,
      * delayed tasks are cancelled at shutdown
      */
-    public void testShutDown2() throws InterruptedException {
+    public void testShutdown2() throws InterruptedException {
         ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         p.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         assertFalse(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
@@ -695,7 +695,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * If setContinueExistingPeriodicTasksAfterShutdownPolicy is set false,
      * periodic tasks are cancelled at shutdown
      */
-    public void testShutDown3() throws InterruptedException {
+    public void testShutdown3() throws InterruptedException {
         ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
         assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
@@ -718,7 +718,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
      * if setContinueExistingPeriodicTasksAfterShutdownPolicy is true,
      * periodic tasks are not cancelled at shutdown
      */
-    public void testShutDown4() throws InterruptedException {
+    public void testShutdown4() throws InterruptedException {
         ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         final CountDownLatch counter = new CountDownLatch(2);
         try {

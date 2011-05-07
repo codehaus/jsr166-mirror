@@ -566,7 +566,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     /**
      * shutDownNow returns a list containing tasks that were not run
      */
-    public void testShutDownNow() {
+    public void testShutdownNow() {
         final ThreadPoolExecutor p =
             new ThreadPoolExecutor(1, 1,
                                    LONG_DELAY_MS, MILLISECONDS,

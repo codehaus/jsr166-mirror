@@ -587,29 +587,28 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     }
 
     /**
-     * purge removes cancelled tasks from the queue
+     * purge eventually removes cancelled tasks from the queue
      */
     public void testPurge() throws InterruptedException {
         ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < tasks.length; i++) {
-            tasks[i] = p.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
-        }
+        for (int i = 0; i < tasks.length; i++)
+            tasks[i] = p.schedule(new SmallPossiblyInterruptedRunnable(),
+                                  LONG_DELAY_MS, MILLISECONDS);
         try {
             int max = tasks.length;
             if (tasks[4].cancel(true)) --max;
             if (tasks[3].cancel(true)) --max;
             // There must eventually be an interference-free point at
             // which purge will not fail. (At worst, when queue is empty.)
-            int k;
-            for (k = 0; k < SMALL_DELAY_MS; ++k) {
+            long startTime = System.nanoTime();
+            do {
                 p.purge();
                 long count = p.getTaskCount();
-                if (count >= 0 && count <= max)
-                    break;
-                delay(1);
-            }
-            assertTrue(k < SMALL_DELAY_MS);
+                if (count == max)
+                    return;
+            } while (millisElapsedSince(startTime) < MEDIUM_DELAY_MS);
+            fail("Purge failed to remove cancelled tasks");
         } finally {
             for (ScheduledFuture task : tasks)
                 task.cancel(true);
@@ -620,19 +619,20 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     /**
      * shutDownNow returns a list containing tasks that were not run
      */
-    public void testShutDownNow() throws InterruptedException {
+    public void testShutdownNow() {
         ScheduledThreadPoolExecutor p = new ScheduledThreadPoolExecutor(1);
         for (int i = 0; i < 5; i++)
-            p.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
-        List l;
+            p.schedule(new SmallPossiblyInterruptedRunnable(),
+                       LONG_DELAY_MS, MILLISECONDS);
         try {
-            l = p.shutdownNow();
+            List<Runnable> l = p.shutdownNow();
+            assertTrue(p.isShutdown());
+            assertEquals(5, l.size());
         } catch (SecurityException ok) {
-            return;
+            // Allowed in case test doesn't have privs
+        } finally {
+            joinPool(p);
         }
-        assertTrue(p.isShutdown());
-        assertTrue(l.size() > 0 && l.size() <= 5);
-        joinPool(p);
     }
 
     /**

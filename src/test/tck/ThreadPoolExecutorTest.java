@@ -378,7 +378,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     * isShutDown is false before shutdown, true after
+     * isShutdown is false before shutdown, true after
      */
     public void testIsShutdown() {
         final ThreadPoolExecutor p =
@@ -564,9 +564,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
     }
 
     /**
-     * shutDownNow returns a list containing tasks that were not run
+     * shutdownNow returns a list containing tasks that were not run
      */
-    public void testShutDownNow() {
+    public void testShutdownNow() {
         final ThreadPoolExecutor p =
             new ThreadPoolExecutor(1, 1,
                                    LONG_DELAY_MS, MILLISECONDS,

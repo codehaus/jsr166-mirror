@@ -1136,7 +1136,7 @@ public abstract class AbstractParallelAnyArray {
     static final class AndPredicate<T> implements Predicate<T> {
         final Predicate<? super T> first;
         final Predicate<? super T> second;
-        AndPredicate(Predicate<? super T> first, 
+        AndPredicate(Predicate<? super T> first,
                      Predicate<? super T> second) {
             this.first = first; this.second = second;
         }

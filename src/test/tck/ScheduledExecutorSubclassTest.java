@@ -510,7 +510,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     }
 
     /**
-     * isShutDown is false before shutdown, true after
+     * isShutdown is false before shutdown, true after
      */
     public void testIsShutdown() {
         CustomExecutor p = new CustomExecutor(1);
@@ -642,24 +642,23 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     public void testPurge() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
         ScheduledFuture[] tasks = new ScheduledFuture[5];
-        for (int i = 0; i < tasks.length; i++) {
-            tasks[i] = p.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
-        }
+        for (int i = 0; i < tasks.length; i++)
+            tasks[i] = p.schedule(new SmallPossiblyInterruptedRunnable(),
+                                  LONG_DELAY_MS, MILLISECONDS);
         try {
             int max = tasks.length;
             if (tasks[4].cancel(true)) --max;
             if (tasks[3].cancel(true)) --max;
             // There must eventually be an interference-free point at
             // which purge will not fail. (At worst, when queue is empty.)
-            int k;
-            for (k = 0; k < SMALL_DELAY_MS; ++k) {
+            long startTime = System.nanoTime();
+            do {
                 p.purge();
                 long count = p.getTaskCount();
-                if (count >= 0 && count <= max)
-                    break;
-                delay(1);
-            }
-            assertTrue(k < SMALL_DELAY_MS);
+                if (count == max)
+                    return;
+            } while (millisElapsedSince(startTime) < MEDIUM_DELAY_MS);
+            fail("Purge failed to remove cancelled tasks");
         } finally {
             for (ScheduledFuture task : tasks)
                 task.cancel(true);
@@ -668,28 +667,29 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
     }
 
     /**
-     * shutDownNow returns a list containing tasks that were not run
+     * shutdownNow returns a list containing tasks that were not run
      */
-    public void testShutDownNow() {
+    public void testShutdownNow() {
         CustomExecutor p = new CustomExecutor(1);
         for (int i = 0; i < 5; i++)
-            p.schedule(new SmallPossiblyInterruptedRunnable(), SHORT_DELAY_MS, MILLISECONDS);
-        List l;
+            p.schedule(new SmallPossiblyInterruptedRunnable(),
+                       LONG_DELAY_MS, MILLISECONDS);
         try {
-            l = p.shutdownNow();
+            List<Runnable> l = p.shutdownNow();
+            assertTrue(p.isShutdown());
+            assertEquals(5, l.size());
         } catch (SecurityException ok) {
-            return;
+            // Allowed in case test doesn't have privs
+        } finally {
+            joinPool(p);
         }
-        assertTrue(p.isShutdown());
-        assertTrue(l.size() > 0 && l.size() <= 5);
-        joinPool(p);
     }
 
     /**
      * In default setting, shutdown cancels periodic but not delayed
      * tasks at shutdown
      */
-    public void testShutDown1() throws InterruptedException {
+    public void testShutdown1() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
         assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
         assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
@@ -719,7 +719,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      * If setExecuteExistingDelayedTasksAfterShutdownPolicy is false,
      * delayed tasks are cancelled at shutdown
      */
-    public void testShutDown2() throws InterruptedException {
+    public void testShutdown2() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
         p.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         assertFalse(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
@@ -746,7 +746,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      * If setContinueExistingPeriodicTasksAfterShutdownPolicy is set false,
      * periodic tasks are cancelled at shutdown
      */
-    public void testShutDown3() throws InterruptedException {
+    public void testShutdown3() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
         assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
         assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
@@ -769,7 +769,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      * if setContinueExistingPeriodicTasksAfterShutdownPolicy is true,
      * periodic tasks are not cancelled at shutdown
      */
-    public void testShutDown4() throws InterruptedException {
+    public void testShutdown4() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
         final CountDownLatch counter = new CountDownLatch(2);
         try {

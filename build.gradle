@@ -6,7 +6,7 @@
 
 //  Author:  Russel Winder <russel@russel.org.uk>
 
-isSnapshot = true
+isSnapshot = false
 
 allprojects {
   group = 'org.codehaus.jsr166-mirror'

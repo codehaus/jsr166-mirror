@@ -246,6 +246,7 @@ public class LockSupport {
      * snapshot -- the thread may have since unblocked or blocked on a
      * different blocker object.
      *
+     * @param t the thread
      * @return the blocker
      * @throws NullPointerException if argument is null
      * @since 1.6

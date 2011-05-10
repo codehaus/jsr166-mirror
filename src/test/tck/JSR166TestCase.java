@@ -7,6 +7,10 @@
  */
 
 import junit.framework.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.PropertyPermission;
@@ -844,8 +848,16 @@ public class JSR166TestCase extends TestCase {
     public Runnable awaiter(final CountDownLatch latch) {
         return new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                latch.await();
+                await(latch);
             }};
+    }
+
+    public void await(CountDownLatch latch) {
+        try {
+            assertTrue(latch.await(LONG_DELAY_MS, MILLISECONDS));
+        } catch (Throwable t) {
+            threadUnexpectedException(t);
+        }
     }
 
     public static class NPETask implements Callable<String> {
@@ -1095,4 +1107,21 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T serialClone(T o) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
+            oos.writeObject(o);
+            oos.flush();
+            oos.close();
+            ByteArrayInputStream bin =
+                new ByteArrayInputStream(bos.toByteArray());
+            ObjectInputStream ois = new ObjectInputStream(bin);
+            return (T) ois.readObject();
+        } catch (Throwable t) {
+            threadUnexpectedException(t);
+            return null;
+        }
+    }
 }

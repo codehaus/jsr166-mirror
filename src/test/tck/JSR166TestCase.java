@@ -451,17 +451,17 @@ public class JSR166TestCase extends TestCase {
      * if the sleep is shorter than specified, may re-sleep or yield
      * until time elapses.
      */
-    public static void delay(long ms) throws InterruptedException {
+    public static void delay(long millis) throws InterruptedException {
         long startTime = System.nanoTime();
-        long ns = ms * 1000 * 1000;
+        long ns = millis * 1000 * 1000;
         for (;;) {
-            if (ms > 0L)
-                Thread.sleep(ms);
+            if (millis > 0L)
+                Thread.sleep(millis);
             else // too short to sleep
                 Thread.yield();
             long d = ns - (System.nanoTime() - startTime);
             if (d > 0L)
-                ms = d / (1000 * 1000);
+                millis = d / (1000 * 1000);
             else
                 break;
         }
@@ -483,15 +483,13 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Checks that thread does not terminate within timeoutMillis
-     * milliseconds (that is, Thread.join times out).
+     * Checks that thread does not terminate within the given millisecond delay.
      */
-    public void assertThreadJoinTimesOut(Thread thread, long timeoutMillis) {
+    public void assertThreadStaysAlive(Thread thread, long millis) {
         try {
-            long startTime = System.nanoTime();
-            thread.join(timeoutMillis);
+            // No need to optimize the failing case via Thread.join.
+            delay(millis);
             assertTrue(thread.isAlive());
-            assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
         } catch (InterruptedException ie) {
             fail("Unexpected InterruptedException");
         }

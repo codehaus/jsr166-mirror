@@ -251,18 +251,30 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     }
 
     /**
-     * After invoking a single task, isQuiescent is true,
-     * queues are empty, threads are not active, and
-     * construction parameters continue to hold
+     * After invoking a single task, isQuiescent eventually becomes
+     * true, at which time queues are empty, threads are not active,
+     * the task has completed successfully, and construction
+     * parameters continue to hold
      */
-    public void testisQuiescent() throws InterruptedException {
+    public void testisQuiescent() throws Exception {
         ForkJoinPool p = new ForkJoinPool(2);
         try {
             assertTrue(p.isQuiescent());
-            p.invoke(new FibTask(20));
+            long startTime = System.nanoTime();
+            FibTask f = new FibTask(20);
+            p.invoke(f);
             assertSame(ForkJoinPool.defaultForkJoinWorkerThreadFactory,
                        p.getFactory());
-            delay(SMALL_DELAY_MS);
+            while (! p.isQuiescent()) {
+                if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                    throw new AssertionFailedError("timed out");
+                assertFalse(p.getAsyncMode());
+                assertFalse(p.isShutdown());
+                assertFalse(p.isTerminating());
+                assertFalse(p.isTerminated());
+                Thread.yield();
+            }
+
             assertTrue(p.isQuiescent());
             assertFalse(p.getAsyncMode());
             assertEquals(0, p.getActiveThreadCount());
@@ -272,6 +284,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             assertFalse(p.isShutdown());
             assertFalse(p.isTerminating());
             assertFalse(p.isTerminated());
+            assertTrue(f.isDone());
+            assertEquals(6765, (int) f.get());
         } finally {
             joinPool(p);
         }

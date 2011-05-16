@@ -23,91 +23,95 @@ public class ExchangerTest extends JSR166TestCase {
     /**
      * exchange exchanges objects across two threads
      */
-    public void testExchange() throws InterruptedException {
+    public void testExchange() {
         final Exchanger e = new Exchanger();
-        Thread t1 = new Thread(new CheckedRunnable() {
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertSame(one, e.exchange(two));
                 assertSame(two, e.exchange(one));
             }});
-        Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertSame(two, e.exchange(one));
                 assertSame(one, e.exchange(two));
             }});
 
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+        awaitTermination(t1);
+        awaitTermination(t2);
     }
 
     /**
      * timed exchange exchanges objects across two threads
      */
-    public void testTimedExchange() throws InterruptedException {
+    public void testTimedExchange() {
         final Exchanger e = new Exchanger();
-        Thread t1 = new Thread(new CheckedRunnable() {
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                assertSame(one, e.exchange(two, SHORT_DELAY_MS, MILLISECONDS));
-                assertSame(two, e.exchange(one, SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(one, e.exchange(two, LONG_DELAY_MS, MILLISECONDS));
+                assertSame(two, e.exchange(one, LONG_DELAY_MS, MILLISECONDS));
             }});
-        Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                assertSame(two, e.exchange(one, SHORT_DELAY_MS, MILLISECONDS));
-                assertSame(one, e.exchange(two, SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(two, e.exchange(one, LONG_DELAY_MS, MILLISECONDS));
+                assertSame(one, e.exchange(two, LONG_DELAY_MS, MILLISECONDS));
             }});
 
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+        awaitTermination(t1);
+        awaitTermination(t2);
     }
 
     /**
      * interrupt during wait for exchange throws IE
      */
-    public void testExchange_InterruptedException() throws InterruptedException {
+    public void testExchange_InterruptedException() {
         final Exchanger e = new Exchanger();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
+                threadStarted.countDown();
                 e.exchange(one);
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(threadStarted);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
      * interrupt during wait for timed exchange throws IE
      */
-    public void testTimedExchange_InterruptedException() throws InterruptedException {
+    public void testTimedExchange_InterruptedException() {
         final Exchanger e = new Exchanger();
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws Exception {
-                e.exchange(null, SMALL_DELAY_MS, MILLISECONDS);
+                threadStarted.countDown();
+                e.exchange(null, LONG_DELAY_MS, MILLISECONDS);
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(threadStarted);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
-     * timeout during wait for timed exchange throws TOE
+     * timeout during wait for timed exchange throws TimeoutException
      */
-    public void testExchange_TimeOutException() throws InterruptedException {
+    public void testExchange_TimeoutException() {
         final Exchanger e = new Exchanger();
-        Thread t = new ThreadShouldThrow(TimeoutException.class) {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                e.exchange(null, SHORT_DELAY_MS, MILLISECONDS);
-            }};
+                long timeoutMillis = SHORT_DELAY_MS;
+                long startTime = System.nanoTime();
+                try {
+                    e.exchange(null, timeoutMillis, MILLISECONDS);
+                    shouldThrow();
+                } catch (TimeoutException success) {
+                    assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
+                }
+            }});
 
-        t.start();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -115,31 +119,33 @@ public class ExchangerTest extends JSR166TestCase {
      */
     public void testReplacementAfterExchange() throws InterruptedException {
         final Exchanger e = new Exchanger();
-        Thread t1 = new Thread(new CheckedInterruptedRunnable() {
+        final CountDownLatch exchanged = new CountDownLatch(2);
+        final CountDownLatch interrupted = new CountDownLatch(1);
+        Thread t1 = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 assertSame(two, e.exchange(one));
+                exchanged.countDown();
                 e.exchange(two);
             }});
-        Thread t2 = new Thread(new CheckedRunnable() {
+        Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertSame(one, e.exchange(two));
-                delay(SMALL_DELAY_MS);
+                exchanged.countDown();
+                interrupted.await();
                 assertSame(three, e.exchange(one));
             }});
-        Thread t3 = new Thread(new CheckedRunnable() {
+        Thread t3 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                delay(SMALL_DELAY_MS);
+                interrupted.await();
                 assertSame(one, e.exchange(three));
             }});
 
-        t1.start();
-        t2.start();
-        t3.start();
-        delay(SHORT_DELAY_MS);
+        await(exchanged);
         t1.interrupt();
-        t1.join();
-        t2.join();
-        t3.join();
+        interrupted.countDown();
+        awaitTermination(t1);
+        awaitTermination(t2);
+        awaitTermination(t3);
     }
 
 }

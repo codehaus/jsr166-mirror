@@ -152,7 +152,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
     /**
      * A timeout in timed await throws TimeoutException
      */
-    public void testAwait3_TimeOutException() throws InterruptedException {
+    public void testAwait3_TimeoutException() throws InterruptedException {
         final CyclicBarrier c = new CyclicBarrier(2);
         Thread t = new ThreadShouldThrow(TimeoutException.class) {
             public void realRun() throws Exception {

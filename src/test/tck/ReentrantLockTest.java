@@ -78,7 +78,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         long startTime = System.nanoTime();
         while (!lock.hasQueuedThread(t)) {
             if (millisElapsedSince(startTime) > LONG_DELAY_MS)
-                throw new AssertionError("timed out");
+                throw new AssertionFailedError("timed out");
             Thread.yield();
         }
         assertTrue(t.isAlive());

@@ -352,23 +352,26 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     /**
      * timed offer times out if full and elements not taken
      */
-    public void testTimedOffer() throws InterruptedException {
+    public void testTimedOffer() {
         final LinkedBlockingQueue q = new LinkedBlockingQueue(2);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.put(new Object());
                 q.put(new Object());
-                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                long startTime = System.nanoTime();
+                assertFalse(q.offer(new Object(), timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+                pleaseInterrupt.countDown();
                 try {
-                    q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    q.offer(new Object(), 2 * LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
-        t.start();
-        delay(SMALL_DELAY_MS);
+        await(pleaseInterrupt);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**

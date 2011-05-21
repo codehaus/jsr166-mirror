@@ -211,21 +211,19 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                long t0 = System.nanoTime();
-                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
-                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+                long startTime = System.nanoTime();
+                assertFalse(q.offer(new Object(), timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
                 pleaseInterrupt.countDown();
-                t0 = System.nanoTime();
                 try {
-                    q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    q.offer(new Object(), 2 * LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
-                assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
             }});
 
-        assertTrue(pleaseInterrupt.await(MEDIUM_DELAY_MS, MILLISECONDS));
+        await(pleaseInterrupt);
         t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
     }
 
     /**

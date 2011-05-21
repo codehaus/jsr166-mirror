@@ -655,21 +655,24 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedOffer() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.put(new Object());
                 q.put(new Object());
-                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                long startTime = System.nanoTime();
+                assertFalse(q.offer(new Object(), timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+                pleaseInterrupt.countDown();
                 try {
-                    q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    q.offer(new Object(), 2 * LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
-        t.start();
-        delay(SMALL_DELAY_MS);
+        await(pleaseInterrupt);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -849,21 +852,24 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedOfferFirst() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.putFirst(new Object());
                 q.putFirst(new Object());
-                assertFalse(q.offerFirst(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                long startTime = System.nanoTime();
+                assertFalse(q.offerFirst(new Object(), timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+                pleaseInterrupt.countDown();
                 try {
-                    q.offerFirst(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    q.offerFirst(new Object(), 2 * LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
-        t.start();
-        delay(SMALL_DELAY_MS);
+        await(pleaseInterrupt);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -1062,21 +1068,24 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedOfferLast() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.putLast(new Object());
                 q.putLast(new Object());
-                assertFalse(q.offerLast(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                long startTime = System.nanoTime();
+                assertFalse(q.offerLast(new Object(), timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+                pleaseInterrupt.countDown();
                 try {
-                    q.offerLast(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    q.offerLast(new Object(), 2 * LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
-        t.start();
-        delay(SMALL_DELAY_MS);
+        await(pleaseInterrupt);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**

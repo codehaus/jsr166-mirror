@@ -365,21 +365,24 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      */
     public void testTimedOffer() throws InterruptedException {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 q.put(new Object());
                 q.put(new Object());
-                assertFalse(q.offer(new Object(), SHORT_DELAY_MS/2, MILLISECONDS));
+                long startTime = System.nanoTime();
+                assertFalse(q.offer(new Object(), timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+                pleaseInterrupt.countDown();
                 try {
-                    q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    q.offer(new Object(), 2 * LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**

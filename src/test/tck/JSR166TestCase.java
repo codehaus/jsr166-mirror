@@ -12,9 +12,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.PropertyPermission;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -270,6 +272,22 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * Returns a timeout in milliseconds to be used in tests that
+     * verify that operations block or time out.
+     */
+    long timeoutMillis() {
+        return SHORT_DELAY_MS / 4;
+    }
+
+    /**
+     * Returns a new Date instance representing a time delayMillis
+     * milliseconds in the future.
+     */
+    Date delayedDate(long delayMillis) {
+        return new Date(new Date().getTime() + delayMillis);
+    }
+
+    /**
      * The first exception encountered if any threadAssertXXX method fails.
      */
     private final AtomicReference<Throwable> threadFailure
@@ -447,11 +465,11 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Delays, via Thread.sleep for the given millisecond delay, but
+     * Delays, via Thread.sleep, for the given millisecond delay, but
      * if the sleep is shorter than specified, may re-sleep or yield
      * until time elapses.
      */
-    public static void delay(long millis) throws InterruptedException {
+    static void delay(long millis) throws InterruptedException {
         long startTime = System.nanoTime();
         long ns = millis * 1000 * 1000;
         for (;;) {
@@ -470,7 +488,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * Waits out termination of a thread pool or fails doing so.
      */
-    public void joinPool(ExecutorService exec) {
+    void joinPool(ExecutorService exec) {
         try {
             exec.shutdown();
             assertTrue("ExecutorService did not terminate in a timely manner",
@@ -483,9 +501,17 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * Checks that thread does not terminate within the default
+     * millisecond delay of {@code timeoutMillis()}.
+     */
+    void assertThreadStaysAlive(Thread thread) {
+        assertThreadStaysAlive(thread, timeoutMillis());
+    }
+
+    /**
      * Checks that thread does not terminate within the given millisecond delay.
      */
-    public void assertThreadStaysAlive(Thread thread, long millis) {
+    void assertThreadStaysAlive(Thread thread, long millis) {
         try {
             // No need to optimize the failing case via Thread.join.
             delay(millis);
@@ -635,16 +661,6 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Sleeps until the timeout has elapsed, or interrupted.
-     * Does <em>NOT</em> throw InterruptedException.
-     */
-    void sleepTillInterrupted(long timeoutMillis) {
-        try {
-            Thread.sleep(timeoutMillis);
-        } catch (InterruptedException wakeup) {}
-    }
-
-    /**
      * Waits up to the specified number of milliseconds for the given
      * thread to enter a wait state: BLOCKED, WAITING, or TIMED_WAITING.
      */
@@ -783,6 +799,7 @@ public class JSR166TestCase extends TestCase {
                 realRun();
                 threadShouldThrow("InterruptedException");
             } catch (InterruptedException success) {
+                threadAssertFalse(Thread.interrupted());
             } catch (Throwable t) {
                 threadUnexpectedException(t);
             }
@@ -812,6 +829,7 @@ public class JSR166TestCase extends TestCase {
                 threadShouldThrow("InterruptedException");
                 return result;
             } catch (InterruptedException success) {
+                threadAssertFalse(Thread.interrupted());
             } catch (Throwable t) {
                 threadUnexpectedException(t);
             }
@@ -857,6 +875,25 @@ public class JSR166TestCase extends TestCase {
             threadUnexpectedException(t);
         }
     }
+
+//     /**
+//      * Spin-waits up to LONG_DELAY_MS until flag becomes true.
+//      */
+//     public void await(AtomicBoolean flag) {
+//         await(flag, LONG_DELAY_MS);
+//     }
+
+//     /**
+//      * Spin-waits up to the specified timeout until flag becomes true.
+//      */
+//     public void await(AtomicBoolean flag, long timeoutMillis) {
+//         long startTime = System.nanoTime();
+//         while (!flag.get()) {
+//             if (millisElapsedSince(startTime) > timeoutMillis)
+//                 throw new AssertionFailedError("timed out");
+//             Thread.yield();
+//         }
+//     }
 
     public static class NPETask implements Callable<String> {
         public String call() { throw new NullPointerException(); }
@@ -1078,7 +1115,7 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public void checkEmpty(BlockingQueue q) {
+    void checkEmpty(BlockingQueue q) {
         try {
             assertTrue(q.isEmpty());
             assertEquals(0, q.size());
@@ -1106,7 +1143,7 @@ public class JSR166TestCase extends TestCase {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T serialClone(T o) {
+    <T> T serialClone(T o) {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(bos);

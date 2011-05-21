@@ -145,7 +145,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().unlock();
     }
 
-    enum AwaitMethod { await, awaitNanos, awaitUntil };
+    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil };
 
     /**
      * Awaits condition using the specified AwaitMethod.
@@ -155,6 +155,9 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         switch (awaitMethod) {
         case await:
             c.await();
+            break;
+        case awaitTimed:
+            assertTrue(c.await(2 * LONG_DELAY_MS, MILLISECONDS));
             break;
         case awaitNanos:
             long nanosRemaining = c.awaitNanos(MILLISECONDS.toNanos(2 * LONG_DELAY_MS));
@@ -866,28 +869,15 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testAwait_IMSE(boolean fair) {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(fair);
         final Condition c = lock.writeLock().newCondition();
-        long startTime = System.nanoTime();
-        try {
+        for (AwaitMethod awaitMethod : AwaitMethod.values()) {
+            long startTime = System.nanoTime();
             try {
-                c.await();
+                await(c, awaitMethod);
                 shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-            try {
-                c.await(LONG_DELAY_MS, MILLISECONDS);
-                shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-            try {
-                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
-                shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-            try {
-                c.awaitUninterruptibly();
-                shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
+            } catch (IllegalMonitorStateException success) {
+            } catch (InterruptedException e) { threadUnexpectedException(e); }
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
-        assertTrue(millisElapsedSince(startTime) < MEDIUM_DELAY_MS);
     }
 
     /**
@@ -1047,6 +1037,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testInterruptible_await()           { testInterruptible(false, AwaitMethod.await); }
     public void testInterruptible_await_fair()      { testInterruptible(true,  AwaitMethod.await); }
+    public void testInterruptible_awaitTimed()      { testInterruptible(false, AwaitMethod.awaitTimed); }
+    public void testInterruptible_awaitTimed_fair() { testInterruptible(true,  AwaitMethod.awaitTimed); }
     public void testInterruptible_awaitNanos()      { testInterruptible(false, AwaitMethod.awaitNanos); }
     public void testInterruptible_awaitNanos_fair() { testInterruptible(true,  AwaitMethod.awaitNanos); }
     public void testInterruptible_awaitUntil()      { testInterruptible(false, AwaitMethod.awaitUntil); }
@@ -1084,6 +1076,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
      */
     public void testSignalAll_await()           { testSignalAll(false, AwaitMethod.await); }
     public void testSignalAll_await_fair()      { testSignalAll(true,  AwaitMethod.await); }
+    public void testSignalAll_awaitTimed()      { testSignalAll(false, AwaitMethod.awaitTimed); }
+    public void testSignalAll_awaitTimed_fair() { testSignalAll(true,  AwaitMethod.awaitTimed); }
     public void testSignalAll_awaitNanos()      { testSignalAll(false, AwaitMethod.awaitNanos); }
     public void testSignalAll_awaitNanos_fair() { testSignalAll(true,  AwaitMethod.awaitNanos); }
     public void testSignalAll_awaitUntil()      { testSignalAll(false, AwaitMethod.awaitUntil); }

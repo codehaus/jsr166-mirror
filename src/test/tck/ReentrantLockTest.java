@@ -136,24 +136,28 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.unlock();
     }
 
-    enum AwaitMethod { await, awaitNanos, awaitUntil };
+    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil };
 
     /**
      * Awaits condition using the specified AwaitMethod.
      */
     void await(Condition c, AwaitMethod awaitMethod)
             throws InterruptedException {
+        long timeoutMillis = 2 * LONG_DELAY_MS;
         switch (awaitMethod) {
         case await:
             c.await();
             break;
+        case awaitTimed:
+            assertTrue(c.await(timeoutMillis, MILLISECONDS));
+            break;
         case awaitNanos:
-            long nanosRemaining = c.awaitNanos(MILLISECONDS.toNanos(2 * LONG_DELAY_MS));
+            long nanosTimeout = MILLISECONDS.toNanos(timeoutMillis);
+            long nanosRemaining = c.awaitNanos(nanosTimeout);
             assertTrue(nanosRemaining > 0);
             break;
         case awaitUntil:
-            java.util.Date d = new java.util.Date();
-            assertTrue(c.awaitUntil(new java.util.Date(d.getTime() + 2 * LONG_DELAY_MS)));
+            assertTrue(c.awaitUntil(delayedDate(timeoutMillis)));
             break;
         }
     }
@@ -482,28 +486,15 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testAwait_IMSE(boolean fair) {
         final ReentrantLock lock = new ReentrantLock(fair);
         final Condition c = lock.newCondition();
-        long startTime = System.nanoTime();
-        try {
+        for (AwaitMethod awaitMethod : AwaitMethod.values()) {
+            long startTime = System.nanoTime();
             try {
-                c.await();
+                await(c, awaitMethod);
                 shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-            try {
-                c.await(LONG_DELAY_MS, MILLISECONDS);
-                shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-            try {
-                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
-                shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-            try {
-                c.awaitUninterruptibly();
-                shouldThrow();
-            } catch (IllegalMonitorStateException success) {}
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
+            } catch (IllegalMonitorStateException success) {
+            } catch (InterruptedException e) { threadUnexpectedException(e); }
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
-        assertTrue(millisElapsedSince(startTime) < MEDIUM_DELAY_MS);
     }
 
     /**
@@ -922,6 +913,8 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testInterruptible_await()           { testInterruptible(false, AwaitMethod.await); }
     public void testInterruptible_await_fair()      { testInterruptible(true,  AwaitMethod.await); }
+    public void testInterruptible_awaitTimed()      { testInterruptible(false, AwaitMethod.awaitTimed); }
+    public void testInterruptible_awaitTimed_fair() { testInterruptible(true,  AwaitMethod.awaitTimed); }
     public void testInterruptible_awaitNanos()      { testInterruptible(false, AwaitMethod.awaitNanos); }
     public void testInterruptible_awaitNanos_fair() { testInterruptible(true,  AwaitMethod.awaitNanos); }
     public void testInterruptible_awaitUntil()      { testInterruptible(false, AwaitMethod.awaitUntil); }
@@ -959,6 +952,8 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testSignalAll_await()           { testSignalAll(false, AwaitMethod.await); }
     public void testSignalAll_await_fair()      { testSignalAll(true,  AwaitMethod.await); }
+    public void testSignalAll_awaitTimed()      { testSignalAll(false, AwaitMethod.awaitTimed); }
+    public void testSignalAll_awaitTimed_fair() { testSignalAll(true,  AwaitMethod.awaitTimed); }
     public void testSignalAll_awaitNanos()      { testSignalAll(false, AwaitMethod.awaitNanos); }
     public void testSignalAll_awaitNanos_fair() { testSignalAll(true,  AwaitMethod.awaitNanos); }
     public void testSignalAll_awaitUntil()      { testSignalAll(false, AwaitMethod.awaitUntil); }

@@ -117,7 +117,7 @@ public class ExchangerTest extends JSR166TestCase {
     /**
      * If one exchanging thread is interrupted, another succeeds.
      */
-    public void testReplacementAfterExchange() throws InterruptedException {
+    public void testReplacementAfterExchange() {
         final Exchanger e = new Exchanger();
         final CountDownLatch exchanged = new CountDownLatch(2);
         final CountDownLatch interrupted = new CountDownLatch(1);

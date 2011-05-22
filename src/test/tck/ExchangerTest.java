@@ -142,8 +142,8 @@ public class ExchangerTest extends JSR166TestCase {
 
         await(exchanged);
         t1.interrupt();
-        interrupted.countDown();
         awaitTermination(t1);
+        interrupted.countDown();
         awaitTermination(t2);
         awaitTermination(t3);
     }

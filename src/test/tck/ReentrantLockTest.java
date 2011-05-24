@@ -286,7 +286,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
-     * hasQueuedThread reports whether a thread is queued.
+     * hasQueuedThread reports whether a thread is queued
      */
     public void testHasQueuedThread()      { testHasQueuedThread(false); }
     public void testHasQueuedThread_fair() { testHasQueuedThread(true); }
@@ -347,7 +347,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
-     * timed tryLock is interruptible.
+     * timed tryLock is interruptible
      */
     public void testTryLock_Interruptible()      { testTryLock_Interruptible(false); }
     public void testTryLock_Interruptible_fair() { testTryLock_Interruptible(true); }
@@ -985,7 +985,7 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
-     * signal wakes up waiting threads in FIFO order.
+     * signal wakes up waiting threads in FIFO order
      */
     public void testSignalWakesFifo()      { testSignalWakesFifo(false); }
     public void testSignalWakesFifo_fair() { testSignalWakesFifo(true); }
@@ -1110,10 +1110,10 @@ public class ReentrantLockTest extends JSR166TestCase {
     public void testToString_fair() { testToString(true); }
     public void testToString(boolean fair) {
         ReentrantLock lock = new ReentrantLock(fair);
-        String us = lock.toString();
-        assertTrue(us.indexOf("Unlocked") >= 0);
+        assertTrue(lock.toString().contains("Unlocked"));
         lock.lock();
-        String ls = lock.toString();
-        assertTrue(ls.indexOf("Locked") >= 0);
+        assertTrue(lock.toString().contains("Locked"));
+        lock.unlock();
+        assertTrue(lock.toString().contains("Unlocked"));
     }
 }

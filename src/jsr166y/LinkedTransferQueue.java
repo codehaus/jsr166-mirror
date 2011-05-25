@@ -8,7 +8,6 @@ package jsr166y;
 
 import java.util.AbstractQueue;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -23,10 +22,17 @@ import java.util.concurrent.locks.LockSupport;
  * producer.  The <em>tail</em> of the queue is that element that has
  * been on the queue the shortest time for some producer.
  *
- * <p>Beware that, unlike in most collections, the {@code size}
- * method is <em>NOT</em> a constant-time operation. Because of the
+ * <p>Beware that, unlike in most collections, the {@code size} method
+ * is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
- * of elements requires a traversal of the elements.
+ * of elements requires a traversal of the elements, and so may report
+ * inaccurate results if this collection is modified during traversal.
+ * Additionally, the bulk operations {@code addAll},
+ * {@code removeAll}, {@code retainAll}, {@code containsAll},
+ * {@code equals}, and {@code toArray} are <em>not</em> guaranteed
+ * to be performed atomically. For example, an iterator operating
+ * concurrently with an {@code addAll} operation might view only some
+ * of the added elements.
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -497,16 +503,27 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             return false;
         }
 
-        // Unsafe mechanics
-        private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-        private static final long nextOffset =
-            objectFieldOffset(UNSAFE, "next", Node.class);
-        private static final long itemOffset =
-            objectFieldOffset(UNSAFE, "item", Node.class);
-        private static final long waiterOffset =
-            objectFieldOffset(UNSAFE, "waiter", Node.class);
-
         private static final long serialVersionUID = -3375979862319811754L;
+
+        // Unsafe mechanics
+        private static final sun.misc.Unsafe UNSAFE;
+        private static final long itemOffset;
+        private static final long nextOffset;
+        private static final long waiterOffset;
+        static {
+            try {
+                UNSAFE = getUnsafe();
+                Class k = Node.class;
+                itemOffset = UNSAFE.objectFieldOffset
+                    (k.getDeclaredField("item"));
+                nextOffset = UNSAFE.objectFieldOffset
+                    (k.getDeclaredField("next"));
+                waiterOffset = UNSAFE.objectFieldOffset
+                    (k.getDeclaredField("waiter"));
+            } catch (Exception e) {
+                throw new Error(e);
+            }
+        }
     }
 
     /** head of the queue; null until first enqueue */
@@ -806,6 +823,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
 
             this.lastRet = prev;
+
             for (Node p = prev, s, n;;) {
                 s = (p == null) ? head : p.next;
                 if (s == null)
@@ -1142,15 +1160,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns an iterator over the elements in this queue in proper
-     * sequence, from head to tail.
+     * Returns an iterator over the elements in this queue in proper sequence.
+     * The elements will be returned in order from first (head) to last (tail).
      *
      * <p>The returned iterator is a "weakly consistent" iterator that
-     * will never throw
-     * {@link ConcurrentModificationException ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed
-     * to) reflect any modifications subsequent to construction.
+     * will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}, and guarantees to traverse
+     * elements as they existed upon construction of the iterator, and
+     * may (but is not guaranteed to) reflect any modifications
+     * subsequent to construction.
      *
      * @return an iterator over the elements in this queue in proper sequence
      */
@@ -1283,23 +1301,22 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     // Unsafe mechanics
 
-    private static final sun.misc.Unsafe UNSAFE = getUnsafe();
-    private static final long headOffset =
-        objectFieldOffset(UNSAFE, "head", LinkedTransferQueue.class);
-    private static final long tailOffset =
-        objectFieldOffset(UNSAFE, "tail", LinkedTransferQueue.class);
-    private static final long sweepVotesOffset =
-        objectFieldOffset(UNSAFE, "sweepVotes", LinkedTransferQueue.class);
-
-    static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
-                                  String field, Class<?> klazz) {
+    private static final sun.misc.Unsafe UNSAFE;
+    private static final long headOffset;
+    private static final long tailOffset;
+    private static final long sweepVotesOffset;
+    static {
         try {
-            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
-        } catch (NoSuchFieldException e) {
-            // Convert Exception to corresponding Error
-            NoSuchFieldError error = new NoSuchFieldError(field);
-            error.initCause(e);
-            throw error;
+            UNSAFE = getUnsafe();
+            Class k = LinkedTransferQueue.class;
+            headOffset = UNSAFE.objectFieldOffset
+                (k.getDeclaredField("head"));
+            tailOffset = UNSAFE.objectFieldOffset
+                (k.getDeclaredField("tail"));
+            sweepVotesOffset = UNSAFE.objectFieldOffset
+                (k.getDeclaredField("sweepVotes"));
+        } catch (Exception e) {
+            throw new Error(e);
         }
     }
 

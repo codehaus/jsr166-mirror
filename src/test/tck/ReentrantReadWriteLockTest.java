@@ -507,7 +507,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
 
     /**
      * A thread that tries to acquire a fair read lock (non-reentrantly)
-     * will block if there is a waiting writer thread.
+     * will block if there is a waiting writer thread
      */
     public void testReaderWriterReaderFairFifo() {
         final PublicReentrantReadWriteLock lock =
@@ -584,7 +584,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
-     * Read trylock succeeds (barging) even in the presence of waiting readers and/or writers.
+     * Read trylock succeeds (barging) even in the presence of waiting
+     * readers and/or writers
      */
     public void testReadTryLockBarging()      { testReadTryLockBarging(false); }
     public void testReadTryLockBarging_fair() { testReadTryLockBarging(true); }
@@ -1111,7 +1112,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
-     * signal wakes up waiting threads in FIFO order.
+     * signal wakes up waiting threads in FIFO order
      */
     public void testSignalWakesFifo()      { testSignalWakesFifo(false); }
     public void testSignalWakesFifo_fair() { testSignalWakesFifo(true); }
@@ -1272,7 +1273,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
-     * hasQueuedThread reports whether a thread is queued.
+     * hasQueuedThread reports whether a thread is queued
      */
     public void testHasQueuedThread()      { testHasQueuedThread(false); }
     public void testHasQueuedThread_fair() { testHasQueuedThread(true); }
@@ -1613,19 +1614,16 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testToString_fair() { testToString(true); }
     public void testToString(boolean fair) {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock(fair);
-        String us = lock.toString();
-        assertTrue(us.indexOf("Write locks = 0") >= 0);
-        assertTrue(us.indexOf("Read locks = 0") >= 0);
+        assertTrue(lock.toString().contains("Write locks = 0"));
+        assertTrue(lock.toString().contains("Read locks = 0"));
         lock.writeLock().lock();
-        String ws = lock.toString();
-        assertTrue(ws.indexOf("Write locks = 1") >= 0);
-        assertTrue(ws.indexOf("Read locks = 0") >= 0);
+        assertTrue(lock.toString().contains("Write locks = 1"));
+        assertTrue(lock.toString().contains("Read locks = 0"));
         lock.writeLock().unlock();
         lock.readLock().lock();
         lock.readLock().lock();
-        String rs = lock.toString();
-        assertTrue(rs.indexOf("Write locks = 0") >= 0);
-        assertTrue(rs.indexOf("Read locks = 2") >= 0);
+        assertTrue(lock.toString().contains("Write locks = 0"));
+        assertTrue(lock.toString().contains("Read locks = 2"));
     }
 
     /**
@@ -1635,12 +1633,10 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testReadLockToString_fair() { testReadLockToString(true); }
     public void testReadLockToString(boolean fair) {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock(fair);
-        String us = lock.readLock().toString();
-        assertTrue(us.indexOf("Read locks = 0") >= 0);
+        assertTrue(lock.readLock().toString().contains("Read locks = 0"));
         lock.readLock().lock();
         lock.readLock().lock();
-        String rs = lock.readLock().toString();
-        assertTrue(rs.indexOf("Read locks = 2") >= 0);
+        assertTrue(lock.readLock().toString().contains("Read locks = 2"));
     }
 
     /**
@@ -1650,11 +1646,11 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     public void testWriteLockToString_fair() { testWriteLockToString(true); }
     public void testWriteLockToString(boolean fair) {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock(fair);
-        String us = lock.writeLock().toString();
-        assertTrue(us.indexOf("Unlocked") >= 0);
+        assertTrue(lock.writeLock().toString().contains("Unlocked"));
         lock.writeLock().lock();
-        String ls = lock.writeLock().toString();
-        assertTrue(ls.indexOf("Locked") >= 0);
+        assertTrue(lock.writeLock().toString().contains("Locked"));
+        lock.writeLock().unlock();
+        assertTrue(lock.writeLock().toString().contains("Unlocked"));
     }
 
 }

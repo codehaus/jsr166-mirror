@@ -459,7 +459,7 @@ public class JSR166TestCase extends TestCase {
         else {
             AssertionFailedError afe =
                 new AssertionFailedError("unexpected exception: " + t);
-            t.initCause(t);
+            afe.initCause(t);
             throw afe;
         }
     }

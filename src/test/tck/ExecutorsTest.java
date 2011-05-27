@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -54,7 +53,6 @@ public class ExecutorsTest extends JSR166TestCase {
         } catch (NullPointerException success) {}
     }
 
-
     /**
      * A new SingleThreadExecutor can execute runnables
      */
@@ -101,7 +99,6 @@ public class ExecutorsTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * A new newFixedThreadPool can execute runnables
      */
@@ -144,7 +141,6 @@ public class ExecutorsTest extends JSR166TestCase {
         } catch (IllegalArgumentException success) {}
     }
 
-
     /**
      * An unconfigurable newFixedThreadPool can execute runnables
      */
@@ -175,7 +171,6 @@ public class ExecutorsTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
 
     /**
      * a newSingleThreadScheduledExecutor successfully runs delayed task
@@ -252,33 +247,32 @@ public class ExecutorsTest extends JSR166TestCase {
      * Future.get on submitted tasks will time out if they compute too long.
      */
     public void testTimedCallable() throws Exception {
+        final ExecutorService[] executors = {
+            Executors.newSingleThreadExecutor(),
+            Executors.newCachedThreadPool(),
+            Executors.newFixedThreadPool(2),
+            Executors.newScheduledThreadPool(2),
+        };
+
         final Runnable sleeper = new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 delay(LONG_DELAY_MS);
             }};
-        for (ExecutorService executor :
-                 new ExecutorService[] {
-                     Executors.newSingleThreadExecutor(),
-                     Executors.newCachedThreadPool(),
-                     Executors.newFixedThreadPool(2),
-                     Executors.newScheduledThreadPool(2),
-                 }) {
-            try {
-                Future future = executor.submit(sleeper);
-                try {
-                    future.get(SHORT_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (TimeoutException success) {
-                } finally {
-                    future.cancel(true);
-                }
-            }
-            finally {
-                joinPool(executor);
-            }
-        }
-    }
 
+        List<Thread> threads = new ArrayList<Thread>();
+        for (final ExecutorService executor : executors) {
+            threads.add(newStartedThread(new CheckedRunnable() {
+                public void realRun() {
+                    long startTime = System.nanoTime();
+                    Future future = executor.submit(sleeper);
+                    assertFutureTimesOut(future);
+                }}));
+        }
+        for (Thread thread : threads)
+            awaitTermination(thread);
+        for (ExecutorService executor : executors)
+            joinPool(executor);
+    }
 
     /**
      * ThreadPoolExecutor using defaultThreadFactory has
@@ -386,7 +380,6 @@ public class ExecutorsTest extends JSR166TestCase {
             return null;
         }
     }
-
 
     /**
      * Without class loader permissions, creating
@@ -543,7 +536,6 @@ public class ExecutorsTest extends JSR166TestCase {
         assertSame(one, c.call());
     }
 
-
     /**
      * callable(null Runnable) throws NPE
      */
@@ -583,6 +575,5 @@ public class ExecutorsTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
 
 }

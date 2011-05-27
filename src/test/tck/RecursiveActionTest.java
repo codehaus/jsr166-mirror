@@ -490,7 +490,6 @@ public class RecursiveActionTest extends JSR166TestCase {
         testInvokeOnPool(mainPool(), a);
     }
 
-
     /**
      * helpQuiesce returns when tasks are complete.
      * getQueuedTaskCount returns 0 when quiescent
@@ -500,14 +499,13 @@ public class RecursiveActionTest extends JSR166TestCase {
             public void realCompute() {
                 FibAction f = new FibAction(8);
                 assertSame(f, f.fork());
-                f.helpQuiesce();
+                helpQuiesce();
                 assertEquals(21, f.result);
                 assertEquals(0, getQueuedTaskCount());
                 checkCompletedNormally(f);
             }};
         testInvokeOnPool(mainPool(), a);
     }
-
 
     /**
      * invoke task throws exception when task completes abnormally
@@ -778,7 +776,6 @@ public class RecursiveActionTest extends JSR166TestCase {
         testInvokeOnPool(mainPool, a);
     }
 
-
     /**
      * setRawResult(null) succeeds
      */
@@ -924,7 +921,6 @@ public class RecursiveActionTest extends JSR166TestCase {
             }};
         testInvokeOnPool(mainPool(), a);
     }
-
 
     /**
      * invokeAll(tasks) with any null task throws NPE

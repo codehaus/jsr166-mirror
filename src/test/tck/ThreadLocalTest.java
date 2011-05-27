@@ -67,12 +67,12 @@ public class ThreadLocalTest extends JSR166TestCase {
                 child = new ITLThread(x);
                 child.start();
             }
-            Thread.currentThread().yield();
+            Thread.yield();
 
             int threadId = itl.get().intValue();
             for (int j = 0; j < threadId; j++) {
                 x[threadId]++;
-                Thread.currentThread().yield();
+                Thread.yield();
             }
 
             if (child != null) { // Wait for child (if any)

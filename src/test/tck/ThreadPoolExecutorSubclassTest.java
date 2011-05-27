@@ -115,7 +115,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         }
     }
 
-
     static class CustomTPE extends ThreadPoolExecutor {
         protected <V> RunnableFuture<V> newTaskFor(Callable<V> c) {
             return new CustomTask<V>(c);
@@ -187,7 +186,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             return new Thread(r);
         }
     }
-
 
     /**
      * execute successfully executes a runnable
@@ -315,7 +313,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         joinPool(p);
     }
 
-
     /**
      * getThreadFactory returns factory in constructor if not set
      */
@@ -336,7 +333,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         assertSame(tf, p.getThreadFactory());
         joinPool(p);
     }
-
 
     /**
      * setThreadFactory(null) throws NPE
@@ -374,7 +370,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         joinPool(p);
     }
 
-
     /**
      * setRejectedExecutionHandler(null) throws NPE
      */
@@ -388,7 +383,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             joinPool(p);
         }
     }
-
 
     /**
      * getLargestPoolSize increases, but doesn't overestimate, when
@@ -494,7 +488,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         assertTrue(p.isShutdown());
         joinPool(p);
     }
-
 
     /**
      * isTerminated is false before termination, true after
@@ -689,7 +682,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
 
     // Exception Tests
 
-
     /**
      * Constructor throws if corePoolSize argument is less than zero
      */
@@ -749,8 +741,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
-
 
     /**
      * Constructor throws if corePoolSize argument is less than zero
@@ -823,7 +813,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         } catch (NullPointerException success) {}
     }
 
-
     /**
      * Constructor throws if corePoolSize argument is less than zero
      */
@@ -894,7 +883,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
 
     /**
      * Constructor throws if corePoolSize argument is less than zero
@@ -980,7 +968,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
 
     /**
      * execute throws RejectedExecutionException if saturated.
@@ -1131,7 +1118,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * execute using DiscardOldestPolicy drops task on shutdown
      */
@@ -1148,7 +1134,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             joinPool(p);
         }
     }
-
 
     /**
      * execute(null) throws NPE
@@ -1213,7 +1198,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
         }
         joinPool(p);
     }
-
 
     /**
      * setKeepAliveTime throws IllegalArgumentException
@@ -1302,7 +1286,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
 
     /**
      * invokeAny(null) throws NPE
@@ -1464,8 +1447,6 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
-
 
     /**
      * timed invokeAny(null) throws NPE
@@ -1726,9 +1707,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      * allowCoreThreadTimeOut(true) causes idle threads to time out
      */
     public void testAllowCoreThreadTimeOut_true() throws Exception {
+        long coreThreadTimeOut = SHORT_DELAY_MS;
         final ThreadPoolExecutor p =
             new CustomTPE(2, 10,
-                          SHORT_DELAY_MS, MILLISECONDS,
+                          coreThreadTimeOut, MILLISECONDS,
                           new ArrayBlockingQueue<Runnable>(10));
         final CountDownLatch threadStarted = new CountDownLatch(1);
         try {
@@ -1738,12 +1720,13 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
                     threadStarted.countDown();
                     assertEquals(1, p.getPoolSize());
                 }});
-            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
-            for (int i = 0; i < (MEDIUM_DELAY_MS/10); i++) {
-                if (p.getPoolSize() == 0)
-                    break;
-                delay(10);
-            }
+            await(threadStarted);
+            delay(coreThreadTimeOut);
+            long startTime = System.nanoTime();
+            while (p.getPoolSize() > 0
+                   && millisElapsedSince(startTime) < LONG_DELAY_MS)
+                Thread.yield();
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
             assertEquals(0, p.getPoolSize());
         } finally {
             joinPool(p);
@@ -1754,9 +1737,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      * allowCoreThreadTimeOut(false) causes idle threads not to time out
      */
     public void testAllowCoreThreadTimeOut_false() throws Exception {
+        long coreThreadTimeOut = SHORT_DELAY_MS;
         final ThreadPoolExecutor p =
             new CustomTPE(2, 10,
-                          SHORT_DELAY_MS, MILLISECONDS,
+                          coreThreadTimeOut, MILLISECONDS,
                           new ArrayBlockingQueue<Runnable>(10));
         final CountDownLatch threadStarted = new CountDownLatch(1);
         try {
@@ -1766,7 +1750,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
                     threadStarted.countDown();
                     assertTrue(p.getPoolSize() >= 1);
                 }});
-            delay(SMALL_DELAY_MS);
+            delay(2 * coreThreadTimeOut);
             assertTrue(p.getPoolSize() >= 1);
         } finally {
             joinPool(p);

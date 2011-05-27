@@ -260,7 +260,6 @@ public class JSR166TestCase extends TestCase {
         return 50;
     }
 
-
     /**
      * Sets delays as multiples of SHORT_DELAY.
      */
@@ -522,6 +521,29 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * Checks that future.get times out, with the default timeout of
+     * {@code timeoutMillis()}.
+     */
+    void assertFutureTimesOut(Future future) {
+        assertFutureTimesOut(future, timeoutMillis());
+    }
+
+    /**
+     * Checks that future.get times out, with the given millisecond timeout.
+     */
+    void assertFutureTimesOut(Future future, long timeoutMillis) {
+        long startTime = System.nanoTime();
+        try {
+            future.get(timeoutMillis, MILLISECONDS);
+            shouldThrow();
+        } catch (TimeoutException success) {
+        } catch (Exception e) {
+            threadUnexpectedException(e);
+        } finally { future.cancel(true); }
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
+    }
+
+    /**
      * Fails with message "should throw exception".
      */
     public void shouldThrow() {
@@ -721,7 +743,7 @@ public class JSR166TestCase extends TestCase {
         } catch (InterruptedException ie) {
             threadUnexpectedException(ie);
         } finally {
-            if (t.isAlive()) {
+            if (t.getState() != Thread.State.TERMINATED) {
                 t.interrupt();
                 fail("Test timed out");
             }

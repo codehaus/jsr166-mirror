@@ -702,16 +702,16 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         p.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
         assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
         assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
+        long initialDelay = LONG_DELAY_MS;
         ScheduledFuture task =
-            p.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, MILLISECONDS);
+            p.scheduleAtFixedRate(new NoOpRunnable(), initialDelay,
+                                  5, MILLISECONDS);
         try { p.shutdown(); } catch (SecurityException ok) { return; }
         assertTrue(p.isShutdown());
-        BlockingQueue q = p.getQueue();
         assertTrue(p.getQueue().isEmpty());
         assertTrue(task.isDone());
         assertTrue(task.isCancelled());
-        assertTrue(p.awaitTermination(SMALL_DELAY_MS, MILLISECONDS));
-        assertTrue(p.isTerminated());
+        joinPool(p);
     }
 
     /**

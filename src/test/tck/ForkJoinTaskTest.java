@@ -496,7 +496,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             public void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
-                f.helpQuiesce();
+                helpQuiesce();
                 assertEquals(21, f.number);
                 assertEquals(0, getQueuedTaskCount());
                 checkCompletedNormally(f);
@@ -1223,7 +1223,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             public void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
-                f.helpQuiesce();
+                helpQuiesce();
                 assertEquals(0, getQueuedTaskCount());
                 assertEquals(21, f.number);
                 checkCompletedNormally(f);

@@ -329,7 +329,7 @@ public class RecursiveTaskTest extends JSR166TestCase {
             public Integer realCompute() {
                 FibTask f = new FibTask(8);
                 assertSame(f, f.fork());
-                f.helpQuiesce();
+                helpQuiesce();
                 assertEquals(0, getQueuedTaskCount());
                 checkCompletedNormally(f, 21);
                 return NoResult;

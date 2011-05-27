@@ -298,7 +298,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         assertSame(four, q.peekLast());
     }
 
-
     /**
      * A new deque has the indicated capacity, or Integer.MAX_VALUE if
      * none given
@@ -456,7 +455,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         assertSame(four, q.peekFirst());
     }
 
-
     /**
      * pop removes next element, or throws NSEE if empty
      */
@@ -470,7 +468,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             shouldThrow();
         } catch (NoSuchElementException success) {}
     }
-
 
     /**
      * Offer succeeds if not full; fails if full
@@ -574,7 +571,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             assertEquals(ints[i], q.poll());
     }
 
-
     /**
      * put(null) throws NPE
      */
@@ -604,49 +600,68 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testBlockingPut() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i)
                     q.put(i);
                 assertEquals(SIZE, q.size());
                 assertEquals(0, q.remainingCapacity());
+
+                Thread.currentThread().interrupt();
                 try {
                     q.put(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.put(99);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(SIZE, q.size());
         assertEquals(0, q.remainingCapacity());
     }
 
     /**
-     * put blocks waiting for take when full
+     * put blocks interruptibly waiting for take when full
      */
     public void testPutWithTake() throws InterruptedException {
         final int capacity = 2;
         final LinkedBlockingDeque q = new LinkedBlockingDeque(capacity);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseTake = new CountDownLatch(1);
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                for (int i = 0; i < capacity + 1; i++)
+                for (int i = 0; i < capacity; i++)
                     q.put(i);
+                pleaseTake.countDown();
+                q.put(86);
+
+                pleaseInterrupt.countDown();
                 try {
                     q.put(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseTake);
         assertEquals(q.remainingCapacity(), 0);
         assertEquals(0, q.take());
-        delay(SHORT_DELAY_MS);
+
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(q.remainingCapacity(), 0);
     }
 
@@ -671,6 +686,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
     }
@@ -686,27 +702,37 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Take removes existing elements until empty, then blocks interruptibly
+     * take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() throws InterruptedException {
         final LinkedBlockingDeque q = populatedDeque(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i) {
                     assertEquals(i, q.take());
                 }
+
+                Thread.currentThread().interrupt();
                 try {
                     q.take();
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
-
 
     /**
      * poll succeeds unless empty
@@ -736,9 +762,14 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     public void testTimedPoll() throws InterruptedException {
         LinkedBlockingDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));
+            long startTime = System.nanoTime();
+            assertEquals(i, q.poll(LONG_DELAY_MS, MILLISECONDS));
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
-        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+        long startTime = System.nanoTime();
+        assertNull(q.poll(timeoutMillis(), MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+        checkEmpty(q);
     }
 
     /**
@@ -801,49 +832,68 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testBlockingPutFirst() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i)
                     q.putFirst(i);
                 assertEquals(SIZE, q.size());
                 assertEquals(0, q.remainingCapacity());
+
+                Thread.currentThread().interrupt();
                 try {
                     q.putFirst(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.putFirst(99);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(SIZE, q.size());
         assertEquals(0, q.remainingCapacity());
     }
 
     /**
-     * putFirst blocks waiting for take when full
+     * putFirst blocks interruptibly waiting for take when full
      */
     public void testPutFirstWithTake() throws InterruptedException {
         final int capacity = 2;
         final LinkedBlockingDeque q = new LinkedBlockingDeque(capacity);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseTake = new CountDownLatch(1);
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                for (int i = 0; i < capacity + 1; i++)
+                for (int i = 0; i < capacity; i++)
                     q.putFirst(i);
+                pleaseTake.countDown();
+                q.putFirst(86);
+
+                pleaseInterrupt.countDown();
                 try {
                     q.putFirst(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseTake);
         assertEquals(q.remainingCapacity(), 0);
         assertEquals(capacity - 1, q.take());
-        delay(SHORT_DELAY_MS);
+
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(q.remainingCapacity(), 0);
     }
 
@@ -868,6 +918,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
     }
@@ -883,42 +934,119 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * takeFirst blocks interruptibly when empty
+     * takeFirst() blocks interruptibly when empty
      */
-    public void testTakeFirstFromEmpty() throws InterruptedException {
-        final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
-            public void realRun() throws InterruptedException {
-                q.takeFirst();
-            }};
-
-        t.start();
-        delay(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-    /**
-     * TakeFirst removes existing elements until empty, then blocks interruptibly
-     */
-    public void testBlockingTakeFirst() throws InterruptedException {
-        final LinkedBlockingDeque q = populatedDeque(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
-            public void realRun() throws InterruptedException {
-                for (int i = 0; i < SIZE; ++i)
-                    assertEquals(i, q.takeFirst());
+    public void testTakeFirstFromEmptyBlocksInterruptibly() {
+        final BlockingDeque q = new LinkedBlockingDeque();
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                threadStarted.countDown();
                 try {
                     q.takeFirst();
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(threadStarted);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
+    /**
+     * takeFirst() throws InterruptedException immediately if interrupted
+     * before waiting
+     */
+    public void testTakeFirstFromEmptyAfterInterrupt() {
+        final BlockingDeque q = new LinkedBlockingDeque();
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                Thread.currentThread().interrupt();
+                try {
+                    q.takeFirst();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+            }});
+
+        awaitTermination(t);
+    }
+
+    /**
+     * takeLast() blocks interruptibly when empty
+     */
+    public void testTakeLastFromEmptyBlocksInterruptibly() {
+        final BlockingDeque q = new LinkedBlockingDeque();
+        final CountDownLatch threadStarted = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                threadStarted.countDown();
+                try {
+                    q.takeLast();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+            }});
+
+        await(threadStarted);
+        assertThreadStaysAlive(t);
+        t.interrupt();
+        awaitTermination(t);
+    }
+
+    /**
+     * takeLast() throws InterruptedException immediately if interrupted
+     * before waiting
+     */
+    public void testTakeLastFromEmptyAfterInterrupt() {
+        final BlockingDeque q = new LinkedBlockingDeque();
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                Thread.currentThread().interrupt();
+                try {
+                    q.takeLast();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+            }});
+
+        awaitTermination(t);
+    }
+
+    /**
+     * takeFirst removes existing elements until empty, then blocks interruptibly
+     */
+    public void testBlockingTakeFirst() throws InterruptedException {
+        final LinkedBlockingDeque q = populatedDeque(SIZE);
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                for (int i = 0; i < SIZE; ++i) {
+                    assertEquals(i, q.takeFirst());
+                }
+
+                Thread.currentThread().interrupt();
+                try {
+                    q.takeFirst();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.takeFirst();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+            }});
+
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
+        t.interrupt();
+        awaitTermination(t);
+    }
 
     /**
      * timed pollFirst with zero timeout succeeds when non-empty, else times out
@@ -937,9 +1065,14 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     public void testTimedPollFirst() throws InterruptedException {
         LinkedBlockingDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, q.pollFirst(SHORT_DELAY_MS, MILLISECONDS));
+            long startTime = System.nanoTime();
+            assertEquals(i, q.pollFirst(LONG_DELAY_MS, MILLISECONDS));
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
-        assertNull(q.pollFirst(SHORT_DELAY_MS, MILLISECONDS));
+        long startTime = System.nanoTime();
+        assertNull(q.pollFirst(timeoutMillis(), MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+        checkEmpty(q);
     }
 
     /**
@@ -947,22 +1080,33 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testInterruptedTimedPollFirst() throws InterruptedException {
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 LinkedBlockingDeque q = populatedDeque(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(i, q.pollFirst(SHORT_DELAY_MS, MILLISECONDS));
+                    assertEquals(i, q.pollFirst(LONG_DELAY_MS, MILLISECONDS));
                 }
+
+                Thread.currentThread().interrupt();
                 try {
                     q.pollFirst(SMALL_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.pollFirst(SMALL_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -971,21 +1115,39 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedPollFirstWithOfferFirst() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CheckedBarrier barrier = new CheckedBarrier(2);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertNull(q.pollFirst(SHORT_DELAY_MS, MILLISECONDS));
+                long startTime = System.nanoTime();
+                assertNull(q.pollFirst(timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+
+                barrier.await();
+
                 assertSame(zero, q.pollFirst(LONG_DELAY_MS, MILLISECONDS));
+
+                Thread.currentThread().interrupt();
                 try {
                     q.pollFirst(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+
+                barrier.await();
+                try {
+                    q.pollFirst(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
             }});
 
-        t.start();
-        delay(SMALL_DELAY_MS);
-        assertTrue(q.offerFirst(zero, SHORT_DELAY_MS, MILLISECONDS));
+        barrier.await();
+        long startTime = System.nanoTime();
+        assertTrue(q.offerFirst(zero, LONG_DELAY_MS, MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
+        barrier.await();
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -1017,49 +1179,68 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testBlockingPutLast() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i)
                     q.putLast(i);
                 assertEquals(SIZE, q.size());
                 assertEquals(0, q.remainingCapacity());
+
+                Thread.currentThread().interrupt();
                 try {
                     q.putLast(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.putLast(99);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(SIZE, q.size());
         assertEquals(0, q.remainingCapacity());
     }
 
     /**
-     * putLast blocks waiting for take when full
+     * putLast blocks interruptibly waiting for take when full
      */
     public void testPutLastWithTake() throws InterruptedException {
         final int capacity = 2;
         final LinkedBlockingDeque q = new LinkedBlockingDeque(capacity);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseTake = new CountDownLatch(1);
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                for (int i = 0; i < capacity + 1; i++)
+                for (int i = 0; i < capacity; i++)
                     q.putLast(i);
+                pleaseTake.countDown();
+                q.putLast(86);
+
+                pleaseInterrupt.countDown();
                 try {
                     q.putLast(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseTake);
         assertEquals(q.remainingCapacity(), 0);
         assertEquals(0, q.take());
-        delay(SHORT_DELAY_MS);
+
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(q.remainingCapacity(), 0);
     }
 
@@ -1084,6 +1265,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
     }
@@ -1099,40 +1281,36 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * takeLast blocks interruptibly when empty
-     */
-    public void testTakeLastFromEmpty() throws InterruptedException {
-        final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new ThreadShouldThrow(InterruptedException.class) {
-            public void realRun() throws InterruptedException {
-                q.takeLast();
-            }};
-
-        t.start();
-        delay(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
-    }
-
-    /**
-     * TakeLast removes existing elements until empty, then blocks interruptibly
+     * takeLast removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTakeLast() throws InterruptedException {
         final LinkedBlockingDeque q = populatedDeque(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                for (int i = 0; i < SIZE; ++i)
-                    assertEquals(SIZE - 1 - i, q.takeLast());
+                for (int i = 0; i < SIZE; ++i) {
+                    assertEquals(SIZE-i-1, q.takeLast());
+                }
+
+                Thread.currentThread().interrupt();
                 try {
                     q.takeLast();
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.takeLast();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -1152,9 +1330,14 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     public void testTimedPollLast() throws InterruptedException {
         LinkedBlockingDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(SIZE-i-1, q.pollLast(SHORT_DELAY_MS, MILLISECONDS));
+            long startTime = System.nanoTime();
+            assertEquals(SIZE-i-1, q.pollLast(LONG_DELAY_MS, MILLISECONDS));
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
-        assertNull(q.pollLast(SHORT_DELAY_MS, MILLISECONDS));
+        long startTime = System.nanoTime();
+        assertNull(q.pollLast(timeoutMillis(), MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+        checkEmpty(q);
     }
 
     /**
@@ -1162,22 +1345,33 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * returning timeout status
      */
     public void testInterruptedTimedPollLast() throws InterruptedException {
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 LinkedBlockingDeque q = populatedDeque(SIZE);
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(SIZE-i-1, q.pollLast(SHORT_DELAY_MS, MILLISECONDS));
+                    assertEquals(SIZE-i-1, q.pollLast(LONG_DELAY_MS, MILLISECONDS));
                 }
+
+                Thread.currentThread().interrupt();
                 try {
-                    q.pollLast(SMALL_DELAY_MS, MILLISECONDS);
+                    q.pollLast(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.pollLast(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -1186,23 +1380,42 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testTimedPollWithOfferLast() throws InterruptedException {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CheckedBarrier barrier = new CheckedBarrier(2);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                long startTime = System.nanoTime();
+                assertNull(q.poll(timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+
+                barrier.await();
+
                 assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
+
+                Thread.currentThread().interrupt();
                 try {
                     q.poll(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                barrier.await();
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SMALL_DELAY_MS);
-        assertTrue(q.offerLast(zero, SHORT_DELAY_MS, MILLISECONDS));
-        t.interrupt();
-        t.join();
-    }
+        barrier.await();
+        long startTime = System.nanoTime();
+        assertTrue(q.offerLast(zero, LONG_DELAY_MS, MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
 
+        barrier.await();
+        assertThreadStaysAlive(t);
+        t.interrupt();
+        awaitTermination(t);
+    }
 
     /**
      * element returns next element, or throws NSEE if empty
@@ -1361,7 +1574,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         } catch (ArrayStoreException success) {}
     }
 
-
     /**
      * iterator iterates through all elements
      */
@@ -1391,7 +1603,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         assertSame(it.next(), three);
         assertFalse(it.hasNext());
     }
-
 
     /**
      * iterator ordering is FIFO
@@ -1423,7 +1634,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         }
         assertEquals(0, q.size());
     }
-
 
     /**
      * Descending iterator iterates through all elements
@@ -1487,7 +1697,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -1495,10 +1704,9 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         LinkedBlockingDeque q = populatedDeque(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
-
 
     /**
      * offer transfers elements across Executor tasks
@@ -1508,16 +1716,18 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         q.add(one);
         q.add(two);
         ExecutorService executor = Executors.newFixedThreadPool(2);
+        final CheckedBarrier threadsStarted = new CheckedBarrier(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertFalse(q.offer(three));
-                assertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
+                threadsStarted.await();
+                assertTrue(q.offer(three, LONG_DELAY_MS, MILLISECONDS));
                 assertEquals(0, q.remainingCapacity());
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                delay(SMALL_DELAY_MS);
+                threadsStarted.await();
                 assertSame(one, q.take());
             }});
 
@@ -1525,21 +1735,23 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * poll retrieves elements across Executor threads
+     * timed poll retrieves elements across Executor threads
      */
     public void testPollInExecutor() {
         final LinkedBlockingDeque q = new LinkedBlockingDeque(2);
+        final CheckedBarrier threadsStarted = new CheckedBarrier(2);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertNull(q.poll());
-                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                assertTrue(q.isEmpty());
+                threadsStarted.await();
+                assertSame(one, q.poll(LONG_DELAY_MS, MILLISECONDS));
+                checkEmpty(q);
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                delay(SMALL_DELAY_MS);
+                threadsStarted.await();
                 q.put(one);
             }});
 

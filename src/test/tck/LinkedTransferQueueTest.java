@@ -254,25 +254,33 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * take removes existing elements until empty, then blocks interruptibly
      */
     public void testBlockingTake() throws InterruptedException {
-        final BlockingQueue<Integer> q = populatedQueue(SIZE);
-        final CountDownLatch aboutToWait = new CountDownLatch(1);
+        final BlockingQueue q = populatedQueue(SIZE);
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i) {
-                    assertEquals(i, (int) q.take());
+                    assertEquals(i, q.take());
                 }
-                aboutToWait.countDown();
+
+                Thread.currentThread().interrupt();
                 try {
                     q.take();
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        aboutToWait.await();
-        waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
-        checkEmpty(q);
+        awaitTermination(t);
     }
 
     /**
@@ -305,13 +313,13 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     public void testTimedPoll() throws InterruptedException {
         LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            long t0 = System.nanoTime();
-            assertEquals(i, (int) q.poll(SMALL_DELAY_MS, MILLISECONDS));
-            assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
+            long startTime = System.nanoTime();
+            assertEquals(i, (int) q.poll(LONG_DELAY_MS, MILLISECONDS));
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
-        long t0 = System.nanoTime();
-        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
-        assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+        long startTime = System.nanoTime();
+        assertNull(q.poll(timeoutMillis(), MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
         checkEmpty(q);
     }
 
@@ -646,7 +654,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         LinkedTransferQueue q = populatedQueue(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 
@@ -655,19 +663,17 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testOfferInExecutor() {
         final LinkedTransferQueue q = new LinkedTransferQueue();
-        final CountDownLatch threadsStarted = new CountDownLatch(2);
+        final CheckedBarrier threadsStarted = new CheckedBarrier(2);
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadsStarted.countDown();
                 threadsStarted.await();
-                assertTrue(q.offer(one, MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.offer(one, LONG_DELAY_MS, MILLISECONDS));
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadsStarted.countDown();
                 threadsStarted.await();
                 assertSame(one, q.take());
                 checkEmpty(q);
@@ -681,21 +687,19 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testPollInExecutor() {
         final LinkedTransferQueue q = new LinkedTransferQueue();
-        final CountDownLatch threadsStarted = new CountDownLatch(2);
+        final CheckedBarrier threadsStarted = new CheckedBarrier(2);
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertNull(q.poll());
-                threadsStarted.countDown();
                 threadsStarted.await();
-                assertSame(one, q.poll(SMALL_DELAY_MS, MILLISECONDS));
+                assertSame(one, q.poll(LONG_DELAY_MS, MILLISECONDS));
                 checkEmpty(q);
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                threadsStarted.countDown();
                 threadsStarted.await();
                 q.put(one);
             }});
@@ -1051,32 +1055,34 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * tryTransfer waits the amount given, and throws
-     * InterruptedException when interrupted.
+     * tryTransfer blocks interruptibly if no takers
      */
     public void testTryTransfer5() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();
-        final CountDownLatch threadStarted = new CountDownLatch(1);
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
         assertTrue(q.isEmpty());
 
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                long t0 = System.nanoTime();
-                threadStarted.countDown();
+                Thread.currentThread().interrupt();
                 try {
                     q.tryTransfer(new Object(), LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
-                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
-                assertTrue(millisElapsedSince(t0) < MEDIUM_DELAY_MS);
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.tryTransfer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        threadStarted.await();
-        while (q.isEmpty())
-            Thread.yield();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
         checkEmpty(q);
     }
 
@@ -1090,12 +1096,12 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 long t0 = System.nanoTime();
                 assertFalse(q.tryTransfer(new Object(),
-                                          SHORT_DELAY_MS, MILLISECONDS));
-                assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+                                          timeoutMillis(), MILLISECONDS));
+                assertTrue(millisElapsedSince(t0) >= timeoutMillis());
                 checkEmpty(q);
             }});
 
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
         checkEmpty(q);
     }
 
@@ -1131,8 +1137,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertTrue(q.offer(four));
         assertEquals(1, q.size());
         long t0 = System.nanoTime();
-        assertFalse(q.tryTransfer(five, SHORT_DELAY_MS, MILLISECONDS));
-        assertTrue(millisElapsedSince(t0) >= SHORT_DELAY_MS);
+        assertFalse(q.tryTransfer(five, timeoutMillis(), MILLISECONDS));
+        assertTrue(millisElapsedSince(t0) >= timeoutMillis());
         assertEquals(1, q.size());
         assertSame(four, q.poll());
         assertNull(q.poll());

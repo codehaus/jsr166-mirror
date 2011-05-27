@@ -198,7 +198,6 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         } catch (NullPointerException success) {}
     }
 
-
     /**
      * getParallelism returns size set in constructor
      */
@@ -379,7 +378,6 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         }
     }
 
-
     // FJ Versions of AbstractExecutorService tests
 
     /**
@@ -400,7 +398,6 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
 
     /**
      * Completed submit(callable) returns result
@@ -520,7 +517,6 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * submit(null callable) throws NullPointerException
      */
@@ -534,7 +530,6 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
 
     /**
      * submit(callable).get() throws InterruptedException if interrupted
@@ -763,7 +758,6 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
 
     /**
      * timed invokeAny(null) throws NullPointerException

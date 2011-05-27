@@ -349,7 +349,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         }
     }
 
-
     static final class FailingAsyncFib extends BinaryAsyncAction {
         int number;
         public FailingAsyncFib(int n) {
@@ -486,7 +485,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         testInvokeOnPool(mainPool(), a);
     }
 
-
     /**
      * helpQuiesce returns when tasks are complete.
      * getQueuedTaskCount returns 0 when quiescent
@@ -503,7 +501,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             }};
         testInvokeOnPool(mainPool(), a);
     }
-
 
     /**
      * invoke task throws exception when task completes abnormally
@@ -848,7 +845,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             }};
         testInvokeOnPool(mainPool(), a);
     }
-
 
     /**
      * invokeAll(tasks) with any null task throws NPE
@@ -1213,7 +1209,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         testInvokeOnPool(singletonPool(), a);
     }
 
-
     /**
      * helpQuiesce returns when tasks are complete.
      * getQueuedTaskCount returns 0 when quiescent
@@ -1230,7 +1225,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             }};
         testInvokeOnPool(singletonPool(), a);
     }
-
 
     /**
      * invoke task throws exception when task completes abnormally
@@ -1518,7 +1512,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             }};
         testInvokeOnPool(singletonPool(), a);
     }
-
 
     /**
      * invokeAll(tasks) with any null task throws NPE

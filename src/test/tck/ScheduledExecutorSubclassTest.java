@@ -48,7 +48,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         }
     }
 
-
     public class CustomExecutor extends ScheduledThreadPoolExecutor {
 
         protected <V> RunnableScheduledFuture<V> decorateTask(Runnable r, RunnableScheduledFuture<V> task) {
@@ -73,7 +72,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
 
     }
 
-
     /**
      * execute successfully executes a runnable
      */
@@ -91,7 +89,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             joinPool(p);
         }
     }
-
 
     /**
      * delayed schedule of callable successfully executes after delay
@@ -228,7 +225,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
         joinPool(p);
     }
-
 
     /**
      * execute(null) throws NPE
@@ -523,7 +519,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         assertTrue(p.isShutdown());
     }
 
-
     /**
      * isTerminated is false before termination, true after
      */
@@ -714,7 +709,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * If setExecuteExistingDelayedTasksAfterShutdownPolicy is false,
      * delayed tasks are cancelled at shutdown
@@ -740,7 +734,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             assertTrue(task.isCancelled());
         }
     }
-
 
     /**
      * If setContinueExistingPeriodicTasksAfterShutdownPolicy is set false,

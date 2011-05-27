@@ -20,7 +20,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         return new TestSuite(ScheduledExecutorTest.class);
     }
 
-
     /**
      * execute successfully executes a runnable
      */
@@ -38,7 +37,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             joinPool(p);
         }
     }
-
 
     /**
      * delayed schedule of callable successfully executes after delay
@@ -175,7 +173,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
         joinPool(p);
     }
-
 
     /**
      * execute(null) throws NPE
@@ -473,7 +470,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         assertTrue(p.isShutdown());
     }
 
-
     /**
      * isTerminated is false before termination, true after
      */
@@ -663,7 +659,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             assertFalse(task.isCancelled());
         }
     }
-
 
     /**
      * If setExecuteExistingDelayedTasksAfterShutdownPolicy is false,
@@ -1174,6 +1169,5 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
 
 }

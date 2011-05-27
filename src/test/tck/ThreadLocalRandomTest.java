@@ -7,7 +7,6 @@ import junit.framework.*;
 import java.util.concurrent.*;
 import java.util.*;
 
-
 public class ThreadLocalRandomTest extends JSR166TestCase {
 
     public static void main(String[] args) {
@@ -67,7 +66,6 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         assertTrue(i < NCALLS);
     }
 
-
     /**
      * Repeated calls to nextBoolean produce at least one different result
      */
@@ -112,7 +110,6 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         assertTrue(i < NCALLS);
     }
 
-
     /**
      * nextInt(negative) throws IllegalArgumentException;
      */
@@ -133,7 +130,6 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         } catch (IllegalArgumentException success) {}
     }
 
-
     /**
      * nextInt(bound) returns 0 <= value < bound;
      * repeated calls produce at least one different result
@@ -153,7 +149,6 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
             assertTrue(i < NCALLS);
         }
     }
-
 
     /**
      * nextInt(least, bound) returns least <= value < bound;
@@ -236,7 +231,6 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * nextDouble(least, bound) returns least <= value < bound;
      * repeated calls produce at least one different result
@@ -257,6 +251,5 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
             }
         }
     }
-
 
 }

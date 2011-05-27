@@ -335,5 +335,4 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         assertEquals(Arrays.toString(a), ai.toString());
     }
 
-
 }

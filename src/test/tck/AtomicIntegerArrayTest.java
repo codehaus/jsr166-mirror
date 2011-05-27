@@ -20,7 +20,6 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         return new TestSuite(AtomicIntegerArrayTest.class);
     }
 
-
     /**
      * constructor creates array of given size with all elements zero
      */
@@ -307,7 +306,6 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
     }
 
-
     /**
      * a deserialized serialized array holds same values
      */
@@ -328,7 +326,6 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
             assertEquals(l.get(i), r.get(i));
         }
     }
-
 
     /**
      * toString returns current value.

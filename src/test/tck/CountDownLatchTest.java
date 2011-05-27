@@ -74,7 +74,6 @@ public class CountDownLatchTest extends JSR166TestCase {
         t.join();
     }
 
-
     /**
      * timed await returns after countDown to zero
      */

@@ -94,7 +94,6 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
         assertEquals(-3,a.get(this));
     }
 
-
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
@@ -114,7 +113,6 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
         assertTrue(a.compareAndSet(this,-4,7));
         assertEquals(7,a.get(this));
     }
-
 
     /**
      * compareAndSet in one thread enables another waiting for value

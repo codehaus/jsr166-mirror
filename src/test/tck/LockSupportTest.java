@@ -8,10 +8,10 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.LockSupport;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class LockSupportTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -23,311 +23,240 @@ public class LockSupportTest extends JSR166TestCase {
     }
 
     /**
+     * Returns the blocker object used by tests in this file.
+     * Any old object will do; we'll return a convenient one.
+     */
+    static Object theBlocker() {
+        return LockSupportTest.class;
+    }
+
+    enum ParkMethod {
+        park() {
+            void park() {
+                LockSupport.park();
+            }
+            void park(long millis) {
+                throw new UnsupportedOperationException();
+            }
+        },
+        parkUntil() {
+            void park(long millis) {
+                LockSupport.parkUntil(deadline(millis));
+            }
+        },
+        parkNanos() {
+            void park(long millis) {
+                LockSupport.parkNanos(MILLISECONDS.toNanos(millis));
+            }
+        },
+        parkBlocker() {
+            void park() {
+                LockSupport.park(theBlocker());
+            }
+            void park(long millis) {
+                throw new UnsupportedOperationException();
+            }
+        },
+        parkUntilBlocker() {
+            void park(long millis) {
+                LockSupport.parkUntil(theBlocker(), deadline(millis));
+            }
+        },
+        parkNanosBlocker() {
+            void park(long millis) {
+                LockSupport.parkNanos(theBlocker(),
+                                      MILLISECONDS.toNanos(millis));
+            }
+        };
+
+        void park() { park(2 * LONG_DELAY_MS); }
+        abstract void park(long millis);
+
+        /** Returns a deadline to use with parkUntil. */
+        long deadline(long millis) {
+            // beware of rounding
+            return System.currentTimeMillis() + millis + 1;
+        }
+    }
+
+    /**
      * park is released by subsequent unpark
      */
-    public void testParkBeforeUnpark() throws InterruptedException {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
-                threadStarted.countDown();
-                LockSupport.park();
-            }});
-
-        threadStarted.await();
-        delay(SHORT_DELAY_MS);
-        LockSupport.unpark(t);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+    public void testParkBeforeUnpark_park() {
+        testParkBeforeUnpark(ParkMethod.park);
     }
-
-    /**
-     * parkUntil is released by subsequent unpark
-     */
-    public void testParkUntilBeforeUnpark() throws InterruptedException {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
-                long d = new Date().getTime() + LONG_DELAY_MS;
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                threadStarted.countDown();
-                LockSupport.parkUntil(d);
-                assertTrue(System.nanoTime() - t0 < nanos);
-            }});
-
-        threadStarted.await();
-        delay(SHORT_DELAY_MS);
-        LockSupport.unpark(t);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+    public void testParkBeforeUnpark_parkNanos() {
+        testParkBeforeUnpark(ParkMethod.parkNanos);
     }
-
-    /**
-     * parkNanos is released by subsequent unpark
-     */
-    public void testParkNanosBeforeUnpark() throws InterruptedException {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
+    public void testParkBeforeUnpark_parkUntil() {
+        testParkBeforeUnpark(ParkMethod.parkUntil);
+    }
+    public void testParkBeforeUnpark_parkBlocker() {
+        testParkBeforeUnpark(ParkMethod.parkBlocker);
+    }
+    public void testParkBeforeUnpark_parkNanosBlocker() {
+        testParkBeforeUnpark(ParkMethod.parkNanosBlocker);
+    }
+    public void testParkBeforeUnpark_parkUntilBlocker() {
+        testParkBeforeUnpark(ParkMethod.parkUntilBlocker);
+    }
+    public void testParkBeforeUnpark(final ParkMethod parkMethod) {
+        final CountDownLatch pleaseUnpark = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                threadStarted.countDown();
-                LockSupport.parkNanos(nanos);
-                assertTrue(System.nanoTime() - t0 < nanos);
+                pleaseUnpark.countDown();
+                parkMethod.park();
             }});
 
-        threadStarted.await();
-        delay(SHORT_DELAY_MS);
+        await(pleaseUnpark);
         LockSupport.unpark(t);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
     }
 
     /**
      * park is released by preceding unpark
      */
-    public void testParkAfterUnpark() throws Exception {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() throws Exception {
-                threadStarted.countDown();
-                while (!unparked.get())
-                    Thread.yield();
-                LockSupport.park();
-            }});
-
-        threadStarted.await();
-        LockSupport.unpark(t);
-        unparked.set(true);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+    public void testParkAfterUnpark_park() {
+        testParkAfterUnpark(ParkMethod.park);
     }
-
-    /**
-     * parkUntil is released by preceding unpark
-     */
-    public void testParkUntilAfterUnpark() throws Exception {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() throws Exception {
-                threadStarted.countDown();
-                while (!unparked.get())
-                    Thread.yield();
-                long d = new Date().getTime() + LONG_DELAY_MS;
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                LockSupport.parkUntil(d);
-                assertTrue(System.nanoTime() - t0 < nanos);
-            }});
-
-        threadStarted.await();
-        LockSupport.unpark(t);
-        unparked.set(true);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+    public void testParkAfterUnpark_parkNanos() {
+        testParkAfterUnpark(ParkMethod.parkNanos);
     }
-
-    /**
-     * parkNanos is released by preceding unpark
-     */
-    public void testParkNanosAfterUnpark() throws Exception {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        final AtomicBoolean unparked = new AtomicBoolean(false);
+    public void testParkAfterUnpark_parkUntil() {
+        testParkAfterUnpark(ParkMethod.parkUntil);
+    }
+    public void testParkAfterUnpark_parkBlocker() {
+        testParkAfterUnpark(ParkMethod.parkBlocker);
+    }
+    public void testParkAfterUnpark_parkNanosBlocker() {
+        testParkAfterUnpark(ParkMethod.parkNanosBlocker);
+    }
+    public void testParkAfterUnpark_parkUntilBlocker() {
+        testParkAfterUnpark(ParkMethod.parkUntilBlocker);
+    }
+    public void testParkAfterUnpark(final ParkMethod parkMethod) {
+        final CountDownLatch pleaseUnpark = new CountDownLatch(1);
+        final AtomicBoolean pleasePark = new AtomicBoolean(false);
         Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() throws Exception {
-                threadStarted.countDown();
-                while (!unparked.get())
+            public void realRun() {
+                pleaseUnpark.countDown();
+                while (!pleasePark.get())
                     Thread.yield();
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                LockSupport.parkNanos(nanos);
-                assertTrue(System.nanoTime() - t0 < nanos);
+                parkMethod.park();
             }});
 
-        threadStarted.await();
+        await(pleaseUnpark);
         LockSupport.unpark(t);
-        unparked.set(true);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        pleasePark.set(true);
+        awaitTermination(t);
     }
 
     /**
      * park is released by subsequent interrupt
      */
-    public void testParkBeforeInterrupt() throws InterruptedException {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
+    public void testParkBeforeInterrupt_park() {
+        testParkBeforeInterrupt(ParkMethod.park);
+    }
+    public void testParkBeforeInterrupt_parkNanos() {
+        testParkBeforeInterrupt(ParkMethod.parkNanos);
+    }
+    public void testParkBeforeInterrupt_parkUntil() {
+        testParkBeforeInterrupt(ParkMethod.parkUntil);
+    }
+    public void testParkBeforeInterrupt_parkBlocker() {
+        testParkBeforeInterrupt(ParkMethod.parkBlocker);
+    }
+    public void testParkBeforeInterrupt_parkNanosBlocker() {
+        testParkBeforeInterrupt(ParkMethod.parkNanosBlocker);
+    }
+    public void testParkBeforeInterrupt_parkUntilBlocker() {
+        testParkBeforeInterrupt(ParkMethod.parkUntilBlocker);
+    }
+    public void testParkBeforeInterrupt(final ParkMethod parkMethod) {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
-                assertFalse(Thread.currentThread().isInterrupted());
-                threadStarted.countDown();
+                pleaseInterrupt.countDown();
                 do {
-                    LockSupport.park();
+                    parkMethod.park();
                     // park may return spuriously
                 } while (! Thread.currentThread().isInterrupted());
             }});
 
-        threadStarted.await();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
-    }
-
-    /**
-     * parkUntil is released by subsequent interrupt
-     */
-    public void testParkUntilBeforeInterrupt() throws InterruptedException {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
-                long d = new Date().getTime() + LONG_DELAY_MS;
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                assertFalse(Thread.currentThread().isInterrupted());
-                threadStarted.countDown();
-                do {
-                    LockSupport.parkUntil(d);
-                    // parkUntil may return spuriously
-                } while (! Thread.currentThread().isInterrupted());
-                assertTrue(System.nanoTime() - t0 < nanos);
-            }});
-
-        threadStarted.await();
-        delay(SHORT_DELAY_MS);
-        t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
-    }
-
-    /**
-     * parkNanos is released by subsequent interrupt
-     */
-    public void testParkNanosBeforeInterrupt() throws InterruptedException {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                assertFalse(Thread.currentThread().isInterrupted());
-                threadStarted.countDown();
-                do {
-                    LockSupport.parkNanos(nanos);
-                    // parkNanos may return spuriously
-                } while (! Thread.currentThread().isInterrupted());
-                assertTrue(System.nanoTime() - t0 < nanos);
-            }});
-
-        threadStarted.await();
-        delay(SHORT_DELAY_MS);
-        t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
     }
 
     /**
      * park is released by preceding interrupt
      */
-    public void testParkAfterInterrupt() throws Exception {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        final AtomicBoolean unparked = new AtomicBoolean(false);
+    public void testParkAfterInterrupt_park() {
+        testParkAfterInterrupt(ParkMethod.park);
+    }
+    public void testParkAfterInterrupt_parkNanos() {
+        testParkAfterInterrupt(ParkMethod.parkNanos);
+    }
+    public void testParkAfterInterrupt_parkUntil() {
+        testParkAfterInterrupt(ParkMethod.parkUntil);
+    }
+    public void testParkAfterInterrupt_parkBlocker() {
+        testParkAfterInterrupt(ParkMethod.parkBlocker);
+    }
+    public void testParkAfterInterrupt_parkNanosBlocker() {
+        testParkAfterInterrupt(ParkMethod.parkNanosBlocker);
+    }
+    public void testParkAfterInterrupt_parkUntilBlocker() {
+        testParkAfterInterrupt(ParkMethod.parkUntilBlocker);
+    }
+    public void testParkAfterInterrupt(final ParkMethod parkMethod) {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        final AtomicBoolean pleasePark = new AtomicBoolean(false);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                threadStarted.countDown();
-                while (!unparked.get())
+                pleaseInterrupt.countDown();
+                while (!pleasePark.get())
                     Thread.yield();
                 assertTrue(Thread.currentThread().isInterrupted());
-                LockSupport.park();
+                parkMethod.park();
                 assertTrue(Thread.currentThread().isInterrupted());
             }});
 
-        threadStarted.await();
+        await(pleaseInterrupt);
         t.interrupt();
-        unparked.set(true);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        pleasePark.set(true);
+        awaitTermination(t);
     }
 
     /**
-     * parkUntil is released by preceding interrupt
+     * timed park times out if not unparked
      */
-    public void testParkUntilAfterInterrupt() throws Exception {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() throws Exception {
-                threadStarted.countDown();
-                while (!unparked.get())
-                    Thread.yield();
-                long d = new Date().getTime() + LONG_DELAY_MS;
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                assertTrue(Thread.currentThread().isInterrupted());
-                LockSupport.parkUntil(d);
-                assertTrue(System.nanoTime() - t0 < nanos);
-                assertTrue(Thread.currentThread().isInterrupted());
-            }});
-
-        threadStarted.await();
-        t.interrupt();
-        unparked.set(true);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+    public void testParkTimesOut_parkNanos() {
+        testParkTimesOut(ParkMethod.parkNanos);
     }
-
-    /**
-     * parkNanos is released by preceding interrupt
-     */
-    public void testParkNanosAfterInterrupt() throws Exception {
-        final CountDownLatch threadStarted = new CountDownLatch(1);
-        final AtomicBoolean unparked = new AtomicBoolean(false);
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() throws Exception {
-                threadStarted.countDown();
-                while (!unparked.get())
-                    Thread.yield();
-                long nanos = LONG_DELAY_MS * 1000L * 1000L;
-                long t0 = System.nanoTime();
-                assertTrue(Thread.currentThread().isInterrupted());
-                LockSupport.parkNanos(nanos);
-                assertTrue(System.nanoTime() - t0 < nanos);
-                assertTrue(Thread.currentThread().isInterrupted());
-            }});
-
-        threadStarted.await();
-        t.interrupt();
-        unparked.set(true);
-        awaitTermination(t, MEDIUM_DELAY_MS);
+    public void testParkTimesOut_parkUntil() {
+        testParkTimesOut(ParkMethod.parkUntil);
     }
-
-    /**
-     * parkNanos times out if not unparked
-     */
-    public void testParkNanosTimesOut() throws InterruptedException {
+    public void testParkTimesOut_parkNanosBlocker() {
+        testParkTimesOut(ParkMethod.parkNanosBlocker);
+    }
+    public void testParkTimesOut_parkUntilBlocker() {
+        testParkTimesOut(ParkMethod.parkUntilBlocker);
+    }
+    public void testParkTimesOut(final ParkMethod parkMethod) {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 for (;;) {
-                    long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
-                    long t0 = System.nanoTime();
-                    LockSupport.parkNanos(timeoutNanos);
-                    // parkNanos may return spuriously
-                    if (System.nanoTime() - t0 >= timeoutNanos)
+                    long startTime = System.nanoTime();
+                    parkMethod.park(timeoutMillis());
+                    // park may return spuriously
+                    if (millisElapsedSince(startTime) >= timeoutMillis())
                         return;
                 }
             }});
 
-        awaitTermination(t, MEDIUM_DELAY_MS);
-    }
-
-    /**
-     * parkUntil times out if not unparked
-     */
-    public void testParkUntilTimesOut() throws InterruptedException {
-        Thread t = newStartedThread(new CheckedRunnable() {
-            public void realRun() {
-                for (;;) {
-                    long d = new Date().getTime() + SHORT_DELAY_MS;
-                    // beware of rounding
-                    long timeoutNanos = (SHORT_DELAY_MS - 1) * 1000L * 1000L;
-                    long t0 = System.nanoTime();
-                    LockSupport.parkUntil(d);
-                    // parkUntil may return spuriously
-                    if (System.nanoTime() - t0 >= timeoutNanos)
-                        return;
-                }
-            }});
-
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
     }
 
     /**
@@ -341,16 +270,96 @@ public class LockSupportTest extends JSR166TestCase {
     }
 
     /**
-     * parkUntil(0) returns immediately.
+     * getBlocker returns the blocker object passed to park
+     */
+    public void testGetBlocker_parkBlocker() {
+        testGetBlocker(ParkMethod.parkBlocker);
+    }
+    public void testGetBlocker_parkNanosBlocker() {
+        testGetBlocker(ParkMethod.parkNanosBlocker);
+    }
+    public void testGetBlocker_parkUntilBlocker() {
+        testGetBlocker(ParkMethod.parkUntilBlocker);
+    }
+    public void testGetBlocker(final ParkMethod parkMethod) {
+        final CountDownLatch started = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                Thread t = Thread.currentThread();
+                started.countDown();
+                do {
+                    assertNull(LockSupport.getBlocker(t));
+                    parkMethod.park();
+                    assertNull(LockSupport.getBlocker(t));
+                    // park may return spuriously
+                } while (! Thread.currentThread().isInterrupted());
+            }});
+
+        long startTime = System.nanoTime();
+        await(started);
+        for (;;) {
+            Object x = LockSupport.getBlocker(t);
+            if (x == theBlocker()) { // success
+                t.interrupt();
+                awaitTermination(t);
+                assertNull(LockSupport.getBlocker(t));
+                return;
+            } else {
+                assertNull(x);  // ok
+                if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                    fail("timed out");
+                Thread.yield();
+            }
+        }
+    }
+
+    /**
+     * timed park(0) returns immediately.
      *
      * Requires hotspot fix for:
      * 6763959 java.util.concurrent.locks.LockSupport.parkUntil(0) blocks forever
      * which is in jdk7-b118 and 6u25.
      */
-    public void testParkUntil0Returns() throws InterruptedException {
+    public void testPark0_parkNanos() {
+        testPark0(ParkMethod.parkNanos);
+    }
+    public void testPark0_parkUntil() {
+        testPark0(ParkMethod.parkUntil);
+    }
+    public void testPark0_parkNanosBlocker() {
+        testPark0(ParkMethod.parkNanosBlocker);
+    }
+    public void testPark0_parkUntilBlocker() {
+        testPark0(ParkMethod.parkUntilBlocker);
+    }
+    public void testPark0(final ParkMethod parkMethod) {
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
-                LockSupport.parkUntil(0L);
+                parkMethod.park(0L);
+            }});
+
+        awaitTermination(t);
+    }
+
+    /**
+     * timed park(Long.MIN_VALUE) returns immediately.
+     */
+    public void testParkNeg_parkNanos() {
+        testParkNeg(ParkMethod.parkNanos);
+    }
+    public void testParkNeg_parkUntil() {
+        testParkNeg(ParkMethod.parkUntil);
+    }
+    public void testParkNeg_parkNanosBlocker() {
+        testParkNeg(ParkMethod.parkNanosBlocker);
+    }
+    public void testParkNeg_parkUntilBlocker() {
+        testParkNeg(ParkMethod.parkUntilBlocker);
+    }
+    public void testParkNeg(final ParkMethod parkMethod) {
+        Thread t = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                parkMethod.park(Long.MIN_VALUE);
             }});
 
         awaitTermination(t);

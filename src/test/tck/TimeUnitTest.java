@@ -337,77 +337,118 @@ public class TimeUnitTest extends JSR166TestCase {
      * Timed wait without holding lock throws
      * IllegalMonitorStateException
      */
-    public void testTimedWait_IllegalMonitorException() throws Exception {
-        Thread t = new Thread(new CheckedRunnable() {
+    public void testTimedWait_IllegalMonitorException() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Object o = new Object();
                 TimeUnit tu = TimeUnit.MILLISECONDS;
-                try {
-                    tu.timedWait(o,LONG_DELAY_MS);
-                    threadShouldThrow();
-                } catch (IllegalMonitorStateException success) {}}});
 
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
-        t.interrupt();
-        t.join();
+                try {
+                    tu.timedWait(o, LONG_DELAY_MS);
+                    threadShouldThrow();
+                } catch (IllegalMonitorStateException success) {}
+            }});
+
+        awaitTermination(t);
     }
 
     /**
      * timedWait throws InterruptedException when interrupted
      */
-    public void testTimedWait() throws InterruptedException {
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+    public void testTimedWait_Interruptible() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 Object o = new Object();
-
                 TimeUnit tu = TimeUnit.MILLISECONDS;
-                synchronized (o) {
-                    tu.timedWait(o,MEDIUM_DELAY_MS);
-                }
+
+                Thread.currentThread().interrupt();
+                try {
+                    synchronized (o) {
+                        tu.timedWait(o, LONG_DELAY_MS);
+                    }
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    synchronized (o) {
+                        tu.timedWait(o, LONG_DELAY_MS);
+                    }
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
      * timedJoin throws InterruptedException when interrupted
      */
-    public void testTimedJoin() throws InterruptedException {
-        final Thread s = new Thread(new CheckedInterruptedRunnable() {
+    public void testTimedJoin_Interruptible() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        final Thread s = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
-                Thread.sleep(MEDIUM_DELAY_MS);
+                Thread.sleep(LONG_DELAY_MS);
             }});
-        final Thread t = new Thread(new CheckedInterruptedRunnable() {
+        final Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 TimeUnit tu = TimeUnit.MILLISECONDS;
-                tu.timedJoin(s, MEDIUM_DELAY_MS);
+                Thread.currentThread().interrupt();
+                try {
+                    tu.timedJoin(s, LONG_DELAY_MS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    tu.timedJoin(s, LONG_DELAY_MS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
-        s.start();
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         s.interrupt();
-        s.join();
+        awaitTermination(s);
     }
 
     /**
      * timedSleep throws InterruptedException when interrupted
      */
-    public void testTimedSleep() throws InterruptedException {
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+    public void testTimedSleep_Interruptible() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 TimeUnit tu = TimeUnit.MILLISECONDS;
-                tu.sleep(MEDIUM_DELAY_MS);
+                Thread.currentThread().interrupt();
+                try {
+                    tu.sleep(LONG_DELAY_MS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    tu.sleep(LONG_DELAY_MS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        Thread.sleep(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -415,16 +456,7 @@ public class TimeUnitTest extends JSR166TestCase {
      */
     public void testSerialization() throws Exception {
         TimeUnit q = TimeUnit.MILLISECONDS;
-
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        TimeUnit r = (TimeUnit)in.readObject();
-        assertSame(q, r);
+        assertSame(q, serialClone(q));
     }
 
 }

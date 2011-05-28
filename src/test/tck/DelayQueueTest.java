@@ -516,7 +516,7 @@ public class DelayQueueTest extends JSR166TestCase {
         final CheckedBarrier barrier = new CheckedBarrier(2);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertNull(q.poll(timeoutMillis(), MILLISECONDS));
 
                 barrier.await();
                 assertSame(pdelay, q.poll(LONG_DELAY_MS, MILLISECONDS));
@@ -841,7 +841,7 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testTimedPollDelayed() throws InterruptedException {
         DelayQueue q = new DelayQueue();
         q.add(new NanoDelay(LONG_DELAY_MS * 1000000L));
-        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+        assertNull(q.poll(timeoutMillis(), MILLISECONDS));
     }
 
     /**

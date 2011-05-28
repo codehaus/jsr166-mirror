@@ -51,7 +51,6 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
             assertEquals(a[i], ai.get(i));
     }
 
-
     /**
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
@@ -197,7 +196,6 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
             assertEquals(r.get(i), l.get(i));
         }
     }
-
 
     /**
      * toString returns current value.

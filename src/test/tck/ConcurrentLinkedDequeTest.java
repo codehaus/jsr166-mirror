@@ -835,7 +835,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
         ConcurrentLinkedDeque q = populatedDeque(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 

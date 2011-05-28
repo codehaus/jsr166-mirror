@@ -605,7 +605,8 @@ public class ConcurrentLinkedDeque<E>
     /**
      * Inserts the specified element at the tail of this queue.
      *
-     * @return {@code true} (as specified by {@link Queue#offer})
+     * @return {@code true}
+     *   (as specified by {@link java.util.Queue#offer Queue.offer})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {

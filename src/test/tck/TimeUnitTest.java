@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-
 import junit.framework.*;
 import java.util.concurrent.*;
 import java.io.*;
@@ -48,7 +47,6 @@ public class TimeUnitTest extends JSR166TestCase {
             assertEquals(t,
                          TimeUnit.SECONDS.convert(1000000000L*t,
                                                   TimeUnit.NANOSECONDS));
-
 
             assertEquals(1000L*t*60*60*24,
                          TimeUnit.MILLISECONDS.convert(t,
@@ -279,7 +277,6 @@ public class TimeUnitTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * convert saturates positive too-large values to Long.MAX_VALUE
      * and negative to LONG.MIN_VALUE
@@ -322,15 +319,19 @@ public class TimeUnitTest extends JSR166TestCase {
                      TimeUnit.MILLISECONDS.toNanos(-Long.MAX_VALUE / 3));
     }
 
-
     /**
-     * toString returns string containing common name of unit
+     * toString returns name of unit
      */
     public void testToString() {
-        String s = TimeUnit.SECONDS.toString();
-        assertTrue(s.indexOf("ECOND") >= 0);
+        assertEquals("SECONDS", TimeUnit.SECONDS.toString());
     }
 
+    /**
+     * name returns name of unit
+     */
+    public void testName() {
+        assertEquals("SECONDS", TimeUnit.SECONDS.name());
+    }
 
     /**
      * Timed wait without holding lock throws
@@ -370,7 +371,6 @@ public class TimeUnitTest extends JSR166TestCase {
         t.interrupt();
         t.join();
     }
-
 
     /**
      * timedJoin throws InterruptedException when interrupted

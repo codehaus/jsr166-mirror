@@ -97,7 +97,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         assertEquals(0, set0().size());
     }
 
-
     /**
      * isEmpty is true before add, false after
      */
@@ -167,7 +166,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             shouldThrow();
         } catch (ClassCastException success) {}
     }
-
 
     /**
      * addAll(null) throws NPE
@@ -329,8 +327,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         }
     }
 
-
-
     /**
      * lower returns preceding element
      */
@@ -472,7 +468,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -480,7 +475,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = populatedSet(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 
@@ -677,7 +672,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         } catch (ClassCastException success) {}
     }
 
-
     /**
      * addAll(null) throws NPE
      */
@@ -832,8 +826,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         }
     }
 
-
-
     /**
      * lower returns preceding element
      */
@@ -976,7 +968,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -984,7 +975,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet q = populatedSet(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 

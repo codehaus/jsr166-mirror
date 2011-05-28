@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -228,7 +227,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         } catch (IllegalArgumentException success) {}
     }
 
-
     /**
      * addAll of a collection with null elements throws NPE
      */
@@ -314,49 +312,68 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      */
     public void testBlockingPut() throws InterruptedException {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i)
                     q.put(i);
                 assertEquals(SIZE, q.size());
                 assertEquals(0, q.remainingCapacity());
+
+                Thread.currentThread().interrupt();
                 try {
                     q.put(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.put(99);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(SIZE, q.size());
         assertEquals(0, q.remainingCapacity());
     }
 
     /**
-     * put blocks waiting for take when full
+     * put blocks interruptibly waiting for take when full
      */
     public void testPutWithTake() throws InterruptedException {
         final int capacity = 2;
         final ArrayBlockingQueue q = new ArrayBlockingQueue(capacity);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseTake = new CountDownLatch(1);
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                for (int i = 0; i < capacity + 1; i++)
+                for (int i = 0; i < capacity; i++)
                     q.put(i);
+                pleaseTake.countDown();
+                q.put(86);
+
+                pleaseInterrupt.countDown();
                 try {
                     q.put(99);
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseTake);
         assertEquals(q.remainingCapacity(), 0);
         assertEquals(0, q.take());
-        delay(SHORT_DELAY_MS);
+
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
         assertEquals(q.remainingCapacity(), 0);
     }
 
@@ -381,6 +398,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             }});
 
         await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
     }
@@ -400,23 +418,33 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      */
     public void testBlockingTake() throws InterruptedException {
         final ArrayBlockingQueue q = populatedQueue(SIZE);
-        Thread t = new Thread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 for (int i = 0; i < SIZE; ++i) {
                     assertEquals(i, q.take());
                 }
+
+                Thread.currentThread().interrupt();
                 try {
                     q.take();
                     shouldThrow();
                 } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    q.take();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
-
 
     /**
      * poll succeeds unless empty
@@ -438,6 +466,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             assertEquals(i, q.poll(0, MILLISECONDS));
         }
         assertNull(q.poll(0, MILLISECONDS));
+        checkEmpty(q);
     }
 
     /**
@@ -446,9 +475,14 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testTimedPoll() throws InterruptedException {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(i, q.poll(SHORT_DELAY_MS, MILLISECONDS));
+            long startTime = System.nanoTime();
+            assertEquals(i, q.poll(LONG_DELAY_MS, MILLISECONDS));
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
-        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+        long startTime = System.nanoTime();
+        assertNull(q.poll(timeoutMillis(), MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+        checkEmpty(q);
     }
 
     /**
@@ -661,7 +695,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         } catch (ArrayStoreException success) {}
     }
 
-
     /**
      * iterator iterates through all elements
      */
@@ -725,7 +758,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         assertEquals(0, q.size());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -733,10 +765,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
-
 
     /**
      * offer transfers elements across Executor tasks
@@ -746,16 +777,19 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         q.add(one);
         q.add(two);
         ExecutorService executor = Executors.newFixedThreadPool(2);
+        final CheckedBarrier threadsStarted = new CheckedBarrier(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertFalse(q.offer(three));
-                assertTrue(q.offer(three, MEDIUM_DELAY_MS, MILLISECONDS));
+                threadsStarted.await();
+                assertTrue(q.offer(three, LONG_DELAY_MS, MILLISECONDS));
                 assertEquals(0, q.remainingCapacity());
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                delay(SMALL_DELAY_MS);
+                threadsStarted.await();
+                assertEquals(0, q.remainingCapacity());
                 assertSame(one, q.take());
             }});
 
@@ -763,21 +797,23 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * poll retrieves elements across Executor threads
+     * timed poll retrieves elements across Executor threads
      */
     public void testPollInExecutor() {
         final ArrayBlockingQueue q = new ArrayBlockingQueue(2);
+        final CheckedBarrier threadsStarted = new CheckedBarrier(2);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertNull(q.poll());
-                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
-                assertTrue(q.isEmpty());
+                threadsStarted.await();
+                assertSame(one, q.poll(LONG_DELAY_MS, MILLISECONDS));
+                checkEmpty(q);
             }});
 
         executor.execute(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                delay(SMALL_DELAY_MS);
+                threadsStarted.await();
                 q.put(one);
             }});
 

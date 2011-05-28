@@ -257,7 +257,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         CopyOnWriteArrayList full = populatedArray(3);
         String s = full.toString();
         for (int i = 0; i < 3; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 

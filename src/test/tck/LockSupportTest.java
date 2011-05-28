@@ -309,7 +309,6 @@ public class LockSupportTest extends JSR166TestCase {
         awaitTermination(t, MEDIUM_DELAY_MS);
     }
 
-
     /**
      * parkUntil times out if not unparked
      */

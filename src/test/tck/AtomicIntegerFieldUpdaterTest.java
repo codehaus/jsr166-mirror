@@ -113,7 +113,6 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         assertEquals(7,a.get(this));
     }
 
-
     /**
      * compareAndSet in one thread enables another waiting for value
      * to succeed

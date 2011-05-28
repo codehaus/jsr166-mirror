@@ -22,7 +22,6 @@ public class EntryTest extends JSR166TestCase {
     static final String k2 = "2";
     static final String v2 = "b";
 
-
     /**
      * A new SimpleEntry(k, v) holds k, v.
      */
@@ -40,7 +39,6 @@ public class EntryTest extends JSR166TestCase {
         assertEquals(k1, s.getKey());
         assertEquals(v1, s.getValue());
     }
-
 
     /**
      * A new SimpleEntry(entry(k, v)) holds k, v.
@@ -101,7 +99,6 @@ public class EntryTest extends JSR166TestCase {
         s = new AbstractMap.SimpleImmutableEntry(k2, v2);
         assertFalse(s2.equals(s));
     }
-
 
     /**
      * getValue returns last setValue for SimpleEntry

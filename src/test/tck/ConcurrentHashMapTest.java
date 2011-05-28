@@ -275,7 +275,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         assertEquals("Z", map.get(one));
     }
 
-
     /**
      * replace value fails when the given key not mapped to expected value
      */
@@ -295,7 +294,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         assertTrue(map.replace(one, "A", "Z"));
         assertEquals("Z", map.get(one));
     }
-
 
     /**
      * remove removes the correct key-value pair from the map
@@ -337,7 +335,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         ConcurrentHashMap map = map5();
         String s = map.toString();
         for (int i = 1; i <= 5; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 
@@ -483,7 +481,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         } catch (NullPointerException success) {}
     }
 
-
     /**
      * replace(x, null) throws NPE
      */
@@ -516,7 +513,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
 
     /**
      * remove(null) throws NPE
@@ -569,7 +565,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         assertTrue(q.equals(r));
         assertTrue(r.equals(q));
     }
-
 
     /**
      * SetValue of an EntrySet entry sets value in the map.

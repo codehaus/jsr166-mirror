@@ -49,7 +49,6 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             assertTrue(a.contains(ints[i]));
     }
 
-
     /**
      * addAll adds each element from the given collection
      */
@@ -131,7 +130,6 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         assertEquals(a.hashCode(), b.hashCode());
     }
 
-
     /**
      * containsAll returns true for collections with subset of elements
      */
@@ -187,10 +185,9 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         CopyOnWriteArraySet full = populatedSet(3);
         String s = full.toString();
         for (int i = 0; i < 3; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
-
 
     /**
      * removeAll removes all elements from the given collection
@@ -203,7 +200,6 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         full.removeAll(v);
         assertEquals(1, full.size());
     }
-
 
     /**
      * remove removes an element
@@ -250,7 +246,6 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         assertEquals(1, (int) i[1]);
         assertEquals(2, (int) i[2]);
     }
-
 
     /**
      * toArray throws an ArrayStoreException when the given array can

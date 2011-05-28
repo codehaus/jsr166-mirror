@@ -34,7 +34,6 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
         } catch (RuntimeException success) {}
     }
 
-
     /**
      * construction with field not of given type throws RuntimeException
      */

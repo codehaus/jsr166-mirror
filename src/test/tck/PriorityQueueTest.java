@@ -463,7 +463,6 @@ public class PriorityQueueTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -471,7 +470,7 @@ public class PriorityQueueTest extends JSR166TestCase {
         PriorityQueue q = populatedQueue(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 

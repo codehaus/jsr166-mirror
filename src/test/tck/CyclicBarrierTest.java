@@ -102,7 +102,6 @@ public class CyclicBarrierTest extends JSR166TestCase {
         t.join();
     }
 
-
     /**
      * An interruption in one party causes others waiting in await to
      * throw BrokenBarrierException
@@ -257,32 +256,28 @@ public class CyclicBarrierTest extends JSR166TestCase {
     public void testReset_Leakage() throws InterruptedException {
         final CyclicBarrier c = new CyclicBarrier(2);
         final AtomicBoolean done = new AtomicBoolean();
-        Thread t = new Thread() {
-                public void run() {
-                    while (!done.get()) {
-                        try {
-                            while (c.isBroken())
-                                c.reset();
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!done.get()) {
+                    try {
+                        while (c.isBroken())
+                            c.reset();
 
-                            c.await();
-                            threadFail("await should not return");
-                        }
-                        catch (BrokenBarrierException e) {
-                        }
-                        catch (InterruptedException ie) {
-                        }
+                        c.await();
+                        shouldThrow();
                     }
-                }
-            };
+                    catch (BrokenBarrierException ok) {}
+                    catch (InterruptedException ok) {}
+                }}});
 
         t.start();
         for (int i = 0; i < 4; i++) {
-            delay(SHORT_DELAY_MS);
+            delay(timeoutMillis());
             t.interrupt();
         }
         done.set(true);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -381,7 +376,6 @@ public class CyclicBarrierTest extends JSR166TestCase {
             assertEquals(0, barrier.getNumberWaiting());
         }
     }
-
 
     /**
      * Reset of a barrier after a failed command reinitializes it.

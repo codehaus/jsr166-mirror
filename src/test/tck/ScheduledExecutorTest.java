@@ -20,7 +20,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         return new TestSuite(ScheduledExecutorTest.class);
     }
 
-
     /**
      * execute successfully executes a runnable
      */
@@ -38,7 +37,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             joinPool(p);
         }
     }
-
 
     /**
      * delayed schedule of callable successfully executes after delay
@@ -175,7 +173,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         assertTrue(c <= SMALL_DELAY_MS + SHORT_DELAY_MS);
         joinPool(p);
     }
-
 
     /**
      * execute(null) throws NPE
@@ -473,7 +470,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         assertTrue(p.isShutdown());
     }
 
-
     /**
      * isTerminated is false before termination, true after
      */
@@ -664,7 +660,6 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * If setExecuteExistingDelayedTasksAfterShutdownPolicy is false,
      * delayed tasks are cancelled at shutdown
@@ -702,16 +697,16 @@ public class ScheduledExecutorTest extends JSR166TestCase {
         p.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
         assertTrue(p.getExecuteExistingDelayedTasksAfterShutdownPolicy());
         assertFalse(p.getContinueExistingPeriodicTasksAfterShutdownPolicy());
+        long initialDelay = LONG_DELAY_MS;
         ScheduledFuture task =
-            p.scheduleAtFixedRate(new NoOpRunnable(), 5, 5, MILLISECONDS);
+            p.scheduleAtFixedRate(new NoOpRunnable(), initialDelay,
+                                  5, MILLISECONDS);
         try { p.shutdown(); } catch (SecurityException ok) { return; }
         assertTrue(p.isShutdown());
-        BlockingQueue q = p.getQueue();
         assertTrue(p.getQueue().isEmpty());
         assertTrue(task.isDone());
         assertTrue(task.isCancelled());
-        assertTrue(p.awaitTermination(SMALL_DELAY_MS, MILLISECONDS));
-        assertTrue(p.isTerminated());
+        joinPool(p);
     }
 
     /**
@@ -1174,6 +1169,5 @@ public class ScheduledExecutorTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
 
 }

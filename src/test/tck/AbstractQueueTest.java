@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -92,7 +91,6 @@ public class AbstractQueueTest extends JSR166TestCase {
         } catch (NoSuchElementException success) {}
     }
 
-
     /**
      * element returns normally if peek succeeds
      */
@@ -133,7 +131,6 @@ public class AbstractQueueTest extends JSR166TestCase {
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
-
 
     /**
      * addAll of a collection with null elements throws NPE

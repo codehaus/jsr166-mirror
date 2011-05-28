@@ -468,7 +468,6 @@ public class LinkedListTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -476,7 +475,7 @@ public class LinkedListTest extends JSR166TestCase {
         LinkedList q = populatedQueue(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 
@@ -554,7 +553,6 @@ public class LinkedListTest extends JSR166TestCase {
         }
         assertNull(q.peekFirst());
     }
-
 
     /**
      * peekLast returns next element, or null if empty

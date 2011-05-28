@@ -494,7 +494,6 @@ public class ArrayDequeTest extends JSR166TestCase {
         assertNull(q.peekLast());
     }
 
-
     /**
      * removeFirst() removes first element, or throws NSEE if empty
      */
@@ -797,7 +796,6 @@ public class ArrayDequeTest extends JSR166TestCase {
         }
     }
 
-
     /**
      * toString() contains toStrings of elements
      */
@@ -805,7 +803,7 @@ public class ArrayDequeTest extends JSR166TestCase {
         ArrayDeque q = populatedDeque(SIZE);
         String s = q.toString();
         for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 

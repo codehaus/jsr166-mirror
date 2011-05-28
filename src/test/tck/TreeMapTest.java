@@ -557,7 +557,7 @@ public class TreeMapTest extends JSR166TestCase {
         TreeMap map = map5();
         String s = map.toString();
         for (int i = 1; i <= 5; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 

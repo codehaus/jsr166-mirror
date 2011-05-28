@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -22,7 +21,6 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
     public static Test suite() {
         return new TestSuite(ExecutorCompletionServiceTest.class);
     }
-
 
     /**
      * Creating a new ECS with null Executor throw NPE

@@ -61,7 +61,6 @@ public class ThreadTest extends JSR166TestCase {
         assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
     }
 
-
     // How to test actually using UEH within junit?
 
 }

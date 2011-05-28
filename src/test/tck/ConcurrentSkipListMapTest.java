@@ -119,7 +119,6 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         assertEquals(five, map.lastKey());
     }
 
-
     /**
      * keySet.toArray returns contains all keys
      */
@@ -382,7 +381,6 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         assertEquals("Z", map.get(one));
     }
 
-
     /**
      * replace value fails when the given key not mapped to expected value
      */
@@ -402,7 +400,6 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         assertTrue(map.replace(one, "A", "Z"));
         assertEquals("Z", map.get(one));
     }
-
 
     /**
      * remove removes the correct key-value pair from the map
@@ -532,7 +529,6 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             shouldThrow();
         } catch (UnsupportedOperationException success) {}
     }
-
 
 
     /**
@@ -678,7 +674,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         ConcurrentSkipListMap map = map5();
         String s = map.toString();
         for (int i = 1; i <= 5; ++i) {
-            assertTrue(s.indexOf(String.valueOf(i)) >= 0);
+            assertTrue(s.contains(String.valueOf(i)));
         }
     }
 
@@ -716,7 +712,6 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
 
     /**
      * put(null,x) throws NPE
@@ -813,8 +808,6 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
         assertTrue(q.equals(r));
         assertTrue(r.equals(q));
     }
-
-
 
     /**
      * subMap returns map with keys in requested range

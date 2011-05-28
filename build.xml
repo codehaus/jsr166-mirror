@@ -213,31 +213,16 @@
     <delete dir="${dist.javadocs.dir}"/>
     <mkdir dir="${dist.javadocs.dir}"/>
 
-    <javadoc destdir="${dist.javadocs.dir}"
-            link="http://download.oracle.com/javase/6/docs/api/"
-            overview="${src.dir}/intro.html"
+    <!-- the packagenames="none" hack below prevents scanning the -->
+    <!-- sourcepath for packages -->
 
-            sourcepath="${src.dir}:${jdksrc.dir}"
-     >
-<!--
-      <packageset dir="${src.dir}" defaultexcludes="yes">
-      <include name="java/util/concurrent"/>
-      <include name="java/util/concurrent/atomic"/>
-      <include name="java/util/concurrent/locks"/>
-      </packageset>
--->
-      <fileset dir="${topsrc.dir}" defaultexcludes="yes">
-      <include name="main/java/util/concurrent/*.java"/>
-      <include name="main/java/util/concurrent/atomic/*.java"/>
-      <include name="main/java/util/concurrent/locks/*.java"/>
-      <include name="main/java/util/*.java"/>
-<!--
-      <include name="main/java/util/concurrent/*.html"/>
-      <include name="main/java/util/concurrent/atomic/*.html"/>
-      <include name="main/java/util/concurrent/locks/*.html"/>
-      <include name="main/java/util/*.html"/>
--->
-<!--      <include name="jsr166x/*.java"/> -->
+    <javadoc destdir="${dist.javadocs.dir}"
+             packagenames="none"
+             link="http://download.oracle.com/javase/6/docs/api/"
+             overview="${src.dir}/intro.html"
+             sourcepath="${src.dir}:${jdksrc.dir}" >
+      <fileset dir="${src.dir}" defaultexcludes="yes">
+      <include name="**/*.java"/>
       </fileset>
     </javadoc>
 

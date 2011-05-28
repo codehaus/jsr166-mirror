@@ -149,7 +149,7 @@
     <mkdir dir="${build.javadocs.dir}"/>
 
     <javadoc destdir="${build.javadocs.dir}"
-                link="http://download.oracle.com/javase/6/docs/api/"
+                link="http://download.oracle.com/javase/7/docs/api/"
             overview="${src.dir}/intro.html"
             sourcepath="${src.dir}:${jdksrc.dir}"
     >
@@ -218,7 +218,7 @@
 
     <javadoc destdir="${dist.javadocs.dir}"
              packagenames="none"
-             link="http://download.oracle.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/7/docs/api/"
              overview="${src.dir}/intro.html"
              sourcepath="${src.dir}:${jdksrc.dir}" >
       <fileset dir="${src.dir}" defaultexcludes="yes">
@@ -502,7 +502,7 @@
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
              packagenames="jsr166x"
-             link="http://download.oracle.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
@@ -540,7 +540,7 @@
 
     <javadoc destdir="${dist.jsr166xjavadocs.dir}"
              packagenames="jsr166x"
-             link="http://download.oracle.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
@@ -605,7 +605,7 @@
 
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
              packagenames="jsr166y"
-             link="http://download.oracle.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
@@ -641,7 +641,7 @@
 
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
              packagenames="jsr166y"
-             link="http://download.oracle.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
@@ -707,7 +707,7 @@
 
     <javadoc destdir="${build.extra166yjavadocs.dir}"
              packagenames="extra166y"
-             link="http://download.oracle.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
@@ -743,7 +743,7 @@
 
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
              packagenames="extra166y"
-             link="http://download.oracle.com/javase/6/docs/api/"
+             link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 

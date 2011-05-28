@@ -516,15 +516,10 @@
     <mkdir dir="${build.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
+             packagenames="jsr166x"
              link="http://download.oracle.com/javase/6/docs/api/"
-            sourcepath="${topsrc.dir}:${jdksrc.dir}"
-    >
-      <packageset dir="${topsrc.dir}" defaultexcludes="yes">
-      <include name="jsr166x"/>
-      </packageset>
-
-
-    </javadoc>
+             source="${build.sourcelevel}"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
   </target>
 
@@ -559,14 +554,10 @@
     <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166xjavadocs.dir}"
-                link="http://download.oracle.com/javase/6/docs/api/"
-              source="${build.sourcelevel}">
-
-      <packageset dir="${topsrc.dir}" defaultexcludes="yes">
-      <include name="jsr166x"/>
-      </packageset>
-
-    </javadoc>
+             packagenames="jsr166x"
+             link="http://download.oracle.com/javase/6/docs/api/"
+             source="${build.sourcelevel}"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
   </target>
 
@@ -628,15 +619,10 @@
     <mkdir dir="${build.jsr166yjavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
-                link="http://download.oracle.com/javase/6/docs/api/"
-            sourcepath="${topsrc.dir}:${jdksrc.dir}"
-    >
-      <packageset dir="${topsrc.dir}" defaultexcludes="no">
-      <include name="jsr166y"/>
-      </packageset>
-
-
-    </javadoc>
+             packagenames="jsr166y"
+             link="http://download.oracle.com/javase/6/docs/api/"
+             source="${build.sourcelevel}"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
   </target>
 
@@ -669,14 +655,10 @@
     <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
-                link="http://download.oracle.com/javase/6/docs/api/"
-              source="${build.sourcelevel}"
-            sourcepath="${topsrc.dir}:${jdksrc.dir}"
-            >
-      <fileset dir="${topsrc.dir}" defaultexcludes="yes">
-      <include name="jsr166y/*.java"/>
-            </fileset>
-    </javadoc>
+             packagenames="jsr166y"
+             link="http://download.oracle.com/javase/6/docs/api/"
+             source="${build.sourcelevel}"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
   </target>
 
@@ -739,15 +721,10 @@
     <mkdir dir="${build.extra166yjavadocs.dir}"/>
 
     <javadoc destdir="${build.extra166yjavadocs.dir}"
-                link="http://download.oracle.com/javase/6/docs/api/"
-            sourcepath="${topsrc.dir}:${jdksrc.dir}"
-    >
-      <packageset dir="${topsrc.dir}" defaultexcludes="no">
-      <include name="extra166y"/>
-      </packageset>
-
-
-    </javadoc>
+             packagenames="extra166y"
+             link="http://download.oracle.com/javase/6/docs/api/"
+             source="${build.sourcelevel}"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
   </target>
 
@@ -780,14 +757,10 @@
     <mkdir dir="${dist.extra166yjavadocs.dir}"/>
 
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
-                link="http://download.oracle.com/javase/6/docs/api/"
-              source="${build.sourcelevel}"
-            sourcepath="${topsrc.dir}:${jdksrc.dir}"
-            >
-      <fileset dir="${topsrc.dir}" defaultexcludes="yes">
-      <include name="extra166y/*.java"/>
-            </fileset>
-    </javadoc>
+             packagenames="extra166y"
+             link="http://download.oracle.com/javase/6/docs/api/"
+             source="${build.sourcelevel}"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
 
   </target>
 

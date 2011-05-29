@@ -10,7 +10,6 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.math.BigInteger;
 import java.security.*;
 
 public class ExecutorsTest extends JSR166TestCase {

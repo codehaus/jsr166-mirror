@@ -110,21 +110,23 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
     /**
      * If poll returns non-null, the returned task is completed
      */
-    public void testPoll1() throws InterruptedException {
+    public void testPoll1() throws Exception {
         ExecutorService e = Executors.newCachedThreadPool();
         ExecutorCompletionService ecs = new ExecutorCompletionService(e);
         try {
             assertNull(ecs.poll());
             Callable c = new StringTask();
             ecs.submit(c);
-            delay(SHORT_DELAY_MS);
-            for (;;) {
-                Future f = ecs.poll();
-                if (f != null) {
-                    assertTrue(f.isDone());
-                    break;
-                }
+
+            long startTime = System.nanoTime();
+            Future f;
+            while ((f = ecs.poll()) == null) {
+                if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                    fail("timed out");
+                Thread.yield();
             }
+            assertTrue(f.isDone());
+            assertSame(TEST_STRING, f.get());
         } finally {
             joinPool(e);
         }

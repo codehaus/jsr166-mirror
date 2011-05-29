@@ -234,6 +234,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
      * BrokenBarrierException
      */
     public void testReset_BrokenBarrier() throws InterruptedException {
+        Thread.interrupted(); // ensure current thread not interrupted
         final CyclicBarrier c = new CyclicBarrier(3);
         final CountDownLatch pleaseReset = new CountDownLatch(2);
         Thread t1 = new ThreadShouldThrow(BrokenBarrierException.class) {

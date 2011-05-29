@@ -370,7 +370,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                     threadProceed.await();
                     threadDone.countDown();
                 }});
-            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            await(threadStarted);
             assertEquals(0, p.getCompletedTaskCount());
             threadProceed.countDown();
             threadDone.await();
@@ -1204,16 +1204,11 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> futures =
                 e.invokeAll(l, SHORT_DELAY_MS, MILLISECONDS);
-            assertEquals(3, futures.size());
-            Iterator<Future<String>> it = futures.iterator();
-            Future<String> f1 = it.next();
-            Future<String> f2 = it.next();
-            Future<String> f3 = it.next();
-            assertTrue(f1.isDone());
-            assertTrue(f2.isDone());
-            assertTrue(f3.isDone());
-            assertFalse(f1.isCancelled());
-            assertTrue(f2.isCancelled());
+            assertEquals(l.size(), futures.size());
+            for (Future future : futures)
+                assertTrue(future.isDone());
+            assertFalse(futures.get(0).isCancelled());
+            assertTrue(futures.get(1).isCancelled());
         } finally {
             joinPool(e);
         }

@@ -22,6 +22,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.security.AccessControlException;
@@ -386,12 +387,15 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     public void testExecuteRunnable() throws Throwable {
         ExecutorService e = new ForkJoinPool(1);
         try {
-            TrackedRunnable task = trackedRunnable(SHORT_DELAY_MS);
-            assertFalse(task.isDone());
+            final AtomicBoolean done = new AtomicBoolean(false);
+            CheckedRunnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.set(true);
+                }};
             Future<?> future = e.submit(task);
             assertNull(future.get());
-            assertNull(future.get(MEDIUM_DELAY_MS, MILLISECONDS));
-            assertTrue(task.isDone());
+            assertNull(future.get(0, MILLISECONDS));
+            assertTrue(done.get());
             assertTrue(future.isDone());
             assertFalse(future.isCancelled());
         } finally {

@@ -1977,7 +1977,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             // enough time to run all tasks
             assertTrue(done.await(nTasks * SHORT_DELAY_MS, MILLISECONDS));
         } finally {
-            p.shutdown();
+            joinPool(p);
         }
     }
 

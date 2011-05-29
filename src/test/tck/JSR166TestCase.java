@@ -283,7 +283,7 @@ public class JSR166TestCase extends TestCase {
      * milliseconds in the future.
      */
     Date delayedDate(long delayMillis) {
-        return new Date(new Date().getTime() + delayMillis);
+        return new Date(System.currentTimeMillis() + delayMillis);
     }
 
     /**

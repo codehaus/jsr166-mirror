@@ -54,81 +54,113 @@ public class CountDownLatchTest extends JSR166TestCase {
     /**
      * await returns after countDown to zero, but not before
      */
-    public void testAwait() throws InterruptedException {
+    public void testAwait() {
         final CountDownLatch l = new CountDownLatch(2);
+        final CountDownLatch pleaseCountDown = new CountDownLatch(1);
 
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertTrue(l.getCount() > 0);
+                assertEquals(2, l.getCount());
+                pleaseCountDown.countDown();
                 l.await();
                 assertEquals(0, l.getCount());
             }});
 
-        t.start();
-        assertEquals(l.getCount(), 2);
-        delay(SHORT_DELAY_MS);
+        await(pleaseCountDown);
+        assertEquals(2, l.getCount());
         l.countDown();
-        assertEquals(l.getCount(), 1);
+        assertEquals(1, l.getCount());
+        assertThreadStaysAlive(t);
         l.countDown();
-        assertEquals(l.getCount(), 0);
-        t.join();
+        assertEquals(0, l.getCount());
+        awaitTermination(t);
     }
 
     /**
      * timed await returns after countDown to zero
      */
-    public void testTimedAwait() throws InterruptedException {
+    public void testTimedAwait() {
         final CountDownLatch l = new CountDownLatch(2);
+        final CountDownLatch pleaseCountDown = new CountDownLatch(1);
 
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertTrue(l.getCount() > 0);
-                assertTrue(l.await(SMALL_DELAY_MS, MILLISECONDS));
+                assertEquals(2, l.getCount());
+                pleaseCountDown.countDown();
+                assertTrue(l.await(LONG_DELAY_MS, MILLISECONDS));
+                assertEquals(0, l.getCount());
             }});
 
-        t.start();
-        assertEquals(l.getCount(), 2);
-        delay(SHORT_DELAY_MS);
+        await(pleaseCountDown);
+        assertEquals(2, l.getCount());
         l.countDown();
-        assertEquals(l.getCount(), 1);
+        assertEquals(1, l.getCount());
+        assertThreadStaysAlive(t);
         l.countDown();
-        assertEquals(l.getCount(), 0);
-        t.join();
+        assertEquals(0, l.getCount());
+        awaitTermination(t);
     }
 
     /**
      * await throws IE if interrupted before counted down
      */
-    public void testAwait_InterruptedException() throws InterruptedException {
+    public void testAwait_Interruptible() {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertTrue(l.getCount() > 0);
-                l.await();
+                Thread.currentThread().interrupt();
+                try {
+                    l.await();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    l.await();
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                assertEquals(1, l.getCount());
             }});
 
-        t.start();
-        assertEquals(l.getCount(), 1);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
      * timed await throws IE if interrupted before counted down
      */
-    public void testTimedAwait_InterruptedException() throws InterruptedException {
+    public void testTimedAwait_Interruptible() {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedInterruptedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(1);
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertTrue(l.getCount() > 0);
-                l.await(MEDIUM_DELAY_MS, MILLISECONDS);
+                Thread.currentThread().interrupt();
+                try {
+                    l.await(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                pleaseInterrupt.countDown();
+                try {
+                    l.await(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+                assertFalse(Thread.interrupted());
+
+                assertEquals(1, l.getCount());
             }});
 
-        t.start();
-        delay(SHORT_DELAY_MS);
-        assertEquals(l.getCount(), 1);
+        await(pleaseInterrupt);
+        assertThreadStaysAlive(t);
         t.interrupt();
-        t.join();
+        awaitTermination(t);
     }
 
     /**
@@ -136,16 +168,15 @@ public class CountDownLatchTest extends JSR166TestCase {
      */
     public void testAwaitTimeout() throws InterruptedException {
         final CountDownLatch l = new CountDownLatch(1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                assertTrue(l.getCount() > 0);
-                assertFalse(l.await(SHORT_DELAY_MS, MILLISECONDS));
-                assertTrue(l.getCount() > 0);
+                assertEquals(1, l.getCount());
+                assertFalse(l.await(timeoutMillis(), MILLISECONDS));
+                assertEquals(1, l.getCount());
             }});
 
-        t.start();
-        assertEquals(l.getCount(), 1);
-        t.join();
+        awaitTermination(t);
+        assertEquals(1, l.getCount());
     }
 
     /**

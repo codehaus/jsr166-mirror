@@ -95,19 +95,18 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testSchedule1() throws Exception {
         CustomExecutor p = new CustomExecutor(1);
-        final long t0 = System.nanoTime();
-        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final long startTime = System.nanoTime();
         final CountDownLatch done = new CountDownLatch(1);
         try {
             Callable task = new CheckedCallable<Boolean>() {
                 public Boolean realCall() {
                     done.countDown();
-                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                    assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
                     return Boolean.TRUE;
                 }};
-            Future f = p.schedule(task, SHORT_DELAY_MS, MILLISECONDS);
-            assertEquals(Boolean.TRUE, f.get());
-            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+            Future f = p.schedule(task, timeoutMillis(), MILLISECONDS);
+            assertSame(Boolean.TRUE, f.get());
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
             assertTrue(done.await(0L, MILLISECONDS));
         } finally {
             joinPool(p);
@@ -119,19 +118,18 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testSchedule3() throws Exception {
         CustomExecutor p = new CustomExecutor(1);
-        final long t0 = System.nanoTime();
-        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final long startTime = System.nanoTime();
         final CountDownLatch done = new CountDownLatch(1);
         try {
             Runnable task = new CheckedRunnable() {
                 public void realRun() {
                     done.countDown();
-                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                    assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
                 }};
-            Future f = p.schedule(task, SHORT_DELAY_MS, MILLISECONDS);
-            assertNull(f.get());
-            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
-            assertTrue(done.await(0L, MILLISECONDS));
+            Future f = p.schedule(task, timeoutMillis(), MILLISECONDS);
+            await(done);
+            assertNull(f.get(LONG_DELAY_MS, MILLISECONDS));
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
         } finally {
             joinPool(p);
         }
@@ -142,20 +140,19 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testSchedule4() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
-        final long t0 = System.nanoTime();
-        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final long startTime = System.nanoTime();
         final CountDownLatch done = new CountDownLatch(1);
         try {
             Runnable task = new CheckedRunnable() {
                 public void realRun() {
                     done.countDown();
-                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                    assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
                 }};
             ScheduledFuture f =
-                p.scheduleAtFixedRate(task, SHORT_DELAY_MS,
-                                      SHORT_DELAY_MS, MILLISECONDS);
-            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
-            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                p.scheduleAtFixedRate(task, timeoutMillis(),
+                                      LONG_DELAY_MS, MILLISECONDS);
+            await(done);
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
             f.cancel(true);
         } finally {
             joinPool(p);
@@ -167,20 +164,19 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
      */
     public void testSchedule5() throws InterruptedException {
         CustomExecutor p = new CustomExecutor(1);
-        final long t0 = System.nanoTime();
-        final long timeoutNanos = SHORT_DELAY_MS * 1000L * 1000L;
+        final long startTime = System.nanoTime();
         final CountDownLatch done = new CountDownLatch(1);
         try {
             Runnable task = new CheckedRunnable() {
                 public void realRun() {
                     done.countDown();
-                    assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                    assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
                 }};
             ScheduledFuture f =
-                p.scheduleWithFixedDelay(task, SHORT_DELAY_MS,
-                                         SHORT_DELAY_MS, MILLISECONDS);
-            assertTrue(done.await(SMALL_DELAY_MS, MILLISECONDS));
-            assertTrue(System.nanoTime() - t0 >= timeoutNanos);
+                p.scheduleWithFixedDelay(task, timeoutMillis(),
+                                         LONG_DELAY_MS, MILLISECONDS);
+            await(done);
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
             f.cancel(true);
         } finally {
             joinPool(p);
@@ -378,8 +374,12 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
             assertEquals(0, p.getCompletedTaskCount());
             threadProceed.countDown();
             threadDone.await();
-            delay(SHORT_DELAY_MS);
-            assertEquals(1, p.getCompletedTaskCount());
+            long startTime = System.nanoTime();
+            while (p.getCompletedTaskCount() != 1) {
+                if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                    fail("timed out");
+                Thread.yield();
+            }
         } finally {
             joinPool(p);
         }

@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -53,7 +52,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
         assertTrue(task.done);
     }
 
-
     /**
      * Completed submit(callable) returns result
      */
@@ -83,7 +81,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
         String result = future.get();
         assertSame(TEST_STRING, result);
     }
-
 
     /**
      * A submitted privileged action runs to completion
@@ -156,7 +153,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
     }
-
 
     /**
      * submit(null callable) throws NPE
@@ -383,7 +379,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             joinPool(e);
         }
     }
-
 
     /**
      * timed invokeAny(null) throws NPE

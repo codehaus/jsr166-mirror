@@ -101,14 +101,12 @@ public class ExchangerTest extends JSR166TestCase {
         final Exchanger e = new Exchanger();
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                long timeoutMillis = SHORT_DELAY_MS;
                 long startTime = System.nanoTime();
                 try {
-                    e.exchange(null, timeoutMillis, MILLISECONDS);
+                    e.exchange(null, timeoutMillis(), MILLISECONDS);
                     shouldThrow();
-                } catch (TimeoutException success) {
-                    assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
-                }
+                } catch (TimeoutException success) {}
+                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
             }});
 
         awaitTermination(t);

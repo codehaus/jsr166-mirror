@@ -27,6 +27,18 @@ public class CyclicBarrierTest extends JSR166TestCase {
     }
 
     /**
+     * Spin-waits till the number of waiters == numberOfWaiters.
+     */
+    void awaitNumberWaiting(CyclicBarrier barrier, int numberOfWaiters) {
+        long startTime = System.nanoTime();
+        while (barrier.getNumberWaiting() != numberOfWaiters) {
+            if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                fail("timed out");
+            Thread.yield();
+        }
+    }
+
+    /**
      * Creating with negative parties throws IAE
      */
     public void testConstructor1() {
@@ -186,8 +198,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
             }});
         Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                while (c.getNumberWaiting() == 0)
-                    Thread.yield();
+                awaitNumberWaiting(c, 1);
                 long startTime = System.nanoTime();
                 try {
                     c.await(timeoutMillis(), MILLISECONDS);
@@ -215,8 +226,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
             }});
         Thread t2 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws Exception {
-                while (c.getNumberWaiting() == 0)
-                    Thread.yield();
+                awaitNumberWaiting(c, 1);
                 long startTime = System.nanoTime();
                 try {
                     c.await(timeoutMillis(), MILLISECONDS);
@@ -234,7 +244,6 @@ public class CyclicBarrierTest extends JSR166TestCase {
      * BrokenBarrierException
      */
     public void testReset_BrokenBarrier() throws InterruptedException {
-        Thread.interrupted(); // ensure current thread not interrupted
         final CyclicBarrier c = new CyclicBarrier(3);
         final CountDownLatch pleaseReset = new CountDownLatch(2);
         Thread t1 = new ThreadShouldThrow(BrokenBarrierException.class) {
@@ -251,6 +260,8 @@ public class CyclicBarrierTest extends JSR166TestCase {
         t1.start();
         t2.start();
         await(pleaseReset);
+
+        awaitNumberWaiting(c, 2);
         c.reset();
         awaitTermination(t1);
         awaitTermination(t2);
@@ -387,8 +398,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
                 }});
             Thread t2 = newStartedThread(new CheckedRunnable() {
                 public void realRun() throws Exception {
-                    while (barrier.getNumberWaiting() == 0)
-                        Thread.yield();
+                    awaitNumberWaiting(barrier, 1);
                     long startTime = System.nanoTime();
                     try {
                         barrier.await(timeoutMillis(), MILLISECONDS);
@@ -433,7 +443,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
             t1.start();
             t2.start();
             start.await();
-            while (barrier.getNumberWaiting() < 2) { Thread.yield(); }
+            awaitNumberWaiting(barrier, 2);
             try {
                 barrier.await();
                 shouldThrow();

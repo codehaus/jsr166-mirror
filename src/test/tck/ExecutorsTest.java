@@ -143,7 +143,7 @@ public class ExecutorsTest extends JSR166TestCase {
     /**
      * An unconfigurable newFixedThreadPool can execute runnables
      */
-    public void testunconfigurableExecutorService() {
+    public void testUnconfigurableExecutorService() {
         ExecutorService e = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
         e.execute(new NoOpRunnable());
         e.execute(new NoOpRunnable());
@@ -154,7 +154,7 @@ public class ExecutorsTest extends JSR166TestCase {
     /**
      * unconfigurableExecutorService(null) throws NPE
      */
-    public void testunconfigurableExecutorServiceNPE() {
+    public void testUnconfigurableExecutorServiceNPE() {
         try {
             ExecutorService e = Executors.unconfigurableExecutorService(null);
             shouldThrow();
@@ -164,7 +164,7 @@ public class ExecutorsTest extends JSR166TestCase {
     /**
      * unconfigurableScheduledExecutorService(null) throws NPE
      */
-    public void testunconfigurableScheduledExecutorServiceNPE() {
+    public void testUnconfigurableScheduledExecutorServiceNPE() {
         try {
             ExecutorService e = Executors.unconfigurableScheduledExecutorService(null);
             shouldThrow();
@@ -177,18 +177,21 @@ public class ExecutorsTest extends JSR166TestCase {
     public void testNewSingleThreadScheduledExecutor() throws Exception {
         ScheduledExecutorService p = Executors.newSingleThreadScheduledExecutor();
         try {
-            final CountDownLatch done = new CountDownLatch(1);
+            final CountDownLatch proceed = new CountDownLatch(1);
             final Runnable task = new CheckedRunnable() {
                 public void realRun() {
-                    done.countDown();
+                    await(proceed);
                 }};
+            long startTime = System.nanoTime();
             Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
-                                  SHORT_DELAY_MS, MILLISECONDS);
+                                  timeoutMillis(), MILLISECONDS);
             assertFalse(f.isDone());
-            assertTrue(done.await(MEDIUM_DELAY_MS, MILLISECONDS));
-            assertSame(Boolean.TRUE, f.get(SMALL_DELAY_MS, MILLISECONDS));
+            proceed.countDown();
+            assertSame(Boolean.TRUE, f.get(LONG_DELAY_MS, MILLISECONDS));
             assertSame(Boolean.TRUE, f.get());
             assertTrue(f.isDone());
+            assertFalse(f.isCancelled());
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
         } finally {
             joinPool(p);
         }
@@ -197,21 +200,24 @@ public class ExecutorsTest extends JSR166TestCase {
     /**
      * a newScheduledThreadPool successfully runs delayed task
      */
-    public void testnewScheduledThreadPool() throws Exception {
+    public void testNewScheduledThreadPool() throws Exception {
         ScheduledExecutorService p = Executors.newScheduledThreadPool(2);
         try {
-            final CountDownLatch done = new CountDownLatch(1);
+            final CountDownLatch proceed = new CountDownLatch(1);
             final Runnable task = new CheckedRunnable() {
                 public void realRun() {
-                    done.countDown();
+                    await(proceed);
                 }};
+            long startTime = System.nanoTime();
             Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
-                                  SHORT_DELAY_MS, MILLISECONDS);
+                                  timeoutMillis(), MILLISECONDS);
             assertFalse(f.isDone());
-            assertTrue(done.await(MEDIUM_DELAY_MS, MILLISECONDS));
-            assertSame(Boolean.TRUE, f.get(SMALL_DELAY_MS, MILLISECONDS));
+            proceed.countDown();
+            assertSame(Boolean.TRUE, f.get(LONG_DELAY_MS, MILLISECONDS));
             assertSame(Boolean.TRUE, f.get());
             assertTrue(f.isDone());
+            assertFalse(f.isCancelled());
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
         } finally {
             joinPool(p);
         }
@@ -220,23 +226,26 @@ public class ExecutorsTest extends JSR166TestCase {
     /**
      * an unconfigurable newScheduledThreadPool successfully runs delayed task
      */
-    public void testunconfigurableScheduledExecutorService() throws Exception {
+    public void testUnconfigurableScheduledExecutorService() throws Exception {
         ScheduledExecutorService p =
             Executors.unconfigurableScheduledExecutorService
             (Executors.newScheduledThreadPool(2));
         try {
-            final CountDownLatch done = new CountDownLatch(1);
+            final CountDownLatch proceed = new CountDownLatch(1);
             final Runnable task = new CheckedRunnable() {
                 public void realRun() {
-                    done.countDown();
+                    await(proceed);
                 }};
+            long startTime = System.nanoTime();
             Future f = p.schedule(Executors.callable(task, Boolean.TRUE),
-                                  SHORT_DELAY_MS, MILLISECONDS);
+                                  timeoutMillis(), MILLISECONDS);
             assertFalse(f.isDone());
-            assertTrue(done.await(MEDIUM_DELAY_MS, MILLISECONDS));
-            assertSame(Boolean.TRUE, f.get(SMALL_DELAY_MS, MILLISECONDS));
+            proceed.countDown();
+            assertSame(Boolean.TRUE, f.get(LONG_DELAY_MS, MILLISECONDS));
             assertSame(Boolean.TRUE, f.get());
             assertTrue(f.isDone());
+            assertFalse(f.isCancelled());
+            assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
         } finally {
             joinPool(p);
         }
@@ -279,6 +288,7 @@ public class ExecutorsTest extends JSR166TestCase {
      */
     public void testDefaultThreadFactory() throws Exception {
         final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
+        final CountDownLatch done = new CountDownLatch(1);
         Runnable r = new CheckedRunnable() {
             public void realRun() {
                 try {
@@ -296,20 +306,19 @@ public class ExecutorsTest extends JSR166TestCase {
                 } catch (SecurityException ok) {
                     // Also pass if not allowed to change setting
                 }
+                done.countDown();
             }};
         ExecutorService e = Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
 
         e.execute(r);
+        await(done);
+
         try {
             e.shutdown();
         } catch (SecurityException ok) {
         }
 
-        try {
-            delay(SHORT_DELAY_MS);
-        } finally {
-            joinPool(e);
-        }
+        joinPool(e);
     }
 
     /**
@@ -318,6 +327,7 @@ public class ExecutorsTest extends JSR166TestCase {
      * access control context and context class loader
      */
     public void testPrivilegedThreadFactory() throws Exception {
+        final CountDownLatch done = new CountDownLatch(1);
         Runnable r = new CheckedRunnable() {
             public void realRun() throws Exception {
                 final ThreadGroup egroup = Thread.currentThread().getThreadGroup();
@@ -338,11 +348,12 @@ public class ExecutorsTest extends JSR166TestCase {
                         assertTrue(name.endsWith("thread-1"));
                         assertSame(thisccl, current.getContextClassLoader());
                         assertEquals(thisacc, AccessController.getContext());
+                        done.countDown();
                     }};
                 ExecutorService e = Executors.newSingleThreadExecutor(Executors.privilegedThreadFactory());
                 e.execute(r);
+                await(done);
                 e.shutdown();
-                delay(SHORT_DELAY_MS);
                 joinPool(e);
             }};
 
@@ -402,7 +413,7 @@ public class ExecutorsTest extends JSR166TestCase {
      * With class loader permissions, calling
      * privilegedCallableUsingCurrentClassLoader does not throw ACE
      */
-    public void testprivilegedCallableUsingCCLWithPrivs() throws Exception {
+    public void testPrivilegedCallableUsingCCLWithPrivs() throws Exception {
         Runnable r = new CheckedRunnable() {
             public void realRun() throws Exception {
                 Executors.privilegedCallableUsingCurrentClassLoader
@@ -418,7 +429,7 @@ public class ExecutorsTest extends JSR166TestCase {
     /**
      * Without permissions, calling privilegedCallable throws ACE
      */
-    public void testprivilegedCallableWithNoPrivs() throws Exception {
+    public void testPrivilegedCallableWithNoPrivs() throws Exception {
         // Avoid classloader-related SecurityExceptions in swingui.TestRunner
         Executors.privilegedCallable(new CheckCCL());
 
@@ -490,7 +501,7 @@ public class ExecutorsTest extends JSR166TestCase {
     /**
      * With permissions, calling privilegedCallable succeeds
      */
-    public void testprivilegedCallableWithPrivs() throws Exception {
+    public void testPrivilegedCallableWithPrivs() throws Exception {
         Runnable r = new CheckedRunnable() {
             public void realRun() throws Exception {
                 Executors.privilegedCallable(new CheckCCL()).call();

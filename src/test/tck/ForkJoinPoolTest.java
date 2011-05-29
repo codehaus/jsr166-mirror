@@ -256,7 +256,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      * the task has completed successfully, and construction
      * parameters continue to hold
      */
-    public void testisQuiescent() throws Exception {
+    public void testIsQuiescent() throws Exception {
         ForkJoinPool p = new ForkJoinPool(2);
         try {
             assertTrue(p.isQuiescent());

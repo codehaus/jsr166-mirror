@@ -9,8 +9,8 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.math.BigInteger;
 import java.security.*;
 
 public class AbstractExecutorServiceTest extends JSR166TestCase {
@@ -45,11 +45,17 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
      */
     public void testExecuteRunnable() throws Exception {
         ExecutorService e = new DirectExecutorService();
-        TrackedShortRunnable task = new TrackedShortRunnable();
-        assertFalse(task.done);
+        final AtomicBoolean done = new AtomicBoolean(false);
+        CheckedRunnable task = new CheckedRunnable() {
+            public void realRun() {
+                done.set(true);
+            }};
         Future<?> future = e.submit(task);
-        future.get();
-        assertTrue(task.done);
+        assertNull(future.get());
+        assertNull(future.get(0, MILLISECONDS));
+        assertTrue(done.get());
+        assertTrue(future.isDone());
+        assertFalse(future.isCancelled());
     }
 
     /**
@@ -588,17 +594,12 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> futures =
                 e.invokeAll(l, SHORT_DELAY_MS, MILLISECONDS);
-            assertEquals(3, futures.size());
-            Iterator<Future<String>> it = futures.iterator();
-            Future<String> f1 = it.next();
-            Future<String> f2 = it.next();
-            Future<String> f3 = it.next();
-            assertTrue(f1.isDone());
-            assertFalse(f1.isCancelled());
-            assertTrue(f2.isDone());
-            assertFalse(f2.isCancelled());
-            assertTrue(f3.isDone());
-            assertTrue(f3.isCancelled());
+            assertEquals(l.size(), futures.size());
+            for (Future future : futures)
+                assertTrue(future.isDone());
+            assertFalse(futures.get(0).isCancelled());
+            assertFalse(futures.get(1).isCancelled());
+            assertTrue(futures.get(2).isCancelled());
         } finally {
             joinPool(e);
         }

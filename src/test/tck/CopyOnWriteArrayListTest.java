@@ -275,7 +275,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     /**
      * lastIndexOf returns the index from the given starting point
      */
-    public void testlastIndexOf2() {
+    public void testLastIndexOf2() {
         CopyOnWriteArrayList full = populatedArray(3);
         full.add(one);
         full.add(three);

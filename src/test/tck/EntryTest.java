@@ -116,7 +116,7 @@ public class EntryTest extends JSR166TestCase {
     /**
      * setValue for SimpleImmutableEntry throws UnsupportedOperationException
      */
-    public void testsetValue2() {
+    public void testSetValue2() {
         Map.Entry s2 = new AbstractMap.SimpleImmutableEntry(k1, v1);
         Map.Entry s = new AbstractMap.SimpleImmutableEntry(s2);
         assertEquals(k1, s.getKey());

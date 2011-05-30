@@ -148,14 +148,17 @@
     <delete dir="${build.javadocs.dir}"/>
     <mkdir dir="${build.javadocs.dir}"/>
 
+    <!-- the packagenames="none" hack below prevents scanning the -->
+    <!-- sourcepath for packages -->
+
     <javadoc destdir="${build.javadocs.dir}"
-                link="http://download.oracle.com/javase/7/docs/api/"
-            overview="${src.dir}/intro.html"
-            sourcepath="${src.dir}:${jdksrc.dir}"
-    >
-
-      <packageset dir="${src.dir}"/>
-
+             packagenames="none"
+             link="http://download.oracle.com/javase/7/docs/api/"
+             overview="${src.dir}/intro.html"
+             sourcepath="${src.dir}:${jdksrc.dir}" >
+      <fileset dir="${src.dir}" defaultexcludes="yes">
+      <include name="**/*.java"/>
+      </fileset>
     </javadoc>
 
   </target>

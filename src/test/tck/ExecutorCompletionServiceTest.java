@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.concurrent.atomic.*;
-import java.math.BigInteger;
 import java.security.*;
 
 public class ExecutorCompletionServiceTest extends JSR166TestCase {

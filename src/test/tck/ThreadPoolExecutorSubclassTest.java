@@ -161,22 +161,32 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
               workQueue, threadFactory, handler);
         }
 
-        volatile boolean beforeCalled = false;
-        volatile boolean afterCalled = false;
-        volatile boolean terminatedCalled = false;
+        final CountDownLatch beforeCalled = new CountDownLatch(1);
+        final CountDownLatch afterCalled = new CountDownLatch(1);
+        final CountDownLatch terminatedCalled = new CountDownLatch(1);
+
         public CustomTPE() {
             super(1, 1, LONG_DELAY_MS, MILLISECONDS, new SynchronousQueue<Runnable>());
         }
         protected void beforeExecute(Thread t, Runnable r) {
-            beforeCalled = true;
+            beforeCalled.countDown();
         }
         protected void afterExecute(Runnable r, Throwable t) {
-            afterCalled = true;
+            afterCalled.countDown();
         }
         protected void terminated() {
-            terminatedCalled = true;
+            terminatedCalled.countDown();
         }
 
+        public boolean beforeCalled() {
+            return beforeCalled.getCount() == 0;
+        }
+        public boolean afterCalled() {
+            return afterCalled.getCount() == 0;
+        }
+        public boolean terminatedCalled() {
+            return terminatedCalled.getCount() == 0;
+        }
     }
 
     static class FailingThreadFactory implements ThreadFactory {
@@ -284,12 +294,16 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
                     threadProceed.await();
                     threadDone.countDown();
                 }});
-            assertTrue(threadStarted.await(SMALL_DELAY_MS, MILLISECONDS));
+            await(threadStarted);
             assertEquals(0, p.getCompletedTaskCount());
             threadProceed.countDown();
             threadDone.await();
-            delay(SHORT_DELAY_MS);
-            assertEquals(1, p.getCompletedTaskCount());
+            long startTime = System.nanoTime();
+            while (p.getCompletedTaskCount() != 1) {
+                if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                    fail("timed out");
+                Thread.yield();
+            }
         } finally {
             joinPool(p);
         }
@@ -1223,7 +1237,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
     public void testTerminated() {
         CustomTPE p = new CustomTPE();
         try { p.shutdown(); } catch (SecurityException ok) { return; }
-        assertTrue(p.terminatedCalled);
+        assertTrue(p.terminatedCalled());
         joinPool(p);
     }
 
@@ -1233,12 +1247,16 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
     public void testBeforeAfter() throws InterruptedException {
         CustomTPE p = new CustomTPE();
         try {
-            TrackedNoOpRunnable r = new TrackedNoOpRunnable();
-            p.execute(r);
-            delay(SHORT_DELAY_MS);
-            assertTrue(r.done);
-            assertTrue(p.beforeCalled);
-            assertTrue(p.afterCalled);
+            final CountDownLatch done = new CountDownLatch(1);
+            final CheckedRunnable task = new CheckedRunnable() {
+                public void realRun() {
+                    done.countDown();
+                }};
+            p.execute(task);
+            await(p.afterCalled);
+            assertEquals(0, done.getCount());
+            assertTrue(p.afterCalled());
+            assertTrue(p.beforeCalled());
             try { p.shutdown(); } catch (SecurityException ok) { return; }
         } finally {
             joinPool(p);
@@ -1655,16 +1673,11 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
             l.add(new StringTask());
             List<Future<String>> futures =
                 e.invokeAll(l, SHORT_DELAY_MS, MILLISECONDS);
-            assertEquals(3, futures.size());
-            Iterator<Future<String>> it = futures.iterator();
-            Future<String> f1 = it.next();
-            Future<String> f2 = it.next();
-            Future<String> f3 = it.next();
-            assertTrue(f1.isDone());
-            assertTrue(f2.isDone());
-            assertTrue(f3.isDone());
-            assertFalse(f1.isCancelled());
-            assertTrue(f2.isCancelled());
+            assertEquals(l.size(), futures.size());
+            for (Future future : futures)
+                assertTrue(future.isDone());
+            assertFalse(futures.get(0).isCancelled());
+            assertTrue(futures.get(1).isCancelled());
         } finally {
             joinPool(e);
         }

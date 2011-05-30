@@ -206,7 +206,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         public int compareTo(Delayed other) {
-            if (other == this) // compare zero ONLY if same object
+            if (other == this) // compare zero if same object
                 return 0;
             if (other instanceof ScheduledFutureTask) {
                 ScheduledFutureTask<?> x = (ScheduledFutureTask<?>)other;

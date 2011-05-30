@@ -1181,10 +1181,11 @@ public class JSR166TestCase extends TestCase {
             oos.writeObject(o);
             oos.flush();
             oos.close();
-            ByteArrayInputStream bin =
-                new ByteArrayInputStream(bos.toByteArray());
-            ObjectInputStream ois = new ObjectInputStream(bin);
-            return (T) ois.readObject();
+            ObjectInputStream ois = new ObjectInputStream
+                (new ByteArrayInputStream(bos.toByteArray()));
+            T clone = (T) ois.readObject();
+            assertSame(o.getClass(), clone.getClass());
+            return clone;
         } catch (Throwable t) {
             threadUnexpectedException(t);
             return null;

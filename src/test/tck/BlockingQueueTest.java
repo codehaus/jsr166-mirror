@@ -39,7 +39,7 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
     //----------------------------------------------------------------
     // Configuration methods
     //----------------------------------------------------------------
-    
+
     /** Returns an empty instance of the implementation class. */
     protected abstract BlockingQueue emptyCollection();
 
@@ -54,7 +54,7 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
     //----------------------------------------------------------------
     // Tests
     //----------------------------------------------------------------
-    
+
     /**
      * offer(null) throws NullPointerException
      */

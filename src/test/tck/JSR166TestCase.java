@@ -1126,15 +1126,17 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * A CyclicBarrier that fails with AssertionFailedErrors instead
-     * of throwing checked exceptions.
+     * A CyclicBarrier that uses timed await and fails with
+     * AssertionFailedErrors instead of throwing checked exceptions.
      */
     public class CheckedBarrier extends CyclicBarrier {
         public CheckedBarrier(int parties) { super(parties); }
 
         public int await() {
             try {
-                return super.await();
+                return super.await(2 * LONG_DELAY_MS, MILLISECONDS);
+            } catch (TimeoutException e) {
+                throw new AssertionFailedError("timed out");
             } catch (Exception e) {
                 AssertionFailedError afe =
                     new AssertionFailedError("Unexpected exception: " + e);

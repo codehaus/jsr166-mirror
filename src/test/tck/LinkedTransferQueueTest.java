@@ -13,10 +13,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedTransferQueue;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import junit.framework.Test;
@@ -65,9 +70,9 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * NullPointerException
      */
     public void testConstructor3() {
+        Collection<Integer> elements = Arrays.asList(new Integer[SIZE]);
         try {
-            Integer[] ints = new Integer[SIZE];
-            new LinkedTransferQueue(Arrays.asList(ints));
+            new LinkedTransferQueue(elements);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -77,12 +82,12 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * throws NullPointerException
      */
     public void testConstructor4() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = i;
+        Collection<Integer> elements = Arrays.asList(ints);
         try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE - 1; ++i) {
-                ints[i] = i;
-            }
-            new LinkedTransferQueue(Arrays.asList(ints));
+            new LinkedTransferQueue(elements);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -129,39 +134,6 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * offer(null) throws NullPointerException
-     */
-    public void testOfferNull() {
-        try {
-            LinkedTransferQueue q = new LinkedTransferQueue();
-            q.offer(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * add(null) throws NullPointerException
-     */
-    public void testAddNull() {
-        try {
-            LinkedTransferQueue q = new LinkedTransferQueue();
-            q.add(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * addAll(null) throws NullPointerException
-     */
-    public void testAddAll1() {
-        try {
-            LinkedTransferQueue q = new LinkedTransferQueue();
-            q.addAll(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * addAll(this) throws IllegalArgumentException
      */
     public void testAddAllSelf() {
@@ -170,18 +142,6 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             q.addAll(q);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
-    }
-
-    /**
-     * addAll of a collection with null elements throws NullPointerException
-     */
-    public void testAddAll2() {
-        try {
-            LinkedTransferQueue q = new LinkedTransferQueue();
-            Integer[] ints = new Integer[SIZE];
-            q.addAll(Arrays.asList(ints));
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -215,17 +175,6 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(ints[i], q.poll());
         }
-    }
-
-    /**
-     * put(null) throws NullPointerException
-     */
-    public void testPutNull() throws InterruptedException {
-        try {
-            LinkedTransferQueue q = new LinkedTransferQueue();
-            q.put(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -561,17 +510,6 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray(null) throws NullPointerException
-     */
-    public void testToArray_NullArg() {
-        LinkedTransferQueue q = populatedQueue(SIZE);
-        try {
-            q.toArray(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * toArray(incompatible array type) throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
@@ -734,28 +672,6 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(null) throws NullPointerException
-     */
-    public void testDrainToNull() {
-        LinkedTransferQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this) throws IllegalArgumentException
-     */
-    public void testDrainToSelf() {
-        LinkedTransferQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(q);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
      * drainTo(c) empties queue into another collection c
      */
     public void testDrainTo() {
@@ -798,28 +714,6 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         }
         awaitTermination(t, MEDIUM_DELAY_MS);
         assertTrue(q.size() + l.size() >= SIZE);
-    }
-
-    /**
-     * drainTo(null, n) throws NullPointerException
-     */
-    public void testDrainToNullN() {
-        LinkedTransferQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(null, SIZE);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this, n) throws IllegalArgumentException
-     */
-    public void testDrainToSelfN() {
-        LinkedTransferQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(q, SIZE);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
     }
 
     /**

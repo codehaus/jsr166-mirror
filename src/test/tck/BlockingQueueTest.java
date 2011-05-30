@@ -8,12 +8,15 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
- * Contains tests generally applicable to BlockingQueue implementations.
+ * Contains "contract" tests applicable to all BlockingQueue implementations.
  */
 public abstract class BlockingQueueTest extends JSR166TestCase {
     /*
@@ -33,8 +36,148 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
         return new TestSuite(this.getClass());
     }
 
+    //----------------------------------------------------------------
+    // Configuration methods
+    //----------------------------------------------------------------
+    
     /** Returns an empty instance of the implementation class. */
     protected abstract BlockingQueue emptyCollection();
+
+    /**
+     * Returns an element suitable for insertion in the collection.
+     * Override for collections with unusual element types.
+     */
+    protected Object makeElement(int i) {
+        return Integer.valueOf(i);
+    }
+
+    //----------------------------------------------------------------
+    // Tests
+    //----------------------------------------------------------------
+    
+    /**
+     * offer(null) throws NullPointerException
+     */
+    public void testOfferNull() {
+        final Queue q = emptyCollection();
+        try {
+            q.offer(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * add(null) throws NullPointerException
+     */
+    public void testAddNull() {
+        final Collection q = emptyCollection();
+        try {
+            q.add(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * timed offer(null) throws NullPointerException
+     */
+    public void testTimedOfferNull() throws InterruptedException {
+        final BlockingQueue q = emptyCollection();
+        long startTime = System.nanoTime();
+        try {
+            q.offer(null, LONG_DELAY_MS, MILLISECONDS);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+        assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
+    }
+
+    /**
+     * put(null) throws NullPointerException
+     */
+    public void testPutNull() throws InterruptedException {
+        final BlockingQueue q = emptyCollection();
+        try {
+            q.put(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * put(null) throws NullPointerException
+     */
+    public void testAddAllNull() throws InterruptedException {
+        final Collection q = emptyCollection();
+        try {
+            q.addAll(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * addAll of a collection with null elements throws NullPointerException
+     */
+    public void testAddAllNullElements() {
+        final Collection q = emptyCollection();
+        final Collection<Integer> elements = Arrays.asList(new Integer[SIZE]);
+        try {
+            q.addAll(elements);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * toArray(null) throws NullPointerException
+     */
+    public void testToArray_NullArray() {
+        final Collection q = emptyCollection();
+        try {
+            q.toArray(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * drainTo(null) throws NullPointerException
+     */
+    public void testDrainToNull() {
+        final BlockingQueue q = emptyCollection();
+        try {
+            q.drainTo(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * drainTo(this) throws IllegalArgumentException
+     */
+    public void testDrainToSelf() {
+        final BlockingQueue q = emptyCollection();
+        try {
+            q.drainTo(q);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+    }
+
+    /**
+     * drainTo(null, n) throws NullPointerException
+     */
+    public void testDrainToNullN() {
+        final BlockingQueue q = emptyCollection();
+        try {
+            q.drainTo(null, 0);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * drainTo(this, n) throws IllegalArgumentException
+     */
+    public void testDrainToSelfN() {
+        final BlockingQueue q = emptyCollection();
+        try {
+            q.drainTo(q, 0);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+    }
 
     /**
      * timed poll before a delayed offer times out; after offer succeeds;
@@ -43,6 +186,7 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
     public void testTimedPollWithOffer() throws InterruptedException {
         final BlockingQueue q = emptyCollection();
         final CheckedBarrier barrier = new CheckedBarrier(2);
+        final Object zero = makeElement(0);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 long startTime = System.nanoTime();

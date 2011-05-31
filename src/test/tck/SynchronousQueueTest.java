@@ -7,8 +7,16 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
@@ -50,32 +58,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * offer(null) throws NullPointerException
-     */
-    public void testOfferNull()      { testOfferNull(false); }
-    public void testOfferNull_fair() { testOfferNull(true); }
-    public void testOfferNull(boolean fair) {
-        SynchronousQueue q = new SynchronousQueue(fair);
-        try {
-            q.offer(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * add(null) throws NullPointerException
-     */
-    public void testAddNull()      { testAddNull(false); }
-    public void testAddNull_fair() { testAddNull(true); }
-    public void testAddNull(boolean fair) {
-        SynchronousQueue q = new SynchronousQueue(fair);
-        try {
-            q.add(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * offer fails if no active taker
      */
     public void testOffer()      { testOffer(false); }
@@ -100,19 +82,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * addAll(null) throws NullPointerException
-     */
-    public void testAddAll_null()      { testAddAll_null(false); }
-    public void testAddAll_null_fair() { testAddAll_null(true); }
-    public void testAddAll_null(boolean fair) {
-        SynchronousQueue q = new SynchronousQueue(fair);
-        try {
-            q.addAll(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * addAll(this) throws IllegalArgumentException
      */
     public void testAddAll_self()      { testAddAll_self(false); }
@@ -123,20 +92,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
             q.addAll(q);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
-    }
-
-    /**
-     * addAll of a collection with null elements throws NullPointerException
-     */
-    public void testAddAll_null2()      { testAddAll_null2(false); }
-    public void testAddAll_null2_fair() { testAddAll_null2(true); }
-    public void testAddAll_null2(boolean fair) {
-        SynchronousQueue q = new SynchronousQueue(fair);
-        Collection<Integer> ints = Arrays.asList(new Integer[1]);
-        try {
-            q.addAll(ints);
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -154,17 +109,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
             q.addAll(coll);
             shouldThrow();
         } catch (IllegalStateException success) {}
-    }
-
-    /**
-     * put(null) throws NPE
-     */
-    public void testPutNull() throws InterruptedException {
-        try {
-            SynchronousQueue q = new SynchronousQueue();
-            q.put(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -591,32 +535,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(null) throws NPE
-     */
-    public void testDrainToNull()      { testDrainToNull(false); }
-    public void testDrainToNull_fair() { testDrainToNull(true); }
-    public void testDrainToNull(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        try {
-            q.drainTo(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this) throws IAE
-     */
-    public void testDrainToSelf()      { testDrainToSelf(false); }
-    public void testDrainToSelf_fair() { testDrainToSelf(true); }
-    public void testDrainToSelf(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        try {
-            q.drainTo(q);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
      * drainTo(c) of empty queue doesn't transfer elements
      */
     public void testDrainTo()      { testDrainTo(false); }
@@ -652,32 +570,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
         assertTrue(l.size() == 1);
         assertSame(one, l.get(0));
         awaitTermination(t);
-    }
-
-    /**
-     * drainTo(null, n) throws NullPointerException
-     */
-    public void testDrainToNullN()      { testDrainToNullN(false); }
-    public void testDrainToNullN_fair() { testDrainToNullN(true); }
-    public void testDrainToNullN(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        try {
-            q.drainTo(null, 0);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this, n) throws IllegalArgumentException
-     */
-    public void testDrainToSelfN()      { testDrainToSelfN(false); }
-    public void testDrainToSelfN_fair() { testDrainToSelfN(true); }
-    public void testDrainToSelfN(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        try {
-            q.drainTo(q, 0);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
     }
 
     /**

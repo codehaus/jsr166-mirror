@@ -7,8 +7,16 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
@@ -63,7 +71,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(0);
+            new ArrayBlockingQueue(0);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -73,7 +81,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(1, true, null);
+            new ArrayBlockingQueue(1, true, null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -82,9 +90,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * Initializing from Collection of null elements throws NPE
      */
     public void testConstructor4() {
+        Collection<Integer> elements = Arrays.asList(new Integer[SIZE]);
         try {
-            Integer[] ints = new Integer[SIZE];
-            ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, false, Arrays.asList(ints));
+            new ArrayBlockingQueue(SIZE, false, elements);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -93,11 +101,12 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * Initializing from Collection with some null elements throws NPE
      */
     public void testConstructor5() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = i;
+        Collection<Integer> elements = Arrays.asList(ints);
         try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
-            ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, false, Arrays.asList(ints));
+            new ArrayBlockingQueue(SIZE, false, Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -106,11 +115,12 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * Initializing from too large collection throws IAE
      */
     public void testConstructor6() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = i;
+        Collection<Integer> elements = Arrays.asList(ints);
         try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
-            ArrayBlockingQueue q = new ArrayBlockingQueue(1, false, Arrays.asList(ints));
+            new ArrayBlockingQueue(SIZE - 1, false, elements);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -121,8 +131,9 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testConstructor7() {
         Integer[] ints = new Integer[SIZE];
         for (int i = 0; i < SIZE; ++i)
-            ints[i] = new Integer(i);
-        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, true, Arrays.asList(ints));
+            ints[i] = i;
+        Collection<Integer> elements = Arrays.asList(ints);
+        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE, true, elements);
         for (int i = 0; i < SIZE; ++i)
             assertEquals(ints[i], q.poll());
     }
@@ -160,28 +171,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * offer(null) throws NPE
-     */
-    public void testOfferNull() {
-        try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(1);
-            q.offer(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * add(null) throws NPE
-     */
-    public void testAddNull() {
-        try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(1);
-            q.add(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * Offer succeeds if not full; fails if full
      */
     public void testOffer() {
@@ -206,17 +195,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * addAll(null) throws NPE
-     */
-    public void testAddAll1() {
-        try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(1);
-            q.addAll(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * addAll(this) throws IAE
      */
     public void testAddAllSelf() {
@@ -225,18 +203,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             q.addAll(q);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
-    }
-
-    /**
-     * addAll of a collection with null elements throws NPE
-     */
-    public void testAddAll2() {
-        try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
-            Integer[] ints = new Integer[SIZE];
-            q.addAll(Arrays.asList(ints));
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -281,17 +247,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         assertTrue(q.addAll(Arrays.asList(ints)));
         for (int i = 0; i < SIZE; ++i)
             assertEquals(ints[i], q.poll());
-    }
-
-    /**
-     * put(null) throws NPE
-     */
-    public void testPutNull() throws InterruptedException {
-        try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
-            q.put(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -674,17 +629,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * toArray(null) throws NullPointerException
-     */
-    public void testToArray_NullArg() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
-        try {
-            q.toArray(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * toArray(incompatible array type) throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
@@ -840,28 +784,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(null) throws NPE
-     */
-    public void testDrainToNull() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this) throws IAE
-     */
-    public void testDrainToSelf() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(q);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
      * drainTo(c) empties queue into another collection c
      */
     public void testDrainTo() {
@@ -903,28 +825,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             assertEquals(l.get(i), new Integer(i));
         t.join();
         assertTrue(q.size() + l.size() >= SIZE);
-    }
-
-    /**
-     * drainTo(null, n) throws NPE
-     */
-    public void testDrainToNullN() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(null, 0);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this, n) throws IAE
-     */
-    public void testDrainToSelfN() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
-        try {
-            q.drainTo(q, 0);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
     }
 
     /**

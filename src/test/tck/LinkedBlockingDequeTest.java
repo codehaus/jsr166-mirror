@@ -5,8 +5,17 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingDeque;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
@@ -80,12 +89,23 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * offer(null) throws NPE
+     * offerFirst(null) throws NullPointerException
      */
     public void testOfferFirstNull() {
+        LinkedBlockingDeque q = new LinkedBlockingDeque();
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque();
             q.offerFirst(null);
+            shouldThrow();
+        } catch (NullPointerException success) {}
+    }
+
+    /**
+     * offerLast(null) throws NullPointerException
+     */
+    public void testOfferLastNull() {
+        LinkedBlockingDeque q = new LinkedBlockingDeque();
+        try {
+            q.offerLast(null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -308,45 +328,47 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor throws IAE if capacity argument nonpositive
+     * Constructor throws IllegalArgumentException if capacity argument nonpositive
      */
     public void testConstructor2() {
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(0);
+            new LinkedBlockingDeque(0);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
 
     /**
-     * Initializing from null Collection throws NPE
+     * Initializing from null Collection throws NullPointerException
      */
     public void testConstructor3() {
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(null);
+            new LinkedBlockingDeque(null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
 
     /**
-     * Initializing from Collection of null elements throws NPE
+     * Initializing from Collection of null elements throws NullPointerException
      */
     public void testConstructor4() {
+        Collection<Integer> elements = Arrays.asList(new Integer[SIZE]);
         try {
-            Integer[] ints = new Integer[SIZE];
-            LinkedBlockingDeque q = new LinkedBlockingDeque(Arrays.asList(ints));
+            new LinkedBlockingDeque(elements);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
 
     /**
-     * Initializing from Collection with some null elements throws NPE
+     * Initializing from Collection with some null elements throws
+     * NullPointerException
      */
     public void testConstructor5() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = i;
+        Collection<Integer> elements = Arrays.asList(ints);
         try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
-            LinkedBlockingDeque q = new LinkedBlockingDeque(Arrays.asList(ints));
+            new LinkedBlockingDeque(elements);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -357,7 +379,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     public void testConstructor6() {
         Integer[] ints = new Integer[SIZE];
         for (int i = 0; i < SIZE; ++i)
-            ints[i] = new Integer(i);
+            ints[i] = i;
         LinkedBlockingDeque q = new LinkedBlockingDeque(Arrays.asList(ints));
         for (int i = 0; i < SIZE; ++i)
             assertEquals(ints[i], q.poll());
@@ -393,28 +415,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             assertEquals(i, q.size());
             q.add(new Integer(i));
         }
-    }
-
-    /**
-     * offer(null) throws NPE
-     */
-    public void testOfferNull() {
-        try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(1);
-            q.offer(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * add(null) throws NPE
-     */
-    public void testAddNull() {
-        try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(1);
-            q.add(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -482,49 +482,25 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * add succeeds if not full; throws ISE if full
      */
     public void testAdd() {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i)
+            assertTrue(q.add(new Integer(i)));
+        assertEquals(0, q.remainingCapacity());
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-            for (int i = 0; i < SIZE; ++i) {
-                assertTrue(q.add(new Integer(i)));
-            }
-            assertEquals(0, q.remainingCapacity());
             q.add(new Integer(SIZE));
             shouldThrow();
         } catch (IllegalStateException success) {}
     }
 
     /**
-     * addAll(null) throws NPE
-     */
-    public void testAddAll1() {
-        try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(1);
-            q.addAll(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * addAll(this) throws IAE
      */
     public void testAddAllSelf() {
+        LinkedBlockingDeque q = populatedDeque(SIZE);
         try {
-            LinkedBlockingDeque q = populatedDeque(SIZE);
             q.addAll(q);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
-    }
-
-    /**
-     * addAll of a collection with null elements throws NPE
-     */
-    public void testAddAll2() {
-        try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-            Integer[] ints = new Integer[SIZE];
-            q.addAll(Arrays.asList(ints));
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -532,26 +508,28 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testAddAll3() {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
+        Collection<Integer> elements = Arrays.asList(ints);
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
-            q.addAll(Arrays.asList(ints));
+            q.addAll(elements);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
 
     /**
-     * addAll throws ISE if not enough room
+     * addAll throws IllegalStateException if not enough room
      */
     public void testAddAll4() {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE - 1);
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
+        Collection<Integer> elements = Arrays.asList(ints);
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(1);
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
-            q.addAll(Arrays.asList(ints));
+            q.addAll(elements);
             shouldThrow();
         } catch (IllegalStateException success) {}
     }
@@ -569,17 +547,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         assertTrue(q.addAll(Arrays.asList(ints)));
         for (int i = 0; i < SIZE; ++i)
             assertEquals(ints[i], q.poll());
-    }
-
-    /**
-     * put(null) throws NPE
-     */
-    public void testPutNull() throws InterruptedException {
-        try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-            q.put(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
     }
 
     /**
@@ -807,8 +774,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * putFirst(null) throws NPE
      */
     public void testPutFirstNull() throws InterruptedException {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
             q.putFirst(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -1154,8 +1121,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * putLast(null) throws NPE
      */
     public void testPutLastNull() throws InterruptedException {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
             q.putLast(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -1553,17 +1520,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * toArray(null) throws NullPointerException
-     */
-    public void testToArray_NullArg() {
-        LinkedBlockingDeque q = populatedDeque(SIZE);
-        try {
-            q.toArray(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
      * toArray(incompatible array type) throws ArrayStoreException
      */
     public void testToArray1_BadArg() {
@@ -1778,28 +1734,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(null) throws NPE
-     */
-    public void testDrainToNull() {
-        LinkedBlockingDeque q = populatedDeque(SIZE);
-        try {
-            q.drainTo(null);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this) throws IAE
-     */
-    public void testDrainToSelf() {
-        LinkedBlockingDeque q = populatedDeque(SIZE);
-        try {
-            q.drainTo(q);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
      * drainTo(c) empties deque into another collection c
      */
     public void testDrainTo() {
@@ -1841,28 +1775,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             assertEquals(l.get(i), new Integer(i));
         t.join();
         assertTrue(q.size() + l.size() >= SIZE);
-    }
-
-    /**
-     * drainTo(null, n) throws NPE
-     */
-    public void testDrainToNullN() {
-        LinkedBlockingDeque q = populatedDeque(SIZE);
-        try {
-            q.drainTo(null, 0);
-            shouldThrow();
-        } catch (NullPointerException success) {}
-    }
-
-    /**
-     * drainTo(this, n) throws IAE
-     */
-    public void testDrainToSelfN() {
-        LinkedBlockingDeque q = populatedDeque(SIZE);
-        try {
-            q.drainTo(q, 0);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
     }
 
     /**

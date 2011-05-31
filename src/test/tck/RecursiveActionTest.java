@@ -267,7 +267,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
 
-                f.reinitialize();
+                f = new FibAction(8);
                 f.cancel(true);
                 assertSame(f, f.fork());
                 myself.interrupt();
@@ -280,7 +280,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                     checkCancelled(f);
                 }
 
-                f.reinitialize();
+                f = new FibAction(8);
                 f.completeExceptionally(new FJException());
                 assertSame(f, f.fork());
                 myself.interrupt();
@@ -294,7 +294,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 }
 
                 // test quietlyJoin()
-                f.reinitialize();
+                f = new FibAction(8);
                 assertSame(f, f.fork());
                 myself.interrupt();
                 assertTrue(myself.isInterrupted());
@@ -303,7 +303,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
 
-                f.reinitialize();
+                f = new FibAction(8);
                 f.cancel(true);
                 assertSame(f, f.fork());
                 myself.interrupt();
@@ -312,7 +312,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 Thread.interrupted();
                 checkCancelled(f);
 
-                f.reinitialize();
+                f = new FibAction(8);
                 f.completeExceptionally(new FJException());
                 assertSame(f, f.fork());
                 myself.interrupt();

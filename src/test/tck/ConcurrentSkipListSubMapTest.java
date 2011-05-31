@@ -5,9 +5,9 @@
  */
 
 import junit.framework.*;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
 
 public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -592,19 +592,14 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
      * A deserialized map equals original
      */
     public void testSerialization() throws Exception {
-        ConcurrentNavigableMap q = map5();
+        NavigableMap x = map5();
+        NavigableMap y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        ConcurrentNavigableMap r = (ConcurrentNavigableMap)in.readObject();
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
 
     /**
@@ -1271,19 +1266,14 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
      * A deserialized map equals original
      */
     public void testDescendingSerialization() throws Exception {
-        ConcurrentNavigableMap q = dmap5();
+        NavigableMap x = dmap5();
+        NavigableMap y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        ConcurrentNavigableMap r = (ConcurrentNavigableMap)in.readObject();
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
 
     /**

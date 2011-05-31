@@ -5,9 +5,12 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NavigableSet;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class TreeSubSetTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -93,7 +96,6 @@ public class TreeSubSetTest extends JSR166TestCase {
         assertEquals(0, set0().size());
     }
 
-
     /**
      * isEmpty is true before add, false after
      */
@@ -163,7 +165,6 @@ public class TreeSubSetTest extends JSR166TestCase {
             shouldThrow();
         } catch (ClassCastException success) {}
     }
-
 
     /**
      * addAll(null) throws NPE
@@ -325,8 +326,6 @@ public class TreeSubSetTest extends JSR166TestCase {
         }
     }
 
-
-
     /**
      * lower returns preceding element
      */
@@ -468,7 +467,6 @@ public class TreeSubSetTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -484,18 +482,18 @@ public class TreeSubSetTest extends JSR166TestCase {
      * A deserialized serialized set has same elements
      */
     public void testSerialization() throws Exception {
-        NavigableSet q = populatedSet(SIZE);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
+        NavigableSet x = populatedSet(SIZE);
+        NavigableSet y = serialClone(x);
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        NavigableSet r = (NavigableSet)in.readObject();
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.pollFirst(), r.pollFirst());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x, y);
+        assertEquals(y, x);
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.pollFirst(), y.pollFirst());
+        }
+        assertTrue(y.isEmpty());
     }
 
     /**
@@ -662,7 +660,6 @@ public class TreeSubSetTest extends JSR166TestCase {
         } catch (ClassCastException success) {}
     }
 
-
     /**
      * addAll(null) throws NPE
      */
@@ -817,8 +814,6 @@ public class TreeSubSetTest extends JSR166TestCase {
         }
     }
 
-
-
     /**
      * lower returns preceding element
      */
@@ -961,7 +956,6 @@ public class TreeSubSetTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -977,18 +971,19 @@ public class TreeSubSetTest extends JSR166TestCase {
      * A deserialized serialized set has same elements
      */
     public void testDescendingSerialization() throws Exception {
-        NavigableSet q = populatedSet(SIZE);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
+        NavigableSet x = dset5();
+        NavigableSet y = serialClone(x);
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        NavigableSet r = (NavigableSet)in.readObject();
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.pollFirst(), r.pollFirst());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertEquals(x, y);
+        assertEquals(y, x);
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.pollFirst(), y.pollFirst());
+        }
+        assertTrue(y.isEmpty());
     }
 
     /**

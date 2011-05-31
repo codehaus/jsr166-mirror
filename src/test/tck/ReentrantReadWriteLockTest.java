@@ -8,10 +8,11 @@
 
 import junit.framework.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.*;
-import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.CountDownLatch;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.io.*;
 import java.util.*;
 
 public class ReentrantReadWriteLockTest extends JSR166TestCase {

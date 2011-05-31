@@ -5,13 +5,14 @@
  */
 
 import junit.framework.*;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Queue;
+import java.util.Random;
 
 public class ArrayDequeTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -811,18 +812,18 @@ public class ArrayDequeTest extends JSR166TestCase {
      * A deserialized serialized deque has same elements in same order
      */
     public void testSerialization() throws Exception {
-        ArrayDeque q = populatedDeque(SIZE);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
+        Queue x = populatedDeque(SIZE);
+        Queue y = serialClone(x);
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        ArrayDeque r = (ArrayDeque)in.readObject();
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.remove(), r.remove());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertTrue(Arrays.equals(x.toArray(), y.toArray()));
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.remove(), y.remove());
+        }
+        assertTrue(y.isEmpty());
     }
 
 }

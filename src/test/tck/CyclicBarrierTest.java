@@ -8,9 +8,11 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CyclicBarrierTest extends JSR166TestCase {

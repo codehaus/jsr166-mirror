@@ -5,18 +5,14 @@
  * Other contributors include John Vint
  */
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
+import junit.framework.*;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -24,8 +20,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedTransferQueue;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class LinkedTransferQueueTest extends JSR166TestCase {
@@ -649,26 +643,18 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * A deserialized serialized queue has same elements in same order
      */
     public void testSerialization() throws Exception {
-        LinkedTransferQueue q = populatedQueue(SIZE);
+        Queue x = populatedQueue(SIZE);
+        Queue y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out
-            = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin
-            = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in
-            = new ObjectInputStream(new BufferedInputStream(bin));
-        LinkedTransferQueue r = (LinkedTransferQueue) in.readObject();
-
-        assertEquals(q.size(), r.size());
-        assertEquals(q.toString(), r.toString());
-        assertTrue(Arrays.equals(q.toArray(), r.toArray()));
-        while (!q.isEmpty()) {
-            assertEquals(q.remove(), r.remove());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertTrue(Arrays.equals(x.toArray(), y.toArray()));
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.remove(), y.remove());
         }
+        assertTrue(y.isEmpty());
     }
 
     /**

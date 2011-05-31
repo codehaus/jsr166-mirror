@@ -10,7 +10,7 @@ import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ScheduledExecutorTest extends JSR166TestCase {
     public static void main(String[] args) {

@@ -7,9 +7,8 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
-import java.io.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class AtomicReferenceArrayTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -178,22 +177,15 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * a deserialized serialized array holds same values
      */
     public void testSerialization() throws Exception {
-        AtomicReferenceArray l = new AtomicReferenceArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            l.set(i, new Integer(-i));
+        AtomicReferenceArray x = new AtomicReferenceArray(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            x.set(i, new Integer(-i));
         }
-
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(l);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        AtomicReferenceArray r = (AtomicReferenceArray) in.readObject();
-        assertEquals(l.length(), r.length());
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(r.get(i), l.get(i));
+        AtomicReferenceArray y = serialClone(x);
+        assertTrue(x != y);
+        assertEquals(x.length(), y.length());
+        for (int i = 0; i < SIZE; i++) {
+            assertEquals(x.get(i), y.get(i));
         }
     }
 

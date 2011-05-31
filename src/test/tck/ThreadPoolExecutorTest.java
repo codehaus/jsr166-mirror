@@ -6,10 +6,9 @@
  * Pat Fisher, Mike Judd.
  */
 
+import junit.framework.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.util.concurrent.atomic.*;
-import junit.framework.*;
 import java.util.*;
 
 public class ThreadPoolExecutorTest extends JSR166TestCase {

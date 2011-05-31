@@ -8,9 +8,18 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.security.*;
 
 public class ExecutorCompletionServiceTest extends JSR166TestCase {

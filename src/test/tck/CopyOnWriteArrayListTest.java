@@ -7,9 +7,13 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CopyOnWriteArrayListTest extends JSR166TestCase {
 
@@ -596,19 +600,20 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      * a deserialized serialized list is equal
      */
     public void testSerialization() throws Exception {
-        CopyOnWriteArrayList q = populatedArray(SIZE);
+        List x = populatedArray(SIZE);
+        List y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        CopyOnWriteArrayList r = (CopyOnWriteArrayList)in.readObject();
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertTrue(Arrays.equals(x.toArray(), y.toArray()));
+        assertEquals(x, y);
+        assertEquals(y, x);
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.remove(0), y.remove(0));
+        }
+        assertTrue(y.isEmpty());
     }
 
 }

@@ -7,9 +7,11 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class CopyOnWriteArraySetTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -265,19 +267,13 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      * A deserialized serialized set is equal
      */
     public void testSerialization() throws Exception {
-        CopyOnWriteArraySet q = populatedSet(SIZE);
+        Set x = populatedSet(SIZE);
+        Set y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        CopyOnWriteArraySet r = (CopyOnWriteArraySet)in.readObject();
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
 
 }

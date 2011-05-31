@@ -4,8 +4,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 import junit.framework.*;
-import java.util.concurrent.*;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ThreadLocalRandomTest extends JSR166TestCase {
 

@@ -7,9 +7,13 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 public class PriorityQueueTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -478,17 +482,15 @@ public class PriorityQueueTest extends JSR166TestCase {
      * A deserialized serialized queue has same elements
      */
     public void testSerialization() throws Exception {
-        PriorityQueue q = populatedQueue(SIZE);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
+        Queue x = populatedQueue(SIZE);
+        Queue y = serialClone(x);
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        PriorityQueue r = (PriorityQueue)in.readObject();
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.remove(), r.remove());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.remove(), y.remove());
+        }
+        assertTrue(y.isEmpty());
     }
 }

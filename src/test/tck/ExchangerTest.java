@@ -8,7 +8,9 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Exchanger;
+import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class ExchangerTest extends JSR166TestCase {

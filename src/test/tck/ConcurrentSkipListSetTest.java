@@ -5,9 +5,17 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NavigableSet;
+import java.util.NoSuchElementException;
+import java.util.Random;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class ConcurrentSkipListSetTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -521,18 +529,18 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * A deserialized serialized set has same elements
      */
     public void testSerialization() throws Exception {
-        ConcurrentSkipListSet q = populatedSet(SIZE);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
+        NavigableSet x = populatedSet(SIZE);
+        NavigableSet y = serialClone(x);
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        ConcurrentSkipListSet r = (ConcurrentSkipListSet)in.readObject();
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.pollFirst(), r.pollFirst());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x, y);
+        assertEquals(y, x);
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.pollFirst(), y.pollFirst());
+        }
+        assertTrue(y.isEmpty());
     }
 
     /**
@@ -655,7 +663,6 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
     }
 
     Random rnd = new Random(666);
-    BitSet bs;
 
     /**
      * Subsets of subsets subdivide correctly
@@ -665,18 +672,18 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         Class cl = ConcurrentSkipListSet.class;
 
         NavigableSet<Integer> set = newSet(cl);
-        bs = new BitSet(setSize);
+        BitSet bs = new BitSet(setSize);
 
-        populate(set, setSize);
-        check(set,                 0, setSize - 1, true);
-        check(set.descendingSet(), 0, setSize - 1, false);
+        populate(set, setSize, bs);
+        check(set,                 0, setSize - 1, true, bs);
+        check(set.descendingSet(), 0, setSize - 1, false, bs);
 
-        mutateSet(set, 0, setSize - 1);
-        check(set,                 0, setSize - 1, true);
-        check(set.descendingSet(), 0, setSize - 1, false);
+        mutateSet(set, 0, setSize - 1, bs);
+        check(set,                 0, setSize - 1, true, bs);
+        check(set.descendingSet(), 0, setSize - 1, false, bs);
 
         bashSubSet(set.subSet(0, true, setSize, false),
-                   0, setSize - 1, true);
+                   0, setSize - 1, true, bs);
     }
 
     static NavigableSet<Integer> newSet(Class cl) throws Exception {
@@ -686,20 +693,20 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         return result;
     }
 
-    void populate(NavigableSet<Integer> set, int limit) {
+    void populate(NavigableSet<Integer> set, int limit, BitSet bs) {
         for (int i = 0, n = 2 * limit / 3; i < n; i++) {
             int element = rnd.nextInt(limit);
-            put(set, element);
+            put(set, element, bs);
         }
     }
 
-    void mutateSet(NavigableSet<Integer> set, int min, int max) {
+    void mutateSet(NavigableSet<Integer> set, int min, int max, BitSet bs) {
         int size = set.size();
         int rangeSize = max - min + 1;
 
         // Remove a bunch of entries directly
         for (int i = 0, n = rangeSize / 2; i < n; i++) {
-            remove(set, min - 5 + rnd.nextInt(rangeSize + 10));
+            remove(set, min - 5 + rnd.nextInt(rangeSize + 10), bs);
         }
 
         // Remove a bunch of entries with iterator
@@ -714,17 +721,18 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         while (set.size() < size) {
             int element = min + rnd.nextInt(rangeSize);
             assertTrue(element >= min && element<= max);
-            put(set, element);
+            put(set, element, bs);
         }
     }
 
-    void mutateSubSet(NavigableSet<Integer> set, int min, int max) {
+    void mutateSubSet(NavigableSet<Integer> set, int min, int max,
+                      BitSet bs) {
         int size = set.size();
         int rangeSize = max - min + 1;
 
         // Remove a bunch of entries directly
         for (int i = 0, n = rangeSize / 2; i < n; i++) {
-            remove(set, min - 5 + rnd.nextInt(rangeSize + 10));
+            remove(set, min - 5 + rnd.nextInt(rangeSize + 10), bs);
         }
 
         // Remove a bunch of entries with iterator
@@ -739,7 +747,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         while (set.size() < size) {
             int element = min - 5 + rnd.nextInt(rangeSize + 10);
             if (element >= min && element<= max) {
-                put(set, element);
+                put(set, element, bs);
             } else {
                 try {
                     set.add(element);
@@ -749,24 +757,25 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         }
     }
 
-    void put(NavigableSet<Integer> set, int element) {
+    void put(NavigableSet<Integer> set, int element, BitSet bs) {
         if (set.add(element))
             bs.set(element);
     }
 
-    void remove(NavigableSet<Integer> set, int element) {
+    void remove(NavigableSet<Integer> set, int element, BitSet bs) {
         if (set.remove(element))
             bs.clear(element);
     }
 
     void bashSubSet(NavigableSet<Integer> set,
-                    int min, int max, boolean ascending) {
-        check(set, min, max, ascending);
-        check(set.descendingSet(), min, max, !ascending);
+                    int min, int max, boolean ascending,
+                    BitSet bs) {
+        check(set, min, max, ascending, bs);
+        check(set.descendingSet(), min, max, !ascending, bs);
 
-        mutateSubSet(set, min, max);
-        check(set, min, max, ascending);
-        check(set.descendingSet(), min, max, !ascending);
+        mutateSubSet(set, min, max, bs);
+        check(set, min, max, ascending, bs);
+        check(set.descendingSet(), min, max, !ascending, bs);
 
         // Recurse
         if (max - min < 2)
@@ -778,16 +787,16 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         NavigableSet<Integer> hm = set.headSet(midPoint, incl);
         if (ascending) {
             if (rnd.nextBoolean())
-                bashSubSet(hm, min, midPoint - (incl ? 0 : 1), true);
+                bashSubSet(hm, min, midPoint - (incl ? 0 : 1), true, bs);
             else
                 bashSubSet(hm.descendingSet(), min, midPoint - (incl ? 0 : 1),
-                           false);
+                           false, bs);
         } else {
             if (rnd.nextBoolean())
-                bashSubSet(hm, midPoint + (incl ? 0 : 1), max, false);
+                bashSubSet(hm, midPoint + (incl ? 0 : 1), max, false, bs);
             else
                 bashSubSet(hm.descendingSet(), midPoint + (incl ? 0 : 1), max,
-                           true);
+                           true, bs);
         }
 
         // tailSet - pick direction and endpoint inclusion randomly
@@ -795,16 +804,16 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         NavigableSet<Integer> tm = set.tailSet(midPoint,incl);
         if (ascending) {
             if (rnd.nextBoolean())
-                bashSubSet(tm, midPoint + (incl ? 0 : 1), max, true);
+                bashSubSet(tm, midPoint + (incl ? 0 : 1), max, true, bs);
             else
                 bashSubSet(tm.descendingSet(), midPoint + (incl ? 0 : 1), max,
-                           false);
+                           false, bs);
         } else {
             if (rnd.nextBoolean()) {
-                bashSubSet(tm, min, midPoint - (incl ? 0 : 1), false);
+                bashSubSet(tm, min, midPoint - (incl ? 0 : 1), false, bs);
             } else {
                 bashSubSet(tm.descendingSet(), min, midPoint - (incl ? 0 : 1),
-                           true);
+                           true, bs);
             }
         }
 
@@ -821,19 +830,19 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
                 endpoints[0], lowIncl, endpoints[1], highIncl);
             if (rnd.nextBoolean())
                 bashSubSet(sm, endpoints[0] + (lowIncl ? 0 : 1),
-                           endpoints[1] - (highIncl ? 0 : 1), true);
+                           endpoints[1] - (highIncl ? 0 : 1), true, bs);
             else
                 bashSubSet(sm.descendingSet(), endpoints[0] + (lowIncl ? 0 : 1),
-                           endpoints[1] - (highIncl ? 0 : 1), false);
+                           endpoints[1] - (highIncl ? 0 : 1), false, bs);
         } else {
             NavigableSet<Integer> sm = set.subSet(
                 endpoints[1], highIncl, endpoints[0], lowIncl);
             if (rnd.nextBoolean())
                 bashSubSet(sm, endpoints[0] + (lowIncl ? 0 : 1),
-                           endpoints[1] - (highIncl ? 0 : 1), false);
+                           endpoints[1] - (highIncl ? 0 : 1), false, bs);
             else
                 bashSubSet(sm.descendingSet(), endpoints[0] + (lowIncl ? 0 : 1),
-                           endpoints[1] - (highIncl ? 0 : 1), true);
+                           endpoints[1] - (highIncl ? 0 : 1), true, bs);
         }
     }
 
@@ -841,7 +850,8 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * min and max are both inclusive.  If max < min, interval is empty.
      */
     void check(NavigableSet<Integer> set,
-                      final int min, final int max, final boolean ascending) {
+               final int min, final int max, final boolean ascending,
+               final BitSet bs) {
         class ReferenceSet {
             int lower(int element) {
                 return ascending ?

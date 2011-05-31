@@ -7,9 +7,8 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
-import java.io.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class AtomicIntegerArrayTest extends JSR166TestCase {
 
@@ -310,20 +309,14 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
      * a deserialized serialized array holds same values
      */
     public void testSerialization() throws Exception {
-        AtomicIntegerArray l = new AtomicIntegerArray(SIZE);
-        for (int i = 0; i < SIZE; ++i)
-            l.set(i, -i);
-
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(l);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        AtomicIntegerArray r = (AtomicIntegerArray) in.readObject();
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(l.get(i), r.get(i));
+        AtomicIntegerArray x = new AtomicIntegerArray(SIZE);
+        for (int i = 0; i < SIZE; i++)
+            x.set(i, -i);
+        AtomicIntegerArray y = serialClone(x);
+        assertTrue(x != y);
+        assertEquals(x.length(), y.length());
+        for (int i = 0; i < SIZE; i++) {
+            assertEquals(x.get(i), y.get(i));
         }
     }
 

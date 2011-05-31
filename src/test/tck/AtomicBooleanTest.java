@@ -7,8 +7,7 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
-import java.io.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AtomicBooleanTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -119,18 +118,13 @@ public class AtomicBooleanTest extends JSR166TestCase {
      * a deserialized serialized atomic holds same value
      */
     public void testSerialization() throws Exception {
-        AtomicBoolean l = new AtomicBoolean();
-
-        l.set(true);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(l);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        AtomicBoolean r = (AtomicBoolean) in.readObject();
-        assertEquals(l.get(), r.get());
+        AtomicBoolean x = new AtomicBoolean();
+        AtomicBoolean y = serialClone(x);
+        x.set(true);
+        AtomicBoolean z = serialClone(x);
+        assertTrue(x.get());
+        assertFalse(y.get());
+        assertTrue(z.get());
     }
 
     /**

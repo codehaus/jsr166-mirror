@@ -13,13 +13,13 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.io.*;
 
 public class PriorityBlockingQueueTest extends JSR166TestCase {
 
@@ -662,18 +662,16 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * A deserialized serialized queue has same elements
      */
     public void testSerialization() throws Exception {
-        PriorityBlockingQueue q = populatedQueue(SIZE);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
+        Queue x = populatedQueue(SIZE);
+        Queue y = serialClone(x);
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        PriorityBlockingQueue r = (PriorityBlockingQueue)in.readObject();
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.remove(), r.remove());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.remove(), y.remove());
+        }
+        assertTrue(y.isEmpty());
     }
 
     /**

@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.io.*;
 
 public class SynchronousQueueTest extends JSR166TestCase {
 
@@ -526,12 +526,11 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testSerialization()      { testSerialization(false); }
     public void testSerialization_fair() { testSerialization(true); }
     public void testSerialization(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        final SynchronousQueue r = serialClone(q);
-        assertTrue(q != r);
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.remove(), r.remove());
+        final SynchronousQueue x = new SynchronousQueue(fair);
+        final SynchronousQueue y = serialClone(x);
+        assertTrue(x != y);
+        assertTrue(x.isEmpty());
+        assertTrue(y.isEmpty());
     }
 
     /**

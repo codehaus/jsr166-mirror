@@ -690,12 +690,11 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Waits up to the specified number of milliseconds for the given
+     * Spin-waits up to the specified number of milliseconds for the given
      * thread to enter a wait state: BLOCKED, WAITING, or TIMED_WAITING.
      */
     void waitForThreadToEnterWaitState(Thread thread, long timeoutMillis) {
-        long timeoutNanos = timeoutMillis * 1000L * 1000L;
-        long t0 = System.nanoTime();
+        long startTime = System.nanoTime();
         for (;;) {
             Thread.State s = thread.getState();
             if (s == Thread.State.BLOCKED ||
@@ -704,7 +703,7 @@ public class JSR166TestCase extends TestCase {
                 return;
             else if (s == Thread.State.TERMINATED)
                 fail("Unexpected thread termination");
-            else if (System.nanoTime() - t0 > timeoutNanos) {
+            else if (millisElapsedSince(startTime) > timeoutMillis) {
                 threadAssertTrue(thread.isAlive());
                 return;
             }

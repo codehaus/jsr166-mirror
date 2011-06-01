@@ -7,7 +7,7 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicStampedReference;
 
 public class AtomicStampedReferenceTest extends JSR166TestCase {
     public static void main(String[] args) {

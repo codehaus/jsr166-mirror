@@ -8,7 +8,7 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CountDownLatchTest extends JSR166TestCase {

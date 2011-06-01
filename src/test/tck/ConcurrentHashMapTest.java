@@ -8,9 +8,7 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.Enumeration;
-import java.io.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConcurrentHashMapTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -551,19 +549,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * A deserialized map equals original
      */
     public void testSerialization() throws Exception {
-        ConcurrentHashMap q = map5();
+        Map x = map5();
+        Map y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        ConcurrentHashMap r = (ConcurrentHashMap)in.readObject();
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
 
     /**

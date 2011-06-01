@@ -7,8 +7,7 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
-import java.io.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AtomicReferenceTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -118,18 +117,14 @@ public class AtomicReferenceTest extends JSR166TestCase {
      * a deserialized serialized atomic holds same value
      */
     public void testSerialization() throws Exception {
-        AtomicReference l = new AtomicReference();
-
-        l.set(one);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(l);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        AtomicReference r = (AtomicReference) in.readObject();
-        assertEquals(l.get(), r.get());
+        AtomicReference x = new AtomicReference();
+        AtomicReference y = serialClone(x);
+        assertTrue(x != y);
+        x.set(one);
+        AtomicReference z = serialClone(x);
+        assertEquals(one, x.get());
+        assertEquals(null, y.get());
+        assertEquals(one, z.get());
     }
 
     /**

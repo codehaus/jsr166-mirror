@@ -7,9 +7,8 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
-import java.io.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 public class AtomicLongArrayTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -309,20 +308,14 @@ public class AtomicLongArrayTest extends JSR166TestCase {
      * a deserialized serialized array holds same values
      */
     public void testSerialization() throws Exception {
-        AtomicLongArray l = new AtomicLongArray(SIZE);
+        AtomicLongArray x = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; ++i)
-            l.set(i, -i);
-
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(l);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        AtomicLongArray r = (AtomicLongArray) in.readObject();
+            x.set(i, -i);
+        AtomicLongArray y = serialClone(x);
+        assertTrue(x != y);
+        assertEquals(x.length(), y.length());
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(l.get(i), r.get(i));
+            assertEquals(x.get(i), y.get(i));
         }
     }
 

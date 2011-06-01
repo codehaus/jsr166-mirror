@@ -8,9 +8,9 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.io.*;
 
 public class SemaphoreTest extends JSR166TestCase {
     public static void main(String[] args) {

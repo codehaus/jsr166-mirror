@@ -7,8 +7,7 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
-import java.io.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AtomicIntegerTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -193,18 +192,14 @@ public class AtomicIntegerTest extends JSR166TestCase {
      * a deserialized serialized atomic holds same value
      */
     public void testSerialization() throws Exception {
-        AtomicInteger l = new AtomicInteger();
-
-        l.set(22);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(l);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        AtomicInteger r = (AtomicInteger) in.readObject();
-        assertEquals(l.get(), r.get());
+        AtomicInteger x = new AtomicInteger();
+        AtomicInteger y = serialClone(x);
+        assertTrue(x != y);
+        x.set(22);
+        AtomicInteger z = serialClone(x);
+        assertEquals(22, x.get());
+        assertEquals(0, y.get());
+        assertEquals(22, z.get());
     }
 
     /**

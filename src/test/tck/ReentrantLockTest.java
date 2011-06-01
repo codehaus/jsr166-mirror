@@ -7,11 +7,12 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.locks.*;
-import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.*;
-import java.io.*;
 
 public class ReentrantLockTest extends JSR166TestCase {
     public static void main(String[] args) {

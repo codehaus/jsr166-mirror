@@ -5,9 +5,17 @@
  */
 
 import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NavigableSet;
+import java.util.NoSuchElementException;
+import java.util.Random;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class TreeSetTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -273,7 +281,6 @@ public class TreeSetTest extends JSR166TestCase {
         assertNull(q.pollFirst());
     }
 
-
     /**
      * remove(x) removes x and returns true if present
      */
@@ -369,8 +376,6 @@ public class TreeSetTest extends JSR166TestCase {
             }
         }
     }
-
-
 
     /**
      * lower returns preceding element
@@ -513,7 +518,6 @@ public class TreeSetTest extends JSR166TestCase {
         assertFalse(it.hasNext());
     }
 
-
     /**
      * toString contains toStrings of elements
      */
@@ -529,18 +533,18 @@ public class TreeSetTest extends JSR166TestCase {
      * A deserialized serialized set has same elements
      */
     public void testSerialization() throws Exception {
-        TreeSet q = populatedSet(SIZE);
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
+        NavigableSet x = populatedSet(SIZE);
+        NavigableSet y = serialClone(x);
 
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        TreeSet r = (TreeSet)in.readObject();
-        assertEquals(q.size(), r.size());
-        while (!q.isEmpty())
-            assertEquals(q.pollFirst(), r.pollFirst());
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x, y);
+        assertEquals(y, x);
+        while (!x.isEmpty()) {
+            assertFalse(y.isEmpty());
+            assertEquals(x.pollFirst(), y.pollFirst());
+        }
+        assertTrue(y.isEmpty());
     }
 
     /**

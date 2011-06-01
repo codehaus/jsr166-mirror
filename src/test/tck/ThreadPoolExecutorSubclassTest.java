@@ -6,11 +6,11 @@
  * Pat Fisher, Mike Judd.
  */
 
+import junit.framework.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.util.concurrent.locks.*;
-
-import junit.framework.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
 
 public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {

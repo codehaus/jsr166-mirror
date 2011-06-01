@@ -6,8 +6,6 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
 
 public class TreeMapTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -118,7 +116,6 @@ public class TreeMapTest extends JSR166TestCase {
         TreeMap map = map5();
         assertEquals(five, map.lastKey());
     }
-
 
     /**
      * keySet.toArray returns contains all keys
@@ -413,7 +410,6 @@ public class TreeMapTest extends JSR166TestCase {
         assertNull(e4);
     }
 
-
     /**
      * lowerKey returns preceding element
      */
@@ -601,19 +597,14 @@ public class TreeMapTest extends JSR166TestCase {
      * A deserialized map equals original
      */
     public void testSerialization() throws Exception {
-        TreeMap q = map5();
+        NavigableMap x = map5();
+        NavigableMap y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        TreeMap r = (TreeMap)in.readObject();
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
 
     /**

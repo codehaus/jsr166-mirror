@@ -7,8 +7,8 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.*;
-import java.io.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class TimeUnitTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -455,8 +455,8 @@ public class TimeUnitTest extends JSR166TestCase {
      * a deserialized serialized unit is the same instance
      */
     public void testSerialization() throws Exception {
-        TimeUnit q = TimeUnit.MILLISECONDS;
-        assertSame(q, serialClone(q));
+        TimeUnit x = TimeUnit.MILLISECONDS;
+        assertSame(x, serialClone(x));
     }
 
 }

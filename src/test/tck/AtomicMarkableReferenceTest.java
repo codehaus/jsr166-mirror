@@ -7,7 +7,7 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicMarkableReference;
 
 public class AtomicMarkableReferenceTest extends JSR166TestCase {
     public static void main(String[] args) {

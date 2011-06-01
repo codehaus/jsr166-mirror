@@ -6,8 +6,6 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
 
 public class EntryTest extends JSR166TestCase {
     public static void main(String[] args) {

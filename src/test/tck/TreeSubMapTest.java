@@ -6,8 +6,6 @@
 
 import junit.framework.*;
 import java.util.*;
-import java.util.concurrent.*;
-import java.io.*;
 
 public class TreeSubMapTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -71,7 +69,6 @@ public class TreeSubMapTest extends JSR166TestCase {
         map.clear();
         assertEquals(map.size(), 0);
     }
-
 
     /**
      * Maps with same contents are equal
@@ -140,7 +137,6 @@ public class TreeSubMapTest extends JSR166TestCase {
         NavigableMap map = map5();
         assertEquals(five, map.lastKey());
     }
-
 
     /**
      * keySet returns a Set containing all the keys
@@ -430,23 +426,15 @@ public class TreeSubMapTest extends JSR166TestCase {
      * A deserialized map equals original
      */
     public void testSerialization() throws Exception {
-        NavigableMap q = map5();
+        NavigableMap x = map5();
+        NavigableMap y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        NavigableMap r = (NavigableMap)in.readObject();
-        assertFalse(r.isEmpty());
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
-
-
 
     /**
      * subMap returns map with keys in requested range
@@ -592,7 +580,6 @@ public class TreeSubMapTest extends JSR166TestCase {
         assertEquals(map.size(), 0);
     }
 
-
     /**
      * Maps with same contents are equal
      */
@@ -660,7 +647,6 @@ public class TreeSubMapTest extends JSR166TestCase {
         NavigableMap map = dmap5();
         assertEquals(m5, map.lastKey());
     }
-
 
     /**
      * keySet returns a Set containing all the keys
@@ -748,7 +734,6 @@ public class TreeSubMapTest extends JSR166TestCase {
         assertTrue(s.contains("E"));
     }
 
-
     /**
      * entrySet contains all pairs
      */
@@ -782,7 +767,6 @@ public class TreeSubMapTest extends JSR166TestCase {
         assertTrue(empty.containsKey(m4));
         assertTrue(empty.containsKey(m5));
     }
-
 
     /**
      * remove removes the correct key-value pair from the map
@@ -969,21 +953,15 @@ public class TreeSubMapTest extends JSR166TestCase {
      * A deserialized map equals original
      */
     public void testDescendingSerialization() throws Exception {
-        NavigableMap q = dmap5();
+        NavigableMap x = dmap5();
+        NavigableMap y = serialClone(x);
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-        out.writeObject(q);
-        out.close();
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-        NavigableMap r = (NavigableMap)in.readObject();
-        assertEquals(q.size(), r.size());
-        assertTrue(q.equals(r));
-        assertTrue(r.equals(q));
+        assertTrue(x != y);
+        assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
-
 
     /**
      * subMap returns map with keys in requested range

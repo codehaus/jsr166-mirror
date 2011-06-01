@@ -2539,9 +2539,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (lo == null)
                 return m.findFirst();
             else if (loInclusive)
-                return m.findNear(lo, m.GT|m.EQ);
+                return m.findNear(lo, GT|EQ);
             else
-                return m.findNear(lo, m.GT);
+                return m.findNear(lo, GT);
         }
 
         /**
@@ -2552,9 +2552,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (hi == null)
                 return m.findLast();
             else if (hiInclusive)
-                return m.findNear(hi, m.LT|m.EQ);
+                return m.findNear(hi, LT|EQ);
             else
-                return m.findNear(hi, m.LT);
+                return m.findNear(hi, LT);
         }
 
         /**
@@ -2636,15 +2636,15 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          */
         private Map.Entry<K,V> getNearEntry(K key, int rel) {
             if (isDescending) { // adjust relation for direction
-                if ((rel & m.LT) == 0)
-                    rel |= m.LT;
+                if ((rel & LT) == 0)
+                    rel |= LT;
                 else
-                    rel &= ~m.LT;
+                    rel &= ~LT;
             }
             if (tooLow(key))
-                return ((rel & m.LT) != 0) ? null : lowestEntry();
+                return ((rel & LT) != 0) ? null : lowestEntry();
             if (tooHigh(key))
-                return ((rel & m.LT) != 0) ? highestEntry() : null;
+                return ((rel & LT) != 0) ? highestEntry() : null;
             for (;;) {
                 Node<K,V> n = m.findNear(key, rel);
                 if (n == null || !inBounds(n.key))
@@ -2659,13 +2659,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         // Almost the same as getNearEntry, except for keys
         private K getNearKey(K key, int rel) {
             if (isDescending) { // adjust relation for direction
-                if ((rel & m.LT) == 0)
-                    rel |= m.LT;
+                if ((rel & LT) == 0)
+                    rel |= LT;
                 else
-                    rel &= ~m.LT;
+                    rel &= ~LT;
             }
             if (tooLow(key)) {
-                if ((rel & m.LT) == 0) {
+                if ((rel & LT) == 0) {
                     ConcurrentSkipListMap.Node<K,V> n = loNode();
                     if (isBeforeEnd(n))
                         return n.key;
@@ -2673,7 +2673,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return null;
             }
             if (tooHigh(key)) {
-                if ((rel & m.LT) != 0) {
+                if ((rel & LT) != 0) {
                     ConcurrentSkipListMap.Node<K,V> n = hiNode();
                     if (n != null) {
                         K last = n.key;
@@ -2872,35 +2872,35 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /* ----------------  Relational methods -------------- */
 
         public Map.Entry<K,V> ceilingEntry(K key) {
-            return getNearEntry(key, (m.GT|m.EQ));
+            return getNearEntry(key, GT|EQ);
         }
 
         public K ceilingKey(K key) {
-            return getNearKey(key, (m.GT|m.EQ));
+            return getNearKey(key, GT|EQ);
         }
 
         public Map.Entry<K,V> lowerEntry(K key) {
-            return getNearEntry(key, (m.LT));
+            return getNearEntry(key, LT);
         }
 
         public K lowerKey(K key) {
-            return getNearKey(key, (m.LT));
+            return getNearKey(key, LT);
         }
 
         public Map.Entry<K,V> floorEntry(K key) {
-            return getNearEntry(key, (m.LT|m.EQ));
+            return getNearEntry(key, LT|EQ);
         }
 
         public K floorKey(K key) {
-            return getNearKey(key, (m.LT|m.EQ));
+            return getNearKey(key, LT|EQ);
         }
 
         public Map.Entry<K,V> higherEntry(K key) {
-            return getNearEntry(key, (m.GT));
+            return getNearEntry(key, GT);
         }
 
         public K higherKey(K key) {
-            return getNearKey(key, (m.GT));
+            return getNearKey(key, GT);
         }
 
         public K firstKey() {

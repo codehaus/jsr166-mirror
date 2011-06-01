@@ -331,7 +331,7 @@ public class ForkJoinWorkerThread extends Thread {
      */
     protected void onStart() {
         queue = new ForkJoinTask<?>[INITIAL_QUEUE_CAPACITY];
-        int r = pool.workerSeedGenerator.nextInt();
+        int r = ForkJoinPool.workerSeedGenerator.nextInt();
         seed = (r == 0) ? 1 : r; //  must be nonzero
     }
 
@@ -955,7 +955,7 @@ public class ForkJoinWorkerThread extends Thread {
         int s;
         try {
             UNSAFE = getUnsafe();
-            Class a = ForkJoinTask[].class;
+            Class<?> a = ForkJoinTask[].class;
             ABASE = UNSAFE.arrayBaseOffset(a);
             s = UNSAFE.arrayIndexScale(a);
         } catch (Exception e) {

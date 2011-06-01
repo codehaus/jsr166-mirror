@@ -1113,7 +1113,7 @@ public class Phaser {
     static {
         try {
             UNSAFE = getUnsafe();
-            Class k = Phaser.class;
+            Class<?> k = Phaser.class;
             stateOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("state"));
         } catch (Exception e) {

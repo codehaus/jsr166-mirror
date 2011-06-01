@@ -513,7 +513,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         static {
             try {
                 UNSAFE = getUnsafe();
-                Class k = Node.class;
+                Class<?> k = Node.class;
                 itemOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("item"));
                 nextOffset = UNSAFE.objectFieldOffset
@@ -1310,7 +1310,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     static {
         try {
             UNSAFE = getUnsafe();
-            Class k = LinkedTransferQueue.class;
+            Class<?> k = LinkedTransferQueue.class;
             headOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("head"));
             tailOffset = UNSAFE.objectFieldOffset

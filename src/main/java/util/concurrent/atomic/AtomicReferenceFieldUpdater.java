@@ -154,7 +154,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
         private final long offset;
         private final Class<T> tclass;
         private final Class<V> vclass;
-        private final Class cclass;
+        private final Class<?> cclass;
 
         /*
          * Internal type checks within all update methods contain
@@ -172,8 +172,8 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
                                         Class<V> vclass,
                                         String fieldName) {
             Field field = null;
-            Class fieldClass = null;
-            Class caller = null;
+            Class<?> fieldClass = null;
+            Class<?> caller = null;
             int modifiers = 0;
             try {
                 field = tclass.getDeclaredField(fieldName);

@@ -262,7 +262,7 @@ public class CopyOnWriteArrayList<E>
      */
     public Object clone() {
         try {
-            CopyOnWriteArrayList c = (CopyOnWriteArrayList)(super.clone());
+            CopyOnWriteArrayList<E> c = (CopyOnWriteArrayList<E>)(super.clone());
             c.resetLock();
             return c;
         } catch (CloneNotSupportedException e) {
@@ -1311,7 +1311,7 @@ public class CopyOnWriteArrayList<E>
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class k = CopyOnWriteArrayList.class;
+            Class<?> k = CopyOnWriteArrayList.class;
             lockOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("lock"));
         } catch (Exception e) {

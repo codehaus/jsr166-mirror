@@ -199,7 +199,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         static {
             try {
                 UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class k = HashEntry.class;
+                Class<?> k = HashEntry.class;
                 nextOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("next"));
             } catch (Exception e) {
@@ -404,7 +404,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             int newCapacity = oldCapacity << 1;
             threshold = (int)(newCapacity * loadFactor);
             HashEntry<K,V>[] newTable =
-                (HashEntry<K,V>[]) new HashEntry[newCapacity];
+                (HashEntry<K,V>[]) new HashEntry<?,?>[newCapacity];
             int sizeMask = newCapacity - 1;
             for (int i = 0; i < oldCapacity ; i++) {
                 HashEntry<K,V> e = oldTable[i];
@@ -648,7 +648,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             int cap = proto.table.length;
             float lf = proto.loadFactor;
             int threshold = (int)(cap * lf);
-            HashEntry<K,V>[] tab = (HashEntry<K,V>[])new HashEntry[cap];
+            HashEntry<K,V>[] tab = (HashEntry<K,V>[])new HashEntry<?,?>[cap];
             if ((seg = (Segment<K,V>)UNSAFE.getObjectVolatile(ss, u))
                 == null) { // recheck
                 Segment<K,V> s = new Segment<K,V>(lf, threshold, tab);
@@ -729,8 +729,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         // create segments and segments[0]
         Segment<K,V> s0 =
             new Segment<K,V>(loadFactor, (int)(cap * loadFactor),
-                             (HashEntry<K,V>[])new HashEntry[cap]);
-        Segment<K,V>[] ss = (Segment<K,V>[])new Segment[ssize];
+                             (HashEntry<K,V>[])new HashEntry<?,?>[cap]);
+        Segment<K,V>[] ss = (Segment<K,V>[])new Segment<?,?>[ssize];
         UNSAFE.putOrderedObject(ss, SBASE, s0); // ordered write of segments[0]
         this.segments = ss;
     }
@@ -1441,7 +1441,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
             Segment<K,V> seg = segments[k];
             if (seg != null) {
                 seg.threshold = (int)(cap * seg.loadFactor);
-                seg.table = (HashEntry<K,V>[]) new HashEntry[cap];
+                seg.table = (HashEntry<K,V>[]) new HashEntry<?,?>[cap];
             }
         }
 
@@ -1466,8 +1466,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         int ss, ts;
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class tc = HashEntry[].class;
-            Class sc = Segment[].class;
+            Class<?> tc = HashEntry[].class;
+            Class<?> sc = Segment[].class;
             TBASE = UNSAFE.arrayBaseOffset(tc);
             SBASE = UNSAFE.arrayBaseOffset(sc);
             ts = UNSAFE.arrayIndexScale(tc);

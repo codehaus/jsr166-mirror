@@ -257,7 +257,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             static {
                 try {
                     UNSAFE = sun.misc.Unsafe.getUnsafe();
-                    Class k = SNode.class;
+                    Class<?> k = SNode.class;
                     matchOffset = UNSAFE.objectFieldOffset
                         (k.getDeclaredField("match"));
                     nextOffset = UNSAFE.objectFieldOffset
@@ -484,7 +484,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         static {
             try {
                 UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class k = TransferStack.class;
+                Class<?> k = TransferStack.class;
                 headOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("head"));
             } catch (Exception e) {
@@ -554,7 +554,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             static {
                 try {
                     UNSAFE = sun.misc.Unsafe.getUnsafe();
-                    Class k = QNode.class;
+                    Class<?> k = QNode.class;
                     itemOffset = UNSAFE.objectFieldOffset
                         (k.getDeclaredField("item"));
                     nextOffset = UNSAFE.objectFieldOffset
@@ -798,7 +798,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         static {
             try {
                 UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class k = TransferQueue.class;
+                Class<?> k = TransferQueue.class;
                 headOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("head"));
                 tailOffset = UNSAFE.objectFieldOffset

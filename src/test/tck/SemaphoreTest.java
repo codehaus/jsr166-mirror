@@ -223,7 +223,7 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testInterruptible_tryAcquireTimedN_fair() { testInterruptible(true,  AcquireMethod.tryAcquireTimedN); }
     public void testInterruptible(boolean fair, final AcquireMethod acquirer) {
         final PublicSemaphore s = new PublicSemaphore(0, fair);
-        final Semaphore anotherInterruptPlease = new Semaphore(0, fair);
+        final Semaphore pleaseInterrupt = new Semaphore(0, fair);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 // Interrupt before acquire
@@ -246,7 +246,7 @@ public class SemaphoreTest extends JSR166TestCase {
                     shouldThrow();
                 } catch (InterruptedException success) {}
 
-                anotherInterruptPlease.release();
+                pleaseInterrupt.release();
 
                 // Interrupt during acquire(N)
                 try {
@@ -257,9 +257,7 @@ public class SemaphoreTest extends JSR166TestCase {
 
         waitForQueuedThread(s, t);
         t.interrupt();
-        try {
-            assertTrue(anotherInterruptPlease.tryAcquire(LONG_DELAY_MS, MILLISECONDS));
-        } catch (InterruptedException e) { threadUnexpectedException(e); }
+        await(pleaseInterrupt);
         waitForQueuedThread(s, t);
         t.interrupt();
         awaitTermination(t);
@@ -275,34 +273,37 @@ public class SemaphoreTest extends JSR166TestCase {
     public void testUninterruptible_acquireUninterruptiblyN_fair() { testUninterruptible(true,  AcquireMethod.acquireUninterruptiblyN); }
     public void testUninterruptible(boolean fair, final AcquireMethod acquirer) {
         final PublicSemaphore s = new PublicSemaphore(0, fair);
-        final Semaphore anotherInterruptPlease = new Semaphore(0, fair);
-        Thread t = newStartedThread(new CheckedRunnable() {
+        final Semaphore pleaseInterrupt = new Semaphore(-1, fair);
+
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 // Interrupt before acquire
+                pleaseInterrupt.release();
                 Thread.currentThread().interrupt();
-                acquirer.acquire(s);
-                assertTrue(Thread.interrupted());
-
-                anotherInterruptPlease.release();
-
-                // Interrupt during acquire
                 acquirer.acquire(s);
                 assertTrue(Thread.interrupted());
             }});
 
-        waitForQueuedThread(s, t);
-        assertThreadStaysAlive(t);
-        s.release();
+        Thread t2 = newStartedThread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                // Interrupt during acquire
+                pleaseInterrupt.release();
+                acquirer.acquire(s);
+                assertTrue(Thread.interrupted());
+            }});
 
-        try {
-            assertTrue(anotherInterruptPlease.tryAcquire(LONG_DELAY_MS, MILLISECONDS));
-        } catch (InterruptedException e) { threadUnexpectedException(e); }
-        waitForQueuedThread(s, t);
-        t.interrupt();
-        assertThreadStaysAlive(t);
-        s.release();
+        await(pleaseInterrupt);
+        waitForQueuedThread(s, t1);
+        waitForQueuedThread(s, t2);
+        t2.interrupt();
 
-        awaitTermination(t);
+        assertThreadStaysAlive(t1);
+        assertTrue(t2.isAlive());
+
+        s.release(2);
+
+        awaitTermination(t1);
+        awaitTermination(t2);
     }
 
     /**

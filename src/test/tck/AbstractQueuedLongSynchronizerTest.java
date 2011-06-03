@@ -944,23 +944,23 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     }
 
     /**
-     * awaitUninterruptibly doesn't abort on interrupt
+     * awaitUninterruptibly is uninterruptible
      */
     public void testAwaitUninterruptibly() {
         final Mutex sync = new Mutex();
         final ConditionObject c = sync.newCondition();
-        final BooleanLatch acquired = new BooleanLatch();
+        final BooleanLatch pleaseInterrupt = new BooleanLatch();
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 sync.acquire();
-                assertTrue(acquired.releaseShared(0));
+                assertTrue(pleaseInterrupt.releaseShared(0));
                 c.awaitUninterruptibly();
                 assertTrue(Thread.interrupted());
                 assertHasWaitersLocked(sync, c, NO_THREADS);
                 sync.release();
             }});
 
-        acquired.acquireShared(0);
+        pleaseInterrupt.acquireShared(0);
         sync.acquire();
         assertHasWaitersLocked(sync, c, t);
         sync.release();
@@ -987,15 +987,15 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     public void testInterruptible(final AwaitMethod awaitMethod) {
         final Mutex sync = new Mutex();
         final ConditionObject c = sync.newCondition();
-        final BooleanLatch acquired = new BooleanLatch();
+        final BooleanLatch pleaseInterrupt = new BooleanLatch();
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 sync.acquire();
-                assertTrue(acquired.releaseShared(0));
+                assertTrue(pleaseInterrupt.releaseShared(0));
                 await(c, awaitMethod);
             }});
 
-        acquired.acquireShared(0);
+        pleaseInterrupt.acquireShared(0);
         t.interrupt();
         awaitTermination(t);
     }

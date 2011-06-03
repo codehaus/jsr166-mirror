@@ -35,8 +35,9 @@ public class EmptyIterator {
     void test(String[] args) throws Throwable {
         testEmptyCollection(Collections.<Object>emptyList());
         testEmptyCollection(Collections.<Object>emptySet());
-        testEmptyCollection(new java.util.concurrent.
-                            SynchronousQueue<Object>());
+//         Removed jdk7 dependency from SynchronousQueue.
+//         testEmptyCollection(new java.util.concurrent.
+//                             SynchronousQueue<Object>());
 
         testEmptyMap(Collections.<Object, Object>emptyMap());
 

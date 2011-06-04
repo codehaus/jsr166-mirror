@@ -106,7 +106,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private final int capacity;
 
     /** Current number of elements */
-    private final AtomicInteger count = new AtomicInteger(0);
+    private final AtomicInteger count = new AtomicInteger();
 
     /**
      * Head of linked list.

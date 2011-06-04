@@ -1005,33 +1005,50 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
     }
 
     /**
-     * awaitUninterruptibly doesn't abort on interrupt
+     * awaitUninterruptibly is uninterruptible
      */
     public void testAwaitUninterruptibly()      { testAwaitUninterruptibly(false); }
     public void testAwaitUninterruptibly_fair() { testAwaitUninterruptibly(true); }
     public void testAwaitUninterruptibly(boolean fair) {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(fair);
         final Condition c = lock.writeLock().newCondition();
-        final CountDownLatch locked = new CountDownLatch(1);
-        Thread t = newStartedThread(new CheckedRunnable() {
+        final CountDownLatch pleaseInterrupt = new CountDownLatch(2);
+
+        Thread t1 = newStartedThread(new CheckedRunnable() {
             public void realRun() {
+                // Interrupt before awaitUninterruptibly
                 lock.writeLock().lock();
-                locked.countDown();
+                pleaseInterrupt.countDown();
+                Thread.currentThread().interrupt();
                 c.awaitUninterruptibly();
                 assertTrue(Thread.interrupted());
                 lock.writeLock().unlock();
             }});
 
-        await(locked);
+        Thread t2 = newStartedThread(new CheckedRunnable() {
+            public void realRun() {
+                // Interrupt during awaitUninterruptibly
+                lock.writeLock().lock();
+                pleaseInterrupt.countDown();
+                c.awaitUninterruptibly();
+                assertTrue(Thread.interrupted());
+                lock.writeLock().unlock();
+            }});
+
+        await(pleaseInterrupt);
         lock.writeLock().lock();
         lock.writeLock().unlock();
-        t.interrupt();
-        long timeoutMillis = 10;
-        assertThreadStaysAlive(t, timeoutMillis);
+        t2.interrupt();
+
+        assertThreadStaysAlive(t1);
+        assertTrue(t2.isAlive());
+
         lock.writeLock().lock();
-        c.signal();
+        c.signalAll();
         lock.writeLock().unlock();
-        awaitTermination(t);
+
+        awaitTermination(t1);
+        awaitTermination(t2);
     }
 
     /**

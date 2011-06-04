@@ -132,7 +132,7 @@ public class ConcurrentSkipListSet<E>
         ConcurrentSkipListSet<E> clone = null;
         try {
             clone = (ConcurrentSkipListSet<E>) super.clone();
-            clone.setMap(new ConcurrentSkipListMap(m));
+            clone.setMap(new ConcurrentSkipListMap<E,Object>(m));
         } catch (CloneNotSupportedException e) {
             throw new InternalError();
         }
@@ -439,7 +439,7 @@ public class ConcurrentSkipListSet<E>
      * @return a reverse order view of this set
      */
     public NavigableSet<E> descendingSet() {
-        return new ConcurrentSkipListSet(m.descendingMap());
+        return new ConcurrentSkipListSet<E>(m.descendingMap());
     }
 
     // Support for resetting map in clone
@@ -452,7 +452,7 @@ public class ConcurrentSkipListSet<E>
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class k = ConcurrentSkipListSet.class;
+            Class<?> k = ConcurrentSkipListSet.class;
             mapOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("m"));
         } catch (Exception e) {

@@ -488,7 +488,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         static {
             try {
                 UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<Node> k = Node.class;
+                Class<?> k = Node.class;
                 valueOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("value"));
                 nextOffset = UNSAFE.objectFieldOffset
@@ -568,7 +568,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         static {
             try {
                 UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<Index> k = Index.class;
+                Class<?> k = Index.class;
                 rightOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("right"));
             } catch (Exception e) {
@@ -904,7 +904,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
              * direction.
              */
             level = max + 1;
-            Index<K,V>[] idxs = (Index<K,V>[])new Index[level+1];
+            Index<K,V>[] idxs = (Index<K,V>[])new Index<?,?>[level+1];
             Index<K,V> idx = null;
             for (int i = 1; i <= level; ++i)
                 idxs[i] = idx = new Index<K,V>(z, idx, null);
@@ -3080,7 +3080,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<ConcurrentSkipListMap> k = ConcurrentSkipListMap.class;
+            Class<?> k = ConcurrentSkipListMap.class;
             headOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("head"));
         } catch (Exception e) {

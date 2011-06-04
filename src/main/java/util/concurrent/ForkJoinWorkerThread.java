@@ -955,7 +955,7 @@ public class ForkJoinWorkerThread extends Thread {
         int s;
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class a = ForkJoinTask[].class;
+            Class<?> a = ForkJoinTask[].class;
             ABASE = UNSAFE.arrayBaseOffset(a);
             s = UNSAFE.arrayIndexScale(a);
         } catch (Exception e) {

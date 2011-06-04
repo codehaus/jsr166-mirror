@@ -237,11 +237,11 @@ public abstract class  AtomicIntegerFieldUpdater<T> {
         private static final Unsafe unsafe = Unsafe.getUnsafe();
         private final long offset;
         private final Class<T> tclass;
-        private final Class cclass;
+        private final Class<?> cclass;
 
         AtomicIntegerFieldUpdaterImpl(Class<T> tclass, String fieldName) {
             Field field = null;
-            Class caller = null;
+            Class<?> caller = null;
             int modifiers = 0;
             try {
                 field = tclass.getDeclaredField(fieldName);
@@ -254,7 +254,7 @@ public abstract class  AtomicIntegerFieldUpdater<T> {
                 throw new RuntimeException(ex);
             }
 
-            Class fieldt = field.getType();
+            Class<?> fieldt = field.getType();
             if (fieldt != int.class)
                 throw new IllegalArgumentException("Must be integer type");
 

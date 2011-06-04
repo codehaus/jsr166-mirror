@@ -301,7 +301,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *    of less-contended queues.  During spins threads check their
      *    interrupt status and generate a thread-local random number
      *    to decide to occasionally perform a Thread.yield. While
-     *    yield has underdefined specs, we assume that might it help,
+     *    yield has underdefined specs, we assume that it might help,
      *    and will not hurt in limiting impact of spinning on busy
      *    systems.  We also use smaller (1/2) spins for nodes that are
      *    not known to be front but whose predecessors have not

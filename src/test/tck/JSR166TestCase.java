@@ -904,6 +904,14 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
+    public void await(Semaphore semaphore) {
+        try {
+            assertTrue(semaphore.tryAcquire(LONG_DELAY_MS, MILLISECONDS));
+        } catch (Throwable t) {
+            threadUnexpectedException(t);
+        }
+    }
+
 //     /**
 //      * Spin-waits up to LONG_DELAY_MS until flag becomes true.
 //      */

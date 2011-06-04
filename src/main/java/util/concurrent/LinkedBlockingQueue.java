@@ -106,7 +106,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private final int capacity;
 
     /** Current number of elements */
-    private final AtomicInteger count = new AtomicInteger(0);
+    private final AtomicInteger count = new AtomicInteger();
 
     /**
      * Head of linked list.
@@ -303,7 +303,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         // Note: convention in all put/take/etc is to preset local var
         // holding count negative to indicate failure unless set.
         int c = -1;
-        Node<E> node = new Node(e);
+        Node<E> node = new Node<E>(e);
         final ReentrantLock putLock = this.putLock;
         final AtomicInteger count = this.count;
         putLock.lockInterruptibly();
@@ -383,7 +383,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         if (count.get() == capacity)
             return false;
         int c = -1;
-        Node<E> node = new Node(e);
+        Node<E> node = new Node<E>(e);
         final ReentrantLock putLock = this.putLock;
         putLock.lock();
         try {

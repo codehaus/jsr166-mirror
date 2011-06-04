@@ -6,6 +6,8 @@
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ThreadLocalRandomTest extends JSR166TestCase {
 
@@ -250,6 +252,42 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
                 assertTrue(i < NCALLS);
             }
         }
+    }
+
+    /**
+     * Different threads produce different pseudo-random sequences
+     */
+    public void testDifferentSequences() {
+        // Don't use main thread's ThreadLocalRandom - it is likely to
+        // be polluted by previous tests.
+        final AtomicReference<ThreadLocalRandom> threadLocalRandom =
+            new AtomicReference<ThreadLocalRandom>();
+        final AtomicLong rand = new AtomicLong();
+
+        long firstRand = 0;
+        ThreadLocalRandom firstThreadLocalRandom = null;
+
+        final CheckedRunnable getRandomState = new CheckedRunnable() {
+            public void realRun() {
+                ThreadLocalRandom current = ThreadLocalRandom.current();
+                assertSame(current, ThreadLocalRandom.current());
+                assertNotSame(current, threadLocalRandom.get());
+                rand.set(current.nextLong());
+                threadLocalRandom.set(current);
+            }};
+
+        Thread first = newStartedThread(getRandomState);
+        awaitTermination(first);
+        firstRand = rand.get();
+        firstThreadLocalRandom = threadLocalRandom.get();
+
+        for (int i = 0; i < NCALLS; i++) {
+            Thread t = newStartedThread(getRandomState);
+            awaitTermination(t);
+            if (firstRand != rand.get())
+                return;
+        }
+        fail("all threads generate the same pseudo-random sequence");
     }
 
 }

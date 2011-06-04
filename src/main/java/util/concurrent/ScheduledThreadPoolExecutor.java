@@ -137,7 +137,7 @@ public class ScheduledThreadPoolExecutor
      * Sequence number to break scheduling ties, and in turn to
      * guarantee FIFO order among tied entries.
      */
-    private static final AtomicLong sequencer = new AtomicLong(0);
+    private static final AtomicLong sequencer = new AtomicLong();
 
     /**
      * Returns current nanosecond time.

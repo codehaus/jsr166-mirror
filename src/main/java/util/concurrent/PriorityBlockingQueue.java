@@ -139,7 +139,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * to maintain compatibility with previous versions
      * of this class. Non-null only during serialization/deserialization.
      */
-    private PriorityQueue q;
+    private PriorityQueue<E> q;
 
     /**
      * Creates a {@code PriorityBlockingQueue} with the default
@@ -939,7 +939,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class k = PriorityBlockingQueue.class;
+            Class<?> k = PriorityBlockingQueue.class;
             allocationSpinLockOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("allocationSpinLock"));
         } catch (Exception e) {

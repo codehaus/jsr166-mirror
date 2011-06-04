@@ -236,11 +236,11 @@ public abstract class  AtomicLongFieldUpdater<T> {
         private static final Unsafe unsafe = Unsafe.getUnsafe();
         private final long offset;
         private final Class<T> tclass;
-        private final Class cclass;
+        private final Class<?> cclass;
 
         CASUpdater(Class<T> tclass, String fieldName) {
             Field field = null;
-            Class caller = null;
+            Class<?> caller = null;
             int modifiers = 0;
             try {
                 field = tclass.getDeclaredField(fieldName);
@@ -253,7 +253,7 @@ public abstract class  AtomicLongFieldUpdater<T> {
                 throw new RuntimeException(ex);
             }
 
-            Class fieldt = field.getType();
+            Class<?> fieldt = field.getType();
             if (fieldt != long.class)
                 throw new IllegalArgumentException("Must be long type");
 
@@ -319,11 +319,11 @@ public abstract class  AtomicLongFieldUpdater<T> {
         private static final Unsafe unsafe = Unsafe.getUnsafe();
         private final long offset;
         private final Class<T> tclass;
-        private final Class cclass;
+        private final Class<?> cclass;
 
         LockedUpdater(Class<T> tclass, String fieldName) {
             Field field = null;
-            Class caller = null;
+            Class<?> caller = null;
             int modifiers = 0;
             try {
                 field = tclass.getDeclaredField(fieldName);
@@ -336,7 +336,7 @@ public abstract class  AtomicLongFieldUpdater<T> {
                 throw new RuntimeException(ex);
             }
 
-            Class fieldt = field.getType();
+            Class<?> fieldt = field.getType();
             if (fieldt != long.class)
                 throw new IllegalArgumentException("Must be long type");
 

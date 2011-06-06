@@ -2705,7 +2705,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public V get(Object key) {
             if (key == null) throw new NullPointerException();
             K k = (K)key;
-            return ((!inBounds(k)) ? null : m.get(k));
+            return (!inBounds(k)) ? null : m.get(k);
         }
 
         public V put(K key, V value) {

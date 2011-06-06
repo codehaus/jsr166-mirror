@@ -598,7 +598,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                                 break;        // unless slack < 2
                         }
                         LockSupport.unpark(p.waiter);
-                        return this.<E>cast(item);
+                        return LinkedTransferQueue.<E>cast(item);
                     }
                 }
                 Node n = p.next;
@@ -676,7 +676,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (item != e) {                  // matched
                 // assert item != s;
                 s.forgetContents();           // avoid garbage
-                return this.<E>cast(item);
+                return LinkedTransferQueue.<E>cast(item);
             }
             if ((w.isInterrupted() || (timed && nanos <= 0)) &&
                     s.casItem(e, s)) {        // cancel
@@ -757,7 +757,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Object item = p.item;
             if (p.isData) {
                 if (item != null && item != p)
-                    return this.<E>cast(item);
+                    return LinkedTransferQueue.<E>cast(item);
             }
             else if (item == null)
                 return null;

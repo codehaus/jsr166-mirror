@@ -2392,14 +2392,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public boolean contains(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
-            Map.Entry<K1,V1> e = (Map.Entry<K1,V1>)o;
+            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
             V1 v = m.get(e.getKey());
             return v != null && v.equals(e.getValue());
         }
         public boolean remove(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
-            Map.Entry<K1,V1> e = (Map.Entry<K1,V1>)o;
+            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
             return m.remove(e.getKey(),
                             e.getValue());
         }
@@ -2705,7 +2705,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public V get(Object key) {
             if (key == null) throw new NullPointerException();
             K k = (K)key;
-            return ((!inBounds(k)) ? null : m.get(k));
+            return (!inBounds(k)) ? null : m.get(k);
         }
 
         public V put(K key, V value) {

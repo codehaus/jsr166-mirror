@@ -1245,14 +1245,14 @@ public class CopyOnWriteArrayList<E>
 
 
     private static class COWSubListIterator<E> implements ListIterator<E> {
-        private final ListIterator<E> i;
+        private final ListIterator<E> it;
         private final int offset;
         private final int size;
 
         COWSubListIterator(List<E> l, int index, int offset, int size) {
             this.offset = offset;
             this.size = size;
-            i = l.listIterator(index+offset);
+            it = l.listIterator(index+offset);
         }
 
         public boolean hasNext() {
@@ -1261,7 +1261,7 @@ public class CopyOnWriteArrayList<E>
 
         public E next() {
             if (hasNext())
-                return i.next();
+                return it.next();
             else
                 throw new NoSuchElementException();
         }
@@ -1272,17 +1272,17 @@ public class CopyOnWriteArrayList<E>
 
         public E previous() {
             if (hasPrevious())
-                return i.previous();
+                return it.previous();
             else
                 throw new NoSuchElementException();
         }
 
         public int nextIndex() {
-            return i.nextIndex() - offset;
+            return it.nextIndex() - offset;
         }
 
         public int previousIndex() {
-            return i.previousIndex() - offset;
+            return it.previousIndex() - offset;
         }
 
         public void remove() {

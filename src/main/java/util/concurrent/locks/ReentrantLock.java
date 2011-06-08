@@ -7,7 +7,6 @@
 package java.util.concurrent.locks;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 
 /**
  * A reentrant mutual exclusion {@link Lock} with the same basic

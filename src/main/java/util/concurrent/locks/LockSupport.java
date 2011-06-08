@@ -5,7 +5,6 @@
  */
 
 package java.util.concurrent.locks;
-import java.util.concurrent.*;
 import sun.misc.Unsafe;
 
 

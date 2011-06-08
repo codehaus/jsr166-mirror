@@ -7,7 +7,6 @@
 
 package java.util.concurrent;
 import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.*;
 import java.util.*;
 
 /**
@@ -403,7 +402,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              */
             long lastTime = timed ? System.nanoTime() : 0;
             Thread w = Thread.currentThread();
-            SNode h = head;
             int spins = (shouldSpin(s) ?
                          (timed ? maxTimedSpins : maxUntimedSpins) : 0);
             for (;;) {

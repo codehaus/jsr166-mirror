@@ -6,7 +6,6 @@
 
 package java.util.concurrent;
 import java.util.*;
-import sun.misc.Unsafe;
 
 /**
  * A scalable concurrent {@link NavigableSet} implementation based on
@@ -293,8 +292,8 @@ public class ConcurrentSkipListSet<E>
     public boolean removeAll(Collection<?> c) {
         // Override AbstractSet version to avoid unnecessary call to size()
         boolean modified = false;
-        for (Iterator<?> i = c.iterator(); i.hasNext(); )
-            if (remove(i.next()))
+        for (Object e : c)
+            if (remove(e))
                 modified = true;
         return modified;
     }

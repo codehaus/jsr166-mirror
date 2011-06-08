@@ -8,9 +8,6 @@ package java.util.concurrent;
 import java.util.concurrent.locks.*;
 import java.util.*;
 import java.io.Serializable;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 /**
  * A hash table supporting full concurrency of retrievals and
@@ -1397,7 +1394,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * for each key-value mapping, followed by a null pair.
      * The key-value mappings are emitted in no particular order.
      */
-    private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+    private void writeObject(java.io.ObjectOutputStream s)
+            throws java.io.IOException {
         // force all segments for serialization compatibility
         for (int k = 0; k < segments.length; ++k)
             ensureSegment(k);
@@ -1431,7 +1429,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      */
     @SuppressWarnings("unchecked")
     private void readObject(java.io.ObjectInputStream s)
-        throws IOException, ClassNotFoundException {
+            throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
 
         // Re-initialize segments to be minimally sized, and let grow.

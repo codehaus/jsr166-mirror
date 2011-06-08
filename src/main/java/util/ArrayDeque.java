@@ -4,7 +4,6 @@
  */
 
 package java.util;
-import java.io.*;
 
 /**
  * Resizable-array implementation of the {@link Deque} interface.  Array
@@ -52,7 +51,7 @@ import java.io.*;
  * @param <E> the type of elements held in this collection
  */
 public class ArrayDeque<E> extends AbstractCollection<E>
-                           implements Deque<E>, Cloneable, Serializable
+                           implements Deque<E>, Cloneable, java.io.Serializable
 {
     /**
      * The array in which the elements of the deque are stored.
@@ -805,7 +804,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * followed by all of its elements (each an object reference) in
      * first-to-last order.
      */
-    private void writeObject(ObjectOutputStream s) throws IOException {
+    private void writeObject(java.io.ObjectOutputStream s)
+            throws java.io.IOException {
         s.defaultWriteObject();
 
         // Write out size
@@ -820,8 +820,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Deserialize this deque.
      */
-    private void readObject(ObjectInputStream s)
-            throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream s)
+            throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
 
         // Read in size and allocate array

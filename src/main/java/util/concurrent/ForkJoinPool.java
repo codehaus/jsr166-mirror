@@ -988,7 +988,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Decrements blockedCount and increments active count
+     * Decrements blockedCount and increments active count.
      */
     private void postBlock() {
         long c;
@@ -1020,7 +1020,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Possibly blocks the given worker waiting for joinMe to
-     * complete or timeout
+     * complete or timeout.
      *
      * @param joinMe the task
      * @param millis the wait time for underlying Object.wait
@@ -1056,7 +1056,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * If necessary, compensates for blocker, and blocks
+     * If necessary, compensates for blocker, and blocks.
      */
     private void awaitBlocker(ManagedBlocker blocker)
         throws InterruptedException {

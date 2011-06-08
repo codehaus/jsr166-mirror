@@ -2116,7 +2116,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         modifyThreadPermission = new RuntimePermission("modifyThread");
         defaultForkJoinWorkerThreadFactory =
             new DefaultForkJoinWorkerThreadFactory();
-        int s;
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
             Class<?> k = ForkJoinPool.class;
@@ -2132,12 +2131,12 @@ public class ForkJoinPool extends AbstractExecutorService {
                 (k.getDeclaredField("scanGuard"));
             nextWorkerNumberOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("nextWorkerNumber"));
-            Class<?> a = ForkJoinTask[].class;
-            ABASE = UNSAFE.arrayBaseOffset(a);
-            s = UNSAFE.arrayIndexScale(a);
         } catch (Exception e) {
             throw new Error(e);
         }
+        Class<?> a = ForkJoinTask[].class;
+        ABASE = UNSAFE.arrayBaseOffset(a);
+        int s = UNSAFE.arrayIndexScale(a);
         if ((s & (s-1)) != 0)
             throw new Error("data type scale not a power of two");
         ASHIFT = 31 - Integer.numberOfLeadingZeros(s);

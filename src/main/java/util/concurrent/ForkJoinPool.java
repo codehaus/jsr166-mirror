@@ -948,7 +948,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             int pc = parallelism;
             do {
                 ForkJoinWorkerThread[] ws; ForkJoinWorkerThread w;
-                int e, ac, tc, rc, i;
+                int e, ac, tc, i;
                 long c = ctl;
                 int u = (int)(c >>> 32);
                 if ((e = (int)c) < 0) {
@@ -1006,7 +1006,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param joinMe the task
      */
     final void tryAwaitJoin(ForkJoinTask<?> joinMe) {
-        int s;
         Thread.interrupted(); // clear interrupts before checking termination
         if (joinMe.status >= 0) {
             if (tryPreBlock()) {

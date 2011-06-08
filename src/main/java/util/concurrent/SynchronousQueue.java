@@ -402,7 +402,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              */
             long lastTime = timed ? System.nanoTime() : 0;
             Thread w = Thread.currentThread();
-            SNode h = head;
             int spins = (shouldSpin(s) ?
                          (timed ? maxTimedSpins : maxUntimedSpins) : 0);
             for (;;) {

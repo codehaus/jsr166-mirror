@@ -292,8 +292,8 @@ public class ConcurrentSkipListSet<E>
     public boolean removeAll(Collection<?> c) {
         // Override AbstractSet version to avoid unnecessary call to size()
         boolean modified = false;
-        for (Iterator<?> it = c.iterator(); it.hasNext(); )
-            if (remove(it.next()))
+        for (Object e : c)
+            if (remove(e))
                 modified = true;
         return modified;
     }

@@ -6,7 +6,6 @@
 
 package java.util.concurrent;
 import java.util.*;
-import sun.misc.Unsafe;
 
 /**
  * A scalable concurrent {@link NavigableSet} implementation based on

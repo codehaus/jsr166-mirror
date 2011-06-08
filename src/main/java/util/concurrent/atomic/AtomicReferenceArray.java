@@ -6,7 +6,6 @@
 
 package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
-import java.util.*;
 
 /**
  * An array of object references in which elements may be updated

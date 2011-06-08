@@ -6,7 +6,6 @@
 
 package java.util.concurrent;
 import java.util.*;
-import java.util.concurrent.atomic.*;
 
 /**
  * A scalable concurrent {@link ConcurrentNavigableMap} implementation.

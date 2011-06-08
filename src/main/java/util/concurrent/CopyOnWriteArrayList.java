@@ -1246,13 +1246,11 @@ public class CopyOnWriteArrayList<E>
 
     private static class COWSubListIterator<E> implements ListIterator<E> {
         private final ListIterator<E> i;
-        private final int index;
         private final int offset;
         private final int size;
 
         COWSubListIterator(List<E> l, int index, int offset,
                            int size) {
-            this.index = index;
             this.offset = offset;
             this.size = size;
             i = l.listIterator(index+offset);

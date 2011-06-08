@@ -163,7 +163,7 @@ public class ForkJoinWorkerThread extends Thread {
 
     /**
      * The work-stealing queue array. Size must be a power of two.
-     * Initialized when started (as oposed to when constructed), to
+     * Initialized when started (as opposed to when constructed), to
      * improve memory locality.
      */
     ForkJoinTask<?>[] queue;

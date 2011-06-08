@@ -292,7 +292,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * "terminate" status, cancels all unprocessed tasks, and wakes up
      * all waiting workers.  Detecting whether termination should
      * commence after a non-abrupt shutdown() call requires more work
-     * and bookkeeping. We need consensus about quiesence (i.e., that
+     * and bookkeeping. We need consensus about quiescence (i.e., that
      * there is no more work) which is reflected in active counts so
      * long as there are no current blockers, as well as possible
      * re-evaluations during independent changes in blocking or

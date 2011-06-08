@@ -1249,8 +1249,7 @@ public class CopyOnWriteArrayList<E>
         private final int offset;
         private final int size;
 
-        COWSubListIterator(List<E> l, int index, int offset,
-                           int size) {
+        COWSubListIterator(List<E> l, int index, int offset, int size) {
             this.offset = offset;
             this.size = size;
             i = l.listIterator(index+offset);

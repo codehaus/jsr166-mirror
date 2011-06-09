@@ -11,9 +11,7 @@
  * array elements to those that also provide an atomic conditional update
  * operation of the form:
  *
- * <pre>
- *   boolean compareAndSet(expectedValue, updateValue);
- * </pre>
+ *  <pre> {@code boolean compareAndSet(expectedValue, updateValue);}</pre>
  *
  * <p>This method (which varies in argument types across different
  * classes) atomically sets a variable to the {@code updateValue} if it
@@ -40,15 +38,14 @@
  * {@code AtomicInteger} provide atomic increment methods.  One
  * application is to generate sequence numbers, as in:
  *
- * <pre>
+ *  <pre> {@code
  * class Sequencer {
  *   private final AtomicLong sequenceNumber
  *     = new AtomicLong(0);
  *   public long next() {
  *     return sequenceNumber.getAndIncrement();
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * <p>The memory effects for accesses and updates of atomics generally
  * follow the rules for volatiles, as stated in

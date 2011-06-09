@@ -23,7 +23,7 @@ import java.util.concurrent.locks.LockSupport;
  * to swap buffers between threads so that the thread filling the
  * buffer gets a freshly emptied one when it needs it, handing off the
  * filled one to the thread emptying the buffer.
- * <pre>{@code
+ *  <pre> {@code
  * class FillAndEmpty {
  *   Exchanger<DataBuffer> exchanger = new Exchanger<DataBuffer>();
  *   DataBuffer initialEmptyBuffer = ... a made-up type
@@ -59,8 +59,7 @@ import java.util.concurrent.locks.LockSupport;
  *     new Thread(new FillingLoop()).start();
  *     new Thread(new EmptyingLoop()).start();
  *   }
- * }
- * }</pre>
+ * }}</pre>
  *
  * <p>Memory consistency effects: For each pair of threads that
  * successfully exchange objects via an {@code Exchanger}, actions

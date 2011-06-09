@@ -42,7 +42,7 @@ import java.util.Collection;
  * pool service incoming requests. It uses the preconfigured {@link
  * Executors#newFixedThreadPool} factory method:
  *
- * <pre>
+ *  <pre> {@code
  * class NetworkService implements Runnable {
  *   private final ServerSocket serverSocket;
  *   private final ExecutorService pool;
@@ -70,14 +70,13 @@ import java.util.Collection;
  *   public void run() {
  *     // read and service request on socket
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * The following method shuts down an <tt>ExecutorService</tt> in two phases,
  * first by calling <tt>shutdown</tt> to reject incoming tasks, and then
  * calling <tt>shutdownNow</tt>, if necessary, to cancel any lingering tasks:
  *
- * <pre>
+ *  <pre> {@code
  * void shutdownAndAwaitTermination(ExecutorService pool) {
  *   pool.shutdown(); // Disable new tasks from being submitted
  *   try {
@@ -94,8 +93,7 @@ import java.util.Collection;
  *     // Preserve interrupt status
  *     Thread.currentThread().interrupt();
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * <p>Memory consistency effects: Actions in a thread prior to the
  * submission of a {@code Runnable} or {@code Callable} task to an

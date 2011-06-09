@@ -413,8 +413,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * <p>The following code can be used to dump a delay queue into a newly
      * allocated array of <tt>Delayed</tt>:
      *
-     * <pre>
-     *     Delayed[] a = q.toArray(new Delayed[0]);</pre>
+     * <pre> {@code Delayed[] a = q.toArray(new Delayed[0]);}</pre>
      *
      * Note that <tt>toArray(new Object[0])</tt> is identical in function to
      * <tt>toArray()</tt>.

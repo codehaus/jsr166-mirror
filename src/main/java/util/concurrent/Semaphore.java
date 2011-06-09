@@ -19,7 +19,7 @@ import java.util.concurrent.locks.*;
  * <p>Semaphores are often used to restrict the number of threads than can
  * access some (physical or logical) resource. For example, here is
  * a class that uses a semaphore to control access to a pool of items:
- * <pre>
+ *  <pre> {@code
  * class Pool {
  *   private static final int MAX_AVAILABLE = 100;
  *   private final Semaphore available = new Semaphore(MAX_AVAILABLE, true);
@@ -61,9 +61,7 @@ import java.util.concurrent.locks.*;
  *     }
  *     return false;
  *   }
- *
- * }
- * </pre>
+ * }}</pre>
  *
  * <p>Before obtaining an item each thread must acquire a permit from
  * the semaphore, guaranteeing that an item is available for use. When

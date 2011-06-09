@@ -113,21 +113,21 @@ import java.util.*;
  *   void processCachedData() {
  *     rwl.readLock().lock();
  *     if (!cacheValid) {
- *        // Must release read lock before acquiring write lock
- *        rwl.readLock().unlock();
- *        rwl.writeLock().lock();
- *        try {
- *          // Recheck state because another thread might have
- *          // acquired write lock and changed state before we did.
- *          if (!cacheValid) {
- *            data = ...
- *            cacheValid = true;
- *          }
- *          // Downgrade by acquiring read lock before releasing write lock
- *          rwl.readLock().lock();
- *        } finally {
- *          rwl.writeLock().unlock(); // Unlock write, still hold read
- *        }
+ *       // Must release read lock before acquiring write lock
+ *       rwl.readLock().unlock();
+ *       rwl.writeLock().lock();
+ *       try {
+ *         // Recheck state because another thread might have
+ *         // acquired write lock and changed state before we did.
+ *         if (!cacheValid) {
+ *           data = ...
+ *           cacheValid = true;
+ *         }
+ *         // Downgrade by acquiring read lock before releasing write lock
+ *         rwl.readLock().lock();
+ *       } finally {
+ *         rwl.writeLock().unlock(); // Unlock write, still hold read
+ *       }
  *     }
  *
  *     try {
@@ -146,33 +146,33 @@ import java.util.*;
  * is a class using a TreeMap that is expected to be large and
  * concurrently accessed.
  *
- * <pre>{@code
+ *  <pre> {@code
  * class RWDictionary {
- *    private final Map<String, Data> m = new TreeMap<String, Data>();
- *    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
- *    private final Lock r = rwl.readLock();
- *    private final Lock w = rwl.writeLock();
+ *   private final Map<String, Data> m = new TreeMap<String, Data>();
+ *   private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+ *   private final Lock r = rwl.readLock();
+ *   private final Lock w = rwl.writeLock();
  *
- *    public Data get(String key) {
- *        r.lock();
- *        try { return m.get(key); }
- *        finally { r.unlock(); }
- *    }
- *    public String[] allKeys() {
- *        r.lock();
- *        try { return m.keySet().toArray(); }
- *        finally { r.unlock(); }
- *    }
- *    public Data put(String key, Data value) {
- *        w.lock();
- *        try { return m.put(key, value); }
- *        finally { w.unlock(); }
- *    }
- *    public void clear() {
- *        w.lock();
- *        try { m.clear(); }
- *        finally { w.unlock(); }
- *    }
+ *   public Data get(String key) {
+ *     r.lock();
+ *     try { return m.get(key); }
+ *     finally { r.unlock(); }
+ *   }
+ *   public String[] allKeys() {
+ *     r.lock();
+ *     try { return m.keySet().toArray(); }
+ *     finally { r.unlock(); }
+ *   }
+ *   public Data put(String key, Data value) {
+ *     w.lock();
+ *     try { return m.put(key, value); }
+ *     finally { w.unlock(); }
+ *   }
+ *   public void clear() {
+ *     w.lock();
+ *     try { m.clear(); }
+ *     finally { w.unlock(); }
+ *   }
  * }}</pre>
  *
  * <h3>Implementation Notes</h3>
@@ -789,8 +789,11 @@ public class ReentrantReadWriteLock
          * permit barging on a fair lock then combine the timed and
          * un-timed forms together:
          *
-         * <pre>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
-         * </pre>
+         *  <pre> {@code
+         * if (lock.tryLock() ||
+         *     lock.tryLock(timeout, unit)) {
+         *   ...
+         * }}</pre>
          *
          * <p>If the write lock is held by another thread then the
          * current thread becomes disabled for thread scheduling
@@ -1019,8 +1022,11 @@ public class ReentrantReadWriteLock
          * that does permit barging on a fair lock then combine the
          * timed and un-timed forms together:
          *
-         * <pre>if (lock.tryLock() || lock.tryLock(timeout, unit) ) { ... }
-         * </pre>
+         *  <pre> {@code
+         * if (lock.tryLock() ||
+         *     lock.tryLock(timeout, unit)) {
+         *   ...
+         * }}</pre>
          *
          * <p>If the current thread already holds this lock then the
          * hold count is incremented by one and the method returns

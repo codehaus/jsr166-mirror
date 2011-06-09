@@ -43,7 +43,7 @@ import java.util.concurrent.locks.*;
  * until all workers have completed.
  * </ul>
  *
- * <pre>
+ *  <pre> {@code
  * class Driver { // ...
  *   void main() throws InterruptedException {
  *     CountDownLatch startSignal = new CountDownLatch(1);
@@ -75,9 +75,7 @@ import java.util.concurrent.locks.*;
  *   }
  *
  *   void doWork() { ... }
- * }
- *
- * </pre>
+ * }}</pre>
  *
  * <p>Another typical usage would be to divide a problem into N parts,
  * describe each part with a Runnable that executes that portion and
@@ -86,7 +84,7 @@ import java.util.concurrent.locks.*;
  * will be able to pass through await. (When threads must repeatedly
  * count down in this way, instead use a {@link CyclicBarrier}.)
  *
- * <pre>
+ *  <pre> {@code
  * class Driver2 { // ...
  *   void main() throws InterruptedException {
  *     CountDownLatch doneSignal = new CountDownLatch(N);
@@ -114,9 +112,7 @@ import java.util.concurrent.locks.*;
  *   }
  *
  *   void doWork() { ... }
- * }
- *
- * </pre>
+ * }}</pre>
  *
  * <p>Memory consistency effects: Until the count reaches
  * zero, actions in a thread prior to calling

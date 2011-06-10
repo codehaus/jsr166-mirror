@@ -19,7 +19,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
@@ -102,13 +101,12 @@ import java.util.concurrent.locks.Condition;
  * daemon} mode, there is typically no need to explicitly {@link
  * #shutdown} such a pool upon program exit.
  *
- * <pre>
+ *  <pre> {@code
  * static final ForkJoinPool mainPool = new ForkJoinPool();
  * ...
  * public void sort(long[] array) {
  *   mainPool.invoke(new SortTask(array, 0, array.length));
- * }
- * </pre>
+ * }}</pre>
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
@@ -949,7 +947,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             int pc = parallelism;
             do {
                 ForkJoinWorkerThread[] ws; ForkJoinWorkerThread w;
-                int e, ac, tc, rc, i;
+                int e, ac, tc, i;
                 long c = ctl;
                 int u = (int)(c >>> 32);
                 if ((e = (int)c) < 0) {
@@ -989,7 +987,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Decrements blockedCount and increments active count
+     * Decrements blockedCount and increments active count.
      */
     private void postBlock() {
         long c;
@@ -1007,7 +1005,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param joinMe the task
      */
     final void tryAwaitJoin(ForkJoinTask<?> joinMe) {
-        int s;
         Thread.interrupted(); // clear interrupts before checking termination
         if (joinMe.status >= 0) {
             if (tryPreBlock()) {
@@ -1021,7 +1018,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Possibly blocks the given worker waiting for joinMe to
-     * complete or timeout
+     * complete or timeout.
      *
      * @param joinMe the task
      * @param millis the wait time for underlying Object.wait
@@ -1057,7 +1054,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * If necessary, compensates for blocker, and blocks
+     * If necessary, compensates for blocker, and blocks.
      */
     private void awaitBlocker(ManagedBlocker blocker)
         throws InterruptedException {
@@ -2118,7 +2115,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         modifyThreadPermission = new RuntimePermission("modifyThread");
         defaultForkJoinWorkerThreadFactory =
             new DefaultForkJoinWorkerThreadFactory();
-        int s;
         try {
             UNSAFE = getUnsafe();
             Class<?> k = ForkJoinPool.class;
@@ -2134,12 +2130,12 @@ public class ForkJoinPool extends AbstractExecutorService {
                 (k.getDeclaredField("scanGuard"));
             nextWorkerNumberOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("nextWorkerNumber"));
-            Class<?> a = ForkJoinTask[].class;
-            ABASE = UNSAFE.arrayBaseOffset(a);
-            s = UNSAFE.arrayIndexScale(a);
         } catch (Exception e) {
             throw new Error(e);
         }
+        Class<?> a = ForkJoinTask[].class;
+        ABASE = UNSAFE.arrayBaseOffset(a);
+        int s = UNSAFE.arrayIndexScale(a);
         if ((s & (s-1)) != 0)
             throw new Error("data type scale not a power of two");
         ASHIFT = 31 - Integer.numberOfLeadingZeros(s);

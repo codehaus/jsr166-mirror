@@ -155,7 +155,8 @@
              packagenames="none"
              link="http://download.oracle.com/javase/7/docs/api/"
              overview="${src.dir}/intro.html"
-             sourcepath="${src.dir}:${jdksrc.dir}" >
+             sourcepath="${src.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" >
       <fileset dir="${src.dir}" defaultexcludes="yes">
       <include name="**/*.java"/>
       </fileset>
@@ -223,7 +224,8 @@
              packagenames="none"
              link="http://download.oracle.com/javase/7/docs/api/"
              overview="${src.dir}/intro.html"
-             sourcepath="${src.dir}:${jdksrc.dir}" >
+             sourcepath="${src.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" >
       <fileset dir="${src.dir}" defaultexcludes="yes">
       <include name="**/*.java"/>
       </fileset>
@@ -507,7 +509,8 @@
              packagenames="jsr166x"
              link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 
@@ -545,7 +548,8 @@
              packagenames="jsr166x"
              link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 
@@ -610,7 +614,8 @@
              packagenames="jsr166y"
              link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 
@@ -646,7 +651,8 @@
              packagenames="jsr166y"
              link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 
@@ -712,7 +718,8 @@
              packagenames="extra166y"
              link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 
@@ -748,7 +755,8 @@
              packagenames="extra166y"
              link="http://download.oracle.com/javase/7/docs/api/"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}" />
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 

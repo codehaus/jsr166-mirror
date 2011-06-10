@@ -91,7 +91,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(1, 2));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertEquals(ai.get(), 3);
+        assertEquals(3, ai.get());
     }
 
     /**
@@ -210,7 +210,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
         assertEquals("0", ai.toString());
         for (int x : VALUES) {
             ai.set(x);
-            assertEquals(ai.toString(), Integer.toString(x));
+            assertEquals(Integer.toString(x), ai.toString());
         }
     }
 

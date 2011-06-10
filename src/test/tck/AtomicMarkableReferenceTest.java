@@ -104,7 +104,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(one, two, false, false));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertSame(ai.getReference(), three);
+        assertSame(three, ai.getReference());
         assertFalse(ai.isMarked());
     }
 
@@ -124,7 +124,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(one, one, false, true));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertSame(ai.getReference(), one);
+        assertSame(one, ai.getReference());
         assertFalse(ai.isMarked());
     }
 

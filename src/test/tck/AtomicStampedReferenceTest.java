@@ -104,8 +104,8 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(one, two, 0, 0));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertSame(ai.getReference(), three);
-        assertEquals(ai.getStamp(), 0);
+        assertSame(three, ai.getReference());
+        assertEquals(0, ai.getStamp());
     }
 
     /**
@@ -124,8 +124,8 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         assertTrue(ai.compareAndSet(one, one, 0, 1));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertSame(ai.getReference(), one);
-        assertEquals(ai.getStamp(), 2);
+        assertSame(one, ai.getReference());
+        assertEquals(2, ai.getStamp());
     }
 
     /**

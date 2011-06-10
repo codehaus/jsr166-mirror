@@ -136,7 +136,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
         assertTrue(a.compareAndSet(this, 1, 2));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertEquals(a.get(this), 3);
+        assertEquals(3, a.get(this));
     }
 
     /**

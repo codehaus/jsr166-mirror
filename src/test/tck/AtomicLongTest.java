@@ -212,7 +212,7 @@ public class AtomicLongTest extends JSR166TestCase {
         assertEquals("0", ai.toString());
         for (long i : VALUES) {
             ai.set(i);
-            assertEquals(ai.toString(), Long.toString(i));
+            assertEquals(Long.toString(i), ai.toString());
         }
     }
 

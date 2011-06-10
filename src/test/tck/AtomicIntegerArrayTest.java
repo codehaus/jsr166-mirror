@@ -141,7 +141,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         assertTrue(a.compareAndSet(0, 1, 2));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertEquals(a.get(0), 3);
+        assertEquals(3, a.get(0));
     }
 
     /**

@@ -132,9 +132,9 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testToString() {
         AtomicBoolean ai = new AtomicBoolean();
-        assertEquals(ai.toString(), Boolean.toString(false));
+        assertEquals(Boolean.toString(false), ai.toString());
         ai.set(true);
-        assertEquals(ai.toString(), Boolean.toString(true));
+        assertEquals(Boolean.toString(true), ai.toString());
     }
 
 }

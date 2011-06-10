@@ -156,7 +156,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
         assertTrue(a.compareAndSet(0, one, two));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertSame(a.get(0), three);
+        assertSame(three, a.get(0));
     }
 
     /**

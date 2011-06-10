@@ -25,7 +25,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     public void testConstructor() {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i)
-            assertEquals(0,ai.get(i));
+            assertEquals(0, ai.get(i));
     }
 
     /**
@@ -84,11 +84,11 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(1,ai.get(i));
+            assertEquals(1, ai.get(i));
             ai.set(i, 2);
-            assertEquals(2,ai.get(i));
+            assertEquals(2, ai.get(i));
             ai.set(i, -3);
-            assertEquals(-3,ai.get(i));
+            assertEquals(-3, ai.get(i));
         }
     }
 
@@ -99,11 +99,11 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.lazySet(i, 1);
-            assertEquals(1,ai.get(i));
+            assertEquals(1, ai.get(i));
             ai.lazySet(i, 2);
-            assertEquals(2,ai.get(i));
+            assertEquals(2, ai.get(i));
             ai.lazySet(i, -3);
-            assertEquals(-3,ai.get(i));
+            assertEquals(-3, ai.get(i));
         }
     }
 
@@ -114,13 +114,13 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertTrue(ai.compareAndSet(i, 1,2));
-            assertTrue(ai.compareAndSet(i, 2,-4));
-            assertEquals(-4,ai.get(i));
-            assertFalse(ai.compareAndSet(i, -5,7));
-            assertEquals(-4,ai.get(i));
-            assertTrue(ai.compareAndSet(i, -4,7));
-            assertEquals(7,ai.get(i));
+            assertTrue(ai.compareAndSet(i, 1, 2));
+            assertTrue(ai.compareAndSet(i, 2, -4));
+            assertEquals(-4, ai.get(i));
+            assertFalse(ai.compareAndSet(i, -5, 7));
+            assertEquals(-4, ai.get(i));
+            assertTrue(ai.compareAndSet(i, -4, 7));
+            assertEquals(7, ai.get(i));
         }
     }
 
@@ -152,11 +152,11 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            while (!ai.weakCompareAndSet(i, 1,2));
-            while (!ai.weakCompareAndSet(i, 2,-4));
-            assertEquals(-4,ai.get(i));
-            while (!ai.weakCompareAndSet(i, -4,7));
-            assertEquals(7,ai.get(i));
+            while (!ai.weakCompareAndSet(i, 1, 2));
+            while (!ai.weakCompareAndSet(i, 2, -4));
+            assertEquals(-4, ai.get(i));
+            while (!ai.weakCompareAndSet(i, -4, 7));
+            assertEquals(7, ai.get(i));
         }
     }
 
@@ -167,9 +167,9 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(1,ai.getAndSet(i,0));
-            assertEquals(0,ai.getAndSet(i,-10));
-            assertEquals(-10,ai.getAndSet(i,1));
+            assertEquals(1, ai.getAndSet(i, 0));
+            assertEquals(0, ai.getAndSet(i, -10));
+            assertEquals(-10, ai.getAndSet(i, 1));
         }
     }
 
@@ -180,10 +180,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(1,ai.getAndAdd(i,2));
-            assertEquals(3,ai.get(i));
-            assertEquals(3,ai.getAndAdd(i,-4));
-            assertEquals(-1,ai.get(i));
+            assertEquals(1, ai.getAndAdd(i, 2));
+            assertEquals(3, ai.get(i));
+            assertEquals(3, ai.getAndAdd(i, -4));
+            assertEquals(-1, ai.get(i));
         }
     }
 
@@ -194,9 +194,9 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(1,ai.getAndDecrement(i));
-            assertEquals(0,ai.getAndDecrement(i));
-            assertEquals(-1,ai.getAndDecrement(i));
+            assertEquals(1, ai.getAndDecrement(i));
+            assertEquals(0, ai.getAndDecrement(i));
+            assertEquals(-1, ai.getAndDecrement(i));
         }
     }
 
@@ -207,13 +207,13 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(1,ai.getAndIncrement(i));
-            assertEquals(2,ai.get(i));
-            ai.set(i,-2);
-            assertEquals(-2,ai.getAndIncrement(i));
-            assertEquals(-1,ai.getAndIncrement(i));
-            assertEquals(0,ai.getAndIncrement(i));
-            assertEquals(1,ai.get(i));
+            assertEquals(1, ai.getAndIncrement(i));
+            assertEquals(2, ai.get(i));
+            ai.set(i, -2);
+            assertEquals(-2, ai.getAndIncrement(i));
+            assertEquals(-1, ai.getAndIncrement(i));
+            assertEquals(0, ai.getAndIncrement(i));
+            assertEquals(1, ai.get(i));
         }
     }
 
@@ -224,10 +224,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(3,ai.addAndGet(i,2));
-            assertEquals(3,ai.get(i));
-            assertEquals(-1,ai.addAndGet(i,-4));
-            assertEquals(-1,ai.get(i));
+            assertEquals(3, ai.addAndGet(i, 2));
+            assertEquals(3, ai.get(i));
+            assertEquals(-1, ai.addAndGet(i, -4));
+            assertEquals(-1, ai.get(i));
         }
     }
 
@@ -238,10 +238,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(0,ai.decrementAndGet(i));
-            assertEquals(-1,ai.decrementAndGet(i));
-            assertEquals(-2,ai.decrementAndGet(i));
-            assertEquals(-2,ai.get(i));
+            assertEquals(0, ai.decrementAndGet(i));
+            assertEquals(-1, ai.decrementAndGet(i));
+            assertEquals(-2, ai.decrementAndGet(i));
+            assertEquals(-2, ai.get(i));
         }
     }
 
@@ -252,13 +252,13 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray ai = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             ai.set(i, 1);
-            assertEquals(2,ai.incrementAndGet(i));
-            assertEquals(2,ai.get(i));
+            assertEquals(2, ai.incrementAndGet(i));
+            assertEquals(2, ai.get(i));
             ai.set(i, -2);
-            assertEquals(-1,ai.incrementAndGet(i));
-            assertEquals(0,ai.incrementAndGet(i));
-            assertEquals(1,ai.incrementAndGet(i));
-            assertEquals(1,ai.get(i));
+            assertEquals(-1, ai.incrementAndGet(i));
+            assertEquals(0, ai.incrementAndGet(i));
+            assertEquals(1, ai.incrementAndGet(i));
+            assertEquals(1, ai.get(i));
         }
     }
 

@@ -68,11 +68,11 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-        assertSame(one,a.get(this));
-        a.set(this,two);
-        assertSame(two,a.get(this));
-        a.set(this,m3);
-        assertSame(m3,a.get(this));
+        assertSame(one, a.get(this));
+        a.set(this, two);
+        assertSame(two, a.get(this));
+        a.set(this, m3);
+        assertSame(m3, a.get(this));
     }
 
     /**
@@ -86,11 +86,11 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-        assertSame(one,a.get(this));
-        a.lazySet(this,two);
-        assertSame(two,a.get(this));
-        a.lazySet(this,m3);
-        assertSame(m3,a.get(this));
+        assertSame(one, a.get(this));
+        a.lazySet(this, two);
+        assertSame(two, a.get(this));
+        a.lazySet(this, m3);
+        assertSame(m3, a.get(this));
     }
 
     /**
@@ -110,7 +110,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
         assertFalse(a.compareAndSet(this, m5, seven));
         assertFalse(seven == a.get(this));
         assertTrue(a.compareAndSet(this, m4, seven));
-        assertSame(seven,a.get(this));
+        assertSame(seven, a.get(this));
     }
 
     /**
@@ -151,11 +151,11 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-        while (!a.weakCompareAndSet(this,one,two));
-        while (!a.weakCompareAndSet(this,two,m4));
-        assertSame(m4,a.get(this));
-        while (!a.weakCompareAndSet(this,m4,seven));
-        assertSame(seven,a.get(this));
+        while (!a.weakCompareAndSet(this, one, two));
+        while (!a.weakCompareAndSet(this, two, m4));
+        assertSame(m4, a.get(this));
+        while (!a.weakCompareAndSet(this, m4, seven));
+        assertSame(seven, a.get(this));
     }
 
     /**
@@ -169,9 +169,9 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = one;
-        assertSame(one,a.getAndSet(this, zero));
-        assertSame(zero,a.getAndSet(this,m10));
-        assertSame(m10,a.getAndSet(this,1));
+        assertSame(one, a.getAndSet(this, zero));
+        assertSame(zero, a.getAndSet(this, m10));
+        assertSame(m10, a.getAndSet(this, 1));
     }
 
 }

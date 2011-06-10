@@ -22,7 +22,7 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
      */
     public void testConstructor() {
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        assertSame(one,ai.getReference());
+        assertSame(one, ai.getReference());
         assertEquals(0, ai.getStamp());
         AtomicStampedReference a2 = new AtomicStampedReference(null, 1);
         assertNull(a2.getReference());
@@ -35,20 +35,20 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
     public void testGetSet() {
         int[] mark = new int[1];
         AtomicStampedReference ai = new AtomicStampedReference(one, 0);
-        assertSame(one,ai.getReference());
+        assertSame(one, ai.getReference());
         assertEquals(0, ai.getStamp());
         assertSame(one, ai.get(mark));
         assertEquals(0, mark[0]);
         ai.set(two, 0);
-        assertSame(two,ai.getReference());
+        assertSame(two, ai.getReference());
         assertEquals(0, ai.getStamp());
         assertSame(two, ai.get(mark));
         assertEquals(0, mark[0]);
         ai.set(one, 1);
-        assertSame(one,ai.getReference());
+        assertSame(one, ai.getReference());
         assertEquals(1, ai.getStamp());
         assertSame(one, ai.get(mark));
-        assertEquals(1,mark[0]);
+        assertEquals(1, mark[0]);
     }
 
     /**

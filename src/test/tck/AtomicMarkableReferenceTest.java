@@ -22,7 +22,7 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
      */
     public void testConstructor() {
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
-        assertSame(one,ai.getReference());
+        assertSame(one, ai.getReference());
         assertFalse(ai.isMarked());
         AtomicMarkableReference a2 = new AtomicMarkableReference(null, true);
         assertNull(a2.getReference());
@@ -35,17 +35,17 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
     public void testGetSet() {
         boolean[] mark = new boolean[1];
         AtomicMarkableReference ai = new AtomicMarkableReference(one, false);
-        assertSame(one,ai.getReference());
+        assertSame(one, ai.getReference());
         assertFalse(ai.isMarked());
         assertSame(one, ai.get(mark));
         assertFalse(mark[0]);
         ai.set(two, false);
-        assertSame(two,ai.getReference());
+        assertSame(two, ai.getReference());
         assertFalse(ai.isMarked());
         assertSame(two, ai.get(mark));
         assertFalse(mark[0]);
         ai.set(one, true);
-        assertSame(one,ai.getReference());
+        assertSame(one, ai.getReference());
         assertTrue(ai.isMarked());
         assertSame(one, ai.get(mark));
         assertTrue(mark[0]);

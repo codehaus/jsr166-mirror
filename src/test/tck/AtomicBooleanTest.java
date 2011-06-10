@@ -62,13 +62,13 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
-        assertTrue(ai.compareAndSet(true,false));
+        assertTrue(ai.compareAndSet(true, false));
         assertFalse(ai.get());
-        assertTrue(ai.compareAndSet(false,false));
+        assertTrue(ai.compareAndSet(false, false));
         assertFalse(ai.get());
-        assertFalse(ai.compareAndSet(true,false));
+        assertFalse(ai.compareAndSet(true, false));
         assertFalse(ai.get());
-        assertTrue(ai.compareAndSet(false,true));
+        assertTrue(ai.compareAndSet(false, true));
         assertTrue(ai.get());
     }
 
@@ -95,11 +95,11 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
-        while (!ai.weakCompareAndSet(true,false));
+        while (!ai.weakCompareAndSet(true, false));
         assertFalse(ai.get());
-        while (!ai.weakCompareAndSet(false,false));
+        while (!ai.weakCompareAndSet(false, false));
         assertFalse(ai.get());
-        while (!ai.weakCompareAndSet(false,true));
+        while (!ai.weakCompareAndSet(false, true));
         assertTrue(ai.get());
     }
 
@@ -108,9 +108,9 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testGetAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
-        assertEquals(true,ai.getAndSet(false));
-        assertEquals(false,ai.getAndSet(false));
-        assertEquals(false,ai.getAndSet(true));
+        assertEquals(true, ai.getAndSet(false));
+        assertEquals(false, ai.getAndSet(false));
+        assertEquals(false, ai.getAndSet(true));
         assertTrue(ai.get());
     }
 

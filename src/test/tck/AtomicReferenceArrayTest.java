@@ -43,7 +43,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * constructor with array is of same size and has all elements
      */
     public void testConstructor2() {
-        Integer[] a = { two, one, three, four, seven};
+        Integer[] a = { two, one, three, four, seven };
         AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
         assertEquals(a.length, ai.length());
         for (int i = 0; i < a.length; ++i)
@@ -208,7 +208,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * toString returns current value.
      */
     public void testToString() {
-        Integer[] a = { two, one, three, four, seven};
+        Integer[] a = { two, one, three, four, seven };
         AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
         assertEquals(Arrays.toString(a), ai.toString());
     }

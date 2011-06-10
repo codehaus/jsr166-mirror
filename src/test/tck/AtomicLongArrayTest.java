@@ -42,7 +42,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
      * constructor with array is of same size and has all elements
      */
     public void testConstructor2() {
-        long[] a = { 17L, 3L, -42L, 99L, -7L};
+        long[] a = { 17L, 3L, -42L, 99L, -7L };
         AtomicLongArray ai = new AtomicLongArray(a);
         assertEquals(a.length, ai.length());
         for (int i = 0; i < a.length; ++i)
@@ -323,7 +323,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
      * toString returns current value.
      */
     public void testToString() {
-        long[] a = { 17, 3, -42, 99, -7};
+        long[] a = { 17, 3, -42, 99, -7 };
         AtomicLongArray ai = new AtomicLongArray(a);
         assertEquals(Arrays.toString(a), ai.toString());
     }

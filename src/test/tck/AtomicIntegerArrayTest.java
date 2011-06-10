@@ -43,7 +43,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
      * constructor with array is of same size and has all elements
      */
     public void testConstructor2() {
-        int[] a = { 17, 3, -42, 99, -7};
+        int[] a = { 17, 3, -42, 99, -7 };
         AtomicIntegerArray ai = new AtomicIntegerArray(a);
         assertEquals(a.length, ai.length());
         for (int i = 0; i < a.length; ++i)
@@ -324,7 +324,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
      * toString returns current value.
      */
     public void testToString() {
-        int[] a = { 17, 3, -42, 99, -7};
+        int[] a = { 17, 3, -42, 99, -7 };
         AtomicIntegerArray ai = new AtomicIntegerArray(a);
         assertEquals(Arrays.toString(a), ai.toString());
     }

@@ -51,6 +51,21 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
     }
 
     /**
+     * Initialize AtomicReference<Class> with SubClass[]
+     */
+    public void testConstructorSubClassArray() {
+        Integer[] a = { two, one, three, four, seven };
+        AtomicReferenceArray<Number> aa = new AtomicReferenceArray<Number>(a);
+        assertEquals(a.length, aa.length());
+        for (int i = 0; i < a.length; ++i) {
+            assertSame(a[i], aa.get(i));
+            Long x = Long.valueOf(i);
+            aa.set(i, x);
+            assertSame(x, aa.get(i));
+        }
+    }
+
+    /**
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
     public void testIndexing() {

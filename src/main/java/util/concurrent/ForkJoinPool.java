@@ -101,13 +101,12 @@ import java.util.concurrent.locks.Condition;
  * daemon} mode, there is typically no need to explicitly {@link
  * #shutdown} such a pool upon program exit.
  *
- * <pre>
+ *  <pre> {@code
  * static final ForkJoinPool mainPool = new ForkJoinPool();
  * ...
  * public void sort(long[] array) {
  *   mainPool.invoke(new SortTask(array, 0, array.length));
- * }
- * </pre>
+ * }}</pre>
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create

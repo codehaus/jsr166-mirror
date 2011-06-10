@@ -160,8 +160,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * The following code can be used to dump the set into a newly allocated
      * array of <tt>String</tt>:
      *
-     * <pre>
-     *     String[] y = x.toArray(new String[0]);</pre>
+     *  <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
      *
      * Note that <tt>toArray(new Object[0])</tt> is identical in function to
      * <tt>toArray()</tt>.

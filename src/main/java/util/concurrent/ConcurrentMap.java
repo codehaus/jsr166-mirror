@@ -32,11 +32,12 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * If the specified key is not already associated
      * with a value, associate it with the given value.
      * This is equivalent to
-     * <pre>
-     *   if (!map.containsKey(key))
-     *       return map.put(key, value);
-     *   else
-     *       return map.get(key);</pre>
+     *  <pre> {@code
+     * if (!map.containsKey(key))
+     *   return map.put(key, value);
+     * else
+     *   return map.get(key);}</pre>
+     *
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is to be associated
@@ -61,11 +62,13 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
     /**
      * Removes the entry for a key only if currently mapped to a given value.
      * This is equivalent to
-     * <pre>
-     *   if (map.containsKey(key) &amp;&amp; map.get(key).equals(value)) {
-     *       map.remove(key);
-     *       return true;
-     *   } else return false;</pre>
+     *  <pre> {@code
+     * if (map.containsKey(key) && map.get(key).equals(value)) {
+     *   map.remove(key);
+     *   return true;
+     * } else
+     *   return false;}</pre>
+     *
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is associated
@@ -85,11 +88,13 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
     /**
      * Replaces the entry for a key only if currently mapped to a given value.
      * This is equivalent to
-     * <pre>
-     *   if (map.containsKey(key) &amp;&amp; map.get(key).equals(oldValue)) {
-     *       map.put(key, newValue);
-     *       return true;
-     *   } else return false;</pre>
+     *  <pre> {@code
+     * if (map.containsKey(key) && map.get(key).equals(oldValue)) {
+     *   map.put(key, newValue);
+     *   return true;
+     * } else
+     *   return false;}</pre>
+     *
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is associated
@@ -110,10 +115,12 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
     /**
      * Replaces the entry for a key only if currently mapped to some value.
      * This is equivalent to
-     * <pre>
-     *   if (map.containsKey(key)) {
-     *       return map.put(key, value);
-     *   } else return null;</pre>
+     *  <pre> {@code
+     * if (map.containsKey(key)) {
+     *   return map.put(key, value);
+     * } else
+     *   return null;}</pre>
+     *
      * except that the action is performed atomically.
      *
      * @param key key with which the specified value is associated

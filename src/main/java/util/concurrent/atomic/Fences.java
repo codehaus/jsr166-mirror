@@ -70,7 +70,7 @@ package java.util.concurrent.atomic;
  * turn because it is used in a framework requiring that all classes
  * have a no-argument constructor; as in:
  *
- * <pre>
+ *  <pre> {@code
  * class WidgetHolder {
  *   private Widget widget;
  *   public WidgetHolder() {}
@@ -79,8 +79,7 @@ package java.util.concurrent.atomic;
  *     h.widget = new Widget(params);
  *     return Fences.orderWrites(h);
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * Here, the invocation of {@code orderWrites} ensures that the
  * effects of the widget assignment are ordered before those of any
@@ -106,15 +105,14 @@ package java.util.concurrent.atomic;
  * practice, among other changes, you would use access methods instead
  * of a public field.
  *
- * <pre>
+ *  <pre> {@code
  * class AnotherWidgetHolder {
  *   public Widget widget;
  *   void publish(Widget w) {
  *     this.widget = Fences.orderWrites(w);
  *   }
  *   // ...
- * }
- * </pre>
+ * }}</pre>
  *
  * In this case, the {@code orderWrites} invocation occurs before the
  * store making the object available. Correctness again relies on
@@ -131,7 +129,7 @@ package java.util.concurrent.atomic;
  * {@code c} contains an accessible variable {@code data} that should
  * have been declared as {@code volatile} but wasn't:
  *
- * <pre>
+ *  <pre> {@code
  * class C {
  *    Object data;  // need volatile access but not volatile
  *    // ...
@@ -148,8 +146,7 @@ package java.util.concurrent.atomic;
  *      Fences.orderAccesses(c);
  *   }
  *   // ...
- * }
- * </pre>
+ * }}</pre>
  *
  * Method {@code getData} provides an emulation of {@code volatile}
  * reads of (non-long/double) fields by ensuring that the read of
@@ -187,7 +184,7 @@ package java.util.concurrent.atomic;
  * already ensured by the referenced objects.
  * For example:
  *
- * <pre>
+ *  <pre> {@code
  * class Item {
  *    synchronized f(); // ALL methods are synchronized
  *    // ...
@@ -204,8 +201,7 @@ package java.util.concurrent.atomic;
  *   }
  *
  *   // ...
- * }
- * </pre>
+ * }}</pre>
  *
  * Because this construction avoids use of {@code orderAccesses},
  * which is typically more costly than the other fence methods, it may
@@ -232,7 +228,7 @@ package java.util.concurrent.atomic;
  * in method {@link Object#finalize}, which may otherwise run
  * concurrently.
  *
- * <pre>
+ *  <pre> {@code
  * class Resource {
  *   private static ExternalResource[] externalResourceArray = ...
  *
@@ -258,8 +254,7 @@ package java.util.concurrent.atomic;
  *   private static void update(ExternalResource ext) {
  *     ext.status = ...;
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * Here, the call to {@code reachabilityFence} is nonintuitively
  * placed <em>after</em> the call to {@code update}, to ensure that
@@ -280,17 +275,16 @@ package java.util.concurrent.atomic;
  * finalizer had already executed (nulling out slot), then you could
  * localize use of {@code reachabilityFence}:
  *
- * <pre>
- *   public void action2() {
- *     // ...
- *     Resource.update(getExternalResource());
- *   }
- *   private ExternalResource getExternalResource() {
- *     ExternalResource ext = externalResourceArray[myIndex];
- *     Fences.reachabilityFence(this);
- *     return ext;
- *   }
- * </pre>
+ *  <pre> {@code
+ * public void action2() {
+ *   // ...
+ *   Resource.update(getExternalResource());
+ * }
+ * private ExternalResource getExternalResource() {
+ *   ExternalResource ext = externalResourceArray[myIndex];
+ *   Fences.reachabilityFence(this);
+ *   return ext;
+ * }}</pre>
  *
  * <p>Method {@code reachabilityFence} is not required in
  * constructions that themselves ensure reachability. For example,

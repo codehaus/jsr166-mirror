@@ -164,7 +164,7 @@ import sun.misc.Unsafe;
  * It also supports conditions and exposes
  * one of the instrumentation methods:
  *
- * <pre>
+ *  <pre> {@code
  * class Mutex implements Lock, java.io.Serializable {
  *
  *   // Our internal helper class
@@ -220,15 +220,14 @@ import sun.misc.Unsafe;
  *       throws InterruptedException {
  *     return sync.tryAcquireNanos(1, unit.toNanos(timeout));
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * <p>Here is a latch class that is like a {@link CountDownLatch}
  * except that it only requires a single <tt>signal</tt> to
  * fire. Because a latch is non-exclusive, it uses the <tt>shared</tt>
  * acquire and release methods.
  *
- * <pre>
+ *  <pre> {@code
  * class BooleanLatch {
  *
  *   private static class Sync extends AbstractQueuedSynchronizer {
@@ -250,8 +249,7 @@ import sun.misc.Unsafe;
  *   public void await() throws InterruptedException {
  *     sync.acquireSharedInterruptibly(1);
  *   }
- * }
- * </pre>
+ * }}</pre>
  *
  * @since 1.5
  * @author Doug Lea

@@ -5,6 +5,8 @@
  */
 
 package java.util.concurrent.atomic;
+
+import java.util.Arrays;
 import sun.misc.Unsafe;
 
 /**
@@ -61,7 +63,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      */
     public AtomicReferenceArray(E[] array) {
         // Visibility guaranteed by final field guarantees
-        this.array = array.clone();
+        this.array = Arrays.copyOf(array, array.length, Object[].class);
     }
 
     /**

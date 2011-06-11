@@ -57,7 +57,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         protected <V> RunnableScheduledFuture<V> decorateTask(Callable<V> c, RunnableScheduledFuture<V> task) {
             return new CustomTask<V>(task);
         }
-        CustomExecutor(int corePoolSize) { super(corePoolSize);}
+        CustomExecutor(int corePoolSize) { super(corePoolSize); }
         CustomExecutor(int corePoolSize, RejectedExecutionHandler handler) {
             super(corePoolSize, handler);
         }

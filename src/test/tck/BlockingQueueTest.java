@@ -8,6 +8,7 @@
  */
 
 import junit.framework.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Queue;
@@ -177,6 +178,33 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
             q.drainTo(q, 0);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
+    }
+
+    /**
+     * drainTo(c, -n) returns 0
+     */
+    public void testDrainToNegativeMaxElements() {
+        final BlockingQueue q = emptyCollection();
+        assertEquals(0, q.drainTo(new ArrayList(), -42));
+    }
+
+    /**
+     * drainTo(c, 0) returns 0 and does nothing
+     */
+    public void testDrainToZeroMaxElements() {
+        final BlockingQueue q = emptyCollection();
+        if (q.remainingCapacity() == 0) {
+            // SynchronousQueue, for example
+            assertEquals(0, q.drainTo(new ArrayList(), 0));
+        } else {
+            Object one = makeElement(1);
+            q.add(one);
+            ArrayList c = new ArrayList();
+            assertEquals(0, q.drainTo(c, 0));
+            assertEquals(1, q.size());
+            assertSame(one, q.poll());
+            assertTrue(c.isEmpty());
+        }
     }
 
     /**

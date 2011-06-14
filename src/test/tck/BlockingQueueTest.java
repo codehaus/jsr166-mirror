@@ -181,26 +181,20 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * drainTo(c, -n) returns 0
+     * drainTo(c, n) returns 0 and does nothing when n <= 0
      */
-    public void testDrainToNegativeMaxElements() {
+    public void testDrainToNonPositiveMaxElements() {
         final BlockingQueue q = emptyCollection();
-        assertEquals(0, q.drainTo(new ArrayList(), -42));
-    }
-
-    /**
-     * drainTo(c, 0) returns 0 and does nothing
-     */
-    public void testDrainToZeroMaxElements() {
-        final BlockingQueue q = emptyCollection();
-        if (q.remainingCapacity() == 0) {
-            // SynchronousQueue, for example
-            assertEquals(0, q.drainTo(new ArrayList(), 0));
-        } else {
+        final int[] ns = { 0, -1, -42, Integer.MIN_VALUE };
+        for (int n : ns)
+            assertEquals(0, q.drainTo(new ArrayList(), n));
+        if (q.remainingCapacity() > 0) {
+            // Not SynchronousQueue, that is
             Object one = makeElement(1);
             q.add(one);
             ArrayList c = new ArrayList();
-            assertEquals(0, q.drainTo(c, 0));
+            for (int n : ns)
+                assertEquals(0, q.drainTo(new ArrayList(), n));
             assertEquals(1, q.size());
             assertSame(one, q.poll());
             assertTrue(c.isEmpty());

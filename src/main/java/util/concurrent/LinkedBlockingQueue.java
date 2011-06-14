@@ -698,6 +698,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             throw new NullPointerException();
         if (c == this)
             throw new IllegalArgumentException();
+        if (maxElements <= 0)
+            return 0;
         boolean signalNotFull = false;
         final ReentrantLock takeLock = this.takeLock;
         takeLock.lock();

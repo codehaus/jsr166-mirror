@@ -12,23 +12,24 @@ import java.util.concurrent.locks.LockSupport;
  * implementation of {@link Future}, with methods to start and cancel
  * a computation, query to see if the computation is complete, and
  * retrieve the result of the computation.  The result can only be
- * retrieved when the computation has completed; the <tt>get</tt>
- * method will block if the computation has not yet completed.  Once
+ * retrieved when the computation has completed; the {@code get}
+ * methods will block if the computation has not yet completed.  Once
  * the computation has completed, the computation cannot be restarted
- * or cancelled.
+ * or cancelled (unless the computation is invoked using
+ * {@link #runAndReset}).
  *
- * <p>A <tt>FutureTask</tt> can be used to wrap a {@link Callable} or
- * {@link java.lang.Runnable} object.  Because <tt>FutureTask</tt>
- * implements <tt>Runnable</tt>, a <tt>FutureTask</tt> can be
- * submitted to an {@link Executor} for execution.
+ * <p>A {@code FutureTask} can be used to wrap a {@link Callable} or
+ * {@link Runnable} object.  Because {@code FutureTask} implements
+ * {@code Runnable}, a {@code FutureTask} can be submitted to an
+ * {@link Executor} for execution.
  *
  * <p>In addition to serving as a standalone class, this class provides
- * <tt>protected</tt> functionality that may be useful when creating
+ * {@code protected} functionality that may be useful when creating
  * customized task classes.
  *
  * @since 1.5
  * @author Doug Lea
- * @param <V> The result type returned by this FutureTask's <tt>get</tt> method
+ * @param <V> The result type returned by this FutureTask's {@code get} methods
  */
 public class FutureTask<V> implements RunnableFuture<V> {
     /*
@@ -48,7 +49,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * transitions to NORMAL, EXCEPTIONAL, or CANCELLED (only) in
      * method setCompletion. During setCompletion, state may take on
      * transient values of COMPLETING (while outcome is being set) or
-     * INTERRUPTING (while interrupting the runner). State values
+     * INTERRUPTING (while interrupting the runner).  State values
      * are ordered and set to powers of two to simplify checks.
      */
     private volatile int state;
@@ -58,26 +59,26 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private static final int EXCEPTIONAL  = 0x08;
     private static final int CANCELLED    = 0x10;
 
+    /** The underlying callable */
+    private final Callable<V> callable;
     /** The result to return or exception to throw from get() */
     private Object outcome; // non-volatile, protected by state reads/writes
     /** The thread running the callable; CASed during run() */
     private volatile Thread runner;
-    /** The underlying callable */
-    private final Callable<V> callable;
     /** Treiber stack of waiting threads */
     private volatile WaitNode waiters;
 
     /**
      * Sets completion status, unless already completed.  If
      * necessary, we first set state to COMPLETING or INTERRUPTING to
-     * establish precedence. This intentionally stalls (just via
+     * establish precedence.  This intentionally stalls (just via
      * yields) in (uncommon) cases of concurrent calls during
      * cancellation until state is set, to avoid surprising users
      * during cancellation races.
      *
      * @param x the outcome
      * @param mode the completion state value
-     * @return true if this call caused transtion from 0 to completed
+     * @return true if this call caused transition from 0 to completed
      */
     private boolean setCompletion(Object x, int mode) {
         Thread r = runner;
@@ -86,8 +87,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
         int next = ((mode == INTERRUPTING) ? // set up transient states
                     (r != null) ? INTERRUPTING : CANCELLED :
                     (x != null) ? COMPLETING : mode);
-        for (int s;;) {
-            if ((s = state) == 0) {
+        for (;;) {
+            int s = state;
+            if (s == 0) {
                 if (UNSAFE.compareAndSwapInt(this, stateOffset, 0, next)) {
                     if (next == INTERRUPTING) {
                         Thread t = runner; // recheck
@@ -106,14 +108,15 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 }
             }
             else if (s == INTERRUPTING)
-                Thread.yield(); // wait out cancellation
+                Thread.yield(); // wait out pending cancellation interrupt
             else
                 return false;
         }
     }
 
     /**
-     * Returns result or throws exception for completed task
+     * Returns result or throws exception for completed task.
+     *
      * @param s completed state value
      */
     private V report(int s) throws ExecutionException {
@@ -126,8 +129,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Creates a <tt>FutureTask</tt> that will, upon running, execute the
-     * given <tt>Callable</tt>.
+     * Creates a {@code FutureTask} that will, upon running, execute the
+     * given {@code Callable}.
      *
      * @param  callable the callable task
      * @throws NullPointerException if callable is null
@@ -139,8 +142,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Creates a <tt>FutureTask</tt> that will, upon running, execute the
-     * given <tt>Runnable</tt>, and arrange that <tt>get</tt> will return the
+     * Creates a {@code FutureTask} that will, upon running, execute the
+     * given {@code Runnable}, and arrange that {@code get} will return the
      * given result on successful completion.
      *
      * @param runnable the runnable task
@@ -172,8 +175,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @throws CancellationException {@inheritDoc}
      */
     public V get() throws InterruptedException, ExecutionException {
-        int s;
-        return report((s = state) > COMPLETING ? s : awaitDone(false, 0L));
+        int s = state;
+        if (s <= COMPLETING)
+            s = awaitDone(false, 0L);
+        return report(s);
     }
 
     /**
@@ -181,17 +186,16 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        int s;
-        long nanos = unit.toNanos(timeout);
-        if ((s = state) <= COMPLETING &&
-            (s = awaitDone(true, nanos)) <= COMPLETING)
+        int s = state;
+        if (s <= COMPLETING &&
+            (s = awaitDone(true, unit.toNanos(timeout))) <= COMPLETING)
             throw new TimeoutException();
         return report(s);
     }
 
     /**
      * Protected method invoked when this task transitions to state
-     * <tt>isDone</tt> (whether normally or via cancellation). The
+     * {@code isDone} (whether normally or via cancellation). The
      * default implementation does nothing.  Subclasses may override
      * this method to invoke completion callbacks or perform
      * bookkeeping. Note that you can query status inside the
@@ -201,10 +205,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
     protected void done() { }
 
     /**
-     * Sets the result of this Future to the given value unless
+     * Sets the result of this future to the given value unless
      * this future has already been set or has been cancelled.
-     * This method is invoked internally by the <tt>run</tt> method
+     *
+     * <p>This method is invoked internally by the {@link #run} method
      * upon successful completion of the computation.
+     *
      * @param v the value
      */
     protected void set(V v) {
@@ -212,11 +218,13 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Causes this future to report an <tt>ExecutionException</tt>
-     * with the given throwable as its cause, unless this Future has
+     * Causes this future to report an {@link ExecutionException}
+     * with the given throwable as its cause, unless this future has
      * already been set or has been cancelled.
-     * This method is invoked internally by the <tt>run</tt> method
+     *
+     * <p>This method is invoked internally by the {@link #run} method
      * upon failure of the computation.
+     *
      * @param t the cause of failure
      */
     protected void setException(Throwable t) {
@@ -240,10 +248,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     /**
      * Executes the computation without setting its result, and then
-     * resets this Future to initial state, failing to do so if the
+     * resets this future to initial state, failing to do so if the
      * computation encounters an exception or is cancelled.  This is
      * designed for use with tasks that intrinsically execute more
      * than once.
+     *
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
@@ -264,13 +273,13 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 return true;
             if (s != INTERRUPTING)
                 return false;
-            Thread.yield(); // wait out racing cancellation
+            Thread.yield(); // wait out pending cancellation interrupt
         }
     }
 
     /**
      * Simple linked list nodes to record waiting threads in a Treiber
-     * stack. See other classes such as Phaser and SynchronousQueue
+     * stack.  See other classes such as Phaser and SynchronousQueue
      * for more detailed explanation.
      */
     static final class WaitNode {
@@ -279,7 +288,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Removes and signals all waiting threads
+     * Removes and signals all waiting threads.
      */
     private void releaseAll() {
         WaitNode q;
@@ -302,9 +311,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Awaits completion or aborts on interrupt of timeout
+     * Awaits completion or aborts on interrupt or timeout.
+     *
      * @param timed true if use timed waits
-     * @param nanos time to wait if timed
+     * @param nanos time to wait, if timed
      * @return state upon completion
      */
     private int awaitDone(boolean timed, long nanos)
@@ -312,12 +322,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
         long last = timed ? System.nanoTime() : 0L;
         WaitNode q = null;
         boolean queued = false;
-        for (int s;;) {
+        for (;;) {
             if (Thread.interrupted()) {
                 removeWaiter(q);
                 throw new InterruptedException();
             }
-            else if ((s = state) > COMPLETING) {
+
+            int s = state;
+            if (s > COMPLETING) {
                 if (q != null)
                     q.thread = null;
                 return s;
@@ -344,8 +356,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Try to unlink a timed-out or interrupted wait node to avoid
-     * accumulating garbage. Internal nodes are simply unspliced
+     * Tries to unlink a timed-out or interrupted wait node to avoid
+     * accumulating garbage.  Internal nodes are simply unspliced
      * without CAS since it is harmless if they are traversed anyway
      * by releasers or concurrent calls to removeWaiter.
      */

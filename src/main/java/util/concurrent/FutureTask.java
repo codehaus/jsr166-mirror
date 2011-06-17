@@ -45,7 +45,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
 
     /**
-     * The run state of this task, initially UNDECIDED.  The run state
+     * The run state of this task, initially NEW.  The run state
      * transitions to a terminal state only in method setCompletion.
      * During setCompletion, state may take on transient values of
      * COMPLETING (while outcome is being set) or INTERRUPTING (only
@@ -53,14 +53,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * State values are highly order-dependent to simplify checks.
      *
      * Possible state transitions:
-     * UNDECIDED -> NORMAL
-     * UNDECIDED -> COMPLETING -> NORMAL
-     * UNDECIDED -> COMPLETING -> EXCEPTIONAL
-     * UNDECIDED -> CANCELLED
-     * UNDECIDED -> INTERRUPTING -> INTERRUPTED
+     * NEW -> NORMAL
+     * NEW -> COMPLETING -> NORMAL
+     * NEW -> COMPLETING -> EXCEPTIONAL
+     * NEW -> CANCELLED
+     * NEW -> INTERRUPTING -> INTERRUPTED
      */
     private volatile int state;
-    private static final int UNDECIDED    = 0;
+    private static final int NEW          = 0;
     private static final int COMPLETING   = 1;
     private static final int NORMAL       = 2;
     private static final int EXCEPTIONAL  = 3;
@@ -84,12 +84,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
      *
      * @param x the outcome
      * @param mode the completion state value
-     * @return true if this call caused transition from UNDECIDED to completed
+     * @return true if this call caused transition from NEW to completed
      */
     private boolean setCompletion(Object x, int mode) {
         // set up transient states
         int next = (x != null) ? COMPLETING : mode;
-        if (!UNSAFE.compareAndSwapInt(this, stateOffset, UNDECIDED, next))
+        if (!UNSAFE.compareAndSwapInt(this, stateOffset, NEW, next))
             return false;
         if (next == INTERRUPTING) {
             // Must check after CAS to avoid missed interrupt
@@ -156,11 +156,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public boolean isDone() {
-        return state != UNDECIDED;
+        return state != NEW;
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return state == UNDECIDED &&
+        return state == NEW &&
             setCompletion(null,
                           mayInterruptIfRunning ? INTERRUPTING : CANCELLED);
     }
@@ -226,14 +226,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public void run() {
-        if (state != UNDECIDED ||
+        if (state != NEW ||
             !UNSAFE.compareAndSwapObject(this, runnerOffset,
                                          null, Thread.currentThread()))
             return;
 
         try {
             // Recheck to avoid missed interrupt.
-            if (state != UNDECIDED)
+            if (state != NEW)
                 return;
             V result;
             try {
@@ -264,18 +264,18 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        if (state != UNDECIDED ||
+        if (state != NEW ||
             !UNSAFE.compareAndSwapObject(this, runnerOffset,
                                          null, Thread.currentThread()))
             return false;
 
         try {
             // Recheck to avoid missed interrupt.
-            if (state != UNDECIDED)
+            if (state != NEW)
                 return false;
             try {
                 callable.call(); // don't set result
-                return (state == UNDECIDED);
+                return (state == NEW);
             } catch (Throwable ex) {
                 setException(ex);
                 return false;

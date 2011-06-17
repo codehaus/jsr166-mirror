@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * A cancellable asynchronous computation.  This class provides a base
@@ -31,8 +31,99 @@ import java.util.concurrent.locks.*;
  * @param <V> The result type returned by this FutureTask's <tt>get</tt> method
  */
 public class FutureTask<V> implements RunnableFuture<V> {
-    /** Synchronization control for FutureTask */
-    private final Sync sync;
+    /*
+     * Revision notes: This differs from previous versions of this
+     * class that relied on AbstractQueuedSynchronizer, mainly to
+     * avoid surprising users about retaining interrupt status during
+     * cancellation races. Sync control in the current design relies
+     * on a "state" field updated via CAS to track completion, along
+     * with a simple Treiber stack to hold waiting threads.
+     *
+     * Style note: As usual, we bypass overhead of using
+     * AtomicXFieldUpdaters and instead directly use Unsafe intrinsics.
+     */
+
+    /**
+     * The run state of this task, initially 0.  The run state
+     * transitions to NORMAL, EXCEPTIONAL, or CANCELLED (only) in
+     * method setCompletion. During setCompletion, state may take on
+     * transient values of COMPLETING (while outcome is being set) or
+     * INTERRUPTING (while interrupting the runner). State values
+     * are ordered and set to powers of two to simplify checks.
+     */
+    private volatile int state;
+    private static final int COMPLETING   = 0x01;
+    private static final int INTERRUPTING = 0x02;
+    private static final int NORMAL       = 0x04;
+    private static final int EXCEPTIONAL  = 0x08;
+    private static final int CANCELLED    = 0x10;
+
+    /** The result to return or exception to throw from get() */
+    private Object outcome; // non-volatile, protected by state reads/writes
+    /** The thread running the callable; CASed during run() */
+    private volatile Thread runner;
+    /** The underlying callable */
+    private final Callable<V> callable;
+    /** Treiber stack of waiting threads */
+    private volatile WaitNode waiters;
+
+    /**
+     * Sets completion status, unless already completed.  If
+     * necessary, we first set state to COMPLETING or INTERRUPTING to
+     * establish precedence. This intentionally stalls (just via
+     * yields) in (uncommon) cases of concurrent calls during
+     * cancellation until state is set, to avoid surprising users
+     * during cancellation races.
+     *
+     * @param x the outcome
+     * @param mode the completion state value
+     * @return true if this call caused transtion from 0 to completed
+     */
+    private boolean setCompletion(Object x, int mode) {
+        Thread r = runner;
+        if (r == Thread.currentThread()) // null out runner on completion
+            UNSAFE.putObject(this, runnerOffset, r = null); // nonvolatile OK
+        int next = ((mode == INTERRUPTING) ? // set up transient states
+                    (r != null) ? INTERRUPTING : CANCELLED :
+                    (x != null) ? COMPLETING : mode);
+        for (int s;;) {
+            if ((s = state) == 0) {
+                if (UNSAFE.compareAndSwapInt(this, stateOffset, 0, next)) {
+                    if (next == INTERRUPTING) {
+                        Thread t = runner; // recheck
+                        if (t != null)
+                            t.interrupt();
+                        state = CANCELLED;
+                    }
+                    else if (next == COMPLETING) {
+                        outcome = x;
+                        state = mode;
+                    }
+                    if (waiters != null)
+                        releaseAll();
+                    done();
+                    return true;
+                }
+            }
+            else if (s == INTERRUPTING)
+                Thread.yield(); // wait out cancellation
+            else
+                return false;
+        }
+    }
+
+    /**
+     * Returns result or throws exception for completed task
+     * @param s completed state value
+     */
+    private V report(int s) throws ExecutionException {
+        Object x = outcome;
+        if (s == NORMAL)
+            return (V)x;
+        if ((s & (CANCELLED | INTERRUPTING)) != 0)
+            throw new CancellationException();
+        throw new ExecutionException((Throwable)x);
+    }
 
     /**
      * Creates a <tt>FutureTask</tt> that will, upon running, execute the
@@ -44,7 +135,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     public FutureTask(Callable<V> callable) {
         if (callable == null)
             throw new NullPointerException();
-        sync = new Sync(callable);
+        this.callable = callable;
     }
 
     /**
@@ -60,26 +151,29 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @throws NullPointerException if runnable is null
      */
     public FutureTask(Runnable runnable, V result) {
-        sync = new Sync(Executors.callable(runnable, result));
+        this.callable = Executors.callable(runnable, result);
     }
 
     public boolean isCancelled() {
-        return sync.innerIsCancelled();
+        return (state & (CANCELLED | INTERRUPTING)) != 0;
     }
 
     public boolean isDone() {
-        return sync.innerIsDone();
+        return state != 0;
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return sync.innerCancel(mayInterruptIfRunning);
+        return state == 0 &&
+            setCompletion(null, mayInterruptIfRunning ?
+                          INTERRUPTING : CANCELLED);
     }
 
     /**
      * @throws CancellationException {@inheritDoc}
      */
     public V get() throws InterruptedException, ExecutionException {
-        return sync.innerGet();
+        int s;
+        return report((s = state) > COMPLETING ? s : awaitDone(false, 0L));
     }
 
     /**
@@ -87,7 +181,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        return sync.innerGet(unit.toNanos(timeout));
+        int s;
+        long nanos = unit.toNanos(timeout);
+        if ((s = state) <= COMPLETING &&
+            (s = awaitDone(true, nanos)) <= COMPLETING)
+            throw new TimeoutException();
+        return report(s);
     }
 
     /**
@@ -109,7 +208,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param v the value
      */
     protected void set(V v) {
-        sync.innerSet(v);
+        setCompletion(v, NORMAL);
     }
 
     /**
@@ -121,11 +220,22 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param t the cause of failure
      */
     protected void setException(Throwable t) {
-        sync.innerSetException(t);
+        setCompletion(t, EXCEPTIONAL);
     }
 
     public void run() {
-        sync.innerRun();
+        Thread r = Thread.currentThread();
+        if (state == 0 &&
+            UNSAFE.compareAndSwapObject(this, runnerOffset, null, r)) {
+            V result;
+            try {
+                result = callable.call();
+            } catch (Throwable ex) {
+                setException(ex);
+                return;
+            }
+            set(result);
+        }
     }
 
     /**
@@ -137,186 +247,152 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        return sync.innerRunAndReset();
+        Thread r = Thread.currentThread();
+        if (state != 0 ||
+            !UNSAFE.compareAndSwapObject(this, runnerOffset, null, r))
+            return false;
+        try {
+            callable.call(); // don't set result
+        } catch (Throwable ex) {
+            setException(ex);
+            return false;
+        }
+        runner = null;
+        for (;;) {
+            int s = state;
+            if (s == 0)
+                return true;
+            if (s != INTERRUPTING)
+                return false;
+            Thread.yield(); // wait out racing cancellation
+        }
     }
 
     /**
-     * Synchronization control for FutureTask. Note that this must be
-     * a non-static inner class in order to invoke the protected
-     * <tt>done</tt> method. For clarity, all inner class support
-     * methods are same as outer, prefixed with "inner".
-     *
-     * Uses AQS sync state to represent run status.
+     * Simple linked list nodes to record waiting threads in a Treiber
+     * stack. See other classes such as Phaser and SynchronousQueue
+     * for more detailed explanation.
      */
-    private final class Sync extends AbstractQueuedSynchronizer {
-        private static final long serialVersionUID = -7828117401763700385L;
+    static final class WaitNode {
+        volatile Thread thread;
+        WaitNode next;
+    }
 
-        /** State value representing that task is ready to run */
-        private static final int READY     = 0;
-        /** State value representing that task is running */
-        private static final int RUNNING   = 1;
-        /** State value representing that task ran */
-        private static final int RAN       = 2;
-        /** State value representing that task was cancelled */
-        private static final int CANCELLED = 4;
-
-        /** The underlying callable */
-        private final Callable<V> callable;
-        /** The result to return from get() */
-        private V result;
-        /** The exception to throw from get() */
-        private Throwable exception;
-
-        /**
-         * The thread running task. When nulled after set/cancel, this
-         * indicates that the results are accessible.  Must be
-         * volatile, to ensure visibility upon completion.
-         */
-        private volatile Thread runner;
-
-        Sync(Callable<V> callable) {
-            this.callable = callable;
-        }
-
-        private boolean ranOrCancelled(int state) {
-            return (state & (RAN | CANCELLED)) != 0;
-        }
-
-        /**
-         * Implements AQS base acquire to succeed if ran or cancelled
-         */
-        protected int tryAcquireShared(int ignore) {
-            return innerIsDone() ? 1 : -1;
-        }
-
-        /**
-         * Implements AQS base release to always signal after setting
-         * final done status by nulling runner thread.
-         */
-        protected boolean tryReleaseShared(int ignore) {
-            runner = null;
-            return true;
-        }
-
-        boolean innerIsCancelled() {
-            return getState() == CANCELLED;
-        }
-
-        boolean innerIsDone() {
-            return ranOrCancelled(getState()) && runner == null;
-        }
-
-        V innerGet() throws InterruptedException, ExecutionException {
-            acquireSharedInterruptibly(0);
-            if (getState() == CANCELLED)
-                throw new CancellationException();
-            if (exception != null)
-                throw new ExecutionException(exception);
-            return result;
-        }
-
-        V innerGet(long nanosTimeout) throws InterruptedException, ExecutionException, TimeoutException {
-            if (!tryAcquireSharedNanos(0, nanosTimeout))
-                throw new TimeoutException();
-            if (getState() == CANCELLED)
-                throw new CancellationException();
-            if (exception != null)
-                throw new ExecutionException(exception);
-            return result;
-        }
-
-        void innerSet(V v) {
-            for (;;) {
-                int s = getState();
-                if (s == RAN)
-                    return;
-                if (s == CANCELLED) {
-                    // aggressively release to set runner to null,
-                    // in case we are racing with a cancel request
-                    // that will try to interrupt runner
-                    releaseShared(0);
-                    return;
+    /**
+     * Removes and signals all waiting threads
+     */
+    private void releaseAll() {
+        WaitNode q;
+        while ((q = waiters) != null) {
+            if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
+                for (;;) {
+                    Thread t = q.thread;
+                    if (t != null) {
+                        q.thread = null;
+                        LockSupport.unpark(t);
+                    }
+                    WaitNode next = q.next;
+                    if (next == null)
+                        return;
+                    q.next = null; // unlink to help gc
+                    q = next;
                 }
-                if (compareAndSetState(s, RAN)) {
-                    result = v;
-                    releaseShared(0);
-                    done();
-                    return;
-                }
-            }
-        }
-
-        void innerSetException(Throwable t) {
-            for (;;) {
-                int s = getState();
-                if (s == RAN)
-                    return;
-                if (s == CANCELLED) {
-                    // aggressively release to set runner to null,
-                    // in case we are racing with a cancel request
-                    // that will try to interrupt runner
-                    releaseShared(0);
-                    return;
-                }
-                if (compareAndSetState(s, RAN)) {
-                    exception = t;
-                    releaseShared(0);
-                    done();
-                    return;
-                }
-            }
-        }
-
-        boolean innerCancel(boolean mayInterruptIfRunning) {
-            for (;;) {
-                int s = getState();
-                if (ranOrCancelled(s))
-                    return false;
-                if (compareAndSetState(s, CANCELLED))
-                    break;
-            }
-            if (mayInterruptIfRunning) {
-                Thread r = runner;
-                if (r != null)
-                    r.interrupt();
-            }
-            releaseShared(0);
-            done();
-            return true;
-        }
-
-        void innerRun() {
-            if (!compareAndSetState(READY, RUNNING))
-                return;
-
-            runner = Thread.currentThread();
-            if (getState() == RUNNING) { // recheck after setting thread
-                V result;
-                try {
-                    result = callable.call();
-                } catch (Throwable ex) {
-                    setException(ex);
-                    return;
-                }
-                set(result);
-            } else {
-                releaseShared(0); // cancel
-            }
-        }
-
-        boolean innerRunAndReset() {
-            if (!compareAndSetState(READY, RUNNING))
-                return false;
-            try {
-                runner = Thread.currentThread();
-                if (getState() == RUNNING)
-                    callable.call(); // don't set result
-                runner = null;
-                return compareAndSetState(RUNNING, READY);
-            } catch (Throwable ex) {
-                setException(ex);
-                return false;
             }
         }
     }
+
+    /**
+     * Awaits completion or aborts on interrupt of timeout
+     * @param timed true if use timed waits
+     * @param nanos time to wait if timed
+     * @return state upon completion
+     */
+    private int awaitDone(boolean timed, long nanos)
+        throws InterruptedException {
+        long last = timed? System.nanoTime() : 0L;
+        WaitNode q = null;
+        boolean queued = false;
+        for (int s;;) {
+            if (Thread.interrupted()) {
+                removeWaiter(q);
+                throw new InterruptedException();
+            }
+            else if ((s = state) > COMPLETING) {
+                if (q != null)
+                    q.thread = null;
+                return s;
+            }
+            else if (q == null)
+                q = new WaitNode();
+            else if (!queued)
+                queued = UNSAFE.compareAndSwapObject(this, waitersOffset,
+                                                     q.next = waiters, q);
+            else if (q.thread == null)
+                q.thread = Thread.currentThread();
+            else if (timed) {
+                long now = System.nanoTime();
+                if ((nanos -= (now - last)) <= 0L) {
+                    removeWaiter(q);
+                    return state;
+                }
+                last = now;
+                LockSupport.parkNanos(this, nanos);
+            }
+            else
+                LockSupport.park(this);
+        }
+    }
+
+    /**
+     * Try to unlink a timed-out or interrupted wait node to avoid
+     * accumulating garbage. Internal nodes are simply unspliced
+     * without CAS since it is harmless if they are traversed anyway
+     * by releasers or concurrent calls to removeWaiter.
+     */
+    private void removeWaiter(WaitNode node) {
+        if (node != null) {
+            node.thread = null;
+            WaitNode pred = null;
+            WaitNode q = waiters;
+            while (q != null) {
+                WaitNode next = node.next;
+                if (q != node) {
+                    pred = q;
+                    q = next;
+                }
+                else if (pred != null) {
+                    pred.next = next;
+                    break;
+                }
+                else if (UNSAFE.compareAndSwapObject(this, waitersOffset,
+                                                     q, next))
+                    break;
+                else { // restart on CAS failure
+                    pred = null;
+                    q = waiters;
+                }
+            }
+        }
+    }
+
+    // Unsafe mechanics
+    private static final sun.misc.Unsafe UNSAFE;
+    private static final long stateOffset;
+    private static final long runnerOffset;
+    private static final long waitersOffset;
+    static {
+        try {
+            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            Class<?> k = FutureTask.class;
+            stateOffset = UNSAFE.objectFieldOffset
+                (k.getDeclaredField("state"));
+            runnerOffset = UNSAFE.objectFieldOffset
+                (k.getDeclaredField("runner"));
+            waitersOffset = UNSAFE.objectFieldOffset
+                (k.getDeclaredField("waiters"));
+        } catch (Exception e) {
+            throw new Error(e);
+        }
+    }
+
 }

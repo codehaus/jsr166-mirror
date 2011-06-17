@@ -45,14 +45,15 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
 
     /**
-     * The run state of this task, initially 0.  The run state
+     * The run state of this task, initially UNDECIDED.  The run state
      * transitions to NORMAL, EXCEPTIONAL, or CANCELLED (only) in
-     * method setCompletion. During setCompletion, state may take on
+     * method setCompletion.  During setCompletion, state may take on
      * transient values of COMPLETING (while outcome is being set) or
-     * INTERRUPTING (while interrupting the runner).  State values
-     * are ordered and set to powers of two to simplify checks.
+     * INTERRUPTING (while interrupting the runner).  State values are
+     * ordered and set to powers of two to simplify checks.
      */
     private volatile int state;
+    private static final int UNDECIDED    = 0x00;
     private static final int COMPLETING   = 0x01;
     private static final int INTERRUPTING = 0x02;
     private static final int NORMAL       = 0x04;
@@ -78,7 +79,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      *
      * @param x the outcome
      * @param mode the completion state value
-     * @return true if this call caused transition from 0 to completed
+     * @return true if this call caused transition from UNDECIDED to completed
      */
     private boolean setCompletion(Object x, int mode) {
         Thread r = runner;
@@ -89,8 +90,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     (x != null) ? COMPLETING : mode);
         for (;;) {
             int s = state;
-            if (s == 0) {
-                if (UNSAFE.compareAndSwapInt(this, stateOffset, 0, next)) {
+            if (s == UNDECIDED) {
+                if (UNSAFE.compareAndSwapInt(this, stateOffset,
+                                             UNDECIDED, next)) {
                     if (next == INTERRUPTING) {
                         Thread t = runner; // recheck
                         if (t != null)
@@ -162,11 +164,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public boolean isDone() {
-        return state != 0;
+        return state != UNDECIDED;
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return state == 0 &&
+        return state == UNDECIDED &&
             setCompletion(null, mayInterruptIfRunning ?
                           INTERRUPTING : CANCELLED);
     }
@@ -232,7 +234,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public void run() {
-        if (state == 0 &&
+        if (state == UNDECIDED &&
             UNSAFE.compareAndSwapObject(this, runnerOffset,
                                         null, Thread.currentThread())) {
             V result;
@@ -256,7 +258,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        if (state != 0 ||
+        if (state != UNDECIDED ||
             !UNSAFE.compareAndSwapObject(this, runnerOffset,
                                          null, Thread.currentThread()))
             return false;
@@ -269,7 +271,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         runner = null;
         for (;;) {
             int s = state;
-            if (s == 0)
+            if (s == UNDECIDED)
                 return true;
             if (s != INTERRUPTING)
                 return false;

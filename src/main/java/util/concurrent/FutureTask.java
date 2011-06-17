@@ -91,7 +91,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
         if (!UNSAFE.compareAndSwapInt(this, stateOffset, UNDECIDED, next))
             return false;
         if (next == INTERRUPTING) {
-            Thread t = runner; // recheck to avoid leaked interrupt
+            // Must check after CAS to avoid missed interrupt
+            Thread t = runner;
             if (t != null)
                 t.interrupt();
             state = INTERRUPTED;
@@ -159,8 +160,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     public boolean cancel(boolean mayInterruptIfRunning) {
         return state == UNDECIDED &&
-            setCompletion(null, (mayInterruptIfRunning && runner != null) ?
-                          INTERRUPTING : CANCELLED);
+            setCompletion(null,
+                          mayInterruptIfRunning ? INTERRUPTING : CANCELLED);
     }
 
     /**
@@ -230,6 +231,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
             return;
 
         try {
+            // Recheck to avoid missed interrupt.
+            if (state != UNDECIDED)
+                return;
             V result;
             try {
                 result = callable.call();
@@ -265,6 +269,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
             return false;
 
         try {
+            // Recheck to avoid missed interrupt.
+            if (state != UNDECIDED)
+                return false;
             try {
                 callable.call(); // don't set result
                 return (state == UNDECIDED);

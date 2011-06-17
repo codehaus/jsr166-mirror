@@ -46,19 +46,27 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     /**
      * The run state of this task, initially UNDECIDED.  The run state
-     * transitions to NORMAL, EXCEPTIONAL, or CANCELLED (only) in
-     * method setCompletion.  During setCompletion, state may take on
-     * transient values of COMPLETING (while outcome is being set) or
-     * INTERRUPTING (while interrupting the runner).  State values are
-     * ordered and set to powers of two to simplify checks.
+     * transitions to a terminal state only in method setCompletion.
+     * During setCompletion, state may take on transient values of
+     * COMPLETING (while outcome is being set) or INTERRUPTING (only
+     * while interrupting the runner to satisfy a cancel(true)).
+     * State values are ordered and set to powers of two to simplify
+     * checks.
+     *
+     * Possible state transitions:
+     * UNDECIDED -> COMPLETING -> NORMAL
+     * UNDECIDED -> COMPLETING -> EXCEPTIONAL
+     * UNDECIDED -> CANCELLED
+     * UNDECIDED -> INTERRUPTING -> INTERRUPTED
      */
     private volatile int state;
     private static final int UNDECIDED    = 0x00;
     private static final int COMPLETING   = 0x01;
-    private static final int INTERRUPTING = 0x02;
-    private static final int NORMAL       = 0x04;
-    private static final int EXCEPTIONAL  = 0x08;
-    private static final int CANCELLED    = 0x10;
+    private static final int NORMAL       = 0x02;
+    private static final int EXCEPTIONAL  = 0x04;
+    private static final int CANCELLED    = 0x08;
+    private static final int INTERRUPTING = 0x10;
+    private static final int INTERRUPTED  = 0x20;
 
     /** The underlying callable */
     private final Callable<V> callable;
@@ -71,28 +79,23 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     /**
      * Sets completion status, unless already completed.  If
-     * necessary, we first set state to COMPLETING or INTERRUPTING to
-     * establish precedence.  This intentionally stalls (just via
-     * yields) in (uncommon) cases of concurrent calls during
-     * cancellation until state is set, to avoid surprising users
-     * during cancellation races.
+     * necessary, we first set state to transient states COMPLETING
+     * or INTERRUPTING to establish precedence.
      *
      * @param x the outcome
      * @param mode the completion state value
      * @return true if this call caused transition from UNDECIDED to completed
      */
     private boolean setCompletion(Object x, int mode) {
-        int next = ((mode == INTERRUPTING) ? // set up transient states
-                    (runner != null) ? INTERRUPTING : CANCELLED :
-                    (x != null) ? COMPLETING : mode);
-        if (!UNSAFE.compareAndSwapInt(this, stateOffset,
-                                      UNDECIDED, next))
+        // set up transient states
+        int next = (x != null) ? COMPLETING : mode;
+        if (!UNSAFE.compareAndSwapInt(this, stateOffset, UNDECIDED, next))
             return false;
         if (next == INTERRUPTING) {
-            Thread t = runner; // recheck
+            Thread t = runner; // recheck to avoid leaked interrupt
             if (t != null)
                 t.interrupt();
-            state = CANCELLED;
+            state = INTERRUPTED;
         }
         else if (next == COMPLETING) {
             outcome = x;
@@ -113,7 +116,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         Object x = outcome;
         if (s == NORMAL)
             return (V)x;
-        if ((s & (CANCELLED | INTERRUPTING)) != 0)
+        if (s >= CANCELLED)
             throw new CancellationException();
         throw new ExecutionException((Throwable)x);
     }
@@ -148,7 +151,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public boolean isCancelled() {
-        return (state & (CANCELLED | INTERRUPTING)) != 0;
+        return state >= CANCELLED;
     }
 
     public boolean isDone() {
@@ -157,7 +160,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     public boolean cancel(boolean mayInterruptIfRunning) {
         return state == UNDECIDED &&
-            setCompletion(null, mayInterruptIfRunning ?
+            setCompletion(null, (mayInterruptIfRunning && runner != null) ?
                           INTERRUPTING : CANCELLED);
     }
 
@@ -238,8 +241,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
             set(result);
         } finally {
             runner = null;
-            while (state == INTERRUPTING)
-                Thread.yield(); // wait out pending cancellation interrupt
+            int s = state;
+            if (s >= INTERRUPTING) {
+                while ((s = state) == INTERRUPTING)
+                    Thread.yield(); // wait out pending cancellation interrupt
+                Thread.interrupted(); // clear any interrupt from cancel(true)
+            }
         }
     }
 
@@ -268,8 +275,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
             }
         } finally {
             runner = null;
-            while (state == INTERRUPTING)
-                Thread.yield(); // wait out pending cancellation interrupt
+            int s = state;
+            if (s >= INTERRUPTING) {
+                while ((s = state) == INTERRUPTING)
+                    Thread.yield(); // wait out pending cancellation interrupt
+                Thread.interrupted(); // clear any interrupt from cancel(true)
+            }
         }
     }
 

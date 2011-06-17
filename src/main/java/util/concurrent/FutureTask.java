@@ -309,7 +309,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     private int awaitDone(boolean timed, long nanos)
         throws InterruptedException {
-        long last = timed? System.nanoTime() : 0L;
+        long last = timed ? System.nanoTime() : 0L;
         WaitNode q = null;
         boolean queued = false;
         for (int s;;) {

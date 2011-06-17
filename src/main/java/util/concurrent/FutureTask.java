@@ -232,9 +232,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public void run() {
-        Thread r = Thread.currentThread();
         if (state == 0 &&
-            UNSAFE.compareAndSwapObject(this, runnerOffset, null, r)) {
+            UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                        null, Thread.currentThread())) {
             V result;
             try {
                 result = callable.call();

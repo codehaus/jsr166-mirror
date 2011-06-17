@@ -50,8 +50,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * During setCompletion, state may take on transient values of
      * COMPLETING (while outcome is being set) or INTERRUPTING (only
      * while interrupting the runner to satisfy a cancel(true)).
-     * State values are ordered and set to powers of two to simplify
-     * checks.
+     * State values are highly order-dependent to simplify checks.
      *
      * Possible state transitions:
      * UNDECIDED -> COMPLETING -> NORMAL
@@ -60,13 +59,13 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * UNDECIDED -> INTERRUPTING -> INTERRUPTED
      */
     private volatile int state;
-    private static final int UNDECIDED    = 0x00;
-    private static final int COMPLETING   = 0x01;
-    private static final int NORMAL       = 0x02;
-    private static final int EXCEPTIONAL  = 0x04;
-    private static final int CANCELLED    = 0x08;
-    private static final int INTERRUPTING = 0x10;
-    private static final int INTERRUPTED  = 0x20;
+    private static final int UNDECIDED    = 0;
+    private static final int COMPLETING   = 1;
+    private static final int NORMAL       = 2;
+    private static final int EXCEPTIONAL  = 3;
+    private static final int CANCELLED    = 4;
+    private static final int INTERRUPTING = 5;
+    private static final int INTERRUPTED  = 6;
 
     /** The underlying callable */
     private final Callable<V> callable;

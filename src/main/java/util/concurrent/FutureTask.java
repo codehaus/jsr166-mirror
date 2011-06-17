@@ -82,38 +82,26 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if this call caused transition from UNDECIDED to completed
      */
     private boolean setCompletion(Object x, int mode) {
-        Thread r = runner;
-        if (r == Thread.currentThread()) // null out runner on completion
-            UNSAFE.putObject(this, runnerOffset, r = null); // nonvolatile OK
         int next = ((mode == INTERRUPTING) ? // set up transient states
-                    (r != null) ? INTERRUPTING : CANCELLED :
+                    (runner != null) ? INTERRUPTING : CANCELLED :
                     (x != null) ? COMPLETING : mode);
-        for (;;) {
-            int s = state;
-            if (s == UNDECIDED) {
-                if (UNSAFE.compareAndSwapInt(this, stateOffset,
-                                             UNDECIDED, next)) {
-                    if (next == INTERRUPTING) {
-                        Thread t = runner; // recheck
-                        if (t != null)
-                            t.interrupt();
-                        state = CANCELLED;
-                    }
-                    else if (next == COMPLETING) {
-                        outcome = x;
-                        state = mode;
-                    }
-                    if (waiters != null)
-                        releaseAll();
-                    done();
-                    return true;
-                }
-            }
-            else if (s == INTERRUPTING)
-                Thread.yield(); // wait out pending cancellation interrupt
-            else
-                return false;
+        if (!UNSAFE.compareAndSwapInt(this, stateOffset,
+                                      UNDECIDED, next))
+            return false;
+        if (next == INTERRUPTING) {
+            Thread t = runner; // recheck
+            if (t != null)
+                t.interrupt();
+            state = CANCELLED;
         }
+        else if (next == COMPLETING) {
+            outcome = x;
+            state = mode;
+        }
+        if (waiters != null)
+            releaseAll();
+        done();
+        return true;
     }
 
     /**
@@ -234,9 +222,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public void run() {
-        if (state == UNDECIDED &&
-            UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                        null, Thread.currentThread())) {
+        if (state != UNDECIDED ||
+            !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                         null, Thread.currentThread()))
+            return;
+
+        try {
             V result;
             try {
                 result = callable.call();
@@ -245,6 +236,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 return;
             }
             set(result);
+        } finally {
+            runner = null;
+            while (state == INTERRUPTING)
+                Thread.yield(); // wait out pending cancellation interrupt
         }
     }
 
@@ -262,20 +257,19 @@ public class FutureTask<V> implements RunnableFuture<V> {
             !UNSAFE.compareAndSwapObject(this, runnerOffset,
                                          null, Thread.currentThread()))
             return false;
+
         try {
-            callable.call(); // don't set result
-        } catch (Throwable ex) {
-            setException(ex);
-            return false;
-        }
-        runner = null;
-        for (;;) {
-            int s = state;
-            if (s == UNDECIDED)
-                return true;
-            if (s != INTERRUPTING)
+            try {
+                callable.call(); // don't set result
+                return (state == UNDECIDED);
+            } catch (Throwable ex) {
+                setException(ex);
                 return false;
-            Thread.yield(); // wait out pending cancellation interrupt
+            }
+        } finally {
+            runner = null;
+            while (state == INTERRUPTING)
+                Thread.yield(); // wait out pending cancellation interrupt
         }
     }
 

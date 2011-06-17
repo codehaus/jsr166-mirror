@@ -256,9 +256,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        Thread r = Thread.currentThread();
         if (state != 0 ||
-            !UNSAFE.compareAndSwapObject(this, runnerOffset, null, r))
+            !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                         null, Thread.currentThread()))
             return false;
         try {
             callable.call(); // don't set result

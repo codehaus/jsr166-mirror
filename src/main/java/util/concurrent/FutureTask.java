@@ -53,6 +53,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * State values are highly order-dependent to simplify checks.
      *
      * Possible state transitions:
+     * UNDECIDED -> NORMAL
      * UNDECIDED -> COMPLETING -> NORMAL
      * UNDECIDED -> COMPLETING -> EXCEPTIONAL
      * UNDECIDED -> CANCELLED

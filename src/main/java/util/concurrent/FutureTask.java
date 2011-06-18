@@ -161,10 +161,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        long nanos = unit.toNanos(timeout);
+        if (unit == null)
+            throw new NullPointerException();
         int s = state;
         if (s <= COMPLETING &&
-            (s = awaitDone(true, nanos)) <= COMPLETING)
+            (s = awaitDone(true, unit.toNanos(timeout))) <= COMPLETING)
             throw new TimeoutException();
         return report(s);
     }

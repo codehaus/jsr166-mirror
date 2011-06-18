@@ -381,7 +381,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
             WaitNode pred = null;
             WaitNode q = waiters;
             while (q != null) {
-                WaitNode next = node.next;
+                WaitNode next = q.next;
                 if (q != node) {
                     pred = q;
                     q = next;

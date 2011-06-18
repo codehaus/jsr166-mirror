@@ -378,9 +378,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private void removeWaiter(WaitNode node) {
         if (node != null) {
             node.thread = null;
-            WaitNode pred = null;
-            WaitNode q = waiters;
-            while (q != null) {
+            for (WaitNode pred = null, q = waiters; q != null;) {
                 WaitNode next = q.next;
                 if (q != node) {
                     pred = q;

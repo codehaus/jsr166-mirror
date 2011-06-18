@@ -68,8 +68,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private static final int INTERRUPTING = 5;
     private static final int INTERRUPTED  = 6;
 
-    /** The underlying callable */
-    private final Callable<V> callable;
+    /** The underlying callable; normally nulled out after use */
+    private Callable<V> callable;
     /** The result to return or exception to throw from get() */
     private Object outcome; // non-volatile, protected by state reads/writes
     /** The thread running the callable; CASed during run() */
@@ -133,6 +133,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         if (callable == null)
             throw new NullPointerException();
         this.callable = callable;
+        this.state = NEW;
     }
 
     /**
@@ -149,6 +150,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public FutureTask(Runnable runnable, V result) {
         this.callable = Executors.callable(runnable, result);
+        this.state = NEW;
     }
 
     public boolean isCancelled() {
@@ -226,30 +228,28 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public void run() {
-        if (state != NEW ||
-            !UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                         null, Thread.currentThread()))
-            return;
-
-        try {
-            // Recheck to avoid missed interrupt.
-            if (state != NEW)
-                return;
-            V result;
-            try {
-                result = callable.call();
-            } catch (Throwable ex) {
-                setException(ex);
-                return;
+        if (state == NEW &&
+            UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                        null, Thread.currentThread())) {
+            Callable<V> c = callable;
+            if (c != null && state == NEW) {
+                V result = null;
+                boolean ran = false;
+                try {
+                    result = c.call();
+                    ran = true;
+                } catch (Throwable ex) {
+                    setException(ex);
+                }
+                if (ran)
+                    set(result);
+                callable = null;       // null out upon use to reduce footprint
             }
-            set(result);
-        } finally {
             runner = null;
-            int s = state;
-            if (s >= INTERRUPTING) {
-                while ((s = state) == INTERRUPTING)
-                    Thread.yield(); // wait out pending cancellation interrupt
-                Thread.interrupted(); // clear any interrupt from cancel(true)
+            if (state >= INTERRUPTING) {
+                while (state == INTERRUPTING)
+                    Thread.yield();   // wait out pending interrupt
+                Thread.interrupted(); // clear interrupt from cancel(true)
             }
         }
     }
@@ -264,31 +264,33 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        if (state != NEW ||
-            !UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                         null, Thread.currentThread()))
-            return false;
-
-        try {
-            // Recheck to avoid missed interrupt.
-            if (state != NEW)
-                return false;
-            try {
-                callable.call(); // don't set result
-                return (state == NEW);
-            } catch (Throwable ex) {
-                setException(ex);
-                return false;
+        boolean rerun = false; // true if this task can be re-run
+        if (state == NEW &&
+            UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                        null, Thread.currentThread())) {
+            Callable<V> c = callable;
+            if (c != null && state == NEW) {
+                try {
+                    c.call(); // don't set result
+                    rerun = true;
+                } catch (Throwable ex) {
+                    setException(ex);
+                }
             }
-        } finally {
             runner = null;
             int s = state;
-            if (s >= INTERRUPTING) {
-                while ((s = state) == INTERRUPTING)
-                    Thread.yield(); // wait out pending cancellation interrupt
-                Thread.interrupted(); // clear any interrupt from cancel(true)
+            if (s != NEW) {
+                rerun = false;
+                if (s >= INTERRUPTING) {
+                    while (state == INTERRUPTING)
+                        Thread.yield();   // wait out pending interrupt
+                    Thread.interrupted(); // clear interrupt from cancel(true)
+                }
             }
+            if (!rerun)
+                callable = null;
         }
+        return rerun;
     }
 
     /**

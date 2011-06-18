@@ -319,7 +319,6 @@ public class RecursiveTaskTest extends JSR166TestCase {
         assertEquals(21, (int) testInvokeOnPool(mainPool(), a));
     }
 
-
     /**
      * helpQuiesce returns when tasks are complete.
      * getQueuedTaskCount returns 0 when quiescent
@@ -336,7 +335,6 @@ public class RecursiveTaskTest extends JSR166TestCase {
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
-
 
     /**
      * invoke task throws exception when task completes abnormally
@@ -762,7 +760,6 @@ public class RecursiveTaskTest extends JSR166TestCase {
             }};
         assertSame(NoResult, testInvokeOnPool(mainPool(), a));
     }
-
 
     /**
      * invokeAll(tasks) with any null task throws NPE

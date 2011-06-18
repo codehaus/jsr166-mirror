@@ -471,7 +471,7 @@ public class FutureTaskTest extends JSR166TestCase {
 
         threadStarted.await();
         t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
         checkNotDone(task);
     }
 
@@ -484,12 +484,12 @@ public class FutureTaskTest extends JSR166TestCase {
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws Exception {
                 threadStarted.countDown();
-                task.get(LONG_DELAY_MS, MILLISECONDS);
+                task.get(2*LONG_DELAY_MS, MILLISECONDS);
             }});
 
         threadStarted.await();
         t.interrupt();
-        awaitTermination(t, MEDIUM_DELAY_MS);
+        awaitTermination(t);
         checkNotDone(task);
     }
 

@@ -293,8 +293,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Removes and signals all waiting threads, and
-     * invokes done();
+     * Removes and signals all waiting threads, and invokes done().
      */
     private void finishCompletion() {
         WaitNode q;

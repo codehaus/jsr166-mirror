@@ -298,7 +298,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     static final class WaitNode {
         volatile Thread thread;
-        WaitNode next;
+        volatile WaitNode next;
+        WaitNode() { thread = Thread.currentThread(); }
     }
 
     /**
@@ -353,8 +354,6 @@ public class FutureTask<V> implements RunnableFuture<V> {
             else if (!queued)
                 queued = UNSAFE.compareAndSwapObject(this, waitersOffset,
                                                      q.next = waiters, q);
-            else if (q.thread == null)
-                q.thread = Thread.currentThread();
             else if (timed) {
                 long now = System.nanoTime();
                 if ((nanos -= (now - last)) <= 0L) {
@@ -373,26 +372,28 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * Tries to unlink a timed-out or interrupted wait node to avoid
      * accumulating garbage.  Internal nodes are simply unspliced
      * without CAS since it is harmless if they are traversed anyway
-     * by releasers or concurrent calls to removeWaiter.
+     * by releasers. To avoid effects of unsplicing from already
+     * removed nodes, the list is retraversed until no cancelled nodes
+     * are found.  This is slow when there are a lot of nodes, but we
+     * don't expect lists to be long enough to outweigh
+     * higher-overhead schemes.
      */
     private void removeWaiter(WaitNode node) {
         if (node != null) {
             node.thread = null;
             for (WaitNode pred = null, q = waiters; q != null;) {
                 WaitNode next = q.next;
-                if (q != node) {
+                if (q.thread != null) {
                     pred = q;
                     q = next;
                 }
-                else if (pred != null) {
-                    pred.next = next;
-                    break;
-                }
-                else if (UNSAFE.compareAndSwapObject(this, waitersOffset,
-                                                     q, next))
-                    break;
-                else { // restart on CAS failure
-                    pred = null;
+                else {
+                    if (pred != null)
+                        pred.next = next;
+                    else
+                        UNSAFE.compareAndSwapObject(this, waitersOffset,
+                                                    q, next);
+                    pred = null; // restart until clean sweep
                     q = waiters;
                 }
             }

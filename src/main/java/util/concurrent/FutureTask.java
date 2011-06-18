@@ -296,8 +296,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * Removes and signals all waiting threads, and invokes done().
      */
     private void finishCompletion() {
-        WaitNode q;
-        while ((q = waiters) != null) {
+        for (WaitNode q; (q = waiters) != null;) {
             if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
                 for (;;) {
                     Thread t = q.thread;
@@ -364,30 +363,31 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * Tries to unlink a timed-out or interrupted wait node to avoid
      * accumulating garbage.  Internal nodes are simply unspliced
      * without CAS since it is harmless if they are traversed anyway
-     * by releasers. To avoid effects of unsplicing from already
-     * removed nodes, the list is retraversed until no cancelled nodes
-     * are found.  This is slow when there are a lot of nodes, but we
-     * don't expect lists to be long enough to outweigh
-     * higher-overhead schemes.
+     * by releasers.  To avoid effects of unsplicing from already
+     * removed nodes, the list is retraversed in case of an apparent
+     * race.  This is slow when there are a lot of nodes, but we don't
+     * expect lists to be long enough to outweigh higher-overhead
+     * schemes.
      */
     private void removeWaiter(WaitNode node) {
         if (node != null) {
             node.thread = null;
-            for (WaitNode pred = null, q = waiters; q != null;) {
-                WaitNode next = q.next;
-                if (q.thread != null) {
-                    pred = q;
-                    q = next;
+            retry:
+            for (;;) {          // restart on removeWaiter race
+                for (WaitNode pred = null, q = waiters, s; q != null; q = s) {
+                    s = q.next;
+                    if (q.thread != null)
+                        pred = q;
+                    else if (pred != null) {
+                        pred.next = s;
+                        if (pred.thread == null) // check for race
+                            continue retry;
+                    }
+                    else if (!UNSAFE.compareAndSwapObject(this, waitersOffset,
+                                                          q, s))
+                        continue retry;
                 }
-                else {
-                    if (pred != null)
-                        pred.next = next;
-                    else
-                        UNSAFE.compareAndSwapObject(this, waitersOffset,
-                                                    q, next);
-                    pred = null; // restart until clean sweep
-                    q = waiters;
-                }
+                break;
             }
         }
     }

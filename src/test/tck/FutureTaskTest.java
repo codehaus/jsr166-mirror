@@ -148,7 +148,6 @@ public class FutureTaskTest extends JSR166TestCase {
         checkCancelled(task);
     }
 
-
     /**
      * setting value causes get to return it
      */
@@ -420,7 +419,6 @@ public class FutureTaskTest extends JSR166TestCase {
         checkCancelled(task);
     }
 
-
     /**
      * A runtime exception in task causes get to throw ExecutionException
      */
@@ -458,7 +456,6 @@ public class FutureTaskTest extends JSR166TestCase {
             checkCompletedAbnormally(task, success.getCause());
         }
     }
-
 
     /**
      * Interrupting a waiting get causes it to throw InterruptedException

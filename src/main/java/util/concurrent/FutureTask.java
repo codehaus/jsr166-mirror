@@ -46,14 +46,15 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     /**
      * The run state of this task, initially NEW.  The run state
-     * transitions to a terminal state only in method setCompletion.
-     * During setCompletion, state may take on transient values of
-     * COMPLETING (while outcome is being set) or INTERRUPTING (only
-     * while interrupting the runner to satisfy a cancel(true)).
-     * State values are highly order-dependent to simplify checks.
+     * transitions to a terminal state only in methods set,
+     * setException, and cancel.  During completion, state may take on
+     * transient values of COMPLETING (while outcome is being set) or
+     * INTERRUPTING (only while interrupting the runner to satisfy a
+     * cancel(true)). Transitions from these intermediate to final
+     * states use cheaper ordered/lazy writes because values are unique
+     * and cannot be further modified.
      *
      * Possible state transitions:
-     * NEW -> NORMAL
      * NEW -> COMPLETING -> NORMAL
      * NEW -> COMPLETING -> EXCEPTIONAL
      * NEW -> CANCELLED
@@ -68,45 +69,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private static final int INTERRUPTING = 5;
     private static final int INTERRUPTED  = 6;
 
-    /** The underlying callable */
-    private final Callable<V> callable;
+    /** The underlying callable; nulled out after running */
+    private Callable<V> callable;
     /** The result to return or exception to throw from get() */
     private Object outcome; // non-volatile, protected by state reads/writes
     /** The thread running the callable; CASed during run() */
     private volatile Thread runner;
     /** Treiber stack of waiting threads */
     private volatile WaitNode waiters;
-
-    /**
-     * Sets completion status, unless already completed.  If
-     * necessary, we first set state to transient states COMPLETING
-     * or INTERRUPTING to establish precedence.
-     *
-     * @param x the outcome
-     * @param mode the completion state value
-     * @return true if this call caused transition from NEW to completed
-     */
-    private boolean setCompletion(Object x, int mode) {
-        // set up transient states
-        int next = (x != null) ? COMPLETING : mode;
-        if (!UNSAFE.compareAndSwapInt(this, stateOffset, NEW, next))
-            return false;
-        if (next == INTERRUPTING) {
-            // Must check after CAS to avoid missed interrupt
-            Thread t = runner;
-            if (t != null)
-                t.interrupt();
-            state = INTERRUPTED;
-        }
-        else if (next == COMPLETING) {
-            outcome = x;
-            state = mode;
-        }
-        if (waiters != null)
-            releaseAll();
-        done();
-        return true;
-    }
 
     /**
      * Returns result or throws exception for completed task.
@@ -133,6 +103,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         if (callable == null)
             throw new NullPointerException();
         this.callable = callable;
+        this.state = NEW;
     }
 
     /**
@@ -149,6 +120,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public FutureTask(Runnable runnable, V result) {
         this.callable = Executors.callable(runnable, result);
+        this.state = NEW;
     }
 
     public boolean isCancelled() {
@@ -160,9 +132,20 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return state == NEW &&
-            setCompletion(null,
-                          mayInterruptIfRunning ? INTERRUPTING : CANCELLED);
+        if (state != NEW)
+            return false;
+        if (mayInterruptIfRunning) {
+            if (!UNSAFE.compareAndSwapInt(this, stateOffset, NEW, INTERRUPTING))
+                return false;
+            Thread t = runner;
+            if (t != null)
+                t.interrupt();
+            UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED); // final state
+        }
+        else if (!UNSAFE.compareAndSwapInt(this, stateOffset, NEW, CANCELLED))
+            return false;
+        finishCompletion();
+        return true;
     }
 
     /**
@@ -170,9 +153,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get() throws InterruptedException, ExecutionException {
         int s = state;
-        if (s <= COMPLETING)
-            s = awaitDone(false, 0L);
-        return report(s);
+        return report(s <= COMPLETING ? awaitDone(false, 0L) : s);
     }
 
     /**
@@ -180,9 +161,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
+        long nanos = unit.toNanos(timeout);
         int s = state;
         if (s <= COMPLETING &&
-            (s = awaitDone(true, unit.toNanos(timeout))) <= COMPLETING)
+            (s = awaitDone(true, nanos)) <= COMPLETING)
             throw new TimeoutException();
         return report(s);
     }
@@ -208,7 +190,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param v the value
      */
     protected void set(V v) {
-        setCompletion(v, NORMAL);
+        if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+            outcome = v;
+            UNSAFE.putOrderedInt(this, stateOffset, NORMAL); // final state
+            finishCompletion();
+        }
     }
 
     /**
@@ -222,34 +208,36 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param t the cause of failure
      */
     protected void setException(Throwable t) {
-        setCompletion(t, EXCEPTIONAL);
+        if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+            outcome = t;
+            UNSAFE.putOrderedInt(this, stateOffset, EXCEPTIONAL); // final state
+            finishCompletion();
+        }
     }
 
     public void run() {
-        if (state != NEW ||
-            !UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                         null, Thread.currentThread()))
-            return;
-
-        try {
-            // Recheck to avoid missed interrupt.
-            if (state != NEW)
-                return;
-            V result;
-            try {
-                result = callable.call();
-            } catch (Throwable ex) {
-                setException(ex);
-                return;
+        if (state == NEW &&
+            UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                        null, Thread.currentThread())) {
+            Callable<V> c = callable;
+            if (c != null && state == NEW) {
+                V result = null;
+                boolean ran = false;
+                try {
+                    result = c.call();
+                    ran = true;
+                } catch (Throwable ex) {
+                    setException(ex);
+                }
+                if (ran)
+                    set(result);
+                callable = null;       // null out upon use to reduce footprint
             }
-            set(result);
-        } finally {
             runner = null;
-            int s = state;
-            if (s >= INTERRUPTING) {
-                while ((s = state) == INTERRUPTING)
-                    Thread.yield(); // wait out pending cancellation interrupt
-                Thread.interrupted(); // clear any interrupt from cancel(true)
+            if (state >= INTERRUPTING) {
+                while (state == INTERRUPTING)
+                    Thread.yield();   // wait out pending interrupt
+                Thread.interrupted(); // clear interrupt from cancel(true)
             }
         }
     }
@@ -264,31 +252,33 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        if (state != NEW ||
-            !UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                         null, Thread.currentThread()))
-            return false;
-
-        try {
-            // Recheck to avoid missed interrupt.
-            if (state != NEW)
-                return false;
-            try {
-                callable.call(); // don't set result
-                return (state == NEW);
-            } catch (Throwable ex) {
-                setException(ex);
-                return false;
+        boolean rerun = false; // true if this task can be re-run
+        if (state == NEW &&
+            UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                        null, Thread.currentThread())) {
+            Callable<V> c = callable;
+            if (c != null && state == NEW) {
+                try {
+                    c.call(); // don't set result
+                    rerun = true;
+                } catch (Throwable ex) {
+                    setException(ex);
+                }
             }
-        } finally {
             runner = null;
             int s = state;
-            if (s >= INTERRUPTING) {
-                while ((s = state) == INTERRUPTING)
-                    Thread.yield(); // wait out pending cancellation interrupt
-                Thread.interrupted(); // clear any interrupt from cancel(true)
+            if (s != NEW) {
+                rerun = false;
+                if (s >= INTERRUPTING) {
+                    while (state == INTERRUPTING)
+                        Thread.yield();   // wait out pending interrupt
+                    Thread.interrupted(); // clear interrupt from cancel(true)
+                }
             }
+            if (!rerun)
+                callable = null;
         }
+        return rerun;
     }
 
     /**
@@ -298,13 +288,15 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     static final class WaitNode {
         volatile Thread thread;
-        WaitNode next;
+        volatile WaitNode next;
+        WaitNode() { thread = Thread.currentThread(); }
     }
 
     /**
-     * Removes and signals all waiting threads.
+     * Removes and signals all waiting threads, and
+     * invokes done();
      */
-    private void releaseAll() {
+    private void finishCompletion() {
         WaitNode q;
         while ((q = waiters) != null) {
             if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
@@ -316,12 +308,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     }
                     WaitNode next = q.next;
                     if (next == null)
-                        return;
+                        break;
                     q.next = null; // unlink to help gc
                     q = next;
                 }
+                break;
             }
         }
+        done();
     }
 
     /**
@@ -353,8 +347,6 @@ public class FutureTask<V> implements RunnableFuture<V> {
             else if (!queued)
                 queued = UNSAFE.compareAndSwapObject(this, waitersOffset,
                                                      q.next = waiters, q);
-            else if (q.thread == null)
-                q.thread = Thread.currentThread();
             else if (timed) {
                 long now = System.nanoTime();
                 if ((nanos -= (now - last)) <= 0L) {
@@ -373,26 +365,28 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * Tries to unlink a timed-out or interrupted wait node to avoid
      * accumulating garbage.  Internal nodes are simply unspliced
      * without CAS since it is harmless if they are traversed anyway
-     * by releasers or concurrent calls to removeWaiter.
+     * by releasers. To avoid effects of unsplicing from already
+     * removed nodes, the list is retraversed until no cancelled nodes
+     * are found.  This is slow when there are a lot of nodes, but we
+     * don't expect lists to be long enough to outweigh
+     * higher-overhead schemes.
      */
     private void removeWaiter(WaitNode node) {
         if (node != null) {
             node.thread = null;
             for (WaitNode pred = null, q = waiters; q != null;) {
                 WaitNode next = q.next;
-                if (q != node) {
+                if (q.thread != null) {
                     pred = q;
                     q = next;
                 }
-                else if (pred != null) {
-                    pred.next = next;
-                    break;
-                }
-                else if (UNSAFE.compareAndSwapObject(this, waitersOffset,
-                                                     q, next))
-                    break;
-                else { // restart on CAS failure
-                    pred = null;
+                else {
+                    if (pred != null)
+                        pred.next = next;
+                    else
+                        UNSAFE.compareAndSwapObject(this, waitersOffset,
+                                                    q, next);
+                    pred = null; // restart until clean sweep
                     q = waiters;
                 }
             }

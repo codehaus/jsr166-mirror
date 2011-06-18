@@ -232,7 +232,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 }
                 if (ran)
                     set(result);
-                callable = null;       // null out upon use to reduce footprint
+                callable = null;      // null out upon use to reduce footprint
             }
             runner = null;
             if (state >= INTERRUPTING) {

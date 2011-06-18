@@ -35,7 +35,6 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         return a;
     }
 
-
     /**
      * a new list is empty
      */
@@ -67,7 +66,6 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i)
             assertEquals(ints[i], a.get(i));
     }
-
 
     /**
      * addAll adds each element from the given collection
@@ -123,7 +121,6 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         assertEquals(0, full.size());
     }
 
-
     /**
      * Cloned list is equal
      */
@@ -177,7 +174,6 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         assertTrue(b.equals(a));
         assertEquals(a.hashCode(), b.hashCode());
     }
-
 
     /**
      * containsAll returns true for collection with subset of elements
@@ -376,7 +372,6 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         assertEquals(1, i[1].intValue());
         assertEquals(2, i[2].intValue());
     }
-
 
     /**
      * sublists contains elements at indexes offset from their base

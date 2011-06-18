@@ -97,7 +97,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * given {@code Callable}.
      *
      * @param  callable the callable task
-     * @throws NullPointerException if callable is null
+     * @throws NullPointerException if the callable is null
      */
     public FutureTask(Callable<V> callable) {
         if (callable == null)
@@ -116,7 +116,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * you don't need a particular result, consider using
      * constructions of the form:
      * {@code Future<?> f = new FutureTask<Void>(runnable, null)}
-     * @throws NullPointerException if runnable is null
+     * @throws NullPointerException if the runnable is null
      */
     public FutureTask(Runnable runnable, V result) {
         this.callable = Executors.callable(runnable, result);

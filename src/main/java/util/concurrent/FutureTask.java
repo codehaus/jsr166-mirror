@@ -308,7 +308,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * nulls out callable.
      */
     private void finishCompletion() {
-        // assert state > NEW;
+        // assert state > COMPLETING;
         for (WaitNode q; (q = waiters) != null;) {
             if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
                 for (;;) {

@@ -287,7 +287,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
             while ((s = state) == INTERRUPTING)
                 Thread.yield(); // wait out pending interrupt
         }
-        assert state == INTERRUPTED;
+        // assert state == INTERRUPTED;
         // Clear any interrupt we may have received.
         Thread.interrupted();   // clear interrupt from cancel(true)
     }
@@ -308,7 +308,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * nulls out callable.
      */
     private void finishCompletion() {
-        assert state > NEW;
+        // assert state > NEW;
         for (WaitNode q; (q = waiters) != null;) {
             if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
                 for (;;) {

@@ -103,7 +103,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         if (callable == null)
             throw new NullPointerException();
         this.callable = callable;
-        this.state = NEW;
+        this.state = NEW;       // ensure visibility of callable
     }
 
     /**
@@ -120,7 +120,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public FutureTask(Runnable runnable, V result) {
         this.callable = Executors.callable(runnable, result);
-        this.state = NEW;
+        this.state = NEW;       // ensure visibility of callable
     }
 
     public boolean isCancelled() {
@@ -232,7 +232,6 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 }
                 if (ran)
                     set(result);
-                callable = null;      // null out upon use to reduce footprint
             }
             runner = null;
             if (state >= INTERRUPTING) {
@@ -276,8 +275,6 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     Thread.interrupted(); // clear interrupt from cancel(true)
                 }
             }
-            if (!rerun)
-                callable = null;
         }
         return rerun;
     }
@@ -294,7 +291,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Removes and signals all waiting threads, and invokes done().
+     * Removes and signals all waiting threads, invokes done(), and
+     * nulls out callable.
      */
     private void finishCompletion() {
         for (WaitNode q; (q = waiters) != null;) {
@@ -314,7 +312,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 break;
             }
         }
+
         done();
+
+        callable = null;        // to reduce footprint
     }
 
     /**

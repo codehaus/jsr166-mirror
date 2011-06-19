@@ -234,11 +234,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     set(result);
             }
             runner = null;
-            if (state >= INTERRUPTING) {
-                while (state == INTERRUPTING)
-                    Thread.yield();   // wait out pending interrupt
-                Thread.interrupted(); // clear interrupt from cancel(true)
-            }
+            int s = state;
+            if (s >= INTERRUPTING)
+                handlePossibleCancellationInterrupt(s);
         }
     }
 
@@ -269,14 +267,27 @@ public class FutureTask<V> implements RunnableFuture<V> {
             int s = state;
             if (s != NEW) {
                 rerun = false;
-                if (s >= INTERRUPTING) {
-                    while (state == INTERRUPTING)
-                        Thread.yield();   // wait out pending interrupt
-                    Thread.interrupted(); // clear interrupt from cancel(true)
-                }
+                if (s >= INTERRUPTING)
+                    handlePossibleCancellationInterrupt(s);
             }
         }
         return rerun;
+    }
+
+    /**
+     * Ensures that any interrupt from a possible cancel(true) does
+     * not leak into subsequent code.
+     */
+    private void handlePossibleCancellationInterrupt(int s) {
+        // It is possible for our interrupter to stall before getting a
+        // chance to interrupt us.  Let's spin-wait patiently.
+        if (s == INTERRUPTING) {
+            while ((s = state) == INTERRUPTING)
+                Thread.yield(); // wait out pending interrupt
+        }
+        assert state == INTERRUPTED;
+        // Clear any interrupt we may have received.
+        Thread.interrupted();   // clear interrupt from cancel(true)
     }
 
     /**
@@ -295,6 +306,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * nulls out callable.
      */
     private void finishCompletion() {
+        assert state > NEW;
         for (WaitNode q; (q = waiters) != null;) {
             if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
                 for (;;) {

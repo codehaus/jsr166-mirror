@@ -261,7 +261,7 @@ public class CopyOnWriteArrayList<E>
      */
     public Object clone() {
         try {
-            CopyOnWriteArrayList<E> c = (CopyOnWriteArrayList<E>)(super.clone());
+            CopyOnWriteArrayList<E> c = (CopyOnWriteArrayList<E>) super.clone();
             c.resetLock();
             return c;
         } catch (CloneNotSupportedException e) {

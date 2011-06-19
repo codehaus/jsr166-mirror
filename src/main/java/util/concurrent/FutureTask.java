@@ -103,7 +103,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         if (callable == null)
             throw new NullPointerException();
         this.callable = callable;
-        this.state = NEW;
+        this.state = NEW;       // ensure visibility of callable
     }
 
     /**
@@ -120,7 +120,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public FutureTask(Runnable runnable, V result) {
         this.callable = Executors.callable(runnable, result);
-        this.state = NEW;
+        this.state = NEW;       // ensure visibility of callable
     }
 
     public boolean isCancelled() {
@@ -153,7 +153,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get() throws InterruptedException, ExecutionException {
         int s = state;
-        return report(s <= COMPLETING ? awaitDone(false, 0L) : s);
+        return report((s <= COMPLETING) ? awaitDone(false, 0L) : s);
     }
 
     /**
@@ -161,10 +161,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-        long nanos = unit.toNanos(timeout);
+        if (unit == null)
+            throw new NullPointerException();
         int s = state;
         if (s <= COMPLETING &&
-            (s = awaitDone(true, nanos)) <= COMPLETING)
+            (s = awaitDone(true, unit.toNanos(timeout))) <= COMPLETING)
             throw new TimeoutException();
         return report(s);
     }
@@ -231,14 +232,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 }
                 if (ran)
                     set(result);
-                callable = null;       // null out upon use to reduce footprint
             }
             runner = null;
-            if (state >= INTERRUPTING) {
-                while (state == INTERRUPTING)
-                    Thread.yield();   // wait out pending interrupt
-                Thread.interrupted(); // clear interrupt from cancel(true)
-            }
+            int s = state;
+            if (s >= INTERRUPTING)
+                handlePossibleCancellationInterrupt(s);
         }
     }
 
@@ -269,16 +267,27 @@ public class FutureTask<V> implements RunnableFuture<V> {
             int s = state;
             if (s != NEW) {
                 rerun = false;
-                if (s >= INTERRUPTING) {
-                    while (state == INTERRUPTING)
-                        Thread.yield();   // wait out pending interrupt
-                    Thread.interrupted(); // clear interrupt from cancel(true)
-                }
+                if (s >= INTERRUPTING)
+                    handlePossibleCancellationInterrupt(s);
             }
-            if (!rerun)
-                callable = null;
         }
         return rerun;
+    }
+
+    /**
+     * Ensures that any interrupt from a possible cancel(true) does
+     * not leak into subsequent code.
+     */
+    private void handlePossibleCancellationInterrupt(int s) {
+        // It is possible for our interrupter to stall before getting a
+        // chance to interrupt us.  Let's spin-wait patiently.
+        if (s == INTERRUPTING) {
+            while ((s = state) == INTERRUPTING)
+                Thread.yield(); // wait out pending interrupt
+        }
+        assert state == INTERRUPTED;
+        // Clear any interrupt we may have received.
+        Thread.interrupted();   // clear interrupt from cancel(true)
     }
 
     /**
@@ -293,11 +302,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Removes and signals all waiting threads, and invokes done().
+     * Removes and signals all waiting threads, invokes done(), and
+     * nulls out callable.
      */
     private void finishCompletion() {
-        WaitNode q;
-        while ((q = waiters) != null) {
+        assert state > NEW;
+        for (WaitNode q; (q = waiters) != null;) {
             if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
                 for (;;) {
                     Thread t = q.thread;
@@ -314,7 +324,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 break;
             }
         }
+
         done();
+
+        callable = null;        // to reduce footprint
     }
 
     /**
@@ -364,30 +377,31 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * Tries to unlink a timed-out or interrupted wait node to avoid
      * accumulating garbage.  Internal nodes are simply unspliced
      * without CAS since it is harmless if they are traversed anyway
-     * by releasers. To avoid effects of unsplicing from already
-     * removed nodes, the list is retraversed until no cancelled nodes
-     * are found.  This is slow when there are a lot of nodes, but we
-     * don't expect lists to be long enough to outweigh
-     * higher-overhead schemes.
+     * by releasers.  To avoid effects of unsplicing from already
+     * removed nodes, the list is retraversed in case of an apparent
+     * race.  This is slow when there are a lot of nodes, but we don't
+     * expect lists to be long enough to outweigh higher-overhead
+     * schemes.
      */
     private void removeWaiter(WaitNode node) {
         if (node != null) {
             node.thread = null;
-            for (WaitNode pred = null, q = waiters; q != null;) {
-                WaitNode next = q.next;
-                if (q.thread != null) {
-                    pred = q;
-                    q = next;
+            retry:
+            for (;;) {          // restart on removeWaiter race
+                for (WaitNode pred = null, q = waiters, s; q != null; q = s) {
+                    s = q.next;
+                    if (q.thread != null)
+                        pred = q;
+                    else if (pred != null) {
+                        pred.next = s;
+                        if (pred.thread == null) // check for race
+                            continue retry;
+                    }
+                    else if (!UNSAFE.compareAndSwapObject(this, waitersOffset,
+                                                          q, s))
+                        continue retry;
                 }
-                else {
-                    if (pred != null)
-                        pred.next = next;
-                    else
-                        UNSAFE.compareAndSwapObject(this, waitersOffset,
-                                                    q, next);
-                    pred = null; // restart until clean sweep
-                    q = waiters;
-                }
+                break;
             }
         }
     }

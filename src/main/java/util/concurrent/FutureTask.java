@@ -217,22 +217,23 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public void run() {
-        if (state == NEW &&
-            UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                        null, Thread.currentThread())) {
+        if (state != NEW ||
+            !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                         null, Thread.currentThread()))
+            return;
+        try {
             Callable<V> c = callable;
             if (c != null && state == NEW) {
-                V result = null;
-                boolean ran = false;
+                V result;
                 try {
                     result = c.call();
-                    ran = true;
                 } catch (Throwable ex) {
                     setException(ex);
+                    return;
                 }
-                if (ran)
-                    set(result);
+                set(result);
             }
+        } finally {
             runner = null;
             int s = state;
             if (s >= INTERRUPTING)
@@ -250,28 +251,27 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        boolean rerun = false; // true if this task can be re-run
-        if (state == NEW &&
-            UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                        null, Thread.currentThread())) {
+        if (state != NEW ||
+            !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                         null, Thread.currentThread()))
+            return false;
+        try {
             Callable<V> c = callable;
             if (c != null && state == NEW) {
                 try {
                     c.call(); // don't set result
-                    rerun = true;
+                    return state == NEW;
                 } catch (Throwable ex) {
                     setException(ex);
                 }
             }
+            return false;
+        } finally {
             runner = null;
             int s = state;
-            if (s != NEW) {
-                rerun = false;
-                if (s >= INTERRUPTING)
-                    handlePossibleCancellationInterrupt(s);
-            }
+            if (s >= INTERRUPTING)
+                handlePossibleCancellationInterrupt(s);
         }
-        return rerun;
     }
 
     /**

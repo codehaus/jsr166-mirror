@@ -85,8 +85,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     private V report(int s) throws ExecutionException {
         Object x = outcome;
-        if (s == NORMAL)
-            return (V)x;
+        if (s == NORMAL) {
+            @SuppressWarnings("unchecked") V v = (V)x;
+            return v;
+        }
         if (s >= CANCELLED)
             throw new CancellationException();
         throw new ExecutionException((Throwable)x);
@@ -153,7 +155,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     public V get() throws InterruptedException, ExecutionException {
         int s = state;
-        return report((s <= COMPLETING) ? awaitDone(false, 0L) : s);
+        if (s <= COMPLETING)
+            s = awaitDone(false, 0L);
+        return report(s);
     }
 
     /**
@@ -217,23 +221,32 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public void run() {
-        if (state == NEW &&
-            UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                        null, Thread.currentThread())) {
+        if (state != NEW ||
+            !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                         null, Thread.currentThread()))
+            return;
+        try {
             Callable<V> c = callable;
             if (c != null && state == NEW) {
-                V result = null;
-                boolean ran = false;
+                V result;
+                boolean ran;
                 try {
                     result = c.call();
                     ran = true;
                 } catch (Throwable ex) {
+                    result = null;
+                    ran = false;
                     setException(ex);
                 }
                 if (ran)
                     set(result);
             }
+        } finally {
+            // runner must be non-null until state is settled to
+            // prevent concurrent calls to run()
             runner = null;
+            // state must be re-read after nulling runner to prevent
+            // leaked interrupts
             int s = state;
             if (s >= INTERRUPTING)
                 handlePossibleCancellationInterrupt(s);
@@ -250,28 +263,33 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @return true if successfully run and reset
      */
     protected boolean runAndReset() {
-        boolean rerun = false; // true if this task can be re-run
-        if (state == NEW &&
-            UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                        null, Thread.currentThread())) {
+        if (state != NEW ||
+            !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                         null, Thread.currentThread()))
+            return false;
+        boolean ran = false;
+        int s = state;
+        try {
             Callable<V> c = callable;
-            if (c != null && state == NEW) {
+            if (c != null && s == NEW) {
                 try {
                     c.call(); // don't set result
-                    rerun = true;
+                    ran = true;
                 } catch (Throwable ex) {
                     setException(ex);
                 }
             }
+        } finally {
+            // runner must be non-null until state is settled to
+            // prevent concurrent calls to run()
             runner = null;
-            int s = state;
-            if (s != NEW) {
-                rerun = false;
-                if (s >= INTERRUPTING)
-                    handlePossibleCancellationInterrupt(s);
-            }
+            // state must be re-read after nulling runner to prevent
+            // leaked interrupts
+            s = state;
+            if (s >= INTERRUPTING)
+                handlePossibleCancellationInterrupt(s);
         }
-        return rerun;
+        return ran && s == NEW;
     }
 
     /**
@@ -285,9 +303,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
             while ((s = state) == INTERRUPTING)
                 Thread.yield(); // wait out pending interrupt
         }
-        assert state == INTERRUPTED;
-        // Clear any interrupt we may have received.
-        Thread.interrupted();   // clear interrupt from cancel(true)
+        // assert state == INTERRUPTED;
+
+        // Clear any interrupt we may have received from cancel(true).
+        Thread.interrupted();
     }
 
     /**
@@ -306,7 +325,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * nulls out callable.
      */
     private void finishCompletion() {
-        assert state > NEW;
+        // assert state > COMPLETING;
         for (WaitNode q; (q = waiters) != null;) {
             if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
                 for (;;) {

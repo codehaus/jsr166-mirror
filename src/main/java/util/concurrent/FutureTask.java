@@ -242,7 +242,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     set(result);
             }
         } finally {
+            // runner must be non-null until state is settled to
+            // prevent concurrent calls to run()
             runner = null;
+            // state must be re-read after nulling runner to prevent
+            // leaked interrupts
             int s = state;
             if (s >= INTERRUPTING)
                 handlePossibleCancellationInterrupt(s);
@@ -276,7 +280,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 }
             }
         } finally {
+            // runner must be non-null until state is settled to
+            // prevent concurrent calls to run()
             runner = null;
+            // state must be re-read after nulling runner to prevent
+            // leaked interrupts
             s = state;
             if (s >= INTERRUPTING)
                 handlePossibleCancellationInterrupt(s);

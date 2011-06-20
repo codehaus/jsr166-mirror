@@ -304,8 +304,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 Thread.yield(); // wait out pending interrupt
         }
         // assert state == INTERRUPTED;
-        // Clear any interrupt we may have received.
-        Thread.interrupted();   // clear interrupt from cancel(true)
+
+        // Clear any interrupt we may have received from cancel(true).
+        Thread.interrupted();
     }
 
     /**

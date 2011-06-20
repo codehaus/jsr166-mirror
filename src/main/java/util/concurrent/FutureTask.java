@@ -293,8 +293,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
-     * Ensures that any interrupt from a possible cancel(true) does
-     * not leak into subsequent code.
+     * Ensures that any interrupt from a possible cancel(true) is only
+     * delivered to a task while in run or runAndReset.
      */
     private void handlePossibleCancellationInterrupt(int s) {
         // It is possible for our interrupter to stall before getting a
@@ -305,8 +305,13 @@ public class FutureTask<V> implements RunnableFuture<V> {
         }
         // assert state == INTERRUPTED;
 
-        // Clear any interrupt we may have received from cancel(true).
-        Thread.interrupted();
+        // We want to clear any interrupt we may have received from
+        // cancel(true).  However, it is permissible to use interrupts
+        // as an independent mechanism for a task to communicate with
+        // its caller, and there is no way to clear only the
+        // cancellation interrupt.
+        //
+        // Thread.interrupted();
     }
 
     /**

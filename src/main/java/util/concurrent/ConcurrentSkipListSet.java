@@ -128,15 +128,15 @@ public class ConcurrentSkipListSet<E>
      * @return a shallow copy of this set
      */
     public ConcurrentSkipListSet<E> clone() {
-        ConcurrentSkipListSet<E> clone = null;
         try {
-            clone = (ConcurrentSkipListSet<E>) super.clone();
+            @SuppressWarnings("unchecked")
+            ConcurrentSkipListSet<E> clone =
+                (ConcurrentSkipListSet<E>) super.clone();
             clone.setMap(new ConcurrentSkipListMap<E,Object>(m));
+            return clone;
         } catch (CloneNotSupportedException e) {
             throw new InternalError();
         }
-
-        return clone;
     }
 
     /* ---------------- Set operations -------------- */

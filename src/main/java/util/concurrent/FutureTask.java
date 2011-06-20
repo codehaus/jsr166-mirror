@@ -229,13 +229,17 @@ public class FutureTask<V> implements RunnableFuture<V> {
             Callable<V> c = callable;
             if (c != null && state == NEW) {
                 V result;
+                boolean ran;
                 try {
                     result = c.call();
+                    ran = true;
                 } catch (Throwable ex) {
+                    result = null;
+                    ran = false;
                     setException(ex);
-                    return;
                 }
-                set(result);
+                if (ran)
+                    set(result);
             }
         } finally {
             runner = null;
@@ -259,23 +263,25 @@ public class FutureTask<V> implements RunnableFuture<V> {
             !UNSAFE.compareAndSwapObject(this, runnerOffset,
                                          null, Thread.currentThread()))
             return false;
+        boolean ran = false;
+        int s = state;
         try {
             Callable<V> c = callable;
-            if (c != null && state == NEW) {
+            if (c != null && s == NEW) {
                 try {
                     c.call(); // don't set result
-                    return state == NEW;
+                    ran = true;
                 } catch (Throwable ex) {
                     setException(ex);
                 }
             }
-            return false;
         } finally {
             runner = null;
-            int s = state;
+            s = state;
             if (s >= INTERRUPTING)
                 handlePossibleCancellationInterrupt(s);
         }
+        return ran && s == NEW;
     }
 
     /**

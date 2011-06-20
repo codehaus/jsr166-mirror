@@ -606,32 +606,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c) {
-        checkNotNull(c);
-        if (c == this)
-            throw new IllegalArgumentException();
-        final Object[] items = this.items;
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            int i = takeIndex;
-            int n = 0;
-            int max = count;
-            while (n < max) {
-                c.add(ArrayBlockingQueue.<E>cast(items[i]));
-                items[i] = null;
-                i = inc(i);
-                ++n;
-            }
-            if (n > 0) {
-                count = 0;
-                putIndex = 0;
-                takeIndex = 0;
-                notFull.signalAll();
-            }
-            return n;
-        } finally {
-            lock.unlock();
-        }
+        return drainTo(c, Integer.MAX_VALUE);
     }
 
     /**
@@ -651,13 +626,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             int i = takeIndex;
-            int n = 0;
-            int max = (maxElements < count) ? maxElements : count;
-            while (n < max) {
+            int max = Math.min(maxElements, count);
+            int n;
+            for (n = 0; n < max; n++) {
                 c.add(ArrayBlockingQueue.<E>cast(items[i]));
                 items[i] = null;
                 i = inc(i);
-                ++n;
             }
             if (n > 0) {
                 count -= n;

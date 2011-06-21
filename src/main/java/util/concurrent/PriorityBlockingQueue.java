@@ -730,8 +730,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             int n = 0;
-            E e;
-            while ( (e = extract()) != null) {
+            for (E e; (e = extract()) != null;) {
                 c.add(e);
                 ++n;
             }
@@ -758,8 +757,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             int n = 0;
-            E e;
-            while (n < maxElements && (e = extract()) != null) {
+            for (E e; n < maxElements && (e = extract()) != null;) {
                 c.add(e);
                 ++n;
             }

@@ -279,13 +279,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * Mechanics for poll().  Call only while holding lock.
      */
     private E extract() {
-        E result;
         int n = size - 1;
         if (n < 0)
-            result = null;
+            return null;
         else {
             Object[] array = queue;
-            result = (E) array[0];
+            E result = (E) array[0];
             E x = (E) array[n];
             array[n] = null;
             Comparator<? super E> cmp = comparator;
@@ -294,8 +293,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             else
                 siftDownUsingComparator(0, x, array, n, cmp);
             size = n;
+            return result;
         }
-        return result;
     }
 
     /**
@@ -490,13 +489,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     public E poll() {
         final ReentrantLock lock = this.lock;
         lock.lock();
-        E result;
         try {
-            result = extract();
+            return extract();
         } finally {
             lock.unlock();
         }
-        return result;
     }
 
     public E take() throws InterruptedException {
@@ -529,13 +526,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     public E peek() {
         final ReentrantLock lock = this.lock;
         lock.lock();
-        E result;
         try {
-            result = size > 0 ? (E) queue[0] : null;
+            return (size == 0) ? null : (E) queue[0];
         } finally {
             lock.unlock();
         }
-        return result;
     }
 
     /**
@@ -709,7 +704,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             StringBuilder sb = new StringBuilder();
             sb.append('[');
             for (int i = 0; i < n; ++i) {
-                E e = (E)queue[i];
+                Object e = queue[i];
                 sb.append(e == this ? "(this Collection)" : e);
                 if (i != n - 1)
                     sb.append(',').append(' ');

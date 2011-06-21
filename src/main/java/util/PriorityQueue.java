@@ -331,9 +331,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     public E peek() {
-        if (size == 0)
-            return null;
-        return (E) queue[0];
+        return (size == 0) ? null : (E) queue[0];
     }
 
     private int indexOf(Object o) {

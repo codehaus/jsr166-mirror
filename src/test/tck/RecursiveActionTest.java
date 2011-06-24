@@ -789,7 +789,7 @@ public class RecursiveActionTest extends JSR166TestCase {
     }
 
     /**
-     * A reinitialized task may be re-invoked
+     * A reinitialized normally completed task may be re-invoked
      */
     public void testReinitialize() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -801,6 +801,29 @@ public class RecursiveActionTest extends JSR166TestCase {
                     assertNull(f.invoke());
                     assertEquals(21, f.result);
                     checkCompletedNormally(f);
+                    f.reinitialize();
+                    checkNotDone(f);
+                }
+            }};
+        testInvokeOnPool(mainPool(), a);
+    }
+
+    /**
+     * A reinitialized abnormally completed task may be re-invoked
+     */
+    public void testReinitializeAbnormal() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            public void realCompute() {
+                FailingFibAction f = new FailingFibAction(8);
+                checkNotDone(f);
+
+                for (int i = 0; i < 3; i++) {
+                    try {
+                        f.invoke();
+                        shouldThrow();
+                    } catch (FJException success) {
+                        checkCompletedAbnormally(f, success);
+                    }
                     f.reinitialize();
                     checkNotDone(f);
                 }

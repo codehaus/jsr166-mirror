@@ -10,15 +10,15 @@ package jsr166y;
  * A recursive resultless {@link ForkJoinTask}.  This class
  * establishes conventions to parameterize resultless actions as
  * {@code Void} {@code ForkJoinTask}s. Because {@code null} is the
- * only valid value of type {@code Void}, methods such as join always
- * return {@code null} upon completion.
+ * only valid value of type {@code Void}, methods such as {@code join}
+ * always return {@code null} upon completion.
  *
  * <p><b>Sample Usages.</b> Here is a sketch of a ForkJoin sort that
  * sorts a given {@code long[]} array:
  *
  *  <pre> {@code
  * class SortTask extends RecursiveAction {
- *   final long[] array; final int lo; final int hi;
+ *   final long[] array; final int lo, hi;
  *   SortTask(long[] array, int lo, int hi) {
  *     this.array = array; this.lo = lo; this.hi = hi;
  *   }
@@ -29,7 +29,7 @@ package jsr166y;
  *       int mid = (lo + hi) >>> 1;
  *       invokeAll(new SortTask(array, lo, mid),
  *                 new SortTask(array, mid, hi));
- *       merge(array, lo, hi);
+ *       merge(array, lo, mid, hi);
  *     }
  *   }
  * }}</pre>
@@ -40,7 +40,7 @@ package jsr166y;
  * task increments each element of an array:
  *  <pre> {@code
  * class IncrementTask extends RecursiveAction {
- *   final long[] array; final int lo; final int hi;
+ *   final long[] array; final int lo, hi;
  *   IncrementTask(long[] array, int lo, int hi) {
  *     this.array = array; this.lo = lo; this.hi = hi;
  *   }

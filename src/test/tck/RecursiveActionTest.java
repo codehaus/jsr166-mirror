@@ -1232,7 +1232,7 @@ public class RecursiveActionTest extends JSR166TestCase {
      */
     public void testSortTaskDemo() {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
-        long[] array = new long[1000];
+        long[] array = new long[1007];
         for (int i = 0; i < array.length; i++)
             array[i] = rnd.nextLong();
         long[] arrayClone = array.clone();

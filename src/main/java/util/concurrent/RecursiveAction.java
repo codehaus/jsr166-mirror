@@ -29,7 +29,7 @@ package java.util.concurrent;
  *       int mid = (lo + hi) >>> 1;
  *       invokeAll(new SortTask(array, lo, mid),
  *                 new SortTask(array, mid, hi));
- *       merge(array, lo, hi);
+ *       merge(array, lo, mid, hi);
  *     }
  *   }
  * }}</pre>

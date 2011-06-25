@@ -35,7 +35,7 @@ package java.util.concurrent;
  * }}</pre>
  *
  * You could then sort {@code anArray} by creating {@code new
- * SortTask(anArray, 0, anArray.length-1) } and invoking it in a
+ * SortTask(anArray, 0, anArray.length) } and invoking it in a
  * ForkJoinPool.  As a more concrete simple example, the following
  * task increments each element of an array:
  *  <pre> {@code

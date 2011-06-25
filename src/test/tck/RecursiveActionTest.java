@@ -12,9 +12,11 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import java.util.Arrays;
 import java.util.HashSet;
 
 public class RecursiveActionTest extends JSR166TestCase {
@@ -1195,4 +1197,48 @@ public class RecursiveActionTest extends JSR166TestCase {
         testInvokeOnPool(asyncSingletonPool(), a);
     }
 
+    static class SortTask extends RecursiveAction {
+        final long[] array; final int lo, hi;
+        SortTask(long[] array, int lo, int hi) {
+            this.array = array; this.lo = lo; this.hi = hi;
+        }
+        final static int THRESHOLD = 100;
+        protected void compute() {
+            if (hi - lo < THRESHOLD)
+                sequentiallySort(array, lo, hi);
+            else {
+                int mid = (lo + hi) >>> 1;
+                invokeAll(new SortTask(array, lo, mid),
+                          new SortTask(array, mid, hi));
+                merge(array, lo, mid, hi);
+            }
+        }
+        static void sequentiallySort(long[] array, int lo, int hi) {
+            Arrays.sort(array, lo, hi);
+        }
+        static void merge(long[] array, int lo, int mid, int hi) {
+            int n = hi - lo;
+            long[] buf = new long[n];
+            int a = lo, b = mid;
+            for (int i = 0; i < n; i++)
+                buf[i] = (b == hi || (a < mid && array[a] < array[b])) ?
+                    array[a++] : array[b++];
+            System.arraycopy(buf, 0, array, lo, n);
+        }
+    }
+
+    /**
+     * SortTask demo works as advertised
+     */
+    public void testSortTaskDemo() {
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+        long[] array = new long[1000];
+        for (int i = 0; i < array.length; i++)
+            array[i] = rnd.nextLong();
+        long[] arrayClone = array.clone();
+        testInvokeOnPool(mainPool(),
+                         new SortTask(array, 0, array.length));
+        Arrays.sort(arrayClone);
+        assertTrue(Arrays.equals(array, arrayClone));
+    }
 }

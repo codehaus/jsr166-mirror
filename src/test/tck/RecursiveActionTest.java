@@ -1217,13 +1217,10 @@ public class RecursiveActionTest extends JSR166TestCase {
             Arrays.sort(array, lo, hi);
         }
         static void merge(long[] array, int lo, int mid, int hi) {
-            int n = hi - lo;
-            long[] buf = new long[n];
-            int a = lo, b = mid;
-            for (int i = 0; i < n; i++)
-                buf[i] = (b == hi || (a < mid && array[a] < array[b])) ?
-                    array[a++] : array[b++];
-            System.arraycopy(buf, 0, array, lo, n);
+            long[] buf = Arrays.copyOfRange(array, lo, mid);
+            for (int i = 0, j = lo, k = mid; i < buf.length; j++)
+                array[j] = (k == hi || buf[i] < array[k]) ?
+                    buf[i++] : array[k++];
         }
     }
 

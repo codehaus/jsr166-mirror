@@ -5,8 +5,10 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.*;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
 
 /**
@@ -202,7 +204,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         public long getDelay(TimeUnit unit) {
-            return unit.convert(time - now(), TimeUnit.NANOSECONDS);
+            return unit.convert(time - now(), NANOSECONDS);
         }
 
         public int compareTo(Delayed other) {
@@ -220,8 +222,8 @@ public class ScheduledThreadPoolExecutor
                 else
                     return 1;
             }
-            long diff = (getDelay(TimeUnit.NANOSECONDS) -
-                         other.getDelay(TimeUnit.NANOSECONDS));
+            long diff = (getDelay(NANOSECONDS) -
+                         other.getDelay(NANOSECONDS));
             return (diff < 0) ? -1 : (diff > 0) ? 1 : 0;
         }
 
@@ -395,7 +397,7 @@ public class ScheduledThreadPoolExecutor
      * @throws IllegalArgumentException if {@code corePoolSize < 0}
      */
     public ScheduledThreadPoolExecutor(int corePoolSize) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
               new DelayedWorkQueue());
     }
 
@@ -412,7 +414,7 @@ public class ScheduledThreadPoolExecutor
      */
     public ScheduledThreadPoolExecutor(int corePoolSize,
                                        ThreadFactory threadFactory) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
               new DelayedWorkQueue(), threadFactory);
     }
 
@@ -429,7 +431,7 @@ public class ScheduledThreadPoolExecutor
      */
     public ScheduledThreadPoolExecutor(int corePoolSize,
                                        RejectedExecutionHandler handler) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
               new DelayedWorkQueue(), handler);
     }
 
@@ -450,7 +452,7 @@ public class ScheduledThreadPoolExecutor
     public ScheduledThreadPoolExecutor(int corePoolSize,
                                        ThreadFactory threadFactory,
                                        RejectedExecutionHandler handler) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, TimeUnit.NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
               new DelayedWorkQueue(), threadFactory, handler);
     }
 
@@ -479,7 +481,7 @@ public class ScheduledThreadPoolExecutor
     private long overflowFree(long delay) {
         Delayed head = (Delayed) super.getQueue().peek();
         if (head != null) {
-            long headDelay = head.getDelay(TimeUnit.NANOSECONDS);
+            long headDelay = head.getDelay(NANOSECONDS);
             if (headDelay < 0 && (delay - headDelay < 0))
                 delay = Long.MAX_VALUE + headDelay;
         }
@@ -587,7 +589,7 @@ public class ScheduledThreadPoolExecutor
      * @throws NullPointerException {@inheritDoc}
      */
     public void execute(Runnable command) {
-        schedule(command, 0, TimeUnit.NANOSECONDS);
+        schedule(command, 0, NANOSECONDS);
     }
 
     // Override AbstractExecutorService methods
@@ -597,7 +599,7 @@ public class ScheduledThreadPoolExecutor
      * @throws NullPointerException       {@inheritDoc}
      */
     public Future<?> submit(Runnable task) {
-        return schedule(task, 0, TimeUnit.NANOSECONDS);
+        return schedule(task, 0, NANOSECONDS);
     }
 
     /**
@@ -605,8 +607,7 @@ public class ScheduledThreadPoolExecutor
      * @throws NullPointerException       {@inheritDoc}
      */
     public <T> Future<T> submit(Runnable task, T result) {
-        return schedule(Executors.callable(task, result),
-                        0, TimeUnit.NANOSECONDS);
+        return schedule(Executors.callable(task, result), 0, NANOSECONDS);
     }
 
     /**
@@ -614,7 +615,7 @@ public class ScheduledThreadPoolExecutor
      * @throws NullPointerException       {@inheritDoc}
      */
     public <T> Future<T> submit(Callable<T> task) {
-        return schedule(task, 0, TimeUnit.NANOSECONDS);
+        return schedule(task, 0, NANOSECONDS);
     }
 
     /**
@@ -1031,7 +1032,7 @@ public class ScheduledThreadPoolExecutor
             lock.lock();
             try {
                 RunnableScheduledFuture<?> first = queue[0];
-                if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
+                if (first == null || first.getDelay(NANOSECONDS) > 0)
                     return null;
                 else
                     return finishPoll(first);
@@ -1049,7 +1050,7 @@ public class ScheduledThreadPoolExecutor
                     if (first == null)
                         available.await();
                     else {
-                        long delay = first.getDelay(TimeUnit.NANOSECONDS);
+                        long delay = first.getDelay(NANOSECONDS);
                         if (delay <= 0)
                             return finishPoll(first);
                         else if (leader != null)
@@ -1087,7 +1088,7 @@ public class ScheduledThreadPoolExecutor
                         else
                             nanos = available.awaitNanos(nanos);
                     } else {
-                        long delay = first.getDelay(TimeUnit.NANOSECONDS);
+                        long delay = first.getDelay(NANOSECONDS);
                         if (delay <= 0)
                             return finishPoll(first);
                         if (nanos <= 0)
@@ -1132,14 +1133,14 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Return and remove first element only if it is expired.
+         * Return first element only if it is expired.
          * Used only by drainTo.  Call only when holding lock.
          */
-        private RunnableScheduledFuture<?> pollExpired() {
+        private RunnableScheduledFuture<?> peekExpired() {
+            // assert lock.isHeldByCurrentThread();
             RunnableScheduledFuture<?> first = queue[0];
-            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
-                return null;
-            return finishPoll(first);
+            return (first == null || first.getDelay(NANOSECONDS) > 0) ?
+                null : first;
         }
 
         public int drainTo(Collection<? super Runnable> c) {
@@ -1152,8 +1153,9 @@ public class ScheduledThreadPoolExecutor
             try {
                 RunnableScheduledFuture<?> first;
                 int n = 0;
-                while ((first = pollExpired()) != null) {
-                    c.add(first);
+                while ((first = peekExpired()) != null) {
+                    c.add(first);   // In this order, in case add() throws.
+                    finishPoll(first);
                     ++n;
                 }
                 return n;
@@ -1174,8 +1176,9 @@ public class ScheduledThreadPoolExecutor
             try {
                 RunnableScheduledFuture<?> first;
                 int n = 0;
-                while (n < maxElements && (first = pollExpired()) != null) {
-                    c.add(first);
+                while (n < maxElements && (first = peekExpired()) != null) {
+                    c.add(first);   // In this order, in case add() throws.
+                    finishPoll(first);
                     ++n;
                 }
                 return n;

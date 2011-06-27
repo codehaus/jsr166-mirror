@@ -722,22 +722,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c) {
-        if (c == null)
-            throw new NullPointerException();
-        if (c == this)
-            throw new IllegalArgumentException();
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            int n = 0;
-            for (E e; (e = extract()) != null;) {
-                c.add(e);
-                ++n;
-            }
-            return n;
-        } finally {
-            lock.unlock();
-        }
+        return drainTo(c, Integer.MAX_VALUE);
     }
 
     /**
@@ -756,10 +741,10 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            int n = 0;
-            for (E e; n < maxElements && (e = extract()) != null;) {
-                c.add(e);
-                ++n;
+            int n = Math.min(size, maxElements);
+            for (int i = 0; i < n; i++) {
+                c.add((E) queue[0]); // In this order, in case add() throws.
+                extract();
             }
             return n;
         } finally {

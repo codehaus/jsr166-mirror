@@ -6,7 +6,9 @@
 
 
 package java.util.concurrent;
-import java.util.concurrent.locks.*;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
 
 /**
@@ -156,7 +158,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             E first = q.peek();
-            if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
+            if (first == null || first.getDelay(NANOSECONDS) > 0)
                 return null;
             else
                 return q.poll();
@@ -181,7 +183,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                 if (first == null)
                     available.await();
                 else {
-                    long delay = first.getDelay(TimeUnit.NANOSECONDS);
+                    long delay = first.getDelay(NANOSECONDS);
                     if (delay <= 0)
                         return q.poll();
                     else if (leader != null)
@@ -228,7 +230,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
                     else
                         nanos = available.awaitNanos(nanos);
                 } else {
-                    long delay = first.getDelay(TimeUnit.NANOSECONDS);
+                    long delay = first.getDelay(NANOSECONDS);
                     if (delay <= 0)
                         return q.poll();
                     if (nanos <= 0)
@@ -286,6 +288,17 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
+     * Return first element only if it is expired.
+     * Used only by drainTo.  Call only when holding lock.
+     */
+    private E peekExpired() {
+        // assert lock.isHeldByCurrentThread();
+        E first = q.peek();
+        return (first == null || first.getDelay(NANOSECONDS) > 0) ?
+            null : first;
+    }
+
+    /**
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
      * @throws NullPointerException          {@inheritDoc}
@@ -300,11 +313,9 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             int n = 0;
-            for (;;) {
-                E first = q.peek();
-                if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
-                    break;
-                c.add(q.poll());
+            for (E e; (e = peekExpired()) != null;) {
+                c.add(e);       // In this order, in case add() throws.
+                q.poll();
                 ++n;
             }
             return n;
@@ -330,11 +341,9 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             int n = 0;
-            while (n < maxElements) {
-                E first = q.peek();
-                if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
-                    break;
-                c.add(q.poll());
+            for (E e; n < maxElements && (e = peekExpired()) != null;) {
+                c.add(e);       // In this order, in case add() throws.
+                q.poll();
                 ++n;
             }
             return n;

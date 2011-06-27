@@ -70,7 +70,7 @@ public class AutoShutdown {
         for (int i = 0; i < 10; ++i) { // give JVM a chance to settle.
             if (Thread.activeCount() == count0)
                 return;
-            Thread.sleep(1000); 
+            Thread.sleep(1000);
         }
         equal(Thread.activeCount(), count0);
     }

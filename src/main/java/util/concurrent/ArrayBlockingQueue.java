@@ -625,20 +625,25 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            int i = takeIndex;
-            int max = Math.min(maxElements, count);
-            int n;
-            for (n = 0; n < max; n++) {
-                c.add(ArrayBlockingQueue.<E>cast(items[i]));
-                items[i] = null;
-                i = inc(i);
+            int n = Math.min(maxElements, count);
+            int take = takeIndex;
+            int i = 0;
+            try {
+                while (i < n) {
+                    c.add(ArrayBlockingQueue.<E>cast(items[take]));
+                    items[take] = null;
+                    take = inc(take);
+                    ++i;
+                }
+                return n;
+            } finally {
+                // Restore invariants even if c.add() threw
+                if (i > 0) {
+                    count -= i;
+                    takeIndex = take;
+                    notFull.signalAll();
+                }
             }
-            if (n > 0) {
-                count -= n;
-                takeIndex = i;
-                notFull.signalAll();
-            }
-            return n;
         } finally {
             lock.unlock();
         }

@@ -1197,26 +1197,29 @@ public class RecursiveActionTest extends JSR166TestCase {
         testInvokeOnPool(asyncSingletonPool(), a);
     }
 
+    /** Demo from RecursiveAction javadoc */
     static class SortTask extends RecursiveAction {
         final long[] array; final int lo, hi;
         SortTask(long[] array, int lo, int hi) {
             this.array = array; this.lo = lo; this.hi = hi;
         }
-        final static int THRESHOLD = 100;
+        SortTask(long[] array) { this(array, 0, array.length); }
         protected void compute() {
             if (hi - lo < THRESHOLD)
-                sequentiallySort(array, lo, hi);
+                sortSequentially(lo, hi);
             else {
                 int mid = (lo + hi) >>> 1;
                 invokeAll(new SortTask(array, lo, mid),
                           new SortTask(array, mid, hi));
-                merge(array, lo, mid, hi);
+                merge(lo, mid, hi);
             }
         }
-        static void sequentiallySort(long[] array, int lo, int hi) {
+        // implementation details follow:
+        final static int THRESHOLD = 100;
+        void sortSequentially(int lo, int hi) {
             Arrays.sort(array, lo, hi);
         }
-        static void merge(long[] array, int lo, int mid, int hi) {
+        void merge(int lo, int mid, int hi) {
             long[] buf = Arrays.copyOfRange(array, lo, mid);
             for (int i = 0, j = lo, k = mid; i < buf.length; j++)
                 array[j] = (k == hi || buf[i] < array[k]) ?
@@ -1233,8 +1236,7 @@ public class RecursiveActionTest extends JSR166TestCase {
         for (int i = 0; i < array.length; i++)
             array[i] = rnd.nextLong();
         long[] arrayClone = array.clone();
-        testInvokeOnPool(mainPool(),
-                         new SortTask(array, 0, array.length));
+        testInvokeOnPool(mainPool(), new SortTask(array));
         Arrays.sort(arrayClone);
         assertTrue(Arrays.equals(array, arrayClone));
     }

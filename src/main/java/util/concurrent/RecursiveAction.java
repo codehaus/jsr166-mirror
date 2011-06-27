@@ -13,31 +13,43 @@ package java.util.concurrent;
  * only valid value of type {@code Void}, methods such as {@code join}
  * always return {@code null} upon completion.
  *
- * <p><b>Sample Usages.</b> Here is a sketch of a ForkJoin sort that
- * sorts a given {@code long[]} array:
+ * <p><b>Sample Usages.</b> Here is a simple but complete ForkJoin
+ * sort that sorts a given {@code long[]} array:
  *
  *  <pre> {@code
- * class SortTask extends RecursiveAction {
+ * static class SortTask extends RecursiveAction {
  *   final long[] array; final int lo, hi;
  *   SortTask(long[] array, int lo, int hi) {
  *     this.array = array; this.lo = lo; this.hi = hi;
  *   }
+ *   SortTask(long[] array) { this(array, 0, array.length); }
  *   protected void compute() {
  *     if (hi - lo < THRESHOLD)
- *       sequentiallySort(array, lo, hi);
+ *       sortSequentially(lo, hi);
  *     else {
  *       int mid = (lo + hi) >>> 1;
  *       invokeAll(new SortTask(array, lo, mid),
  *                 new SortTask(array, mid, hi));
- *       merge(array, lo, mid, hi);
+ *       merge(lo, mid, hi);
  *     }
+ *   }
+ *   // implementation details follow:
+ *   final static int THRESHOLD = 1000;
+ *   void sortSequentially(int lo, int hi) {
+ *     Arrays.sort(array, lo, hi);
+ *   }
+ *   void merge(int lo, int mid, int hi) {
+ *     long[] buf = Arrays.copyOfRange(array, lo, mid);
+ *     for (int i = 0, j = lo, k = mid; i < buf.length; j++)
+ *       array[j] = (k == hi || buf[i] < array[k]) ?
+ *         buf[i++] : array[k++];
  *   }
  * }}</pre>
  *
  * You could then sort {@code anArray} by creating {@code new
- * SortTask(anArray, 0, anArray.length) } and invoking it in a
- * ForkJoinPool.  As a more concrete simple example, the following
- * task increments each element of an array:
+ * SortTask(anArray)} and invoking it in a ForkJoinPool.  As a more
+ * concrete simple example, the following task increments each element
+ * of an array:
  *  <pre> {@code
  * class IncrementTask extends RecursiveAction {
  *   final long[] array; final int lo, hi;

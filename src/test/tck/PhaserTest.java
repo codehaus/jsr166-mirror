@@ -165,8 +165,8 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * register() correctly returns the current barrier phase number when
-     * invoked
+     * register() correctly returns the current barrier phase number
+     * when invoked
      */
     public void testRegister3() {
         Phaser phaser = new Phaser();
@@ -177,8 +177,8 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * register causes the next arrive to not increment the phase rather retain
-     * the phase number
+     * register causes the next arrive to not increment the phase
+     * rather retain the phase number
      */
     public void testRegister4() {
         Phaser phaser = new Phaser(1);
@@ -186,6 +186,22 @@ public class PhaserTest extends JSR166TestCase {
         assertEquals(1, phaser.register());
         assertEquals(1, phaser.arrive());
         assertState(phaser, 1, 2, 1);
+    }
+
+    /**
+     * register on a subphaser that is currently empty succeeds, even
+     * in the presence of another non-empty subphaser
+     * XXXX broken (hangs) as of 2011-06-26
+     */
+    public void XXXXtestRegisterEmptySubPhaser() {
+        Phaser root = new Phaser();
+        Phaser child1 = new Phaser(root, 1);
+        Phaser child2 = new Phaser(root, 0);
+        assertEquals(0, child2.register());
+        assertEquals(0, child2.arriveAndDeregister());
+        assertEquals(0, child2.register());
+        assertEquals(0, child2.arriveAndDeregister());
+        assertState(child2, 0, 0, 0);
     }
 
     /**
@@ -200,8 +216,8 @@ public class PhaserTest extends JSR166TestCase {
     }
 
     /**
-     * bulkRegister should correctly record the number of unarrived parties with
-     * the number of parties being registered
+     * bulkRegister should correctly record the number of unarrived
+     * parties with the number of parties being registered
      */
     public void testBulkRegister2() {
         Phaser phaser = new Phaser();

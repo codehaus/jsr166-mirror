@@ -16,46 +16,134 @@ import java.util.concurrent.*;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class DrainToFails {
     final int CAPACITY = 10;
+    final int SMALL = 2;
 
     void test(String[] args) throws Throwable {
-        test(new LinkedBlockingQueue(CAPACITY));
-        test(new LinkedBlockingDeque(CAPACITY));
-        test(new ArrayBlockingQueue(CAPACITY));
+        testDelayQueue(new DelayQueue());
+        testDelayQueue(new ScheduledThreadPoolExecutor(1).getQueue());
+
+        testUnbounded(new LinkedBlockingQueue());
+        testUnbounded(new LinkedBlockingDeque());
+        testUnbounded(new PriorityBlockingQueue());
+
+        testBounded(new LinkedBlockingQueue(CAPACITY));
+        testBounded(new LinkedBlockingDeque(CAPACITY));
+        testBounded(new ArrayBlockingQueue(CAPACITY));
     }
 
-    void test(final BlockingQueue q) throws Throwable {
-        System.out.println(q.getClass().getSimpleName());
+    static class PDelay
+        extends FutureTask<Void>
+        implements Delayed, RunnableScheduledFuture<Void> {
+        int pseudodelay;
+        PDelay(int i) {
+            super(new Runnable() { public void run() {}}, null);
+            pseudodelay = i;
+        }
+        public int compareTo(PDelay other) {
+            int a = this.pseudodelay;
+            int b = other.pseudodelay;
+            return (a < b) ? -1 : (a > b) ? 1 : 0;
+        }
+        public int compareTo(Delayed y) {
+            return compareTo((PDelay)y);
+        }
+        public boolean equals(Object other) {
+            return (other instanceof PDelay) &&
+                this.pseudodelay == ((PDelay)other).pseudodelay;
+        }
+        public long getDelay(TimeUnit ignore) {
+            return Integer.MIN_VALUE + pseudodelay;
+        }
+        public String toString() {
+            return String.valueOf(pseudodelay);
+        }
+        public boolean isPeriodic() { return false; }
+    }
+
+    void testDelayQueue(final BlockingQueue q) throws Throwable {
+        System.err.println(q.getClass().getSimpleName());
+        for (int i = 0; i < CAPACITY; i++)
+            q.add(new PDelay(i));
+        ArrayBlockingQueue q2 = new ArrayBlockingQueue(SMALL);
+        try {
+            q.drainTo(q2, SMALL + 3);
+            fail("should throw");
+        } catch (IllegalStateException success) {
+            equal(SMALL, q2.size());
+            equal(new PDelay(0), q2.poll());
+            equal(new PDelay(1), q2.poll());
+            check(q2.isEmpty());
+            for (int i = SMALL; i < CAPACITY; i++)
+                equal(new PDelay(i), q.poll());
+            equal(0, q.size());
+        }
+    }
+
+    void testUnbounded(final BlockingQueue q) throws Throwable {
+        System.err.println(q.getClass().getSimpleName());
+        for (int i = 0; i < CAPACITY; i++)
+            q.add(i);
+        ArrayBlockingQueue q2 = new ArrayBlockingQueue(SMALL);
+        try {
+            q.drainTo(q2, 7);
+            fail("should throw");
+        } catch (IllegalStateException success) {
+            assertContentsInOrder(q2, 0, 1);
+            q2.clear();
+            equal(q.size(), CAPACITY - SMALL);
+            equal(SMALL, q.peek());
+        }
+
+        try {
+            q.drainTo(q2);
+            fail("should throw");
+        } catch (IllegalStateException success) {
+            assertContentsInOrder(q2, 2, 3);
+            equal(q.size(), CAPACITY - 2 * SMALL);
+            for (int i = 2 * SMALL; i < CAPACITY; i++)
+                equal(i, q.poll());
+            equal(0, q.size());
+        }
+    }
+
+    void testBounded(final BlockingQueue q) throws Throwable {
+        System.err.println(q.getClass().getSimpleName());
         for (int i = 0; i < CAPACITY; i++)
             q.add(i);
         List<Thread> putters = new ArrayList<Thread>();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 4; i++) {
             Thread putter = new Thread(putter(q, 42 + i));
             putters.add(putter);
             putter.setDaemon(true);
             putter.start();
         }
-        ArrayBlockingQueue q2 = new ArrayBlockingQueue(2);
+        ArrayBlockingQueue q2 = new ArrayBlockingQueue(SMALL);
         try {
-            q.drainTo(q2, 4);
+            q.drainTo(q2, 7);
+            fail("should throw");
+        } catch (IllegalStateException success) {
+            while (q.size() < CAPACITY)
+                Thread.yield();
+            assertContentsInOrder(q2, 0, 1);
+            q2.clear();
+        }
+
+        try {
+            q.drainTo(q2);
             fail("should throw");
         } catch (IllegalStateException success) {
             for (Thread putter : putters) {
                 putter.join(2000L);
                 check(! putter.isAlive());
             }
-            // expect q to contain [2, 3, 4, 5, 6, 7, 8, 9, 42, 43]
-            // expect q2 to contain [0, 1]
-            equal(2, q2.size());
-            equal(0, q2.poll());
-            equal(1, q2.poll());
-            check(q2.isEmpty());
-            for (int i = 2; i < CAPACITY; i++)
+            assertContentsInOrder(q2, 2, 3);
+            for (int i = 2 * SMALL; i < CAPACITY; i++)
                 equal(i, q.poll());
-            equal(2, q.size());
+            equal(4, q.size());
             check(q.contains(42));
             check(q.contains(43));
-            // System.err.println(q);
-            // System.err.println(q2);
+            check(q.contains(44));
+            check(q.contains(45));
         }
     }
 
@@ -64,6 +152,13 @@ public class DrainToFails {
             public void run() {
                 try { q.put(elt); }
                 catch (Throwable t) { unexpected(t); }}};
+    }
+
+    void assertContentsInOrder(Iterable it, Object... contents) {
+        int i = 0;
+        for (Object e : it)
+            equal(contents[i++], e);
+        equal(contents.length, i);
     }
 
     //--------------------- Infrastructure ---------------------------

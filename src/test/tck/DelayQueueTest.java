@@ -49,33 +49,22 @@ public class DelayQueueTest extends JSR166TestCase {
      */
     static class PDelay implements Delayed {
         int pseudodelay;
-        PDelay(int i) { pseudodelay = Integer.MIN_VALUE + i; }
-        public int compareTo(PDelay y) {
-            int i = pseudodelay;
-            int j = y.pseudodelay;
-            if (i < j) return -1;
-            if (i > j) return 1;
-            return 0;
+        PDelay(int i) { pseudodelay = i; }
+        public int compareTo(PDelay other) {
+            int a = this.pseudodelay;
+            int b = other.pseudodelay;
+            return (a < b) ? -1 : (a > b) ? 1 : 0;
         }
-
         public int compareTo(Delayed y) {
             return compareTo((PDelay)y);
         }
-
         public boolean equals(Object other) {
-            return equals((PDelay)other);
+            return (other instanceof PDelay) &&
+                this.pseudodelay == ((PDelay)other).pseudodelay;
         }
-        public boolean equals(PDelay other) {
-            return other.pseudodelay == pseudodelay;
-        }
-
         public long getDelay(TimeUnit ignore) {
-            return pseudodelay;
+            return Integer.MIN_VALUE + pseudodelay;
         }
-        public int intValue() {
-            return pseudodelay;
-        }
-
         public String toString() {
             return String.valueOf(pseudodelay);
         }
@@ -657,9 +646,8 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testToString() {
         DelayQueue q = populatedQueue(SIZE);
         String s = q.toString();
-        for (int i = 0; i < SIZE; ++i) {
-            assertTrue(s.contains(String.valueOf(Integer.MIN_VALUE+i)));
-        }
+        for (Object e : q)
+            assertTrue(s.contains(e.toString()));
     }
 
     /**

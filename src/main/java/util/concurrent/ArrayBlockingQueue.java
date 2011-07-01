@@ -638,11 +638,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 return n;
             } finally {
                 // Restore invariants even if c.add() threw
-                if (i > 0) {
-                    count -= i;
-                    takeIndex = take;
-                    notFull.signalAll();
-                }
+                count -= i;
+                takeIndex = take;
+                for (; i > 0 && lock.hasWaiters(notFull); i--)
+                    notFull.signal();
             }
         } finally {
             lock.unlock();

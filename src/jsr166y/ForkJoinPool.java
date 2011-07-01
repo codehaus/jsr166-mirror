@@ -1341,11 +1341,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param delta 1 for increment, -1 for decrement
      */
     final void addActiveCount(int delta) {
-        long d = delta < 0 ? -AC_UNIT : AC_UNIT;
+        long d = (long)delta << AC_SHIFT;
         long c;
-        do {} while (!UNSAFE.compareAndSwapLong(this, ctlOffset, c = ctl,
-                                                ((c + d) & AC_MASK) |
-                                                (c & ~AC_MASK)));
+        do {} while (!UNSAFE.compareAndSwapLong(this, ctlOffset,
+                                                c = ctl, c + d));
     }
 
     /**

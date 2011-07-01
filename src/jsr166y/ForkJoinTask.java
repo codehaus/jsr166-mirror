@@ -161,12 +161,14 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * See the internal documentation of class ForkJoinPool for a
      * general implementation overview.  ForkJoinTasks are mainly
      * responsible for maintaining their "status" field amidst relays
-     * to methods in ForkJoinWorkerThread and ForkJoinPool. The
-     * methods of this class are more-or-less layered into (1) basic
-     * status maintenance (2) execution and awaiting completion (3)
-     * user-level methods that additionally report results. This is
-     * sometimes hard to see because this file orders exported methods
-     * in a way that flows well in javadocs.
+     * to methods in ForkJoinWorkerThread and ForkJoinPool.
+     *
+     * The methods of this class are more-or-less layered into
+     * (1) basic status maintenance
+     * (2) execution and awaiting completion
+     * (3) user-level methods that additionally report results.
+     * This is sometimes hard to see because this file orders exported
+     * methods in a way that flows well in javadocs.
      */
 
     /*
@@ -693,7 +695,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             if (t != null) {
                 if (ex != null)
                     t.cancel(false);
-                else if (t.doJoin() < NORMAL && ex == null)
+                else if (t.doJoin() < NORMAL)
                     ex = t.getException();
             }
         }
@@ -750,7 +752,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             if (t != null) {
                 if (ex != null)
                     t.cancel(false);
-                else if (t.doJoin() < NORMAL && ex == null)
+                else if (t.doJoin() < NORMAL)
                     ex = t.getException();
             }
         }

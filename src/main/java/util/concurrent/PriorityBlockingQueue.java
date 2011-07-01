@@ -81,7 +81,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * java.util.PriorityQueue operations within a lock, as was done
      * in a previous version of this class. To maintain
      * interoperability, a plain PriorityQueue is still used during
-     * serialization, which maintains compatibility at the espense of
+     * serialization, which maintains compatibility at the expense of
      * transiently doubling overhead.
      */
 

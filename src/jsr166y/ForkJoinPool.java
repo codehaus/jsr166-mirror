@@ -465,7 +465,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Main pool control -- a long packed with:
      * AC: Number of active running workers minus target parallelism (16 bits)
-     * TC: Number of total workers minus target parallelism (16bits)
+     * TC: Number of total workers minus target parallelism (16 bits)
      * ST: true if pool is terminating (1 bit)
      * EC: the wait count of top waiting thread (15 bits)
      * ID: ~poolIndex of top of Treiber stack of waiting threads (16 bits)
@@ -545,8 +545,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     volatile boolean shutdown;
 
     /**
-     * True if use local fifo, not default lifo, for local polling
-     * Read by, and replicated by ForkJoinWorkerThreads
+     * True if use local fifo, not default lifo, for local polling.
+     * Read by, and replicated by ForkJoinWorkerThreads.
      */
     final boolean locallyFifo;
 
@@ -1321,7 +1321,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     // misc ForkJoinWorkerThread support
 
     /**
-     * Increment or decrement quiescerCount. Needed only to prevent
+     * Increments or decrements quiescerCount. Needed only to prevent
      * triggering shutdown if a worker is transiently inactive while
      * checking quiescence.
      *
@@ -1334,9 +1334,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Directly increment or decrement active count without
-     * queuing. This method is used to transiently assert inactivation
-     * while checking quiescence.
+     * Directly increments or decrements active count without queuing.
+     * This method is used to transiently assert inactivation while
+     * checking quiescence.
      *
      * @param delta 1 for increment, -1 for decrement
      */

@@ -614,21 +614,18 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @return {@code true} if this queue changed as a result of the call
      */
     public boolean remove(Object o) {
-        boolean removed = false;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int i = indexOf(o);
-            if (i != -1) {
-                removeAt(i);
-                removed = true;
-            }
+            if (i == -1)
+                return false;
+            removeAt(i);
+            return true;
         } finally {
             lock.unlock();
         }
-        return removed;
     }
-
 
     /**
      * Identity-based version for use in Itr.remove
@@ -638,8 +635,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             Object[] array = queue;
-            int n = size;
-            for (int i = 0; i < n; i++) {
+            for (int i = 0, n = size; i < n; i++) {
                 if (o == array[i]) {
                     removeAt(i);
                     break;
@@ -659,15 +655,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @return {@code true} if this queue contains the specified element
      */
     public boolean contains(Object o) {
-        int index;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            index = indexOf(o);
+            return indexOf(o) != -1;
         } finally {
             lock.unlock();
         }
-        return index != -1;
     }
 
     /**
@@ -692,7 +686,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-
 
     public String toString() {
         final ReentrantLock lock = this.lock;
@@ -882,8 +875,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         throws java.io.IOException {
         lock.lock();
         try {
-            int n = size; // avoid zero capacity argument
-            q = new PriorityQueue<E>(n == 0 ? 1 : n, comparator);
+            // avoid zero capacity argument
+            q = new PriorityQueue<E>(Math.max(size, 1), comparator);
             q.addAll(this);
             s.defaultWriteObject();
         } finally {

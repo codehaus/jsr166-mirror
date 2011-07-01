@@ -784,7 +784,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         long nc = (long)(v & E_MASK) | ((c - AC_UNIT) & (AC_MASK|TC_MASK));
         if (ctl != c || !UNSAFE.compareAndSwapLong(this, ctlOffset, c, nc)) {
             long d = ctl; // return true if lost to a deq, to force scan
-            return (int)d != (int)c && ((d - c) & AC_MASK) >= 0L;
+            return (int)d != (int)c && (d & AC_MASK) >= (c & AC_MASK);
         }
         for (int sc = w.stealCount; sc != 0;) {   // accumulate stealCount
             long s = stealCount;

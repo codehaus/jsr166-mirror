@@ -94,16 +94,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         return ((i == 0) ? items.length : i) - 1;
     }
 
-    @SuppressWarnings("unchecked")
-    static <E> E cast(Object item) {
-        return (E) item;
-    }
-
     /**
      * Returns item at index i.
      */
     final E itemAt(int i) {
-        return ArrayBlockingQueue.<E>cast(items[i]);
+        @SuppressWarnings("unchecked") E x = (E) items[i];
+        return x;
     }
 
     /**
@@ -133,7 +129,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     private E extract() {
         final Object[] items = this.items;
-        E x = ArrayBlockingQueue.<E>cast(items[takeIndex]);
+        @SuppressWarnings("unchecked") E x = (E) items[takeIndex];
         items[takeIndex] = null;
         takeIndex = inc(takeIndex);
         --count;
@@ -630,7 +626,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int i = 0;
             try {
                 while (i < n) {
-                    c.add(ArrayBlockingQueue.<E>cast(items[take]));
+                    @SuppressWarnings("unchecked") E x = (E) items[take];
+                    c.add(x);
                     items[take] = null;
                     take = inc(take);
                     ++i;

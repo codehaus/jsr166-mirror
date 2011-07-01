@@ -465,7 +465,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Main pool control -- a long packed with:
      * AC: Number of active running workers minus target parallelism (16 bits)
-     * TC: Number of total workers minus target parallelism (16bits)
+     * TC: Number of total workers minus target parallelism (16 bits)
      * ST: true if pool is terminating (1 bit)
      * EC: the wait count of top waiting thread (15 bits)
      * ID: ~poolIndex of top of Treiber stack of waiting threads (16 bits)

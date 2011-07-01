@@ -318,7 +318,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Sets the control state to the given value,
+     * Sets the control state to the given value.
      * @param value the new value
      */
     protected final void setControlState(int value) {
@@ -326,7 +326,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Increment the control state
+     * Increments the control state.
      * @return true if successful
      */
     protected final void incrementControlState() {
@@ -334,7 +334,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Decrement the control state
+     * Decrements the control state.
      * @return true if successful
      */
     protected final void decrementControlState() {

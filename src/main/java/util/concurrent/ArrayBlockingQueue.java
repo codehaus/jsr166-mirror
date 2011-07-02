@@ -5,8 +5,12 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.locks.*;
-import java.util.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.AbstractQueue;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * A bounded {@linkplain BlockingQueue blocking queue} backed by an
@@ -73,8 +77,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /** Main lock guarding all access */
     final ReentrantLock lock;
+
     /** Condition for waiting takes */
     private final Condition notEmpty;
+
     /** Condition for waiting puts */
     private final Condition notFull;
 

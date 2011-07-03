@@ -789,7 +789,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Convenience method to interrupt current thread.
      */
-    private static void selfInterrupt() {
+    static void selfInterrupt() {
         Thread.currentThread().interrupt();
     }
 

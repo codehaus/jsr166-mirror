@@ -568,7 +568,7 @@ public abstract class AbstractQueuedLongSynchronizer
     /**
      * Convenience method to interrupt current thread.
      */
-    private static void selfInterrupt() {
+    static void selfInterrupt() {
         Thread.currentThread().interrupt();
     }
 

@@ -838,7 +838,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      */
     final class Itr implements Iterator<E> {
         final Object[] array; // Array of all elements
-        int cursor;           // index of next element to return;
+        int cursor;           // index of next element to return
         int lastRet;          // index of last element, or -1 if no such
 
         Itr(Object[] array) {

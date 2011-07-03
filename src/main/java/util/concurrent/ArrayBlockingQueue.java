@@ -122,7 +122,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Inserts element at current put position, advances, and signals.
      * Call only when holding lock.
      */
-    private void insert(E x) {
+    private void enqueue(E x) {
         items[putIndex] = x;
         putIndex = inc(putIndex);
         ++count;
@@ -133,7 +133,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Extracts element at current take position, advances, and signals.
      * Call only when holding lock.
      */
-    private E extract() {
+    private E dequeue() {
         final Object[] items = this.items;
         @SuppressWarnings("unchecked") E x = (E) items[takeIndex];
         items[takeIndex] = null;
@@ -273,7 +273,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (count == items.length)
                 return false;
             else {
-                insert(e);
+                enqueue(e);
                 return true;
             }
         } finally {
@@ -295,7 +295,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             while (count == items.length)
                 notFull.await();
-            insert(e);
+            enqueue(e);
         } finally {
             lock.unlock();
         }
@@ -322,7 +322,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     return false;
                 nanos = notFull.awaitNanos(nanos);
             }
-            insert(e);
+            enqueue(e);
             return true;
         } finally {
             lock.unlock();
@@ -333,7 +333,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return (count == 0) ? null : extract();
+            return (count == 0) ? null : dequeue();
         } finally {
             lock.unlock();
         }
@@ -345,7 +345,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             while (count == 0)
                 notEmpty.await();
-            return extract();
+            return dequeue();
         } finally {
             lock.unlock();
         }
@@ -361,7 +361,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     return null;
                 nanos = notEmpty.awaitNanos(nanos);
             }
-            return extract();
+            return dequeue();
         } finally {
             lock.unlock();
         }

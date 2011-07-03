@@ -630,7 +630,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Identity-based version for use in Itr.remove
      */
-    private void removeEQ(Object o) {
+    void removeEQ(Object o) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {

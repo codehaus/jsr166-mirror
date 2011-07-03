@@ -440,11 +440,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--) {
-                if (o.equals(items[i])) {
-                    removeAt(i);
-                    return true;
-                }
+            if (count > 0) {
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do {
+                    if (o.equals(items[i])) {
+                        removeAt(i);
+                        return true;
+                    }
+                } while ((i = inc(i)) != putIndex);
             }
             return false;
         } finally {
@@ -466,9 +470,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--)
-                if (o.equals(items[i]))
-                    return true;
+            if (count > 0) {
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do {
+                    if (o.equals(items[i]))
+                        return true;
+                } while ((i = inc(i)) != putIndex);
+            }
             return false;
         } finally {
             lock.unlock();
@@ -590,12 +599,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--)
-                items[i] = null;
-            count = 0;
-            putIndex = 0;
-            takeIndex = 0;
-            notFull.signalAll();
+            int k = count;
+            if (k > 0) {
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do {
+                    items[i] = null;
+                } while ((i = inc(i)) != putIndex);
+                takeIndex = putIndex;
+                count = 0;
+                for (; k > 0 && lock.hasWaiters(notFull); k--)
+                    notFull.signal();
+            }
         } finally {
             lock.unlock();
         }
@@ -636,7 +651,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     c.add(x);
                     items[take] = null;
                     take = inc(take);
-                    ++i;
+                    i++;
                 }
                 return n;
             } finally {

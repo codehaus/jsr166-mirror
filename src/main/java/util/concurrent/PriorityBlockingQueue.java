@@ -278,7 +278,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Mechanics for poll().  Call only while holding lock.
      */
-    private E extract() {
+    private E dequeue() {
         int n = size - 1;
         if (n < 0)
             return null;
@@ -490,7 +490,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return extract();
+            return dequeue();
         } finally {
             lock.unlock();
         }
@@ -501,7 +501,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lockInterruptibly();
         E result;
         try {
-            while ( (result = extract()) == null)
+            while ( (result = dequeue()) == null)
                 notEmpty.await();
         } finally {
             lock.unlock();
@@ -515,7 +515,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.lockInterruptibly();
         E result;
         try {
-            while ( (result = extract()) == null && nanos > 0)
+            while ( (result = dequeue()) == null && nanos > 0)
                 nanos = notEmpty.awaitNanos(nanos);
         } finally {
             lock.unlock();
@@ -737,7 +737,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             int n = Math.min(size, maxElements);
             for (int i = 0; i < n; i++) {
                 c.add((E) queue[0]); // In this order, in case add() throws.
-                extract();
+                dequeue();
             }
             return n;
         } finally {

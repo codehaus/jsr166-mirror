@@ -5,8 +5,12 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.locks.*;
-import java.util.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.AbstractQueue;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * A bounded {@linkplain BlockingQueue blocking queue} backed by an
@@ -73,8 +77,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
     /** Main lock guarding all access */
     final ReentrantLock lock;
+
     /** Condition for waiting takes */
     private final Condition notEmpty;
+
     /** Condition for waiting puts */
     private final Condition notFull;
 
@@ -116,7 +122,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Inserts element at current put position, advances, and signals.
      * Call only when holding lock.
      */
-    private void insert(E x) {
+    private void enqueue(E x) {
         items[putIndex] = x;
         putIndex = inc(putIndex);
         ++count;
@@ -127,7 +133,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Extracts element at current take position, advances, and signals.
      * Call only when holding lock.
      */
-    private E extract() {
+    private E dequeue() {
         final Object[] items = this.items;
         @SuppressWarnings("unchecked") E x = (E) items[takeIndex];
         items[takeIndex] = null;
@@ -267,7 +273,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (count == items.length)
                 return false;
             else {
-                insert(e);
+                enqueue(e);
                 return true;
             }
         } finally {
@@ -289,7 +295,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             while (count == items.length)
                 notFull.await();
-            insert(e);
+            enqueue(e);
         } finally {
             lock.unlock();
         }
@@ -316,7 +322,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     return false;
                 nanos = notFull.awaitNanos(nanos);
             }
-            insert(e);
+            enqueue(e);
             return true;
         } finally {
             lock.unlock();
@@ -327,7 +333,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return (count == 0) ? null : extract();
+            return (count == 0) ? null : dequeue();
         } finally {
             lock.unlock();
         }
@@ -339,7 +345,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             while (count == 0)
                 notEmpty.await();
-            return extract();
+            return dequeue();
         } finally {
             lock.unlock();
         }
@@ -355,7 +361,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     return null;
                 nanos = notEmpty.awaitNanos(nanos);
             }
-            return extract();
+            return dequeue();
         } finally {
             lock.unlock();
         }
@@ -434,11 +440,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--) {
-                if (o.equals(items[i])) {
-                    removeAt(i);
-                    return true;
-                }
+            if (count > 0) {
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do {
+                    if (o.equals(items[i])) {
+                        removeAt(i);
+                        return true;
+                    }
+                } while ((i = inc(i)) != putIndex);
             }
             return false;
         } finally {
@@ -460,9 +470,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--)
-                if (o.equals(items[i]))
-                    return true;
+            if (count > 0) {
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do {
+                    if (o.equals(items[i]))
+                        return true;
+                } while ((i = inc(i)) != putIndex);
+            }
             return false;
         } finally {
             lock.unlock();
@@ -584,12 +599,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            for (int i = takeIndex, k = count; k > 0; i = inc(i), k--)
-                items[i] = null;
-            count = 0;
-            putIndex = 0;
-            takeIndex = 0;
-            notFull.signalAll();
+            int k = count;
+            if (k > 0) {
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do {
+                    items[i] = null;
+                } while ((i = inc(i)) != putIndex);
+                takeIndex = putIndex;
+                count = 0;
+                for (; k > 0 && lock.hasWaiters(notFull); k--)
+                    notFull.signal();
+            }
         } finally {
             lock.unlock();
         }
@@ -630,7 +651,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     c.add(x);
                     items[take] = null;
                     take = inc(take);
-                    ++i;
+                    i++;
                 }
                 return n;
             } finally {
@@ -649,12 +670,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Returns an iterator over the elements in this queue in proper sequence.
      * The elements will be returned in order from first (head) to last (tail).
      *
-     * <p>The returned {@code Iterator} is a "weakly consistent" iterator that
+     * <p>The returned iterator is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * ConcurrentModificationException}, and guarantees to traverse
+     * elements as they existed upon construction of the iterator, and
+     * may (but is not guaranteed to) reflect any modifications
+     * subsequent to construction.
      *
      * @return an iterator over the elements in this queue in proper sequence
      */

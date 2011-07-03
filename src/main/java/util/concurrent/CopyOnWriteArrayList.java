@@ -530,7 +530,7 @@ public class CopyOnWriteArrayList<E>
      * @throws IndexOutOfBoundsException if fromIndex or toIndex out of range
      *         ({@code{fromIndex < 0 || toIndex > size() || toIndex < fromIndex})
      */
-    private void removeRange(int fromIndex, int toIndex) {
+    void removeRange(int fromIndex, int toIndex) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {

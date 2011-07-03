@@ -112,7 +112,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * Head of linked list.
      * Invariant: head.item == null
      */
-    private transient Node<E> head;
+    transient Node<E> head;
 
     /**
      * Tail of linked list.

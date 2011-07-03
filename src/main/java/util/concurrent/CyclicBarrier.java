@@ -327,7 +327,7 @@ public class CyclicBarrier {
         try {
             return dowait(false, 0L);
         } catch (TimeoutException toe) {
-            throw new Error(toe); // cannot happen;
+            throw new Error(toe); // cannot happen
         }
     }
 

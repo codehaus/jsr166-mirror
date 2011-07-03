@@ -461,6 +461,24 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
+     * Identity-based version for use in Itr.remove
+     */
+    void removeEQ(Object o) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            for (Iterator<E> it = q.iterator(); it.hasNext(); ) {
+                if (o == it.next()) {
+                    it.remove();
+                    break;
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
      * Returns an iterator over all the elements (both expired and
      * unexpired) in this queue. The iterator does not return the
      * elements in any particular order.
@@ -483,7 +501,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      */
     private class Itr implements Iterator<E> {
         final Object[] array; // Array of all elements
-        int cursor;           // index of next element to return;
+        int cursor;           // index of next element to return
         int lastRet;          // index of last element, or -1 if no such
 
         Itr(Object[] array) {
@@ -506,21 +524,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         public void remove() {
             if (lastRet < 0)
                 throw new IllegalStateException();
-            Object x = array[lastRet];
+            removeEQ(array[lastRet]);
             lastRet = -1;
-            // Traverse underlying queue to find == element,
-            // not just a .equals element.
-            lock.lock();
-            try {
-                for (Iterator<E> it = q.iterator(); it.hasNext(); ) {
-                    if (it.next() == x) {
-                        it.remove();
-                        return;
-                    }
-                }
-            } finally {
-                lock.unlock();
-            }
         }
     }
 

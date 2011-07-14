@@ -589,7 +589,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * avoid missing traversing elements.
      */
     private E removeAt(int i) {
-        assert i >= 0 && i < size;
+        // assert i >= 0 && i < size;
         modCount++;
         int s = --size;
         if (s == i) // removed last element

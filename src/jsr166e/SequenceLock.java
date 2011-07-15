@@ -122,7 +122,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
                 getExclusiveOwnerThread() == Thread.currentThread();
         }
 
-      public final boolean tryAcquire(long acquires) {
+        public final boolean tryAcquire(long acquires) {
             Thread current = Thread.currentThread();
             long c = getState();
             if ((c & 1L) == 0L) {
@@ -152,7 +152,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
 
         public final long tryAcquireShared(long unused) {
             return ((getState() & 1L) == 0L ||
-                    getExclusiveOwnerThread() == Thread.currentThread())?
+                    getExclusiveOwnerThread() == Thread.currentThread()) ?
                 1L : -1L; // must return long
         }
 
@@ -205,7 +205,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
         }
 
         final long getHoldCount() {
-            return isHeldExclusively()? holds : 0;
+            return isHeldExclusively() ? holds : 0;
         }
 
         private void readObject(ObjectInputStream s)

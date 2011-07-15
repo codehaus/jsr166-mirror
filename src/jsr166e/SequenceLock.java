@@ -31,12 +31,12 @@ import java.io.IOException;
  * possibly platform-specific, value is used.
  *
  * <p>Except for the lack of support for specified fairness policies,
- * or {link Condition} objects, a SequenceLock can be used in the same
+ * or {@link Condition} objects, a SequenceLock can be used in the same
  * way as {@link ReentrantLock}, and has a nearly identical
  * API. SequenceLocks may be preferable in contexts in which multiple
  * threads invoke read-only methods much more frequently than fully
  * locked methods.
- * 
+ *
  * <p> Methods {@code awaitAvailability} and {@code getSequence} can
  * be used together to define (partially) optimistic read-only methods
  * that are usually more efficient than ReadWriteLocks when they
@@ -121,7 +121,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
             return (getState() & 1L) != 0L &&
                 getExclusiveOwnerThread() == Thread.currentThread();
         }
-        
+
       public final boolean tryAcquire(long acquires) {
             Thread current = Thread.currentThread();
             long c = getState();
@@ -138,7 +138,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
             }
             return false;
         }
-        
+
         public final boolean tryRelease(long releases) {
             if (Thread.currentThread() != getExclusiveOwnerThread())
                 throw new IllegalMonitorStateException();
@@ -151,8 +151,8 @@ public class SequenceLock implements Lock, java.io.Serializable {
         }
 
         public final long tryAcquireShared(long unused) {
-            return ((getState() & 1L) == 0L || 
-                    getExclusiveOwnerThread() == Thread.currentThread())? 
+            return ((getState() & 1L) == 0L ||
+                    getExclusiveOwnerThread() == Thread.currentThread())?
                 1L : -1L; // must return long
         }
 
@@ -160,7 +160,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
             return true;
         }
 
-        public final Condition newCondition() { 
+        public final Condition newCondition() {
             throw new UnsupportedOperationException();
         }
 
@@ -169,7 +169,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
         final long getSequence() {
             return getState();
         }
-        
+
         final void lock() {
             int k = spins;
             while (!tryAcquire(1)) {
@@ -180,7 +180,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
                 --k;
             }
         }
-        
+
         final long awaitAvailability() {
             long s;
             int k = spins;
@@ -218,13 +218,13 @@ public class SequenceLock implements Lock, java.io.Serializable {
 
     private final Sync sync;
 
-    /** 
+    /**
      * The default spin value for constructor. Future versions of this
      * class might choose platform-specific values.  Currently, except
      * on uniprocessors, it is set to a small value that ovecomes near
      * misses between releases and acquires.
      */
-    static final int DEFAULT_SPINS = 
+    static final int DEFAULT_SPINS =
         Runtime.getRuntime().availableProcessors() > 1 ? 64 : 0;
 
     /**
@@ -236,7 +236,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
 
     /**
      * Creates an instance of {@code SequenceLock} that
-     * will retry attempts to lock or await release 
+     * will retry attempts to lock or await release
      * at least the given number times before blocking.
      */
     public SequenceLock(int spins) { sync = new Sync(spins); }
@@ -261,7 +261,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * @return the current sequence number
      */
     public long awaitAvailability() { return sync.awaitAvailability(); }
-    
+
     /**
      * Acquires the lock.
      *
@@ -334,7 +334,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      *
      * <p>Acquires the lock if it is not held by another thread and
      * returns immediately with the value {@code true}, setting the
-     * lock hold count to one. 
+     * lock hold count to one.
      *
      * <p> If the current thread already holds this lock then the hold
      * count is incremented by one and the method returns {@code true}.
@@ -445,7 +445,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      *
      * @throws UnsupportedOperationException
      */
-    public Condition newCondition()   { 
+    public Condition newCondition()   {
         throw new UnsupportedOperationException();
     }
 
@@ -456,7 +456,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * matched by an unlock action.
      *
      * <p>The hold count information is typically only used for testing and
-     * debugging purposes. 
+     * debugging purposes.
      *
      * @return the number of holds on this lock by the current thread,
      *         or zero if this lock is not held by the current thread
@@ -570,4 +570,4 @@ public class SequenceLock implements Lock, java.io.Serializable {
     }
 
 }
-            
+

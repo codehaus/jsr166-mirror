@@ -327,6 +327,42 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
         awaitTermination(t);
     }
 
+    /**
+     * remove(x) removes x and returns true if present
+     * TODO: move to superclass CollectionTest.java
+     */
+    public void testRemoveElement() {
+        final BlockingQueue q = emptyCollection();
+        final int size = Math.min(q.remainingCapacity(), SIZE);
+        final Object[] elts = new Object[size];
+        assertFalse(q.contains(makeElement(99)));
+        assertFalse(q.remove(makeElement(99)));
+        checkEmpty(q);
+        for (int i = 0; i < size; i++)
+            q.add(elts[i] = makeElement(i));
+        for (int i = 1; i < size; i+=2) {
+            for (int pass = 0; pass < 2; pass++) {
+                assertEquals((pass == 0), q.contains(elts[i]));
+                assertEquals((pass == 0), q.remove(elts[i]));
+                assertFalse(q.contains(elts[i]));
+                assertTrue(q.contains(elts[i-1]));
+                if (i < size - 1)
+                    assertTrue(q.contains(elts[i+1]));
+            }
+        }
+        if (size > 0)
+            assertTrue(q.contains(elts[0]));
+        for (int i = size-2; i >= 0; i-=2) {
+            assertTrue(q.contains(elts[i]));
+            assertFalse(q.contains(elts[i+1]));
+            assertTrue(q.remove(elts[i]));
+            assertFalse(q.contains(elts[i]));
+            assertFalse(q.remove(elts[i+1]));
+            assertFalse(q.contains(elts[i+1]));
+        }
+        checkEmpty(q);
+    }
+
     /** For debugging. */
     public void XXXXtestFails() {
         fail(emptyCollection().getClass().toString());

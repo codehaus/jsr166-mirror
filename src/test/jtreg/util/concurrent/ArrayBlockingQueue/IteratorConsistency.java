@@ -1,0 +1,592 @@
+/*
+ * Written by Martin Buchholz with assistance from members of JCP
+ * JSR-166 Expert Group and released to the public domain, as
+ * explained at http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+import java.lang.ref.*;
+import java.lang.reflect.*;
+import java.util.*;
+import java.util.concurrent.*;
+
+/*
+ * @test
+ * @summary White box testing of ArrayBlockingQueue iterators.
+ */
+
+/**
+ * Highly coupled to the implementation of ArrayBlockingQueue.
+ * Uses reflection to inspect queue and iterator state.
+ */
+@SuppressWarnings({"unchecked", "rawtypes"})
+public class IteratorConsistency {
+    final Random rnd = new Random();
+    final int CAPACITY = 20;
+    Field itrsField;
+    Field itemsField;
+    Field takeIndexField;
+    Field headField;
+    Field nextField;
+    Field prevTakeIndexField;
+
+    void test(String[] args) throws Throwable {
+        itrsField = ArrayBlockingQueue.class.getDeclaredField("itrs");
+        itemsField = ArrayBlockingQueue.class.getDeclaredField("items");
+        takeIndexField = ArrayBlockingQueue.class.getDeclaredField("takeIndex");
+        headField = Class.forName("java.util.concurrent.ArrayBlockingQueue$Itrs").getDeclaredField("head");
+        nextField = Class.forName("java.util.concurrent.ArrayBlockingQueue$Itrs$Node").getDeclaredField("next");
+        prevTakeIndexField = Class.forName("java.util.concurrent.ArrayBlockingQueue$Itr").getDeclaredField("prevTakeIndex");
+        itrsField.setAccessible(true);
+        itemsField.setAccessible(true);
+        takeIndexField.setAccessible(true);
+        headField.setAccessible(true);
+        nextField.setAccessible(true);
+        prevTakeIndexField.setAccessible(true);
+        test(CAPACITY, true);
+        test(CAPACITY, false);
+    }
+
+    Object itrs(ArrayBlockingQueue q) {
+        try {
+            return itrsField.get(q);
+        } catch (Throwable t) { throw new Error(); }
+    }
+
+    int takeIndex(ArrayBlockingQueue q) {
+        try {
+            return takeIndexField.getInt(q);
+        } catch (Throwable t) { throw new Error(); }
+    }
+
+    List<Iterator> trackedIterators(Object itrs) {
+        try {
+            List<Iterator> its = new ArrayList<Iterator>();
+            if (itrs != null)
+                for (Object p = headField.get(itrs); p != null; p = nextField.get(p))
+                    its.add(((WeakReference<Iterator>)(p)).get());
+            Collections.reverse(its);
+            return its;
+        } catch (Throwable t) { throw new Error(); }
+    }
+
+    List<Iterator> trackedIterators(ArrayBlockingQueue q) {
+        return trackedIterators(itrs(q));
+    }
+
+    List<Iterator> attachedIterators(Object itrs) {
+        try {
+            List<Iterator> its = new ArrayList<Iterator>();
+            if (itrs != null)
+                for (Object p = headField.get(itrs); p != null; p = nextField.get(p)) {
+                    Iterator it = ((WeakReference<Iterator>)(p)).get();
+                    if (it != null && !isDetached(it))
+                        its.add(it);
+                }
+            Collections.reverse(its);
+            return its;
+        } catch (Throwable t) { unexpected(t); return null; }
+    }
+
+    List<Iterator> attachedIterators(ArrayBlockingQueue q) {
+        return attachedIterators(itrs(q));
+    }
+
+    Object[] internalArray(ArrayBlockingQueue q) {
+        try {
+            return (Object[]) itemsField.get(q);
+        } catch (Throwable t) { throw new Error(t); }
+    }
+
+    void printInternalArray(ArrayBlockingQueue q) {
+        System.err.println(Arrays.toString(internalArray(q)));
+    }
+
+    void checkExhausted(Iterator it) {
+        if (rnd.nextBoolean()) {
+            check(!it.hasNext());
+            check(isDetached(it));
+        }
+        if (rnd.nextBoolean())
+            try { it.next(); fail("should throw"); }
+            catch (NoSuchElementException success) {}
+    }
+
+    boolean isDetached(Iterator it) {
+        try {
+            return prevTakeIndexField.getInt(it) < 0;
+        } catch (IllegalAccessException t) { unexpected(t); return false; }
+    }
+
+    void checkDetached(Iterator it) {
+        check(isDetached(it));
+    }
+
+    void removeUsingIterator(ArrayBlockingQueue q, Object element) {
+        Iterator it = q.iterator();
+        while (it.hasNext()) {
+            Object x = it.next();
+            if (element.equals(x))
+                it.remove();
+            checkRemoveThrowsISE(it);
+        }
+    }
+
+    void checkRemoveThrowsISE(Iterator it) {
+        if (rnd.nextBoolean()) {
+            try { it.remove(); fail("should throw"); }
+            catch (IllegalStateException success) {}
+        }
+    }
+
+    void checkRemoveHasNoEffect(Iterator it, Collection c) {
+        if (rnd.nextBoolean()) {
+            int size = c.size();
+            it.remove(); // no effect
+            equal(c.size(), size);
+            checkRemoveThrowsISE(it);
+        }
+    }
+
+    private static void waitForFinalizersToRun() {
+        for (int i = 0; i < 2; i++)
+            tryWaitForFinalizersToRun();
+    }
+
+    private static void tryWaitForFinalizersToRun() {
+        System.gc();
+        final CountDownLatch fin = new CountDownLatch(1);
+        new Object() { protected void finalize() { fin.countDown(); }};
+        System.gc();
+        try { fin.await(); }
+        catch (InterruptedException ie) { throw new Error(ie); }
+    }
+
+    void test(int capacity, boolean fair) {
+        //----------------------------------------------------------------
+        // q.clear will clear out itrs.
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity; i++)
+                check(q.add(i));
+            check(itrs(q) == null);
+            for (int i = 0; i < capacity; i++) {
+                its.add(q.iterator());
+                equal(trackedIterators(q), its);
+                q.poll();
+                q.add(capacity+i);
+            }
+            q.clear();
+            check(itrs(q) == null);
+            int j = 0;
+            for (Iterator it : its) {
+                if (rnd.nextBoolean())
+                    check(it.hasNext());
+                equal(it.next(), j++);
+                checkExhausted(it);
+            }
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // q emptying will clear out itrs.
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            check(itrs(q) == null);
+            for (int i = 0; i < capacity; i++) {
+                its.add(q.iterator());
+                equal(trackedIterators(q), its);
+                q.poll();
+                q.add(capacity+i);
+            }
+            for (int i = 0; i < capacity; i++)
+                q.poll();
+            check(itrs(q) == null);
+            int j = 0;
+            for (Iterator it : its) {
+                if (rnd.nextBoolean())
+                    check(it.hasNext());
+                equal(it.next(), j++);
+                checkExhausted(it);
+            }
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Advancing 2 cycles will remove iterators.
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            check(itrs(q) == null);
+            for (int i = capacity; i < 3 * capacity; i++) {
+                its.add(q.iterator());
+                equal(trackedIterators(q), its);
+                q.poll();
+                q.add(i);
+            }
+            for (int i = 3 * capacity; i < 4 * capacity; i++) {
+                equal(trackedIterators(q), its.subList(capacity,2*capacity));
+                q.poll();
+                q.add(i);
+            }
+            check(itrs(q) == null);
+            int j = 0;
+            for (Iterator it : its) {
+                if (rnd.nextBoolean())
+                    check(it.hasNext());
+                equal(it.next(), j++);
+                checkExhausted(it);
+            }
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check iterators on an empty q
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            for (int i = 0; i < 4; i++) {
+                Iterator it = q.iterator();
+                check(itrs(q) == null);
+                if (rnd.nextBoolean()) checkExhausted(it);
+                if (rnd.nextBoolean()) checkDetached(it);
+                checkRemoveThrowsISE(it);
+            }
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check "interior" removal of iterator's last element
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            for (int i = 0; i < capacity; i++) {
+                Iterator it = q.iterator();
+                its.add(it);
+                for (int j = 0; j < i; j++)
+                    equal(j, it.next());
+                equal(attachedIterators(q), its);
+            }
+            q.remove(capacity - 1);
+            equal(attachedIterators(q), its);
+            for (int i = 1; i < capacity - 1; i++) {
+                q.remove(capacity - i - 1);
+                Iterator it = its.get(capacity - i);
+                checkDetached(it);
+                equal(attachedIterators(q), its.subList(0, capacity - i));
+                if (rnd.nextBoolean()) check(it.hasNext());
+                equal(it.next(), capacity - i);
+                checkExhausted(it);
+            }
+            equal(attachedIterators(q), its.subList(0, 2));
+            q.remove(0);
+            check(q.isEmpty());
+            check(itrs(q) == null);
+            Iterator it = its.get(0);
+            equal(it.next(), 0);
+            checkRemoveHasNoEffect(it, q);
+            checkExhausted(it);
+            checkDetached(it);
+            checkRemoveHasNoEffect(its.get(1), q);
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check "interior" removal of alternating elements, straddling 2 cycles
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            // Move takeIndex to middle
+            for (int i = 0; i < capacity/2; i++) {
+                check(q.add(i));
+                equal(q.poll(), i);
+            }
+            check(takeIndex(q) == capacity/2);
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            for (int i = 0; i < capacity; i++) {
+                Iterator it = q.iterator();
+                its.add(it);
+                for (int j = 0; j < i; j++)
+                    equal(j, it.next());
+                equal(attachedIterators(q), its);
+            }
+            // Remove all even elements, in either direction using
+            // q.remove(), or iterator.remove()
+            switch (rnd.nextInt(3)) {
+            case 0:
+                for (int i = 0; i < capacity; i+=2) {
+                    check(q.remove(i));
+                    equal(attachedIterators(q), its);
+                }
+                break;
+            case 1:
+                for (int i = capacity - 2; i >= 0; i-=2) {
+                    check(q.remove(i));
+                    equal(attachedIterators(q), its);
+                }
+                break;
+            case 2:
+                Iterator it = q.iterator();
+                while (it.hasNext()) {
+                    int i = (Integer) it.next();
+                    if ((i & 1) == 0)
+                        it.remove();
+                }
+                equal(attachedIterators(q), its);
+                break;
+            default: throw new Error();
+            }
+
+            for (int i = 0; i < capacity; i++) {
+                Iterator it = its.get(i);
+                boolean even = ((i & 1) == 0);
+                if (even) {
+                    if (rnd.nextBoolean()) check(it.hasNext());
+                    equal(i, it.next());
+                    for (int j = i+1; j < capacity; j += 2)
+                        equal(j, it.next());
+                    check(!isDetached(it));
+                    check(!it.hasNext());
+                    check(isDetached(it));
+                } else { /* odd */
+                    if (rnd.nextBoolean()) check(it.hasNext());
+                    checkRemoveHasNoEffect(it, q);
+                    equal(i, it.next());
+                    for (int j = i+2; j < capacity; j += 2)
+                        equal(j, it.next());
+                    check(!isDetached(it));
+                    check(!it.hasNext());
+                    check(isDetached(it));
+                }
+            }
+            equal(trackedIterators(q), Collections.emptyList());
+            check(itrs(q) == null);
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check garbage collection of discarded iterators
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            for (int i = 0; i < capacity; i++) {
+                its.add(q.iterator());
+                equal(attachedIterators(q), its);
+            }
+            its = null;
+            waitForFinalizersToRun();
+            List<Iterator> trackedIterators = trackedIterators(q);
+            equal(trackedIterators.size(), capacity);
+            for (Iterator x : trackedIterators)
+                check(x == null);
+            Iterator it = q.iterator();
+            equal(trackedIterators(q), Collections.singletonList(it));
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check incremental sweeping of discarded iterators.
+        // Excessively white box?!
+        //----------------------------------------------------------------
+        try {
+            final int SHORT_SWEEP_PROBES = 4;
+            final int LONG_SWEEP_PROBES = 16;
+            final int PROBE_HOP = LONG_SWEEP_PROBES + 6 * SHORT_SWEEP_PROBES;
+            final int PROBE_HOP_COUNT = 10;
+            // Expect around 8 sweeps per PROBE_HOP
+            final int SWEEPS_PER_PROBE_HOP = 8;
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            for (int i = 0; i < PROBE_HOP_COUNT * PROBE_HOP; i++) {
+                its.add(q.iterator());
+                equal(attachedIterators(q), its);
+            }
+            // make some garbage, separated by PROBE_HOP
+            for (int i = 0; i < its.size(); i += PROBE_HOP)
+                its.set(i, null);
+            waitForFinalizersToRun();
+            int retries;
+            for (retries = 0;
+                 trackedIterators(q).contains(null) && retries < 1000;
+                 retries++)
+                // one round of sweeping
+                its.add(q.iterator());
+            check(retries >= PROBE_HOP_COUNT * (SWEEPS_PER_PROBE_HOP - 2));
+            check(retries <= PROBE_HOP_COUNT * (SWEEPS_PER_PROBE_HOP + 2));
+            Iterator itsit = its.iterator();
+            while (itsit.hasNext())
+                if (itsit.next() == null)
+                    itsit.remove();
+            equal(trackedIterators(q), its);
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check safety of iterator.remove while in detached mode.
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity/2; i++) {
+                q.add(i);
+                q.remove();
+            }
+            check(takeIndex(q) == capacity/2);
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            for (int i = 0; i < capacity; i++) {
+                Iterator it = q.iterator();
+                its.add(it);
+                for (int j = 0; j < i; j++)
+                    equal(j, it.next());
+                equal(attachedIterators(q), its);
+            }
+            for (int i = capacity - 1; i >= 0; i--) {
+                Iterator it = its.get(i);
+                equal(i, it.next()); // last element
+                check(!isDetached(it));
+                check(!it.hasNext()); // first hasNext failure
+                check(isDetached(it));
+                int size = q.size();
+                check(q.contains(i));
+                switch (rnd.nextInt(3)) {
+                case 0:
+                    it.remove();
+                    check(!q.contains(i));
+                    equal(q.size(), size - 1);
+                    break;
+                case 1:
+                    // replace i with impostor
+                    if (q.remainingCapacity() == 0) {
+                        check(q.remove(i));
+                        check(q.add(-1));
+                    } else {
+                        check(q.add(-1));
+                        check(q.remove(i));
+                    }
+                    it.remove(); // should have no effect
+                    equal(size, q.size());
+                    check(q.contains(-1));
+                    check(q.remove(-1));
+                    break;
+                case 2:
+                    // replace i with true impostor
+                    if (i != 0) {
+                        check(q.remove(i));
+                        check(q.add(i));
+                    }
+                    it.remove();
+                    check(!q.contains(i));
+                    equal(q.size(), size - 1);
+                    break;
+                default: throw new Error();
+                }
+                checkRemoveThrowsISE(it);
+                check(isDetached(it));
+                check(!trackedIterators(q).contains(it));
+            }
+            check(q.isEmpty());
+            check(itrs(q) == null);
+            for (Iterator it : its)
+                checkExhausted(it);
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check dequeues bypassing iterators' current positions.
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            Queue<Iterator> its0
+                = new ArrayDeque<Iterator>();
+            Queue<Iterator> itsMid
+                = new ArrayDeque<Iterator>();
+            List<Iterator> its = new ArrayList<Iterator>();
+            for (int i = 0; i < capacity; i++)
+                q.add(i);
+            for (int i = 0; i < 2 * capacity + 1; i++) {
+                Iterator it = q.iterator();
+                its.add(it);
+                its0.add(it);
+            }
+            for (int i = 0; i < 2 * capacity + 1; i++) {
+                Iterator it = q.iterator();
+                for (int j = 0; j < capacity/2; j++)
+                    equal(j, it.next());
+                its.add(it);
+                itsMid.add(it);
+            }
+            for (int i = capacity; i < 3 * capacity; i++) {
+                Iterator it;
+
+                it = its0.remove();
+                checkRemoveThrowsISE(it);
+                if (rnd.nextBoolean()) check(it.hasNext());
+                equal(0, it.next());
+                int victim = i - capacity;
+                for (int j = victim + (victim == 0 ? 1 : 0); j < i; j++) {
+                    if (rnd.nextBoolean()) check(it.hasNext());
+                    equal(j, it.next());
+                }
+                checkExhausted(it);
+
+                it = itsMid.remove();
+                if (victim >= capacity/2)
+                    checkRemoveHasNoEffect(it, q);
+                equal(capacity/2, it.next());
+                if (victim > capacity/2)
+                    checkRemoveHasNoEffect(it, q);
+                for (int j = Math.max(victim, capacity/2 + 1); j < i; j++) {
+                    if (rnd.nextBoolean()) check(it.hasNext());
+                    equal(j, it.next());
+                }
+                checkExhausted(it);
+
+                equal(victim, q.remove());
+                check(q.add(i));
+            }
+            // takeIndex has wrapped twice.
+            Iterator it0 = its0.remove();
+            Iterator itMid = itsMid.remove();
+            check(isDetached(it0));
+            check(isDetached(itMid));
+            if (rnd.nextBoolean()) check(it0.hasNext());
+            if (rnd.nextBoolean()) check(itMid.hasNext());
+            checkRemoveThrowsISE(it0);
+            checkRemoveHasNoEffect(itMid, q);
+            if (rnd.nextBoolean()) equal(0, it0.next());
+            if (rnd.nextBoolean()) equal(capacity/2, itMid.next());
+            check(isDetached(it0));
+            check(isDetached(itMid));
+            equal(capacity, q.size());
+            equal(0, q.remainingCapacity());
+        } catch (Throwable t) { unexpected(t); }
+
+    }
+
+    //--------------------- Infrastructure ---------------------------
+    volatile int passed = 0, failed = 0;
+    void pass() {passed++;}
+    void fail() {failed++; Thread.dumpStack();}
+    void fail(String msg) {System.err.println(msg); fail();}
+    void unexpected(Throwable t) {failed++; t.printStackTrace();}
+    void check(boolean cond) {if (cond) pass(); else fail();}
+    void equal(Object x, Object y) {
+        if (x == null ? y == null : x.equals(y)) pass();
+        else fail(x + " not equal to " + y);}
+    public static void main(String[] args) throws Throwable {
+        new IteratorConsistency().instanceMain(args);}
+    public void instanceMain(String[] args) throws Throwable {
+        try {test(args);} catch (Throwable t) {unexpected(t);}
+        System.err.printf("%nPassed = %d, failed = %d%n%n", passed, failed);
+        if (failed > 0) throw new AssertionError("Some tests failed");}
+}

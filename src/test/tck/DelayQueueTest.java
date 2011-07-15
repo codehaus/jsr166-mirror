@@ -482,21 +482,6 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     * remove(x) removes x and returns true if present
-     */
-    public void testRemoveElement() {
-        DelayQueue q = populatedQueue(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.remove(new PDelay(i)));
-        }
-        for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.remove(new PDelay(i)));
-            assertFalse(q.remove(new PDelay(i+1)));
-        }
-        assertTrue(q.isEmpty());
-    }
-
-    /**
      * contains(x) reports true when elements added but not yet removed
      */
     public void testContains() {

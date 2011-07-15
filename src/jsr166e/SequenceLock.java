@@ -19,7 +19,7 @@ import java.io.IOException;
  * A reentrant mutual exclusion {@link Lock} in which each lock
  * acquisition or release advances a sequence number.  When the
  * sequence number (accessible using {@link #getSequence()}) is odd,
- * the lock is held. When it is even (i.e., {@code lock.getSequence()
+ * the lock is held. When it is even (i.e., ({@code lock.getSequence()
  * & 1L) == 0L}), the lock is released. Method {@link
  * #awaitAvailability} can be used to await availability of the lock,
  * returning its current sequence number. Sequence numbers are of type
@@ -31,10 +31,11 @@ import java.io.IOException;
  * possibly platform-specific, value is used.
  *
  * <p>Except for the lack of support for specified fairness policies,
- * a SequenceLock can be used in the same way as {@link
- * ReentrantLock}, and has a nearly identical API. SequenceLocks may
- * be preferable in contexts in which multiple threads invoke
- * read-only methods much more frequently than fully locked methods.
+ * or {link Condition} objects, a SequenceLock can be used in the same
+ * way as {@link ReentrantLock}, and has a nearly identical
+ * API. SequenceLocks may be preferable in contexts in which multiple
+ * threads invoke read-only methods much more frequently than fully
+ * locked methods.
  * 
  * <p> Methods {@code awaitAvailability} and {@code getSequence} can
  * be used together to define (partially) optimistic read-only methods
@@ -121,7 +122,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
                 getExclusiveOwnerThread() == Thread.currentThread();
         }
         
-        public final boolean tryAcquire(long acquires) {
+      public final boolean tryAcquire(long acquires) {
             Thread current = Thread.currentThread();
             long c = getState();
             if ((c & 1L) == 0L) {
@@ -159,7 +160,9 @@ public class SequenceLock implements Lock, java.io.Serializable {
             return true;
         }
 
-        public final Condition newCondition() { return new ConditionObject(); }
+        public final Condition newCondition() { 
+            throw new UnsupportedOperationException();
+        }
 
         // Other methods in support of SequenceLock
 
@@ -198,7 +201,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
         }
 
         final Thread getOwner() {
-            return (getState() & 1L) != 0L ? null : getExclusiveOwnerThread();
+            return (getState() & 1L) == 0L ? null : getExclusiveOwnerThread();
         }
 
         final long getHoldCount() {
@@ -437,42 +440,14 @@ public class SequenceLock implements Lock, java.io.Serializable {
     public void unlock()              { sync.release(1); }
 
     /**
-     * Returns a {@link Condition} instance for use with this
-     * {@link Lock} instance.
+     * Throws UnsupportedOperationException. SequenceLocks
+     * do not support Condition objects.
      *
-     * <p>The returned {@link Condition} instance supports the same
-     * usages as do the {@link Object} monitor methods ({@link
-     * Object#wait() wait}, {@link Object#notify notify}, and {@link
-     * Object#notifyAll notifyAll}) when used with the built-in
-     * monitor lock.
-     *
-     * <ul>
-     *
-     * <li>If this lock is not held when any of the {@link Condition}
-     * {@linkplain Condition#await() waiting} or {@linkplain
-     * Condition#signal signalling} methods are called, then an {@link
-     * IllegalMonitorStateException} is thrown.
-     *
-     * <li>When the condition {@linkplain Condition#await() waiting}
-     * methods are called the lock is released and, before they
-     * return, the lock is reacquired and the lock hold count restored
-     * to what it was when the method was called.
-     *
-     * <li>If a thread is {@linkplain Thread#interrupt interrupted}
-     * while waiting then the wait will terminate, an {@link
-     * InterruptedException} will be thrown, and the thread's
-     * interrupted status will be cleared.
-     *
-     * <li> Waiting threads are signalled in FIFO order.
-     *
-     * <li>The ordering of lock reacquisition for threads returning
-     * from waiting methods is the same as for threads initially
-     * acquiring the lock.
-     * </ul>
-     *
-     * @return the Condition object
+     * @throws UnsupportedOperationException
      */
-    public Condition newCondition()   { return sync.newCondition(); }
+    public Condition newCondition()   { 
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Queries the number of holds on this lock by the current thread.
@@ -577,77 +552,6 @@ public class SequenceLock implements Lock, java.io.Serializable {
      */
     protected Collection<Thread> getQueuedThreads() {
         return sync.getQueuedThreads();
-    }
-
-    /**
-     * Queries whether any threads are waiting on the given condition
-     * associated with this lock. Note that because timeouts and
-     * interrupts may occur at any time, a {@code true} return does
-     * not guarantee that a future {@code signal} will awaken any
-     * threads.  This method is designed primarily for use in
-     * monitoring of the system state.
-     *
-     * @param condition the condition
-     * @return {@code true} if there are any waiting threads
-     * @throws IllegalMonitorStateException if this lock is not held
-     * @throws IllegalArgumentException if the given condition is
-     *         not associated with this lock
-     * @throws NullPointerException if the condition is null
-     */
-    public boolean hasWaiters(Condition condition) {
-        if (condition == null)
-            throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedLongSynchronizer.ConditionObject))
-            throw new IllegalArgumentException("not owner");
-        return sync.hasWaiters((AbstractQueuedLongSynchronizer.ConditionObject)condition);
-    }
-
-    /**
-     * Returns an estimate of the number of threads waiting on the
-     * given condition associated with this lock. Note that because
-     * timeouts and interrupts may occur at any time, the estimate
-     * serves only as an upper bound on the actual number of waiters.
-     * This method is designed for use in monitoring of the system
-     * state, not for synchronization control.
-     *
-     * @param condition the condition
-     * @return the estimated number of waiting threads
-     * @throws IllegalMonitorStateException if this lock is not held
-     * @throws IllegalArgumentException if the given condition is
-     *         not associated with this lock
-     * @throws NullPointerException if the condition is null
-     */
-    public int getWaitQueueLength(Condition condition) {
-        if (condition == null)
-            throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedLongSynchronizer.ConditionObject))
-            throw new IllegalArgumentException("not owner");
-        return sync.getWaitQueueLength((AbstractQueuedLongSynchronizer.ConditionObject)condition);
-    }
-
-    /**
-     * Returns a collection containing those threads that may be
-     * waiting on the given condition associated with this lock.
-     * Because the actual set of threads may change dynamically while
-     * constructing this result, the returned collection is only a
-     * best-effort estimate. The elements of the returned collection
-     * are in no particular order.  This method is designed to
-     * facilitate construction of subclasses that provide more
-     * extensive condition monitoring facilities.
-     *
-     * @param condition the condition
-     * @return the collection of threads
-     * @throws IllegalMonitorStateException if this lock is not held
-     * @throws IllegalArgumentException if the given condition is
-     *         not associated with this lock
-     * @throws NullPointerException if the condition is null
-     */
-    protected Collection<Thread> getWaitingThreads(Condition condition) {
-        if (condition == null)
-            throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedLongSynchronizer.ConditionObject))
-            throw new IllegalArgumentException("not owner");
-        return sync.getWaitingThreads((AbstractQueuedLongSynchronizer.ConditionObject)condition);
     }
 
     /**

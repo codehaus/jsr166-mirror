@@ -551,7 +551,14 @@ public class IteratorConsistency {
                 }
                 checkExhausted(it);
 
-                equal(victim, q.remove());
+                if (rnd.nextBoolean()) {
+                    equal(victim, q.remove());
+                } else {
+                    ArrayList list = new ArrayList(1);
+                    q.drainTo(list, 1);
+                    equal(list.size(), 1);
+                    equal(victim, list.get(0));
+                }
                 check(q.add(i));
             }
             // takeIndex has wrapped twice.

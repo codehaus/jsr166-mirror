@@ -42,6 +42,10 @@
   <property name="build.jsr166ylib.dir"        location="${build.dir}/jsr166ylib"/>
   <property name="build.jsr166yjavadocs.dir"   location="${build.dir}/jsr166yjavadocs"/>
 
+  <property name="build.jsr166e.dir"           location="${build.dir}/jsr166e"/>
+  <property name="build.jsr166elib.dir"        location="${build.dir}/jsr166elib"/>
+  <property name="build.jsr166ejavadocs.dir"   location="${build.dir}/jsr166ejavadocs"/>
+
   <property name="build.extra166y.dir"         location="${build.dir}/extra166y"/>
   <property name="build.extra166ylib.dir"      location="${build.dir}/extra166ylib"/>
   <property name="build.extra166yjavadocs.dir" location="${build.dir}/extra166yjavadocs"/>
@@ -57,18 +61,21 @@
   <property name="topsrc.dir"           location="${basedir}/src"/>
   <property name="jsr166xsrc.dir"       location="${basedir}/src/jsr166x"/>
   <property name="jsr166ysrc.dir"       location="${basedir}/src/jsr166y"/>
+  <property name="jsr166esrc.dir"       location="${basedir}/src/jsr166e"/>
   <property name="extra166ysrc.dir"     location="${basedir}/src/extra166y"/>
   <property name="jdksrc.dir"           location="/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"/>
   <!-- Distribution locations -->
   <property name="dist.javadocs.dir"           location="${dist.dir}/docs"/>
   <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
   <property name="dist.jsr166yjavadocs.dir"    location="${dist.dir}/jsr166ydocs"/>
+  <property name="dist.jsr166ejavadocs.dir"    location="${dist.dir}/jsr166edocs"/>
   <property name="dist.extra166yjavadocs.dir"  location="${dist.dir}/extra166ydocs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
   <property name="jsr166xproduct.jar"   location="${build.jsr166xlib.dir}/jsr166x.jar"/>
   <property name="jsr166yproduct.jar"   location="${build.jsr166ylib.dir}/jsr166y.jar"/>
+  <property name="jsr166eproduct.jar"   location="${build.jsr166elib.dir}/jsr166e.jar"/>
   <property name="extra166yproduct.jar" location="${build.extra166ylib.dir}/extra166y.jar"/>
   <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
 
@@ -90,7 +97,7 @@
   <!-- Main targets -->
 
   <target name="dists"
-          depends="dist, jsr166xdist, jsr166ydist, extra166ydist"
+          depends="dist, jsr166xdist, jsr166ydist,jsr166edist,  extra166ydist"
           description="Builds all public jars and docs"/>
 
   <target name="compile"
@@ -663,6 +670,7 @@
 
   </target>
 
+
   <!-- extra166y -->
 
 
@@ -764,6 +772,109 @@
           depends="extra166yclean, extra166yjar">
 
     <copy file="${extra166yproduct.jar}" todir="${dist.dir}"/>
+
+  </target>
+
+  <!-- jsr166e -->
+
+
+  <target name="jsr166ecompile"
+          depends="init, configure-compiler"
+          description="Compiles jsr166e sources">
+
+    <mkdir dir="${build.jsr166e.dir}"/>
+
+    <javac srcdir="${jsr166esrc.dir}"
+          destdir="${build.jsr166e.dir}"
+            debug="${build.debug}"
+       debuglevel="${build.debuglevel}"
+      deprecation="${build.deprecation}"
+           source="1.7"
+             fork="true">
+
+      <include name="**/*.java"/>
+      <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="${bootclasspath.args}"/>
+
+<!--       <compilerarg line="-Xlint -Xmaxwarns 1000"/> -->
+
+    </javac>
+
+  </target>
+
+
+
+  <target name="jsr166ejar"
+          depends="jsr166ecompile"
+          description="Builds library jar from compiled sources">
+
+    <mkdir dir="${build.jsr166elib.dir}"/>
+
+    <jar destfile="${jsr166eproduct.jar}" index="true">
+      <fileset dir="${build.jsr166e.dir}"/>
+    </jar>
+
+  </target>
+
+
+
+  <target name="jsr166edocs"
+          description="Builds javadocs with custom tags to build folder">
+
+    <delete dir="${build.jsr166ejavadocs.dir}"/>
+    <mkdir dir="${build.jsr166ejavadocs.dir}"/>
+
+    <javadoc destdir="${build.jsr166ejavadocs.dir}"
+             packagenames="jsr166e,jsr166e.extra"
+             link="http://download.oracle.com/javase/7/docs/api/"
+             source="1.7"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
+
+  </target>
+
+
+  <target name="jsr166edist"
+          depends="jsr166edist-clean, jsr166edist-jar, jsr166edist-docs"
+          description="Puts all distributable products in single hierarchy"/>
+
+
+
+  <target name="jsr166eclean"
+          description="Removes all build products">
+
+    <delete dir="${build.jsr166e.dir}"/>
+    <delete dir="${build.jsr166elib.dir}"/>
+
+  </target>
+
+
+
+  <target name="jsr166edist-clean"
+          description="Removes all build and distribution products">
+
+  </target>
+
+  <target name="jsr166edist-docs"
+          description="Builds javadocs without custom tags to dist folder">
+
+    <delete dir="${dist.jsr166ejavadocs.dir}"/>
+    <mkdir dir="${dist.jsr166ejavadocs.dir}"/>
+
+    <javadoc destdir="${dist.jsr166ejavadocs.dir}"
+             packagenames="jsr166e,jsr166e.extra"
+             link="http://download.oracle.com/javase/7/docs/api/"
+             source="1.7"
+             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             additionalparam="-XDignore.symbol.file=true" />
+
+  </target>
+
+  <target name="jsr166edist-jar"
+          depends="jsr166eclean, jsr166ejar">
+
+    <copy file="${jsr166eproduct.jar}" todir="${dist.dir}"/>
 
   </target>
 

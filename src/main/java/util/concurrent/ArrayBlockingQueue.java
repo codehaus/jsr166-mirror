@@ -158,38 +158,41 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Deletes item at array index i.
+     * Deletes item at array index removeIndex.
      * Utility for remove(Object) and iterator.remove.
      * Call only when holding lock.
      */
-    void removeAt(int i) {
+    void removeAt(final int removeIndex) {
         assert lock.getHoldCount() == 1;
-        assert items[i] != null;
-        assert i >= 0 && i < items.length;
+        assert items[removeIndex] != null;
+        assert removeIndex >= 0 && removeIndex < items.length;
         final Object[] items = this.items;
-        count--;
-        if (i == takeIndex) {
+        if (removeIndex == takeIndex) {
             // removing front item; just advance
             items[takeIndex] = null;
             takeIndex = inc(takeIndex);
+            count--;
             if (itrs != null)
                 itrs.elementDequeued();
         } else {
             // an "interior" remove
-            if (itrs != null)
-                itrs.aboutToRemoveAt(i);
+
             // slide over all others up through putIndex.
-            for (;;) {
-                int nexti = inc(i);
-                if (nexti != putIndex) {
-                    items[i] = items[nexti];
-                    i = nexti;
+            final int putIndex = this.putIndex;
+            for (int i = removeIndex;;) {
+                int next = inc(i);
+                if (next != putIndex) {
+                    items[i] = items[next];
+                    i = next;
                 } else {
                     items[i] = null;
-                    putIndex = i;
+                    this.putIndex = i;
                     break;
                 }
             }
+            count--;
+            if (itrs != null)
+                itrs.removedAt(removeIndex);
         }
         notFull.signal();
     }
@@ -854,13 +857,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Called whenever an interior remove (not at takeIndex) occurs.
+         * Called whenever an interior remove (not at takeIndex) occured.
          */
-        void aboutToRemoveAt(int aboutToBeRemoved) {
+        void removedAt(int removedIndex) {
             for (Node o = null, p = head; p != null;) {
                 final Itr it = p.get();
                 final Node next = p.next;
-                if (it == null || it.aboutToRemoveAt(aboutToBeRemoved)) {
+                if (it == null || it.removedAt(removedIndex)) {
                     // unlink p
                     assert it == null || it.isDetached();
                     p.clear();
@@ -898,7 +901,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Called whenever an element is dequeued (at takeIndex).
+         * Called whenever an element has been dequeued (at takeIndex).
          */
         void elementDequeued() {
             assert lock.getHoldCount() == 1;
@@ -1201,11 +1204,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Called whenever an interior remove (not at takeIndex) occurs.
+         * Called whenever an interior remove (not at takeIndex) occured.
          *
-         * @return true if this iterator should be removed from itrs
+         * @return true if this iterator should be unlinked from itrs
          */
-        boolean aboutToRemoveAt(int aboutToBeRemoved) {
+        boolean removedAt(int removedIndex) {
             assert lock.getHoldCount() == 1;
             if (isDetached())
                 return true;
@@ -1216,17 +1219,16 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             final int prevTakeIndex = this.prevTakeIndex;
             final int len = items.length;
             int cycleDiff = cycles - prevCycles;
-            if (aboutToBeRemoved < takeIndex)
+            if (removedIndex < takeIndex)
                 cycleDiff++;
             final int removedDistance =
-                (cycleDiff * len) + (aboutToBeRemoved - prevTakeIndex);
+                (cycleDiff * len) + (removedIndex - prevTakeIndex);
             assert removedDistance >= 0;
             int cursor = this.cursor;
             if (cursor >= 0) {
                 int x = distance(cursor, prevTakeIndex, len);
                 if (x == removedDistance) {
-                    // inverse of incCursor
-                    if (inc(cursor) == putIndex)
+                    if (cursor == putIndex)
                         this.cursor = cursor = -1;
                 }
                 else if (x > removedDistance) {
@@ -1260,7 +1262,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /**
          * Called whenever takeIndex wraps around to zero.
          *
-         * @return true if this iterator should be removed from itrs
+         * @return true if this iterator should be unlinked from itrs
          */
         boolean takeIndexWrapped() {
             assert lock.getHoldCount() == 1;

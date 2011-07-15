@@ -334,6 +334,12 @@ public class MapMicroBenchmark {
                     if (m.put(x, x) == null)
                         ++sum;
                 }
+                /*  // uncomment to avoid calling clear()
+                for (int i = 0; i < len; ++i) {
+                    Object x = keys[i];
+                    m.remove(x);
+                }
+                */
                 m.clear();
                 sum += len - (quarter * 2);
                 checkSum += sum ^ (sum << 12);

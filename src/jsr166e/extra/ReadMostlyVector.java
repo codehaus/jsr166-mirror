@@ -151,13 +151,14 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
      * as well as sublist and iterator classes.
      */
 
+    // Version of indexOf that returns -1 if either not present or invalid
     final int validatedIndexOf(Object x, Object[] items, int index, int fence,
                                long seq) {
         for (int i = index; i < fence; ++i) {
             Object e = items[i];
             if (lock.getSequence() != seq)
                 break;
-            if ((x == null) ? e == null : (e != null && x.equals(e)))
+            if (x == null? e == null : x.equals(e))
                 return i;
         }
         return -1;
@@ -167,7 +168,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] items = array;
         for (int i = index; i < fence; ++i) {
             Object e = items[i];
-            if ((x == null) ? e == null : (e != null && x.equals(e)))
+            if (x == null? e == null : x.equals(e))
                 return i;
         }
         return -1;
@@ -179,7 +180,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             Object e = items[i];
             if (lock.getSequence() != seq)
                 break;
-            if ((x == null) ? e == null : (e != null && x.equals(e)))
+            if (x == null? e == null : x.equals(e))
                 return i;
         }
         return -1;
@@ -189,13 +190,13 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] items = array;
         for (int i = index; i >= origin; --i) {
             Object e = items[i];
-            if ((x == null) ? e == null : (e != null && x.equals(e)))
+            if (x == null? e == null : x.equals(e))
                 return i;
         }
         return -1;
     }
 
-    final void internalAdd(Object e) {
+    final void rawAdd(Object e) {
         int n = count;
         if (n >= array.length)
             grow(n + 1);
@@ -203,7 +204,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         count = n + 1;
     }
 
-    final void internalAddAt(int index, Object e) {
+    final void rawAddAt(int index, Object e) {
         int n = count;
         if (index > n)
             throw new ArrayIndexOutOfBoundsException(index);
@@ -215,7 +216,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         count = n + 1;
     }
 
-    final boolean internalAddAllAt(int index, Object[] elements) {
+    final boolean rawAddAllAt(int index, Object[] elements) {
         int n = count;
         if (index < 0 || index > n)
             throw new ArrayIndexOutOfBoundsException(index);
@@ -233,7 +234,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         return true;
     }
 
-    final boolean internalRemoveAt(int index) {
+    final boolean rawRemoveAt(int index) {
         int n = count - 1;
         if (index < 0 || index > n)
             return false;
@@ -261,7 +262,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             int fence = bound < 0 || bound > n ? n : bound;
             if (origin >= 0 && origin < fence) {
                 for (Object x : c) {
-                    while (internalRemoveAt(rawIndexOf(x, origin, fence)))
+                    while (rawRemoveAt(rawIndexOf(x, origin, fence)))
                         removed = true;
                 }
             }
@@ -280,7 +281,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                 int i = origin;
                 int n = count;
                 int fence = bound < 0 || bound > n ? n : bound;
-                while (i < fence) {
+                while (i >= 0 && i < fence) {
                     if (c.contains(array[i]))
                         ++i;
                     else {
@@ -331,7 +332,11 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                 else {
                     contained = true;
                     for (Object e : c) {
-                        if (validatedIndexOf(e, items, origin, fence, seq) < 0) {
+                        int idx = (locked?
+                                   rawIndexOf(e, origin, fence) :
+                                   validatedIndexOf(e, items, origin,
+                                                    fence, seq));
+                        if (idx < 0) {
                             contained = false;
                             break;
                         }
@@ -351,32 +356,26 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
 
     final boolean internalEquals(List<?> list, int origin, int bound) {
         SequenceLock lock = this.lock;
-        boolean equal;
         boolean locked = false;
+        boolean equal;
         try {
-            outer:for (;;) {
-                equal = true;
+            for (;;) {
                 long seq = lock.awaitAvailability();
                 Object[] items = array;
-                int len = items.length;
                 int n = count;
-                if (n > len)
-                    continue;
-                int fence = bound < 0 || bound > n ? n : bound;
-                if (origin < 0)
+                if (n > items.length || origin < 0)
                     equal = false;
                 else {
+                    equal = true;
+                    int fence = bound < 0 || bound > n ? n : bound;
                     Iterator<?> it = list.iterator();
                     for (int i = origin; i < fence; ++i) {
-                        if (!it.hasNext()) {
-                            equal = false;
-                            break;
-                        }
-                        Object x = it.next();
-                        Object y = items[i];
-                        if (lock.getSequence() != seq)
-                            continue outer;
-                        if ((x == null) ? y != null : (y == null || !x.equals(y))) {
+                        Object x = items[i];
+                        Object y;
+                        if ((!locked && lock.getSequence() != seq) ||
+                            !it.hasNext() ||
+                            (y = it.next()) == null ?
+                            x != null : !y.equals(x)) {
                             equal = false;
                             break;
                         }
@@ -450,7 +449,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                         Object e = items[i];
                         if (e == this)
                             sb.append("(this Collection)");
-                        else if (lock.getSequence() != seq)
+                        else if (!locked && lock.getSequence() != seq)
                             continue outer;
                         else
                             sb.append(e.toString());
@@ -518,10 +517,10 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                     continue;
                 int fence = bound < 0 || bound > n ? n : bound;
                 int rlen = fence - origin;
+                if (rlen < 0)
+                    rlen = 0;
                 if (origin < 0 || alen >= rlen) {
-                    if (rlen < 0)
-                        rlen = 0;
-                    else if (rlen > 0)
+                    if (rlen > 0)
                         System.arraycopy(array, 0, a, origin, rlen);
                     if (alen > rlen)
                         a[rlen] = null;
@@ -548,7 +547,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         SequenceLock lock = this.lock;
         lock.lock();
         try {
-            internalAdd(e);
+            rawAdd(e);
         } finally {
             lock.unlock();
         }
@@ -559,7 +558,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         SequenceLock lock = this.lock;
         lock.lock();
         try {
-            internalAddAt(index, element);
+            rawAddAt(index, element);
         } finally {
             lock.unlock();
         }
@@ -590,7 +589,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] elements = c.toArray();
         lock.lock();
         try {
-            ret = internalAddAllAt(index, elements);
+            ret = rawAddAllAt(index, elements);
         } finally {
             lock.unlock();
         }
@@ -622,7 +621,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             return true;
         if (!(o instanceof List))
             return false;
-        return internalEquals((List<?>)(o), 0, -1);
+        return internalEquals((List<?>)o, 0, -1);
     }
 
     public E get(int index) {
@@ -661,9 +660,20 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] items = array;
         int n = count;
         if (n <= items.length) {
-            int idx = validatedIndexOf(o, items, 0, n, seq);
-            if (lock.getSequence() == seq)
-                return idx;
+            boolean valid = true;
+            for (int i = 0; i < n; ++i) {
+                Object e = items[i];
+                if (lock.getSequence() == seq) {
+                    if (o == null? e == null : o.equals(e))
+                        return i;
+                }
+                else {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid)
+                return -1;
         }
         lock.lock();
         try {
@@ -716,7 +726,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             if (index < 0 || index >= count)
                 throw new ArrayIndexOutOfBoundsException(index);
             oldValue = array[index];
-            internalRemoveAt(index);
+            rawRemoveAt(index);
         } finally {
             lock.unlock();
         }
@@ -728,7 +738,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         boolean removed;
         lock.lock();
         try {
-            removed = internalRemoveAt(rawIndexOf(o, 0, count));
+            removed = rawRemoveAt(rawIndexOf(o, 0, count));
         } finally {
             lock.unlock();
         }
@@ -797,7 +807,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         lock.lock();
         try {
             if (rawIndexOf(e, 0, count) < 0) {
-                internalAdd(e);
+                rawAdd(e);
                 added = true;
             }
             else
@@ -829,7 +839,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                 for (int i = 0; i < clen; ++i) {
                     Object e = cs[i];
                     if (rawIndexOf(e, 0, count) < 0) {
-                        internalAdd(e);
+                        rawAdd(e);
                         ++added;
                     }
                 }
@@ -1256,7 +1266,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             lock.lock();
             try {
                 int c = size;
-                list.internalAddAt(c + offset, element);
+                list.rawAddAt(c + offset, element);
                 size = c + 1;
             } finally {
                 lock.unlock();
@@ -1270,7 +1280,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             try {
                 if (index < 0 || index > size)
                     throw new ArrayIndexOutOfBoundsException(index);
-                list.internalAddAt(index + offset, element);
+                list.rawAddAt(index + offset, element);
                 ++size;
             } finally {
                 lock.unlock();
@@ -1285,7 +1295,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             try {
                 int s = size;
                 int pc = list.count;
-                list.internalAddAllAt(offset + s, elements);
+                list.rawAddAllAt(offset + s, elements);
                 added = list.count - pc;
                 size = s + added;
             } finally {
@@ -1304,7 +1314,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                 if (index < 0 || index > s)
                     throw new ArrayIndexOutOfBoundsException(index);
                 int pc = list.count;
-                list.internalAddAllAt(index + offset, elements);
+                list.rawAddAllAt(index + offset, elements);
                 added = list.count - pc;
                 size = s + added;
             } finally {
@@ -1356,13 +1366,14 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             Object[] items = list.array;
             int c = list.count;
             if (c <= items.length) {
-                int idx = list.validatedIndexOf(o, items, offset, offset+size, seq);
+                int idx = list.validatedIndexOf(o, items, offset,
+                                                offset + size, seq);
                 if (lock.getSequence() == seq)
                     return idx < 0 ? -1 : idx - offset;
             }
             lock.lock();
             try {
-                int idx = list.rawIndexOf(o, offset, offset+size);
+                int idx = list.rawIndexOf(o, offset, offset + size);
                 return idx < 0 ? -1 : idx - offset;
             } finally {
                 lock.unlock();
@@ -1410,11 +1421,12 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             SequenceLock lock = list.lock;
             lock.lock();
             try {
-                if (index < 0 || index >= size)
-                    throw new ArrayIndexOutOfBoundsException(index);
+                Object[] items = list.array;
                 int i = index + offset;
-                result = list.array[i];
-                list.internalRemoveAt(i);
+                if (index < 0 || index >= size || i >= items.length)
+                    throw new ArrayIndexOutOfBoundsException(index);
+                result = items[i];
+                list.rawRemoveAt(i);
                 size--;
             } finally {
                 lock.unlock();
@@ -1427,8 +1439,8 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             SequenceLock lock = list.lock;
             lock.lock();
             try {
-                if (list.internalRemoveAt(list.rawIndexOf(o, offset,
-                                                          offset + size))) {
+                if (list.rawRemoveAt(list.rawIndexOf(o, offset,
+                                                     offset + size))) {
                     removed = true;
                     --size;
                 }

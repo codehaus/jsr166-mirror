@@ -53,7 +53,7 @@ import java.io.IOException;
  *     private float x, y;
  *     private final SequenceLock sl = new SequenceLock();
  *
- *     void move(float deltaX, float deltaY) { // an excluively locked method
+ *     void move(float deltaX, float deltaY) { // an exclusively locked method
  *        sl.lock();
  *        try {
  *            x += deltaX;
@@ -221,7 +221,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
     /**
      * The default spin value for constructor. Future versions of this
      * class might choose platform-specific values.  Currently, except
-     * on uniprocessors, it is set to a small value that ovecomes near
+     * on uniprocessors, it is set to a small value that overcomes near
      * misses between releases and acquires.
      */
     static final int DEFAULT_SPINS =

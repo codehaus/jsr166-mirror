@@ -12,7 +12,7 @@ import java.util.*;
  * A class with the same methods and array-based characteristics as
  * {@link java.util.Vector} but with reduced contention and improved
  * throughput when invocations of read-only methods by multiple
- * threads are most common. 
+ * threads are most common.
  *
  * <p> The iterators returned by this class's {@link #iterator()
  * iterator} and {@link #listIterator(int) listIterator} methods are
@@ -40,7 +40,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
      * Short methods,including get(index), continually retry obtaining
      * a snapshot of array, count, and element, using sequence number
      * to validate.
-     * 
+     *
      * Methods that are potentially O(n) (or worse) try once in
      * read-only mode, and then lock. When in read-only mode, they
      * validate only at the end of an array scan unless the element is
@@ -151,13 +151,13 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
      * as well as sublist and iterator classes.
      */
 
-    final int validatedIndexOf(Object x, Object[] items, int index, int fence, 
+    final int validatedIndexOf(Object x, Object[] items, int index, int fence,
                                long seq) {
         for (int i = index; i < fence; ++i) {
             Object e = items[i];
             if (lock.getSequence() != seq)
                 break;
-            if (x == null? e == null : (e != null && x.equals(e)))
+            if ((x == null) ? e == null : (e != null && x.equals(e)))
                 return i;
         }
         return -1;
@@ -167,19 +167,19 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] items = array;
         for (int i = index; i < fence; ++i) {
             Object e = items[i];
-            if (x == null? e == null : (e != null && x.equals(e)))
+            if ((x == null) ? e == null : (e != null && x.equals(e)))
                 return i;
         }
         return -1;
     }
 
-    final int validatedLastIndexOf(Object x, Object[] items, 
+    final int validatedLastIndexOf(Object x, Object[] items,
                                    int index, int origin, long seq) {
         for (int i = index; i >= origin; --i) {
             Object e = items[i];
             if (lock.getSequence() != seq)
                 break;
-            if (x == null? e == null : (e != null && x.equals(e)))
+            if ((x == null) ? e == null : (e != null && x.equals(e)))
                 return i;
         }
         return -1;
@@ -189,7 +189,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] items = array;
         for (int i = index; i >= origin; --i) {
             Object e = items[i];
-            if (x == null? e == null : (e != null && x.equals(e)))
+            if ((x == null) ? e == null : (e != null && x.equals(e)))
                 return i;
         }
         return -1;
@@ -376,7 +376,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                         Object y = items[i];
                         if (lock.getSequence() != seq)
                             continue outer;
-                        if (x == null? y != null : (y == null || !x.equals(y))) {
+                        if ((x == null) ? y != null : (y == null || !x.equals(y))) {
                             equal = false;
                             break;
                         }
@@ -527,7 +527,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                         a[rlen] = null;
                     result = a;
                 }
-                else 
+                else
                     result = (T[]) Arrays.copyOfRange(array, origin,
                                                       fence, a.getClass());
                 if (lock.getSequence() == seq)
@@ -1383,7 +1383,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             Object[] items = list.array;
             int c = list.count;
             if (c <= items.length) {
-                int idx = list.validatedLastIndexOf(o, items, offset+size-1, 
+                int idx = list.validatedLastIndexOf(o, items, offset+size-1,
                                                     offset, seq);
                 if (lock.getSequence() == seq)
                     return idx < 0 ? -1 : idx - offset;

@@ -1107,7 +1107,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 assert cursor == NONE;
                 assert nextIndex == NONE;
                 if (!isDetached()) {
-                    assert itrs != null;
                     assert lastRet >= 0;
                     incorporateDequeues(); // might update lastRet
                     if (lastRet >= 0) {
@@ -1131,10 +1130,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
-                if (!isDetached()) {
-                    assert itrs != null;
+                if (!isDetached())
                     incorporateDequeues();
-                }
                 assert nextIndex != NONE;
                 assert lastItem == null;
                 lastRet = nextIndex;
@@ -1158,16 +1155,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
+                if (!isDetached())
+                    incorporateDequeues(); // might update lastRet or detach
+                final int lastRet = this.lastRet;
+                this.lastRet = NONE;
                 if (lastRet >= 0) {
-                    if (isDetached()) {
+                    if (!isDetached())
+                        removeAt(lastRet);
+                    else {
+                        final E lastItem = this.lastItem;
                         assert lastItem != null;
+                        this.lastItem = null;
                         if (itemAt(lastRet) == lastItem)
-                            removeAt(lastRet);
-                        lastItem = null;
-                    } else {
-                        assert lastItem == null;
-                        incorporateDequeues(); // might update lastRet
-                        if (lastRet >= 0)
                             removeAt(lastRet);
                     }
                 } else if (lastRet == NONE)
@@ -1176,7 +1175,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 // previously asynchronously removed via an operation other
                 // than this.remove(), so nothing to do.
 
-                lastRet = NONE;
                 if (cursor < 0 && nextIndex < 0)
                     detach();
             } finally {

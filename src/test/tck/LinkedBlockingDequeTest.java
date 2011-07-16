@@ -29,7 +29,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
 
     public static class Bounded extends BlockingQueueTest {
         protected BlockingQueue emptyCollection() {
-            return new LinkedBlockingDeque(20);
+            return new LinkedBlockingDeque(SIZE);
         }
     }
 
@@ -1397,27 +1397,6 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             q.element();
             shouldThrow();
         } catch (NoSuchElementException success) {}
-    }
-
-    /**
-     * remove(x) removes x and returns true if present
-     */
-    public void testRemoveElement() {
-        LinkedBlockingDeque q = populatedDeque(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.contains(i));
-            assertTrue(q.remove(i));
-            assertFalse(q.contains(i));
-            assertTrue(q.contains(i-1));
-        }
-        for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.contains(i));
-            assertTrue(q.remove(i));
-            assertFalse(q.contains(i));
-            assertFalse(q.remove(i+1));
-            assertFalse(q.contains(i+1));
-        }
-        assertTrue(q.isEmpty());
     }
 
     /**

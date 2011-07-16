@@ -322,17 +322,6 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     /**
-     * remove(x) returns false
-     */
-    public void testRemoveElement()      { testRemoveElement(false); }
-    public void testRemoveElement_fair() { testRemoveElement(true); }
-    public void testRemoveElement(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        assertFalse(q.remove(zero));
-        assertTrue(q.isEmpty());
-    }
-
-    /**
      * contains returns false
      */
     public void testContains()      { testContains(false); }

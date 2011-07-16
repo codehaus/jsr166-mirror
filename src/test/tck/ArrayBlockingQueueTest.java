@@ -24,13 +24,13 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
 
     public static class Fair extends BlockingQueueTest {
         protected BlockingQueue emptyCollection() {
-            return new ArrayBlockingQueue(20, true);
+            return new ArrayBlockingQueue(SIZE, true);
         }
     }
 
     public static class NonFair extends BlockingQueueTest {
         protected BlockingQueue emptyCollection() {
-            return new ArrayBlockingQueue(20, false);
+            return new ArrayBlockingQueue(SIZE, false);
         }
     }
 
@@ -512,21 +512,6 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success) {}
-    }
-
-    /**
-     * remove(x) removes x and returns true if present
-     */
-    public void testRemoveElement() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.remove(new Integer(i)));
-        }
-        for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.remove(new Integer(i)));
-            assertFalse(q.remove(new Integer(i+1)));
-        }
-        assertTrue(q.isEmpty());
     }
 
     /**

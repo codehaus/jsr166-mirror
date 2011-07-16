@@ -31,7 +31,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
 
     public static class InitialCapacity extends BlockingQueueTest {
         protected BlockingQueue emptyCollection() {
-            return new PriorityBlockingQueue(20);
+            return new PriorityBlockingQueue(SIZE);
         }
     }
 
@@ -456,27 +456,6 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success) {}
-    }
-
-    /**
-     * remove(x) removes x and returns true if present
-     */
-    public void testRemoveElement() {
-        PriorityBlockingQueue q = populatedQueue(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
-            assertTrue(q.contains(i));
-            assertTrue(q.remove(i));
-            assertFalse(q.contains(i));
-            assertTrue(q.contains(i-1));
-        }
-        for (int i = 0; i < SIZE; i+=2) {
-            assertTrue(q.contains(i));
-            assertTrue(q.remove(i));
-            assertFalse(q.contains(i));
-            assertFalse(q.remove(i+1));
-            assertFalse(q.contains(i+1));
-        }
-        assertTrue(q.isEmpty());
     }
 
     /**

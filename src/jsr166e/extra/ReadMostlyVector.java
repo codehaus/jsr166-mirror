@@ -19,7 +19,10 @@ import java.util.*;
  * best-effort in the presence of concurrent modifications, and do
  * <em>NOT</em> throw {@link ConcurrentModificationException}.  An
  * iterator's {@code next()} method returns consecutive elements as
- * they appear in the underlying array upon each access.
+ * they appear in the underlying array upon each access. Alternatvely,
+ * method {@link #snapshotIterator} may be used for deterministic
+ * traversals, at the expense of making a copy, and unavailability of
+ * method {@code Iterator.remove}.
  *
  * <p>Otherwise, this class supports all methods, under the same
  * documented specifications, as {@code Vector}.  Consult {@link
@@ -848,6 +851,31 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             }
         }
         return added;
+    }
+
+    /**
+     * Returns an iterator operating over a snapshot copy of the
+     * elements of this collection created upon construction of the
+     * iterator. The iterator does <em>NOT</em> support the
+     * <tt>remove</tt> method.
+     *
+     * @return an iterator over the elements in this list in proper sequence
+     */
+    public Iterator<E> snapshotIterator() {
+        return new SnapshotIterator<E>(this);
+    }
+
+    static final class SnapshotIterator<E> implements Iterator<E> {
+        final Object[] items;
+        int cursor;
+        SnapshotIterator(ReadMostlyVector<E> v) { items = v.toArray(); }
+        public boolean hasNext() { return cursor < items.length; }
+        public E next() {
+            if (cursor < items.length)
+                return (E) items[cursor++];
+            throw new NoSuchElementException();
+        }
+        public void remove() { throw new UnsupportedOperationException() ; }
     }
 
     // Vector-only methods

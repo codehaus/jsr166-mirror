@@ -394,6 +394,36 @@ public class IteratorConsistency {
         } catch (Throwable t) { unexpected(t); }
 
         //----------------------------------------------------------------
+        // Check garbage collection of discarded iterators,
+        // with a randomly retained subset.
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            List<Iterator> its = new ArrayList<Iterator>();
+            List<Iterator> retained = new ArrayList<Iterator>();
+            final int size = 1 + rnd.nextInt(capacity);
+            for (int i = 0; i < size; i++)
+                q.add(i);
+            for (int i = 0; i < size; i++) {
+                Iterator it = q.iterator();
+                its.add(it);
+                equal(attachedIterators(q), its);
+            }
+            // Leave sufficient gaps in retained
+            for (int i = 0; i < size; i+= 2+rnd.nextInt(3))
+                retained.add(its.get(i));
+            its = null;
+            waitForFinalizersToRun();
+            List<Iterator> trackedIterators = trackedIterators(q);
+            equal(trackedIterators.size(), size);
+            for (Iterator it : trackedIterators)
+                check((it == null) ^ retained.contains(it));
+            Iterator it = q.iterator(); // trigger another sweep
+            retained.add(it);
+            equal(trackedIterators(q), retained);
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
         // Check incremental sweeping of discarded iterators.
         // Excessively white box?!
         //----------------------------------------------------------------

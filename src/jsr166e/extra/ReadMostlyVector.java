@@ -161,7 +161,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             Object e = items[i];
             if (lock.getSequence() != seq)
                 break;
-            if (x == null? e == null : x.equals(e))
+            if ((x == null) ? e == null : x.equals(e))
                 return i;
         }
         return -1;
@@ -171,7 +171,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] items = array;
         for (int i = index; i < fence; ++i) {
             Object e = items[i];
-            if (x == null? e == null : x.equals(e))
+            if ((x == null) ? e == null : x.equals(e))
                 return i;
         }
         return -1;
@@ -183,7 +183,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             Object e = items[i];
             if (lock.getSequence() != seq)
                 break;
-            if (x == null? e == null : x.equals(e))
+            if ((x == null) ? e == null : x.equals(e))
                 return i;
         }
         return -1;
@@ -193,7 +193,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         Object[] items = array;
         for (int i = index; i >= origin; --i) {
             Object e = items[i];
-            if (x == null? e == null : x.equals(e))
+            if ((x == null) ? e == null : x.equals(e))
                 return i;
         }
         return -1;
@@ -335,7 +335,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                 else {
                     contained = true;
                     for (Object e : c) {
-                        int idx = (locked?
+                        int idx = (locked ?
                                    rawIndexOf(e, origin, fence) :
                                    validatedIndexOf(e, items, origin,
                                                     fence, seq));
@@ -667,7 +667,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             for (int i = 0; i < n; ++i) {
                 Object e = items[i];
                 if (lock.getSequence() == seq) {
-                    if (o == null? e == null : o.equals(e))
+                    if ((o == null) ? e == null : o.equals(e))
                         return i;
                 }
                 else {

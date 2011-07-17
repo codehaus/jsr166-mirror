@@ -766,13 +766,17 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         int cycles = 0;
 
         /** Linked list of weak iterator references */
-        private Node head = null;
+        private Node head;
 
         /** Used to expunge stale iterators */
         private Node sweeper = null;
 
         private static final int SHORT_SWEEP_PROBES = 4;
         private static final int LONG_SWEEP_PROBES = 16;
+
+        Itrs(Itr initial) {
+            register(initial);
+        }
 
         /**
          * Sweeps itrs, looking for and expunging stale iterators.
@@ -783,19 +787,30 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          */
         void doSomeSweeping(boolean tryHarder) {
             assert lock.getHoldCount() == 1;
+            assert head != null;
             int probes = tryHarder ? LONG_SWEEP_PROBES : SHORT_SWEEP_PROBES;
             Node o, p;
             final Node sweeper = this.sweeper;
+            boolean passedGo;   // to limit search to one full sweep
 
-            if (sweeper != null && sweeper.get() != null) {
-                o = sweeper;
-                p = o.next;
-            } else {
+            if (sweeper == null) {
                 o = null;
                 p = head;
+                passedGo = true;
+            } else {
+                o = sweeper;
+                p = o.next;
+                passedGo = false;
             }
 
-            for (; p != null && probes > 0; probes--) {
+            for (; probes > 0; probes--) {
+                if (p == null) {
+                    if (passedGo)
+                        break;
+                    o = null;
+                    p = head;
+                    passedGo = true;
+                }
                 final Itr it = p.get();
                 final Node next = p.next;
                 if (it == null || it.isDetached()) {
@@ -804,8 +819,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     // unlink p
                     p.clear();
                     p.next = null;
-                    if (o == null)
+                    if (o == null) {
                         head = next;
+                        if (next == null) {
+                            // We've run out of iterators to track; retire
+                            itrs = null;
+                            return;
+                        }
+                    }
                     else
                         o.next = next;
                 } else {
@@ -813,8 +834,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 }
                 p = next;
             }
-            if (head == null)   // no more iterators to track
-                itrs = null;
 
             this.sweeper = (p == null) ? null : o;
         }
@@ -858,6 +877,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
         /**
          * Called whenever an interior remove (not at takeIndex) occured.
+         *
+         * Notifies all iterators, and expunges any that are now stale.
          */
         void removedAt(int removedIndex) {
             for (Node o = null, p = head; p != null;) {
@@ -981,8 +1002,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     nextItem = itemAt(nextIndex = takeIndex);
                     cursor = incCursor(takeIndex);
                     if (itrs == null) {
-                        itrs = new Itrs();
-                        itrs.register(this);
+                        itrs = new Itrs(this);
                     } else {
                         itrs.register(this); // in this order
                         itrs.doSomeSweeping(false);

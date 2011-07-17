@@ -153,13 +153,13 @@ public class SequenceLock implements Lock, java.io.Serializable {
         }
 
         public final long tryAcquireShared(long unused) {
-            return ((getState() & 1L) == 0L ||
-                    getExclusiveOwnerThread() == Thread.currentThread()) ?
-                1L : -1L; // must return long
+            return (((getState() & 1L) == 0L) ? 1L :
+                    (getExclusiveOwnerThread() == Thread.currentThread()) ?  0L:
+                    -1L);
         }
 
         public final boolean tryReleaseShared(long unused) {
-            return true;
+            return (getState() & 1L) == 0L;
         }
 
         public final Condition newCondition() {

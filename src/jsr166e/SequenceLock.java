@@ -6,6 +6,7 @@
 
 package jsr166e;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Condition;
@@ -26,16 +27,17 @@ import java.io.IOException;
  * {@code long} to ensure that they will not wrap around until
  * hundreds of years of use under current processor rates.  A
  * SequenceLock can be created with a specified number of
- * spins. Attempts to lock or await release retry at least the given
- * number of times before blocking. If not specified, a default,
+ * spins. Attempts to lock or await release will retry at least the
+ * given number of times before blocking. If not specified, a default,
  * possibly platform-specific, value is used.
  *
  * <p>Except for the lack of support for specified fairness policies,
- * or {@link Condition} objects, a SequenceLock can be used in the same
- * way as {@link ReentrantLock}, and has a nearly identical
- * API. SequenceLocks may be preferable in contexts in which multiple
- * threads invoke read-only methods much more frequently than fully
- * locked methods.
+ * or {@link Condition} objects, a SequenceLock can be used in the
+ * same way as {@link ReentrantLock}. It provides similar status and
+ * monitoring methods such as {@link #isHeldByCurrentThread}.
+ * SequenceLocks may be preferable in contexts in which multiple
+ * threads invoke short read-only methods much more frequently than
+ * fully locked methods.
  *
  * <p> Methods {@code awaitAvailability} and {@code getSequence} can
  * be used together to define (partially) optimistic read-only methods
@@ -172,9 +174,9 @@ public class SequenceLock implements Lock, java.io.Serializable {
 
         final void lock() {
             int k = spins;
-            while (!tryAcquire(1)) {
+            while (!tryAcquire(1L)) {
                 if (k == 0) {
-                    acquire(1);
+                    acquire(1L);
                     break;
                 }
                 --k;
@@ -189,11 +191,28 @@ public class SequenceLock implements Lock, java.io.Serializable {
                 if (k > 0)
                     --k;
                 else {
-                    acquireShared(1);
-                    releaseShared(1);
+                    acquireShared(1L);
+                    releaseShared(1L);
                 }
             }
             return s;
+        }
+
+        final long tryAwaitAvailability(long nanos)
+            throws InterruptedException, TimeoutException {
+            Thread current = Thread.currentThread();
+            for (;;) {
+                long s = getState();
+                if ((s & 1L) == 0L || getExclusiveOwnerThread() == current) {
+                    releaseShared(1L);
+                    return s;
+                }
+                if (!tryAcquireSharedNanos(1L, nanos))
+                    throw new TimeoutException();
+                // since tryAcquireSharedNanos doesn't return seq
+                // retry with minimal wait time.
+                nanos = 1L;
+            }
         }
 
         final boolean isLocked() {
@@ -243,8 +262,8 @@ public class SequenceLock implements Lock, java.io.Serializable {
 
     /**
      * Returns the current sequence number of this lock.  The sequence
-     * number is advanced upon each lock or unlock action. When this
-     * value is odd, the lock is held; when even, it is released.
+     * number is advanced upon each acquire or release action. When
+     * this value is odd, the lock is held; when even, it is released.
      *
      * @return the current sequence number
      */
@@ -263,18 +282,59 @@ public class SequenceLock implements Lock, java.io.Serializable {
     public long awaitAvailability() { return sync.awaitAvailability(); }
 
     /**
+     * Returns the current sequence number if the lock is, or
+     * becomes, available within the specified waiting time.
+     *
+     * <p>If the lock is not available, the current thread becomes
+     * disabled for thread scheduling purposes and lies dormant until
+     * one of three things happens:
+     *
+     * <ul>
+     *
+     * <li>The lock becomes available, in which case the current
+     * sequence number is returned.
+     *
+     * <li>Some other thread {@linkplain Thread#interrupt interrupts}
+     * the current thread, in which case this method throws
+     * {@link InterruptedException}.
+     *
+     * <li>The specified waiting time elapses, in which case
+     * this method throws {@link TimeoutException}.
+     *
+     * </ul>
+     *
+     * @param timeout the time to wait for availability
+     * @param unit the time unit of the timeout argument
+     * @return the current sequence number if the lock is available
+     *         upon return from this method.
+     * @throws InterruptedException if the current thread is interrupted
+     * @throws TimeoutException if the lock was not available within
+     * the specified waiting time.
+     * @throws NullPointerException if the time unit is null
+     */
+    public long tryAwaitAvailability(long timeout, TimeUnit unit)
+        throws InterruptedException, TimeoutException {
+        return sync.tryAwaitAvailability(unit.toNanos(timeout));
+    }
+
+    /**
      * Acquires the lock.
      *
-     * <p>Acquires the lock if it is not held by another thread and returns
-     * immediately, setting the lock hold count to one.
+     * <p>If the current thread already holds this lock then the hold count
+     * is incremented by one and the method returns immediately without
+     * incrementing the sequence number.
      *
-     * <p>If the current thread already holds the lock then the hold
-     * count is incremented by one and the method returns immediately.
+     * <p>If this lock not held by another thread, this method
+     * increments the sequence number (which thus becomes an odd
+     * number), sets the lock hold count to one, and returns
+     * immediately.
      *
-     * <p>If the lock is held by another thread then the
-     * current thread becomes disabled for thread scheduling
-     * purposes and lies dormant until the lock has been acquired,
-     * at which time the lock hold count is set to one.
+     * <p>If the lock is held by another thread then the current
+     * thread may retry acquiring this lock, depending on the {@code
+     * spin} count established in constructor.  If the lock is still
+     * not acquired, the current thread becomes disabled for thread
+     * scheduling purposes and lies dormant until enabled by
+     * some other thread releasing the lock.
      */
     public void lock() { sync.lock(); }
 
@@ -282,15 +342,21 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * Acquires the lock unless the current thread is
      * {@linkplain Thread#interrupt interrupted}.
      *
-     * <p>Acquires the lock if it is not held by another thread and returns
-     * immediately, setting the lock hold count to one.
-     *
      * <p>If the current thread already holds this lock then the hold count
-     * is incremented by one and the method returns immediately.
+     * is incremented by one and the method returns immediately without
+     * incrementing the sequence number.
      *
-     * <p>If the lock is held by another thread then the
-     * current thread becomes disabled for thread scheduling
-     * purposes and lies dormant until one of two things happens:
+     * <p>If this lock not held by another thread, this method
+     * increments the sequence number (which thus becomes an odd
+     * number), sets the lock hold count to one, and returns
+     * immediately.
+     *
+     * <p>If the lock is held by another thread then the current
+     * thread may retry acquiring this lock, depending on the {@code
+     * spin} count established in constructor.  If the lock is still
+     * not acquired, the current thread becomes disabled for thread
+     * scheduling purposes and lies dormant until one of two things
+     * happens:
      *
      * <ul>
      *
@@ -302,7 +368,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * </ul>
      *
      * <p>If the lock is acquired by the current thread then the lock hold
-     * count is set to one.
+     * count is set to one and the sequence number is incremented.
      *
      * <p>If the current thread:
      *
@@ -325,55 +391,51 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * @throws InterruptedException if the current thread is interrupted
      */
     public void lockInterruptibly() throws InterruptedException {
-        sync.acquireInterruptibly(1);
+        sync.acquireInterruptibly(1L);
     }
 
     /**
      * Acquires the lock only if it is not held by another thread at the time
      * of invocation.
      *
-     * <p>Acquires the lock if it is not held by another thread and
-     * returns immediately with the value {@code true}, setting the
-     * lock hold count to one.
+     * <p>If the current thread already holds this lock then the hold
+     * count is incremented by one and the method returns {@code true}
+     * without incrementing the sequence number.
      *
-     * <p> If the current thread already holds this lock then the hold
-     * count is incremented by one and the method returns {@code true}.
+     * <p>If this lock not held by another thread, this method
+     * increments the sequence number (which thus becomes an odd
+     * number), sets the lock hold count to one, and returns {@code
+     * true}.
      *
-     * <p>If the lock is held by another thread then this method will return
-     * immediately with the value {@code false}.
+     * <p>If the lock is held by another thread then this method
+     * returns {@code false}.
      *
      * @return {@code true} if the lock was free and was acquired by the
      *         current thread, or the lock was already held by the current
      *         thread; and {@code false} otherwise
      */
-    public boolean tryLock() { return sync.tryAcquire(1); }
+    public boolean tryLock() { return sync.tryAcquire(1L); }
 
     /**
      * Acquires the lock if it is not held by another thread within the given
      * waiting time and the current thread has not been
      * {@linkplain Thread#interrupt interrupted}.
      *
-     * <p>Acquires the lock if it is not held by another thread and returns
-     * immediately with the value {@code true}, setting the lock hold count
-     * to one. If this lock has been set to use a fair ordering policy then
-     * an available lock <em>will not</em> be acquired if any other threads
-     * are waiting for the lock. This is in contrast to the {@link #tryLock()}
-     * method. If you want a timed {@code tryLock} that does permit barging on
-     * a fair lock then combine the timed and un-timed forms together:
+     * <p>If the current thread already holds this lock then the hold count
+     * is incremented by one and the method returns immediately without
+     * incrementing the sequence number.
      *
-     *  <pre> {@code
-     * if (lock.tryLock() ||
-     *     lock.tryLock(timeout, unit)) {
-     *   ...
-     * }}</pre>
+     * <p>If this lock not held by another thread, this method
+     * increments the sequence number (which thus becomes an odd
+     * number), sets the lock hold count to one, and returns
+     * immediately.
      *
-     * <p>If the current thread
-     * already holds this lock then the hold count is incremented by one and
-     * the method returns {@code true}.
-     *
-     * <p>If the lock is held by another thread then the
-     * current thread becomes disabled for thread scheduling
-     * purposes and lies dormant until one of three things happens:
+     * <p>If the lock is held by another thread then the current
+     * thread may retry acquiring this lock, depending on the {@code
+     * spin} count established in constructor.  If the lock is still
+     * not acquired, the current thread becomes disabled for thread
+     * scheduling purposes and lies dormant until one of three things
+     * happens:
      *
      * <ul>
      *
@@ -423,16 +485,18 @@ public class SequenceLock implements Lock, java.io.Serializable {
      */
     public boolean tryLock(long timeout, TimeUnit unit)
         throws InterruptedException {
-        return sync.tryAcquireNanos(1, unit.toNanos(timeout));
+        return sync.tryAcquireNanos(1L, unit.toNanos(timeout));
     }
 
     /**
      * Attempts to release this lock.
      *
-     * <p>If the current thread is the holder of this lock then the hold
-     * count is decremented.  If the hold count is now zero then the lock
-     * is released.  If the current thread is not the holder of this
-     * lock then {@link IllegalMonitorStateException} is thrown.
+     * <p>If the current thread is the holder of this lock then the
+     * hold count is decremented.  If the hold count is now zero then
+     * the sequence number is incremented (thus becoming an even
+     * number) and the lock is released.  If the current thread is not
+     * the holder of this lock then {@link
+     * IllegalMonitorStateException} is thrown.
      *
      * @throws IllegalMonitorStateException if the current thread does not
      *         hold this lock

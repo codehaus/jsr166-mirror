@@ -719,12 +719,29 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Shared data between iterators and their queue.  Allows queue
+     * Shared data between iterators and their queue, allowing queue
      * modifications to update iterators when elements are removed.
      *
-     * We track all active iterators in a linked list of weak references
-     * to Itr, so that queue operations can update the iterators.  The
-     * list is cleaned up using 3 different mechanisms:
+     * This adds a lot of complexity for the sake of correctly
+     * handling some uncommon operations, but the combination of
+     * circular-arrays and supporting interior removes (i.e., those
+     * not at head) would cause iterators to sometimes lose their
+     * places and/or (re)report elements they shouldn't.  To avoid
+     * this, when a queue has one or more iterators, it keeps iterator
+     * state consistent by:
+     *
+     * (1) keeping track of the number of "cycles", that is, the
+     *     number of times takeIndex has wrapped around to 0.
+     * (2) notifying all iterators via the callback removedAt whenever
+     *     an interior element is removed (and thus other elements may
+     *     be shifted).
+     *
+     * These suffice to eliminate iterator inconsistencies, but
+     * unfortunately add the secondary responsibility of maintaining
+     * the list of iterators.  We track all active iterators in a
+     * simple linked list (accessed only when the queue's lock is
+     * held) of weak references to Itr.  The list is cleaned up using
+     * 3 different mechanisms:
      *
      * (1) Whenever a new iterator is created, do some O(1) checking for
      *     stale list elements.
@@ -735,18 +752,22 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * (3) Whenever the queue becomes empty, all iterators are notified
      *     and this entire data structure is discarded.
      *
-     * Whenever a list element is examined, it is expunged if either the
-     * GC has determined that the iterator is discarded, or if the
-     * iterator reports that it is "detached" (does not need any further
-     * state updates).
+     * So in addition to the removedAt callback that is necessary for
+     * correctness, iterators have the shutdown and takeIndexWrapped
+     * callbacks that help remove stale iterators from the list.
      *
-     * This achieves our goals of a high-reliability iterator that adds
-     * very little overhead if users don't create iterators.  The most
-     * overhead is seen if takeIndex never advances, iterators are
-     * discarded before they are exhausted, and all removals are
-     * interior removes, in which case all stale iterators are
-     * discovered by the GC.  But even in this case we don't increase
-     * the amortized complexity.
+     * Whenever a list element is examined, it is expunged if either
+     * the GC has determined that the iterator is discarded, or if the
+     * iterator reports that it is "detached" (does not need any
+     * further state updates).  Overhead is maximal when takeIndex
+     * never advances, iterators are discarded before they are
+     * exhausted, and all removals are interior removes, in which case
+     * all stale iterators are discovered by the GC.  But even in this
+     * case we don't increase the amortized complexity.
+     *
+     * Care must be taken to keep list sweeping methods from
+     * reentrantly invoking another such method, causing subtle
+     * corruption bugs.
      */
     class Itrs {
 
@@ -781,6 +802,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /**
          * Sweeps itrs, looking for and expunging stale iterators.
          * If at least one was found, tries harder to find more.
+         * Called only from iterating thread.
          *
          * @param tryHarder whether to start in try-harder mode, because
          * there is known to be at least one iterator to collect

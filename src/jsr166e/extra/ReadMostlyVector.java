@@ -659,30 +659,26 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
 
     public int indexOf(Object o) {
         SequenceLock lock = this.lock;
-        long seq = lock.awaitAvailability();
-        Object[] items = array;
-        int n = count;
-        if (n <= items.length) {
-            boolean valid = true;
-            for (int i = 0; i < n; ++i) {
-                Object e = items[i];
-                if (lock.getSequence() == seq) {
-                    if ((o == null) ? e == null : o.equals(e))
+        for (;;) {
+            long seq = lock.awaitAvailability();
+            Object[] items = array;
+            int n = count;
+            if (n <= items.length) { 
+                for (int i = 0; i < n; ++i) {
+                    Object e = items[i];
+                    if (lock.getSequence() != seq) {
+                        lock.lock();
+                        try {
+                            return rawIndexOf(o, 0, count);
+                        } finally {
+                            lock.unlock();
+                        }
+                    }
+                    else if ((o == null) ? e == null : o.equals(e))
                         return i;
                 }
-                else {
-                    valid = false;
-                    break;
-                }
-            }
-            if (valid)
                 return -1;
-        }
-        lock.lock();
-        try {
-            return rawIndexOf(o, 0, count);
-        } finally {
-            lock.unlock();
+            }
         }
     }
 
@@ -697,19 +693,26 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
 
     public int lastIndexOf(Object o) {
         SequenceLock lock = this.lock;
-        long seq = lock.awaitAvailability();
-        Object[] items = array;
-        int n = count;
-        if (n <= items.length) {
-            int idx = validatedLastIndexOf(o, items, n - 1, 0, seq);
-            if (lock.getSequence() == seq)
-                return idx;
-        }
-        lock.lock();
-        try {
-            return rawLastIndexOf(o, count - 1, 0);
-        } finally {
-            lock.unlock();
+        for (;;) {
+            long seq = lock.awaitAvailability();
+            Object[] items = array;
+            int n = count;
+            if (n <= items.length) { 
+                for (int i = n - 1; i >= 0; --i) {
+                    Object e = items[i];
+                    if (lock.getSequence() != seq) {
+                        lock.lock();
+                        try {
+                            return rawLastIndexOf(o, 0, count);
+                        } finally {
+                            lock.unlock();
+                        }
+                    }
+                    else if ((o == null) ? e == null : o.equals(e))
+                        return i;
+                }
+                return -1;
+            }
         }
     }
 

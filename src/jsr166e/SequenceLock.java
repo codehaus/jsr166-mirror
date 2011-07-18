@@ -23,13 +23,14 @@ import java.io.IOException;
  * the lock is held. When it is even (i.e., ({@code lock.getSequence()
  * & 1L) == 0L}), the lock is released. Method {@link
  * #awaitAvailability} can be used to await availability of the lock,
- * returning its current sequence number. Sequence numbers are of type
- * {@code long} to ensure that they will not wrap around until
- * hundreds of years of use under current processor rates.  A
- * SequenceLock can be created with a specified number of
- * spins. Attempts to lock or await release will retry at least the
- * given number of times before blocking. If not specified, a default,
- * possibly platform-specific, value is used.
+ * returning its current sequence number. Sequence numbers (as well as
+ * reentrant hold counts) are of type {@code long} to ensure that they
+ * will not wrap around until hundreds of years of use under current
+ * processor rates.  A SequenceLock can be created with a specified
+ * number of spins. Attempts to acquire the lock in method {@link
+ * #lock} will retry at least the given number of times before
+ * blocking. If not specified, a default, possibly platform-specific,
+ * value is used.
  *
  * <p>Except for the lack of support for specified fairness policies,
  * or {@link Condition} objects, a SequenceLock can be used in the
@@ -52,10 +53,10 @@ import java.io.IOException;
  *
  * <pre> {@code
  * class Point {
- *     private float x, y;
+ *     private double x, y;
  *     private final SequenceLock sl = new SequenceLock();
  *
- *     void move(float deltaX, float deltaY) { // an exclusively locked method
+ *     void move(double deltaX, double deltaY) { // an exclusively locked method
  *        sl.lock();
  *        try {
  *            x += deltaX;
@@ -65,19 +66,19 @@ import java.io.IOException;
  *      }
  *  }
  *
- *  float distanceFromOriginV1() { // A read-only method
- *      float currentX, currentY;
+ *  double distanceFromOriginV1() { // A read-only method
+ *      double currentX, currentY;
  *      long seq;
  *      do {
  *          seq = sl.awaitAvailability();
  *          currentX = x;
  *          currentY = y;
  *      } while (sl.getSequence() != seq); // retry if sequence changed
- *      return (float)Math.sqrt(currentX * currentX + currentY * currentY);
+ *      return Math.sqrt(currentX * currentX + currentY * currentY);
  *  }
  *
- *  float distanceFromOriginV2() { // Uses bounded retries before locking
- *      float currentX, currentY;
+ *  double distanceFromOriginV2() { // Uses bounded retries before locking
+ *      double currentX, currentY;
  *      long seq;
  *      int retries = RETRIES_BEFORE_LOCKING; // for example 8
  *      try {
@@ -92,7 +93,7 @@ import java.io.IOException;
  *        if (retries < 0)
  *           sl.unlock();
  *      }
- *      return (float)Math.sqrt(currentX * currentX + currentY * currentY);
+ *      return Math.sqrt(currentX * currentX + currentY * currentY);
  *  }
  *}}</pre>
  *
@@ -111,7 +112,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
         /**
          * The number of reentrant holds on this lock. Uses a long for
          * compatibility with other AbstractQueuedLongSynchronizer
-         * operations.
+         * operations. Accessed only by lock holder.
          */
         long holds;
 
@@ -185,15 +186,10 @@ public class SequenceLock implements Lock, java.io.Serializable {
 
         final long awaitAvailability() {
             long s;
-            int k = spins;
             while (((s = getState()) & 1L) != 0L &&
                    getExclusiveOwnerThread() != Thread.currentThread()) {
-                if (k > 0)
-                    --k;
-                else {
-                    acquireShared(1L);
-                    releaseShared(1L);
-                }
+                acquireShared(1L);
+                releaseShared(1L);
             }
             return s;
         }
@@ -248,15 +244,14 @@ public class SequenceLock implements Lock, java.io.Serializable {
 
     /**
      * Creates an instance of {@code SequenceLock} with the default
-     * number of retry attempts to lock or await release before
-     * blocking.
+     * number of retry attempts to acquire the lock before blocking.
      */
     public SequenceLock() { sync = new Sync(DEFAULT_SPINS); }
 
     /**
-     * Creates an instance of {@code SequenceLock} that
-     * will retry attempts to lock or await release
-     * at least the given number times before blocking.
+     * Creates an instance of {@code SequenceLock} that will retry
+     * attempts to acquire the lock at least the given number times
+     * before blocking.
      */
     public SequenceLock(int spins) { sync = new Sync(spins); }
 

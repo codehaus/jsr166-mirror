@@ -663,7 +663,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             long seq = lock.awaitAvailability();
             Object[] items = array;
             int n = count;
-            if (n <= items.length) { 
+            if (n <= items.length) {
                 for (int i = 0; i < n; ++i) {
                     Object e = items[i];
                     if (lock.getSequence() != seq) {
@@ -697,7 +697,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             long seq = lock.awaitAvailability();
             Object[] items = array;
             int n = count;
-            if (n <= items.length) { 
+            if (n <= items.length) {
                 for (int i = n - 1; i >= 0; --i) {
                     Object e = items[i];
                     if (lock.getSequence() != seq) {

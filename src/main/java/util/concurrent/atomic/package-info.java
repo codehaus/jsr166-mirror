@@ -47,6 +47,22 @@
  *   }
  * }}</pre>
  *
+ * <p>It is straightforward to define new utility functions that, like
+ * {@code getAndIncrement}, apply a function to a value atomically.
+ * For example, given some transformation
+ * <pre> {@code long transform(long input)}</pre>
+ *
+ * write your utility method as follows:
+ *  <pre> {@code
+ * boolean getAndTransform(AtomicLong var) {
+ *   while (true) {
+ *     long current = var.get();
+ *     long next = transform(current);
+ *     if (var.compareAndSet(current, next))
+ *         return current;
+ *   }
+ * }}</pre>
+ *
  * <p>The memory effects for accesses and updates of atomics generally
  * follow the rules for volatiles, as stated in
  * <a href="http://java.sun.com/docs/books/jls/"> The Java Language
@@ -158,9 +174,9 @@
  * {@code byte} values, and cast appropriately.
  *
  * You can also hold floats using
- * {@link java.lang.Float#floatToIntBits} and
+ * {@link java.lang.Float#floatToRawIntBits} and
  * {@link java.lang.Float#intBitsToFloat} conversions, and doubles using
- * {@link java.lang.Double#doubleToLongBits} and
+ * {@link java.lang.Double#doubleToRawLongBits} and
  * {@link java.lang.Double#longBitsToDouble} conversions.
  *
  * @since 1.5

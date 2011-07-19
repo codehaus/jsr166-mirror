@@ -688,7 +688,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
     }
 
     public Iterator<E> iterator() {
-        return new Itr(this, 0);
+        return new Itr<E>(this, 0);
     }
 
     public int lastIndexOf(Object o) {
@@ -717,11 +717,11 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
     }
 
     public ListIterator<E> listIterator() {
-        return new Itr(this, 0);
+        return new Itr<E>(this, 0);
     }
 
     public ListIterator<E> listIterator(int index) {
-        return new Itr(this, index);
+        return new Itr<E>(this, index);
     }
 
     public E remove(int index) {
@@ -784,7 +784,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         int ssize = toIndex - fromIndex;
         if (fromIndex < 0 || toIndex > c || ssize < 0)
             throw new IndexOutOfBoundsException();
-        return new ReadMostlyVectorSublist(this, fromIndex, ssize);
+        return new ReadMostlyVectorSublist<E>(this, fromIndex, ssize);
     }
 
     public Object[] toArray() {
@@ -1060,7 +1060,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
 
     /** See {@link Vector#elements} */
     public Enumeration<E> elements() {
-        return new Itr(this, 0);
+        return new Itr<E>(this, 0);
     }
 
     /** See {@link Vector#capacity} */
@@ -1106,7 +1106,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
 
     // other methods
 
-    public Object clone() {
+    public ReadMostlyVector<E> clone() {
         SequenceLock lock = this.lock;
         Object[] a = null;
         boolean retry = false;
@@ -1126,7 +1126,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
                 lock.unlock();
             }
         }
-        return new ReadMostlyVector(a, n, capacityIncrement);
+        return new ReadMostlyVector<E>(a, n, capacityIncrement);
     }
 
     private void writeObject(java.io.ObjectOutputStream s)
@@ -1416,7 +1416,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         }
 
         public Iterator<E> iterator() {
-            return new SubItr(this, offset);
+            return new SubItr<E>(this, offset);
         }
 
         public int lastIndexOf(Object o) {
@@ -1440,11 +1440,11 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
         }
 
         public ListIterator<E> listIterator() {
-            return new SubItr(this, offset);
+            return new SubItr<E>(this, offset);
         }
 
         public ListIterator<E> listIterator(int index) {
-            return new SubItr(this, index + offset);
+            return new SubItr<E>(this, index + offset);
         }
 
         public E remove(int index) {
@@ -1504,7 +1504,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
             int ssize = toIndex - fromIndex;
             if (fromIndex < 0 || toIndex > c || ssize < 0)
                 throw new IndexOutOfBoundsException();
-            return new ReadMostlyVectorSublist(list, offset+fromIndex, ssize);
+            return new ReadMostlyVectorSublist<E>(list, offset+fromIndex, ssize);
         }
 
         public Object[] toArray() {

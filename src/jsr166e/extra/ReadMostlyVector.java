@@ -805,7 +805,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
      * Append the element if not present.
      *
      * @param e element to be added to this list, if absent
-     * @return <tt>true</tt> if the element was added
+     * @return {@code true} if the element was added
      */
     public boolean addIfAbsent(E e) {
         boolean added;
@@ -860,7 +860,7 @@ public class ReadMostlyVector<E> implements List<E>, RandomAccess, Cloneable, ja
      * Returns an iterator operating over a snapshot copy of the
      * elements of this collection created upon construction of the
      * iterator. The iterator does <em>NOT</em> support the
-     * <tt>remove</tt> method.
+     * {@code remove} method.
      *
      * @return an iterator over the elements in this list in proper sequence
      */

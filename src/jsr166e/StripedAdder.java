@@ -22,7 +22,7 @@ import java.io.ObjectOutputStream;
  * <em>NOT</em> an atomic snapshot (concurrent updates may occur while
  * the sum is being calculated), and so cannot be used alone for
  * fine-grained synchronization control.
- * 
+ *
  * <p> This class may be applicable when many threads frequently
  * update a common sum that is used for purposes such as collecting
  * statistics. In this case, performance may be significantly faster
@@ -31,7 +31,7 @@ import java.io.ObjectOutputStream;
  * only one thread can ever update the sum, performance may be
  * significantly slower than just updating a local variable.
  *
- * @author Doug Lea 
+ * @author Doug Lea
  */
 public class StripedAdder implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
@@ -52,7 +52,7 @@ public class StripedAdder implements Serializable {
      * candidate Adder.
      */
 
-    /** 
+    /**
      * Number of processors, to place a cap on table growth.
      */
     static final int NCPU = Runtime.getRuntime().availableProcessors();
@@ -66,7 +66,7 @@ public class StripedAdder implements Serializable {
         Adder(long x) { super(x); }
     }
 
-    /** 
+    /**
      * Holder for the thread-local hash code.
      */
     static final class HashCode {
@@ -79,7 +79,7 @@ public class StripedAdder implements Serializable {
      */
     static final class ThreadHashCode extends ThreadLocal<HashCode> {
         static final Random rng = new Random();
-        public HashCode initialValue() { 
+        public HashCode initialValue() {
             int h = rng.nextInt();
             return new HashCode((h == 0) ? 1 : h); // ensure nonzero
         }
@@ -107,7 +107,7 @@ public class StripedAdder implements Serializable {
     /**
      * Marsaglia XorShift for rehashing on collisions
      */
-    private static int xorShift(int r) { 
+    private static int xorShift(int r) {
         r ^= r << 13;
         r ^= r >>> 17;
         return r ^ (r << 5);
@@ -172,7 +172,7 @@ public class StripedAdder implements Serializable {
      * Returns an estimate of the current sum.  The result is
      * calculated by summing multiple variables, so may not be
      * accurate if updates occur concurrently with this method.
-     * 
+     *
      * @return the estimated sum
      */
     public long sum() {

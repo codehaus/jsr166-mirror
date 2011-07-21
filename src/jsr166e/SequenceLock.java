@@ -43,9 +43,11 @@ import java.io.IOException;
  * <p> Methods {@code awaitAvailability} and {@code getSequence} can
  * be used together to define (partially) optimistic read-only methods
  * that are usually more efficient than ReadWriteLocks when they
- * apply.  These read-only methods typically read multiple {@code
- * volatile} field values into local variables when the lock is not
- * held, retrying if the sequence number changed while doing so.
+ * apply.  These methods should in general be structured as loops that
+ * await lock availablity, then read {@code volatile} fields into
+ * local variables (and may further read other values derived from
+ * these, for example the {@code length} of a {@code volatile} array),
+ * and retry if the sequence number changed while doing so.
  * Alternatively, because {@code awaitAvailability} accommodates
  * reentrancy, a method can retry a bounded number of times before
  * switching to locking mode.  While conceptually straightforward,

@@ -131,8 +131,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Call only when holding lock.
      */
     private void enqueue(E x) {
-        assert lock.getHoldCount() == 1;
-        assert items[putIndex] == null;
+        // assert lock.getHoldCount() == 1;
+        // assert items[putIndex] == null;
         items[putIndex] = x;
         putIndex = inc(putIndex);
         count++;
@@ -144,8 +144,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Call only when holding lock.
      */
     private E dequeue() {
-        assert lock.getHoldCount() == 1;
-        assert items[takeIndex] != null;
+        // assert lock.getHoldCount() == 1;
+        // assert items[takeIndex] != null;
         final Object[] items = this.items;
         @SuppressWarnings("unchecked") E x = (E) items[takeIndex];
         items[takeIndex] = null;
@@ -163,9 +163,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Call only when holding lock.
      */
     void removeAt(final int removeIndex) {
-        assert lock.getHoldCount() == 1;
-        assert items[removeIndex] != null;
-        assert removeIndex >= 0 && removeIndex < items.length;
+        // assert lock.getHoldCount() == 1;
+        // assert items[removeIndex] != null;
+        // assert removeIndex >= 0 && removeIndex < items.length;
         final Object[] items = this.items;
         if (removeIndex == takeIndex) {
             // removing front item; just advance
@@ -808,8 +808,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * there is known to be at least one iterator to collect
          */
         void doSomeSweeping(boolean tryHarder) {
-            assert lock.getHoldCount() == 1;
-            assert head != null;
+            // assert lock.getHoldCount() == 1;
+            // assert head != null;
             int probes = tryHarder ? LONG_SWEEP_PROBES : SHORT_SWEEP_PROBES;
             Node o, p;
             final Node sweeper = this.sweeper;
@@ -864,7 +864,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * Adds a new iterator to the linked list of tracked iterators.
          */
         void register(Itr itr) {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             head = new Node(itr, head);
         }
 
@@ -874,14 +874,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * Notifies all iterators, and expunges any that are now stale.
          */
         void takeIndexWrapped() {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             cycles++;
             for (Node o = null, p = head; p != null;) {
                 final Itr it = p.get();
                 final Node next = p.next;
                 if (it == null || it.takeIndexWrapped()) {
                     // unlink p
-                    assert it == null || it.isDetached();
+                    // assert it == null || it.isDetached();
                     p.clear();
                     p.next = null;
                     if (o == null)
@@ -908,7 +908,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 final Node next = p.next;
                 if (it == null || it.removedAt(removedIndex)) {
                     // unlink p
-                    assert it == null || it.isDetached();
+                    // assert it == null || it.isDetached();
                     p.clear();
                     p.next = null;
                     if (o == null)
@@ -931,7 +931,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * clears all weak refs, and unlinks the itrs datastructure.
          */
         void queueIsEmpty() {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             for (Node p = head; p != null; p = p.next) {
                 Itr it = p.get();
                 if (it != null) {
@@ -947,7 +947,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * Called whenever an element has been dequeued (at takeIndex).
          */
         void elementDequeued() {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             if (count == 0)
                 queueIsEmpty();
             else if (takeIndex == 0)
@@ -1008,13 +1008,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         private static final int DETACHED = -3;
 
         Itr() {
-            assert lock.getHoldCount() == 0;
+            // assert lock.getHoldCount() == 0;
             lastRet = NONE;
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
                 if (count == 0) {
-                    assert itrs == null;
+                    // assert itrs == null;
                     cursor = NONE;
                     nextIndex = NONE;
                     prevTakeIndex = DETACHED;
@@ -1030,10 +1030,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                         itrs.doSomeSweeping(false);
                     }
                     prevCycles = itrs.cycles;
-                    assert takeIndex >= 0;
-                    assert prevTakeIndex == takeIndex;
-                    assert nextIndex >= 0;
-                    assert nextItem != null;
+                    // assert takeIndex >= 0;
+                    // assert prevTakeIndex == takeIndex;
+                    // assert nextIndex >= 0;
+                    // assert nextItem != null;
                 }
             } finally {
                 lock.unlock();
@@ -1041,12 +1041,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         boolean isDetached() {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             return prevTakeIndex < 0;
         }
 
         private int incCursor(int index) {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             index = inc(index);
             if (index == putIndex)
                 index = NONE;
@@ -1072,10 +1072,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * operation on this iterator.  Call only from iterating thread.
          */
         private void incorporateDequeues() {
-            assert lock.getHoldCount() == 1;
-            assert itrs != null;
-            assert !isDetached();
-            assert count > 0;
+            // assert lock.getHoldCount() == 1;
+            // assert itrs != null;
+            // assert !isDetached();
+            // assert count > 0;
 
             final int cycles = itrs.cycles;
             final int takeIndex = ArrayBlockingQueue.this.takeIndex;
@@ -1115,13 +1115,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          */
         private void detach() {
             // Switch to detached mode
-            assert lock.getHoldCount() == 1;
-            assert cursor == NONE;
-            assert nextIndex < 0;
-            assert lastRet < 0 || nextItem == null;
-            assert lastRet < 0 ^ lastItem != null;
+            // assert lock.getHoldCount() == 1;
+            // assert cursor == NONE;
+            // assert nextIndex < 0;
+            // assert lastRet < 0 || nextItem == null;
+            // assert lastRet < 0 ^ lastItem != null;
             if (prevTakeIndex >= 0) {
-                assert itrs != null;
+                // assert itrs != null;
                 prevTakeIndex = DETACHED;
                 // try to unlink from itrs (but not too hard)
                 itrs.doSomeSweeping(true);
@@ -1135,7 +1135,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * triggered by queue modifications.
          */
         public boolean hasNext() {
-            assert lock.getHoldCount() == 0;
+            // assert lock.getHoldCount() == 0;
             if (nextItem != null)
                 return true;
             noNext();
@@ -1146,26 +1146,26 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
-                assert cursor == NONE;
-                assert nextIndex == NONE;
+                // assert cursor == NONE;
+                // assert nextIndex == NONE;
                 if (!isDetached()) {
-                    assert lastRet >= 0;
+                    // assert lastRet >= 0;
                     incorporateDequeues(); // might update lastRet
                     if (lastRet >= 0) {
                         lastItem = itemAt(lastRet);
-                        assert lastItem != null;
+                        // assert lastItem != null;
                         detach();
                     }
                 }
-                assert isDetached();
-                assert lastRet < 0 ^ lastItem != null;
+                // assert isDetached();
+                // assert lastRet < 0 ^ lastItem != null;
             } finally {
                 lock.unlock();
             }
         }
 
         public E next() {
-            assert lock.getHoldCount() == 0;
+            // assert lock.getHoldCount() == 0;
             final E x = nextItem;
             if (x == null)
                 throw new NoSuchElementException();
@@ -1174,13 +1174,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             try {
                 if (!isDetached())
                     incorporateDequeues();
-                assert nextIndex != NONE;
-                assert lastItem == null;
+                // assert nextIndex != NONE;
+                // assert lastItem == null;
                 lastRet = nextIndex;
                 final int cursor = this.cursor;
                 if (cursor >= 0) {
                     nextItem = itemAt(nextIndex = cursor);
-                    assert nextItem != null;
+                    // assert nextItem != null;
                     this.cursor = incCursor(cursor);
                 } else {
                     nextIndex = NONE;
@@ -1193,7 +1193,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         public void remove() {
-            assert lock.getHoldCount() == 0;
+            // assert lock.getHoldCount() == 0;
             final ReentrantLock lock = ArrayBlockingQueue.this.lock;
             lock.lock();
             try {
@@ -1206,7 +1206,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                         removeAt(lastRet);
                     else {
                         final E lastItem = this.lastItem;
-                        assert lastItem != null;
+                        // assert lastItem != null;
                         this.lastItem = null;
                         if (itemAt(lastRet) == lastItem)
                             removeAt(lastRet);
@@ -1221,8 +1221,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     detach();
             } finally {
                 lock.unlock();
-                assert lastRet == NONE;
-                assert lastItem == null;
+                // assert lastRet == NONE;
+                // assert lastItem == null;
             }
         }
 
@@ -1233,7 +1233,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * from next(), as promised by returning true from hasNext().
          */
         void shutdown() {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             cursor = NONE;
             if (nextIndex >= 0)
                 nextIndex = REMOVED;
@@ -1261,7 +1261,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * @return true if this iterator should be unlinked from itrs
          */
         boolean removedAt(int removedIndex) {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             if (isDetached())
                 return true;
 
@@ -1275,7 +1275,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 cycleDiff++;
             final int removedDistance =
                 (cycleDiff * len) + (removedIndex - prevTakeIndex);
-            assert removedDistance >= 0;
+            // assert removedDistance >= 0;
             int cursor = this.cursor;
             if (cursor >= 0) {
                 int x = distance(cursor, prevTakeIndex, len);
@@ -1284,7 +1284,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                         this.cursor = cursor = NONE;
                 }
                 else if (x > removedDistance) {
-                    assert cursor != prevTakeIndex;
+                    // assert cursor != prevTakeIndex;
                     this.cursor = cursor = dec(cursor);
                 }
             }
@@ -1317,7 +1317,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          * @return true if this iterator should be unlinked from itrs
          */
         boolean takeIndexWrapped() {
-            assert lock.getHoldCount() == 1;
+            // assert lock.getHoldCount() == 1;
             if (isDetached())
                 return true;
             if (itrs.cycles - prevCycles > 1) {

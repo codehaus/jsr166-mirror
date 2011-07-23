@@ -27,9 +27,9 @@ import java.io.ObjectOutputStream;
  * update a common sum that is used for purposes such as collecting
  * statistics. In this case, performance may be significantly faster
  * than using a shared {@link AtomicLong}, at the expense of using
- * significantly more space.  On the other hand, if it is known that
- * only one thread can ever update the sum, performance may be
- * significantly slower than just updating a local variable.
+ * much more space.  On the other hand, if it is known that only one
+ * thread can ever update the sum, performance may be significantly
+ * slower than just updating a local variable.
  *
  * <p>A StripedAdder may optionally be constructed with a given
  * expected contention level; i.e., the number of threads that are
@@ -43,7 +43,7 @@ public class StripedAdder implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
 
     /*
-     * Overview: We maintain a table of Atomic long variables. The
+     * A StripedAdder maintains a table of Atomic long variables. The
      * table is indexed by per-thread hash codes that are initialized
      * to random values.
      *
@@ -58,7 +58,7 @@ public class StripedAdder implements Serializable {
      * and failures only become known via CAS failures, convergence
      * will be slow, and because threads are typically not bound to
      * CPUS forever, may not occur at all. However, despite these
-     * limitations, observed contention is typically very low in these
+     * limitations, observed contention is typically low in these
      * cases.
      *
      * Table entries are of class Adder; a form of AtomicLong padded
@@ -67,15 +67,14 @@ public class StripedAdder implements Serializable {
      * irregularly scattered in memory and thus don't interfere much
      * with each other. But Atomic objects residing in arrays will
      * tend to be placed adjacent to each other, and so will most
-     * often share cache lines without this precaution.  Except for
-     * slot adders[0], Adders are constructed upon first use, which
-     * further improves per-thread locality and helps reduce (an
-     * already large) footprint.
+     * often share cache lines without this precaution.  Adders are
+     * constructed upon first use, which further improves per-thread
+     * locality and helps reduce (an already large) footprint.
      *
      * A single spinlock is used for resizing the table as well as
      * populating slots with new Adders. Upon lock contention, threads
-     * try other slots rather than blocking. We guarantee that at
-     * least one slot (0) exists, so retries will eventually find a
+     * try other slots rather than blocking. After initialization, at
+     * least one slot exists, so retries will eventually find a
      * candidate Adder. During these retries, there is increased
      * contention and reduced locality, which is still better than
      * alternatives.
@@ -96,9 +95,8 @@ public class StripedAdder implements Serializable {
 
     /**
      * Holder for the thread-local hash code. The code starts off with
-     * a given random value, but may be set to a different
-     * pseudo-random value (using a cheaper but adequate xorshift
-     * generator) upon collisions.
+     * a given random value, but may be set to a different value upon
+     * collisions in retryAdd.
      */
     static final class HashCode {
         int code;
@@ -136,19 +134,11 @@ public class StripedAdder implements Serializable {
     private final AtomicInteger mutex;
 
     /**
-     * Marsaglia XorShift random generator for rehashing on collisions
-     */
-    private static int xorShift(int r) {
-        r ^= r << 13;
-        r ^= r >>> 17;
-        return r ^ (r << 5);
-    }
-
-    /**
      * Creates a new adder with zero sum.
      */
     public StripedAdder() {
-        this(2);
+        this.mutex = new AtomicInteger();
+        // remaining initialization on first call to add.
     }
 
     /**
@@ -164,7 +154,8 @@ public class StripedAdder implements Serializable {
         while (size < cap)
             size <<= 1;
         Adder[] as = new Adder[size];
-        as[0] = new Adder(0); // ensure at least one available adder
+        for (int i = 0; i < size; ++i)
+            as[i] = new Adder(0);
         this.adders = as;
         this.mutex = new AtomicInteger();
     }
@@ -175,43 +166,60 @@ public class StripedAdder implements Serializable {
      * @param x the value to add
      */
     public void add(long x) {
+        Adder[] as; Adder a; int n; long v; // locals to hold volatile reads
         HashCode hc = threadHashCode.get();
-        for (int h = hc.code;;) {
-            Adder[] as = adders;
-            int n = as.length;
-            Adder a = as[h & (n - 1)];
-            if (a != null) {
-                long v = a.get();
-                if (a.compareAndSet(v, v + x))
-                    break;
-                if (n >= NCPU) {                 // Collision when table at max
-                    h = hc.code = xorShift(h);   // change code
-                    continue;
+        if ((as = adders) == null || (n = as.length) < 1 ||
+            (a = as[hc.code & (n - 1)]) == null ||
+            !a.compareAndSet(v = a.get(), v + x))
+            retryAdd(x, hc);
+    }
+
+    /**
+     * Handle cases of add involving initialization, resizing,
+     * creating new Adders, and/or contention.
+     */
+    private void retryAdd(long x, HashCode hc) {
+        int h = hc.code;
+        final AtomicInteger mutex = this.mutex;
+        AtomicInteger lock = null;                     // nonnull when held
+        try {
+            for (;;) {
+                Adder[] as; Adder a; long v; int n, k; // locals for volatiles
+                boolean needLock = true;
+                if ((as = adders) == null || (n = as.length) < 1) {
+                    if (lock != null)                  // default-initialize
+                        adders = new Adder[2];
                 }
-            }
-            final AtomicInteger mutex = this.mutex;
-            if (mutex.get() != 0)
-                h = xorShift(h);                 // Try elsewhere
-            else if (mutex.compareAndSet(0, 1)) {
-                boolean created = false;
-                try {
-                    Adder[] rs = adders;
-                    if (a != null && rs == as)   // Resize table
-                        rs = adders = Arrays.copyOf(as, as.length << 1);
-                    int j = h & (rs.length - 1);
-                    if (rs[j] == null) {         // Create adder
-                        rs[j] = new Adder(x);
-                        created = true;
+                else if ((a = as[k = h & (n - 1)]) == null) {
+                    if (lock != null) {                // attach new adder
+                        as[k] = new Adder(x);
+                        break;
                     }
-                } finally {
-                    mutex.set(0);
                 }
-                if (created) {
-                    hc.code = h;                 // Use this adder next time
+                else if (a.compareAndSet(v = a.get(), v + x))
                     break;
+                else if (n >= NCPU)                    // cannot expand
+                    needLock = false;
+                else if (lock != null)                 // expand table
+                    adders = Arrays.copyOf(as, n << 1);
+
+                if (lock == null) {
+                    if (needLock && mutex.get() == 0 &&
+                        mutex.compareAndSet(0, 1))
+                        lock = mutex;
+                    else {                             // try elsewhere
+                        h ^= h << 13;                  // Marsaglia XorShift
+                        h ^= h >>> 17;
+                        h ^= h << 5;
+                    }
                 }
             }
+        } finally {
+            if (lock != null)
+                lock.set(0);
         }
+        if (hc.code != h)                              // avoid unneeded writes
+            hc.code = h;
     }
 
     /**
@@ -222,13 +230,15 @@ public class StripedAdder implements Serializable {
      * @return the estimated sum
      */
     public long sum() {
-        long sum = 0;
+        long sum = 0L;
         Adder[] as = adders;
-        int n = as.length;
-        for (int i = 0; i < n; ++i) {
-            Adder a = as[i];
-            if (a != null)
-                sum += a.get();
+        if (as != null) {
+            int n = as.length;
+            for (int i = 0; i < n; ++i) {
+                Adder a = as[i];
+                if (a != null)
+                    sum += a.get();
+            }
         }
         return sum;
     }
@@ -240,11 +250,13 @@ public class StripedAdder implements Serializable {
      */
     public void reset() {
         Adder[] as = adders;
-        int n = as.length;
-        for (int i = 0; i < n; ++i) {
-            Adder a = as[i];
-            if (a != null)
-                a.set(0L);
+        if (as != null) {
+            int n = as.length;
+            for (int i = 0; i < n; ++i) {
+                Adder a = as[i];
+                if (a != null)
+                    a.set(0L);
+            }
         }
     }
 
@@ -268,14 +280,16 @@ public class StripedAdder implements Serializable {
      * @return the estimated sum
      */
     public long sumAndReset() {
-        long sum = 0;
+        long sum = 0L;
         Adder[] as = adders;
-        int n = as.length;
-        for (int i = 0; i < n; ++i) {
-            Adder a = as[i];
-            if (a != null) {
-                sum += a.get();
-                a.set(0L);
+        if (as != null) {
+            int n = as.length;
+            for (int i = 0; i < n; ++i) {
+                Adder a = as[i];
+                if (a != null) {
+                    sum += a.get();
+                    a.set(0L);
+                }
             }
         }
         return sum;
@@ -290,13 +304,8 @@ public class StripedAdder implements Serializable {
     private void readObject(ObjectInputStream s)
         throws IOException, ClassNotFoundException {
         s.defaultReadObject();
-        long c = s.readLong();
-        Adder[] as = new Adder[2];
-        as[0] = new Adder(c);
-        this.adders = as;
         mutex.set(0);
+        add(s.readLong());
     }
 
 }
-
-

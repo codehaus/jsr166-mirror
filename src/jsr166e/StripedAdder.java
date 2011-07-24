@@ -86,6 +86,11 @@ public class StripedAdder implements Serializable {
     static final int NCPU = Runtime.getRuntime().availableProcessors();
 
     /**
+     * The table size set upon first use when default-constructed
+     */
+    private static final int DEFAULT_ARRAY_SIZE = 8;
+
+    /**
      * Padded version of AtomicLong
      */
     static final class Adder extends AtomicLong {
@@ -122,14 +127,14 @@ public class StripedAdder implements Serializable {
     static final ThreadHashCode threadHashCode = new ThreadHashCode();
 
     /**
-     * Table of adders. Minimum size 2. Size grows to be at most NCPU.
+     * Table of adders. Size is power of two, grows to be at most NCPU.
      */
     private transient volatile Adder[] adders;
 
     /**
      * Serves as a lock when resizing and/or creating Adders.  There
-     * is no need for a blocking lock: When busy, other threads try
-     * other slots.
+     * is no need for a blocking lock: Except during initialization
+     * races, when busy, other threads try other slots.
      */
     private final AtomicInteger mutex;
 
@@ -149,10 +154,15 @@ public class StripedAdder implements Serializable {
      * will concurrently update the sum.
      */
     public StripedAdder(int expectedContention) {
-        int cap = (expectedContention < NCPU) ? expectedContention : NCPU;
-        int size = 2;
-        while (size < cap)
-            size <<= 1;
+        int size;
+        if (expectedContention > 0) {
+            int cap = (expectedContention < NCPU) ? expectedContention : NCPU;
+            size = 1;
+            while (size < cap)
+                size <<= 1;
+        }
+        else
+            size = 0;
         Adder[] as = new Adder[size];
         for (int i = 0; i < size; ++i)
             as[i] = new Adder(0);
@@ -181,45 +191,52 @@ public class StripedAdder implements Serializable {
     private void retryAdd(long x, HashCode hc) {
         int h = hc.code;
         final AtomicInteger mutex = this.mutex;
-        AtomicInteger lock = null;                     // nonnull when held
-        try {
-            for (;;) {
-                Adder[] as; Adder a; long v; int n, k; // locals for volatiles
-                boolean needLock = true;
-                if ((as = adders) == null || (n = as.length) < 1) {
-                    if (lock != null)                  // default-initialize
-                        adders = new Adder[2];
-                }
-                else if ((a = as[k = h & (n - 1)]) == null) {
-                    if (lock != null) {                // attach new adder
-                        as[k] = new Adder(x);
-                        break;
+        for (boolean retried = false; ; retried = true) {
+            Adder[] as; Adder a; long v; int n, k; // Locals for volatiles
+            if ((as = adders) == null || (n = as.length) < 1) {
+                if (mutex.get() == 0 && mutex.compareAndSet(0, 1)) {
+                    try {
+                        if (adders == null)        // Default-initialize
+                            adders = new Adder[DEFAULT_ARRAY_SIZE];
+                    } finally {
+                        mutex.set(0);
                     }
                 }
-                else if (a.compareAndSet(v = a.get(), v + x))
-                    break;
-                else if (n >= NCPU)                    // cannot expand
-                    needLock = false;
-                else if (lock != null)                 // expand table
-                    adders = Arrays.copyOf(as, n << 1);
-
-                if (lock == null) {
-                    if (needLock && mutex.get() == 0 &&
-                        mutex.compareAndSet(0, 1))
-                        lock = mutex;
-                    else {                             // try elsewhere
-                        h ^= h << 13;                  // Marsaglia XorShift
-                        h ^= h >>> 17;
-                        h ^= h << 5;
-                    }
-                }
+                else
+                    Thread.yield();               // initialization race
             }
-        } finally {
-            if (lock != null)
-                lock.set(0);
+            else if ((a = as[k = h & (n - 1)]) != null &&
+                     retried && a.compareAndSet(v = a.get(), v + x))
+                break;
+            else if ((a == null || n < NCPU) &&
+                     mutex.get() == 0 && mutex.compareAndSet(0, 1)) {
+                boolean created = false;
+                try {
+                    if (adders == as) {
+                        if (as[k] == null) {
+                            as[k] = new Adder(x);
+                            created = true;
+                        }
+                        else {                   // Expand table
+                            Adder[] rs = new Adder[n << 1];
+                            for (int i = 0; i < n; ++i)
+                                rs[i] = as[i];
+                            adders = rs;
+                        }
+                    }
+                } finally {
+                    mutex.set(0);
+                }
+                if (created)
+                    break;
+            }
+            else {                                // Try elsewhere
+                h ^= h << 13;
+                h ^= h >>> 17;                    // Marsaglia XorShift
+                h ^= h << 5;
+            }
         }
-        if (hc.code != h)                              // avoid unneeded writes
-            hc.code = h;
+        hc.code = h;
     }
 
     /**

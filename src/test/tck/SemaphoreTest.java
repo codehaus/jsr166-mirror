@@ -72,7 +72,7 @@ public class SemaphoreTest extends JSR166TestCase {
                 throw new AssertionFailedError("timed out");
             Thread.yield();
         }
-        assert(s.hasQueuedThreads());
+        assertTrue(s.hasQueuedThreads());
         assertTrue(t.isAlive());
     }
 

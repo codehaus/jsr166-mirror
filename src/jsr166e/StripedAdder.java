@@ -140,7 +140,13 @@ public class StripedAdder implements Serializable {
     static final ThreadHashCode threadHashCode = new ThreadHashCode();
 
     /**
-     * Table of adders. Size is power of two, grows to be at most CAP.
+     * Common placeholder for empty arrays.
+     */
+    static final Adder[] EMPTY_ARRAY = new Adder[0];
+
+    /**
+     * Table of adders. Size is either zero or a power of two, grows
+     * to be at most CAP.
      */
     private transient volatile Adder[] adders;
 
@@ -157,6 +163,7 @@ public class StripedAdder implements Serializable {
      * Creates a new adder with zero sum.
      */
     public StripedAdder() {
+        this.adders = EMPTY_ARRAY;
         this.mutex = new AtomicInteger();
         // remaining initialization on first call to add.
     }
@@ -169,14 +176,18 @@ public class StripedAdder implements Serializable {
      * will concurrently update the sum.
      */
     public StripedAdder(int expectedContention) {
-        int cap = (expectedContention < CAP) ? expectedContention : CAP;
-        int size = 1;
-        while (size < cap)
-            size <<= 1;
-        Adder[] as = new Adder[size];
-        for (int i = 0; i < size; ++i)
-            as[i] = new Adder(0);
-        this.adders = as;
+        if (expectedContention > 0) {
+            int cap = (expectedContention < CAP) ? expectedContention : CAP;
+            int size = 1;
+            while (size < cap)
+                size <<= 1;
+            Adder[] as = new Adder[size];
+            for (int i = 0; i < size; ++i)
+                as[i] = new Adder(0);
+            this.adders = as;
+        }
+        else
+            this.adders = EMPTY_ARRAY;
         this.mutex = new AtomicInteger();
     }
 
@@ -208,7 +219,7 @@ public class StripedAdder implements Serializable {
             Adder[] as; Adder a; long v; int k, n;
             while ((as = adders) == null || (n = as.length) < 1) {
                 synchronized(mutex) {                // Try to initialize
-                    if (adders == null) {
+                    if (adders == as) {
                         Adder[] rs = new Adder[DEFAULT_INITIAL_SIZE];
                         rs[h & (DEFAULT_INITIAL_SIZE - 1)] = new Adder(0);
                         adders = rs;

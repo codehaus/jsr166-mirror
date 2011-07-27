@@ -216,6 +216,22 @@ project ( ':extra166y' ) {
   sourceArtifact { into ( 'extra166y' ) { from sourceSets.main.allSource } }
 }
 
+project ( ':jsr166e' ) {
+  sourceSets { main { java { srcDir '../src/jsr166e' } } }
+  //compileJava.dependsOn project ( ':jsr166' ).jar
+  //compileJava.options.bootClasspath = bootClasspath
+  jar {
+    manifest { 
+      name = 'jsr166e'
+      symbolicName = 'jsr166e'
+      instruction 'Extension-Name' , 'jsr166e'
+      instruction 'Specification-Title' , 'JSR166e'
+      instruction 'Implementation-Title' , 'JSR166e'
+    }
+  }
+  sourceArtifact { into ( 'jsr166e' ) { from sourceSets.main.allSource } }
+}
+
 task clobber ( description : 'Clean all the Gradle subproject directories since they are transient.  All the permanent material is not in the subproject directories.' ) << {
   childProjects.keySet ( ).each { item -> delete ( item ) }
 }

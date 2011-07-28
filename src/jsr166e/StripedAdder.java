@@ -278,6 +278,20 @@ public class StripedAdder implements Serializable {
     }
 
     /**
+     * Equivalent to {@code add(1)}.
+     */
+    public void increment() {
+        add(1L);
+    }
+
+    /**
+     * Equivalent to {@code add(-1)}.
+     */
+    public void decrement() {
+        add(-1L);
+    }
+
+    /**
      * Returns an estimate of the current sum.  The result is
      * calculated by summing multiple variables, so may not be
      * accurate if updates occur concurrently with this method.
@@ -299,42 +313,13 @@ public class StripedAdder implements Serializable {
     }
 
     /**
-     * Resets each of the variables to zero. This is effective in
-     * fully resetting the sum only if there are no concurrent
-     * updates.
-     */
-    public void reset() {
-        Adder[] as = adders;
-        if (as != null) {
-            int n = as.length;
-            for (int i = 0; i < n; ++i) {
-                Adder a = as[i];
-                if (a != null)
-                    a.value = 0L;
-            }
-        }
-    }
-
-    /**
-     * Equivalent to {@code add(1)}.
-     */
-    public void increment() {
-        add(1L);
-    }
-
-    /**
-     * Equivalent to {@code add(-1)}.
-     */
-    public void decrement() {
-        add(-1L);
-    }
-
-    /**
-     * Equivalent to {@link #sum} followed by {@link #reset}.
+     * Resets each of the variables to zero, returning the estimated
+     * previous sum. This is effective in fully resetting the sum only
+     * if there are no concurrent updates.
      *
-     * @return the estimated sum
+     * @return the estimated previous sum
      */
-    public long sumAndReset() {
+    public long reset() {
         long sum = 0L;
         Adder[] as = adders;
         if (as != null) {

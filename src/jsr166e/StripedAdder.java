@@ -209,22 +209,26 @@ public class StripedAdder implements Serializable {
             Adder[] as; Adder a; int n;
             if ((as = adders) != null && (n = as.length) > 0) {
                 if ((a = as[(n - 1) & h]) == null) {
-                    if (busy == 0 &&            // Try to attach new Adder
-                        UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
-                        boolean created = false;
-                        try {                   // Recheck under lock
-                            Adder[] rs; int m, j;
-                            if ((rs = adders) != null && (m = rs.length) > 0 &&
-                                rs[j = (m - 1) & h] == null) {
-                                rs[j] = new Adder(x);
-                                created = true;
+                    if (busy == 0) {            // Try to attach new Adder
+                        Adder r = new Adder(x); // Optimistically create
+                        if (busy == 0 &&
+                            UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
+                            boolean created = false;
+                            try {               // Recheck under lock
+                                Adder[] rs; int m, j;
+                                if ((rs = adders) != null &&
+                                    (m = rs.length) > 0 &&
+                                    rs[j = (m - 1) & h] == null) {
+                                    rs[j] = r;
+                                    created = true;
+                                }
+                            } finally {
+                                busy = 0;
                             }
-                        } finally {
-                            busy = 0;
+                            if (created)
+                                break;
+                            continue;           // Slot is now non-empty
                         }
-                        if (created)
-                            break;
-                        continue;               // Slot is now non-empty
                     }
                     collide = false;
                 }
@@ -237,7 +241,7 @@ public class StripedAdder implements Serializable {
                     if (!collide)
                         collide = true;
                     else if (n >= NCPU || adders != as)
-                        collide = false;        // Don't expand
+                        collide = false;        // Can't expand
                     else if (busy == 0 &&
                              UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
                         collide = false;

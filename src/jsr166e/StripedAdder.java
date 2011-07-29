@@ -26,9 +26,9 @@ import java.io.ObjectOutputStream;
  * update a common sum that is used for purposes such as collecting
  * statistics. In this case, performance may be significantly faster
  * than using a shared {@link AtomicLong}, at the expense of using
- * much more space.  On the other hand, if it is known that only one
- * thread can ever update the sum, performance may be significantly
- * slower than just updating a local variable.
+ * more space.  On the other hand, if it is known that only one thread
+ * can ever update the sum, performance may be significantly slower
+ * than just updating a local variable.
  *
  * <p>A StripedAdder may optionally be constructed with a given
  * expected contention level; i.e., the number of threads that are
@@ -69,19 +69,19 @@ public class StripedAdder implements Serializable {
      * find a free slot.
      *
      * By default, the table is lazily initialized.  Upon first use,
-     * the table is set to size 2 (the minimum non-empty size), but
-     * containing only a single Adder. The maximum table size is
-     * bounded by nearest power of two >= the number of CPUS.  The
-     * table size is capped because, when there are more threads than
-     * CPUs, supposing that each thread were bound to a CPU, there
-     * would exist a perfect hash function mapping threads to slots
-     * that eliminates collisions. When we reach capacity, we search
-     * for this mapping by randomly varying the hash codes of
-     * colliding threads.  Because search is random, and failures only
-     * become known via CAS failures, convergence will be slow, and
-     * because threads are typically not bound to CPUS forever, may
-     * not occur at all. However, despite these limitations, observed
-     * contention is typically low in these cases.
+     * the table is set to size 1, and contains a single Adder. The
+     * maximum table size is bounded by nearest power of two >= the
+     * number of CPUS.  The table size is capped because, when there
+     * are more threads than CPUs, supposing that each thread were
+     * bound to a CPU, there would exist a perfect hash function
+     * mapping threads to slots that eliminates collisions. When we
+     * reach capacity, we search for this mapping by randomly varying
+     * the hash codes of colliding threads.  Because search is random,
+     * and failures only become known via CAS failures, convergence
+     * will be slow, and because threads are typically not bound to
+     * CPUS forever, may not occur at all. However, despite these
+     * limitations, observed contention is typically low in these
+     * cases.
      *
      * A single spinlock is used for resizing the table as well as
      * populating slots with new Adders. After initialization, there
@@ -136,7 +136,7 @@ public class StripedAdder implements Serializable {
     static final ThreadHashCode threadHashCode = new ThreadHashCode();
 
     /**
-     * Table of adders. When non-null, size is a power of 2, at least 2.
+     * Table of adders. When non-null, size is a power of 2.
      */
     private transient volatile Adder[] adders;
 
@@ -160,7 +160,7 @@ public class StripedAdder implements Serializable {
      */
     public StripedAdder(int expectedContention) {
         int cap = (expectedContention < NCPU) ? expectedContention : NCPU;
-        int size = 2;
+        int size = 1;
         while (size < cap)
             size <<= 1;
         Adder[] as = new Adder[size];
@@ -178,17 +178,17 @@ public class StripedAdder implements Serializable {
         Adder[] as; Adder a; int n;  // locals to hold volatile reads
         HashCode hc = threadHashCode.get();
         int h = hc.code;
-        boolean collide;
+        boolean contended;
         if ((as = adders) != null && (n = as.length) > 0 &&
             (a = as[(n - 1) & h]) != null) {
             long v = a.value;
             if (UNSAFE.compareAndSwapLong(a, valueOffset, v, v + x))
                 return;
-            collide = true;
+            contended = true;
         }
         else
-            collide = false;
-        retryAdd(x, hc, collide);
+            contended = false;
+        retryAdd(x, hc, contended);
     }
 
     /**
@@ -197,39 +197,19 @@ public class StripedAdder implements Serializable {
      * explanation. This method suffers the usual non-modularity
      * problems of optimistic retry code, relying on rechecked sets of
      * reads.
+     *
+     * @param x the value to add
+     * @param hc the hash code holder
+     * @param precontended true if CAS failed before call
      */
-    private void retryAdd(long x, HashCode hc, boolean collide) {
+    private void retryAdd(long x, HashCode hc, boolean precontended) {
         int h = hc.code;
+        boolean collide = false; // true if last slot nonempty
         for (;;) {
             Adder[] as; Adder a; int n;
             if ((as = adders) != null && (n = as.length) > 0) {
-                if ((a = as[(n - 1) & h]) != null) {
-                    boolean shared = true;      // Slot exists
-                    if (collide && n < NCPU && busy == 0 &&
-                        UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
-                        try {
-                            if (adders == as) { // Expand table
-                                Adder[] rs = new Adder[n << 1];
-                                for (int i = 0; i < n; ++i)
-                                    rs[i] = as[i];
-                                adders = rs;
-                                shared = false;
-                            }
-                        } finally {
-                            busy = 0;
-                        }
-                        if (shared || (h & n) != 0) {
-                            collide = false;
-                            continue;           // Array or index changed
-                        }
-                    }
-                    long v = a.value;
-                    if (UNSAFE.compareAndSwapLong(a, valueOffset, v, v + x))
-                        break;
-                    collide = shared;
-                }
-                else {                          // Try to attach new Adder
-                    if (busy == 0 &&
+                if ((a = as[(n - 1) & h]) == null) {
+                    if (busy == 0 &&            // Try to attach new Adder
                         UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
                         boolean created = false;
                         try {                   // Recheck under lock
@@ -248,31 +228,59 @@ public class StripedAdder implements Serializable {
                     }
                     collide = false;
                 }
+                else if (precontended)          // CAS already known to fail
+                    precontended = false;       // Continue after rehash
+                else {
+                    long v = a.value;
+                    if (UNSAFE.compareAndSwapLong(a, valueOffset, v, v + x))
+                        break;
+                    if (!collide)
+                        collide = true;
+                    else if (n >= NCPU || adders != as)
+                        collide = false;        // Don't expand
+                    else if (busy == 0 &&
+                             UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
+                        collide = false;
+                        try {
+                            if (adders == as) { // Expand table
+                                Adder[] rs = new Adder[n << 1];
+                                for (int i = 0; i < n; ++i)
+                                    rs[i] = as[i];
+                                adders = rs;
+                            }
+                        } finally {
+                            busy = 0;
+                        }
+                        continue;
+                    }
+                }
                 h ^= h << 13;                   // Rehash
                 h ^= h >>> 17;
                 h ^= h << 5;
             }
-            else if (busy == 0) {               // Default-initialize
-                Adder r = new Adder(x);
-                Adder[] rs = new Adder[2];
-                rs[h & 1] = r;
-                if (adders == as && busy == 0 &&
-                    UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
-                    boolean init = false;
-                    try {
-                        if (adders == as) {
-                            adders = rs;
-                            init = true;
+            else if (adders == as) {            // Try to default-initialize
+                Adder[] rs = new Adder[1];
+                rs[0] = new Adder(x);
+                boolean init = false;
+                while (adders == as) {
+                    if (UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
+                        try {
+                            if (adders == as) {
+                                adders = rs;
+                                init = true;
+                            }
+                        } finally {
+                            busy = 0;
                         }
-                    } finally {
-                        busy = 0;
-                    }
-                    if (init)
                         break;
+                    }
+                    if (adders != as)
+                        break;
+                    Thread.yield();              // Back off
                 }
+                if (init)
+                    break;
             }
-            else if (adders == as)              // Lost initialization race
-                Thread.yield();
         }
         hc.code = h;                            // Record index for next time
     }

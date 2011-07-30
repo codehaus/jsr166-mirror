@@ -15,13 +15,8 @@ import java.io.Serializable;
  * A keyed table of scalable adders, that may be useful in computing
  * frequency counts and histograms, or may be used a form of multiset.
  * A {@link StripedAdder} is associated with each key. Keys may be
- * added to the table explicitly, and are also added implicitly upon
- * any attempt to update.
- *
- * <p>This class shares features and limitations of {@link
- * StripedAdder}: Update throughput is highly scalable, at the price
- * of potentially high space usage and the lack of any guarantees
- * about {@link #sum} returning atomic snapshots.
+ * added to the table explicitly ({@link #install}, and are also added
+ * implicitly upon any attempt to update.
  *
  * @author Doug Lea
  */
@@ -44,28 +39,22 @@ public class StripedAdderTable<K> implements Serializable {
     }
 
     /**
-     * If the given key does not already exist in the table,
-     * inserts the key with initial value of zero.
+     * If the given key does not already exist in the table, adds the
+     * key with initial sum of zero; in either case returning the
+     * adder associated with this key.
      *
      * @param key the key
+     * @return the counter associated with the key
      */
-    public void add(K key)   { add(key, 0L); }
-
-    /**
-     * Increments the sum associated with the given key.  If the key
-     * does not already exist in the table, it is inserted.
-     *
-     * @param key the key
-     */
-    public void increment(K key) { add(key, 1L); }
-
-    /**
-     * Decrements the sum associated with the given key.  If the key
-     * does not already exist in the table, it is inserted.
-     *
-     * @param key the key
-     */
-    public void decrement(K key) { add(key, -1L); }
+    public StripedAdder install(K key) {
+        StripedAdder a = map.get(key);
+        if (a == null) {
+            StripedAdder r = new StripedAdder();
+            if ((a = map.putIfAbsent(key, r)) == null)
+                a = r;
+        }
+        return a;
+    }
 
     /**
      * Adds the given value to the sum associated with the given
@@ -86,8 +75,24 @@ public class StripedAdderTable<K> implements Serializable {
     }
 
     /**
-     * Returns the estimated sum associated with the given key, or
-     * zero if the key does not currently exist in the table.
+     * Increments the sum associated with the given key.  If the key
+     * does not already exist in the table, it is inserted.
+     *
+     * @param key the key
+     */
+    public void increment(K key) { add(key, 1L); }
+
+    /**
+     * Decrements the sum associated with the given key.  If the key
+     * does not already exist in the table, it is inserted.
+     *
+     * @param key the key
+     */
+    public void decrement(K key) { add(key, -1L); }
+
+    /**
+     * Returns the sum associated with the given key, or zero if the
+     * key does not currently exist in the table.
      *
      * @param key the key
      * @return the sum associated with the key, or zero if the key is
@@ -100,23 +105,35 @@ public class StripedAdderTable<K> implements Serializable {
 
     /**
      * Resets the sum associated with the given key to zero if the key
-     * exists in the table; returning the previous estimated sum.
-     * This method does <em>NOT</em> add or remove the key from the
-     * table (see {@link #remove}).
+     * exists in the table.  This method does <em>NOT</em> add or
+     * remove the key from the table (see {@link #remove}).
      *
      * @param key the key
-     * @return the estimated previous sum, or zero if the key is not
-     * in the table
      */
-    public long reset(K key) {
+    public void reset(K key) {
         StripedAdder a = map.get(key);
-        return (a == null) ? 0L : a.reset();
+        if (a != null)
+            a.reset();
     }
 
     /**
-     * Returns the estimated sum totalled across all keys.
+     * Resets the sum associated with the given key to zero if the key
+     * exists in the table.  This method does <em>NOT</em> add or
+     * remove the key from the table (see {@link #remove}).
      *
-     * @return the estimated sum totalled across all keys.
+     * @param key the key
+     * @return the previous sum, or zero if the key is not
+     * in the table
+     */
+    public long sumThenReset(K key) {
+        StripedAdder a = map.get(key);
+        return a == null ? 0L : a.sumThenReset();
+    }
+
+    /**
+     * Returns the sum totalled across all keys.
+     *
+     * @return the sum totalled across all keys.
      */
     public long sumAll() {
         long sum = 0L;
@@ -126,20 +143,27 @@ public class StripedAdderTable<K> implements Serializable {
     }
 
     /**
-     * Resets the sum associated with each key to zero,
-     * returning the estimated previous total.
-     *
-     * @return the estimated previous total
+     * Resets the sum associated with each key to zero.
      */
-    public long resetAll() {
+    public void resetAll() {
+        for (StripedAdder a : map.values())
+            a.reset();
+    }
+
+    /**
+     * Totals, then resets, the sums associated with all keys.
+     *
+     * @return the sum totalled across all keys.
+     */
+    public long sumThenResetAll() {
         long sum = 0L;
         for (StripedAdder a : map.values())
-            sum += a.reset();
+            sum += a.sumThenReset();
         return sum;
     }
 
     /**
-     * Removes the the given key from the table.
+     * Removes the given key from the table.
      *
      * @param key the key
      */
@@ -150,7 +174,7 @@ public class StripedAdderTable<K> implements Serializable {
      *
      * @return the current set of keys
      */
-    public Set<K> keys() {
+    public Set<K> keySet() {
         return map.keySet();
     }
 
@@ -159,7 +183,7 @@ public class StripedAdderTable<K> implements Serializable {
      *
      * @return the current set of key-value mappings
      */
-    public Set<Map.Entry<K,StripedAdder>> mappings() {
+    public Set<Map.Entry<K,StripedAdder>> entrySet() {
         return map.entrySet();
     }
 

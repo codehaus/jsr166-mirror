@@ -21,37 +21,33 @@ import java.io.ObjectOutputStream;
  * <p> This class is usually preferable to {@link AtomicLong} when
  * multiple threads update a common sum that is used for purposes such
  * as collecting statistics, not for fine-grained synchronization
- * control.  Under high update contention, throughput of this class is
- * expected to be significantly higher, at the expense of higher space
- * consumption.  Under low contention, this class imposes very little
- * time and space overhead compared to AtomicLong.  On the other hand,
- * in contexts where it is statically known that only one thread can
- * ever update a sum, time and space overhead is noticeably greater
- * than just updating a local variable.
+ * control.  Under low update contention, the two classes have similar
+ * characteristics. But under high contention, expected throughput of
+ * this class is significantly higher, at the expense of higher space
+ * consumption.
  *
  * <p> Method {@link #sum} returns the current combined total across
  * the variables maintaining the sum.  This value is <em>NOT</em> an
- * atomic snapshot: Concurrent updates may occur while the sum is
- * being calculated.  However, updates cannot be "lost", so invocation
- * of <code>sum</code> in the absence of concurrent updates always
- * returns an accurate result.  The sum may also be <code>reset</code>
- * to zero, as an alternative to creating a new adder.  However,
- * method {@link #reset} is intrinsically racy, so should only be used
- * when it is known that no threads are concurrently updating the sum.
+ * atomic snapshot: Invocation of <code>sum</code> in the absence of
+ * concurrent updates returns an accurate result, but concurrent
+ * updates that occur while the sum is being calculated might not be
+ * incorporated.  The sum may also be <code>reset</code> to zero, as
+ * an alternative to creating a new adder.  However, method {@link
+ * #reset} is intrinsically racy, so should only be used when it is
+ * known that no threads are concurrently updating the sum.
  *
  * <p><em>jsr166e note: This class is targeted to be placed in
  * java.util.concurrent.atomic<em>
  *
  * @author Doug Lea
  */
-public class StripedAdder implements Serializable {
+public class LongAdder implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
 
     /*
-     * A StripedAdder maintains a lazily-initialized table of
-     * atomically updated variables, plus an extra "base" field. The
-     * table size is a power of two. Indexing uses masked per-thread
-     * hash codes
+     * A LongAdder maintains a lazily-initialized table of atomically
+     * updated variables, plus an extra "base" field. The table size
+     * is a power of two. Indexing uses masked per-thread hash codes
      *
      * Table entries are of class Cell; a variant of AtomicLong padded
      * to reduce cache contention on most processors. Padding is
@@ -106,9 +102,9 @@ public class StripedAdder implements Serializable {
      * contention levels will recur, so the cells will eventually be
      * needed again; and for short-lived ones, it does not matter.
      *
+     * JVM intrinsics note: It would be possible to use a release-only
+     * form of CAS here, if it were provided.
      */
-
-    private static final int NCPU = Runtime.getRuntime().availableProcessors();
 
     /**
      * Padded variant of AtomicLong.  The value field is placed
@@ -134,7 +130,7 @@ public class StripedAdder implements Serializable {
             code = (h == 0) ? 1 : h;
         }
     }
-
+    
     /**
      * The corresponding ThreadLocal class
      */
@@ -143,12 +139,15 @@ public class StripedAdder implements Serializable {
     }
 
     /**
-     * Static per-thread hash codes. Shared across all StripedAdders
+     * Static per-thread hash codes. Shared across all LongAdders
      * to reduce ThreadLocal pollution and because adjustments due to
      * collisions in one table are likely to be appropriate for
      * others.
      */
     static final ThreadHashCode threadHashCode = new ThreadHashCode();
+
+    /** Nomber of CPUS, to place bound on table size */
+    private static final int NCPU = Runtime.getRuntime().availableProcessors();
 
     /**
      * Table of cells. When non-null, size is a power of 2.
@@ -169,7 +168,7 @@ public class StripedAdder implements Serializable {
     /**
      * Creates a new adder with initial sum of zero.
      */
-    public StripedAdder() {
+    public LongAdder() {
     }
 
     /**
@@ -178,20 +177,16 @@ public class StripedAdder implements Serializable {
      * @param x the value to add
      */
     public void add(long x) {
-        Cell[] as; long v; HashCode hc; Cell a; int n; boolean contended;
+        Cell[] as; long v; HashCode hc; Cell a; int n;
         if ((as = cells) != null ||
             !UNSAFE.compareAndSwapLong(this, baseOffset, v = base, v + x)) {
+            boolean uncontended = true;
             int h = (hc = threadHashCode.get()).code;
-            if (as != null && (n = as.length) > 0 &&
-                (a = as[(n - 1) & h]) != null) {
-                if (UNSAFE.compareAndSwapLong(a, valueOffset,
-                                              v = a.value, v + x))
-                    return;
-                contended = true;
-            }
-            else
-                contended = false;
-            retryAdd(x, hc, contended);
+            if (as == null || (n = as.length) < 1 ||
+                (a = as[(n - 1) & h]) == null ||
+                !(uncontended = UNSAFE.compareAndSwapLong(a, valueOffset,
+                                                          v = a.value, v + x)))
+                retryAdd(x, hc, uncontended);
         }
     }
 
@@ -204,13 +199,13 @@ public class StripedAdder implements Serializable {
      *
      * @param x the value to add
      * @param hc the hash code holder
-     * @param precontended true if CAS failed before call
+     * @param wasUncontended false if CAS failed before call
      */
-    private void retryAdd(long x, HashCode hc, boolean precontended) {
+    private void retryAdd(long x, HashCode hc, boolean wasUncontended) {
         int h = hc.code;
-        boolean collide = false; // true if last slot nonempty
+        boolean collide = false;                // True if last slot nonempty
         for (;;) {
-            Cell[] as; Cell a; int n;
+            Cell[] as; Cell a; int n; long v;
             if ((as = cells) != null && (n = as.length) > 0) {
                 if ((a = as[(n - 1) & h]) == null) {
                     if (busy == 0) {            // Try to attach new Cell
@@ -236,31 +231,29 @@ public class StripedAdder implements Serializable {
                     }
                     collide = false;
                 }
-                else if (precontended)          // CAS already known to fail
-                    precontended = false;       // Continue after rehash
-                else {
-                    long v = a.value;
-                    if (UNSAFE.compareAndSwapLong(a, valueOffset, v, v + x))
-                        break;
-                    if (!collide)
-                        collide = true;
-                    else if (n >= NCPU || cells != as)
-                        collide = false;        // Can't expand
-                    else if (busy == 0 &&
-                             UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
-                        collide = false;
-                        try {
-                            if (cells == as) { // Expand table
-                                Cell[] rs = new Cell[n << 1];
-                                for (int i = 0; i < n; ++i)
-                                    rs[i] = as[i];
-                                cells = rs;
-                            }
-                        } finally {
-                            busy = 0;
+                else if (!wasUncontended)       // CAS already known to fail
+                    wasUncontended = true;      // Continue after rehash
+                else if (UNSAFE.compareAndSwapLong(a, valueOffset, 
+                                                   v = a.value, v + x))
+                    break;
+                else if (n >= NCPU || cells != as)
+                    collide = false;            // At max size or stale
+                else if (!collide)
+                    collide = true;
+                else if (busy == 0 &&           // Try to expand table
+                         UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
+                    try {
+                        if (cells == as) {
+                            Cell[] rs = new Cell[n << 1];
+                            for (int i = 0; i < n; ++i)
+                                rs[i] = as[i];
+                            cells = rs;
                         }
-                        continue;
+                    } finally {
+                        busy = 0;
                     }
+                    collide = false;
+                    continue;                   // Retry with expanded table
                 }
                 h ^= h << 13;                   // Rehash
                 h ^= h >>> 17;
@@ -269,11 +262,10 @@ public class StripedAdder implements Serializable {
             else if (busy == 0 && cells == as &&
                      UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1)) {
                 boolean init = false;
-                try {                           // Initialize
+                try {                           // Initialize table
                     if (cells == as) {
-                        Cell r = new Cell(x);
                         Cell[] rs = new Cell[2];
-                        rs[h & 1] = r;
+                        rs[h & 1] = new Cell(x);
                         cells = rs;
                         init = true;
                     }
@@ -283,11 +275,9 @@ public class StripedAdder implements Serializable {
                 if (init)
                     break;
             }
-            else {                              // Lost initialization race
-                long b = base;                  // Fall back on using base
-                if (UNSAFE.compareAndSwapLong(this, baseOffset, b, b + x))
-                    break;
-            }
+            else if (UNSAFE.compareAndSwapLong(this, baseOffset, 
+                                               v = base, v + x))
+                break;                          // Fall back on using base
         }
         hc.code = h;                            // Record index for next time
     }
@@ -395,7 +385,7 @@ public class StripedAdder implements Serializable {
     static {
         try {
             UNSAFE = getUnsafe();
-            Class<?> sk = StripedAdder.class;
+            Class<?> sk = LongAdder.class;
             baseOffset = UNSAFE.objectFieldOffset
                 (sk.getDeclaredField("base"));
             busyOffset = UNSAFE.objectFieldOffset

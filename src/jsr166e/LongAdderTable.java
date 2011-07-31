@@ -5,22 +5,25 @@
  */
 
 package jsr166e.extra;
-import jsr166e.StripedAdder;
+import jsr166e.LongAdder;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.io.Serializable;
 
 /**
- * A keyed table of scalable adders, that may be useful in computing
- * frequency counts and histograms, or may be used a form of multiset.
- * A {@link StripedAdder} is associated with each key. Keys may be
- * added to the table explicitly ({@link #install}, and are also added
- * implicitly upon any attempt to update.
+ * A keyed table of adders, that may be useful in computing frequency
+ * counts and histograms, or may be used a form of multiset.  A {@link
+ * LongAdder} is associated with each key. Keys are added to the table
+ * implicitly upon any attempt to update, or may be added explicitly
+ * using method {@link #install}.
+ *
+ * <p><em>jsr166e note: This class is targeted to be placed in
+ * java.util.concurrent.atomic<em>
  *
  * @author Doug Lea
  */
-public class StripedAdderTable<K> implements Serializable {
+public class LongAdderTable<K> implements Serializable {
     /** Relies on default serialization */
     private static final long serialVersionUID = 7249369246863182397L;
 
@@ -29,27 +32,27 @@ public class StripedAdderTable<K> implements Serializable {
         Math.max(16, Runtime.getRuntime().availableProcessors());
 
     /** The underlying map */
-    private final ConcurrentHashMap<K, StripedAdder> map;
+    private final ConcurrentHashMap<K, LongAdder> map;
 
     /**
      * Creates a new empty table.
      */
-    public StripedAdderTable() {
-        map = new ConcurrentHashMap<K, StripedAdder>(16, 0.75f, MAP_SEGMENTS);
+    public LongAdderTable() {
+        map = new ConcurrentHashMap<K, LongAdder>(16, 0.75f, MAP_SEGMENTS);
     }
 
     /**
-     * If the given key does not already exist in the table, adds the
-     * key with initial sum of zero; in either case returning the
+     * If the given key does not already exist in the table, inserts
+     * the key with initial sum of zero; in either case returning the
      * adder associated with this key.
      *
      * @param key the key
-     * @return the counter associated with the key
+     * @return the adder associated with the key
      */
-    public StripedAdder install(K key) {
-        StripedAdder a = map.get(key);
+    public LongAdder install(K key) {
+        LongAdder a = map.get(key);
         if (a == null) {
-            StripedAdder r = new StripedAdder();
+            LongAdder r = new LongAdder();
             if ((a = map.putIfAbsent(key, r)) == null)
                 a = r;
         }
@@ -65,9 +68,9 @@ public class StripedAdderTable<K> implements Serializable {
      * @param x the value to add
      */
     public void add(K key, long x) {
-        StripedAdder a = map.get(key);
+        LongAdder a = map.get(key);
         if (a == null) {
-            StripedAdder r = new StripedAdder();
+            LongAdder r = new LongAdder();
             if ((a = map.putIfAbsent(key, r)) == null)
                 a = r;
         }
@@ -99,7 +102,7 @@ public class StripedAdderTable<K> implements Serializable {
      * not in the table
      */
     public long sum(K key) {
-        StripedAdder a = map.get(key);
+        LongAdder a = map.get(key);
         return a == null ? 0L : a.sum();
     }
 
@@ -111,7 +114,7 @@ public class StripedAdderTable<K> implements Serializable {
      * @param key the key
      */
     public void reset(K key) {
-        StripedAdder a = map.get(key);
+        LongAdder a = map.get(key);
         if (a != null)
             a.reset();
     }
@@ -126,7 +129,7 @@ public class StripedAdderTable<K> implements Serializable {
      * in the table
      */
     public long sumThenReset(K key) {
-        StripedAdder a = map.get(key);
+        LongAdder a = map.get(key);
         return a == null ? 0L : a.sumThenReset();
     }
 
@@ -137,7 +140,7 @@ public class StripedAdderTable<K> implements Serializable {
      */
     public long sumAll() {
         long sum = 0L;
-        for (StripedAdder a : map.values())
+        for (LongAdder a : map.values())
             sum += a.sum();
         return sum;
     }
@@ -146,7 +149,7 @@ public class StripedAdderTable<K> implements Serializable {
      * Resets the sum associated with each key to zero.
      */
     public void resetAll() {
-        for (StripedAdder a : map.values())
+        for (LongAdder a : map.values())
             a.reset();
     }
 
@@ -157,7 +160,7 @@ public class StripedAdderTable<K> implements Serializable {
      */
     public long sumThenResetAll() {
         long sum = 0L;
-        for (StripedAdder a : map.values())
+        for (LongAdder a : map.values())
             sum += a.sumThenReset();
         return sum;
     }
@@ -168,6 +171,11 @@ public class StripedAdderTable<K> implements Serializable {
      * @param key the key
      */
     public void remove(K key) { map.remove(key); }
+
+    /**
+     * Removes all keys from the table.
+     */
+    public void removeAll() { map.clear(); }
 
     /**
      * Returns the current set of keys.
@@ -183,7 +191,7 @@ public class StripedAdderTable<K> implements Serializable {
      *
      * @return the current set of key-value mappings
      */
-    public Set<Map.Entry<K,StripedAdder>> entrySet() {
+    public Set<Map.Entry<K,LongAdder>> entrySet() {
         return map.entrySet();
     }
 

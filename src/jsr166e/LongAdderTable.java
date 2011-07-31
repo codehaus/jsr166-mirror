@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package jsr166e.extra;
+package jsr166e;
 import jsr166e.LongAdder;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;

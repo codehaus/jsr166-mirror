@@ -199,10 +199,8 @@ project ( ':extra166y' ) {
     //  At some point in between 1.0-milestone-3 and the 1.0-milestone-4 snapshots, the classes property was
     //  deprecated.  Leave the new versions commented out pending upgrade from 1.0-milestone-3 which doesn't
     //  have the change.
-    compile files ( project ( ':jsr166y' ).sourceSets.main.classes )
-    testCompile 'junit:junit:4.8.2' , files ( project ( ':jsr166tck' ).sourceSets.main.classes )  // The extra166y tests depend on classes in the TCK.
-    //compile files ( project ( ':jsr166y' ).sourceSets.main.output )
-    //testCompile 'junit:junit:4.8.2' , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
+    compile files ( project ( ':jsr166y' ).sourceSets.main.output )
+    testCompile 'junit:junit:4.8.2' , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
   }
   jar {
     manifest { 

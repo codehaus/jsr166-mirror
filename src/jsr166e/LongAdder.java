@@ -130,7 +130,7 @@ public class LongAdder implements Serializable {
             code = (h == 0) ? 1 : h;
         }
     }
-    
+
     /**
      * The corresponding ThreadLocal class
      */
@@ -233,7 +233,7 @@ public class LongAdder implements Serializable {
                 }
                 else if (!wasUncontended)       // CAS already known to fail
                     wasUncontended = true;      // Continue after rehash
-                else if (UNSAFE.compareAndSwapLong(a, valueOffset, 
+                else if (UNSAFE.compareAndSwapLong(a, valueOffset,
                                                    v = a.value, v + x))
                     break;
                 else if (n >= NCPU || cells != as)
@@ -275,7 +275,7 @@ public class LongAdder implements Serializable {
                 if (init)
                     break;
             }
-            else if (UNSAFE.compareAndSwapLong(this, baseOffset, 
+            else if (UNSAFE.compareAndSwapLong(this, baseOffset,
                                                v = base, v + x))
                 break;                          // Fall back on using base
         }

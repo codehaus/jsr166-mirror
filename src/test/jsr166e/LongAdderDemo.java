@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import jsr166e.LongAdder;
 
 public class LongAdderDemo {
-    static final int INCS_PER_THREAD = 10000000; 
+    static final int INCS_PER_THREAD = 10000000;
     static final int NCPU = Runtime.getRuntime().availableProcessors();
     static final ExecutorService pool = Executors.newCachedThreadPool();
 
@@ -72,8 +72,8 @@ public class LongAdderDemo {
         final Phaser phaser;
         final int incs;
         volatile long result;
-        AdderTask(LongAdder adder, Phaser phaser, int incs) { 
-            this.adder = adder; 
+        AdderTask(LongAdder adder, Phaser phaser, int incs) {
+            this.adder = adder;
             this.phaser = phaser;
             this.incs = incs;
         }
@@ -94,8 +94,8 @@ public class LongAdderDemo {
         final Phaser phaser;
         final int incs;
         volatile long result;
-        CasTask(AtomicLong adder, Phaser phaser, int incs) { 
-            this.adder = adder; 
+        CasTask(AtomicLong adder, Phaser phaser, int incs) {
+            this.adder = adder;
             this.phaser = phaser;
             this.incs = incs;
         }

@@ -146,7 +146,7 @@ public class LongAdder implements Serializable {
      */
     static final ThreadHashCode threadHashCode = new ThreadHashCode();
 
-    /** Nomber of CPUS, to place bound on table size */
+    /** Number of CPUS, to place bound on table size */
     private static final int NCPU = Runtime.getRuntime().availableProcessors();
 
     /**
@@ -156,7 +156,7 @@ public class LongAdder implements Serializable {
 
     /**
      * Base sum, used mainly when there is no contention, but also as
-     * a fallback during table initializion races. Updated via CAS.
+     * a fallback during table initialization races. Updated via CAS.
      */
     private transient volatile long base;
 

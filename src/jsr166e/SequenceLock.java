@@ -44,7 +44,7 @@ import java.io.IOException;
  * be used together to define (partially) optimistic read-only methods
  * that are usually more efficient than ReadWriteLocks when they
  * apply.  These methods should in general be structured as loops that
- * await lock availablity, then read {@code volatile} fields into
+ * await lock availability, then read {@code volatile} fields into
  * local variables (and may further read other values derived from
  * these, for example the {@code length} of a {@code volatile} array),
  * and retry if the sequence number changed while doing so.

@@ -35,7 +35,7 @@ import java.io.IOException;
  * <p>Except for the lack of support for specified fairness policies,
  * or {@link Condition} objects, a SequenceLock can be used in the
  * same way as {@link ReentrantLock}. It provides similar status and
- * monitoring methods such as {@link #isHeldByCurrentThread}.
+ * monitoring methods, such as {@link #isHeldByCurrentThread}.
  * SequenceLocks may be preferable in contexts in which multiple
  * threads invoke short read-only methods much more frequently than
  * fully locked methods.
@@ -44,7 +44,7 @@ import java.io.IOException;
  * be used together to define (partially) optimistic read-only methods
  * that are usually more efficient than ReadWriteLocks when they
  * apply.  These methods should in general be structured as loops that
- * await lock availablity, then read {@code volatile} fields into
+ * await lock availability, then read {@code volatile} fields into
  * local variables (and may further read other values derived from
  * these, for example the {@code length} of a {@code volatile} array),
  * and retry if the sequence number changed while doing so.

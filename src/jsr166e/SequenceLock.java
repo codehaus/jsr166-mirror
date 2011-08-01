@@ -35,7 +35,7 @@ import java.io.IOException;
  * <p>Except for the lack of support for specified fairness policies,
  * or {@link Condition} objects, a SequenceLock can be used in the
  * same way as {@link ReentrantLock}. It provides similar status and
- * monitoring methods such as {@link #isHeldByCurrentThread}.
+ * monitoring methods, such as {@link #isHeldByCurrentThread}.
  * SequenceLocks may be preferable in contexts in which multiple
  * threads invoke short read-only methods much more frequently than
  * fully locked methods.

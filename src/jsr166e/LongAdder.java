@@ -28,10 +28,10 @@ import java.io.ObjectOutputStream;
  *
  * <p> Method {@link #sum} returns the current combined total across
  * the variables maintaining the sum.  This value is <em>NOT</em> an
- * atomic snapshot: Invocation of <code>sum</code> in the absence of
+ * atomic snapshot: Invocation of {@code sum} in the absence of
  * concurrent updates returns an accurate result, but concurrent
  * updates that occur while the sum is being calculated might not be
- * incorporated.  The sum may also be <code>reset</code> to zero, as
+ * incorporated.  The sum may also be {@code reset} to zero, as
  * an alternative to creating a new adder.  However, method {@link
  * #reset} is intrinsically racy, so should only be used when it is
  * known that no threads are concurrently updating the sum.

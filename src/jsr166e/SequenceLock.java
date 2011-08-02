@@ -53,51 +53,54 @@ import java.io.IOException;
  * switching to locking mode.  While conceptually straightforward,
  * expressing these ideas can be verbose. For example:
  *
- * <pre> {@code
+ *  <pre> {@code
  * class Point {
- *     private volatile double x, y;
- *     private final SequenceLock sl = new SequenceLock();
+ *   private volatile double x, y;
+ *   private final SequenceLock sl = new SequenceLock();
  *
- *     void move(double deltaX, double deltaY) { // an exclusively locked method
- *        sl.lock();
- *        try {
- *            x += deltaX;
- *            y += deltaY;
- *        } finally {
- *          sl.unlock();
- *      }
- *  }
+ *   // an exclusively locked method
+ *   void move(double deltaX, double deltaY) {
+ *     sl.lock();
+ *     try {
+ *       x += deltaX;
+ *       y += deltaY;
+ *     } finally {
+ *       sl.unlock();
+ *     }
+ *   }
  *
- *  double distanceFromOriginV1() { // A read-only method
- *      double currentX, currentY;
- *      long seq;
- *      do {
- *          seq = sl.awaitAvailability();
- *          currentX = x;
- *          currentY = y;
- *      } while (sl.getSequence() != seq); // retry if sequence changed
- *      return Math.sqrt(currentX * currentX + currentY * currentY);
- *  }
+ *   // A read-only method
+ *   double distanceFromOriginV1() {
+ *     double currentX, currentY;
+ *     long seq;
+ *     do {
+ *       seq = sl.awaitAvailability();
+ *       currentX = x;
+ *       currentY = y;
+ *     } while (sl.getSequence() != seq); // retry if sequence changed
+ *     return Math.sqrt(currentX * currentX + currentY * currentY);
+ *   }
  *
- *  double distanceFromOriginV2() { // Uses bounded retries before locking
- *      double currentX, currentY;
- *      long seq;
- *      int retries = RETRIES_BEFORE_LOCKING; // for example 8
- *      try {
- *        do {
- *           if (--retries < 0)
- *              sl.lock();
- *           seq = sl.awaitAvailability();
- *           currentX = x;
- *           currentY = y;
- *        } while (sl.getSequence() != seq);
- *      } finally {
- *        if (retries < 0)
- *           sl.unlock();
- *      }
- *      return Math.sqrt(currentX * currentX + currentY * currentY);
- *  }
- *}}</pre>
+ *   // Uses bounded retries before locking
+ *   double distanceFromOriginV2() {
+ *     double currentX, currentY;
+ *     long seq;
+ *     int retries = RETRIES_BEFORE_LOCKING; // for example 8
+ *     try {
+ *       do {
+ *         if (--retries < 0)
+ *           sl.lock();
+ *         seq = sl.awaitAvailability();
+ *         currentX = x;
+ *         currentY = y;
+ *       } while (sl.getSequence() != seq);
+ *     } finally {
+ *       if (retries < 0)
+ *         sl.unlock();
+ *     }
+ *     return Math.sqrt(currentX * currentX + currentY * currentY);
+ *   }
+ * }}</pre>
  *
  * @since 1.8
  * @author Doug Lea

@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import jsr166e.DoubleAdder;
 
 public class DoubleAdderDemo {
-    static final int INCS_PER_THREAD = 10000000; 
+    static final int INCS_PER_THREAD = 10000000;
     static final int NCPU = Runtime.getRuntime().availableProcessors();
     static final ExecutorService pool = Executors.newCachedThreadPool();
 
@@ -78,8 +78,8 @@ public class DoubleAdderDemo {
         final Phaser phaser;
         final int incs;
         volatile double result;
-        AdderTask(DoubleAdder adder, Phaser phaser, int incs) { 
-            this.adder = adder; 
+        AdderTask(DoubleAdder adder, Phaser phaser, int incs) {
+            this.adder = adder;
             this.phaser = phaser;
             this.incs = incs;
         }
@@ -100,8 +100,8 @@ public class DoubleAdderDemo {
         final Phaser phaser;
         final int incs;
         volatile double result;
-        SyncTask(SynchronizedDoubleAdder adder, Phaser phaser, int incs) { 
-            this.adder = adder; 
+        SyncTask(SynchronizedDoubleAdder adder, Phaser phaser, int incs) {
+            this.adder = adder;
             this.phaser = phaser;
             this.incs = incs;
         }

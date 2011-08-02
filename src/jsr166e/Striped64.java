@@ -109,7 +109,7 @@ abstract class Striped64 extends Number {
                 throw new Error(e);
             }
         }
-        
+
     }
 
     /**
@@ -124,7 +124,7 @@ abstract class Striped64 extends Number {
             code = (h == 0) ? 1 : h;
         }
     }
-    
+
     /**
      * The corresponding ThreadLocal class
      */
@@ -238,7 +238,7 @@ abstract class Striped64 extends Number {
                     collide = false;            // At max size or stale
                 else if (!collide)
                     collide = true;
-                else if (busy == 0 && casBusy()) {          
+                else if (busy == 0 && casBusy()) {
                     try {
                         if (cells == as) {      // Expand table unless stale
                             Cell[] rs = new Cell[n << 1];
@@ -293,7 +293,7 @@ abstract class Striped64 extends Number {
             }
         }
     }
-   
+
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;
     private static final long baseOffset;

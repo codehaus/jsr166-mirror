@@ -1147,8 +1147,8 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Reconstitute this deque from a stream (that is,
-     * deserialize it).
+     * Reconstitutes this deque from a stream (that is, deserializes it).
+     *
      * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)

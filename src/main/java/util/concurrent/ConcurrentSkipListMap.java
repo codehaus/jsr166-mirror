@@ -1502,7 +1502,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Reconstitute the map from a stream.
+     * Reconstitutes the map from a stream (that is, deserializes it).
+     *
+     * @param s the stream
      */
     private void readObject(final java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

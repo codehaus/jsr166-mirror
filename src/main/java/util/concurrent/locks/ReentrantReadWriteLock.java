@@ -624,7 +624,9 @@ public class ReentrantReadWriteLock
         }
 
         /**
-         * Reconstitute this lock instance from a stream
+         * Reconstitutes this lock instance from a stream (that is,
+         * deserializes it).
+         *
          * @param s the stream
          */
         private void readObject(java.io.ObjectInputStream s)

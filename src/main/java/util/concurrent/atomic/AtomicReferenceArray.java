@@ -182,4 +182,16 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
         }
     }
 
+    /**
+     * Reconstitutes the instance from a stream
+     * @param s the stream
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException,
+        java.io.InvalidObjectException {
+        s.defaultReadObject();
+        if (!array.getClass().equals(Object[].class))
+            throw new java.io.InvalidObjectException("Wrong array type");
+    }
+
 }

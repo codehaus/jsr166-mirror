@@ -5,7 +5,6 @@
  */
 
 package jsr166e;
-import java.util.concurrent.atomic.AtomicLong;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.ObjectInputStream;
@@ -13,19 +12,11 @@ import java.io.ObjectOutputStream;
 
 /**
  * One or more variables that together maintain an initially zero
- * {@code long} sum.  When updates (method {@link #add}) are contended
- * across threads, the set of variables may grow dynamically to reduce
- * contention. Method {@link #sum} (or, equivalently, {@link
- * #longValue}) returns the current total combined across the
+ * {@code double} sum.  When updates (method {@link #add}) are
+ * contended across threads, the set of variables may grow dynamically
+ * to reduce contention.  Method {@link #sum} (or, equivalently {@link
+ * #doubleValue}) returns the current total combined across the
  * variables maintaining the sum.
- *
- * <p> This class is usually preferable to {@link AtomicLong} when
- * multiple threads update a common sum that is used for purposes such
- * as collecting statistics, not for fine-grained synchronization
- * control.  Under low update contention, the two classes have similar
- * characteristics. But under high contention, expected throughput of
- * this class is significantly higher, at the expense of higher space
- * consumption.
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
  * methods such as {@code hashCode} and {@code compareTo} because
@@ -37,18 +28,31 @@ import java.io.ObjectOutputStream;
  *
  * @author Doug Lea
  */
-public class LongAdder extends Striped64 implements Serializable {
+public class DoubleAdder extends Striped64 implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
 
     /**
-     * Version of plus for use in retryUpdate
+     * Update function. Note that we must use "long" for underlying
+     * representations, because there is no compareAndSet for double,
+     * due to the fact that the bitwise equals used in any CAS
+     * implementation is not the same as double-precision equals.
+     * However, we use CAS only to detect and alleviate contention,
+     * for which bitwise equals works best anyway. In principle, the
+     * long/double conversions used here should be essentially free on
+     * most platforms since they just re-interpret bits.
+     *
+     * Similar conversions are used in other methods.
      */
-    final long fn(long v, long x) { return v + x; }
+    final long fn(long v, long x) {
+        return Double.doubleToRawLongBits
+            (Double.longBitsToDouble(v) +
+             Double.longBitsToDouble(x));
+    }
 
     /**
      * Creates a new adder with initial sum of zero.
      */
-    public LongAdder() {
+    public DoubleAdder() {
     }
 
     /**
@@ -56,30 +60,21 @@ public class LongAdder extends Striped64 implements Serializable {
      *
      * @param x the value to add
      */
-    public void add(long x) {
+    public void add(double x) {
         Cell[] as; long b, v; HashCode hc; Cell a; int n;
-        if ((as = cells) != null || !casBase(b = base, b + x)) {
+        if ((as = cells) != null ||
+            !casBase(b = base,
+                     Double.doubleToRawLongBits
+                     (Double.longBitsToDouble(b) + x))) {
             boolean uncontended = true;
             int h = (hc = threadHashCode.get()).code;
             if (as == null || (n = as.length) < 1 ||
                 (a = as[(n - 1) & h]) == null ||
-                !(uncontended = a.cas(v = a.value, v + x)))
-                retryUpdate(x, hc, uncontended);
+                !(uncontended = a.cas(v = a.value,
+                                      Double.doubleToRawLongBits
+                                      (Double.longBitsToDouble(v) + x))))
+                retryUpdate(Double.doubleToRawLongBits(x), hc, uncontended);
         }
-    }
-
-    /**
-     * Equivalent to {@code add(1)}.
-     */
-    public void increment() {
-        add(1L);
-    }
-
-    /**
-     * Equivalent to {@code add(-1)}.
-     */
-    public void decrement() {
-        add(-1L);
     }
 
     /**
@@ -87,19 +82,22 @@ public class LongAdder extends Striped64 implements Serializable {
      * atomic snapshot: Invocation in the absence of concurrent
      * updates returns an accurate result, but concurrent updates that
      * occur while the sum is being calculated might not be
-     * incorporated.
+     * incorporated.  Also, because double-precision arithmetic is not
+     * strictly associative, the returned result need not be identical
+     * to the value that would be obtained in a sequential series of
+     * updates to a single variable.
      *
      * @return the sum
      */
-    public long sum() {
+    public double sum() {
         Cell[] as = cells;
-        long sum = base;
+        double sum = Double.longBitsToDouble(base);
         if (as != null) {
             int n = as.length;
             for (int i = 0; i < n; ++i) {
                 Cell a = as[i];
                 if (a != null)
-                    sum += a.value;
+                    sum += Double.longBitsToDouble(a.value);
             }
         }
         return sum;
@@ -126,9 +124,9 @@ public class LongAdder extends Striped64 implements Serializable {
      *
      * @return the sum
      */
-    public long sumThenReset() {
+    public double sumThenReset() {
         Cell[] as = cells;
-        long sum = base;
+        double sum = Double.longBitsToDouble(base);
         base = 0L;
         if (as != null) {
             int n = as.length;
@@ -137,7 +135,7 @@ public class LongAdder extends Striped64 implements Serializable {
                 if (a != null) {
                     long v = a.value;
                     a.value = 0L;
-                    sum += v;
+                    sum += Double.longBitsToDouble(v);
                 }
             }
         }
@@ -149,7 +147,7 @@ public class LongAdder extends Striped64 implements Serializable {
      * @return the String representation of the {@link #sum}.
      */
     public String toString() {
-        return Long.toString(sum());
+        return Double.toString(sum());
     }
 
     /**
@@ -157,12 +155,20 @@ public class LongAdder extends Striped64 implements Serializable {
      *
      * @return the sum
      */
-    public long longValue() {
+    public double doubleValue() {
         return sum();
     }
 
     /**
-     * Returns the {@link #sum} as an {@code int} after a narrowing
+     * Returns the {@link #sum} as a {@code long} after a
+     * primitive conversion.
+     */
+    public long longValue() {
+        return (long)sum();
+    }
+
+    /**
+     * Returns the {@link #sum} as an {@code int} after a
      * primitive conversion.
      */
     public int intValue() {
@@ -171,24 +177,16 @@ public class LongAdder extends Striped64 implements Serializable {
 
     /**
      * Returns the {@link #sum} as a {@code float}
-     * after a widening primitive conversion.
+     * after a primitive conversion.
      */
     public float floatValue() {
         return (float)sum();
     }
 
-    /**
-     * Returns the {@link #sum} as a {@code double} after a widening
-     * primitive conversion.
-     */
-    public double doubleValue() {
-        return (double)sum();
-    }
-
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
         s.defaultWriteObject();
-        s.writeLong(sum());
+        s.writeDouble(sum());
     }
 
     private void readObject(ObjectInputStream s)
@@ -196,7 +194,7 @@ public class LongAdder extends Striped64 implements Serializable {
         s.defaultReadObject();
         busy = 0;
         cells = null;
-        base = s.readLong();
+        base = Double.doubleToRawLongBits(s.readDouble());
     }
 
 }

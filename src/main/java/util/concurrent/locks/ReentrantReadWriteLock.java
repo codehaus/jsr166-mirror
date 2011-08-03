@@ -397,7 +397,6 @@ public class ReentrantReadWriteLock
                 int count = rh.count;
                 if (count <= 1) {
                     readHolds.remove();
-                    cachedHoldCounter = null;
                     if (count <= 0)
                         throw unmatchedUnlockException();
                 }
@@ -490,10 +489,8 @@ public class ReentrantReadWriteLock
                             rh = cachedHoldCounter;
                             if (rh == null || rh.tid != current.getId()) {
                                 rh = readHolds.get();
-                                if (rh.count == 0) {
+                                if (rh.count == 0)
                                     readHolds.remove();
-                                    cachedHoldCounter = null;
-                                }
                             }
                         }
                         if (rh.count == 0)
@@ -622,10 +619,7 @@ public class ReentrantReadWriteLock
                 return rh.count;
 
             int count = readHolds.get().count;
-            if (count == 0) {
-                readHolds.remove();
-                cachedHoldCounter = null;
-            }
+            if (count == 0) readHolds.remove();
             return count;
         }
 

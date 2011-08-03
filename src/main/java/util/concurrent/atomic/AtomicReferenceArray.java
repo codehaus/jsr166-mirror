@@ -21,13 +21,23 @@ import sun.misc.Unsafe;
 public class AtomicReferenceArray<E> implements java.io.Serializable {
     private static final long serialVersionUID = -6209656149925076980L;
 
-    private static final Unsafe unsafe = Unsafe.getUnsafe();
-    private static final int base = unsafe.arrayBaseOffset(Object[].class);
+    private static final Unsafe unsafe;
+    private static final int base;
     private static final int shift;
-    private final Object[] array;
+    private static final long arrayFieldOffset;
+    private final Object[] array; // must have exact type Object[]
 
     static {
-        int scale = unsafe.arrayIndexScale(Object[].class);
+        int scale;
+        try {
+            unsafe = Unsafe.getUnsafe();
+            arrayFieldOffset = unsafe.objectFieldOffset
+                (AtomicReferenceArray.class.getDeclaredField("array"));
+            base = unsafe.arrayBaseOffset(Object[].class);
+            scale = unsafe.arrayIndexScale(Object[].class);
+        } catch (Exception e) {
+            throw new Error(e);
+        }
         if ((scale & (scale - 1)) != 0)
             throw new Error("data type scale not a power of two");
         shift = 31 - Integer.numberOfLeadingZeros(scale);
@@ -190,8 +200,10 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
         throws java.io.IOException, ClassNotFoundException,
         java.io.InvalidObjectException {
         s.defaultReadObject();
-        if (!array.getClass().equals(Object[].class))
+        if (array.getClass() != Object[].class) {
+            unsafe.putObjectVolatile(this, arrayFieldOffset, null);
             throw new java.io.InvalidObjectException("Wrong array type");
+        }
     }
 
 }

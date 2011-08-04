@@ -857,8 +857,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Reconstitute this queue instance from a stream (that is,
-     * deserialize it).
+     * Reconstitutes this queue from a stream (that is, deserializes it).
      *
      * @param s the stream
      */

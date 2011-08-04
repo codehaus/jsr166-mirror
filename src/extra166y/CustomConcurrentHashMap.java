@@ -1570,7 +1570,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Reconstitute the instance from a stream (i.e., deserialize it).
+     * Reconstitutes the instance from a stream (that is, deserializes it).
      * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)

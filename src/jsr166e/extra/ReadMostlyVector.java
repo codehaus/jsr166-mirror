@@ -19,7 +19,7 @@ import java.util.*;
  * best-effort in the presence of concurrent modifications, and do
  * <em>NOT</em> throw {@link ConcurrentModificationException}.  An
  * iterator's {@code next()} method returns consecutive elements as
- * they appear in the underlying array upon each access. Alternatvely,
+ * they appear in the underlying array upon each access. Alternatively,
  * method {@link #snapshotIterator} may be used for deterministic
  * traversals, at the expense of making a copy, and unavailability of
  * method {@code Iterator.remove}.

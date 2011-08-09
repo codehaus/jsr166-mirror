@@ -1,6 +1,7 @@
 /*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
+ * Written by Doug Lea and Martin Buchholz with assistance from
+ * members of JCP JSR-166 Expert Group and released to the public
+ * domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
@@ -12,15 +13,26 @@ import sun.misc.Unsafe;
 /**
  * A {@code double} value that may be updated atomically.  See the
  * {@link java.util.concurrent.atomic} package specification for
- * description of the properties of atomic variables. An
- * {@code AtomicDouble} is used in applications such as atomically
- * incremented sequence numbers, and cannot be used as a replacement
- * for a {@link java.lang.Double}. However, this class does extend
- * {@code Number} to allow uniform access by tools and utilities that
- * deal with numerically-based classes.
+ * description of the properties of atomic variables.  An {@code
+ * AtomicDouble} is used in applications such as atomic summation, and
+ * cannot be used as a replacement for a {@link Double}.  However,
+ * this class does extend {@code Number} to allow uniform access by
+ * tools and utilities that deal with numerically-based classes.
  *
+ * <p>This class differs from the primitive double {@code ==} operator
+ * and from {@link Double#equals} in that it uses purely bitwise
+ * equality in methods such as {@link #compareAndSet}, as if
+ * implemented by:
+ *  <pre> {@code
+ * boolean bitEquals(double x, double y) {
+ *   long xBits = Double.doubleToRawLongBits(x);
+ *   long yBits = Double.doubleToRawLongBits(y);
+ *   return xBits == yBits;
+ * }}</pre>
+ * 
  * @since 1.5
  * @author Doug Lea
+ * @author Martin Buchholz
  */
 public class AtomicDouble extends Number implements java.io.Serializable {
     private static final long serialVersionUID = 1927816293512124184L;
@@ -41,7 +53,15 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * Returns whether underlying JVM supports lockless CompareAndSet
      * for longs. Called only once and cached in VM_SUPPORTS_LONG_CAS.
      */
-    private static native boolean VMSupportsCS8();
+    private static boolean VMSupportsCS8() {
+        try {
+            Class<?> klazz = java.util.concurrent.atomic.AtomicLong.class;
+            java.lang.reflect.Method m =
+                klazz.getDeclaredMethod("VMSupportsCS8", new Class<?>[0]);
+            m.setAccessible(true);
+            return (Boolean) m.invoke(new Class<?>[0]);
+        } catch (Throwable t) { throw new Error(t); }
+    }
 
     static {
         try {
@@ -104,7 +124,8 @@ public class AtomicDouble extends Number implements java.io.Serializable {
         long newBits = doubleToRawLongBits(newValue);
         while (true) {
             long currentBits = value;
-            if (compareAndSet(currentBits, newBits))
+            if (unsafe.compareAndSwapLong(this, valueOffset,
+                                          currentBits, newBits))
                 return longBitsToDouble(currentBits);
         }
     }
@@ -150,7 +171,8 @@ public class AtomicDouble extends Number implements java.io.Serializable {
         while (true) {
             long currentBits = value;
             long nextBits = doubleToRawLongBits(longBitsToDouble(currentBits) + delta);
-            if (compareAndSet(currentBits, nextBits))
+            if (unsafe.compareAndSwapLong(this, valueOffset,
+                                          currentBits, nextBits))
                 return longBitsToDouble(currentBits);
         }
     }

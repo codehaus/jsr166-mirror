@@ -39,32 +39,6 @@ public class AtomicDouble extends Number implements java.io.Serializable {
     private static final sun.misc.Unsafe unsafe = getUnsafe();
     private static final long valueOffset;
 
-    /**
-     * Records whether the underlying JVM supports lockless
-     * compareAndSwap for longs. While the Unsafe.compareAndSwapLong
-     * method works in either case, some constructions should be
-     * handled at Java level to avoid locking user-visible locks.
-     */
-    static final boolean VM_SUPPORTS_LONG_CAS = VMSupportsCS8();
-
-    /**
-     * Returns whether underlying JVM supports lockless CompareAndSet
-     * for longs. Called only once and cached in VM_SUPPORTS_LONG_CAS.
-     */
-    private static boolean VMSupportsCS8() {
-        final Class<?> klazz = java.util.concurrent.atomic.AtomicLong.class;
-        return java.security.AccessController.doPrivileged
-            (new java.security.PrivilegedAction<Boolean>() {
-                public Boolean run() {
-                    try {
-                        java.lang.reflect.Method m =
-                            klazz.getDeclaredMethod("VMSupportsCS8", new Class<?>[0]);
-                        m.setAccessible(true);
-                        return (Boolean) m.invoke(new Class<?>[0]);
-                    } catch (Throwable t) { throw new Error(t); }
-                }});
-    }
-
     static {
         try {
             valueOffset = unsafe.objectFieldOffset

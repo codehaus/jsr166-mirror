@@ -8,14 +8,13 @@
 package jsr166e.extra;
 import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
-import sun.misc.Unsafe;
 
 /**
  * A {@code double} value that may be updated atomically.  See the
  * {@link java.util.concurrent.atomic} package specification for
  * description of the properties of atomic variables.  An {@code
- * AtomicDouble} is used in applications such as atomic summation, and
- * cannot be used as a replacement for a {@link Double}.  However,
+ * AtomicDouble} is used in applications such as atomic accumulation,
+ * and cannot be used as a replacement for a {@link Double}.  However,
  * this class does extend {@code Number} to allow uniform access by
  * tools and utilities that deal with numerically-based classes.
  *
@@ -29,16 +28,15 @@ import sun.misc.Unsafe;
  *   long yBits = Double.doubleToRawLongBits(y);
  *   return xBits == yBits;
  * }}</pre>
- * 
- * @since 1.5
+ *
  * @author Doug Lea
  * @author Martin Buchholz
  */
 public class AtomicDouble extends Number implements java.io.Serializable {
-    private static final long serialVersionUID = 1927816293512124184L;
+    static final long serialVersionUID = -8405198993435143622L;
 
     // setup to use Unsafe.compareAndSwapLong for updates
-    private static final Unsafe unsafe = Unsafe.getUnsafe();
+    private static final sun.misc.Unsafe unsafe = getUnsafe();
     private static final long valueOffset;
 
     /**
@@ -54,13 +52,17 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * for longs. Called only once and cached in VM_SUPPORTS_LONG_CAS.
      */
     private static boolean VMSupportsCS8() {
-        try {
-            Class<?> klazz = java.util.concurrent.atomic.AtomicLong.class;
-            java.lang.reflect.Method m =
-                klazz.getDeclaredMethod("VMSupportsCS8", new Class<?>[0]);
-            m.setAccessible(true);
-            return (Boolean) m.invoke(new Class<?>[0]);
-        } catch (Throwable t) { throw new Error(t); }
+        final Class<?> klazz = java.util.concurrent.atomic.AtomicLong.class;
+        return java.security.AccessController.doPrivileged
+            (new java.security.PrivilegedAction<Boolean>() {
+                public Boolean run() {
+                    try {
+                        java.lang.reflect.Method m =
+                            klazz.getDeclaredMethod("VMSupportsCS8", new Class<?>[0]);
+                        m.setAccessible(true);
+                        return (Boolean) m.invoke(new Class<?>[0]);
+                    } catch (Throwable t) { throw new Error(t); }
+                }});
     }
 
     static {
@@ -108,7 +110,6 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * Eventually sets to the given value.
      *
      * @param newValue the new value
-     * @since 1.6
      */
     public final void lazySet(double newValue) {
         unsafe.putOrderedLong(this, valueOffset, doubleToRawLongBits(newValue));
@@ -230,6 +231,34 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      */
     public double doubleValue() {
         return get();
+    }
+
+    /**
+     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+     * Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a jdk.
+     *
+     * @return a sun.misc.Unsafe
+     */
+    private static sun.misc.Unsafe getUnsafe() {
+        try {
+            return sun.misc.Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security
+                     .PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                        public sun.misc.Unsafe run() throws Exception {
+                            java.lang.reflect.Field f = sun.misc
+                                .Unsafe.class.getDeclaredField("theUnsafe");
+                            f.setAccessible(true);
+                            return (sun.misc.Unsafe) f.get(null);
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw new RuntimeException("Could not initialize intrinsics",
+                                           e.getCause());
+            }
+        }
     }
 
 }

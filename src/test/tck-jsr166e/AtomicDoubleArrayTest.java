@@ -116,6 +116,10 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
                 shouldThrow();
             } catch (IndexOutOfBoundsException success) {}
             try {
+                aa.lazySet(index, 1.0);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
                 aa.compareAndSet(index, 1.0, 2.0);
                 shouldThrow();
             } catch (IndexOutOfBoundsException success) {}

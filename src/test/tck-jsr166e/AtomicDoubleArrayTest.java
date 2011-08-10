@@ -307,12 +307,10 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
             aa.set(i, (double)COUNTDOWN);
         Counter c1 = new Counter(aa);
         Counter c2 = new Counter(aa);
-        Thread t1 = new Thread(c1);
-        Thread t2 = new Thread(c2);
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+        Thread t1 = newStartedThread(c1);
+        Thread t2 = newStartedThread(c2);
+        awaitTermination(t1);
+        awaitTermination(t2);
         assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
     }
 

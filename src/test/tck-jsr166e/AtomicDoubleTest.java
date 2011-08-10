@@ -134,7 +134,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
         AtomicDouble at = new AtomicDouble(prev);
         for (double x : VALUES) {
             assertBitEquals(prev, at.get());
-            assertFalse(at.compareAndSet(unused, x));
+            assertFalse(at.weakCompareAndSet(unused, x));
             assertBitEquals(prev, at.get());
             while (!at.weakCompareAndSet(prev, x))
                 ;

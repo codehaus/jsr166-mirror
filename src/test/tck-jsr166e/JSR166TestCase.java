@@ -178,9 +178,8 @@ public class JSR166TestCase extends TestCase {
      * Collects all JSR166 unit tests as one suite.
      */
     public static Test suite() {
-        return newTestSuite(
-            AtomicDoubleTest.suite()
-            );
+        return newTestSuite(AtomicDoubleTest.suite(),
+                            AtomicDoubleArrayTest.suite());
     }
 
 

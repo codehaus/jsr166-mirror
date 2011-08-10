@@ -61,10 +61,9 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      * constructor with array is of same size and has all elements
      */
     public void testConstructor2() {
-        double[] a = { 17.0, 3.0, -42.0, 99.0, -7.0 };
-        AtomicDoubleArray aa = new AtomicDoubleArray(a);
-        assertEquals(a.length, aa.length());
-        for (int i = 0; i < a.length; ++i)
+        AtomicDoubleArray aa = new AtomicDoubleArray(VALUES);
+        assertEquals(VALUES.length, aa.length());
+        for (int i = 0; i < VALUES.length; ++i)
             assertEquals(a[i], aa.get(i));
     }
 

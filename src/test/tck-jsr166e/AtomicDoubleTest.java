@@ -201,7 +201,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
     }
 
     /**
-     * toString returns current value.
+     * toString returns current value
      */
     public void testToString() {
         AtomicDouble at = new AtomicDouble();

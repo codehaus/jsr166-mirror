@@ -342,6 +342,8 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     public void testToString() {
         AtomicDoubleArray aa = new AtomicDoubleArray(VALUES);
         assertEquals(Arrays.toString(VALUES), aa.toString());
+        assertEquals("[]", new AtomicDoubleArray(0).toString());
+        assertEquals("[]", new AtomicDoubleArray(new double[0]).toString());
     }
 
     /**

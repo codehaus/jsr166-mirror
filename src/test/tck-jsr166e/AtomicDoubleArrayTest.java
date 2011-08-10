@@ -331,6 +331,7 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
         AtomicDoubleArray b = serialClone(a);
         assertFalse(a.equals(b));
         assertFalse(b.equals(a));
+        assertEquals(a.length(), b.length());
         for (int i = 0; i < VALUES.length; i++)
             assertBitEquals(a.get(i), b.get(i));
     }

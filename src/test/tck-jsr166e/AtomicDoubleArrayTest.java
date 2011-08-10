@@ -35,6 +35,7 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
         Double.MAX_VALUE,
         Double.POSITIVE_INFINITY,
         Double.NaN,
+        Float.MAX_VALUE,
     };
 
     /** The notion of equality used by AtomicDoubleArray */

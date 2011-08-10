@@ -6,6 +6,7 @@
  */
 
 package jsr166e.extra;
+
 import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
 
@@ -18,10 +19,11 @@ import static java.lang.Double.longBitsToDouble;
  * this class does extend {@code Number} to allow uniform access by
  * tools and utilities that deal with numerically-based classes.
  *
- * <p>This class differs from the primitive double {@code ==} operator
- * and from {@link Double#equals} in that it uses purely bitwise
- * equality in methods such as {@link #compareAndSet}, as if
- * implemented by:
+ * <p><a name="bitEquals">This class compares primitive {@code double}
+ * values in methods such as {@link #compareAndSet} by comparing their
+ * bitwise representation using {@link Double#doubleToRawLongBits},
+ * which differs from both the primitive double {@code ==} operator
+ * and from {@link Double#equals}, as if implemented by:
  *  <pre> {@code
  * boolean bitEquals(double x, double y) {
  *   long xBits = Double.doubleToRawLongBits(x);
@@ -34,17 +36,6 @@ import static java.lang.Double.longBitsToDouble;
  */
 public class AtomicDouble extends Number implements java.io.Serializable {
     static final long serialVersionUID = -8405198993435143622L;
-
-    // setup to use Unsafe.compareAndSwapLong for updates
-    private static final sun.misc.Unsafe unsafe = getUnsafe();
-    private static final long valueOffset;
-
-    static {
-        try {
-            valueOffset = unsafe.objectFieldOffset
-                (AtomicDouble.class.getDeclaredField("value"));
-        } catch (Exception ex) { throw new Error(ex); }
-    }
 
     private volatile long value;
 
@@ -77,7 +68,8 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * @param newValue the new value
      */
     public final void set(double newValue) {
-        value = doubleToRawLongBits(newValue);
+        long next = doubleToRawLongBits(newValue);
+        value = next;
     }
 
     /**
@@ -86,7 +78,8 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * @param newValue the new value
      */
     public final void lazySet(double newValue) {
-        unsafe.putOrderedLong(this, valueOffset, doubleToRawLongBits(newValue));
+        long next = doubleToRawLongBits(newValue);
+        unsafe.putOrderedLong(this, valueOffset, next);
     }
 
     /**
@@ -96,23 +89,23 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final double getAndSet(double newValue) {
-        long newBits = doubleToRawLongBits(newValue);
+        long next = doubleToRawLongBits(newValue);
         while (true) {
-            long currentBits = value;
-            if (unsafe.compareAndSwapLong(this, valueOffset,
-                                          currentBits, newBits))
-                return longBitsToDouble(currentBits);
+            long current = value;
+            if (unsafe.compareAndSwapLong(this, valueOffset, current, next))
+                return longBitsToDouble(current);
         }
     }
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value {@code ==} the expected value.
+     * if the current value is <a href="#bitEquals">bitwise equal</a>
+     * to the expected value.
      *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful. False return indicates that
-     * the actual value was not equal to the expected value.
+     * @return {@code true} if successful. False return indicates that
+     * the actual value was not bitwise equal to the expected value.
      */
     public final boolean compareAndSet(double expect, double update) {
         return unsafe.compareAndSwapLong(this, valueOffset,
@@ -122,7 +115,8 @@ public class AtomicDouble extends Number implements java.io.Serializable {
 
     /**
      * Atomically sets the value to the given updated value
-     * if the current value {@code ==} the expected value.
+     * if the current value is <a href="#bitEquals">bitwise equal</a>
+     * to the expected value.
      *
      * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
      * and does not provide ordering guarantees, so is only rarely an
@@ -130,7 +124,7 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return {@code true} if successful
      */
     public final boolean weakCompareAndSet(double expect, double update) {
         return compareAndSet(expect, update);
@@ -144,11 +138,12 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      */
     public final double getAndAdd(double delta) {
         while (true) {
-            long currentBits = value;
-            long nextBits = doubleToRawLongBits(longBitsToDouble(currentBits) + delta);
-            if (unsafe.compareAndSwapLong(this, valueOffset,
-                                          currentBits, nextBits))
-                return longBitsToDouble(currentBits);
+            long current = value;
+            double currentVal = longBitsToDouble(current);
+            double nextVal = currentVal + delta;
+            long next = doubleToRawLongBits(nextVal);
+            if (unsafe.compareAndSwapLong(this, valueOffset, current, next))
+                return currentVal;
         }
     }
 
@@ -159,22 +154,23 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final double addAndGet(double delta) {
-        for (;;) {
-            double current = get();
-            double next = current + delta;
-            if (compareAndSet(current, next))
-                return next;
+        while (true) {
+            long current = value;
+            double currentVal = longBitsToDouble(current);
+            double nextVal = currentVal + delta;
+            long next = doubleToRawLongBits(nextVal);
+            if (unsafe.compareAndSwapLong(this, valueOffset, current, next))
+                return nextVal;
         }
     }
 
     /**
      * Returns the String representation of the current value.
-     * @return the String representation of the current value.
+     * @return the String representation of the current value
      */
     public String toString() {
         return Double.toString(get());
     }
-
 
     /**
      * Returns the value of this {@code AtomicDouble} as an {@code int}
@@ -185,7 +181,8 @@ public class AtomicDouble extends Number implements java.io.Serializable {
     }
 
     /**
-     * Returns the value of this {@code AtomicDouble} as a {@code long}.
+     * Returns the value of this {@code AtomicDouble} as a {@code long}
+     * after a narrowing primitive conversion.
      */
     public long longValue() {
         return (long)get();
@@ -193,18 +190,28 @@ public class AtomicDouble extends Number implements java.io.Serializable {
 
     /**
      * Returns the value of this {@code AtomicDouble} as a {@code float}
-     * after a widening primitive conversion.
+     * after a narrowing primitive conversion.
      */
     public float floatValue() {
         return (float)get();
     }
 
     /**
-     * Returns the value of this {@code AtomicDouble} as a {@code double}
-     * after a widening primitive conversion.
+     * Returns the value of this {@code AtomicDouble} as a {@code double}.
      */
     public double doubleValue() {
         return get();
+    }
+
+    // Unsafe mechanics
+    private static final sun.misc.Unsafe unsafe = getUnsafe();
+    private static final long valueOffset;
+
+    static {
+        try {
+            valueOffset = unsafe.objectFieldOffset
+                (AtomicDouble.class.getDeclaredField("value"));
+        } catch (Exception ex) { throw new Error(ex); }
     }
 
     /**

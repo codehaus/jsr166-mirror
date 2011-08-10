@@ -40,7 +40,7 @@ public class AtomicDouble extends Number implements java.io.Serializable {
     private volatile long value;
 
     /**
-     * Creates a new AtomicDouble with the given initial value.
+     * Creates a new {@code AtomicDouble} with the given initial value.
      *
      * @param initialValue the initial value
      */
@@ -49,7 +49,7 @@ public class AtomicDouble extends Number implements java.io.Serializable {
     }
 
     /**
-     * Creates a new AtomicDouble with initial value {@code 0.0}.
+     * Creates a new {@code AtomicDouble} with initial value {@code 0.0}.
      */
     public AtomicDouble() { this(0.0); }
 
@@ -241,5 +241,4 @@ public class AtomicDouble extends Number implements java.io.Serializable {
             }
         }
     }
-
 }

@@ -37,13 +37,23 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
         Double.NaN,
     };
 
+    /** The notion of equality used by AtomicDoubleArray */
+    boolean bitEquals(double x, double y) {
+        return Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(y);
+    }
+
+    void assertBitEquals(double x, double y) {
+        assertEquals(Double.doubleToRawLongBits(x),
+                     Double.doubleToRawLongBits(y));
+    }
+
     /**
      * constructor creates array of given size with all elements zero
      */
     public void testConstructor() {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i)
-            assertEquals(0.0, aa.get(i));
+        for (int i = 0; i < SIZE; i++)
+            assertBitEquals(0.0, aa.get(i));
     }
 
     /**
@@ -63,8 +73,32 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     public void testConstructor2() {
         AtomicDoubleArray aa = new AtomicDoubleArray(VALUES);
         assertEquals(VALUES.length, aa.length());
-        for (int i = 0; i < VALUES.length; ++i)
-            assertEquals(a[i], aa.get(i));
+        for (int i = 0; i < VALUES.length; i++)
+            assertBitEquals(VALUES[i], aa.get(i));
+    }
+
+    /**
+     * constructor with empty array has size 0 and contains no elements
+     */
+    public void testConstructorEmptyArray() {
+        AtomicDoubleArray aa = new AtomicDoubleArray(new double[0]);
+        assertEquals(0, aa.length());
+        try {
+            aa.get(0);
+            shouldThrow();
+        } catch (IndexOutOfBoundsException success) {}
+    }
+
+    /**
+     * constructor with length zero has size 0 and contains no elements
+     */
+    public void testConstructorZeroLength() {
+        AtomicDoubleArray aa = new AtomicDoubleArray(0);
+        assertEquals(0, aa.length());
+        try {
+            aa.get(0);
+            shouldThrow();
+        } catch (IndexOutOfBoundsException success) {}
     }
 
     /**
@@ -72,25 +106,31 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testIndexing() {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        try {
-            aa.get(SIZE);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
-        }
-        try {
-            aa.get(-1);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
-        }
-        try {
-            aa.set(SIZE, 0);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
-        }
-        try {
-            aa.set(-1, 0.0);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
+        for (int index : new int[] { -1, SIZE }) {
+            try {
+                aa.get(index);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.set(index, 1.0);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.compareAndSet(index, 1.0, 2.0);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.weakCompareAndSet(index, 1.0, 2.0);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.getAndAdd(index, 1.0);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.addAndGet(index, 1.0);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
         }
     }
 
@@ -98,14 +138,13 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      * get returns the last value set at index
      */
     public void testGetSet() {
-        AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            aa.set(i, 1.0);
-            assertEquals(1.0, aa.get(i));
-            aa.set(i, 2.0);
-            assertEquals(2.0, aa.get(i));
+        AtomicDoubleArray aa = new AtomicDoubleArray(VALUES.length);
+        for (int i = 0; i < VALUES.length; i++) {
+            assertBitEquals(0.0, aa.get(i));
+            aa.set(i, VALUES[i]);
+            assertBitEquals(VALUES[i], aa.get(i));
             aa.set(i, -3.0);
-            assertEquals(-3.0, aa.get(i));
+            assertBitEquals(-3.0, aa.get(i));
         }
     }
 
@@ -113,14 +152,13 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      * get returns the last value lazySet at index by same thread
      */
     public void testGetLazySet() {
-        AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            aa.lazySet(i, 1.0);
-            assertEquals(1.0, aa.get(i));
-            aa.lazySet(i, 2.0);
-            assertEquals(2.0, aa.get(i));
+        AtomicDoubleArray aa = new AtomicDoubleArray(VALUES.length);
+        for (int i = 0; i < VALUES.length; i++) {
+            assertBitEquals(0.0, aa.get(i));
+            aa.lazySet(i, VALUES[i]);
+            assertBitEquals(VALUES[i], aa.get(i));
             aa.lazySet(i, -3.0);
-            assertEquals(-3.0, aa.get(i));
+            assertBitEquals(-3.0, aa.get(i));
         }
     }
 
@@ -129,15 +167,17 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testCompareAndSet() {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            aa.set(i, 1);
-            assertTrue(aa.compareAndSet(i, 1.0, 2.0));
-            assertTrue(aa.compareAndSet(i, 2.0, -4.0));
-            assertEquals(-4.0, aa.get(i));
-            assertFalse(aa.compareAndSet(i, -5.0, 7.0));
-            assertEquals(-4.0, aa.get(i));
-            assertTrue(aa.compareAndSet(i, -4.0, 7.0));
-            assertEquals(7.0, aa.get(i));
+        for (int i : new int[] { 0, SIZE - 1}) {
+            double prev = 0.0;
+            double unused = Math.E + Math.PI;
+            for (double x : VALUES) {
+                assertBitEquals(prev, aa.get(i));
+                assertFalse(aa.compareAndSet(i, unused, x));
+                assertBitEquals(prev, aa.get(i));
+                assertTrue(aa.compareAndSet(i, prev, x));
+                assertBitEquals(x, aa.get(i));
+                prev = x;
+            }
         }
     }
 
@@ -148,17 +188,16 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     public void testCompareAndSetInMultipleThreads() throws InterruptedException {
         final AtomicDoubleArray a = new AtomicDoubleArray(1);
         a.set(0, 1);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 while (!a.compareAndSet(0, 2.0, 3.0))
                     Thread.yield();
             }});
 
-        t.start();
         assertTrue(a.compareAndSet(0, 1.0, 2.0));
         t.join(LONG_DELAY_MS);
         assertFalse(t.isAlive());
-        assertEquals(3.0, a.get(0));
+        assertBitEquals(3.0, a.get(0));
     }
 
     /**
@@ -167,13 +206,18 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet() {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            aa.set(i, 1.0);
-            while (!aa.weakCompareAndSet(i, 1.0, 2.0));
-            while (!aa.weakCompareAndSet(i, 2.0, -4.0));
-            assertEquals(-4.0, aa.get(i));
-            while (!aa.weakCompareAndSet(i, -4.0, 7.0));
-            assertEquals(7.0, aa.get(i));
+        for (int i : new int[] { 0, SIZE - 1}) {
+            double prev = 0.0;
+            double unused = Math.E + Math.PI;
+            for (double x : VALUES) {
+                assertBitEquals(prev, aa.get(i));
+                assertFalse(aa.weakCompareAndSet(i, unused, x));
+                assertBitEquals(prev, aa.get(i));
+                while (!aa.weakCompareAndSet(i, prev, x))
+                    ;
+                assertBitEquals(x, aa.get(i));
+                prev = x;
+            }
         }
     }
 
@@ -182,11 +226,13 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testGetAndSet() {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            aa.set(i, 1.0);
-            assertEquals(1.0, aa.getAndSet(i, 0.0));
-            assertEquals(0.0, aa.getAndSet(i, -10.0));
-            assertEquals(-10.0, aa.getAndSet(i, 1.0));
+        for (int i : new int[] { 0, SIZE - 1}) {
+            double prev = 0.0;
+            double unused = Math.E + Math.PI;
+            for (double x : VALUES) {
+                assertBitEquals(prev, aa.getAndSet(i, x));
+                prev = x;
+            }
         }
     }
 
@@ -195,12 +241,15 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testGetAndAdd() {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            aa.set(i, 1.0);
-            assertEquals(1.0, aa.getAndAdd(i, 2.0));
-            assertEquals(3.0, aa.get(i));
-            assertEquals(3.0, aa.getAndAdd(i, -4.0));
-            assertEquals(-1.0, aa.get(i));
+        for (int i : new int[] { 0, SIZE - 1}) {
+            for (double x : VALUES) {
+                for (double y : VALUES) {
+                    aa.set(i, x);
+                    double z = aa.getAndAdd(i, y);
+                    assertBitEquals(x, z);
+                    assertBitEquals(x + y, aa.get(i));
+                }
+            }
         }
     }
 
@@ -209,12 +258,15 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testAddAndGet() {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            aa.set(i, 1.0);
-            assertEquals(3.0, aa.addAndGet(i, 2.0));
-            assertEquals(3.0, aa.get(i));
-            assertEquals(-1.0, aa.addAndGet(i, -4.0));
-            assertEquals(-1.0, aa.get(i));
+        for (int i : new int[] { 0, SIZE - 1}) {
+            for (double x : VALUES) {
+                for (double y : VALUES) {
+                    aa.set(i, x);
+                    double z = aa.addAndGet(i, y);
+                    assertBitEquals(x + y, z);
+                    assertBitEquals(x + y, aa.get(i));
+                }
+            }
         }
     }
 
@@ -227,12 +279,12 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
         public void realRun() {
             for (;;) {
                 boolean done = true;
-                for (int i = 0; i < aa.length(); ++i) {
+                for (int i = 0; i < aa.length(); i++) {
                     double v = aa.get(i);
                     assertTrue(v >= 0);
                     if (v != 0) {
                         done = false;
-                        if (aa.compareAndSet(i, v, v-1))
+                        if (aa.compareAndSet(i, v, v - 1.0))
                             ++counts;
                     }
                 }
@@ -248,8 +300,8 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testCountingInMultipleThreads() throws InterruptedException {
         final AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i)
-            aa.set(i, COUNTDOWN);
+        for (int i = 0; i < SIZE; i++)
+            aa.set(i, (double)COUNTDOWN);
         Counter c1 = new Counter(aa);
         Counter c2 = new Counter(aa);
         Thread t1 = new Thread(c1);
@@ -266,14 +318,20 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testSerialization() throws Exception {
         AtomicDoubleArray x = new AtomicDoubleArray(SIZE);
-        for (int i = 0; i < SIZE; ++i)
-            x.set(i, -i);
+        for (int i = 0; i < SIZE; i++)
+            x.set(i, (double)-i);
         AtomicDoubleArray y = serialClone(x);
         assertTrue(x != y);
         assertEquals(x.length(), y.length());
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(x.get(i), y.get(i));
-        }
+        for (int i = 0; i < SIZE; i++)
+            assertBitEquals(x.get(i), y.get(i));
+
+        AtomicDoubleArray a = new AtomicDoubleArray(VALUES);
+        AtomicDoubleArray b = serialClone(a);
+        assertFalse(a.equals(b));
+        assertFalse(b.equals(a));
+        for (int i = 0; i < VALUES.length; i++)
+            assertBitEquals(a.get(i), b.get(i));
     }
 
     /**
@@ -282,6 +340,23 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     public void testToString() {
         AtomicDoubleArray aa = new AtomicDoubleArray(VALUES);
         assertEquals(Arrays.toString(VALUES), aa.toString());
+    }
+
+    /**
+     * compareAndSet treats +0.0 and -0.0 as distinct values
+     */
+    public void testDistinctZeros() {
+        AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
+        for (int i : new int[] { 0, SIZE - 1}) {
+            assertFalse(aa.compareAndSet(i, -0.0, 7.0));
+            assertFalse(aa.weakCompareAndSet(i, -0.0, 7.0));
+            assertBitEquals(+0.0, aa.get(i));
+            assertTrue(aa.compareAndSet(i, +0.0, -0.0));
+            assertBitEquals(-0.0, aa.get(i));
+            assertFalse(aa.compareAndSet(i, +0.0, 7.0));
+            assertFalse(aa.weakCompareAndSet(i, +0.0, 7.0));
+            assertBitEquals(-0.0, aa.get(i));
+        }
     }
 
 }

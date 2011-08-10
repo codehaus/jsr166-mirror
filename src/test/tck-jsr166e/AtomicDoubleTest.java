@@ -263,7 +263,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
     }
 
     /**
-     * compareAndSet treats +0.0 and -0.0 as different
+     * compareAndSet treats +0.0 and -0.0 as distinct values
      */
     public void testDistinctZeros() {
         AtomicDouble at = new AtomicDouble(+0.0);

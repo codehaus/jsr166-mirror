@@ -148,7 +148,6 @@ public class AtomicDoubleTest extends JSR166TestCase {
      */
     public void testGetAndSet() {
         double prev = Math.E;
-        double unused = Math.E + Math.PI;
         AtomicDouble at = new AtomicDouble(prev);
         for (double x : VALUES) {
             assertBitEquals(prev, at.getAndSet(x));

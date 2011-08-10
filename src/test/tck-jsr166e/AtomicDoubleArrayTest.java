@@ -232,7 +232,6 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
         AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
         for (int i : new int[] { 0, SIZE - 1}) {
             double prev = 0.0;
-            double unused = Math.E + Math.PI;
             for (double x : VALUES) {
                 assertBitEquals(prev, aa.getAndSet(i, x));
                 prev = x;

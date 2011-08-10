@@ -34,6 +34,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
         Double.MAX_VALUE,
         Double.POSITIVE_INFINITY,
         Double.NaN,
+        Float.MAX_VALUE,
     };
 
     /** The notion of equality used by AtomicDouble */
@@ -111,16 +112,14 @@ public class AtomicDoubleTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicDouble at = new AtomicDouble(1.0);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 while (!at.compareAndSet(2.0, 3.0))
                     Thread.yield();
             }});
 
-        t.start();
         assertTrue(at.compareAndSet(1.0, 2.0));
-        t.join(LONG_DELAY_MS);
-        assertFalse(t.isAlive());
+        awaitTermination(t);
         assertBitEquals(3.0, at.get());
     }
 
@@ -134,7 +133,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
         AtomicDouble at = new AtomicDouble(prev);
         for (double x : VALUES) {
             assertBitEquals(prev, at.get());
-            assertFalse(at.compareAndSet(unused, x));
+            assertFalse(at.weakCompareAndSet(unused, x));
             assertBitEquals(prev, at.get());
             while (!at.weakCompareAndSet(prev, x))
                 ;
@@ -148,7 +147,6 @@ public class AtomicDoubleTest extends JSR166TestCase {
      */
     public void testGetAndSet() {
         double prev = Math.E;
-        double unused = Math.E + Math.PI;
         AtomicDouble at = new AtomicDouble(prev);
         for (double x : VALUES) {
             assertBitEquals(prev, at.getAndSet(x));
@@ -203,7 +201,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
     }
 
     /**
-     * toString returns current value.
+     * toString returns current value
      */
     public void testToString() {
         AtomicDouble at = new AtomicDouble();
@@ -263,7 +261,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
     }
 
     /**
-     * compareAndSet treats +0.0 and -0.0 as different
+     * compareAndSet treats +0.0 and -0.0 as distinct values
      */
     public void testDistinctZeros() {
         AtomicDouble at = new AtomicDouble(+0.0);

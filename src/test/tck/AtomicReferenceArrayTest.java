@@ -22,9 +22,9 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * constructor creates array of given size with all elements null
      */
     public void testConstructor() {
-        AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            assertNull(ai.get(i));
+        AtomicReferenceArray<Integer> aa = new AtomicReferenceArray<Integer>(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            assertNull(aa.get(i));
         }
     }
 
@@ -34,7 +34,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
     public void testConstructor2NPE() {
         try {
             Integer[] a = null;
-            AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
+            AtomicReferenceArray<Integer> aa = new AtomicReferenceArray<Integer>(a);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -44,10 +44,10 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         Integer[] a = { two, one, three, four, seven };
-        AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
-        assertEquals(a.length, ai.length());
-        for (int i = 0; i < a.length; ++i)
-            assertEquals(a[i], ai.get(i));
+        AtomicReferenceArray<Integer> aa = new AtomicReferenceArray<Integer>(a);
+        assertEquals(a.length, aa.length());
+        for (int i = 0; i < a.length; i++)
+            assertEquals(a[i], aa.get(i));
     }
 
     /**
@@ -57,7 +57,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
         Integer[] a = { two, one, three, four, seven };
         AtomicReferenceArray<Number> aa = new AtomicReferenceArray<Number>(a);
         assertEquals(a.length, aa.length());
-        for (int i = 0; i < a.length; ++i) {
+        for (int i = 0; i < a.length; i++) {
             assertSame(a[i], aa.get(i));
             Long x = Long.valueOf(i);
             aa.set(i, x);
@@ -69,26 +69,28 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * get and set for out of bound indices throw IndexOutOfBoundsException
      */
     public void testIndexing() {
-        AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(SIZE);
-        try {
-            ai.get(SIZE);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
-        }
-        try {
-            ai.get(-1);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
-        }
-        try {
-            ai.set(SIZE, null);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
-        }
-        try {
-            ai.set(-1, null);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {
+        AtomicReferenceArray<Integer> aa = new AtomicReferenceArray<Integer>(SIZE);
+        for (int index : new int[] { -1, SIZE }) {
+            try {
+                aa.get(index);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.set(index, null);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.lazySet(index, null);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.compareAndSet(index, null, null);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+            try {
+                aa.weakCompareAndSet(index, null, null);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
         }
     }
 
@@ -96,14 +98,14 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * get returns the last value set at index
      */
     public void testGetSet() {
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            ai.set(i, one);
-            assertSame(one, ai.get(i));
-            ai.set(i, two);
-            assertSame(two, ai.get(i));
-            ai.set(i, m3);
-            assertSame(m3, ai.get(i));
+        AtomicReferenceArray aa = new AtomicReferenceArray(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            aa.set(i, one);
+            assertSame(one, aa.get(i));
+            aa.set(i, two);
+            assertSame(two, aa.get(i));
+            aa.set(i, m3);
+            assertSame(m3, aa.get(i));
         }
     }
 
@@ -111,14 +113,14 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * get returns the last value lazySet at index by same thread
      */
     public void testGetLazySet() {
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            ai.lazySet(i, one);
-            assertSame(one, ai.get(i));
-            ai.lazySet(i, two);
-            assertSame(two, ai.get(i));
-            ai.lazySet(i, m3);
-            assertSame(m3, ai.get(i));
+        AtomicReferenceArray aa = new AtomicReferenceArray(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            aa.lazySet(i, one);
+            assertSame(one, aa.get(i));
+            aa.lazySet(i, two);
+            assertSame(two, aa.get(i));
+            aa.lazySet(i, m3);
+            assertSame(m3, aa.get(i));
         }
     }
 
@@ -126,16 +128,16 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
     public void testCompareAndSet() {
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            ai.set(i, one);
-            assertTrue(ai.compareAndSet(i, one, two));
-            assertTrue(ai.compareAndSet(i, two, m4));
-            assertSame(m4, ai.get(i));
-            assertFalse(ai.compareAndSet(i, m5, seven));
-            assertSame(m4, ai.get(i));
-            assertTrue(ai.compareAndSet(i, m4, seven));
-            assertSame(seven, ai.get(i));
+        AtomicReferenceArray aa = new AtomicReferenceArray(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            aa.set(i, one);
+            assertTrue(aa.compareAndSet(i, one, two));
+            assertTrue(aa.compareAndSet(i, two, m4));
+            assertSame(m4, aa.get(i));
+            assertFalse(aa.compareAndSet(i, m5, seven));
+            assertSame(m4, aa.get(i));
+            assertTrue(aa.compareAndSet(i, m4, seven));
+            assertSame(seven, aa.get(i));
         }
     }
 
@@ -164,14 +166,14 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * to expected
      */
     public void testWeakCompareAndSet() {
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            ai.set(i, one);
-            while (!ai.weakCompareAndSet(i, one, two));
-            while (!ai.weakCompareAndSet(i, two, m4));
-            assertSame(m4, ai.get(i));
-            while (!ai.weakCompareAndSet(i, m4, seven));
-            assertSame(seven, ai.get(i));
+        AtomicReferenceArray aa = new AtomicReferenceArray(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            aa.set(i, one);
+            while (!aa.weakCompareAndSet(i, one, two));
+            while (!aa.weakCompareAndSet(i, two, m4));
+            assertSame(m4, aa.get(i));
+            while (!aa.weakCompareAndSet(i, m4, seven));
+            assertSame(seven, aa.get(i));
         }
     }
 
@@ -179,12 +181,12 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      * getAndSet returns previous value and sets to given value at given index
      */
     public void testGetAndSet() {
-        AtomicReferenceArray ai = new AtomicReferenceArray(SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            ai.set(i, one);
-            assertSame(one, ai.getAndSet(i, zero));
-            assertSame(zero, ai.getAndSet(i, m10));
-            assertSame(m10, ai.getAndSet(i, one));
+        AtomicReferenceArray aa = new AtomicReferenceArray(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            aa.set(i, one);
+            assertSame(one, aa.getAndSet(i, zero));
+            assertSame(zero, aa.getAndSet(i, m10));
+            assertSame(m10, aa.getAndSet(i, one));
         }
     }
 
@@ -209,7 +211,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
      */
     public void testToString() {
         Integer[] a = { two, one, three, four, seven };
-        AtomicReferenceArray<Integer> ai = new AtomicReferenceArray<Integer>(a);
-        assertEquals(Arrays.toString(a), ai.toString());
+        AtomicReferenceArray<Integer> aa = new AtomicReferenceArray<Integer>(a);
+        assertEquals(Arrays.toString(a), aa.toString());
     }
 }

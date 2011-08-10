@@ -191,7 +191,7 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws InterruptedException {
         final AtomicDoubleArray a = new AtomicDoubleArray(1);
-        a.set(0, 1);
+        a.set(0, 1.0);
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 while (!a.compareAndSet(0, 2.0, 3.0))

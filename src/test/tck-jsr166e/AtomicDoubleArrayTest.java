@@ -337,7 +337,7 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     }
 
     /**
-     * toString returns current value.
+     * toString returns current value
      */
     public void testToString() {
         AtomicDoubleArray aa = new AtomicDoubleArray(VALUES);

@@ -112,16 +112,14 @@ public class AtomicDoubleTest extends JSR166TestCase {
      */
     public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicDouble at = new AtomicDouble(1.0);
-        Thread t = new Thread(new CheckedRunnable() {
+        Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() {
                 while (!at.compareAndSet(2.0, 3.0))
                     Thread.yield();
             }});
 
-        t.start();
         assertTrue(at.compareAndSet(1.0, 2.0));
-        t.join(LONG_DELAY_MS);
-        assertFalse(t.isAlive());
+        awaitTermination(t);
         assertBitEquals(3.0, at.get());
     }
 

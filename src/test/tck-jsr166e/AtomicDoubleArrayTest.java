@@ -200,8 +200,7 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
             }});
 
         assertTrue(a.compareAndSet(0, 1.0, 2.0));
-        t.join(LONG_DELAY_MS);
-        assertFalse(t.isAlive());
+        awaitTermination(t);
         assertBitEquals(3.0, a.get(0));
     }
 

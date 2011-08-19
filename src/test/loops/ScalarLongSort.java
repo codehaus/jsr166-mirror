@@ -10,7 +10,7 @@ import java.util.*;
 class ScalarLongSort {
     static final long NPS = (1000L * 1000 * 1000);
 
-    static int THRESHOLD;
+    static int THRESHOLD = -1;
     static final boolean warmup = true;
 
     public static void main (String[] args) throws Exception {
@@ -18,16 +18,19 @@ class ScalarLongSort {
         int n = 1 << 22;
         int reps = 20;
         int sreps = 2;
+        int st = -1;
         try {
             if (args.length > 0)
                 procs = Integer.parseInt(args[0]);
             if (args.length > 1)
                 n = Integer.parseInt(args[1]);
             if (args.length > 2)
-                reps = Integer.parseInt(args[1]);
+                reps = Integer.parseInt(args[2]);
+            if (args.length > 3)
+                st = Integer.parseInt(args[3]);
         }
         catch (Exception e) {
-            System.out.println("Usage: java ScalarLongSort threads n reps");
+            System.out.println("Usage: java ScalarLongSort threads n reps sequential-threshold");
             return;
         }
         ForkJoinPool pool = (procs == 0) ? new ForkJoinPool() :
@@ -46,10 +49,10 @@ class ScalarLongSort {
             checkSorted(a);
         }
 
-        // for now hardwire 8 * #CPUs leaf tasks
-        THRESHOLD = 1 + ((n + 7) >>> 3) / pool.getParallelism();
-        //        THRESHOLD = 1 + ((n + 15) >>> 4) / pool.getParallelism();
-        //        THRESHOLD = 1 + ((n + 31) >>> 5) / pool.getParallelism();
+        if (st <= 0) // for now hardwire 8 * #CPUs leaf tasks
+            THRESHOLD = 1 + ((n + 7) >>> 3) / pool.getParallelism();
+        else
+            THRESHOLD = st;
 
         System.out.printf("Sorting %d longs, %d replications\n", n, reps);
         for (int i = 0; i < reps; ++i) {

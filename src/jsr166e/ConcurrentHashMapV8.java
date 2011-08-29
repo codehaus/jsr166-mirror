@@ -125,8 +125,8 @@ public class ConcurrentHashMapV8<K, V>
      * within bins are always accurately traversable under volatile
      * reads, so long as lookups check hash code and non-nullness of
      * key and value before checking key equality. (All valid hash
-     * codes are nonnegative. Negative values are served for special
-     * nodes.)
+     * codes are nonnegative. Negative values are reserved for special
+     * forwarding nodes; see below.)
      *
      * A bin may be locked during update (insert, delete, and replace)
      * operations.  We do not want to waste the space required to
@@ -172,26 +172,27 @@ public class ConcurrentHashMapV8<K, V>
      * complexity of access and iteration schemes that could admit
      * out-of-order or concurrent bin transfers.
      *
-     * (While not yet implemented, a similar traversal scheme can
-     * apply to partial traversals during partitioned aggregate
-     * operations. Also, read-only operations give up if ever
-     * forwarded to a null table, which provides support for
-     * shutdown-style clearing, which is also not currently
-     * implemented.)
+     * A similar traversal scheme (not yet implemented) can apply to
+     * partial traversals during partitioned aggregate operations.
+     * Also, read-only operations give up if ever forwarded to a null
+     * table, which provides support for shutdown-style clearing,
+     * which is also not currently implemented.
      *
      * The element count is maintained using a LongAdder, which avoids
      * contention on updates but can encounter cache thrashing if read
      * too frequently during concurrent updates. To avoid reading so
-     * often, resizing is attempted only upon adding to a bin already
-     * holding two or more nodes. Under the default threshold (0.75),
-     * and uniform hash distributions, the probability of this
+     * often, resizing is normally attempted only upon adding to a bin
+     * already holding two or more nodes. Under the default threshold
+     * (0.75), and uniform hash distributions, the probability of this
      * occurring at threshold is around 13%, meaning that only about 1
      * in 8 puts check threshold (and after resizing, many fewer do
-     * so). To increase the probablity that a resize occurs soon
-     * enough, we offset the threshold (see THRESHOLD_OFFSET) by the
-     * expected number of puts between checks. This is currently set
-     * to 8, in accord with the default load factor. In practice, this
-     * is rarely overridden, and in any case is close enough to other
+     * so). But this approximation has high variance for small table
+     * sizes, so we check on any collision for sizes <= 64.  Further,
+     * to increase the probablity that a resize occurs soon enough, we
+     * offset the threshold (see THRESHOLD_OFFSET) by the expected
+     * number of puts between checks. This is currently set to 8, in
+     * accord with the default load factor. In practice, this is
+     * rarely overridden, and in any case is close enough to other
      * plausible values not to waste dynamic probablity computation
      * for more precision.
      */
@@ -310,8 +311,9 @@ public class ConcurrentHashMapV8<K, V>
      * implicitly bounds-checked, relying on the invariants that tab
      * arrays have non-zero size, and all indices are masked with
      * (tab.length - 1) which is never negative and always less than
-     * length. The only other usage is in HashIterator.advance, which
-     * performs explicit checks.
+     * length. The "relaxed" non-volatile forms are used only during
+     * table initialization. The only other usage is in
+     * HashIterator.advance, which performs explicit checks.
      */
 
     static final Node tabAt(Node[] tab, int i) { // used in HashIterator
@@ -326,10 +328,18 @@ public class ConcurrentHashMapV8<K, V>
         UNSAFE.putObjectVolatile(tab, ((long)i<<ASHIFT)+ABASE, v);
     }
 
+    private static final Node relaxedTabAt(Node[] tab, int i) {
+        return (Node)UNSAFE.getObject(tab, ((long)i<<ASHIFT)+ABASE);
+    }
+
+    private static final void relaxedSetTabAt(Node[] tab, int i, Node v) {
+        UNSAFE.putObject(tab, ((long)i<<ASHIFT)+ABASE, v);
+    }
+
     /* ---------------- Access and update operations -------------- */
 
-    /** Implements get and containsKey **/
-    private final Object internalGet(Object k) {
+    /** Implementation for get and containsKey **/
+   private final Object internalGet(Object k) {
         int h = spread(k.hashCode());
         Node[] tab = table;
         retry: while (tab != null) {
@@ -341,7 +351,7 @@ public class ConcurrentHashMapV8<K, V>
                     if (ev != null && ek != null && (k == ek || k.equals(ek)))
                         return ev;
                 }
-                if (eh < 0) { // bin was moved during resize
+                else if (eh < 0) { // bin was moved during resize
                     tab = (Node[])e.key;
                     continue retry;
                 }
@@ -352,20 +362,17 @@ public class ConcurrentHashMapV8<K, V>
         return null;
     }
 
-    /** Implements put and putIfAbsent **/
+    /** Implementation for put and putIfAbsent **/
     private final Object internalPut(Object k, Object v, boolean replace) {
         int h = spread(k.hashCode());
         Object oldVal = null;  // the previous value or null if none
-        Node node = null;      // the node created if absent
         Node[] tab = table;
         for (;;) {
             Node e; int i;
             if (tab == null)
                 tab = grow(0);
             else if ((e = tabAt(tab, i = (tab.length - 1) & h)) == null) {
-                if (node == null)
-                    node = new Node(h, k, v, null);
-                if (casTabAt(tab, i, null, node))
+                if (casTabAt(tab, i, null, new Node(h, k, v, null)))
                     break;
             }
             else if (e.hash < 0)
@@ -393,10 +400,8 @@ public class ConcurrentHashMapV8<K, V>
                         if ((e = e.next) == null) {
                             if (tabAt(tab, i) == first) {
                                 validated = true;
-                                if (node == null)
-                                    node = new Node(h, k, v, null);
-                                last.next = node;
-                                if (last != first)
+                                last.next = new Node(h, k, v, null);
+                                if (last != first || tab.length <= 64)
                                     checkSize = true;
                             }
                             break;
@@ -476,12 +481,13 @@ public class ConcurrentHashMapV8<K, V>
         return oldVal;
     }
 
-    /** Implements computeIfAbsent */
+    /** Implementation for computeIfAbsent and compute */
     @SuppressWarnings("unchecked")
-    private final V computeVal(K k, MappingFunction<? super K, ? extends V> f) {
+    private final V internalCompute(K k,
+                                    MappingFunction<? super K, ? extends V> f,
+                                    boolean replace) {
         int h = spread(k.hashCode());
         V val = null;
-        Node node = null;
         boolean added = false;
         boolean validated = false;
         Node[] tab = table;
@@ -490,8 +496,7 @@ public class ConcurrentHashMapV8<K, V>
             if (tab == null)
                 tab = grow(0);
             else if ((e = tabAt(tab, i = (tab.length - 1) & h)) == null) {
-                if (node == null)
-                    node = new Node(h, k, null, null);
+                Node node = new Node(h, k, null, null);
                 synchronized(node) {
                     if (casTabAt(tab, i, null, node)) {
                         validated = true;
@@ -522,6 +527,8 @@ public class ConcurrentHashMapV8<K, V>
                             (k == ek || k.equals(ek))) {
                             if (tabAt(tab, i) == first) {
                                 validated = true;
+                                if (replace && (ev = f.map(k)) != null)
+                                    e.val = ev;
                                 val = (V)ev;
                             }
                             break;
@@ -531,14 +538,10 @@ public class ConcurrentHashMapV8<K, V>
                             if (tabAt(tab, i) == first) {
                                 validated = true;
                                 if ((val = f.map(k)) != null) {
-                                    if (node == null)
-                                        node = new Node(h, k, val, null);
-                                    else
-                                        node.val = val;
-                                    last.next = node;
-                                    if (last != first)
-                                        checkSize = true;
+                                    last.next = new Node(h, k, val, null);
                                     added = true;
+                                    if (last != first || tab.length <= 64)
+                                        checkSize = true;
                                 }
                             }
                             break;
@@ -595,13 +598,13 @@ public class ConcurrentHashMapV8<K, V>
                         }
                         if (tabAt(tab, i) == e) {
                             validated = true;
-                            setTabAt(nextTab, idx, lastRun);
+                            relaxedSetTabAt(nextTab, idx, lastRun);
                             for (Node p = e; p != lastRun; p = p.next) {
                                 int h = p.hash;
                                 int j = h & mask;
-                                Object pk = p.key, pv = p.val;
-                                Node r = tabAt(nextTab, j);
-                                setTabAt(nextTab, j, new Node(h, pk, pv, r));
+                                Node r = relaxedTabAt(nextTab, j);
+                                relaxedSetTabAt(nextTab, j,
+                                                new Node(h, p.key, p.val, r));
                             }
                             setTabAt(tab, i, fwd);
                         }
@@ -623,13 +626,13 @@ public class ConcurrentHashMapV8<K, V>
      * @return current table
      */
     private final Node[] grow(int sizeHint) {
-        Node[] tab;
         if (resizing == 0 &&
             UNSAFE.compareAndSwapInt(this, resizingOffset, 0, 1)) {
             try {
                 for (;;) {
                     int cap, n;
-                    if ((tab = table) == null) {
+                    Node[] tab = table;
+                    if (tab == null) {
                         int c = initCap;
                         if (c < sizeHint)
                             c = sizeHint;
@@ -653,24 +656,24 @@ public class ConcurrentHashMapV8<K, V>
                     if (tab != null)
                         transfer(tab, nextTab);
                     table = nextTab;
-                    if (tab == null || counter.sum() < threshold) {
-                        tab = nextTab;
+                    if (tab == null || cap >= MAXIMUM_CAPACITY ||
+                        (sizeHint > 0 && cap >= sizeHint) ||
+                        counter.sum() < threshold)
                         break;
-                    }
                 }
             } finally {
                 resizing = 0;
             }
         }
-        else if ((tab = table) == null)
+        else if (table == null)
             Thread.yield(); // lost initialization race; just spin
-        return tab;
+        return table;
     }
 
     /**
-     * Implements putAll and constructor with Map argument. Tries to
-     * first override initial capacity or grow (once) based on map
-     * size to pre-allocate table space.
+     * Implementation for putAll and constructor with Map
+     * argument. Tries to first override initial capacity or grow
+     * based on map size to pre-allocate table space.
      */
     private final void internalPutAll(Map<? extends K, ? extends V> m) {
         int s = m.size();
@@ -685,10 +688,10 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Implements clear. Steps through each bin, removing all nodes.
+     * Implementation for clear. Steps through each bin, removing all nodes.
      */
     private final void internalClear() {
-        long delta = 0L; // negative of number of deletions
+        long deletions = 0L;
         int i = 0;
         Node[] tab = table;
         while (tab != null && i < tab.length) {
@@ -705,17 +708,23 @@ public class ConcurrentHashMapV8<K, V>
                         do {
                             if (e.val != null) {
                                 e.val = null;
-                                --delta;
+                                ++deletions;
                             }
                         } while ((e = e.next) != null);
                         setTabAt(tab, i, null);
                     }
                 }
-                if (validated)
+                if (validated) {
                     ++i;
+                    if (deletions > THRESHOLD_OFFSET) { // bound lag in counts
+                        counter.add(-deletions);
+                        deletions = 0L;
+                    }
+                }
             }
         }
-        counter.add(delta);
+        if (deletions != 0L)
+            counter.add(-deletions);
     }
 
     /**
@@ -962,7 +971,7 @@ public class ConcurrentHashMapV8<K, V>
      * @return {@code true} if this map contains no key-value mappings
      */
     public boolean isEmpty() {
-        return counter.sum() == 0L;
+        return counter.sum() <= 0L; // ignore transient negative values
     }
 
     /**
@@ -974,7 +983,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     public int size() {
         long n = counter.sum();
-        return n >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)n;
+        return n <= 0L? 0 : n >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)n;
     }
 
     /**
@@ -1103,17 +1112,15 @@ public class ConcurrentHashMapV8<K, V>
      *       return map.get(key);
      *   value = mappingFunction.map(key);
      *   if (value != null)
-     *      return map.put(key, value);
-     *   else
-     *      return null;
+     *      map.put(key, value);
+     *   return value;
      * </pre>
      *
      * except that the action is performed atomically.  Some attempted
      * operations on this map by other threads may be blocked while
-     * computation is in progress. Because this function is invoked
-     * within atomicity control, the computation should be short and
-     * simple, and must not attempt to update any other mappings of
-     * this Map. The most common usage is to construct a new object
+     * computation is in progress, so the computation should be short
+     * and simple, and must not attempt to update any other mappings
+     * of this Map. The most common usage is to construct a new object
      * serving as an initial mapped value, or memoized result.
      *
      * @param key key with which the specified value is to be associated
@@ -1129,7 +1136,42 @@ public class ConcurrentHashMapV8<K, V>
     public V computeIfAbsent(K key, MappingFunction<? super K, ? extends V> mappingFunction) {
         if (key == null || mappingFunction == null)
             throw new NullPointerException();
-        return computeVal(key, mappingFunction);
+        return internalCompute(key, mappingFunction, false);
+    }
+
+    /**
+     * Computes the value associated with he given key using the given
+     * mappingFunction, and if non-null, enters it into the map.  This
+     * is equivalent to
+     *
+     * <pre>
+     *   value = mappingFunction.map(key);
+     *   if (value != null)
+     *      map.put(key, value);
+     *   else
+     *      return map.get(key);
+     * </pre>
+     *
+     * except that the action is performed atomically.  Some attempted
+     * operations on this map by other threads may be blocked while
+     * computation is in progress, so the computation should be short
+     * and simple, and must not attempt to update any other mappings
+     * of this Map.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param mappingFunction the function to compute a value
+     * @return the current value associated with
+     *         the specified key, or {@code null} if the computation
+     *         returned {@code null} and the value was not otherwise present.
+     * @throws NullPointerException if the specified key or mappingFunction
+     *         is null,
+     * @throws RuntimeException or Error if the mappingFunction does so,
+     *         in which case the mapping is unchanged.
+     */
+    public V compute(K key, MappingFunction<? super K, ? extends V> mappingFunction) {
+        if (key == null || mappingFunction == null)
+            throw new NullPointerException();
+        return internalCompute(key, mappingFunction, true);
     }
 
     /**
@@ -1277,21 +1319,40 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the hash code value for this {@link Map}, i.e.,
+     * the sum of, for each key-value pair in the map,
+     * {@code key.hashCode() ^ value.hashCode()}.
+     *
+     * @return the hash code value for this map
      */
     public int hashCode() {
         return new HashIterator().mapHashCode();
     }
 
     /**
-     * {@inheritDoc}
+     * Returns a string representation of this map.  The string
+     * representation consists of a list of key-value mappings (in no
+     * particular order) enclosed in braces ("{@code {}}").  Adjacent
+     * mappings are separated by the characters {@code ", "} (comma
+     * and space).  Each key-value mapping is rendered as the key
+     * followed by an equals sign ("{@code =}") followed by the
+     * associated value.
+     *
+     * @return a string representation of this map
      */
     public String toString() {
         return new HashIterator().mapToString();
     }
 
     /**
-     * {@inheritDoc}
+     * Compares the specified object with this map for equality.
+     * Returns {@code true} if the given object is a map with the same
+     * mappings as this map.  This operation may return misleading
+     * results if either map is concurrently modified during execution
+     * of this method.
+     *
+     * @param o object to be compared for equality with this map
+     * @return {@code true} if the specified object is equal to this map
      */
     public boolean equals(Object o) {
         if (o == this)

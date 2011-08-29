@@ -6,7 +6,6 @@
 
 package jsr166e;
 import jsr166e.LongAdder;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.io.Serializable;
@@ -27,18 +26,21 @@ public class LongAdderTable<K> implements Serializable {
     /** Relies on default serialization */
     private static final long serialVersionUID = 7249369246863182397L;
 
-    /** Concurrency parameter for map -- we assume high contention */
-    private static final int MAP_SEGMENTS =
-        Math.max(16, Runtime.getRuntime().availableProcessors());
-
     /** The underlying map */
-    private final ConcurrentHashMap<K, LongAdder> map;
+    private final ConcurrentHashMapV8<K, LongAdder> map;
+
+    static final class CreateAdder 
+        implements ConcurrentHashMapV8.MappingFunction<Object, LongAdder> {
+        public LongAdder map(Object unused) { return new LongAdder(); }
+    }
+
+    private static final CreateAdder createAdder = new CreateAdder();
 
     /**
      * Creates a new empty table.
      */
     public LongAdderTable() {
-        map = new ConcurrentHashMap<K, LongAdder>(16, 0.75f, MAP_SEGMENTS);
+        map = new ConcurrentHashMapV8<K, LongAdder>();
     }
 
     /**
@@ -69,11 +71,8 @@ public class LongAdderTable<K> implements Serializable {
      */
     public void add(K key, long x) {
         LongAdder a = map.get(key);
-        if (a == null) {
-            LongAdder r = new LongAdder();
-            if ((a = map.putIfAbsent(key, r)) == null)
-                a = r;
-        }
+        if (a == null)
+            a = map.computeIfAbsent(key, createAdder);
         a.add(x);
     }
 

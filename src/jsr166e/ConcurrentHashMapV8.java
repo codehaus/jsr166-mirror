@@ -390,7 +390,7 @@ public class ConcurrentHashMapV8<K, V>
                         validated = true;
                         for (Node first = e;;) {
                             Object ek, ev;
-                            if (e.hash == h && 
+                            if (e.hash == h &&
                                 (ek = e.key) != null &&
                                 (ev = e.val) != null &&
                                 (k == ek || k.equals(ek))) {

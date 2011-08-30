@@ -29,7 +29,7 @@ public class LongAdderTable<K> implements Serializable {
     /** The underlying map */
     private final ConcurrentHashMapV8<K, LongAdder> map;
 
-    static final class CreateAdder 
+    static final class CreateAdder
         implements ConcurrentHashMapV8.MappingFunction<Object, LongAdder> {
         public LongAdder map(Object unused) { return new LongAdder(); }
     }

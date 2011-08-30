@@ -339,7 +339,7 @@ public class ConcurrentHashMapV8<K, V>
     /* ---------------- Access and update operations -------------- */
 
     /** Implementation for get and containsKey **/
-   private final Object internalGet(Object k) {
+    private final Object internalGet(Object k) {
         int h = spread(k.hashCode());
         Node[] tab = table;
         retry: while (tab != null) {
@@ -380,7 +380,7 @@ public class ConcurrentHashMapV8<K, V>
             else {
                 boolean validated = false;
                 boolean checkSize = false;
-                synchronized(e) {
+                synchronized (e) {
                     Node first = e;
                     for (;;) {
                         Object ek, ev;
@@ -438,7 +438,7 @@ public class ConcurrentHashMapV8<K, V>
             else {
                 boolean validated = false;
                 boolean deleted = false;
-                synchronized(e) {
+                synchronized (e) {
                     Node pred = null;
                     Node first = e;
                     for (;;) {
@@ -497,7 +497,7 @@ public class ConcurrentHashMapV8<K, V>
                 tab = grow(0);
             else if ((e = tabAt(tab, i = (tab.length - 1) & h)) == null) {
                 Node node = new Node(h, k, null, null);
-                synchronized(node) {
+                synchronized (node) {
                     if (casTabAt(tab, i, null, node)) {
                         validated = true;
                         try {
@@ -517,7 +517,7 @@ public class ConcurrentHashMapV8<K, V>
                 tab = (Node[])e.key;
             else {
                 boolean checkSize = false;
-                synchronized(e) {
+                synchronized (e) {
                     Node first = e;
                     for (;;) {
                         Object ek, ev;
@@ -586,7 +586,7 @@ public class ConcurrentHashMapV8<K, V>
                 }
                 else {
                     boolean validated = false;
-                    synchronized(e) {
+                    synchronized (e) {
                         int idx = e.hash & mask;
                         Node lastRun = e;
                         for (Node p = e.next; p != null; p = p.next) {
@@ -677,7 +677,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     private final void internalPutAll(Map<? extends K, ? extends V> m) {
         int s = m.size();
-        grow((s >= (MAXIMUM_CAPACITY >>> 1))? s : s + (s >>> 1));
+        grow((s >= (MAXIMUM_CAPACITY >>> 1)) ? s : s + (s >>> 1));
         for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
             Object k = e.getKey();
             Object v = e.getValue();
@@ -702,7 +702,7 @@ public class ConcurrentHashMapV8<K, V>
                 tab = (Node[])e.key;
             else {
                 boolean validated = false;
-                synchronized(e) {
+                synchronized (e) {
                     if (tabAt(tab, i) == e) {
                         validated = true;
                         do {
@@ -983,7 +983,9 @@ public class ConcurrentHashMapV8<K, V>
      */
     public int size() {
         long n = counter.sum();
-        return n <= 0L? 0 : n >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)n;
+        return (n <= 0L) ? 0 :
+            (n >= Integer.MAX_VALUE) ? Integer.MAX_VALUE :
+            (int)n;
     }
 
     /**

@@ -146,11 +146,15 @@ public class ConcurrentHashMapV8<K, V>
      * there is no existing node during a put operation, then one can
      * be CAS'ed in (without need for lock except in computeIfAbsent);
      * the CAS serves as validation. This is on average the most
-     * common case for put operations. The expected number of locks
-     * covering different elements (i.e., bins with 2 or more nodes)
-     * is approximately 10% at steady state under default settings.
-     * Lock contention probability for two threads accessing arbitrary
-     * distinct elements is thus less than 1% even for small tables.
+     * common case for put operations -- under random hash codes, the
+     * distribution of nodes in bins follows a Poisson distribution
+     * (see http://en.wikipedia.org/wiki/Poisson_distribution) with a
+     * parameter of 0.5 on average under the default loadFactor of
+     * 0.75.  The expected number of locks covering different elements
+     * (i.e., bins with 2 or more nodes) is approximately 10% at
+     * steady state under default settings.  Lock contention
+     * probability for two threads accessing arbitrary distinct
+     * elements is, roughly, 1 / (8 * #elements).
      *
      * The table is resized when occupancy exceeds a threshold.  Only
      * a single thread performs the resize (using field "resizing", to
@@ -515,6 +519,8 @@ public class ConcurrentHashMapV8<K, V>
             }
             else if (e.hash < 0)
                 tab = (Node[])e.key;
+            else if (Thread.holdsLock(e))
+                throw new IllegalStateException("Recursive map computation");
             else {
                 boolean checkSize = false;
                 synchronized (e) {
@@ -1119,11 +1125,16 @@ public class ConcurrentHashMapV8<K, V>
      * </pre>
      *
      * except that the action is performed atomically.  Some attempted
-     * operations on this map by other threads may be blocked while
-     * computation is in progress, so the computation should be short
-     * and simple, and must not attempt to update any other mappings
-     * of this Map. The most common usage is to construct a new object
-     * serving as an initial mapped value, or memoized result.
+     * update operations on this map by other threads may be blocked
+     * while computation is in progress, so the computation should be
+     * short and simple, and must not attempt to update any other
+     * mappings of this Map. The most appropriate usage is to
+     * construct a new object serving as an initial mapped value, or
+     * memoized result, as in:
+     * <pre>{@code
+     * map.computeIfAbsent(key, new MappingFunction<K, V>() {
+     *   public V map(K k) { return new Value(f(k)); }};
+     * }</pre>
      *
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
@@ -1132,6 +1143,9 @@ public class ConcurrentHashMapV8<K, V>
      *         returned {@code null}.
      * @throws NullPointerException if the specified key or mappingFunction
      *         is null,
+     * @throws IllegalStateException if the computation detectably
+     *         attempts a recursive update to this map that would
+     *         otherwise never complete.
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is left unestablished.
      */
@@ -1142,7 +1156,7 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Computes the value associated with he given key using the given
+     * Computes the value associated with the given key using the given
      * mappingFunction, and if non-null, enters it into the map.  This
      * is equivalent to
      *
@@ -1151,14 +1165,15 @@ public class ConcurrentHashMapV8<K, V>
      *   if (value != null)
      *      map.put(key, value);
      *   else
-     *      return map.get(key);
+     *      value = map.get(key);
+     *   return value;
      * </pre>
      *
      * except that the action is performed atomically.  Some attempted
-     * operations on this map by other threads may be blocked while
-     * computation is in progress, so the computation should be short
-     * and simple, and must not attempt to update any other mappings
-     * of this Map.
+     * update operations on this map by other threads may be blocked
+     * while computation is in progress, so the computation should be
+     * short and simple, and must not attempt to update any other
+     * mappings of this Map.
      *
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
@@ -1167,6 +1182,9 @@ public class ConcurrentHashMapV8<K, V>
      *         returned {@code null} and the value was not otherwise present.
      * @throws NullPointerException if the specified key or mappingFunction
      *         is null,
+     * @throws IllegalStateException if the computation detectably
+     *         attempts a recursive update to this map that would
+     *         otherwise never complete.
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is unchanged.
      */

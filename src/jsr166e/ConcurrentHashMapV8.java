@@ -83,8 +83,8 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * A function computing a mapping from the given key to a value,
-     *  or <code>null</code> if there is no mapping. This is a
-     * place-holder for an upcoming JDK8 interface.
+     * or {@code null} if there is no mapping. This is a place-holder
+     * for an upcoming JDK8 interface.
      */
     public static interface MappingFunction<K, V> {
         /**

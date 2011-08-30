@@ -1187,7 +1187,7 @@ public class ConcurrentHashMapV8<K, V>
     public V remove(Object key) {
         if (key == null)
             throw new NullPointerException();
-	return (V)internalReplace(key, null, null);
+        return (V)internalReplace(key, null, null);
     }
 
     /**
@@ -1211,7 +1211,7 @@ public class ConcurrentHashMapV8<K, V>
     public boolean replace(K key, V oldValue, V newValue) {
         if (key == null || oldValue == null || newValue == null)
             throw new NullPointerException();
-	return internalReplace(key, newValue, oldValue) != null;
+        return internalReplace(key, newValue, oldValue) != null;
     }
 
     /**
@@ -1225,7 +1225,7 @@ public class ConcurrentHashMapV8<K, V>
     public V replace(K key, V value) {
         if (key == null || value == null)
             throw new NullPointerException();
-	return (V)internalReplace(key, value, null);
+        return (V)internalReplace(key, value, null);
     }
 
     /**

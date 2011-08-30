@@ -54,7 +54,7 @@ import java.io.Serializable;
  * <p> Resizing this or any other kind of hash table is a relatively
  * slow operation, so, when possible, it is a good idea to provide
  * estimates of expected table sizes in constructors. Also, for
- * compatability with previous versions of this class, constructors
+ * compatibility with previous versions of this class, constructors
  * may optionally specify an expected {@code concurrencyLevel} as an
  * additional hint for internal sizing.
  *
@@ -192,12 +192,12 @@ public class ConcurrentHashMapV8<K, V>
      * in 8 puts check threshold (and after resizing, many fewer do
      * so). But this approximation has high variance for small table
      * sizes, so we check on any collision for sizes <= 64.  Further,
-     * to increase the probablity that a resize occurs soon enough, we
+     * to increase the probability that a resize occurs soon enough, we
      * offset the threshold (see THRESHOLD_OFFSET) by the expected
      * number of puts between checks. This is currently set to 8, in
      * accord with the default load factor. In practice, this is
      * rarely overridden, and in any case is close enough to other
-     * plausible values not to waste dynamic probablity computation
+     * plausible values not to waste dynamic probability computation
      * for more precision.
      */
 
@@ -234,7 +234,7 @@ public class ConcurrentHashMapV8<K, V>
     static final int DEFAULT_CONCURRENCY_LEVEL = 16;
 
     /**
-     * The count value to offset thesholds to compensate for checking
+     * The count value to offset thresholds to compensate for checking
      * for resizing only when inserting into bins with two or more
      * elements. See above for explanation.
      */
@@ -271,7 +271,7 @@ public class ConcurrentHashMapV8<K, V>
     transient Set<Map.Entry<K,V>> entrySet;
     transient Collection<V> values;
 
-    /** For serialization compatability. Null unless serialized; see below */
+    /** For serialization compatibility. Null unless serialized; see below */
     Segment<K,V>[] segments;
 
     /**
@@ -309,7 +309,7 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /*
-     * Volatile access nethods are used for table elements as well as
+     * Volatile access methods are used for table elements as well as
      * elements of in-progress next table while resizing.  Uses in
      * access and update methods are null checked by callers, and
      * implicitly bounds-checked, relying on the invariants that tab

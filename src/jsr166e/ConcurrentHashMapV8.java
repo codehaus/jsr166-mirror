@@ -139,7 +139,7 @@ public class ConcurrentHashMapV8<K, V>
      * that it is still the first node, and retry if not. (Because new
      * nodes are always appended to lists, once a node is first in a
      * bin, it remains first until deleted or the bin becomes
-     * invalidated.)  However, update operations can and usually do
+     * invalidated.)  However, update operations can and sometimes do
      * still traverse the bin until the point of update, which helps
      * reduce cache misses on retries.  This is a converse of sorts to
      * the lazy locking technique described by Herlihy & Shavit. If
@@ -342,7 +342,7 @@ public class ConcurrentHashMapV8<K, V>
 
     /* ---------------- Access and update operations -------------- */
 
-    /** Implementation for get and containsKey **/
+   /** Implementation for get and containsKey */
     private final Object internalGet(Object k) {
         int h = spread(k.hashCode());
         Node[] tab = table;
@@ -366,7 +366,8 @@ public class ConcurrentHashMapV8<K, V>
         return null;
     }
 
-    /** Implementation for put and putIfAbsent **/
+
+    /** Implementation for put and putIfAbsent */
     private final Object internalPut(Object k, Object v, boolean replace) {
         int h = spread(k.hashCode());
         Object oldVal = null;  // the previous value or null if none
@@ -385,30 +386,26 @@ public class ConcurrentHashMapV8<K, V>
                 boolean validated = false;
                 boolean checkSize = false;
                 synchronized (e) {
-                    Node first = e;
-                    for (;;) {
-                        Object ek, ev;
-                        if ((ev = e.val) == null)
-                            break;
-                        if (e.hash == h && (ek = e.key) != null &&
-                            (k == ek || k.equals(ek))) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                    if (tabAt(tab, i) == e) {
+                        validated = true;
+                        for (Node first = e;;) {
+                            Object ek, ev;
+                            if (e.hash == h && 
+                                (ek = e.key) != null &&
+                                (ev = e.val) != null &&
+                                (k == ek || k.equals(ek))) {
                                 oldVal = ev;
                                 if (replace)
                                     e.val = v;
+                                break;
                             }
-                            break;
-                        }
-                        Node last = e;
-                        if ((e = e.next) == null) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                            Node last = e;
+                            if ((e = e.next) == null) {
                                 last.next = new Node(h, k, v, null);
                                 if (last != first || tab.length <= 64)
                                     checkSize = true;
+                                break;
                             }
-                            break;
                         }
                     }
                 }
@@ -426,9 +423,9 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Covers the four public remove/replace methods: Replaces node
-     * value with v, conditional upon match of cv if non-null.  If
-     * resulting value is null, delete.
+     * Implementation for the four public remove/replace methods:
+     * Replaces node value with v, conditional upon match of cv if
+     * non-null.  If resulting value is null, delete.
      */
     private final Object internalReplace(Object k, Object v, Object cv) {
         int h = spread(k.hashCode());
@@ -443,16 +440,15 @@ public class ConcurrentHashMapV8<K, V>
                 boolean validated = false;
                 boolean deleted = false;
                 synchronized (e) {
-                    Node pred = null;
-                    Node first = e;
-                    for (;;) {
-                        Object ek, ev;
-                        if ((ev = e.val) == null)
-                            break;
-                        if (e.hash == h && (ek = e.key) != null &&
-                            (k == ek || k.equals(ek))) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                    if (tabAt(tab, i) == e) {
+                        validated = true;
+                        Node pred = null;
+                        do {
+                            Object ek, ev;
+                            if (e.hash == h &&
+                                (ek = e.key) != null &&
+                                (ev = e.val) != null &&
+                                (k == ek || k.equals(ek))) {
                                 if (cv == null || cv == ev || cv.equals(ev)) {
                                     oldVal = ev;
                                     if ((e.val = v) == null) {
@@ -464,15 +460,10 @@ public class ConcurrentHashMapV8<K, V>
                                             setTabAt(tab, i, en);
                                     }
                                 }
+                                break;
                             }
-                            break;
-                        }
-                        pred = e;
-                        if ((e = e.next) == null) {
-                            if (tabAt(tab, i) == first)
-                                validated = true;
-                            break;
-                        }
+                            pred = e;
+                        } while ((e = e.next) != null);
                     }
                 }
                 if (validated) {
@@ -493,14 +484,14 @@ public class ConcurrentHashMapV8<K, V>
         int h = spread(k.hashCode());
         V val = null;
         boolean added = false;
-        boolean validated = false;
         Node[] tab = table;
-        do {
+        for(;;) {
             Node e; int i;
             if (tab == null)
                 tab = grow(0);
             else if ((e = tabAt(tab, i = (tab.length - 1) & h)) == null) {
                 Node node = new Node(h, k, null, null);
+                boolean validated = false;
                 synchronized (node) {
                     if (casTabAt(tab, i, null, node)) {
                         validated = true;
@@ -516,49 +507,51 @@ public class ConcurrentHashMapV8<K, V>
                         }
                     }
                 }
+                if (validated)
+                    break;
             }
             else if (e.hash < 0)
                 tab = (Node[])e.key;
             else if (Thread.holdsLock(e))
                 throw new IllegalStateException("Recursive map computation");
             else {
+                boolean validated = false;
                 boolean checkSize = false;
                 synchronized (e) {
-                    Node first = e;
-                    for (;;) {
-                        Object ek, ev;
-                        if ((ev = e.val) == null)
-                            break;
-                        if (e.hash == h && (ek = e.key) != null &&
-                            (k == ek || k.equals(ek))) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
-                                if (replace && (ev = f.map(k)) != null)
-                                    e.val = ev;
+                    if (tabAt(tab, i) == e) {
+                        validated = true;
+                        for (Node first = e;;) {
+                            Object ek, ev, fv;
+                            if (e.hash == h &&
+                                (ek = e.key) != null &&
+                                (ev = e.val) != null &&
+                                (k == ek || k.equals(ek))) {
+                                if (replace && (fv = f.map(k)) != null)
+                                    ev = e.val = fv;
                                 val = (V)ev;
+                                break;
                             }
-                            break;
-                        }
-                        Node last = e;
-                        if ((e = e.next) == null) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                            Node last = e;
+                            if ((e = e.next) == null) {
                                 if ((val = f.map(k)) != null) {
                                     last.next = new Node(h, k, val, null);
                                     added = true;
                                     if (last != first || tab.length <= 64)
                                         checkSize = true;
                                 }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
-                if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                    resizing == 0 && counter.sum() >= threshold)
-                    grow(0);
+                if (validated) {
+                    if (checkSize && tab.length < MAXIMUM_CAPACITY &&
+                        resizing == 0 && counter.sum() >= threshold)
+                        grow(0);
+                    break;
+                }
             }
-        } while (!validated);
+        }
         if (added)
             counter.increment();
         return val;
@@ -591,19 +584,19 @@ public class ConcurrentHashMapV8<K, V>
                         break;
                 }
                 else {
+                    int idx = e.hash & mask;
                     boolean validated = false;
                     synchronized (e) {
-                        int idx = e.hash & mask;
-                        Node lastRun = e;
-                        for (Node p = e.next; p != null; p = p.next) {
-                            int j = p.hash & mask;
-                            if (j != idx) {
-                                idx = j;
-                                lastRun = p;
-                            }
-                        }
                         if (tabAt(tab, i) == e) {
                             validated = true;
+                            Node lastRun = e;
+                            for (Node p = e.next; p != null; p = p.next) {
+                                int j = p.hash & mask;
+                                if (j != idx) {
+                                    idx = j;
+                                    lastRun = p;
+                                }
+                            }
                             relaxedSetTabAt(nextTab, idx, lastRun);
                             for (Node p = e; p != lastRun; p = p.next) {
                                 int h = p.hash;
@@ -663,8 +656,8 @@ public class ConcurrentHashMapV8<K, V>
                         transfer(tab, nextTab);
                     table = nextTab;
                     if (tab == null || cap >= MAXIMUM_CAPACITY ||
-                        (sizeHint > 0 && cap >= sizeHint) ||
-                        counter.sum() < threshold)
+                        ((sizeHint > 0) ? cap >= sizeHint :
+                         counter.sum() < threshold))
                         break;
                 }
             } finally {

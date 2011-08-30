@@ -485,7 +485,7 @@ public class ConcurrentHashMapV8<K, V>
         V val = null;
         boolean added = false;
         Node[] tab = table;
-        for(;;) {
+        for (;;) {
             Node e; int i;
             if (tab == null)
                 tab = grow(0);

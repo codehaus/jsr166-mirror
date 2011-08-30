@@ -217,7 +217,7 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * The default initial table capacity.  Must be a power of 2, at
-     * least MINIMUM_CAPACITY and at most MAXIMUM_CAPACITY
+     * least MINIMUM_CAPACITY and at most MAXIMUM_CAPACITY.
      */
     static final int DEFAULT_CAPACITY = 16;
 
@@ -909,7 +909,7 @@ public class ConcurrentHashMapV8<K, V>
      * nonpositive.
      */
     public ConcurrentHashMapV8(int initialCapacity,
-                             float loadFactor, int concurrencyLevel) {
+                               float loadFactor, int concurrencyLevel) {
         if (!(loadFactor > 0) || initialCapacity < 0 || concurrencyLevel <= 0)
             throw new IllegalArgumentException();
         this.initCap = initialCapacity;
@@ -1550,8 +1550,7 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Reconstitutes the  instance from a
-     * stream (i.e., deserializes it).
+     * Reconstitutes the instance from a stream (that is, deserializes it).
      * @param s the stream
      */
     @SuppressWarnings("unchecked")

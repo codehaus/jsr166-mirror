@@ -989,9 +989,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     public int size() {
         long n = counter.sum();
-        return (n <= 0L) ? 0 :
-            (n >= Integer.MAX_VALUE) ? Integer.MAX_VALUE :
-            (int)n;
+        return ((n >>> 31) == 0) ? (int)n : (n < 0L) ? 0 : Integer.MAX_VALUE;
     }
 
     /**

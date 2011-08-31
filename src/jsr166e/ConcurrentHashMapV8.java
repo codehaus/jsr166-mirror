@@ -1105,15 +1105,13 @@ public class ConcurrentHashMapV8<K, V>
      * If the specified key is not already associated with a value,
      * computes its value using the given mappingFunction, and if
      * non-null, enters it into the map.  This is equivalent to
-     *
-     * <pre>
-     *   if (map.containsKey(key))
-     *       return map.get(key);
-     *   value = mappingFunction.map(key);
-     *   if (value != null)
-     *      map.put(key, value);
-     *   return value;
-     * </pre>
+     *  <pre> {@code
+     * if (map.containsKey(key))
+     *   return map.get(key);
+     * value = mappingFunction.map(key);
+     * if (value != null)
+     *   map.put(key, value);
+     * return value;}</pre>
      *
      * except that the action is performed atomically.  Some attempted
      * update operations on this map by other threads may be blocked
@@ -1122,10 +1120,9 @@ public class ConcurrentHashMapV8<K, V>
      * mappings of this Map. The most appropriate usage is to
      * construct a new object serving as an initial mapped value, or
      * memoized result, as in:
-     * <pre>{@code
+     *  <pre> {@code
      * map.computeIfAbsent(key, new MappingFunction<K, V>() {
-     *   public V map(K k) { return new Value(f(k)); }};
-     * }</pre>
+     *   public V map(K k) { return new Value(f(k)); }});}</pre>
      *
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
@@ -1150,15 +1147,13 @@ public class ConcurrentHashMapV8<K, V>
      * Computes the value associated with the given key using the given
      * mappingFunction, and if non-null, enters it into the map.  This
      * is equivalent to
-     *
-     * <pre>
-     *   value = mappingFunction.map(key);
-     *   if (value != null)
-     *      map.put(key, value);
-     *   else
-     *      value = map.get(key);
-     *   return value;
-     * </pre>
+     *  <pre> {@code
+     * value = mappingFunction.map(key);
+     * if (value != null)
+     *   map.put(key, value);
+     * else
+     *   value = map.get(key);
+     * return value;}</pre>
      *
      * except that the action is performed atomically.  Some attempted
      * update operations on this map by other threads may be blocked

@@ -54,7 +54,7 @@ import java.io.Serializable;
  * <p> Resizing this or any other kind of hash table is a relatively
  * slow operation, so, when possible, it is a good idea to provide
  * estimates of expected table sizes in constructors. Also, for
- * compatability with previous versions of this class, constructors
+ * compatibility with previous versions of this class, constructors
  * may optionally specify an expected {@code concurrencyLevel} as an
  * additional hint for internal sizing.
  *
@@ -83,8 +83,8 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * A function computing a mapping from the given key to a value,
-     *  or <code>null</code> if there is no mapping. This is a
-     * place-holder for an upcoming JDK8 interface.
+     * or {@code null} if there is no mapping. This is a place-holder
+     * for an upcoming JDK8 interface.
      */
     public static interface MappingFunction<K, V> {
         /**
@@ -139,18 +139,22 @@ public class ConcurrentHashMapV8<K, V>
      * that it is still the first node, and retry if not. (Because new
      * nodes are always appended to lists, once a node is first in a
      * bin, it remains first until deleted or the bin becomes
-     * invalidated.)  However, update operations can and usually do
+     * invalidated.)  However, update operations can and sometimes do
      * still traverse the bin until the point of update, which helps
      * reduce cache misses on retries.  This is a converse of sorts to
      * the lazy locking technique described by Herlihy & Shavit. If
      * there is no existing node during a put operation, then one can
      * be CAS'ed in (without need for lock except in computeIfAbsent);
      * the CAS serves as validation. This is on average the most
-     * common case for put operations. The expected number of locks
-     * covering different elements (i.e., bins with 2 or more nodes)
-     * is approximately 10% at steady state under default settings.
-     * Lock contention probability for two threads accessing arbitrary
-     * distinct elements is thus less than 1% even for small tables.
+     * common case for put operations -- under random hash codes, the
+     * distribution of nodes in bins follows a Poisson distribution
+     * (see http://en.wikipedia.org/wiki/Poisson_distribution) with a
+     * parameter of 0.5 on average under the default loadFactor of
+     * 0.75.  The expected number of locks covering different elements
+     * (i.e., bins with 2 or more nodes) is approximately 10% at
+     * steady state under default settings.  Lock contention
+     * probability for two threads accessing arbitrary distinct
+     * elements is, roughly, 1 / (8 * #elements).
      *
      * The table is resized when occupancy exceeds a threshold.  Only
      * a single thread performs the resize (using field "resizing", to
@@ -188,12 +192,12 @@ public class ConcurrentHashMapV8<K, V>
      * in 8 puts check threshold (and after resizing, many fewer do
      * so). But this approximation has high variance for small table
      * sizes, so we check on any collision for sizes <= 64.  Further,
-     * to increase the probablity that a resize occurs soon enough, we
+     * to increase the probability that a resize occurs soon enough, we
      * offset the threshold (see THRESHOLD_OFFSET) by the expected
      * number of puts between checks. This is currently set to 8, in
      * accord with the default load factor. In practice, this is
      * rarely overridden, and in any case is close enough to other
-     * plausible values not to waste dynamic probablity computation
+     * plausible values not to waste dynamic probability computation
      * for more precision.
      */
 
@@ -213,7 +217,7 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * The default initial table capacity.  Must be a power of 2, at
-     * least MINIMUM_CAPACITY and at most MAXIMUM_CAPACITY
+     * least MINIMUM_CAPACITY and at most MAXIMUM_CAPACITY.
      */
     static final int DEFAULT_CAPACITY = 16;
 
@@ -230,7 +234,7 @@ public class ConcurrentHashMapV8<K, V>
     static final int DEFAULT_CONCURRENCY_LEVEL = 16;
 
     /**
-     * The count value to offset thesholds to compensate for checking
+     * The count value to offset thresholds to compensate for checking
      * for resizing only when inserting into bins with two or more
      * elements. See above for explanation.
      */
@@ -267,7 +271,7 @@ public class ConcurrentHashMapV8<K, V>
     transient Set<Map.Entry<K,V>> entrySet;
     transient Collection<V> values;
 
-    /** For serialization compatability. Null unless serialized; see below */
+    /** For serialization compatibility. Null unless serialized; see below */
     Segment<K,V>[] segments;
 
     /**
@@ -305,7 +309,7 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /*
-     * Volatile access nethods are used for table elements as well as
+     * Volatile access methods are used for table elements as well as
      * elements of in-progress next table while resizing.  Uses in
      * access and update methods are null checked by callers, and
      * implicitly bounds-checked, relying on the invariants that tab
@@ -338,7 +342,7 @@ public class ConcurrentHashMapV8<K, V>
 
     /* ---------------- Access and update operations -------------- */
 
-    /** Implementation for get and containsKey **/
+   /** Implementation for get and containsKey */
     private final Object internalGet(Object k) {
         int h = spread(k.hashCode());
         Node[] tab = table;
@@ -362,7 +366,8 @@ public class ConcurrentHashMapV8<K, V>
         return null;
     }
 
-    /** Implementation for put and putIfAbsent **/
+
+    /** Implementation for put and putIfAbsent */
     private final Object internalPut(Object k, Object v, boolean replace) {
         int h = spread(k.hashCode());
         Object oldVal = null;  // the previous value or null if none
@@ -381,30 +386,26 @@ public class ConcurrentHashMapV8<K, V>
                 boolean validated = false;
                 boolean checkSize = false;
                 synchronized (e) {
-                    Node first = e;
-                    for (;;) {
-                        Object ek, ev;
-                        if ((ev = e.val) == null)
-                            break;
-                        if (e.hash == h && (ek = e.key) != null &&
-                            (k == ek || k.equals(ek))) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                    if (tabAt(tab, i) == e) {
+                        validated = true;
+                        for (Node first = e;;) {
+                            Object ek, ev;
+                            if (e.hash == h &&
+                                (ek = e.key) != null &&
+                                (ev = e.val) != null &&
+                                (k == ek || k.equals(ek))) {
                                 oldVal = ev;
                                 if (replace)
                                     e.val = v;
+                                break;
                             }
-                            break;
-                        }
-                        Node last = e;
-                        if ((e = e.next) == null) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                            Node last = e;
+                            if ((e = e.next) == null) {
                                 last.next = new Node(h, k, v, null);
                                 if (last != first || tab.length <= 64)
                                     checkSize = true;
+                                break;
                             }
-                            break;
                         }
                     }
                 }
@@ -422,9 +423,9 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Covers the four public remove/replace methods: Replaces node
-     * value with v, conditional upon match of cv if non-null.  If
-     * resulting value is null, delete.
+     * Implementation for the four public remove/replace methods:
+     * Replaces node value with v, conditional upon match of cv if
+     * non-null.  If resulting value is null, delete.
      */
     private final Object internalReplace(Object k, Object v, Object cv) {
         int h = spread(k.hashCode());
@@ -439,16 +440,15 @@ public class ConcurrentHashMapV8<K, V>
                 boolean validated = false;
                 boolean deleted = false;
                 synchronized (e) {
-                    Node pred = null;
-                    Node first = e;
-                    for (;;) {
-                        Object ek, ev;
-                        if ((ev = e.val) == null)
-                            break;
-                        if (e.hash == h && (ek = e.key) != null &&
-                            (k == ek || k.equals(ek))) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                    if (tabAt(tab, i) == e) {
+                        validated = true;
+                        Node pred = null;
+                        do {
+                            Object ek, ev;
+                            if (e.hash == h &&
+                                (ek = e.key) != null &&
+                                (ev = e.val) != null &&
+                                (k == ek || k.equals(ek))) {
                                 if (cv == null || cv == ev || cv.equals(ev)) {
                                     oldVal = ev;
                                     if ((e.val = v) == null) {
@@ -460,15 +460,10 @@ public class ConcurrentHashMapV8<K, V>
                                             setTabAt(tab, i, en);
                                     }
                                 }
+                                break;
                             }
-                            break;
-                        }
-                        pred = e;
-                        if ((e = e.next) == null) {
-                            if (tabAt(tab, i) == first)
-                                validated = true;
-                            break;
-                        }
+                            pred = e;
+                        } while ((e = e.next) != null);
                     }
                 }
                 if (validated) {
@@ -489,14 +484,14 @@ public class ConcurrentHashMapV8<K, V>
         int h = spread(k.hashCode());
         V val = null;
         boolean added = false;
-        boolean validated = false;
         Node[] tab = table;
-        do {
+        for (;;) {
             Node e; int i;
             if (tab == null)
                 tab = grow(0);
             else if ((e = tabAt(tab, i = (tab.length - 1) & h)) == null) {
                 Node node = new Node(h, k, null, null);
+                boolean validated = false;
                 synchronized (node) {
                     if (casTabAt(tab, i, null, node)) {
                         validated = true;
@@ -512,47 +507,51 @@ public class ConcurrentHashMapV8<K, V>
                         }
                     }
                 }
+                if (validated)
+                    break;
             }
             else if (e.hash < 0)
                 tab = (Node[])e.key;
+            else if (Thread.holdsLock(e))
+                throw new IllegalStateException("Recursive map computation");
             else {
+                boolean validated = false;
                 boolean checkSize = false;
                 synchronized (e) {
-                    Node first = e;
-                    for (;;) {
-                        Object ek, ev;
-                        if ((ev = e.val) == null)
-                            break;
-                        if (e.hash == h && (ek = e.key) != null &&
-                            (k == ek || k.equals(ek))) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
-                                if (replace && (ev = f.map(k)) != null)
-                                    e.val = ev;
+                    if (tabAt(tab, i) == e) {
+                        validated = true;
+                        for (Node first = e;;) {
+                            Object ek, ev, fv;
+                            if (e.hash == h &&
+                                (ek = e.key) != null &&
+                                (ev = e.val) != null &&
+                                (k == ek || k.equals(ek))) {
+                                if (replace && (fv = f.map(k)) != null)
+                                    ev = e.val = fv;
                                 val = (V)ev;
+                                break;
                             }
-                            break;
-                        }
-                        Node last = e;
-                        if ((e = e.next) == null) {
-                            if (tabAt(tab, i) == first) {
-                                validated = true;
+                            Node last = e;
+                            if ((e = e.next) == null) {
                                 if ((val = f.map(k)) != null) {
                                     last.next = new Node(h, k, val, null);
                                     added = true;
                                     if (last != first || tab.length <= 64)
                                         checkSize = true;
                                 }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
-                if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                    resizing == 0 && counter.sum() >= threshold)
-                    grow(0);
+                if (validated) {
+                    if (checkSize && tab.length < MAXIMUM_CAPACITY &&
+                        resizing == 0 && counter.sum() >= threshold)
+                        grow(0);
+                    break;
+                }
             }
-        } while (!validated);
+        }
         if (added)
             counter.increment();
         return val;
@@ -585,19 +584,19 @@ public class ConcurrentHashMapV8<K, V>
                         break;
                 }
                 else {
+                    int idx = e.hash & mask;
                     boolean validated = false;
                     synchronized (e) {
-                        int idx = e.hash & mask;
-                        Node lastRun = e;
-                        for (Node p = e.next; p != null; p = p.next) {
-                            int j = p.hash & mask;
-                            if (j != idx) {
-                                idx = j;
-                                lastRun = p;
-                            }
-                        }
                         if (tabAt(tab, i) == e) {
                             validated = true;
+                            Node lastRun = e;
+                            for (Node p = e.next; p != null; p = p.next) {
+                                int j = p.hash & mask;
+                                if (j != idx) {
+                                    idx = j;
+                                    lastRun = p;
+                                }
+                            }
                             relaxedSetTabAt(nextTab, idx, lastRun);
                             for (Node p = e; p != lastRun; p = p.next) {
                                 int h = p.hash;
@@ -657,8 +656,8 @@ public class ConcurrentHashMapV8<K, V>
                         transfer(tab, nextTab);
                     table = nextTab;
                     if (tab == null || cap >= MAXIMUM_CAPACITY ||
-                        (sizeHint > 0 && cap >= sizeHint) ||
-                        counter.sum() < threshold)
+                        ((sizeHint > 0) ? cap >= sizeHint :
+                         counter.sum() < threshold))
                         break;
                 }
             } finally {
@@ -903,7 +902,7 @@ public class ConcurrentHashMapV8<K, V>
      * nonpositive.
      */
     public ConcurrentHashMapV8(int initialCapacity,
-                             float loadFactor, int concurrencyLevel) {
+                               float loadFactor, int concurrencyLevel) {
         if (!(loadFactor > 0) || initialCapacity < 0 || concurrencyLevel <= 0)
             throw new IllegalArgumentException();
         this.initCap = initialCapacity;
@@ -983,9 +982,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     public int size() {
         long n = counter.sum();
-        return (n <= 0L) ? 0 :
-            (n >= Integer.MAX_VALUE) ? Integer.MAX_VALUE :
-            (int)n;
+        return ((n >>> 31) == 0) ? (int)n : (n < 0L) ? 0 : Integer.MAX_VALUE;
     }
 
     /**
@@ -1108,22 +1105,24 @@ public class ConcurrentHashMapV8<K, V>
      * If the specified key is not already associated with a value,
      * computes its value using the given mappingFunction, and if
      * non-null, enters it into the map.  This is equivalent to
-     *
-     * <pre>
-     *   if (map.containsKey(key))
-     *       return map.get(key);
-     *   value = mappingFunction.map(key);
-     *   if (value != null)
-     *      map.put(key, value);
-     *   return value;
-     * </pre>
+     *  <pre> {@code
+     * if (map.containsKey(key))
+     *   return map.get(key);
+     * value = mappingFunction.map(key);
+     * if (value != null)
+     *   map.put(key, value);
+     * return value;}</pre>
      *
      * except that the action is performed atomically.  Some attempted
-     * operations on this map by other threads may be blocked while
-     * computation is in progress, so the computation should be short
-     * and simple, and must not attempt to update any other mappings
-     * of this Map. The most common usage is to construct a new object
-     * serving as an initial mapped value, or memoized result.
+     * update operations on this map by other threads may be blocked
+     * while computation is in progress, so the computation should be
+     * short and simple, and must not attempt to update any other
+     * mappings of this Map. The most appropriate usage is to
+     * construct a new object serving as an initial mapped value, or
+     * memoized result, as in:
+     *  <pre> {@code
+     * map.computeIfAbsent(key, new MappingFunction<K, V>() {
+     *   public V map(K k) { return new Value(f(k)); }});}</pre>
      *
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
@@ -1132,6 +1131,9 @@ public class ConcurrentHashMapV8<K, V>
      *         returned {@code null}.
      * @throws NullPointerException if the specified key or mappingFunction
      *         is null,
+     * @throws IllegalStateException if the computation detectably
+     *         attempts a recursive update to this map that would
+     *         otherwise never complete.
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is left unestablished.
      */
@@ -1142,23 +1144,22 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Computes the value associated with he given key using the given
+     * Computes the value associated with the given key using the given
      * mappingFunction, and if non-null, enters it into the map.  This
      * is equivalent to
-     *
-     * <pre>
-     *   value = mappingFunction.map(key);
-     *   if (value != null)
-     *      map.put(key, value);
-     *   else
-     *      return map.get(key);
-     * </pre>
+     *  <pre> {@code
+     * value = mappingFunction.map(key);
+     * if (value != null)
+     *   map.put(key, value);
+     * else
+     *   value = map.get(key);
+     * return value;}</pre>
      *
      * except that the action is performed atomically.  Some attempted
-     * operations on this map by other threads may be blocked while
-     * computation is in progress, so the computation should be short
-     * and simple, and must not attempt to update any other mappings
-     * of this Map.
+     * update operations on this map by other threads may be blocked
+     * while computation is in progress, so the computation should be
+     * short and simple, and must not attempt to update any other
+     * mappings of this Map.
      *
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
@@ -1167,6 +1168,9 @@ public class ConcurrentHashMapV8<K, V>
      *         returned {@code null} and the value was not otherwise present.
      * @throws NullPointerException if the specified key or mappingFunction
      *         is null,
+     * @throws IllegalStateException if the computation detectably
+     *         attempts a recursive update to this map that would
+     *         otherwise never complete.
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is unchanged.
      */
@@ -1534,8 +1538,7 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Reconstitutes the  instance from a
-     * stream (i.e., deserializes it).
+     * Reconstitutes the instance from a stream (that is, deserializes it).
      * @param s the stream
      */
     @SuppressWarnings("unchecked")

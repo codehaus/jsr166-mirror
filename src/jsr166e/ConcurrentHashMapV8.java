@@ -49,14 +49,27 @@ import java.io.Serializable;
  * are typically useful only when a map is not undergoing concurrent
  * updates in other threads.  Otherwise the results of these methods
  * reflect transient states that may be adequate for monitoring
- * purposes, but not for program control.
+ * or estimation purposes, but not for program control.
  *
- * <p> Resizing this or any other kind of hash table is a relatively
- * slow operation, so, when possible, it is a good idea to provide
- * estimates of expected table sizes in constructors. Also, for
- * compatibility with previous versions of this class, constructors
- * may optionally specify an expected {@code concurrencyLevel} as an
- * additional hint for internal sizing.
+ * <p> The table is dynamically expanded when there are too many
+ * collisions (i.e., keys that have distinct hash codes but fall into
+ * the same slot modulo the table size), with the expected average
+ * effect of maintaining roughly two bins per mapping. There may be
+ * much variance around this average as mappings are added and
+ * removed, but overall, this maintains a commonly accepted time/space
+ * tradeoff for hash tables.  However, resizing this or any other kind
+ * of hash table may be a relatively slow operation. When possible, it
+ * is a good idea to provide a size estimate as an optional {@code
+ * initialCapacity} constructor argument. An additional optional
+ * {@code loadFactor} constructor argument provides a further means of
+ * customizing initial table capacity by specifying the table density
+ * to be used in calculating the amount of space to allocate for the
+ * given number of elements.  Also, for compatibility with previous
+ * versions of this class, constructors may optionally specify an
+ * expected {@code concurrencyLevel} as an additional hint for
+ * internal sizing.  Note that using many keys with exactly the same
+ * {@code hashCode{}} is a sure way to slow down performance of any
+ * hash table.
  *
  * <p>This class and its views and iterators implement all of the
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
@@ -156,14 +169,23 @@ public class ConcurrentHashMapV8<K, V>
      * of alternatives: Under random hash codes, the frequency of
      * nodes in bins follows a Poisson distribution
      * (http://en.wikipedia.org/wiki/Poisson_distribution) with a
-     * parameter of 0.5 on average under the default loadFactor of
-     * 0.75. The expected number of locks covering different elements
-     * (i.e., bins with 2 or more nodes) is approximately 10% at
-     * steady state.  Lock contention probability for two threads
-     * accessing distinct elements is roughly 1 / (8 * #elements).
-     * Function "spread" performs hashCode randomization that improves
-     * the likelihood that these assumptions hold unless users define
-     * exactly the same value for too many hashCodes.
+     * parameter of about 0.5 on average, given the resizing threshold
+     * of 0.75, although with a large variance because of resizing
+     * granularity. Ignoring variance, the expected occurrences of
+     * list size k are (exp(-0.5) * pow(0.5, k) / factorial(k)). The
+     * first few values are:
+     *
+     * 0:    0.607
+     * 1:    0.303
+     * 2:    0.076
+     * 3:    0.012
+     * more: 0.002
+     *
+     * Lock contention probability for two threads accessing distinct
+     * elements is roughly 1 / (8 * #elements).  Function "spread"
+     * performs hashCode randomization that improves the likelihood
+     * that these assumptions hold unless users define exactly the
+     * same value for too many hashCodes.
      *
      * The table is resized when occupancy exceeds a threshold.  Only
      * a single thread performs the resize (using field "resizing", to
@@ -197,26 +219,24 @@ public class ConcurrentHashMapV8<K, V>
      * and also avoids resizings when the first operation is from a
      * putAll, constructor with map argument, or deserialization.
      * These cases attempt to override the targetCapacity used in
-     * growTable (which may harmlessly fail to take effect in cases of
-     * races with other ongoing resizings).
+     * growTable. These harmlessly fail to take effect in cases of
+     * races with other ongoing resizings. Uses of the threshold and
+     * targetCapacity during attempted initializations or resizings
+     * are racy but fall back on checks to preserve correctness.
      *
      * The element count is maintained using a LongAdder, which avoids
      * contention on updates but can encounter cache thrashing if read
      * too frequently during concurrent access. To avoid reading so
      * often, resizing is normally attempted only upon adding to a bin
-     * already holding two or more nodes. Under the default load
-     * factor and uniform hash distributions, the probability of this
-     * occurring at threshold is around 13%, meaning that only about 1
-     * in 8 puts check threshold (and after resizing, many fewer do
-     * so). But this approximation has high variance for small table
-     * sizes, so we check on any collision for sizes <= 64.  Further,
-     * to increase the probability that a resize occurs soon enough,
-     * we offset the threshold (see THRESHOLD_OFFSET) by the expected
-     * number of puts between checks. This is currently set to 8, in
-     * accord with the default load factor. In practice, this default
-     * is rarely overridden, and in any case is close enough to other
-     * plausible values not to waste dynamic probability computation
-     * for the sake of more precision.
+     * already holding two or more nodes. Under uniform hash
+     * distributions, the probability of this occurring at threshold
+     * is around 13%, meaning that only about 1 in 8 puts check
+     * threshold (and after resizing, many fewer do so). But this
+     * approximation has high variance for small table sizes, so we
+     * check on any collision for sizes <= 64.  Further, to increase
+     * the probability that a resize occurs soon enough, we offset the
+     * threshold (see THRESHOLD_OFFSET) by the expected number of puts
+     * between checks.
      *
      * Maintaining API and serialization compatibility with previous
      * versions of this class introduces several oddities. Mainly: We
@@ -228,8 +248,9 @@ public class ConcurrentHashMapV8<K, V>
     /* ---------------- Constants -------------- */
 
     /**
-     * The largest allowed table capacity.  Must be a power of 2, at
-     * most 1<<30 to stay within Java array size limits.
+     * The largest possible table capacity.  This value must be
+     * exactly 1<<30 to stay within Java array allocation and indexing
+     * bounds for power of two table sizes.
      */
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 
@@ -240,16 +261,13 @@ public class ConcurrentHashMapV8<K, V>
     private static final int DEFAULT_CAPACITY = 16;
 
     /**
-     * The default load factor for this table, used when not otherwise
-     * specified in a constructor.
+     * The load factor for this table. Overrides of this value in
+     * constructors affect only the initial table capacity.  The
+     * actual floating point value isn't normally used, because it is
+     * simpler to rely on the expression {@code n - (n >>> 2)} for the
+     * associated resizing threshold.
      */
-    private static final float DEFAULT_LOAD_FACTOR = 0.75f;
-
-    /**
-     * The default concurrency level for this table. Unused, but
-     * defined for compatibility with previous versions of this class.
-     */
-    private static final int DEFAULT_CONCURRENCY_LEVEL = 16;
+    private static final float LOAD_FACTOR = 0.75f;
 
     /**
      * The count value to offset thresholds to compensate for checking
@@ -257,6 +275,13 @@ public class ConcurrentHashMapV8<K, V>
      * or more elements. See above for explanation.
      */
     private static final int THRESHOLD_OFFSET = 8;
+
+    /**
+     * The default concurrency level for this table. Unused except as
+     * a sizing hint, but defined for compatibility with previous
+     * versions of this class.
+     */
+    private static final int DEFAULT_CONCURRENCY_LEVEL = 16;
 
     /* ---------------- Nodes -------------- */
 
@@ -305,8 +330,6 @@ public class ConcurrentHashMapV8<K, V>
     private transient int threshold;
     /** The target capacity; volatile to cover initialization races. */
     private transient volatile int targetCapacity;
-    /** The target load factor for the table */
-    private transient final float loadFactor;
 
     // views
     private transient KeySet<K,V> keySet;
@@ -373,16 +396,16 @@ public class ConcurrentHashMapV8<K, V>
             try {
                 for (;;) {
                     Node[] tab = table;
-                    int n, c;
+                    int n, c, m;
                     if (tab == null)
                         n = (c = targetCapacity) > 0 ? c : DEFAULT_CAPACITY;
-                    else if ((n = tab.length) < MAXIMUM_CAPACITY &&
-                             counter.sum() >= threshold)
-                        n <<= 1;
+                    else if ((m = tab.length) < MAXIMUM_CAPACITY &&
+                             counter.sum() >= (long)threshold)
+                        n = m << 1;
                     else
                         break;
+                    threshold = n - (n >>> 2) - THRESHOLD_OFFSET;
                     Node[] nextTab = new Node[n];
-                    threshold = (int)(n * loadFactor) - THRESHOLD_OFFSET;
                     if (tab != null)
                         transfer(tab, nextTab,
                                  new Node(SIGN_BIT, nextTab, null, null));
@@ -405,11 +428,11 @@ public class ConcurrentHashMapV8<K, V>
      * either stay at same index, or move with a power of two
      * offset. We eliminate unnecessary node creation by catching
      * cases where old nodes can be reused because their next fields
-     * won't change.  Statistically, at the default loadFactor, only
-     * about one-sixth of them need cloning when a table doubles. The
-     * nodes they replace will be garbage collectable as soon as they
-     * are no longer referenced by any reader thread that may be in
-     * the midst of concurrently traversing table.
+     * won't change.  Statistically, only about one-sixth of them need
+     * cloning when a table doubles. The nodes they replace will be
+     * garbage collectable as soon as they are no longer referenced by
+     * any reader thread that may be in the midst of concurrently
+     * traversing table.
      *
      * Transfers are done from the bottom up to preserve iterator
      * traversability. On each step, the old bin is locked,
@@ -547,7 +570,7 @@ public class ConcurrentHashMapV8<K, V>
                 }
                 if (validated) {
                     if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                        resizing == 0 && counter.sum() >= threshold)
+                        resizing == 0 && counter.sum() >= (long)threshold)
                         growTable();
                     break;
                 }
@@ -686,7 +709,7 @@ public class ConcurrentHashMapV8<K, V>
                 }
                 if (validated) {
                     if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                        resizing == 0 && counter.sum() >= threshold)
+                        resizing == 0 && counter.sum() >= (long)threshold)
                         growTable();
                     break;
                 }
@@ -828,14 +851,74 @@ public class ConcurrentHashMapV8<K, V>
     /* ---------------- Public operations -------------- */
 
     /**
-     * Creates a new, empty map with the specified initial
-     * capacity, load factor and concurrency level.
+     * Creates a new, empty map with the default initial table size (16),
+     */
+    public ConcurrentHashMapV8() {
+        this.counter = new LongAdder();
+        this.targetCapacity = DEFAULT_CAPACITY;
+    }
+
+    /**
+     * Creates a new, empty map with an initial table size
+     * accommodating the specified number of elements without the need
+     * to dynamically resize.
+     *
+     * @param initialCapacity The implementation performs internal
+     * sizing to accommodate this many elements.
+     * @throws IllegalArgumentException if the initial capacity of
+     * elements is negative.
+     */
+    public ConcurrentHashMapV8(int initialCapacity) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException();
+        int cap = ((initialCapacity >= (MAXIMUM_CAPACITY >>> 1)) ?
+                   MAXIMUM_CAPACITY :
+                   tableSizeFor(initialCapacity + (initialCapacity >>> 1) + 1));
+        this.counter = new LongAdder();
+        this.targetCapacity = cap;
+    }
+
+    /**
+     * Creates a new map with the same mappings as the given map.
+     *
+     * @param m the map
+     */
+    public ConcurrentHashMapV8(Map<? extends K, ? extends V> m) {
+        this.counter = new LongAdder();
+        this.targetCapacity = DEFAULT_CAPACITY;
+        putAll(m);
+    }
+
+    /**
+     * Creates a new, empty map with an initial table size based on
+     * the given number of elements ({@code initialCapacity}) and
+     * initial table density ({@code loadFactor}).
      *
      * @param initialCapacity the initial capacity. The implementation
-     * performs internal sizing to accommodate this many elements.
-     * @param loadFactor  the load factor threshold, used to control resizing.
-     * Resizing may be performed when the average number of elements per
-     * bin exceeds this threshold.
+     * performs internal sizing to accommodate this many elements,
+     * given the specified load factor.
+     * @param loadFactor the load factor (table density) for
+     * establishing the initial table size.
+     * @throws IllegalArgumentException if the initial capacity of
+     * elements is negative or the load factor is nonpositive
+     *
+     * @since 1.6
+     */
+    public ConcurrentHashMapV8(int initialCapacity, float loadFactor) {
+        this(initialCapacity, loadFactor, 1);
+    }
+
+    /**
+     * Creates a new, empty map with an initial table size based on
+     * the given number of elements ({@code initialCapacity}), table
+     * density ({@code loadFactor}), and number of concurrently
+     * updating threads ({@code concurrencyLevel}).
+     *
+     * @param initialCapacity the initial capacity. The implementation
+     * performs internal sizing to accommodate this many elements,
+     * given the specified load factor.
+     * @param loadFactor the load factor (table density) for
+     * establishing the initial table size.
      * @param concurrencyLevel the estimated number of concurrently
      * updating threads. The implementation may use this value as
      * a sizing hint.
@@ -847,62 +930,13 @@ public class ConcurrentHashMapV8<K, V>
                                float loadFactor, int concurrencyLevel) {
         if (!(loadFactor > 0.0f) || initialCapacity < 0 || concurrencyLevel <= 0)
             throw new IllegalArgumentException();
-        int cap = tableSizeFor(initialCapacity);
+        if (initialCapacity < concurrencyLevel)   // Use at least as many bins
+            initialCapacity = concurrencyLevel;   // as estimated threads
+        long size = (long)(1.0 + (long)initialCapacity / loadFactor);
+        int cap =  ((size >= (long)MAXIMUM_CAPACITY) ?
+                    MAXIMUM_CAPACITY: tableSizeFor((int)size));
         this.counter = new LongAdder();
-        this.loadFactor = loadFactor;
         this.targetCapacity = cap;
-    }
-
-    /**
-     * Creates a new, empty map with the specified initial capacity
-     * and load factor and with the default concurrencyLevel (16).
-     *
-     * @param initialCapacity The implementation performs internal
-     * sizing to accommodate this many elements.
-     * @param loadFactor  the load factor threshold, used to control resizing.
-     * Resizing may be performed when the average number of elements per
-     * bin exceeds this threshold.
-     * @throws IllegalArgumentException if the initial capacity of
-     * elements is negative or the load factor is nonpositive
-     *
-     * @since 1.6
-     */
-    public ConcurrentHashMapV8(int initialCapacity, float loadFactor) {
-        this(initialCapacity, loadFactor, DEFAULT_CONCURRENCY_LEVEL);
-    }
-
-    /**
-     * Creates a new, empty map with the specified initial capacity,
-     * and with default load factor (0.75) and concurrencyLevel (16).
-     *
-     * @param initialCapacity the initial capacity. The implementation
-     * performs internal sizing to accommodate this many elements.
-     * @throws IllegalArgumentException if the initial capacity of
-     * elements is negative.
-     */
-    public ConcurrentHashMapV8(int initialCapacity) {
-        this(initialCapacity, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
-    }
-
-    /**
-     * Creates a new, empty map with a default initial capacity (16),
-     * load factor (0.75) and concurrencyLevel (16).
-     */
-    public ConcurrentHashMapV8() {
-        this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
-    }
-
-    /**
-     * Creates a new map with the same mappings as the given map.
-     * The map is created with a capacity of 1.5 times the number
-     * of mappings in the given map or 16 (whichever is greater),
-     * and a default load factor (0.75) and concurrencyLevel (16).
-     *
-     * @param m the map
-     */
-    public ConcurrentHashMapV8(Map<? extends K, ? extends V> m) {
-        this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
-        putAll(m);
     }
 
     /**
@@ -1048,7 +1082,7 @@ public class ConcurrentHashMapV8<K, V>
         if (table == null) {
             int size = m.size();
             int cap = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY :
-                tableSizeFor(size + (size >>> 1));
+                tableSizeFor(size + (size >>> 1) + 1);
             if (cap > targetCapacity)
                 targetCapacity = cap;
         }
@@ -1567,7 +1601,7 @@ public class ConcurrentHashMapV8<K, V>
             segments = (Segment<K,V>[])
                 new Segment<?,?>[DEFAULT_CONCURRENCY_LEVEL];
             for (int i = 0; i < segments.length; ++i)
-                segments[i] = new Segment<K,V>(DEFAULT_LOAD_FACTOR);
+                segments[i] = new Segment<K,V>(LOAD_FACTOR);
         }
         s.defaultWriteObject();
         InternalIterator it = new InternalIterator(table);
@@ -1590,9 +1624,8 @@ public class ConcurrentHashMapV8<K, V>
             throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         this.segments = null; // unneeded
-        // initalize transient final fields
+        // initalize transient final field
         UNSAFE.putObjectVolatile(this, counterOffset, new LongAdder());
-        UNSAFE.putFloatVolatile(this, loadFactorOffset, DEFAULT_LOAD_FACTOR);
         this.targetCapacity = DEFAULT_CAPACITY;
 
         // Create all nodes, then place in table once size is known
@@ -1620,9 +1653,9 @@ public class ConcurrentHashMapV8<K, V>
                             n = MAXIMUM_CAPACITY;
                         else {
                             int sz = (int)size;
-                            n = tableSizeFor(sz + (sz >>> 1));
+                            n = tableSizeFor(sz + (sz >>> 1) + 1);
                         }
-                        threshold = (n - (n >>> 2)) - THRESHOLD_OFFSET;
+                        threshold = n - (n >>> 2) - THRESHOLD_OFFSET;
                         Node[] tab = new Node[n];
                         int mask = n - 1;
                         while (p != null) {
@@ -1651,7 +1684,6 @@ public class ConcurrentHashMapV8<K, V>
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;
     private static final long counterOffset;
-    private static final long loadFactorOffset;
     private static final long resizingOffset;
     private static final long ABASE;
     private static final int ASHIFT;
@@ -1663,8 +1695,6 @@ public class ConcurrentHashMapV8<K, V>
             Class<?> k = ConcurrentHashMapV8.class;
             counterOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("counter"));
-            loadFactorOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("loadFactor"));
             resizingOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("resizing"));
             Class<?> sc = Node[].class;

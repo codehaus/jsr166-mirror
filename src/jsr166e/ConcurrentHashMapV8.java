@@ -797,7 +797,7 @@ public class ConcurrentHashMapV8<K, V>
         InternalIterator(Node[] tab, int lo, int hi) {
             this.tab = tab;
             baseSize = (tab == null) ? 0 : tab.length;
-            baseLimit = (hi <= baseSize)? hi : baseSize;
+            baseLimit = (hi <= baseSize) ? hi : baseSize;
             index = baseIndex = lo;
             next = null;
             advance();
@@ -917,8 +917,8 @@ public class ConcurrentHashMapV8<K, V>
      */
     public int size() {
         long n = counter.sum();
-        return ((n < 0L)? 0 :
-                (n > (long)Integer.MAX_VALUE)? Integer.MAX_VALUE :
+        return ((n < 0L) ? 0 :
+                (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
                 (int)n);
     }
 

@@ -35,6 +35,7 @@ import java.io.ObjectOutputStream;
  * <p><em>jsr166e note: This class is targeted to be placed in
  * java.util.concurrent.atomic<em>
  *
+ * @since 1.8
  * @author Doug Lea
  */
 public class LongAdder extends Striped64 implements Serializable {

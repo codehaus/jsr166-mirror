@@ -422,7 +422,7 @@ public class ConcurrentHashMapV8<K, V>
         return table;
     }
 
-    /*
+    /**
      * Reclassifies nodes in each bin to new table.  Because we are
      * using power-of-two expansion, the elements from each bin must
      * either stay at same index, or move with a power of two

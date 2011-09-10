@@ -306,10 +306,10 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * @param timeout the time to wait for availability
      * @param unit the time unit of the timeout argument
      * @return the current sequence number if the lock is available
-     *         upon return from this method.
+     *         upon return from this method
      * @throws InterruptedException if the current thread is interrupted
      * @throws TimeoutException if the lock was not available within
-     * the specified waiting time.
+     * the specified waiting time
      * @throws NullPointerException if the time unit is null
      */
     public long tryAwaitAvailability(long timeout, TimeUnit unit)

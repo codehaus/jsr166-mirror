@@ -145,7 +145,7 @@ public class DoubleAdder extends Striped64 implements Serializable {
 
     /**
      * Returns the String representation of the {@link #sum}.
-     * @return the String representation of the {@link #sum}.
+     * @return the String representation of the {@link #sum}
      */
     public String toString() {
         return Double.toString(sum());

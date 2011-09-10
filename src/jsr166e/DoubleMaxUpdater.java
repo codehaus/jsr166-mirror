@@ -140,7 +140,7 @@ public class DoubleMaxUpdater extends Striped64 implements Serializable {
 
     /**
      * Returns the String representation of the {@link #max}.
-     * @return the String representation of the {@link #max}.
+     * @return the String representation of the {@link #max}
      */
     public String toString() {
         return Double.toString(max());

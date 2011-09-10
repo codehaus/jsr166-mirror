@@ -136,7 +136,7 @@ public class LongAdderTable<K> implements Serializable {
     /**
      * Returns the sum totalled across all keys.
      *
-     * @return the sum totalled across all keys.
+     * @return the sum totalled across all keys
      */
     public long sumAll() {
         long sum = 0L;
@@ -156,7 +156,7 @@ public class LongAdderTable<K> implements Serializable {
     /**
      * Totals, then resets, the sums associated with all keys.
      *
-     * @return the sum totalled across all keys.
+     * @return the sum totalled across all keys
      */
     public long sumThenResetAll() {
         long sum = 0L;

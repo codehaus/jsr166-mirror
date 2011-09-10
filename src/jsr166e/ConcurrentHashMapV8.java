@@ -866,7 +866,7 @@ public class ConcurrentHashMapV8<K, V>
      * @param initialCapacity The implementation performs internal
      * sizing to accommodate this many elements.
      * @throws IllegalArgumentException if the initial capacity of
-     * elements is negative.
+     * elements is negative
      */
     public ConcurrentHashMapV8(int initialCapacity) {
         if (initialCapacity < 0)
@@ -898,7 +898,7 @@ public class ConcurrentHashMapV8<K, V>
      * performs internal sizing to accommodate this many elements,
      * given the specified load factor.
      * @param loadFactor the load factor (table density) for
-     * establishing the initial table size.
+     * establishing the initial table size
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative or the load factor is nonpositive
      *
@@ -918,13 +918,13 @@ public class ConcurrentHashMapV8<K, V>
      * performs internal sizing to accommodate this many elements,
      * given the specified load factor.
      * @param loadFactor the load factor (table density) for
-     * establishing the initial table size.
+     * establishing the initial table size
      * @param concurrencyLevel the estimated number of concurrently
      * updating threads. The implementation may use this value as
      * a sizing hint.
      * @throws IllegalArgumentException if the initial capacity is
      * negative or the load factor or concurrencyLevel are
-     * nonpositive.
+     * nonpositive
      */
     public ConcurrentHashMapV8(int initialCapacity,
                                float loadFactor, int concurrencyLevel) {
@@ -980,7 +980,7 @@ public class ConcurrentHashMapV8<K, V>
      * @param  key   possible key
      * @return {@code true} if and only if the specified object
      *         is a key in this table, as determined by the
-     *         {@code equals} method; {@code false} otherwise.
+     *         {@code equals} method; {@code false} otherwise
      * @throws NullPointerException if the specified key is null
      */
     public boolean containsKey(Object key) {
@@ -1117,14 +1117,14 @@ public class ConcurrentHashMapV8<K, V>
      * @param mappingFunction the function to compute a value
      * @return the current (existing or computed) value associated with
      *         the specified key, or {@code null} if the computation
-     *         returned {@code null}.
+     *         returned {@code null}
      * @throws NullPointerException if the specified key or mappingFunction
-     *         is null,
+     *         is null
      * @throws IllegalStateException if the computation detectably
      *         attempts a recursive update to this map that would
-     *         otherwise never complete.
+     *         otherwise never complete
      * @throws RuntimeException or Error if the mappingFunction does so,
-     *         in which case the mapping is left unestablished.
+     *         in which case the mapping is left unestablished
      */
     public V computeIfAbsent(K key, MappingFunction<? super K, ? extends V> mappingFunction) {
         if (key == null || mappingFunction == null)
@@ -1154,14 +1154,14 @@ public class ConcurrentHashMapV8<K, V>
      * @param mappingFunction the function to compute a value
      * @return the current value associated with
      *         the specified key, or {@code null} if the computation
-     *         returned {@code null} and the value was not otherwise present.
+     *         returned {@code null} and the value was not otherwise present
      * @throws NullPointerException if the specified key or mappingFunction
-     *         is null,
+     *         is null
      * @throws IllegalStateException if the computation detectably
      *         attempts a recursive update to this map that would
-     *         otherwise never complete.
+     *         otherwise never complete
      * @throws RuntimeException or Error if the mappingFunction does so,
-     *         in which case the mapping is unchanged.
+     *         in which case the mapping is unchanged
      */
     public V compute(K key, MappingFunction<? super K, ? extends V> mappingFunction) {
         if (key == null || mappingFunction == null)

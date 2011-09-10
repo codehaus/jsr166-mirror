@@ -1622,7 +1622,7 @@ public class ConcurrentHashMapV8<K, V>
             throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         this.segments = null; // unneeded
-        // initalize transient final field
+        // initialize transient final field
         UNSAFE.putObjectVolatile(this, counterOffset, new LongAdder());
         this.targetCapacity = DEFAULT_CAPACITY;
 

@@ -26,6 +26,7 @@ import java.io.ObjectOutputStream;
  * <p><em>jsr166e note: This class is targeted to be placed in
  * java.util.concurrent.atomic<em>
  *
+ * @since 1.8
  * @author Doug Lea
  */
 public class DoubleAdder extends Striped64 implements Serializable {
@@ -144,7 +145,7 @@ public class DoubleAdder extends Striped64 implements Serializable {
 
     /**
      * Returns the String representation of the {@link #sum}.
-     * @return the String representation of the {@link #sum}.
+     * @return the String representation of the {@link #sum}
      */
     public String toString() {
         return Double.toString(sum());

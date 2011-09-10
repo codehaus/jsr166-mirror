@@ -85,7 +85,7 @@ import java.io.Serializable;
  * <p><em>jsr166e note: This class is a candidate replacement for
  * java.util.concurrent.ConcurrentHashMap.<em>
  *
- * @since 1.8
+ * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
@@ -901,6 +901,8 @@ public class ConcurrentHashMapV8<K, V>
      * establishing the initial table size
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative or the load factor is nonpositive
+     *
+     * @since 1.6
      */
     public ConcurrentHashMapV8(int initialCapacity, float loadFactor) {
         this(initialCapacity, loadFactor, 1);

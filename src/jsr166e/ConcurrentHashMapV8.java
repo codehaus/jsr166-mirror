@@ -775,7 +775,7 @@ public class ConcurrentHashMapV8<K, V>
      *
      * Exported iterators (subclasses of ViewIterator) extract key,
      * value, or key-value pairs as return values of Iterator.next(),
-     * and encapulate the it.next check as hasNext();
+     * and encapsulate the it.next check as hasNext();
      *
      * The iterator visits each valid node that was reachable upon
      * iterator construction once. It might miss some that were added

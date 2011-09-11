@@ -152,7 +152,7 @@ public class ConcurrentHashMapV8<K, V>
      * node of a bin list itself as a lock, using plain "synchronized"
      * locks. These save space and we can live with block-structured
      * lock/unlock operations. Using the first node of a list as a
-     * lock does not by itself suffice though: When a node is locked,
+     * lock does not by itself suffice though. When a node is locked,
      * any update must first validate that it is still the first node,
      * and retry if not. Because new nodes are always appended to
      * lists, once a node is first in a bin, it remains first until
@@ -291,7 +291,7 @@ public class ConcurrentHashMapV8<K, V>
      * special, and do not contain user keys or values.  Otherwise,
      * keys are never null, and null val fields indicate that a node
      * is in the process of being deleted or created. For purposes of
-     * read-only, access, a key may be read before a val, but can only
+     * read-only access, a key may be read before a val, but can only
      * be used after checking val.  (For an update operation, when a
      * lock is held on a node, order doesn't matter.)
      */
@@ -771,7 +771,7 @@ public class ConcurrentHashMapV8<K, V>
      * valid.
      *
      * Internal traversals directly access these fields, as in:
-     * {@code while (it.next != null) { process(nextKey); it.advance(); }}
+     * {@code while (it.next != null) { process(it.nextKey); it.advance(); }}
      *
      * Exported iterators (subclasses of ViewIterator) extract key,
      * value, or key-value pairs as return values of Iterator.next(),

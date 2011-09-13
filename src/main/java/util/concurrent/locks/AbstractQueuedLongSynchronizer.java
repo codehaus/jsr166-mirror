@@ -1230,7 +1230,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * due to the queue being empty.
      *
      * <p>This method is designed to be used by a fair synchronizer to
-     * avoid <a href="AbstractQueuedSynchronizer#barging">barging</a>.
+     * avoid <a href="AbstractQueuedSynchronizer.html#barging">barging</a>.
      * Such a synchronizer's {@link #tryAcquire} method should return
      * {@code false}, and its {@link #tryAcquireShared} method should
      * return a negative value, if this method returns {@code true}

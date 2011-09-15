@@ -6,6 +6,7 @@
 
 package jsr166e;
 import jsr166e.LongAdder;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.Collection;
@@ -19,6 +20,7 @@ import java.util.Enumeration;
 import java.util.ConcurrentModificationException;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.LockSupport;
 import java.io.Serializable;
 
 /**
@@ -54,12 +56,13 @@ import java.io.Serializable;
  * <p> The table is dynamically expanded when there are too many
  * collisions (i.e., keys that have distinct hash codes but fall into
  * the same slot modulo the table size), with the expected average
- * effect of maintaining roughly two bins per mapping. There may be
- * much variance around this average as mappings are added and
- * removed, but overall, this maintains a commonly accepted time/space
- * tradeoff for hash tables.  However, resizing this or any other kind
- * of hash table may be a relatively slow operation. When possible, it
- * is a good idea to provide a size estimate as an optional {@code
+ * effect of maintaining roughly two bins per mapping (corresponding
+ * to a 0.75 load factor threshold for resizing). There may be much
+ * variance around this average as mappings are added and removed, but
+ * overall, this maintains a commonly accepted time/space tradeoff for
+ * hash tables.  However, resizing this or any other kind of hash
+ * table may be a relatively slow operation. When possible, it is a
+ * good idea to provide a size estimate as an optional {@code
  * initialCapacity} constructor argument. An additional optional
  * {@code loadFactor} constructor argument provides a further means of
  * customizing initial table capacity by specifying the table density
@@ -121,7 +124,9 @@ public class ConcurrentHashMapV8<K, V>
      * The primary design goal of this hash table is to maintain
      * concurrent readability (typically method get(), but also
      * iterators and related methods) while minimizing update
-     * contention.
+     * contention. Secondary goals are to keep space consumption about
+     * the same or better than java.util.HashMap, and to support high
+     * initial insertion rates on an empty table by many threads.
      *
      * Each key-value mapping is held in a Node.  Because Node fields
      * can contain special values, they are defined using plain Object
@@ -139,29 +144,47 @@ public class ConcurrentHashMapV8<K, V>
      * we use intrinsics (sun.misc.Unsafe) operations.  The lists of
      * nodes within bins are always accurately traversable under
      * volatile reads, so long as lookups check hash code and
-     * non-nullness of value before checking key equality. (All valid
-     * hash codes are nonnegative. Negative values are reserved for
-     * special forwarding nodes; see below.)
+     * non-nullness of value before checking key equality.
+     *
+     * We use the top two bits of Node hash fields for control
+     * purposes -- they are available anyway because of addressing
+     * constraints.  As explained further below, these top bits are
+     * usd as follows:
+     *  00 - Normal
+     *  01 - Locked
+     *  11 - Locked and may have a thread waiting for lock
+     *  10 - Node is a forwarding node
+     *
+     * The lower 30 bits of each Node's hash field contain a
+     * transformation (for better randomization -- method "spread") of
+     * the key's hash code, except for forwarding nodes, for which the
+     * lower bits are zero (and so always have hash field == "MOVED").
      *
      * Insertion (via put or putIfAbsent) of the first node in an
      * empty bin is performed by just CASing it to the bin.  This is
-     * on average by far the most common case for put operations.
-     * Other update operations (insert, delete, and replace) require
-     * locks.  We do not want to waste the space required to associate
-     * a distinct lock object with each bin, so instead use the first
-     * node of a bin list itself as a lock, using plain "synchronized"
-     * locks. These save space and we can live with block-structured
-     * lock/unlock operations. Using the first node of a list as a
-     * lock does not by itself suffice though. When a node is locked,
-     * any update must first validate that it is still the first node,
-     * and retry if not. Because new nodes are always appended to
-     * lists, once a node is first in a bin, it remains first until
-     * deleted or the bin becomes invalidated.  However, operations
-     * that only conditionally update can and sometimes do inspect
-     * nodes until the point of update. This is a converse of sorts to
-     * the lazy locking technique described by Herlihy & Shavit.
+     * by far the most common case for put operations.  Other update
+     * operations (insert, delete, and replace) require locks.  We do
+     * not want to waste the space required to associate a distinct
+     * lock object with each bin, so instead use the first node of a
+     * bin list itself as a lock. Blocking support for these locks
+     * relies on the builtin "synchronized" monitors.  However, we
+     * also need a tryLock construction, so we overlay these by using
+     * bits of the Node hash field for lock control (see above), and
+     * so normally use builtin monitors only for blocking and
+     * signalling using wait/notifyAll constructions. See
+     * Node.tryAwaitLock.
      *
-     * The main disadvantage of this approach is that most update
+     * Using the first node of a list as a lock does not by itself
+     * suffice though: When a node is locked, any update must first
+     * validate that it is still the first node after locking it, and
+     * retry if not. Because new nodes are always appended to lists,
+     * once a node is first in a bin, it remains first until deleted
+     * or the bin becomes invalidated.  However, operations that only
+     * conditionally update may inspect nodes until the point of
+     * update. This is a converse of sorts to the lazy locking
+     * technique described by Herlihy & Shavit.
+     *
+     * The main disadvantage of per-bin locks is that other update
      * operations on other nodes in a bin list protected by the same
      * lock can stall, for example when user equals() or mapping
      * functions take a long time.  However, statistically, this is
@@ -187,27 +210,46 @@ public class ConcurrentHashMapV8<K, V>
      * that these assumptions hold unless users define exactly the
      * same value for too many hashCodes.
      *
-     * The table is resized when occupancy exceeds a threshold.  Only
-     * a single thread performs the resize (using field "resizing", to
-     * arrange exclusion), but the table otherwise remains usable for
-     * reads and updates. Resizing proceeds by transferring bins, one
-     * by one, from the table to the next table.  Upon transfer, the
-     * old table bin contains only a special forwarding node (with
-     * negative hash field) that contains the next table as its
-     * key. On encountering a forwarding node, access and update
-     * operations restart, using the new table. To ensure concurrent
-     * readability of traversals, transfers must proceed from the last
-     * bin (table.length - 1) up towards the first.  Upon seeing a
-     * forwarding node, traversals (see class InternalIterator)
-     * arrange to move to the new table for the rest of the traversal
-     * without revisiting nodes.  This constrains bin transfers to a
-     * particular order, and so can block indefinitely waiting for the
-     * next lock, and other threads cannot help with the transfer.
-     * However, expected stalls are infrequent enough to not warrant
-     * the additional overhead of access and iteration schemes that
-     * could admit out-of-order or concurrent bin transfers.
+     * The table is resized when occupancy exceeds an occupancy
+     * threshold (nominally, 0.75, but see below).  Only a single
+     * thread performs the resize (using field "sizeCtl", to arrange
+     * exclusion), but the table otherwise remains usable for reads
+     * and updates. Resizing proceeds by transferring bins, one by
+     * one, from the table to the next table.  Because we are using
+     * power-of-two expansion, the elements from each bin must either
+     * stay at same index, or move with a power of two offset. We
+     * eliminate unnecessary node creation by catching cases where old
+     * nodes can be reused because their next fields won't change.  On
+     * average, only about one-sixth of them need cloning when a table
+     * doubles. The nodes they replace will be garbage collectable as
+     * soon as they are no longer referenced by any reader thread that
+     * may be in the midst of concurrently traversing table.  Upon
+     * transfer, the old table bin contains only a special forwarding
+     * node (with hash field "MOVED") that contains the next table as
+     * its key. On encountering a forwarding node, access and update
+     * operations restart, using the new table.
      *
-     * This traversal scheme also applies to partial traversals of
+     * Each bin transfer requires its bin lock. However, unlike other
+     * cases, a transfer can skip a bin if it fails to acquire its
+     * lock, and revisit it later. Method rebuild maintains a buffer
+     * of TRANSFER_BUFFER_SIZE bins that have been skipped because of
+     * failure to acquire a lock, and blocks only if none are
+     * available (i.e., only very rarely).  The transfer operation
+     * must also ensure that all accessible bins in both the old and
+     * new table are usable by any traversal.  When there are no lock
+     * acquisition failures, this is arranged simply by proceeding
+     * from the last bin (table.length - 1) up towards the first.
+     * Upon seeing a forwarding node, traversals (see class
+     * InternalIterator) arrange to move to the new table without
+     * revisiting nodes.  However, when any node is skipped during a
+     * transfer, all earlier table bins may have become visible, so
+     * are initialized with a reverse-forwarding node back to the old
+     * table until the new ones are established. (This sometimes
+     * requires transiently locking a forwarding node, which is
+     * possible under the above encoding.) These more expensive
+     * mechanics trigger only when necessary.
+     *
+     * The traversal scheme also applies to partial traversals of
      * ranges of bins (via an alternate InternalIterator constructor)
      * to support partitioned aggregate operations (that are not
      * otherwise implemented yet).  Also, read-only operations give up
@@ -218,11 +260,8 @@ public class ConcurrentHashMapV8<K, V>
      * Lazy table initialization minimizes footprint until first use,
      * and also avoids resizings when the first operation is from a
      * putAll, constructor with map argument, or deserialization.
-     * These cases attempt to override the targetCapacity used in
-     * growTable. These harmlessly fail to take effect in cases of
-     * races with other ongoing resizings. Uses of the threshold and
-     * targetCapacity during attempted initializations or resizings
-     * are racy but fall back on checks to preserve correctness.
+     * These cases attempt to override the initial capacity settings,
+     * but harmlessly fail to take effect in cases of races.
      *
      * The element count is maintained using a LongAdder, which avoids
      * contention on updates but can encounter cache thrashing if read
@@ -233,16 +272,16 @@ public class ConcurrentHashMapV8<K, V>
      * is around 13%, meaning that only about 1 in 8 puts check
      * threshold (and after resizing, many fewer do so). But this
      * approximation has high variance for small table sizes, so we
-     * check on any collision for sizes <= 64.  Further, to increase
-     * the probability that a resize occurs soon enough, we offset the
-     * threshold (see THRESHOLD_OFFSET) by the expected number of puts
-     * between checks.
+     * check on any collision for sizes <= 64.
      *
      * Maintaining API and serialization compatibility with previous
      * versions of this class introduces several oddities. Mainly: We
      * leave untouched but unused constructor arguments refering to
-     * concurrencyLevel. We also declare an unused "Segment" class
-     * that is instantiated in minimal form only when serializing.
+     * concurrencyLevel. We accept a loadFactor constructor argument,
+     * but apply it only to initial table capacity (which is the only
+     * time that we can guarantee to honor it.) We also declare an
+     * unused "Segment" class that is instantiated in minimal form
+     * only when serializing.
      */
 
     /* ---------------- Constants -------------- */
@@ -250,7 +289,9 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * The largest possible table capacity.  This value must be
      * exactly 1<<30 to stay within Java array allocation and indexing
-     * bounds for power of two table sizes.
+     * bounds for power of two table sizes, and is further required
+     * because the top two bits of 32bit hash fields are used for
+     * control purposes.
      */
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 
@@ -261,42 +302,86 @@ public class ConcurrentHashMapV8<K, V>
     private static final int DEFAULT_CAPACITY = 16;
 
     /**
+     * The largest possible (non-power of two) array size.
+     * Needed by toArray and related methods.
+     */
+    static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+    /**
+     * The default concurrency level for this table. Unused but
+     * defined for compatibility with previous versions of this class.
+     */
+    private static final int DEFAULT_CONCURRENCY_LEVEL = 16;
+
+    /**
      * The load factor for this table. Overrides of this value in
      * constructors affect only the initial table capacity.  The
-     * actual floating point value isn't normally used, because it is
-     * simpler to rely on the expression {@code n - (n >>> 2)} for the
-     * associated resizing threshold.
+     * actual floating point value isn't normally used -- it is
+     * simpler to use expressions such as {@code n - (n >>> 2)} for
+     * the associated resizing threshold.
      */
     private static final float LOAD_FACTOR = 0.75f;
 
     /**
-     * The count value to offset thresholds to compensate for checking
-     * for the need to resize only when inserting into bins with two
-     * or more elements. See above for explanation.
+     * The buffer size for skipped bins during transfers. The
+     * value is arbitrary but should be large enough to avoid
+     * most locking stalls during resizes.
      */
-    private static final int THRESHOLD_OFFSET = 8;
+    private static final int TRANSFER_BUFFER_SIZE = 32;
+
+    /*
+     * Encodings for special uses of Node hash fields. See above for
+     * explanation.
+     */
+    static final int MOVED     = 0x80000000; // hash field for fowarding nodes
+    static final int LOCKED    = 0x40000000; // set/tested only as a bit
+    static final int WAITING   = 0xc0000000; // both bits set/tested together
+    static final int HASH_BITS = 0x3fffffff; // usable bits of normal node hash
+
+    /* ---------------- Fields -------------- */
 
     /**
-     * The default concurrency level for this table. Unused except as
-     * a sizing hint, but defined for compatibility with previous
-     * versions of this class.
+     * The array of bins. Lazily initialized upon first insertion.
+     * Size is always a power of two. Accessed directly by iterators.
      */
-    private static final int DEFAULT_CONCURRENCY_LEVEL = 16;
+    transient volatile Node[] table;
+
+    /**
+     * The counter maintaining number of elements.
+     */
+    private transient final LongAdder counter;
+
+    /**
+     * Table initialization and resizing control.  When negative, the
+     * table is being initialized or resized. Otherwise, when table is
+     * null, holds the initial table size to use upon creation, or 0
+     * for default. After initialization, holds the next element count
+     * value upon which to resize the table.
+     */
+    private transient volatile int sizeCtl;
+
+    // views
+    private transient KeySet<K,V> keySet;
+    private transient Values<K,V> values;
+    private transient EntrySet<K,V> entrySet;
+
+    /** For serialization compatibility. Null unless serialized; see below */
+    private Segment<K,V>[] segments;
 
     /* ---------------- Nodes -------------- */
 
     /**
      * Key-value entry. Note that this is never exported out as a
-     * user-visible Map.Entry. Nodes with a negative hash field are
-     * special, and do not contain user keys or values.  Otherwise,
-     * keys are never null, and null val fields indicate that a node
-     * is in the process of being deleted or created. For purposes of
-     * read-only access, a key may be read before a val, but can only
-     * be used after checking val.  (For an update operation, when a
-     * lock is held on a node, order doesn't matter.)
+     * user-visible Map.Entry (see WriteThroughEntry and SnapshotEntry
+     * below). Nodes with a negative hash field are special, and do
+     * not contain user keys or values.  Otherwise, keys are never
+     * null, and null val fields indicate that a node is in the
+     * process of being deleted or created. For purposes of read-only
+     * access, a key may be read before a val, but can only be used
+     * after checking val to be non-null.
      */
     static final class Node {
-        final int hash;
+        volatile int hash;
         final Object key;
         volatile Object val;
         volatile Node next;
@@ -307,37 +392,71 @@ public class ConcurrentHashMapV8<K, V>
             this.val = val;
             this.next = next;
         }
+
+        /** CompareAndSet the hash field */
+        final boolean casHash(int cmp, int val) {
+            return UNSAFE.compareAndSwapInt(this, hashOffset, cmp, val);
+        }
+
+        /** The number of spins before blocking for a lock */
+        static final int MAX_SPINS =
+            Runtime.getRuntime().availableProcessors() > 1 ? 64 : 1;
+
+        /**
+         * Spins a while if LOCKED bit set and this node is the first
+         * of its bin, and then sets WAITING bits on hash field and
+         * blocks (once) if they are still set.  It is OK for this
+         * method to return even if lock is not available upon exit,
+         * which enables these simple single-wait mechanics.
+         *
+         * The corresponding signalling operation is performed within
+         * callers: Upon detecting that WAITING has been set when
+         * unlocking lock (via a failed CAS from non-waiting LOCKED
+         * state), unlockers acquire the sync lock and perform a
+         * notifyAll.
+         */
+        final void tryAwaitLock(Node[] tab, int i) {
+            if (tab != null && i >= 0 && i < tab.length) { // bounds check
+                int spins = MAX_SPINS, h;
+                while (tabAt(tab, i) == this && ((h = hash) & LOCKED) != 0) {
+                    if (spins >= 0) {
+                        if (--spins == MAX_SPINS >>> 1)
+                            Thread.yield();  // heuristically yield mid-way
+                    }
+                    else if (casHash(h, h | WAITING)) {
+                        synchronized(this) {
+                            if (tabAt(tab, i) == this &&
+                                (hash & WAITING) == WAITING) {
+                                try {
+                                    wait();
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                            else
+                                notifyAll(); // possibly won race vs signaller
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Unsafe mechanics for casHash
+        private static final sun.misc.Unsafe UNSAFE;
+        private static final long hashOffset;
+
+        static {
+            try {
+                UNSAFE = getUnsafe();
+                Class<?> k = Node.class;
+                hashOffset = UNSAFE.objectFieldOffset
+                    (k.getDeclaredField("hash"));
+            } catch (Exception e) {
+                throw new Error(e);
+            }
+        }
     }
-
-    /**
-     * Sign bit of node hash value indicating to use table in node.key.
-     */
-    private static final int SIGN_BIT = 0x80000000;
-
-    /* ---------------- Fields -------------- */
-
-    /**
-     * The array of bins. Lazily initialized upon first insertion.
-     * Size is always a power of two. Accessed directly by iterators.
-     */
-    transient volatile Node[] table;
-
-    /** The counter maintaining number of elements. */
-    private transient final LongAdder counter;
-    /** Nonzero when table is being initialized or resized. Updated via CAS. */
-    private transient volatile int resizing;
-    /** The next element count value upon which to resize the table. */
-    private transient int threshold;
-    /** The target capacity; volatile to cover initialization races. */
-    private transient volatile int targetCapacity;
-
-    // views
-    private transient KeySet<K,V> keySet;
-    private transient Values<K,V> values;
-    private transient EntrySet<K,V> entrySet;
-
-    /** For serialization compatibility. Null unless serialized; see below */
-    private Segment<K,V>[] segments;
 
     /* ---------------- Table element access -------------- */
 
@@ -365,132 +484,15 @@ public class ConcurrentHashMapV8<K, V>
         UNSAFE.putObjectVolatile(tab, ((long)i<<ASHIFT)+ABASE, v);
     }
 
-    /* ----------------Table Initialization and Resizing -------------- */
-
-    /**
-     * Returns a power of two table size for the given desired capacity.
-     * See Hackers Delight, sec 3.2
-     */
-    private static final int tableSizeFor(int c) {
-        int n = c - 1;
-        n |= n >>> 1;
-        n |= n >>> 2;
-        n |= n >>> 4;
-        n |= n >>> 8;
-        n |= n >>> 16;
-        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
-    }
-
-    /**
-     * If not already resizing, initializes or creates next table and
-     * transfers bins. Initial table size uses the capacity recorded
-     * in targetCapacity.  Rechecks occupancy after a transfer to see
-     * if another resize is already needed because resizings are
-     * lagging additions.
-     *
-     * @return current table
-     */
-    private final Node[] growTable() {
-        if (resizing == 0 &&
-            UNSAFE.compareAndSwapInt(this, resizingOffset, 0, 1)) {
-            try {
-                for (;;) {
-                    Node[] tab = table;
-                    int n, c, m;
-                    if (tab == null)
-                        n = (c = targetCapacity) > 0 ? c : DEFAULT_CAPACITY;
-                    else if ((m = tab.length) < MAXIMUM_CAPACITY &&
-                             counter.sum() >= (long)threshold)
-                        n = m << 1;
-                    else
-                        break;
-                    threshold = n - (n >>> 2) - THRESHOLD_OFFSET;
-                    Node[] nextTab = new Node[n];
-                    if (tab != null)
-                        transfer(tab, nextTab,
-                                 new Node(SIGN_BIT, nextTab, null, null));
-                    table = nextTab;
-                    if (tab == null)
-                        break;
-                }
-            } finally {
-                resizing = 0;
-            }
-        }
-        else if (table == null)
-            Thread.yield(); // lost initialization race; just spin
-        return table;
-    }
-
-    /**
-     * Reclassifies nodes in each bin to new table.  Because we are
-     * using power-of-two expansion, the elements from each bin must
-     * either stay at same index, or move with a power of two
-     * offset. We eliminate unnecessary node creation by catching
-     * cases where old nodes can be reused because their next fields
-     * won't change.  Statistically, only about one-sixth of them need
-     * cloning when a table doubles. The nodes they replace will be
-     * garbage collectable as soon as they are no longer referenced by
-     * any reader thread that may be in the midst of concurrently
-     * traversing table.
-     *
-     * Transfers are done from the bottom up to preserve iterator
-     * traversability. On each step, the old bin is locked,
-     * moved/copied, and then replaced with a forwarding node.
-     */
-    private static final void transfer(Node[] tab, Node[] nextTab, Node fwd) {
-        int n = tab.length;
-        Node ignore = nextTab[n + n - 1]; // force bounds check
-        for (int i = n - 1; i >= 0; --i) {
-            for (Node e;;) {
-                if ((e = tabAt(tab, i)) != null) {
-                    boolean validated = false;
-                    synchronized (e) {
-                        if (tabAt(tab, i) == e) {
-                            validated = true;
-                            Node lo = null, hi = null, lastRun = e;
-                            int runBit = e.hash & n;
-                            for (Node p = e.next; p != null; p = p.next) {
-                                int b = p.hash & n;
-                                if (b != runBit) {
-                                    runBit = b;
-                                    lastRun = p;
-                                }
-                            }
-                            if (runBit == 0)
-                                lo = lastRun;
-                            else
-                                hi = lastRun;
-                            for (Node p = e; p != lastRun; p = p.next) {
-                                int ph = p.hash;
-                                Object pk = p.key, pv = p.val;
-                                if ((ph & n) == 0)
-                                    lo = new Node(ph, pk, pv, lo);
-                                else
-                                    hi = new Node(ph, pk, pv, hi);
-                            }
-                            setTabAt(nextTab, i, lo);
-                            setTabAt(nextTab, i + n, hi);
-                            setTabAt(tab, i, fwd);
-                        }
-                    }
-                    if (validated)
-                        break;
-                }
-                else if (casTabAt(tab, i, e, fwd))
-                    break;
-            }
-        }
-    }
-
     /* ---------------- Internal access and update methods -------------- */
 
     /**
      * Applies a supplemental hash function to a given hashCode, which
      * defends against poor quality hash functions.  The result must
-     * be non-negative, and for reasonable performance must have good
-     * avalanche properties; i.e., that each bit of the argument
-     * affects each bit (except sign bit) of the result.
+     * be have the top 2 bits clear. For reasonable performance, this
+     * function must have good avalanche properties; i.e., that each
+     * bit of the argument affects each bit of the result. (Although
+     * we don't care about the unused top 2 bits.)
      */
     private static final int spread(int h) {
         // Apply base step of MurmurHash; see http://code.google.com/p/smhasher/
@@ -498,24 +500,22 @@ public class ConcurrentHashMapV8<K, V>
         h *= 0x85ebca6b;
         h ^= h >>> 13;
         h *= 0xc2b2ae35;
-        return (h >>> 16) ^ (h & 0x7fffffff); // mask out sign bit
+        return ((h >>> 16) ^ h) & HASH_BITS; // mask out top bits
     }
 
     /** Implementation for get and containsKey */
     private final Object internalGet(Object k) {
         int h = spread(k.hashCode());
         retry: for (Node[] tab = table; tab != null;) {
-            Node e; Object ek, ev; int eh;  // locals to read fields once
+            Node e; Object ek, ev; int eh;    // locals to read fields once
             for (e = tabAt(tab, (tab.length - 1) & h); e != null; e = e.next) {
-                if ((eh = e.hash) == h) {
-                    if ((ev = e.val) != null &&
-                        ((ek = e.key) == k || k.equals(ek)))
-                        return ev;
-                }
-                else if (eh < 0) {          // sign bit set
-                    tab = (Node[])e.key;    // bin was moved during resize
+                if ((eh = e.hash) == MOVED) {
+                    tab = (Node[])e.key;      // restart with new table
                     continue retry;
                 }
+                if ((eh & HASH_BITS) == h && (ev = e.val) != null &&
+                    ((ek = e.key) == k || k.equals(ek)))
+                    return ev;
             }
             break;
         }
@@ -527,32 +527,33 @@ public class ConcurrentHashMapV8<K, V>
         int h = spread(k.hashCode());
         Object oldVal = null;               // previous value or null if none
         for (Node[] tab = table;;) {
-            Node e; int i; Object ek, ev;
+            int i; Node f; int fh; Object fk, fv;
             if (tab == null)
-                tab = growTable();
-            else if ((e = tabAt(tab, i = (tab.length - 1) & h)) == null) {
+                tab = initTable();
+            else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null) {
                 if (casTabAt(tab, i, null, new Node(h, k, v, null)))
                     break;                   // no lock when adding to empty bin
             }
-            else if (e.hash < 0)             // resized -- restart with new table
-                tab = (Node[])e.key;
-            else if (!replace && e.hash == h && (ev = e.val) != null &&
-                     ((ek = e.key) == k || k.equals(ek))) {
-                if (tabAt(tab, i) == e) {    // inspect and validate 1st node
-                    oldVal = ev;             // without lock for putIfAbsent
-                    break;
-                }
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if (!replace && (fh & HASH_BITS) == h && (fv = f.val) != null &&
+                     ((fk = f.key) == k || k.equals(fk))) {
+                oldVal = fv;                // precheck 1st node for putIfAbsent
+                break;
             }
-            else {
+            else if ((fh & LOCKED) != 0)
+                f.tryAwaitLock(tab, i);
+            else if (f.casHash(fh, fh | LOCKED)) {
                 boolean validated = false;
                 boolean checkSize = false;
-                synchronized (e) {           // lock the 1st node of bin list
-                    if (tabAt(tab, i) == e) {
+                try {
+                    if (tabAt(tab, i) == f) {
                         validated = true;    // retry if 1st already deleted
-                        for (Node first = e;;) {
-                            if (e.hash == h &&
-                                ((ek = e.key) == k || k.equals(ek)) &&
-                                (ev = e.val) != null) {
+                        for (Node e = f;;) {
+                            Object ek, ev;
+                            if ((e.hash & HASH_BITS) == h &&
+                                (ev = e.val) != null &&
+                                ((ek = e.key) == k || k.equals(ek))) {
                                 oldVal = ev;
                                 if (replace)
                                     e.val = v;
@@ -561,16 +562,22 @@ public class ConcurrentHashMapV8<K, V>
                             Node last = e;
                             if ((e = e.next) == null) {
                                 last.next = new Node(h, k, v, null);
-                                if (last != first || tab.length <= 64)
+                                if (last != f || tab.length <= 64)
                                     checkSize = true;
                                 break;
                             }
                         }
                     }
+                } finally {                  // unlock and signal if needed
+                    if (!f.casHash(fh | LOCKED, fh)) {
+                        f.hash = fh;
+                        synchronized(f) { f.notifyAll(); };
+                    }
                 }
                 if (validated) {
+                    int sc;
                     if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                        resizing == 0 && counter.sum() >= (long)threshold)
+                        (sc = sizeCtl) >= 0 && counter.sum() >= (long)sc)
                         growTable();
                     break;
                 }
@@ -588,26 +595,29 @@ public class ConcurrentHashMapV8<K, V>
      */
     private final Object internalReplace(Object k, Object v, Object cv) {
         int h = spread(k.hashCode());
+        Object oldVal = null;
         for (Node[] tab = table;;) {
-            Node e; int i;
+            Node f; int i, fh;
             if (tab == null ||
-                (e = tabAt(tab, i = (tab.length - 1) & h)) == null)
-                return null;
-            else if (e.hash < 0)
-                tab = (Node[])e.key;
-            else {
-                Object oldVal = null;
+                (f = tabAt(tab, i = (tab.length - 1) & h)) == null)
+                break;
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if ((fh & HASH_BITS) != h && f.next == null) // precheck
+                break;                          // rules out possible existence
+            else if ((fh & LOCKED) != 0)
+                f.tryAwaitLock(tab, i);
+            else if (f.casHash(fh, fh | LOCKED)) {
                 boolean validated = false;
                 boolean deleted = false;
-                synchronized (e) {
-                    if (tabAt(tab, i) == e) {
+                try {
+                    if (tabAt(tab, i) == f) {
                         validated = true;
-                        Node pred = null;
-                        do {
+                        for (Node e = f, pred = null;;) {
                             Object ek, ev;
-                            if (e.hash == h &&
-                                ((ek = e.key) == k || k.equals(ek)) &&
-                                ((ev = e.val) != null)) {
+                            if ((e.hash & HASH_BITS) == h &&
+                                ((ev = e.val) != null) &&
+                                ((ek = e.key) == k || k.equals(ek))) {
                                 if (cv == null || cv == ev || cv.equals(ev)) {
                                     oldVal = ev;
                                     if ((e.val = v) == null) {
@@ -621,95 +631,113 @@ public class ConcurrentHashMapV8<K, V>
                                 }
                                 break;
                             }
-                        } while ((e = (pred = e).next) != null);
+                            pred = e;
+                            if ((e = e.next) == null)
+                                break;
+                        }
+                    }
+                } finally {
+                    if (!f.casHash(fh | LOCKED, fh)) {
+                        f.hash = fh;
+                        synchronized(f) { f.notifyAll(); };
                     }
                 }
                 if (validated) {
                     if (deleted)
                         counter.decrement();
-                    return oldVal;
+                    break;
                 }
             }
         }
+        return oldVal;
     }
 
     /** Implementation for computeIfAbsent and compute. Like put, but messier. */
+    // Todo: Somehow reinstate non-termination check
     @SuppressWarnings("unchecked")
     private final V internalCompute(K k,
-                                    MappingFunction<? super K, ? extends V> f,
+                                    MappingFunction<? super K, ? extends V> fn,
                                     boolean replace) {
         int h = spread(k.hashCode());
         V val = null;
         boolean added = false;
         Node[] tab = table;
         outer:for (;;) {
-            Node e; int i; Object ek, ev;
+            Node f; int i, fh; Object fk, fv;
             if (tab == null)
-                tab = growTable();
-            else if ((e = tabAt(tab, i = (tab.length - 1) & h)) == null) {
-                Node node = new Node(h, k, null, null);
+                tab = initTable();
+            else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null) {
+                Node node = new Node(fh = h | LOCKED, k, null, null);
                 boolean validated = false;
-                synchronized (node) {  // must lock while computing value
-                    if (casTabAt(tab, i, null, node)) {
-                        validated = true;
-                        try {
-                            val = f.map(k);
-                            if (val != null) {
-                                node.val = val;
-                                added = true;
-                            }
-                        } finally {
-                            if (!added)
-                                setTabAt(tab, i, null);
+                if (casTabAt(tab, i, null, node)) {
+                    validated = true;
+                    try {
+                        val = fn.map(k);
+                        if (val != null) {
+                            node.val = val;
+                            added = true;
+                        }
+                    } finally {
+                        if (!added)
+                            setTabAt(tab, i, null);
+                        if (!node.casHash(fh, h)) {
+                            node.hash = fh;
+                            synchronized(node) { node.notifyAll(); };
                         }
                     }
                 }
                 if (validated)
                     break;
             }
-            else if (e.hash < 0)
-                tab = (Node[])e.key;
-            else if (!replace && e.hash == h && (ev = e.val) != null &&
-                     ((ek = e.key) == k || k.equals(ek))) {
-                if (tabAt(tab, i) == e) {
-                    val = (V)ev;
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if (!replace && (fh & HASH_BITS) == h && (fv = f.val) != null &&
+                     ((fk = f.key) == k || k.equals(fk))) {
+                if (tabAt(tab, i) == f) {
+                    val = (V)fv;
                     break;
                 }
             }
-            else if (Thread.holdsLock(e))
-                throw new IllegalStateException("Recursive map computation");
-            else {
+            else if ((fh & LOCKED) != 0)
+                f.tryAwaitLock(tab, i);
+            else if (f.casHash(fh, fh | LOCKED)) {
                 boolean validated = false;
                 boolean checkSize = false;
-                synchronized (e) {
-                    if (tabAt(tab, i) == e) {
+                try {
+                    if (tabAt(tab, i) == f) {
                         validated = true;
-                        for (Node first = e;;) {
-                            if (e.hash == h &&
-                                ((ek = e.key) == k || k.equals(ek)) &&
-                                ((ev = e.val) != null)) {
-                                Object fv;
-                                if (replace && (fv = f.map(k)) != null)
-                                    ev = e.val = fv;
+                        for (Node e = f;;) {
+                            Object ek, ev, v;
+                            if ((e.hash & HASH_BITS) == h &&
+                                (ev = e.val) != null &&
+                                ((ek = e.key) == k || k.equals(ek))) {
+                                if (replace && (v = fn.map(k)) != null)
+                                    ev = e.val = v;
                                 val = (V)ev;
                                 break;
                             }
                             Node last = e;
                             if ((e = e.next) == null) {
-                                if ((val = f.map(k)) != null) {
+                                if ((val = fn.map(k)) != null) {
                                     last.next = new Node(h, k, val, null);
                                     added = true;
-                                    if (last != first || tab.length <= 64)
+                                    if (last != f || tab.length <= 64)
                                         checkSize = true;
                                 }
                                 break;
                             }
                         }
                     }
+                } finally {
+                    if (!f.casHash(fh | LOCKED, fh)) {
+                        f.hash = fh;
+                        synchronized(f) { f.notifyAll(); };
+                    }
                 }
                 if (validated) {
+                    int sc;
                     if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                        resizing == 0 && counter.sum() >= (long)threshold)
+                        (sc = sizeCtl) >= 0 && counter.sum() >= (long)sc)
                         growTable();
                     break;
                 }
@@ -728,25 +756,31 @@ public class ConcurrentHashMapV8<K, V>
         int i = 0;
         Node[] tab = table;
         while (tab != null && i < tab.length) {
-            Node e = tabAt(tab, i);
-            if (e == null)
+            int fh;
+            Node f = tabAt(tab, i);
+            if (f == null)
                 ++i;
-            else if (e.hash < 0)
-                tab = (Node[])e.key;
-            else {
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if ((fh & LOCKED) != 0)
+                f.tryAwaitLock(tab, i);
+            else if (f.casHash(fh, fh | LOCKED)) {
                 boolean validated = false;
-                synchronized (e) {
-                    if (tabAt(tab, i) == e) {
+                try {
+                    if (tabAt(tab, i) == f) {
                         validated = true;
-                        Node en;
-                        do {
-                            en = e.next;
+                        for (Node e = f; e != null; e = e.next) {
                             if (e.val != null) { // currently always true
                                 e.val = null;
                                 --delta;
                             }
-                        } while ((e = en) != null);
+                        }
                         setTabAt(tab, i, null);
+                    }
+                } finally {
+                    if (!f.casHash(fh | LOCKED, fh)) {
+                        f.hash = fh;
+                        synchronized(f) { f.notifyAll(); };
                     }
                 }
                 if (validated)
@@ -754,6 +788,177 @@ public class ConcurrentHashMapV8<K, V>
             }
         }
         counter.add(delta);
+    }
+
+    /* ----------------Table Initialization and Resizing -------------- */
+
+    /**
+     * Returns a power of two table size for the given desired capacity.
+     * See Hackers Delight, sec 3.2
+     */
+    private static final int tableSizeFor(int c) {
+        int n = c - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+    }
+
+    /**
+     * Initializes table, using the size recorded in sizeCtl.
+     */
+    private final Node[] initTable() {
+        Node[] tab; int sc;
+        while ((tab = table) == null) {
+            if ((sc = sizeCtl) < 0)
+                Thread.yield(); // lost initialization race; just spin
+            else if (UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
+                try {
+                    if ((tab = table) == null) {
+                        int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
+                        tab = table = new Node[n];
+                        sc = n - (n >>> 2) - 1;
+                    }
+                } finally {
+                    sizeCtl = sc;
+                }
+                break;
+            }
+        }
+        return tab;
+    }
+
+    /**
+     * If not already resizing, creates next table and transfers bins.
+     * Rechecks occupancy after a transfer to see if another resize is
+     * already needed because resizings are lagging additions.
+     */
+    private final void growTable() {
+        int sc = sizeCtl;
+        if (sc >= 0 && UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
+            try {
+                Node[] tab; int n;
+                while ((tab = table) != null &&
+                       (n = tab.length) > 0 && n < MAXIMUM_CAPACITY &&
+                       counter.sum() >= (long)sc) {
+                    table = rebuild(tab);
+                    sc = (n << 1) - (n >>> 1) - 1;
+                }
+            } finally {
+                sizeCtl = sc;
+            }
+        }
+    }
+
+    /*
+     * Moves and/or copies the nodes in each bin to new table. See
+     * above for explanation.
+     *
+     * @return the new table
+     */
+    private static final Node[] rebuild(Node[] tab) {
+        int n = tab.length;
+        Node[] nextTab = new Node[n << 1];
+        Node fwd = new Node(MOVED, nextTab, null, null);
+        int[] buffer = null;       // holds bins to revisit; null until needed
+        Node rev = null;           // reverse forwarder; null until needed
+        int nbuffered = 0;         // the number of bins in buffer list
+        int bufferIndex = 0;       // buffer index of current buffered bin
+        int bin = n - 1;           // current non-buffered bin or -1 if none
+
+        for (int i = bin;;) {      // start upwards sweep
+            int fh; Node f;
+            if ((f = tabAt(tab, i)) == null) {
+                if (bin >= 0) {    // no lock needed (or available)
+                    if (!casTabAt(tab, i, f, fwd))
+                        continue;
+                }
+                else {             // transiently use a locked forwarding node
+                    Node g =  new Node(MOVED|LOCKED, nextTab, null, null);
+                    if (!casTabAt(tab, i, f, g))
+                        continue;
+                    setTabAt(nextTab, i, null);
+                    setTabAt(nextTab, i + n, null);
+                    setTabAt(tab, i, fwd);
+                    if (!g.casHash(MOVED|LOCKED, MOVED)) {
+                        g.hash = MOVED;
+                        synchronized(g) { g.notifyAll(); }
+                    }
+                }
+            }
+            else if (((fh = f.hash) & LOCKED) == 0 && f.casHash(fh, fh|LOCKED)) {
+                boolean validated = false;
+                try {              // split to lo and hi lists; copying as needed
+                    if (tabAt(tab, i) == f) {
+                        validated = true;
+                        Node e = f, lastRun = f;
+                        Node lo = null, hi = null;
+                        int runBit = e.hash & n;
+                        for (Node p = e.next; p != null; p = p.next) {
+                            int b = p.hash & n;
+                            if (b != runBit) {
+                                runBit = b;
+                                lastRun = p;
+                            }
+                        }
+                        if (runBit == 0)
+                            lo = lastRun;
+                        else
+                            hi = lastRun;
+                        for (Node p = e; p != lastRun; p = p.next) {
+                            int ph = p.hash & HASH_BITS;
+                            Object pk = p.key, pv = p.val;
+                            if ((ph & n) == 0)
+                                lo = new Node(ph, pk, pv, lo);
+                            else
+                                hi = new Node(ph, pk, pv, hi);
+                        }
+                        setTabAt(nextTab, i, lo);
+                        setTabAt(nextTab, i + n, hi);
+                        setTabAt(tab, i, fwd);
+                    }
+                } finally {
+                    if (!f.casHash(fh | LOCKED, fh)) {
+                        f.hash = fh;
+                        synchronized(f) { f.notifyAll(); };
+                    }
+                }
+                if (!validated)
+                    continue;
+            }
+            else {
+                if (buffer == null) // initialize buffer for revisits
+                    buffer = new int[TRANSFER_BUFFER_SIZE];
+                if (bin < 0 && bufferIndex > 0) {
+                    int j = buffer[--bufferIndex];
+                    buffer[bufferIndex] = i;
+                    i = j;         // swap with another bin
+                    continue;
+                }
+                if (bin < 0 || nbuffered >= TRANSFER_BUFFER_SIZE) {
+                    f.tryAwaitLock(tab, i);
+                    continue;      // no other options -- block
+                }
+                if (rev == null)   // initialize reverse-forwarder
+                    rev = new Node(MOVED, tab, null, null);
+                if (tabAt(tab, i) != f || (f.hash & LOCKED) == 0)
+                    continue;      // recheck before adding to list
+                buffer[nbuffered++] = i;
+                setTabAt(nextTab, i, rev);     // install place-holders
+                setTabAt(nextTab, i + n, rev);
+            }
+
+            if (bin > 0)
+                i = --bin;
+            else if (buffer != null && nbuffered > 0) {
+                bin = -1;
+                i = buffer[bufferIndex = --nbuffered];
+            }
+            else
+                return nextTab;
+        }
     }
 
     /* ----------------Table Traversal -------------- */
@@ -830,20 +1035,20 @@ public class ConcurrentHashMapV8<K, V>
         final void advance() {
             Node e = last = next;
             outer: do {
-                if (e != null)                   // pass used or skipped node
+                if (e != null)                  // advance past used/skipped node
                     e = e.next;
-                while (e == null) {              // get to next non-null bin
-                    Node[] t; int b, i, n;       // checks must use locals
+                while (e == null) {             // get to next non-null bin
+                    Node[] t; int b, i, n;      // checks must use locals
                     if ((b = baseIndex) >= baseLimit || (i = index) < 0 ||
                         (t = tab) == null || i >= (n = t.length))
                         break outer;
-                    else if ((e = tabAt(t, i)) != null && e.hash < 0)
-                        tab = (Node[])e.key;     // restarts due to null val
-                    else                         // visit upper slots if present
+                    else if ((e = tabAt(t, i)) != null && e.hash == MOVED)
+                        tab = (Node[])e.key;    // restarts due to null val
+                    else                        // visit upper slots if present
                         index = (i += baseSize) < n ? i : (baseIndex = b + 1);
                 }
                 nextKey = e.key;
-            } while ((nextVal = e.val) == null); // skip deleted or special nodes
+            } while ((nextVal = e.val) == null);// skip deleted or special nodes
             next = e;
         }
     }
@@ -855,7 +1060,6 @@ public class ConcurrentHashMapV8<K, V>
      */
     public ConcurrentHashMapV8() {
         this.counter = new LongAdder();
-        this.targetCapacity = DEFAULT_CAPACITY;
     }
 
     /**
@@ -875,7 +1079,7 @@ public class ConcurrentHashMapV8<K, V>
                    MAXIMUM_CAPACITY :
                    tableSizeFor(initialCapacity + (initialCapacity >>> 1) + 1));
         this.counter = new LongAdder();
-        this.targetCapacity = cap;
+        this.sizeCtl = cap;
     }
 
     /**
@@ -885,7 +1089,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     public ConcurrentHashMapV8(Map<? extends K, ? extends V> m) {
         this.counter = new LongAdder();
-        this.targetCapacity = DEFAULT_CAPACITY;
+        this.sizeCtl = DEFAULT_CAPACITY;
         putAll(m);
     }
 
@@ -936,7 +1140,7 @@ public class ConcurrentHashMapV8<K, V>
         int cap =  ((size >= (long)MAXIMUM_CAPACITY) ?
                     MAXIMUM_CAPACITY: tableSizeFor((int)size));
         this.counter = new LongAdder();
-        this.targetCapacity = cap;
+        this.sizeCtl = cap;
     }
 
     /**
@@ -954,6 +1158,11 @@ public class ConcurrentHashMapV8<K, V>
         return ((n < 0L) ? 0 :
                 (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
                 (int)n);
+    }
+
+    final long longSize() { // accurate version of size needed for views
+        long n = counter.sum();
+        return (n < 0L) ? 0L : n;
     }
 
     /**
@@ -1076,18 +1285,33 @@ public class ConcurrentHashMapV8<K, V>
         if (m == null)
             throw new NullPointerException();
         /*
-         * If uninitialized, try to adjust targetCapacity to
-         * accommodate the given number of elements.
+         * If uninitialized, try to preallocate big enough table
          */
         if (table == null) {
             int size = m.size();
-            int cap = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY :
+            int n = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY :
                 tableSizeFor(size + (size >>> 1) + 1);
-            if (cap > targetCapacity)
-                targetCapacity = cap;
+            int sc = sizeCtl;
+            if (n < sc)
+                n = sc;
+            if (sc >= 0 &&
+                UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
+                try {
+                    if (table == null) {
+                        table = new Node[n];
+                        sc = n - (n >>> 2) - 1;
+                    }
+                } finally {
+                    sizeCtl = sc;
+                }
+            }
         }
-        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
-            put(e.getKey(), e.getValue());
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
+            Object ek = e.getKey(), ev = e.getValue();
+            if (ek == null || ev == null)
+                throw new NullPointerException();
+            internalPut(ek, ev, true);
+        }
     }
 
     /**
@@ -1462,22 +1686,32 @@ public class ConcurrentHashMapV8<K, V>
             Object k = nextKey;
             Object v = nextVal;
             advance();
-            return new WriteThroughEntry<K,V>(map, (K)k, (V)v);
+            return new WriteThroughEntry<K,V>((K)k, (V)v, map);
+        }
+    }
+
+    static final class SnapshotEntryIterator<K,V> extends ViewIterator<K,V>
+        implements Iterator<Map.Entry<K,V>> {
+        SnapshotEntryIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
+
+        @SuppressWarnings("unchecked")
+        public final Map.Entry<K,V> next() {
+            if (next == null)
+                throw new NoSuchElementException();
+            Object k = nextKey;
+            Object v = nextVal;
+            advance();
+            return new SnapshotEntry<K,V>((K)k, (V)v);
         }
     }
 
     /**
-     * Custom Entry class used by EntryIterator.next(), that relays
-     * setValue changes to the underlying map.
+     * Base of writeThrough and Snapshot entry classes
      */
-    static final class WriteThroughEntry<K,V> implements Map.Entry<K, V> {
-        final ConcurrentHashMapV8<K, V> map;
+    static abstract class MapEntry<K,V> implements Map.Entry<K, V> {
         final K key; // non-null
         V val;       // non-null
-        WriteThroughEntry(ConcurrentHashMapV8<K, V> map, K key, V val) {
-            this.map = map; this.key = key; this.val = val;
-        }
-
+        MapEntry(K key, V val)        { this.key = key; this.val = val; }
         public final K getKey()       { return key; }
         public final V getValue()     { return val; }
         public final int hashCode()   { return key.hashCode() ^ val.hashCode(); }
@@ -1490,6 +1724,21 @@ public class ConcurrentHashMapV8<K, V>
                     (v = e.getValue()) != null &&
                     (k == key || k.equals(key)) &&
                     (v == val || v.equals(val)));
+        }
+
+        public abstract V setValue(V value);
+    }
+
+    /**
+     * Entry used by EntryIterator.next(), that relays setValue
+     * changes to the underlying map.
+     */
+    static final class WriteThroughEntry<K,V> extends MapEntry<K,V>
+        implements Map.Entry<K, V> {
+        final ConcurrentHashMapV8<K, V> map;
+        WriteThroughEntry(K key, V val, ConcurrentHashMapV8<K, V> map) {
+            super(key, val);
+            this.map = map;
         }
 
         /**
@@ -1510,50 +1759,211 @@ public class ConcurrentHashMapV8<K, V>
         }
     }
 
+    /**
+     * Internal version of entry, that doesn't write though changes
+     */
+    static final class SnapshotEntry<K,V> extends MapEntry<K,V>
+        implements Map.Entry<K, V> {
+        SnapshotEntry(K key, V val) { super(key, val); }
+        public final V setValue(V value) { // only locally update
+            if (value == null) throw new NullPointerException();
+            V v = val;
+            val = value;
+            return v;
+        }
+    }
+
     /* ----------------Views -------------- */
 
-    /*
-     * These currently just extend java.util.AbstractX classes, but
-     * may need a new custom base to support partitioned traversal.
+    /**
+     * Base class for views. This is done mainly to allow adding
+     * customized parallel traversals (not yet implemented.)
      */
-
-    static final class KeySet<K,V> extends AbstractSet<K> {
+    static abstract class MapView<K, V> {
         final ConcurrentHashMapV8<K, V> map;
-        KeySet(ConcurrentHashMapV8<K, V> map)   { this.map = map; }
-
+        MapView(ConcurrentHashMapV8<K, V> map)  { this.map = map; }
         public final int size()                 { return map.size(); }
         public final boolean isEmpty()          { return map.isEmpty(); }
         public final void clear()               { map.clear(); }
+
+        // implementations below rely on concrete classes supplying these
+        abstract Iterator<?> iter();
+        abstract public boolean contains(Object o);
+        abstract public boolean remove(Object o);
+
+        private static final String oomeMsg = "Required array size too large";
+
+        public final Object[] toArray() {
+            long sz = map.longSize();
+            if (sz > (long)(MAX_ARRAY_SIZE))
+                throw new OutOfMemoryError(oomeMsg);
+            int n = (int)sz;
+            Object[] r = new Object[n];
+            int i = 0;
+            Iterator<?> it = iter();
+            while (it.hasNext()) {
+                if (i == n) {
+                    if (n >= MAX_ARRAY_SIZE)
+                        throw new OutOfMemoryError(oomeMsg);
+                    if (n >= MAX_ARRAY_SIZE - (MAX_ARRAY_SIZE >>> 1) - 1)
+                        n = MAX_ARRAY_SIZE;
+                    else
+                        n += (n >>> 1) + 1;
+                    r = Arrays.copyOf(r, n);
+                }
+                r[i++] = it.next();
+            }
+            return (i == n) ? r : Arrays.copyOf(r, i);
+        }
+
+        @SuppressWarnings("unchecked")
+        public final <T> T[] toArray(T[] a) {
+            long sz = map.longSize();
+            if (sz > (long)(MAX_ARRAY_SIZE))
+                throw new OutOfMemoryError(oomeMsg);
+            int m = (int)sz;
+            T[] r = (a.length >= m) ? a :
+                (T[])java.lang.reflect.Array
+                .newInstance(a.getClass().getComponentType(), m);
+            int n = r.length;
+            int i = 0;
+            Iterator<?> it = iter();
+            while (it.hasNext()) {
+                if (i == n) {
+                    if (n >= MAX_ARRAY_SIZE)
+                        throw new OutOfMemoryError(oomeMsg);
+                    if (n >= MAX_ARRAY_SIZE - (MAX_ARRAY_SIZE >>> 1) - 1)
+                        n = MAX_ARRAY_SIZE;
+                    else
+                        n += (n >>> 1) + 1;
+                    r = Arrays.copyOf(r, n);
+                }
+                r[i++] = (T)it.next();
+            }
+            if (a == r && i < n) {
+                r[i] = null; // null-terminate
+                return r;
+            }
+            return (i == n) ? r : Arrays.copyOf(r, i);
+        }
+
+        public final int hashCode() {
+            int h = 0;
+            for (Iterator<?> it = iter(); it.hasNext();)
+                h += it.next().hashCode();
+            return h;
+        }
+
+        public final String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append('[');
+            Iterator<?> it = iter();
+            if (it.hasNext()) {
+                for (;;) {
+                    Object e = it.next();
+                    sb.append(e == this ? "(this Collection)" : e);
+                    if (!it.hasNext())
+                        break;
+                    sb.append(',').append(' ');
+                }
+            }
+            return sb.append(']').toString();
+        }
+
+        public final boolean containsAll(Collection<?> c) {
+            if (c != this) {
+                for (Iterator<?> it = c.iterator(); it.hasNext();) {
+                    Object e = it.next();
+                    if (e == null || !contains(e))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public final boolean removeAll(Collection c) {
+            boolean modified = false;
+            for (Iterator<?> it = iter(); it.hasNext();) {
+                if (c.contains(it.next())) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+            return modified;
+        }
+
+        public final boolean retainAll(Collection<?> c) {
+            boolean modified = false;
+            for (Iterator<?> it = iter(); it.hasNext();) {
+                if (!c.contains(it.next())) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+            return modified;
+        }
+
+    }
+
+    static final class KeySet<K,V> extends MapView<K,V> implements Set<K> {
+        KeySet(ConcurrentHashMapV8<K, V> map)   { super(map); }
         public final boolean contains(Object o) { return map.containsKey(o); }
         public final boolean remove(Object o)   { return map.remove(o) != null; }
+
         public final Iterator<K> iterator() {
             return new KeyIterator<K,V>(map);
         }
+        final Iterator<?> iter() {
+            return new KeyIterator<K,V>(map);
+        }
+        public final boolean add(K e) {
+            throw new UnsupportedOperationException();
+        }
+        public final boolean addAll(Collection<? extends K> c) {
+            throw new UnsupportedOperationException();
+        }
+        public boolean equals(Object o) {
+            Set<?> c;
+            return ((o instanceof Set) &&
+                    ((c = (Set<?>)o) == this ||
+                     (containsAll(c) && c.containsAll(this))));
+        }
     }
 
-    static final class Values<K,V> extends AbstractCollection<V> {
-        final ConcurrentHashMapV8<K, V> map;
-        Values(ConcurrentHashMapV8<K, V> map)   { this.map = map; }
-
-        public final int size()                 { return map.size(); }
-        public final boolean isEmpty()          { return map.isEmpty(); }
-        public final void clear()               { map.clear(); }
+    static final class Values<K,V> extends MapView<K,V>
+        implements Collection<V>  {
+        Values(ConcurrentHashMapV8<K, V> map)   { super(map); }
         public final boolean contains(Object o) { return map.containsValue(o); }
+
+        public final boolean remove(Object o) {
+            if (o != null) {
+                Iterator<V> it = new ValueIterator<K,V>(map);
+                while (it.hasNext()) {
+                    if (o.equals(it.next())) {
+                        it.remove();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
         public final Iterator<V> iterator() {
             return new ValueIterator<K,V>(map);
         }
+        final Iterator<?> iter() {
+            return new ValueIterator<K,V>(map);
+        }
+        public final boolean add(V e) {
+            throw new UnsupportedOperationException();
+        }
+        public final boolean addAll(Collection<? extends V> c) {
+            throw new UnsupportedOperationException();
+        }
     }
 
-    static final class EntrySet<K,V> extends AbstractSet<Map.Entry<K,V>> {
-        final ConcurrentHashMapV8<K, V> map;
-        EntrySet(ConcurrentHashMapV8<K, V> map) { this.map = map; }
-
-        public final int size()                 { return map.size(); }
-        public final boolean isEmpty()          { return map.isEmpty(); }
-        public final void clear()               { map.clear(); }
-        public final Iterator<Map.Entry<K,V>> iterator() {
-            return new EntryIterator<K,V>(map);
-        }
+    static final class EntrySet<K,V>  extends MapView<K,V>
+        implements Set<Map.Entry<K,V>> {
+        EntrySet(ConcurrentHashMapV8<K, V> map) { super(map); }
 
         public final boolean contains(Object o) {
             Object k, v, r; Map.Entry<?,?> e;
@@ -1570,6 +1980,25 @@ public class ConcurrentHashMapV8<K, V>
                     (k = (e = (Map.Entry<?,?>)o).getKey()) != null &&
                     (v = e.getValue()) != null &&
                     map.remove(k, v));
+        }
+
+        public final Iterator<Map.Entry<K,V>> iterator() {
+            return new EntryIterator<K,V>(map);
+        }
+        final Iterator<?> iter() {
+            return new SnapshotEntryIterator<K,V>(map);
+        }
+        public final boolean add(Entry<K,V> e) {
+            throw new UnsupportedOperationException();
+        }
+        public final boolean addAll(Collection<? extends Entry<K,V>> c) {
+            throw new UnsupportedOperationException();
+        }
+        public boolean equals(Object o) {
+            Set<?> c;
+            return ((o instanceof Set) &&
+                    ((c = (Set<?>)o) == this ||
+                     (containsAll(c) && c.containsAll(this))));
         }
     }
 
@@ -1626,7 +2055,6 @@ public class ConcurrentHashMapV8<K, V>
         this.segments = null; // unneeded
         // initialize transient final field
         UNSAFE.putObjectVolatile(this, counterOffset, new LongAdder());
-        this.targetCapacity = DEFAULT_CAPACITY;
 
         // Create all nodes, then place in table once size is known
         long size = 0L;
@@ -1643,19 +2071,19 @@ public class ConcurrentHashMapV8<K, V>
         }
         if (p != null) {
             boolean init = false;
-            if (resizing == 0 &&
-                UNSAFE.compareAndSwapInt(this, resizingOffset, 0, 1)) {
+            int n;
+            if (size >= (long)(MAXIMUM_CAPACITY >>> 1))
+                n = MAXIMUM_CAPACITY;
+            else {
+                int sz = (int)size;
+                n = tableSizeFor(sz + (sz >>> 1) + 1);
+            }
+            int sc = sizeCtl;
+            if (n > sc &&
+                UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
                 try {
                     if (table == null) {
                         init = true;
-                        int n;
-                        if (size >= (long)(MAXIMUM_CAPACITY >>> 1))
-                            n = MAXIMUM_CAPACITY;
-                        else {
-                            int sz = (int)size;
-                            n = tableSizeFor(sz + (sz >>> 1) + 1);
-                        }
-                        threshold = n - (n >>> 2) - THRESHOLD_OFFSET;
                         Node[] tab = new Node[n];
                         int mask = n - 1;
                         while (p != null) {
@@ -1667,9 +2095,10 @@ public class ConcurrentHashMapV8<K, V>
                         }
                         table = tab;
                         counter.add(size);
+                        sc = n - (n >>> 2) - 1;
                     }
                 } finally {
-                    resizing = 0;
+                    sizeCtl = sc;
                 }
             }
             if (!init) { // Can only happen if unsafely published.
@@ -1684,7 +2113,7 @@ public class ConcurrentHashMapV8<K, V>
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;
     private static final long counterOffset;
-    private static final long resizingOffset;
+    private static final long sizeCtlOffset;
     private static final long ABASE;
     private static final int ASHIFT;
 
@@ -1695,8 +2124,8 @@ public class ConcurrentHashMapV8<K, V>
             Class<?> k = ConcurrentHashMapV8.class;
             counterOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("counter"));
-            resizingOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("resizing"));
+            sizeCtlOffset = UNSAFE.objectFieldOffset
+                (k.getDeclaredField("sizeCtl"));
             Class<?> sc = Node[].class;
             ABASE = UNSAFE.arrayBaseOffset(sc);
             ss = UNSAFE.arrayIndexScale(sc);

@@ -681,7 +681,7 @@ public class ConcurrentHashMapV8<K, V>
                         if (!added)
                             setTabAt(tab, i, null);
                         if (!node.casHash(fh, h)) {
-                            node.hash = fh;
+                            node.hash = h;
                             synchronized(node) { node.notifyAll(); };
                         }
                     }

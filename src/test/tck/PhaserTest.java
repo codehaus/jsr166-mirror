@@ -191,9 +191,8 @@ public class PhaserTest extends JSR166TestCase {
     /**
      * register on a subphaser that is currently empty succeeds, even
      * in the presence of another non-empty subphaser
-     * XXXX broken (hangs) as of 2011-06-26
      */
-    public void XXXXtestRegisterEmptySubPhaser() {
+    public void testRegisterEmptySubPhaser() {
         Phaser root = new Phaser();
         Phaser child1 = new Phaser(root, 1);
         Phaser child2 = new Phaser(root, 0);

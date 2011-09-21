@@ -1517,6 +1517,18 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
+     * Same as prestartCoreThread except arranges that at least one
+     * thread is started even if corePoolSize is 0.
+     */
+    void ensurePrestart() {
+        int wc = workerCountOf(ctl.get());
+        if (wc == 0)
+            addWorker(null, false);
+        else if (wc < corePoolSize)
+            addWorker(null, true);
+    }
+
+    /**
      * Starts all core threads, causing them to idly wait for work. This
      * overrides the default policy of starting core threads only when
      * new tasks are executed.

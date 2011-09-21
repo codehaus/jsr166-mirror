@@ -360,19 +360,26 @@ public class Phaser {
                     throw new IllegalStateException(badArrive(s));
             }
             else if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
+                long n = s & PARTIES_MASK;  // base of next state
+                int nextUnarrived = (int)n >>> PARTIES_SHIFT;
                 if (unarrived == 0) {
-                    long n = s & PARTIES_MASK;  // base of next state
-                    int nextUnarrived = (int)n >>> PARTIES_SHIFT;
-                    if (root != this)
-                        return parent.doArrive(nextUnarrived == 0);
-                    if (onAdvance(phase, nextUnarrived))
-                        n |= TERMINATION_BIT;
-                    else if (nextUnarrived == 0)
-                        n |= EMPTY;
+                    if (root == this) {
+                        if (onAdvance(phase, nextUnarrived))
+                            n |= TERMINATION_BIT;
+                        else if (nextUnarrived == 0)
+                            n |= EMPTY;
+                        else
+                            n |= nextUnarrived;
+                        n |= (long)((phase + 1) & MAX_PHASE) << PHASE_SHIFT;
+                        UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
+                    }
+                    else if (nextUnarrived == 0) { // propagate deregistration
+                        phase = parent.doArrive(true);
+                        UNSAFE.compareAndSwapLong(this, stateOffset,
+                                                  s, s | EMPTY);
+                    }
                     else
-                        n |= nextUnarrived;
-                    n |= (long)((phase + 1) & MAX_PHASE) << PHASE_SHIFT;
-                    UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
+                        phase = parent.doArrive(false);
                     releaseWaiters(phase);
                 }
                 return phase;
@@ -392,7 +399,7 @@ public class Phaser {
         final Phaser parent = this.parent;
         int phase;
         for (;;) {
-            long s = state;
+            long s = (parent == null) ? state : reconcileState();
             int counts = (int)s;
             int parties = counts >>> PARTIES_SHIFT;
             int unarrived = counts & UNARRIVED_MASK;
@@ -458,7 +465,8 @@ public class Phaser {
                     s = (((long)phase << PHASE_SHIFT) |
                          (s & PARTIES_MASK) |
                          ((p = (int)s >>> PARTIES_SHIFT) == 0 ? EMPTY :
-                          (u = (int)s & UNARRIVED_MASK) == 0 ? p : u))))
+                          ((u = (int)s & UNARRIVED_MASK) == 0 && phase >= 0) ?
+                          p : u))))
                 s = state;
         }
         return s;

@@ -424,7 +424,7 @@ public class ConcurrentHashMapV8<K, V>
                             Thread.yield();  // heuristically yield mid-way
                     }
                     else if (casHash(h, h | WAITING)) {
-                        synchronized(this) {
+                        synchronized (this) {
                             if (tabAt(tab, i) == this &&
                                 (hash & WAITING) == WAITING) {
                                 try {
@@ -571,7 +571,7 @@ public class ConcurrentHashMapV8<K, V>
                 } finally {                  // unlock and signal if needed
                     if (!f.casHash(fh | LOCKED, fh)) {
                         f.hash = fh;
-                        synchronized(f) { f.notifyAll(); };
+                        synchronized (f) { f.notifyAll(); };
                     }
                 }
                 if (validated) {
@@ -639,7 +639,7 @@ public class ConcurrentHashMapV8<K, V>
                 } finally {
                     if (!f.casHash(fh | LOCKED, fh)) {
                         f.hash = fh;
-                        synchronized(f) { f.notifyAll(); };
+                        synchronized (f) { f.notifyAll(); };
                     }
                 }
                 if (validated) {
@@ -682,7 +682,7 @@ public class ConcurrentHashMapV8<K, V>
                             setTabAt(tab, i, null);
                         if (!node.casHash(fh, h)) {
                             node.hash = h;
-                            synchronized(node) { node.notifyAll(); };
+                            synchronized (node) { node.notifyAll(); };
                         }
                     }
                 }
@@ -731,7 +731,7 @@ public class ConcurrentHashMapV8<K, V>
                 } finally {
                     if (!f.casHash(fh | LOCKED, fh)) {
                         f.hash = fh;
-                        synchronized(f) { f.notifyAll(); };
+                        synchronized (f) { f.notifyAll(); };
                     }
                 }
                 if (validated) {
@@ -780,7 +780,7 @@ public class ConcurrentHashMapV8<K, V>
                 } finally {
                     if (!f.casHash(fh | LOCKED, fh)) {
                         f.hash = fh;
-                        synchronized(f) { f.notifyAll(); };
+                        synchronized (f) { f.notifyAll(); };
                     }
                 }
                 if (validated)
@@ -884,7 +884,7 @@ public class ConcurrentHashMapV8<K, V>
                     setTabAt(tab, i, fwd);
                     if (!g.casHash(MOVED|LOCKED, MOVED)) {
                         g.hash = MOVED;
-                        synchronized(g) { g.notifyAll(); }
+                        synchronized (g) { g.notifyAll(); }
                     }
                 }
             }
@@ -922,7 +922,7 @@ public class ConcurrentHashMapV8<K, V>
                 } finally {
                     if (!f.casHash(fh | LOCKED, fh)) {
                         f.hash = fh;
-                        synchronized(f) { f.notifyAll(); };
+                        synchronized (f) { f.notifyAll(); };
                     }
                 }
                 if (!validated)

@@ -7,6 +7,7 @@
 package java.util.concurrent.atomic;
 
 import java.util.Arrays;
+import java.lang.reflect.Array;
 import sun.misc.Unsafe;
 
 /**
@@ -201,8 +202,10 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
         java.io.InvalidObjectException {
         // Note: This must be changed if any additional fields are defined
         Object a = s.readFields().get("array", null);
-        if (a == null || a.getClass() != Object[].class)
-            throw new java.io.InvalidObjectException("Wrong array type");
+        if (a == null || !a.getClass().isArray())
+            throw new java.io.InvalidObjectException("Not array type");
+        if (a.getClass() != Object[].class)
+            a = Arrays.copyOf((Object[])a, Array.getLength(a), Object[].class);
         unsafe.putObjectVolatile(this, arrayFieldOffset, a);
     }
 

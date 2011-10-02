@@ -1678,7 +1678,7 @@ public class ConcurrentHashMapV8<K, V>
      * final String msg = ...;
      * map.compute(key, new RemappingFunction<Key, String>() {
      *   public String remap(Key k, String v) {
-     *    return (v == null) ? msg : v + msg;});}</pre>
+     *    return (v == null) ? msg : v + msg;});}}</pre>
      *
      * @param key key with which the specified value is to be associated
      * @param remappingFunction the function to compute a value

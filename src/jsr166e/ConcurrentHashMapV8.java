@@ -98,24 +98,34 @@ public class ConcurrentHashMapV8<K, V>
     private static final long serialVersionUID = 7249069246763182397L;
 
     /**
-     * A function computing a mapping from the given key to a value,
-     * or {@code null} if there is no mapping. This is a place-holder
-     * for an upcoming JDK8 interface.
+     * A function computing a mapping from the given key to a value.
+     * This is a place-holder for an upcoming JDK8 interface.
      */
     public static interface MappingFunction<K, V> {
         /**
-         * Returns a value for the given key, or null if there is no
-         * mapping. If this function throws an (unchecked) exception,
-         * the exception is rethrown to its caller, and no mapping is
-         * recorded.  Because this function is invoked within
-         * atomicity control, the computation should be short and
-         * simple. The most common usage is to construct a new object
-         * serving as an initial mapped value.
+         * Returns a non-null value for the given key.
          *
          * @param key the (non-null) key
-         * @return a value, or null if none
+         * @return a non-null value
          */
         V map(K key);
+    }
+
+    /**
+     * A function computing a new mapping given a key and its current
+     * mapped value (or {@code null} if there is no current
+     * mapping). This is a place-holder for an upcoming JDK8
+     * interface.
+     */
+    public static interface RemappingFunction<K, V> {
+        /**
+         * Returns a new value given a key and its current value.
+         *
+         * @param key the (non-null) key
+         * @param value the current value, or null if there is no mapping
+         * @return a non-null value
+         */
+        V remap(K key, V value);
     }
 
     /*
@@ -134,22 +144,26 @@ public class ConcurrentHashMapV8<K, V>
      * work off Object types. And similarly, so do the internal
      * methods of auxiliary iterator and view classes.  All public
      * generic typed methods relay in/out of these internal methods,
-     * supplying null-checks and casts as needed.
+     * supplying null-checks and casts as needed. This also allows
+     * many of the public methods to be factored into a smaller number
+     * of internal methods (although sadly not so for the five
+     * sprawling variants of put-related operations).
      *
      * The table is lazily initialized to a power-of-two size upon the
      * first insertion.  Each bin in the table contains a list of
-     * Nodes (most often, zero or one Node).  Table accesses require
-     * volatile/atomic reads, writes, and CASes.  Because there is no
-     * other way to arrange this without adding further indirections,
-     * we use intrinsics (sun.misc.Unsafe) operations.  The lists of
-     * nodes within bins are always accurately traversable under
-     * volatile reads, so long as lookups check hash code and
-     * non-nullness of value before checking key equality.
+     * Nodes (most often, the list has only zero or one Node).  Table
+     * accesses require volatile/atomic reads, writes, and CASes.
+     * Because there is no other way to arrange this without adding
+     * further indirections, we use intrinsics (sun.misc.Unsafe)
+     * operations.  The lists of nodes within bins are always
+     * accurately traversable under volatile reads, so long as lookups
+     * check hash code and non-nullness of value before checking key
+     * equality.
      *
      * We use the top two bits of Node hash fields for control
      * purposes -- they are available anyway because of addressing
      * constraints.  As explained further below, these top bits are
-     * usd as follows:
+     * used as follows:
      *  00 - Normal
      *  01 - Locked
      *  11 - Locked and may have a thread waiting for lock
@@ -158,9 +172,9 @@ public class ConcurrentHashMapV8<K, V>
      * The lower 30 bits of each Node's hash field contain a
      * transformation (for better randomization -- method "spread") of
      * the key's hash code, except for forwarding nodes, for which the
-     * lower bits are zero (and so always have hash field == "MOVED").
+     * lower bits are zero (and so always have hash field == MOVED).
      *
-     * Insertion (via put or putIfAbsent) of the first node in an
+     * Insertion (via put or its variants) of the first node in an
      * empty bin is performed by just CASing it to the bin.  This is
      * by far the most common case for put operations.  Other update
      * operations (insert, delete, and replace) require locks.  We do
@@ -179,10 +193,10 @@ public class ConcurrentHashMapV8<K, V>
      * validate that it is still the first node after locking it, and
      * retry if not. Because new nodes are always appended to lists,
      * once a node is first in a bin, it remains first until deleted
-     * or the bin becomes invalidated.  However, operations that only
-     * conditionally update may inspect nodes until the point of
-     * update. This is a converse of sorts to the lazy locking
-     * technique described by Herlihy & Shavit.
+     * or the bin becomes invalidated (upon resizing).  However,
+     * operations that only conditionally update may inspect nodes
+     * until the point of update. This is a converse of sorts to the
+     * lazy locking technique described by Herlihy & Shavit.
      *
      * The main disadvantage of per-bin locks is that other update
      * operations on other nodes in a bin list protected by the same
@@ -266,13 +280,17 @@ public class ConcurrentHashMapV8<K, V>
      * The element count is maintained using a LongAdder, which avoids
      * contention on updates but can encounter cache thrashing if read
      * too frequently during concurrent access. To avoid reading so
-     * often, resizing is normally attempted only upon adding to a bin
-     * already holding two or more nodes. Under uniform hash
-     * distributions, the probability of this occurring at threshold
-     * is around 13%, meaning that only about 1 in 8 puts check
-     * threshold (and after resizing, many fewer do so). But this
-     * approximation has high variance for small table sizes, so we
-     * check on any collision for sizes <= 64.
+     * often, resizing is attempted either when a bin lock is
+     * contended, or upon adding to a bin already holding two or more
+     * nodes (checked before adding in the xIfAbsent methods, after
+     * adding in others). Under uniform hash distributions, the
+     * probability of this occurring at threshold is around 13%,
+     * meaning that only about 1 in 8 puts check threshold (and after
+     * resizing, many fewer do so). But this approximation has high
+     * variance for small table sizes, so we check on any collision
+     * for sizes <= 64. The bulk putAll operation further reduces
+     * contention by only committing count updates upon these size
+     * checks.
      *
      * Maintaining API and serialization compatibility with previous
      * versions of this class introduces several oddities. Mainly: We
@@ -496,6 +514,8 @@ public class ConcurrentHashMapV8<K, V>
      */
     private static final int spread(int h) {
         // Apply base step of MurmurHash; see http://code.google.com/p/smhasher/
+        // Despite two multiplies, this is often faster than others
+        // with comparable bit-spread properties.
         h ^= h >>> 16;
         h *= 0x85ebca6b;
         h ^= h >>> 13;
@@ -522,72 +542,6 @@ public class ConcurrentHashMapV8<K, V>
         return null;
     }
 
-    /** Implementation for put and putIfAbsent */
-    private final Object internalPut(Object k, Object v, boolean replace) {
-        int h = spread(k.hashCode());
-        Object oldVal = null;               // previous value or null if none
-        for (Node[] tab = table;;) {
-            int i; Node f; int fh; Object fk, fv;
-            if (tab == null)
-                tab = initTable();
-            else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null) {
-                if (casTabAt(tab, i, null, new Node(h, k, v, null)))
-                    break;                   // no lock when adding to empty bin
-            }
-            else if ((fh = f.hash) == MOVED)
-                tab = (Node[])f.key;
-            else if (!replace && (fh & HASH_BITS) == h && (fv = f.val) != null &&
-                     ((fk = f.key) == k || k.equals(fk))) {
-                oldVal = fv;                // precheck 1st node for putIfAbsent
-                break;
-            }
-            else if ((fh & LOCKED) != 0)
-                f.tryAwaitLock(tab, i);
-            else if (f.casHash(fh, fh | LOCKED)) {
-                boolean validated = false;
-                boolean checkSize = false;
-                try {
-                    if (tabAt(tab, i) == f) {
-                        validated = true;    // retry if 1st already deleted
-                        for (Node e = f;;) {
-                            Object ek, ev;
-                            if ((e.hash & HASH_BITS) == h &&
-                                (ev = e.val) != null &&
-                                ((ek = e.key) == k || k.equals(ek))) {
-                                oldVal = ev;
-                                if (replace)
-                                    e.val = v;
-                                break;
-                            }
-                            Node last = e;
-                            if ((e = e.next) == null) {
-                                last.next = new Node(h, k, v, null);
-                                if (last != f || tab.length <= 64)
-                                    checkSize = true;
-                                break;
-                            }
-                        }
-                    }
-                } finally {                  // unlock and signal if needed
-                    if (!f.casHash(fh | LOCKED, fh)) {
-                        f.hash = fh;
-                        synchronized (f) { f.notifyAll(); };
-                    }
-                }
-                if (validated) {
-                    int sc;
-                    if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                        (sc = sizeCtl) >= 0 && counter.sum() >= (long)sc)
-                        growTable();
-                    break;
-                }
-            }
-        }
-        if (oldVal == null)
-            counter.increment();             // update counter outside of locks
-        return oldVal;
-    }
-
     /**
      * Implementation for the four public remove/replace methods:
      * Replaces node value with v, conditional upon match of cv if
@@ -605,8 +559,10 @@ public class ConcurrentHashMapV8<K, V>
                 tab = (Node[])f.key;
             else if ((fh & HASH_BITS) != h && f.next == null) // precheck
                 break;                          // rules out possible existence
-            else if ((fh & LOCKED) != 0)
+            else if ((fh & LOCKED) != 0) {
+                checkForResize();               // try resizing if can't get lock
                 f.tryAwaitLock(tab, i);
+            }
             else if (f.casHash(fh, fh | LOCKED)) {
                 boolean validated = false;
                 boolean deleted = false;
@@ -639,12 +595,12 @@ public class ConcurrentHashMapV8<K, V>
                 } finally {
                     if (!f.casHash(fh | LOCKED, fh)) {
                         f.hash = fh;
-                        synchronized (f) { f.notifyAll(); };
+                        synchronized(f) { f.notifyAll(); };
                     }
                 }
                 if (validated) {
                     if (deleted)
-                        counter.decrement();
+                        counter.add(-1L);
                     break;
                 }
             }
@@ -652,17 +608,171 @@ public class ConcurrentHashMapV8<K, V>
         return oldVal;
     }
 
-    /** Implementation for computeIfAbsent and compute. Like put, but messier. */
-    // Todo: Somehow reinstate non-termination check
-    @SuppressWarnings("unchecked")
-    private final V internalCompute(K k,
-                                    MappingFunction<? super K, ? extends V> fn,
-                                    boolean replace) {
+    /*
+     * Internal versions of the five insertion methods, each a
+     * little more complicated than the last. All have
+     * the same basic structure as the first (internalPut):
+     *  1. If table uninitialized, create
+     *  2. If bin empty, try to CAS new node
+     *  3. If bin stale, use new table
+     *  4. Lock and validate; if valid, scan and add or update
+     *
+     * The others interweave other checks and/or alternative actions:
+     *  * Plain put checks for and performs resize after insertion.
+     *  * putIfAbsent prescans for mapping without lock (and fails to add
+     *    if present), which also makes pre-emptive resize checks worthwhile.
+     *  * computeIfAbsent extends form used in putIfAbsent with additional
+     *    mechanics to deal with, calls, potential exceptions and null
+     *    returns from function call.
+     *  * compute uses the same function-call mechanics, but without
+     *    the prescans
+     *  * putAll attempts to pre-allocate enough table space
+     *    and more lazily performs count updates and checks.
+     *
+     * Someday when details settle down a bit more, it might be worth
+     * some factoring to reduce sprawl.
+     */
+
+    /** Implementation for put */
+    private final Object internalPut(Object k, Object v) {
         int h = spread(k.hashCode());
-        V val = null;
-        boolean added = false;
-        Node[] tab = table;
-        outer:for (;;) {
+        boolean checkSize = false;
+        for (Node[] tab = table;;) {
+            int i; Node f; int fh;
+            if (tab == null)
+                tab = initTable();
+            else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null) {
+                if (casTabAt(tab, i, null, new Node(h, k, v, null)))
+                    break;                   // no lock when adding to empty bin
+            }
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if ((fh & LOCKED) != 0) {
+                checkForResize();
+                f.tryAwaitLock(tab, i);
+            }
+            else if (f.casHash(fh, fh | LOCKED)) {
+                Object oldVal = null;
+                boolean validated = false;
+                try {                        // needed in case equals() throws
+                    if (tabAt(tab, i) == f) {
+                        validated = true;    // retry if 1st already deleted
+                        for (Node e = f;;) {
+                            Object ek, ev;
+                            if ((e.hash & HASH_BITS) == h &&
+                                (ev = e.val) != null &&
+                                ((ek = e.key) == k || k.equals(ek))) {
+                                oldVal = ev;
+                                e.val = v;
+                                break;
+                            }
+                            Node last = e;
+                            if ((e = e.next) == null) {
+                                last.next = new Node(h, k, v, null);
+                                if (last != f || tab.length <= 64)
+                                    checkSize = true;
+                                break;
+                            }
+                        }
+                    }
+                } finally {                  // unlock and signal if needed
+                    if (!f.casHash(fh | LOCKED, fh)) {
+                        f.hash = fh;
+                        synchronized (f) { f.notifyAll(); };
+                    }
+                }
+                if (validated) {
+                    if (oldVal != null)
+                        return oldVal;
+                    break;
+                }
+            }
+        }
+        counter.add(1L);
+        if (checkSize)
+            checkForResize();
+        return null;
+    }
+
+    /** Implementation for putIfAbsent */
+    private final Object internalPutIfAbsent(Object k, Object v) {
+        int h = spread(k.hashCode());
+        for (Node[] tab = table;;) {
+            int i; Node f; int fh; Object fk, fv;
+            if (tab == null)
+                tab = initTable();
+            else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null) {
+                if (casTabAt(tab, i, null, new Node(h, k, v, null)))
+                    break;
+            }
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if ((fh & HASH_BITS) == h && (fv = f.val) != null &&
+                     ((fk = f.key) == k || k.equals(fk)))
+                return fv;
+            else {
+                Node g = f.next;
+                if (g != null) { // at least 2 nodes -- search and maybe resize
+                    for (Node e = g;;) {
+                        Object ek, ev;
+                        if ((e.hash & HASH_BITS) == h && (ev = e.val) != null &&
+                            ((ek = e.key) == k || k.equals(ek)))
+                            return ev;
+                        if ((e = e.next) == null) {
+                            checkForResize();
+                            break;
+                        }
+                    }
+                }
+                if (((fh = f.hash) & LOCKED) != 0) {
+                    checkForResize();
+                    f.tryAwaitLock(tab, i);
+                }
+                else if (tabAt(tab, i) == f && f.casHash(fh, fh | LOCKED)) {
+                    Object oldVal = null;
+                    boolean validated = false;
+                    try {
+                        if (tabAt(tab, i) == f) {
+                            validated = true;
+                            for (Node e = f;;) {
+                                Object ek, ev;
+                                if ((e.hash & HASH_BITS) == h &&
+                                    (ev = e.val) != null &&
+                                    ((ek = e.key) == k || k.equals(ek))) {
+                                    oldVal = ev;
+                                    break;
+                                }
+                                Node last = e;
+                                if ((e = e.next) == null) {
+                                    last.next = new Node(h, k, v, null);
+                                    break;
+                                }
+                            }
+                        }
+                    } finally {
+                        if (!f.casHash(fh | LOCKED, fh)) {
+                            f.hash = fh;
+                            synchronized(f) { f.notifyAll(); };
+                        }
+                    }
+                    if (validated) {
+                        if (oldVal != null)
+                            return oldVal;
+                        break;
+                    }
+                }
+            }
+        }
+        counter.add(1L);
+        return null;
+    }
+
+    /** Implementation for computeIfAbsent */
+    private final Object internalComputeIfAbsent(K k,
+                                                 MappingFunction<? super K, ?> mf) {
+        int h = spread(k.hashCode());
+        Object val = null;
+        for (Node[] tab = table;;) {
             Node f; int i, fh; Object fk, fv;
             if (tab == null)
                 tab = initTable();
@@ -672,8 +782,100 @@ public class ConcurrentHashMapV8<K, V>
                 if (casTabAt(tab, i, null, node)) {
                     validated = true;
                     try {
-                        val = fn.map(k);
-                        if (val != null) {
+                        if ((val = mf.map(k)) != null)
+                            node.val = val;
+                    } finally {
+                        if (val == null)
+                            setTabAt(tab, i, null);
+                        if (!node.casHash(fh, h)) {
+                            node.hash = h;
+                            synchronized(node) { node.notifyAll(); };
+                        }
+                    }
+                }
+                if (validated)
+                    break;
+            }
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if ((fh & HASH_BITS) == h && (fv = f.val) != null &&
+                     ((fk = f.key) == k || k.equals(fk)))
+                return fv;
+            else {
+                Node g = f.next;
+                if (g != null) {
+                    for (Node e = g;;) {
+                        Object ek, ev;
+                        if ((e.hash & HASH_BITS) == h && (ev = e.val) != null &&
+                            ((ek = e.key) == k || k.equals(ek)))
+                            return ev;
+                        if ((e = e.next) == null) {
+                            checkForResize();
+                            break;
+                        }
+                    }
+                }
+                if (((fh = f.hash) & LOCKED) != 0) {
+                    checkForResize();
+                    f.tryAwaitLock(tab, i);
+                }
+                else if (tabAt(tab, i) == f && f.casHash(fh, fh | LOCKED)) {
+                    boolean validated = false;
+                    try {
+                        if (tabAt(tab, i) == f) {
+                            validated = true;
+                            for (Node e = f;;) {
+                                Object ek, ev;
+                                if ((e.hash & HASH_BITS) == h &&
+                                    (ev = e.val) != null &&
+                                    ((ek = e.key) == k || k.equals(ek))) {
+                                    val = ev;
+                                    break;
+                                }
+                                Node last = e;
+                                if ((e = e.next) == null) {
+                                    if ((val = mf.map(k)) != null)
+                                        last.next = new Node(h, k, val, null);
+                                    break;
+                                }
+                            }
+                        }
+                    } finally {
+                        if (!f.casHash(fh | LOCKED, fh)) {
+                            f.hash = fh;
+                            synchronized(f) { f.notifyAll(); };
+                        }
+                    }
+                    if (validated)
+                        break;
+                }
+            }
+        }
+        if (val == null)
+            throw new NullPointerException();
+        counter.add(1L);
+        return val;
+    }
+
+    /** Implementation for compute */
+    @SuppressWarnings("unchecked")
+    private final Object internalCompute(K k,
+                                         RemappingFunction<? super K, V> mf) {
+        int h = spread(k.hashCode());
+        Object val = null;
+        boolean added = false;
+        boolean checkSize = false;
+        for (Node[] tab = table;;) {
+            Node f; int i, fh;
+            if (tab == null)
+                tab = initTable();
+            else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null) {
+                Node node = new Node(fh = h | LOCKED, k, null, null);
+                boolean validated = false;
+                if (casTabAt(tab, i, null, node)) {
+                    validated = true;
+                    try {
+                        if ((val = mf.remap(k, null)) != null) {
                             node.val = val;
                             added = true;
                         }
@@ -691,34 +893,28 @@ public class ConcurrentHashMapV8<K, V>
             }
             else if ((fh = f.hash) == MOVED)
                 tab = (Node[])f.key;
-            else if (!replace && (fh & HASH_BITS) == h && (fv = f.val) != null &&
-                     ((fk = f.key) == k || k.equals(fk))) {
-                if (tabAt(tab, i) == f) {
-                    val = (V)fv;
-                    break;
-                }
-            }
-            else if ((fh & LOCKED) != 0)
+            else if ((fh & LOCKED) != 0) {
+                checkForResize();
                 f.tryAwaitLock(tab, i);
+            }
             else if (f.casHash(fh, fh | LOCKED)) {
                 boolean validated = false;
-                boolean checkSize = false;
                 try {
                     if (tabAt(tab, i) == f) {
                         validated = true;
                         for (Node e = f;;) {
-                            Object ek, ev, v;
+                            Object ek, ev;
                             if ((e.hash & HASH_BITS) == h &&
                                 (ev = e.val) != null &&
                                 ((ek = e.key) == k || k.equals(ek))) {
-                                if (replace && (v = fn.map(k)) != null)
-                                    ev = e.val = v;
-                                val = (V)ev;
+                                val = mf.remap(k, (V)ev);
+                                if (val != null)
+                                    e.val = val;
                                 break;
                             }
                             Node last = e;
                             if ((e = e.next) == null) {
-                                if ((val = fn.map(k)) != null) {
+                                if ((val = mf.remap(k, null)) != null) {
                                     last.next = new Node(h, k, val, null);
                                     added = true;
                                     if (last != f || tab.length <= 64)
@@ -734,63 +930,101 @@ public class ConcurrentHashMapV8<K, V>
                         synchronized (f) { f.notifyAll(); };
                     }
                 }
-                if (validated) {
-                    int sc;
-                    if (checkSize && tab.length < MAXIMUM_CAPACITY &&
-                        (sc = sizeCtl) >= 0 && counter.sum() >= (long)sc)
-                        growTable();
+                if (validated)
                     break;
-                }
             }
         }
-        if (added)
-            counter.increment();
+        if (added) {
+            counter.add(1L);
+            if (checkSize)
+                checkForResize();
+        }
+        else if (val == null)
+            throw new NullPointerException();
         return val;
     }
 
-    /**
-     * Implementation for clear. Steps through each bin, removing all nodes.
-     */
-    private final void internalClear() {
-        long delta = 0L; // negative number of deletions
-        int i = 0;
-        Node[] tab = table;
-        while (tab != null && i < tab.length) {
-            int fh;
-            Node f = tabAt(tab, i);
-            if (f == null)
-                ++i;
-            else if ((fh = f.hash) == MOVED)
-                tab = (Node[])f.key;
-            else if ((fh & LOCKED) != 0)
-                f.tryAwaitLock(tab, i);
-            else if (f.casHash(fh, fh | LOCKED)) {
-                boolean validated = false;
-                try {
-                    if (tabAt(tab, i) == f) {
-                        validated = true;
-                        for (Node e = f; e != null; e = e.next) {
-                            if (e.val != null) { // currently always true
-                                e.val = null;
-                                --delta;
+    /** Implementation for putAll */
+    private final void internalPutAll(Map<?, ?> m) {
+        tryPresize(m.size());
+        long delta = 0L;     // number of uncommitted additions
+        boolean npe = false; // to throw exception on exit for nulls
+        try {                // to clean up counts on other exceptions
+            for (Map.Entry<?, ?> entry : m.entrySet()) {
+                Object k, v;
+                if (entry == null || (k = entry.getKey()) == null ||
+                    (v = entry.getValue()) == null) {
+                    npe = true;
+                    break;
+                }
+                int h = spread(k.hashCode());
+                for (Node[] tab = table;;) {
+                    int i; Node f; int fh;
+                    if (tab == null)
+                        tab = initTable();
+                    else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null){
+                        if (casTabAt(tab, i, null, new Node(h, k, v, null))) {
+                            ++delta;
+                            break;
+                        }
+                    }
+                    else if ((fh = f.hash) == MOVED)
+                        tab = (Node[])f.key;
+                    else if ((fh & LOCKED) != 0) {
+                        counter.add(delta);
+                        delta = 0L;
+                        checkForResize();
+                        f.tryAwaitLock(tab, i);
+                    }
+                    else if (f.casHash(fh, fh | LOCKED)) {
+                        boolean validated = false;
+                        boolean tooLong = false;
+                        try {
+                            if (tabAt(tab, i) == f) {
+                                validated = true;
+                                for (Node e = f;;) {
+                                    Object ek, ev;
+                                    if ((e.hash & HASH_BITS) == h &&
+                                        (ev = e.val) != null &&
+                                        ((ek = e.key) == k || k.equals(ek))) {
+                                        e.val = v;
+                                        break;
+                                    }
+                                    Node last = e;
+                                    if ((e = e.next) == null) {
+                                        ++delta;
+                                        last.next = new Node(h, k, v, null);
+                                        break;
+                                    }
+                                    tooLong = true;
+                                }
+                            }
+                        } finally {
+                            if (!f.casHash(fh | LOCKED, fh)) {
+                                f.hash = fh;
+                                synchronized(f) { f.notifyAll(); };
                             }
                         }
-                        setTabAt(tab, i, null);
-                    }
-                } finally {
-                    if (!f.casHash(fh | LOCKED, fh)) {
-                        f.hash = fh;
-                        synchronized (f) { f.notifyAll(); };
+                        if (validated) {
+                            if (tooLong) {
+                                counter.add(delta);
+                                delta = 0L;
+                                checkForResize();
+                            }
+                            break;
+                        }
                     }
                 }
-                if (validated)
-                    ++i;
             }
+        } finally {
+            if (delta != 0)
+                counter.add(delta);
         }
-        counter.add(delta);
+        if (npe)
+            throw new NullPointerException();
     }
 
-    /* ----------------Table Initialization and Resizing -------------- */
+    /* ---------------- Table Initialization and Resizing -------------- */
 
     /**
      * Returns a power of two table size for the given desired capacity.
@@ -819,7 +1053,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((tab = table) == null) {
                         int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
                         tab = table = new Node[n];
-                        sc = n - (n >>> 2) - 1;
+                        sc = n - (n >>> 2);
                     }
                 } finally {
                     sizeCtl = sc;
@@ -831,23 +1065,63 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * If not already resizing, creates next table and transfers bins.
-     * Rechecks occupancy after a transfer to see if another resize is
-     * already needed because resizings are lagging additions.
+     * If table is too small and not already resizing, creates next
+     * table and transfers bins.  Rechecks occupancy after a transfer
+     * to see if another resize is already needed because resizings
+     * are lagging additions.
      */
-    private final void growTable() {
-        int sc = sizeCtl;
-        if (sc >= 0 && UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
+    private final void checkForResize() {
+        Node[] tab; int n, sc;
+        while ((tab = table) != null &&
+               (n = tab.length) < MAXIMUM_CAPACITY &&
+               (sc = sizeCtl) >= 0 && counter.sum() >= (long)sc &&
+               UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
             try {
-                Node[] tab; int n;
-                while ((tab = table) != null &&
-                       (n = tab.length) > 0 && n < MAXIMUM_CAPACITY &&
-                       counter.sum() >= (long)sc) {
+                if (tab == table) {
                     table = rebuild(tab);
-                    sc = (n << 1) - (n >>> 1) - 1;
+                    sc = (n << 1) - (n >>> 1);
                 }
             } finally {
                 sizeCtl = sc;
+            }
+        }
+    }
+
+    /**
+     * Tries to presize table to accommodate the given number of elements.
+     *
+     * @param size number of elements (doesn't need to be perfectly accurate)
+     */
+    private final void tryPresize(int size) {
+        int c = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY :
+            tableSizeFor(size + (size >>> 1) + 1);
+        int sc;
+        while ((sc = sizeCtl) >= 0) {
+            Node[] tab = table; int n;
+            if (tab == null || (n = tab.length) == 0) {
+                n = (sc > c)? sc : c;
+                if (UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
+                    try {
+                        if (table == tab) {
+                            table = new Node[n];
+                            sc = n - (n >>> 2);
+                        }
+                    } finally {
+                        sizeCtl = sc;
+                    }
+                }
+            }
+            else if (c <= sc || n >= MAXIMUM_CAPACITY)
+                break;
+            else if (UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
+                try {
+                    if (table == tab) {
+                        table = rebuild(tab);
+                        sc = (n << 1) - (n >>> 1);
+                    }
+                } finally {
+                    sizeCtl = sc;
+                }
             }
         }
     }
@@ -961,6 +1235,54 @@ public class ConcurrentHashMapV8<K, V>
         }
     }
 
+    /**
+     * Implementation for clear. Steps through each bin, removing all
+     * nodes.
+     */
+    private final void internalClear() {
+        long delta = 0L; // negative number of deletions
+        int i = 0;
+        Node[] tab = table;
+        while (tab != null && i < tab.length) {
+            int fh;
+            Node f = tabAt(tab, i);
+            if (f == null)
+                ++i;
+            else if ((fh = f.hash) == MOVED)
+                tab = (Node[])f.key;
+            else if ((fh & LOCKED) != 0) {
+                counter.add(delta); // opportunistically update count
+                delta = 0L;
+                f.tryAwaitLock(tab, i);
+            }
+            else if (f.casHash(fh, fh | LOCKED)) {
+                boolean validated = false;
+                try {
+                    if (tabAt(tab, i) == f) {
+                        validated = true;
+                        for (Node e = f; e != null; e = e.next) {
+                            if (e.val != null) { // currently always true
+                                e.val = null;
+                                --delta;
+                            }
+                        }
+                        setTabAt(tab, i, null);
+                    }
+                } finally {
+                    if (!f.casHash(fh | LOCKED, fh)) {
+                        f.hash = fh;
+                        synchronized(f) { f.notifyAll(); };
+                    }
+                }
+                if (validated)
+                    ++i;
+            }
+        }
+        if (delta != 0)
+            counter.add(delta);
+    }
+
+
     /* ----------------Table Traversal -------------- */
 
     /**
@@ -982,13 +1304,14 @@ public class ConcurrentHashMapV8<K, V>
      * value, or key-value pairs as return values of Iterator.next(),
      * and encapsulate the it.next check as hasNext();
      *
-     * The iterator visits each valid node that was reachable upon
-     * iterator construction once. It might miss some that were added
-     * to a bin after the bin was visited, which is OK wrt consistency
-     * guarantees. Maintaining this property in the face of possible
-     * ongoing resizes requires a fair amount of bookkeeping state
-     * that is difficult to optimize away amidst volatile accesses.
-     * Even so, traversal maintains reasonable throughput.
+     * The iterator visits once each still-valid node that was
+     * reachable upon iterator construction. It might miss some that
+     * were added to a bin after the bin was visited, which is OK wrt
+     * consistency guarantees. Maintaining this property in the face
+     * of possible ongoing resizes requires a fair amount of
+     * bookkeeping state that is difficult to optimize away amidst
+     * volatile accesses.  Even so, traversal maintains reasonable
+     * throughput.
      *
      * Normally, iteration proceeds bin-by-bin traversing lists.
      * However, if the table has been resized, then all future steps
@@ -1026,7 +1349,7 @@ public class ConcurrentHashMapV8<K, V>
             this.tab = tab;
             baseSize = (tab == null) ? 0 : tab.length;
             baseLimit = (hi <= baseSize) ? hi : baseSize;
-            index = baseIndex = lo;
+            index = baseIndex = (lo >= 0) ? lo : 0;
             next = null;
             advance();
         }
@@ -1090,7 +1413,7 @@ public class ConcurrentHashMapV8<K, V>
     public ConcurrentHashMapV8(Map<? extends K, ? extends V> m) {
         this.counter = new LongAdder();
         this.sizeCtl = DEFAULT_CAPACITY;
-        putAll(m);
+        internalPutAll(m);
     }
 
     /**
@@ -1257,7 +1580,7 @@ public class ConcurrentHashMapV8<K, V>
     public V put(K key, V value) {
         if (key == null || value == null)
             throw new NullPointerException();
-        return (V)internalPut(key, value, true);
+        return (V)internalPut(key, value);
     }
 
     /**
@@ -1271,7 +1594,7 @@ public class ConcurrentHashMapV8<K, V>
     public V putIfAbsent(K key, V value) {
         if (key == null || value == null)
             throw new NullPointerException();
-        return (V)internalPut(key, value, false);
+        return (V)internalPutIfAbsent(key, value);
     }
 
     /**
@@ -1282,57 +1605,32 @@ public class ConcurrentHashMapV8<K, V>
      * @param m mappings to be stored in this map
      */
     public void putAll(Map<? extends K, ? extends V> m) {
-        if (m == null)
-            throw new NullPointerException();
-        /*
-         * If uninitialized, try to preallocate big enough table
-         */
-        if (table == null) {
-            int size = m.size();
-            int n = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY :
-                tableSizeFor(size + (size >>> 1) + 1);
-            int sc = sizeCtl;
-            if (n < sc)
-                n = sc;
-            if (sc >= 0 &&
-                UNSAFE.compareAndSwapInt(this, sizeCtlOffset, sc, -1)) {
-                try {
-                    if (table == null) {
-                        table = new Node[n];
-                        sc = n - (n >>> 2) - 1;
-                    }
-                } finally {
-                    sizeCtl = sc;
-                }
-            }
-        }
-        for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
-            Object ek = e.getKey(), ev = e.getValue();
-            if (ek == null || ev == null)
-                throw new NullPointerException();
-            internalPut(ek, ev, true);
-        }
+        internalPutAll(m);
     }
 
     /**
      * If the specified key is not already associated with a value,
-     * computes its value using the given mappingFunction, and if
-     * non-null, enters it into the map.  This is equivalent to
-     *  <pre> {@code
+     * computes its value using the given mappingFunction and
+     * enters it into the map.  This is equivalent to
+     * <pre> {@code
      * if (map.containsKey(key))
      *   return map.get(key);
      * value = mappingFunction.map(key);
-     * if (value != null)
-     *   map.put(key, value);
+     * map.put(key, value);
      * return value;}</pre>
      *
-     * except that the action is performed atomically.  Some attempted
-     * update operations on this map by other threads may be blocked
-     * while computation is in progress, so the computation should be
-     * short and simple, and must not attempt to update any other
-     * mappings of this Map. The most appropriate usage is to
-     * construct a new object serving as an initial mapped value, or
-     * memoized result, as in:
+     * except that the action is performed atomically.  If the
+     * function returns {@code null} (in which case a {@code
+     * NullPointerException} is thrown), or the function itself throws
+     * an (unchecked) exception, the exception is rethrown to its
+     * caller, and no mapping is recorded.  Some attempted update
+     * operations on this map by other threads may be blocked while
+     * computation is in progress, so the computation should be short
+     * and simple, and must not attempt to update any other mappings
+     * of this Map. The most appropriate usage is to construct a new
+     * object serving as an initial mapped value, or memoized result,
+     * as in:
+     *
      *  <pre> {@code
      * map.computeIfAbsent(key, new MappingFunction<K, V>() {
      *   public V map(K k) { return new Value(f(k)); }});}</pre>
@@ -1340,57 +1638,65 @@ public class ConcurrentHashMapV8<K, V>
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
      * @return the current (existing or computed) value associated with
-     *         the specified key, or {@code null} if the computation
-     *         returned {@code null}
-     * @throws NullPointerException if the specified key or mappingFunction
-     *         is null
+     *         the specified key.
+     * @throws NullPointerException if the specified key, mappingFunction,
+     *         or computed value is null
      * @throws IllegalStateException if the computation detectably
      *         attempts a recursive update to this map that would
      *         otherwise never complete
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is left unestablished
      */
+    @SuppressWarnings("unchecked")
     public V computeIfAbsent(K key, MappingFunction<? super K, ? extends V> mappingFunction) {
         if (key == null || mappingFunction == null)
             throw new NullPointerException();
-        return internalCompute(key, mappingFunction, false);
+        return (V)internalComputeIfAbsent(key, mappingFunction);
     }
 
     /**
-     * Computes the value associated with the given key using the given
-     * mappingFunction, and if non-null, enters it into the map.  This
-     * is equivalent to
+     * Computes and enters a new mapping value given a key and
+     * its current mapped value (or {@code null} if there is no current
+     * mapping). This is equivalent to
      *  <pre> {@code
-     * value = mappingFunction.map(key);
-     * if (value != null)
-     *   map.put(key, value);
-     * else
-     *   value = map.get(key);
-     * return value;}</pre>
+     *  map.put(key, remappingFunction.remap(key, map.get(key));
+     * }</pre>
      *
-     * except that the action is performed atomically.  Some attempted
+     * except that the action is performed atomically.  If the
+     * function returns {@code null} (in which case a {@code
+     * NullPointerException} is thrown), or the function itself throws
+     * an (unchecked) exception, the exception is rethrown to its
+     * caller, and current mapping is left unchanged.  Some attempted
      * update operations on this map by other threads may be blocked
      * while computation is in progress, so the computation should be
      * short and simple, and must not attempt to update any other
-     * mappings of this Map.
+     * mappings of this Map. For example, to either create or
+     * append new messages to a value mapping:
+     *
+     * <pre> {@code
+     * Map<Key, String> map = ...;
+     * final String msg = ...;
+     * map.compute(key, new RemappingFunction<Key, String>() {
+     *   public String remap(Key k, String v) {
+     *    return (v == null) ? msg : v + msg;});}</pre>
      *
      * @param key key with which the specified value is to be associated
-     * @param mappingFunction the function to compute a value
-     * @return the current value associated with
-     *         the specified key, or {@code null} if the computation
-     *         returned {@code null} and the value was not otherwise present
-     * @throws NullPointerException if the specified key or mappingFunction
-     *         is null
+     * @param remappingFunction the function to compute a value
+     * @return the new value associated with
+     *         the specified key.
+     * @throws NullPointerException if the specified key or remappingFunction
+     *         or computed value is null
      * @throws IllegalStateException if the computation detectably
      *         attempts a recursive update to this map that would
      *         otherwise never complete
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is unchanged
      */
-    public V compute(K key, MappingFunction<? super K, ? extends V> mappingFunction) {
-        if (key == null || mappingFunction == null)
+    @SuppressWarnings("unchecked")
+    public V compute(K key, RemappingFunction<? super K, V> remappingFunction) {
+        if (key == null || remappingFunction == null)
             throw new NullPointerException();
-        return internalCompute(key, mappingFunction, true);
+        return (V)internalCompute(key, remappingFunction);
     }
 
     /**
@@ -2103,7 +2409,7 @@ public class ConcurrentHashMapV8<K, V>
             }
             if (!init) { // Can only happen if unsafely published.
                 while (p != null) {
-                    internalPut(p.key, p.val, true);
+                    internalPut(p.key, p.val);
                     p = p.next;
                 }
             }

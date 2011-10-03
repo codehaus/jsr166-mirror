@@ -53,13 +53,7 @@ public class LongAdderTable<K> implements Serializable {
      * @return the adder associated with the key
      */
     public LongAdder install(K key) {
-        LongAdder a = map.get(key);
-        if (a == null) {
-            LongAdder r = new LongAdder();
-            if ((a = map.putIfAbsent(key, r)) == null)
-                a = r;
-        }
-        return a;
+        return map.computeIfAbsent(key, createAdder);
     }
 
     /**
@@ -71,10 +65,7 @@ public class LongAdderTable<K> implements Serializable {
      * @param x the value to add
      */
     public void add(K key, long x) {
-        LongAdder a = map.get(key);
-        if (a == null)
-            a = map.computeIfAbsent(key, createAdder);
-        a.add(x);
+        map.computeIfAbsent(key, createAdder).add(x);
     }
 
     /**

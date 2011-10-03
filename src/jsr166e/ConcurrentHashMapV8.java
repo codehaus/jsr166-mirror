@@ -391,7 +391,7 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * Key-value entry. Note that this is never exported out as a
      * user-visible Map.Entry (see WriteThroughEntry and SnapshotEntry
-     * below). Nodes with a negative hash field are special, and do
+     * below). Nodes with a hash field of MOVED are special, and do
      * not contain user keys or values.  Otherwise, keys are never
      * null, and null val fields indicate that a node is in the
      * process of being deleted or created. For purposes of read-only
@@ -934,13 +934,13 @@ public class ConcurrentHashMapV8<K, V>
                     break;
             }
         }
+        if (val == null)
+            throw new NullPointerException();
         if (added) {
             counter.add(1L);
             if (checkSize)
                 checkForResize();
         }
-        else if (val == null)
-            throw new NullPointerException();
         return val;
     }
 
@@ -1689,7 +1689,7 @@ public class ConcurrentHashMapV8<K, V>
      * @throws IllegalStateException if the computation detectably
      *         attempts a recursive update to this map that would
      *         otherwise never complete
-     * @throws RuntimeException or Error if the mappingFunction does so,
+     * @throws RuntimeException or Error if the remappingFunction does so,
      *         in which case the mapping is unchanged
      */
     @SuppressWarnings("unchecked")
@@ -2401,7 +2401,7 @@ public class ConcurrentHashMapV8<K, V>
                         }
                         table = tab;
                         counter.add(size);
-                        sc = n - (n >>> 2) - 1;
+                        sc = n - (n >>> 2);
                     }
                 } finally {
                     sizeCtl = sc;

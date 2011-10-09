@@ -276,6 +276,7 @@ public class Phaser {
     // some special values
     private static final int  ONE_ARRIVAL     = 1;
     private static final int  ONE_PARTY       = 1 << PARTIES_SHIFT;
+    private static final int  ONE_DEREGISTER  = ONE_ARRIVAL|ONE_PARTY;
     private static final int  EMPTY           = 1;
 
     // The following unpacking methods are usually manually inlined
@@ -343,10 +344,11 @@ public class Phaser {
      * Manually tuned to speed up and minimize race windows for the
      * common case of just decrementing unarrived field.
      *
-     * @param deregister false for arrive, true for arriveAndDeregister
+     * @param adjust value to subtract from state;
+     *               ONE_ARRIVAL for arrive,
+     *               ONE_DEREGISTER for arriveAndDeregister
      */
-    private int doArrive(boolean deregister) {
-        int adj = deregister ? ONE_ARRIVAL|ONE_PARTY : ONE_ARRIVAL;
+    private int doArrive(int adjust) {
         final Phaser root = this.root;
         for (;;) {
             long s = (root == this) ? state : reconcileState();
@@ -357,7 +359,7 @@ public class Phaser {
             int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
             if (unarrived <= 0)
                 throw new IllegalStateException(badArrive(s));
-            if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
+            if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adjust)) {
                 if (unarrived == 1) {
                     long n = s & PARTIES_MASK;  // base of next state
                     int nextUnarrived = (int)n >>> PARTIES_SHIFT;
@@ -373,12 +375,12 @@ public class Phaser {
                         UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
                     }
                     else if (nextUnarrived == 0) { // propagate deregistration
-                        phase = parent.doArrive(true);
+                        phase = parent.doArrive(ONE_DEREGISTER);
                         UNSAFE.compareAndSwapLong(this, stateOffset,
                                                   s, s | EMPTY);
                     }
                     else
-                        phase = parent.doArrive(false);
+                        phase = parent.doArrive(ONE_ARRIVAL);
                     releaseWaiters(phase);
                 }
                 return phase;
@@ -394,7 +396,7 @@ public class Phaser {
      */
     private int doRegister(int registrations) {
         // adjustment to state
-        long adj = ((long)registrations << PARTIES_SHIFT) | registrations;
+        long adjust = ((long)registrations << PARTIES_SHIFT) | registrations;
         final Phaser parent = this.parent;
         int phase;
         for (;;) {
@@ -411,12 +413,12 @@ public class Phaser {
                     if (unarrived == 0)             // wait out advance
                         root.internalAwaitAdvance(phase, null);
                     else if (UNSAFE.compareAndSwapLong(this, stateOffset,
-                                                       s, s + adj))
+                                                       s, s + adjust))
                         break;
                 }
             }
             else if (parent == null) {              // 1st root registration
-                long next = ((long)phase << PHASE_SHIFT) | adj;
+                long next = ((long)phase << PHASE_SHIFT) | adjust;
                 if (UNSAFE.compareAndSwapLong(this, stateOffset, s, next))
                     break;
             }
@@ -429,7 +431,7 @@ public class Phaser {
                             // assert phase < 0 || (int)state == EMPTY;
                         } while (!UNSAFE.compareAndSwapLong
                                  (this, stateOffset, state,
-                                  ((long)phase << PHASE_SHIFT) | adj));
+                                  ((long)phase << PHASE_SHIFT) | adjust));
                         break;
                     }
                 }
@@ -597,7 +599,7 @@ public class Phaser {
      * of unarrived parties would become negative
      */
     public int arrive() {
-        return doArrive(false);
+        return doArrive(ONE_ARRIVAL);
     }
 
     /**
@@ -617,7 +619,7 @@ public class Phaser {
      * of registered or unarrived parties would become negative
      */
     public int arriveAndDeregister() {
-        return doArrive(true);
+        return doArrive(ONE_DEREGISTER);
     }
 
     /**

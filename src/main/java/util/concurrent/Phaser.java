@@ -282,7 +282,7 @@ public class Phaser {
 
     private static int unarrivedOf(long s) {
         int counts = (int)s;
-        return (counts == EMPTY) ? 0 : counts & UNARRIVED_MASK;
+        return (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
     }
 
     private static int partiesOf(long s) {
@@ -351,18 +351,16 @@ public class Phaser {
         for (;;) {
             long s = (root == this) ? state : reconcileState();
             int phase = (int)(s >>> PHASE_SHIFT);
-            int counts = (int)s;
-            int unarrived = (counts & UNARRIVED_MASK) - 1;
             if (phase < 0)
                 return phase;
-            else if (counts == EMPTY || unarrived < 0) {
-                if (root == this || reconcileState() == s)
-                    throw new IllegalStateException(badArrive(s));
-            }
-            else if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
+            int counts = (int)s;
+            int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
+            if (unarrived <= 0)
+                throw new IllegalStateException(badArrive(s));
+            if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
                 long n = s & PARTIES_MASK;  // base of next state
                 int nextUnarrived = (int)n >>> PARTIES_SHIFT;
-                if (unarrived == 0) {
+                if (unarrived == 1) {
                     if (root == this) {
                         if (onAdvance(phase, nextUnarrived))
                             n |= TERMINATION_BIT;
@@ -370,7 +368,8 @@ public class Phaser {
                             n |= EMPTY;
                         else
                             n |= nextUnarrived;
-                        n |= (long)((phase + 1) & MAX_PHASE) << PHASE_SHIFT;
+                        int nextPhase = (phase + 1) & MAX_PHASE;
+                        n |= (long)nextPhase << PHASE_SHIFT;
                         UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
                     }
                     else if (nextUnarrived == 0) { // propagate deregistration
@@ -645,17 +644,15 @@ public class Phaser {
         for (;;) {
             long s = (root == this) ? state : reconcileState();
             int phase = (int)(s >>> PHASE_SHIFT);
-            int counts = (int)s;
-            int unarrived = (counts & UNARRIVED_MASK) - 1;
             if (phase < 0)
                 return phase;
-            else if (counts == EMPTY || unarrived < 0) {
-                if (reconcileState() == s)
-                    throw new IllegalStateException(badArrive(s));
-            }
-            else if (UNSAFE.compareAndSwapLong(this, stateOffset, s,
-                                               s -= ONE_ARRIVAL)) {
-                if (unarrived != 0)
+            int counts = (int)s;
+            int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
+            if (unarrived <= 0)
+                throw new IllegalStateException(badArrive(s));
+            if (UNSAFE.compareAndSwapLong(this, stateOffset, s,
+                                          s -= ONE_ARRIVAL)) {
+                if (unarrived > 1)
                     return root.internalAwaitAdvance(phase, null);
                 if (root != this)
                     return parent.arriveAndAwaitAdvance();
@@ -995,7 +992,7 @@ public class Phaser {
 
     /**
      * Possibly blocks and waits for phase to advance unless aborted.
-     * Call only from root node.
+     * Call only on root phaser.
      *
      * @param phase current phase
      * @param node if non-null, the wait node to track interrupt and timeout;
@@ -1003,6 +1000,7 @@ public class Phaser {
      * @return current phase
      */
     private int internalAwaitAdvance(int phase, QNode node) {
+        // assert root == this;
         releaseWaiters(phase-1);          // ensure old queue clean
         boolean queued = false;           // true when node is enqueued
         int lastUnarrived = 0;            // to increase spins upon change

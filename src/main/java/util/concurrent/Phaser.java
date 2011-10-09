@@ -373,6 +373,7 @@ public class Phaser {
                         int nextPhase = (phase + 1) & MAX_PHASE;
                         n |= (long)nextPhase << PHASE_SHIFT;
                         UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
+                        releaseWaiters(phase);
                     }
                     else if (nextUnarrived == 0) { // propagate deregistration
                         phase = parent.doArrive(ONE_DEREGISTER);
@@ -381,7 +382,6 @@ public class Phaser {
                     }
                     else
                         phase = parent.doArrive(ONE_ARRIVAL);
-                    releaseWaiters(phase);
                 }
                 return phase;
             }

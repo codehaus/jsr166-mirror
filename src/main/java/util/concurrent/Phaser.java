@@ -787,8 +787,8 @@ public class Phaser {
             if (UNSAFE.compareAndSwapLong(root, stateOffset,
                                           s, s | TERMINATION_BIT)) {
                 // signal all threads
-                releaseWaiters(0);
-                releaseWaiters(1);
+                releaseWaiters(0); // Waiters on evenQ
+                releaseWaiters(1); // Waiters on oddQ
                 return;
             }
         }

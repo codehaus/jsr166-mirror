@@ -358,9 +358,9 @@ public class Phaser {
             if (unarrived <= 0)
                 throw new IllegalStateException(badArrive(s));
             if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adj)) {
-                long n = s & PARTIES_MASK;  // base of next state
-                int nextUnarrived = (int)n >>> PARTIES_SHIFT;
                 if (unarrived == 1) {
+                    long n = s & PARTIES_MASK;  // base of next state
+                    int nextUnarrived = (int)n >>> PARTIES_SHIFT;
                     if (root == this) {
                         if (onAdvance(phase, nextUnarrived))
                             n |= TERMINATION_BIT;

@@ -406,9 +406,10 @@ public class Phaser {
             int unarrived = counts & UNARRIVED_MASK;
             if (registrations > MAX_PARTIES - parties)
                 throw new IllegalStateException(badRegister(s));
-            else if ((phase = (int)(s >>> PHASE_SHIFT)) < 0)
+            phase = (int)(s >>> PHASE_SHIFT);
+            if (phase < 0)
                 break;
-            else if (counts != EMPTY) {             // not 1st registration
+            if (counts != EMPTY) {                  // not 1st registration
                 if (parent == null || reconcileState() == s) {
                     if (unarrived == 0)             // wait out advance
                         root.internalAwaitAdvance(phase, null);

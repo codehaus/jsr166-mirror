@@ -12,10 +12,10 @@ import java.io.Serializable;
 
 /**
  * A keyed table of adders, that may be useful in computing frequency
- * counts and histograms, or may be used a form of multiset.  A {@link
- * LongAdder} is associated with each key. Keys are added to the table
- * implicitly upon any attempt to update, or may be added explicitly
- * using method {@link #install}.
+ * counts and histograms, or may be used as a form of multiset.  A
+ * {@link LongAdder} is associated with each key. Keys are added to
+ * the table implicitly upon any attempt to update, or may be added
+ * explicitly using method {@link #install}.
  *
  * <p><em>jsr166e note: This class is targeted to be placed in
  * java.util.concurrent.atomic<em>

@@ -13,7 +13,7 @@ class BoxedLongSort {
     static int THRESHOLD;
     static final boolean warmup = true;
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         int procs = 0;
         int n = 1 << 22;
         int reps = 20;
@@ -206,7 +206,7 @@ class BoxedLongSort {
 
     }
 
-    static void checkSorted (Long[] a) {
+    static void checkSorted(Long[] a) {
         int n = a.length;
         for (int i = 0; i < n - 1; i++) {
             if (a[i] > a[i+1]) {

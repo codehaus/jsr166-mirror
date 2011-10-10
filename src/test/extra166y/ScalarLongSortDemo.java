@@ -11,7 +11,7 @@ import java.util.*;
 class ScalarLongSortDemo {
     static final long NPS = (1000L * 1000 * 1000);
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         int n = 1 << 22;
         int sreps = 4;
         int reps = 10;

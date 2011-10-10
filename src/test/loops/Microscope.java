@@ -242,7 +242,7 @@ public class Microscope extends JPanel {
         if (lookAheads <= 1) lookAheads = 2;
     }
 
-    public int level () { return Microscope.lookAheads; }
+    public int level() { return Microscope.lookAheads; }
 
 
     // process a move (called only from mover)

@@ -426,13 +426,19 @@ public class Phaser {
             else {
                 synchronized (this) {               // 1st sub registration
                     if (state == s) {               // recheck under lock
-                        parent.doRegister(1);
-                        do {                        // force current phase
+                        phase = parent.doRegister(1);
+                        if (phase < 0)
+                            break;
+                        // finish registration whenever parent registration
+                        // succeeded, even when racing with termination,
+                        // since these are part of the same "transaction".
+                        while (!UNSAFE.compareAndSwapLong
+                               (this, stateOffset, s,
+                                ((long)phase << PHASE_SHIFT) | adjust)) {
+                            s = state;
                             phase = (int)(root.state >>> PHASE_SHIFT);
-                            // assert phase < 0 || (int)state == EMPTY;
-                        } while (!UNSAFE.compareAndSwapLong
-                                 (this, stateOffset, state,
-                                  ((long)phase << PHASE_SHIFT) | adjust));
+                            // assert (int)s == EMPTY;
+                        }
                         break;
                     }
                 }

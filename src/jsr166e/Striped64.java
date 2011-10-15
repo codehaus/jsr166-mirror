@@ -6,8 +6,6 @@
 
 package jsr166e;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A package-local class holding common representation and mechanics

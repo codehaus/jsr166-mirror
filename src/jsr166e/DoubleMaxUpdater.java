@@ -157,7 +157,7 @@ public class DoubleMaxUpdater extends Striped64 implements Serializable {
 
     /**
      * Returns the {@link #max} as a {@code long} after a
-     * primitive conversion.
+     * narrowing primitive conversion.
      */
     public long longValue() {
         return (long)max();
@@ -165,7 +165,7 @@ public class DoubleMaxUpdater extends Striped64 implements Serializable {
 
     /**
      * Returns the {@link #max} as an {@code int} after a
-     * primitive conversion.
+     * narrowing primitive conversion.
      */
     public int intValue() {
         return (int)max();
@@ -173,7 +173,7 @@ public class DoubleMaxUpdater extends Striped64 implements Serializable {
 
     /**
      * Returns the {@link #max} as a {@code float}
-     * after a primitive conversion.
+     * after a narrowing primitive conversion.
      */
     public float floatValue() {
         return (float)max();

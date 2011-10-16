@@ -6,13 +6,11 @@
 
 package jsr166e;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A package-local class holding common representation and mechanics
  * for classes supporting dynamic striping on 64bit values. The class
- * extends Number so that concrete subclasses can publicly do so.
+ * extends Number so that concrete subclasses must publicly do so.
  */
 abstract class Striped64 extends Number {
     /*
@@ -79,9 +77,9 @@ abstract class Striped64 extends Number {
      */
 
     /**
-     * Padded variant of AtomicLong supporting only raw accesses plus
-     * CAS The value field is placed between pads, hoping that the JVM
-     * doesn't reorder them.
+     * Padded variant of AtomicLong supporting only raw accesses plus CAS.
+     * The value field is placed between pads, hoping that the JVM doesn't
+     * reorder them.
      *
      * JVM intrinsics note: It would be possible to use a release-only
      * form of CAS here, if it were provided.
@@ -166,14 +164,14 @@ abstract class Striped64 extends Number {
     }
 
     /**
-     * CAS the base field
+     * CASes the base field.
      */
     final boolean casBase(long cmp, long val) {
         return UNSAFE.compareAndSwapLong(this, baseOffset, cmp, val);
     }
 
     /**
-     * CAS the busy field from 0 to 1 to acquire lock.
+     * CASes the busy field from 0 to 1 to acquire lock.
      */
     final boolean casBusy() {
         return UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1);
@@ -279,7 +277,7 @@ abstract class Striped64 extends Number {
 
 
     /**
-     * Set base and all cells to the given value
+     * Sets base and all cells to the given value.
      */
     final void internalReset(long initialValue) {
         Cell[] as = cells;

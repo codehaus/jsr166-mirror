@@ -271,6 +271,7 @@ public class Phaser {
     private static final int  PHASE_SHIFT     = 32;
     private static final int  UNARRIVED_MASK  = 0xffff;      // to mask ints
     private static final long PARTIES_MASK    = 0xffff0000L; // to mask longs
+    private static final long COUNTS_MASK     = 0xffffffffL;
     private static final long TERMINATION_BIT = 1L << 63;
 
     // some special values
@@ -453,10 +454,6 @@ public class Phaser {
      * subphasers have not yet done so, in which case they must finish
      * their own advance by setting unarrived to parties (or if
      * parties is zero, resetting to unregistered EMPTY state).
-     * However, this method may also be called when "floating"
-     * subphasers with possibly some unarrived parties are merely
-     * catching up to current phase, in which case counts are
-     * unaffected.
      *
      * @return reconciled state
      */
@@ -464,17 +461,16 @@ public class Phaser {
         final Phaser root = this.root;
         long s = state;
         if (root != this) {
-            int phase, u, p;
-            // CAS root phase with current parties; possibly trip unarrived
+            int phase, p;
+            // CAS to root phase with current parties, tripping unarrived
             while ((phase = (int)(root.state >>> PHASE_SHIFT)) !=
                    (int)(s >>> PHASE_SHIFT) &&
                    !UNSAFE.compareAndSwapLong
                    (this, stateOffset, s,
                     s = (((long)phase << PHASE_SHIFT) |
-                         (s & PARTIES_MASK) |
-                         ((p = (int)s >>> PARTIES_SHIFT) == 0 ? EMPTY :
-                          ((u = (int)s & UNARRIVED_MASK) == 0 && phase >= 0) ?
-                          p : u))))
+                         ((phase < 0) ? (s & COUNTS_MASK) :
+                          (((p = (int)s >>> PARTIES_SHIFT) == 0) ? EMPTY :
+                           ((s & PARTIES_MASK) | p))))))
                 s = state;
         }
         return s;

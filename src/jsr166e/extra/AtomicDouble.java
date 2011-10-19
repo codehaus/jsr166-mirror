@@ -31,6 +31,9 @@ import static java.lang.Double.longBitsToDouble;
  *   return xBits == yBits;
  * }}</pre>
  *
+ * @see jsr166e.DoubleAdder
+ * @see jsr166e.DoubleMaxUpdater
+ *
  * @author Doug Lea
  * @author Martin Buchholz
  */

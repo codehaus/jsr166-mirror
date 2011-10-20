@@ -38,7 +38,7 @@ import static java.lang.Double.longBitsToDouble;
  * @author Martin Buchholz
  */
 public class AtomicDouble extends Number implements java.io.Serializable {
-    static final long serialVersionUID = -8405198993435143622L;
+    private static final long serialVersionUID = -8405198993435143622L;
 
     private volatile long value;
 

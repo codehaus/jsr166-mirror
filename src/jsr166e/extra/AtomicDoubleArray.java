@@ -20,7 +20,7 @@ import static java.lang.Double.longBitsToDouble;
  * which differs from both the primitive double {@code ==} operator
  * and from {@link Double#equals}, as if implemented by:
  *  <pre> {@code
- * boolean bitEquals(double x, double y) {
+ * static boolean bitEquals(double x, double y) {
  *   long xBits = Double.doubleToRawLongBits(x);
  *   long yBits = Double.doubleToRawLongBits(y);
  *   return xBits == yBits;

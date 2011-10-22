@@ -25,17 +25,20 @@ import static java.lang.Double.longBitsToDouble;
  * which differs from both the primitive double {@code ==} operator
  * and from {@link Double#equals}, as if implemented by:
  *  <pre> {@code
- * boolean bitEquals(double x, double y) {
+ * static boolean bitEquals(double x, double y) {
  *   long xBits = Double.doubleToRawLongBits(x);
  *   long yBits = Double.doubleToRawLongBits(y);
  *   return xBits == yBits;
  * }}</pre>
  *
+ * @see jsr166e.DoubleAdder
+ * @see jsr166e.DoubleMaxUpdater
+ *
  * @author Doug Lea
  * @author Martin Buchholz
  */
 public class AtomicDouble extends Number implements java.io.Serializable {
-    static final long serialVersionUID = -8405198993435143622L;
+    private static final long serialVersionUID = -8405198993435143622L;
 
     private volatile long value;
 
@@ -51,7 +54,9 @@ public class AtomicDouble extends Number implements java.io.Serializable {
     /**
      * Creates a new {@code AtomicDouble} with initial value {@code 0.0}.
      */
-    public AtomicDouble() { this(0.0); }
+    public AtomicDouble() {
+        // assert doubleToRawLongBits(0.0) == 0L;
+    }
 
     /**
      * Gets the current value.
@@ -118,7 +123,9 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * if the current value is <a href="#bitEquals">bitwise equal</a>
      * to the expected value.
      *
-     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * <p>May <a
+     * href="http://download.oracle.com/javase/7/docs/api/java/util/concurrent/atomic/package-summary.html#Spurious">
+     * fail spuriously</a>
      * and does not provide ordering guarantees, so is only rarely an
      * appropriate alternative to {@code compareAndSet}.
      *
@@ -177,7 +184,7 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * after a narrowing primitive conversion.
      */
     public int intValue() {
-        return (int)get();
+        return (int) get();
     }
 
     /**
@@ -185,7 +192,7 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * after a narrowing primitive conversion.
      */
     public long longValue() {
-        return (long)get();
+        return (long) get();
     }
 
     /**
@@ -193,7 +200,7 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * after a narrowing primitive conversion.
      */
     public float floatValue() {
-        return (float)get();
+        return (float) get();
     }
 
     /**

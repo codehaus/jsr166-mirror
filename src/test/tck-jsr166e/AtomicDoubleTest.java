@@ -16,11 +16,11 @@ public class AtomicDoubleTest extends JSR166TestCase {
         return new TestSuite(AtomicDoubleTest.class);
     }
 
-    final double[] VALUES = {
+    private static final double[] VALUES = {
         Double.NEGATIVE_INFINITY,
         -Double.MAX_VALUE,
-        (double)Long.MIN_VALUE,
-        (double)Integer.MIN_VALUE,
+        (double) Long.MIN_VALUE,
+        (double) Integer.MIN_VALUE,
         -Math.PI,
         -1.0,
         -Double.MIN_VALUE,
@@ -29,8 +29,8 @@ public class AtomicDoubleTest extends JSR166TestCase {
         Double.MIN_VALUE,
         1.0,
         Math.PI,
-        (double)Integer.MAX_VALUE,
-        (double)Long.MAX_VALUE,
+        (double) Integer.MAX_VALUE,
+        (double) Long.MAX_VALUE,
         Double.MAX_VALUE,
         Double.POSITIVE_INFINITY,
         Double.NaN,
@@ -38,11 +38,11 @@ public class AtomicDoubleTest extends JSR166TestCase {
     };
 
     /** The notion of equality used by AtomicDouble */
-    boolean bitEquals(double x, double y) {
+    static boolean bitEquals(double x, double y) {
         return Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(y);
     }
 
-    void assertBitEquals(double x, double y) {
+    static void assertBitEquals(double x, double y) {
         assertEquals(Double.doubleToRawLongBits(x),
                      Double.doubleToRawLongBits(y));
     }
@@ -220,7 +220,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
         assertEquals(0, at.intValue());
         for (double x : VALUES) {
             at.set(x);
-            assertEquals((int)x, at.intValue());
+            assertEquals((int) x, at.intValue());
         }
     }
 
@@ -232,7 +232,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
         assertEquals(0L, at.longValue());
         for (double x : VALUES) {
             at.set(x);
-            assertEquals((long)x, at.longValue());
+            assertEquals((long) x, at.longValue());
         }
     }
 
@@ -244,7 +244,7 @@ public class AtomicDoubleTest extends JSR166TestCase {
         assertEquals(0.0f, at.floatValue());
         for (double x : VALUES) {
             at.set(x);
-            assertEquals((float)x, at.floatValue());
+            assertEquals((float) x, at.floatValue());
         }
     }
 
@@ -274,5 +274,4 @@ public class AtomicDoubleTest extends JSR166TestCase {
         assertFalse(at.weakCompareAndSet(+0.0, 7.0));
         assertBitEquals(-0.0, at.get());
     }
-
 }

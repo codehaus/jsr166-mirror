@@ -17,11 +17,11 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
         return new TestSuite(AtomicDoubleArrayTest.class);
     }
 
-    final double[] VALUES = {
+    private static final double[] VALUES = {
         Double.NEGATIVE_INFINITY,
         -Double.MAX_VALUE,
-        (double)Long.MIN_VALUE,
-        (double)Integer.MIN_VALUE,
+        (double) Long.MIN_VALUE,
+        (double) Integer.MIN_VALUE,
         -Math.PI,
         -1.0,
         -Double.MIN_VALUE,
@@ -30,8 +30,8 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
         Double.MIN_VALUE,
         1.0,
         Math.PI,
-        (double)Integer.MAX_VALUE,
-        (double)Long.MAX_VALUE,
+        (double) Integer.MAX_VALUE,
+        (double) Long.MAX_VALUE,
         Double.MAX_VALUE,
         Double.POSITIVE_INFINITY,
         Double.NaN,
@@ -39,11 +39,11 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     };
 
     /** The notion of equality used by AtomicDoubleArray */
-    boolean bitEquals(double x, double y) {
+    static boolean bitEquals(double x, double y) {
         return Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(y);
     }
 
-    void assertBitEquals(double x, double y) {
+    static void assertBitEquals(double x, double y) {
         assertEquals(Double.doubleToRawLongBits(x),
                      Double.doubleToRawLongBits(y));
     }
@@ -304,14 +304,14 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     public void testCountingInMultipleThreads() throws InterruptedException {
         final AtomicDoubleArray aa = new AtomicDoubleArray(SIZE);
         for (int i = 0; i < SIZE; i++)
-            aa.set(i, (double)COUNTDOWN);
+            aa.set(i, (double) COUNTDOWN);
         Counter c1 = new Counter(aa);
         Counter c2 = new Counter(aa);
         Thread t1 = newStartedThread(c1);
         Thread t2 = newStartedThread(c2);
         awaitTermination(t1);
         awaitTermination(t2);
-        assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
+        assertEquals(c1.counts + c2.counts, SIZE * COUNTDOWN);
     }
 
     /**
@@ -320,7 +320,7 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
     public void testSerialization() throws Exception {
         AtomicDoubleArray x = new AtomicDoubleArray(SIZE);
         for (int i = 0; i < SIZE; i++)
-            x.set(i, (double)-i);
+            x.set(i, (double) -i);
         AtomicDoubleArray y = serialClone(x);
         assertTrue(x != y);
         assertEquals(x.length(), y.length());
@@ -362,5 +362,4 @@ public class AtomicDoubleArrayTest extends JSR166TestCase {
             assertBitEquals(-0.0, aa.get(i));
         }
     }
-
 }

@@ -20,7 +20,7 @@ import static java.lang.Double.longBitsToDouble;
  * which differs from both the primitive double {@code ==} operator
  * and from {@link Double#equals}, as if implemented by:
  *  <pre> {@code
- * boolean bitEquals(double x, double y) {
+ * static boolean bitEquals(double x, double y) {
  *   long xBits = Double.doubleToRawLongBits(x);
  *   long yBits = Double.doubleToRawLongBits(y);
  *   return xBits == yBits;
@@ -162,7 +162,9 @@ public class AtomicDoubleArray implements java.io.Serializable {
      * if the current value is <a href="#bitEquals">bitwise equal</a>
      * to the expected value.
      *
-     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * <p>May <a
+     * href="http://download.oracle.com/javase/7/docs/api/java/util/concurrent/atomic/package-summary.html#Spurious">
+     * fail spuriously</a>
      * and does not provide ordering guarantees, so is only rarely an
      * appropriate alternative to {@code compareAndSet}.
      *
@@ -222,9 +224,10 @@ public class AtomicDoubleArray implements java.io.Serializable {
         if (iMax == -1)
             return "[]";
 
-        StringBuilder b = new StringBuilder();
+        // Double.toString(Math.PI).length() == 17
+        StringBuilder b = new StringBuilder((17 + 2) * (iMax + 1));
         b.append('[');
-        for (int i = 0; ; i++) {
+        for (int i = 0;; i++) {
             b.append(longBitsToDouble(getRaw(byteOffset(i))));
             if (i == iMax)
                 return b.append(']').toString();

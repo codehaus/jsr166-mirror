@@ -20,7 +20,6 @@ subprojects {
   apply plugin: 'java'
   apply plugin: 'osgi'
   apply plugin: 'maven'
-  sourceCompatibility = 6
   // Without the -XDignore.symbol.file=true option there are compilation errors.
   compileJava.options.compilerArgs = [ '-Xlint' , '-XDignore.symbol.file=true' ]
   repositories { mavenCentral ( ) }
@@ -29,17 +28,17 @@ subprojects {
   //  Gradle currently has facility to append to the bootclasspath but not prepend, which is what is needed
   //  since some of the JSR166 classes replace ones in the Java distribution, so the JSR 166 classes must
   //  appear earlier in the classpath than the Java distribution ones.  This means we have to provide the
-  //  whole of the bootclasspath, which is going to be a nightmare to handle in a truly platform independent
-  //  way :-(
+  //  whole of the bootclasspath, which is going to be a nightmare to handle in a platform independent way
+  //  :-(
   //
-  bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-6-openjdk/jre/lib/rt.jar' )
+  bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rt.jar' )
   bootClasspath = bootClasspathCollection.asPath
   //
   configurations {
     deployJars
   }
   dependencies {
-    deployJars 'org.apache.maven.wagon:wagon-http-lightweight:1.0-beta-6'
+    deployJars 'org.apache.maven.wagon:wagon-http-lightweight:2.0'
   }
   def theVendor = 'Doug Lea'
   jar {
@@ -107,6 +106,8 @@ subprojects {
 //  allow for the appropirate dependencies.
 
 project ( ':jsr166' ) {
+  sourceCompatibility = 6
+  targetComaptibility = 6
   sourceSets { main { java { srcDir '../src/main' } } }
   jar {
     manifest { 
@@ -131,6 +132,8 @@ project ( ':jsr166' ) {
 //  just depend on the jsr166tck.jar for the dependencies it needs.
 
 project ( ':jsr166tck' ) {
+  sourceCompatibility = 6
+  targetComaptibility = 6
   sourceSets {
     main { java { srcDir '../src/test/tck' } }
     test { java { srcDir '../src/test/tck' } }
@@ -153,6 +156,8 @@ project ( ':jsr166tck' ) {
 }
 
 project ( ':jsr166x' ) {
+  sourceCompatibility = 6
+  targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/jsr166x' } } }
   compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
@@ -169,6 +174,8 @@ project ( ':jsr166x' ) {
 }
 
 project ( ':jsr166y' ) {
+  sourceCompatibility = 6
+  targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/jsr166y' } } }
   compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
@@ -185,6 +192,8 @@ project ( ':jsr166y' ) {
 }
 
 project ( ':extra166y' ) {
+  sourceCompatibility = 6
+  targetCompatibility = 6
   sourceSets {
     main { java { srcDir '../src/extra166y' } }
     test { java { srcDir '../src/test/extra166y' } }
@@ -215,6 +224,8 @@ project ( ':extra166y' ) {
 }
 
 project ( ':jsr166e' ) {
+  sourceCompatibility = 7
+  targetCompatibility = 7
   sourceSets { main { java { srcDir '../src/jsr166e' } } }
   //compileJava.dependsOn project ( ':jsr166' ).jar
   //compileJava.options.bootClasspath = bootClasspath

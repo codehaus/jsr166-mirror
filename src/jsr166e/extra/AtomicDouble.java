@@ -40,7 +40,7 @@ import static java.lang.Double.longBitsToDouble;
 public class AtomicDouble extends Number implements java.io.Serializable {
     private static final long serialVersionUID = -8405198993435143622L;
 
-    private volatile transient long value;
+    private transient volatile long value;
 
     /**
      * Creates a new {@code AtomicDouble} with the given initial value.

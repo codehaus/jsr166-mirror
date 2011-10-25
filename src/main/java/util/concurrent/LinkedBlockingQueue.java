@@ -830,7 +830,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Save the state to a stream (that is, serialize it).
+     * Saves the state to a stream (that is, serializes it).
      *
      * @serialData The capacity is emitted (int), followed by all of
      * its elements (each an {@code Object}) in the proper order,

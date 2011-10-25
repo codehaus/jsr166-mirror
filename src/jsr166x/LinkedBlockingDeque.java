@@ -717,7 +717,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Save the state to a stream (that is, serialize it).
+     * Saves the state to a stream (that is, serializes it).
      *
      * @serialData The capacity (int), followed by elements (each an
      * <tt>Object</tt>) in the proper order, followed by a null
@@ -740,8 +740,8 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Reconstitute this deque instance from a stream (that is,
-     * deserialize it).
+     * Reconstitutes this deque instance from a stream (that is,
+     * deserializes it).
      * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)

@@ -1123,7 +1123,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Save the state of this deque to a stream (that is, serialize it).
+     * Saves the state of this deque to a stream (that is, serializes it).
      *
      * @serialData The capacity (int), followed by elements (each an
      * {@code Object}) in the proper order, followed by a null

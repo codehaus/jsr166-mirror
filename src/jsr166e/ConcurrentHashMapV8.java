@@ -71,7 +71,7 @@ import java.io.Serializable;
  * versions of this class, constructors may optionally specify an
  * expected {@code concurrencyLevel} as an additional hint for
  * internal sizing.  Note that using many keys with exactly the same
- * {@code hashCode{}} is a sure way to slow down performance of any
+ * {@code hashCode()} is a sure way to slow down performance of any
  * hash table.
  *
  * <p>This class and its views and iterators implement all of the

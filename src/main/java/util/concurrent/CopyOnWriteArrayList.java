@@ -825,7 +825,7 @@ public class CopyOnWriteArrayList<E>
      * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException{
+        throws java.io.IOException {
 
         s.defaultWriteObject();
 

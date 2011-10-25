@@ -216,7 +216,7 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      * @serialData The current value is emitted (a {@code double}).
      */
     private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException{
+        throws java.io.IOException {
         s.defaultWriteObject();
 
         s.writeDouble(get());

@@ -13,7 +13,7 @@ import jsr166y.*;
 import extra166y.*;
 import java.io.*;
 
-public class ParallelArrayAsListTest extends JSR166TestCase{
+public class ParallelArrayAsListTest extends JSR166TestCase {
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());

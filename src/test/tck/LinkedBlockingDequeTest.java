@@ -1479,7 +1479,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     /**
      * toArray contains all elements in FIFO order
      */
-    public void testToArray() throws InterruptedException{
+    public void testToArray() throws InterruptedException {
         LinkedBlockingDeque q = populatedDeque(SIZE);
         Object[] o = q.toArray();
         for (int i = 0; i < o.length; i++)

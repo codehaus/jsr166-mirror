@@ -242,7 +242,7 @@ public class AtomicDoubleArray implements java.io.Serializable {
      *             of its elements (each a {@code double}) in the proper order.
      */
     private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException{
+        throws java.io.IOException {
         s.defaultWriteObject();
 
         // Write out array length

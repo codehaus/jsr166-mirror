@@ -32,7 +32,7 @@ import static java.lang.Double.longBitsToDouble;
 public class AtomicDoubleArray implements java.io.Serializable {
     private static final long serialVersionUID = -2308431214976778248L;
 
-    private final long[] array;
+    private final transient long[] array;
 
     private long checkedByteOffset(int i) {
         if (i < 0 || i >= array.length)
@@ -235,16 +235,59 @@ public class AtomicDoubleArray implements java.io.Serializable {
         }
     }
 
+    /**
+     * Saves the state to a stream (that is, serializes it).
+     *
+     * @serialData The length of the array is emitted (int), followed by all
+     *             of its elements (each a {@code double}) in the proper order.
+     */
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws java.io.IOException{
+        s.defaultWriteObject();
+
+        // Write out array length
+        int length = length();
+        s.writeInt(length);
+
+        // Write out all elements in the proper order.
+        for (int i = 0; i < length; i++)
+            s.writeDouble(get(i));
+    }
+
+    /**
+     * Reconstitutes the instance from a stream (that is, deserializes it).
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+
+        // Read in array length and allocate array
+        int length = s.readInt();
+        unsafe.putObjectVolatile(this, arrayOffset, new long[length]);
+
+        // Read in all elements in the proper order.
+        for (int i = 0; i < length; i++)
+            set(i, s.readDouble());
+    }
+
     // Unsafe mechanics
     private static final sun.misc.Unsafe unsafe = getUnsafe();
+    private static final long arrayOffset;
     private static final int base = unsafe.arrayBaseOffset(long[].class);
     private static final int shift;
 
     static {
-        int scale = unsafe.arrayIndexScale(long[].class);
-        if ((scale & (scale - 1)) != 0)
-            throw new Error("data type scale not a power of two");
-        shift = 31 - Integer.numberOfLeadingZeros(scale);
+        try {
+            Class<?> k = AtomicDoubleArray.class;
+            arrayOffset = unsafe.objectFieldOffset
+                (k.getDeclaredField("array"));
+            int scale = unsafe.arrayIndexScale(long[].class);
+            if ((scale & (scale - 1)) != 0)
+                throw new Error("data type scale not a power of two");
+            shift = 31 - Integer.numberOfLeadingZeros(scale);
+        } catch (Exception e) {
+            throw new Error(e);
+        }
     }
 
     /**

@@ -40,7 +40,7 @@ import static java.lang.Double.longBitsToDouble;
 public class AtomicDouble extends Number implements java.io.Serializable {
     private static final long serialVersionUID = -8405198993435143622L;
 
-    private volatile long value;
+    private volatile transient long value;
 
     /**
      * Creates a new {@code AtomicDouble} with the given initial value.
@@ -208,6 +208,28 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      */
     public double doubleValue() {
         return get();
+    }
+
+    /**
+     * Saves the state to a stream (that is, serializes it).
+     *
+     * @serialData The current value is emitted (a {@code double}).
+     */
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws java.io.IOException{
+        s.defaultWriteObject();
+
+        s.writeDouble(get());
+    }
+
+    /**
+     * Reconstitutes the instance from a stream (that is, deserializes it).
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+
+        set(s.readDouble());
     }
 
     // Unsafe mechanics

@@ -1129,7 +1129,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     private WaitQueue waitingConsumers;
 
     /**
-     * Save the state to a stream (that is, serialize it).
+     * Saves the state to a stream (that is, serializes it).
      *
      * @param s the stream
      */

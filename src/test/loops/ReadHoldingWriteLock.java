@@ -68,7 +68,7 @@ class ReadHoldingWriteLock {
      * Read lock succeeds if write locked by current thread even if
      * other threads are waiting
      */
-    public void testReadHoldingWriteLock2() throws Exception{
+    public void testReadHoldingWriteLock2() throws Exception {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         lock.writeLock().lock();
         Thread t1 = new Thread(new Runnable() {
@@ -101,7 +101,7 @@ class ReadHoldingWriteLock {
     /**
      * Fair Read trylock succeeds if write locked by current thread
      */
-    public void testReadHoldingWriteLockFair() throws Exception{
+    public void testReadHoldingWriteLockFair() throws Exception {
         final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         lock.writeLock().lock();
         assertTrue(lock.readLock().tryLock());

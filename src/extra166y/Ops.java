@@ -347,7 +347,7 @@ public class Ops {
     public static interface IntProcedure                 { void    op(int a);}
     public static interface IntGenerator                 { int     op();}
     public static interface BinaryIntPredicate           { boolean op(int a, int b);}
-    public static interface IntReducer extends BinaryIntOp{}
+    public static interface IntReducer extends BinaryIntOp {}
     public static interface IntComparator                { int     compare(int a, int b);}
 
     public static interface LongOp                       { long    op(long a);}
@@ -356,7 +356,7 @@ public class Ops {
     public static interface BinaryLongPredicate          { boolean op(long a, long b);}
     public static interface LongProcedure                { void    op(long a);}
     public static interface LongGenerator                { long    op();}
-    public static interface LongReducer extends BinaryLongOp{}
+    public static interface LongReducer extends BinaryLongOp {}
     public static interface LongComparator               { int     compare(long a, long b);}
 
     public static interface DoubleOp                     { double  op(double a);}
@@ -365,7 +365,7 @@ public class Ops {
     public static interface BinaryDoublePredicate        { boolean op(double a, double b);}
     public static interface DoubleProcedure              { void    op(double a);}
     public static interface DoubleGenerator              { double  op();}
-    public static interface DoubleReducer extends BinaryDoubleOp{}
+    public static interface DoubleReducer extends BinaryDoubleOp {}
     public static interface DoubleComparator             { int     compare(double a, double b);}
 
     public static interface Action                       { void    op();}

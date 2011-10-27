@@ -733,7 +733,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException{
+        throws java.io.IOException {
         // Write out element count, and any hidden stuff
         s.defaultWriteObject();
 

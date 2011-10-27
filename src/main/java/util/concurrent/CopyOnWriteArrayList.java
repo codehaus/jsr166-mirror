@@ -528,7 +528,7 @@ public class CopyOnWriteArrayList<E>
      * @param fromIndex index of first element to be removed
      * @param toIndex index after last element to be removed
      * @throws IndexOutOfBoundsException if fromIndex or toIndex out of range
-     *         ({@code{fromIndex < 0 || toIndex > size() || toIndex < fromIndex})
+     *         ({@code fromIndex < 0 || toIndex > size() || toIndex < fromIndex})
      */
     void removeRange(int fromIndex, int toIndex) {
         final ReentrantLock lock = this.lock;
@@ -825,7 +825,7 @@ public class CopyOnWriteArrayList<E>
      * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException{
+        throws java.io.IOException {
 
         s.defaultWriteObject();
 

@@ -1551,8 +1551,8 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Save the state of the instance to a stream (i.e., serialize
-     * it).
+     * Saves the state of the instance to a stream (i.e., serializes it).
+     *
      * @param s the stream
      * @serialData
      * the key (Object) and value (Object)

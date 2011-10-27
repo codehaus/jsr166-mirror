@@ -1477,7 +1477,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /* ---------------- Serialization -------------- */
 
     /**
-     * Save the state of this map to a stream.
+     * Saves the state of this map to a stream (that is, serializes it).
      *
      * @serialData The key (Object) and value (Object) for each
      * key-value mapping represented by the map, followed by

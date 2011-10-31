@@ -24,7 +24,7 @@ public class FJSums {
             if (args.length > 1)
                 n = Integer.parseInt(args[1]);
             if (args.length > 2)
-                reps = Integer.parseInt(args[1]);
+                reps = Integer.parseInt(args[2]);
         }
         catch (Exception e) {
             System.out.println("Usage: java FJSums threads n reps");

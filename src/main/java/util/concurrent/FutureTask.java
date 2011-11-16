@@ -378,6 +378,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     q.thread = null;
                 return s;
             }
+            else if (s == COMPLETING) // cannot time out yet
+                Thread.yield();
             else if (q == null)
                 q = new WaitNode();
             else if (!queued)

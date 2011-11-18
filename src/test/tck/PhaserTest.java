@@ -197,10 +197,22 @@ public class PhaserTest extends JSR166TestCase {
         Phaser child1 = new Phaser(root, 1);
         Phaser child2 = new Phaser(root, 0);
         assertEquals(0, child2.register());
+        assertState(root, 0, 2, 2);
+        assertState(child1, 0, 1, 1);
+        assertState(child2, 0, 1, 1);
         assertEquals(0, child2.arriveAndDeregister());
+        assertState(root, 0, 1, 1);
+        assertState(child1, 0, 1, 1);
+        assertState(child2, 0, 0, 0);
         assertEquals(0, child2.register());
         assertEquals(0, child2.arriveAndDeregister());
+        assertState(root, 0, 1, 1);
+        assertState(child1, 0, 1, 1);
         assertState(child2, 0, 0, 0);
+        assertEquals(0, child1.arriveAndDeregister());
+        assertTerminated(root, 1);
+        assertTerminated(child1, 1);
+        assertTerminated(child2, 1);
     }
 
     /**

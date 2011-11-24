@@ -106,7 +106,6 @@ public class AtomicLongArray implements java.io.Serializable {
         unsafe.putOrderedLong(array, checkedByteOffset(i), newValue);
     }
 
-
     /**
      * Atomically sets the element at position {@code i} to the given value
      * and returns the old value.

@@ -979,7 +979,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         return false;
     }
 
-
     /**
      * Creates an initially empty {@code LinkedTransferQueue}.
      */

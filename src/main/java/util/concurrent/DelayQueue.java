@@ -4,7 +4,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-
 package java.util.concurrent;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.util.concurrent.locks.Condition;

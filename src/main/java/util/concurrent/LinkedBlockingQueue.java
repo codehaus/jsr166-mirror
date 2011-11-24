@@ -262,7 +262,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-
     // this doc comment is overridden to remove the reference to collections
     // greater in size than Integer.MAX_VALUE
     /**
@@ -400,7 +399,6 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             signalNotEmpty();
         return c >= 0;
     }
-
 
     public E take() throws InterruptedException {
         E x;

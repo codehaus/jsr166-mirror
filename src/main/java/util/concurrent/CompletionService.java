@@ -69,7 +69,6 @@ public interface CompletionService<V> {
      */
     Future<V> take() throws InterruptedException;
 
-
     /**
      * Retrieves and removes the Future representing the next
      * completed task or <tt>null</tt> if none are present.

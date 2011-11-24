@@ -235,7 +235,6 @@ public class Executors {
         return new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
     }
 
-
     /**
      * Returns an object that delegates all defined {@link
      * ExecutorService} methods to the given executor, but not any
@@ -670,7 +669,6 @@ public class Executors {
             return e.scheduleWithFixedDelay(command, initialDelay, delay, unit);
         }
     }
-
 
     /** Cannot instantiate. */
     private Executors() {}

@@ -218,7 +218,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     private transient volatile Node<E> tail;
 
-
     /**
      * Creates a {@code ConcurrentLinkedQueue} that is initially empty.
      */

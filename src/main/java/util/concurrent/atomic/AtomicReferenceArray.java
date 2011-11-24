@@ -121,7 +121,6 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
         unsafe.putOrderedObject(array, checkedByteOffset(i), newValue);
     }
 
-
     /**
      * Atomically sets the element at position {@code i} to the given
      * value and returns the old value.

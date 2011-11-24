@@ -1406,7 +1406,6 @@ public class ConcurrentLinkedDeque<E>
         initHeadTail(h, t);
     }
 
-
     private boolean casHead(Node<E> cmp, Node<E> val) {
         return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
     }

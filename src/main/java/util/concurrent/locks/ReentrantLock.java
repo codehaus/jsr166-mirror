@@ -605,7 +605,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         return sync.hasQueuedThreads();
     }
 
-
     /**
      * Queries whether the given thread is waiting to acquire this
      * lock. Note that because cancellations may occur at any time, a
@@ -620,7 +619,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public final boolean hasQueuedThread(Thread thread) {
         return sync.isQueued(thread);
     }
-
 
     /**
      * Returns an estimate of the number of threads waiting to

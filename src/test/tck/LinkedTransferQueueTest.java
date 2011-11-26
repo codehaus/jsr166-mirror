@@ -177,7 +177,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     public void testPut() {
         LinkedTransferQueue<Integer> q = new LinkedTransferQueue<Integer>();
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(q.size(), i);
+            assertEquals(i, q.size());
             q.put(i);
             assertTrue(q.contains(i));
         }
@@ -646,7 +646,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertEquals(0, q.size());
         assertEquals(SIZE, l.size());
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(l.get(i), i);
+            assertEquals(i, l.get(i));
         }
         q.add(zero);
         q.add(one);
@@ -658,7 +658,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertEquals(0, q.size());
         assertEquals(2, l.size());
         for (int i = 0; i < 2; ++i) {
-            assertEquals(l.get(i), i);
+            assertEquals(i, l.get(i));
         }
     }
 
@@ -674,9 +674,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         ArrayList l = new ArrayList();
         q.drainTo(l);
         assertTrue(l.size() >= SIZE);
-        for (int i = 0; i < SIZE; ++i) {
-            assertEquals(l.get(i), i);
-        }
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(i, l.get(i));
         awaitTermination(t, MEDIUM_DELAY_MS);
         assertTrue(q.size() + l.size() >= SIZE);
     }
@@ -693,11 +692,10 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             ArrayList l = new ArrayList();
             q.drainTo(l, i);
             int k = (i < SIZE) ? i : SIZE;
-            assertEquals(l.size(), k);
-            assertEquals(q.size(), SIZE - k);
-            for (int j = 0; j < k; ++j) {
-                assertEquals(l.get(j), j);
-            }
+            assertEquals(k, l.size());
+            assertEquals(SIZE - k, q.size());
+            for (int j = 0; j < k; ++j)
+                assertEquals(j, l.get(j));
             while (q.poll() != null)
                 ;
         }

@@ -924,7 +924,7 @@ public class TreeSetTest extends JSR166TestCase {
             if (bsContainsI)
                 size++;
         }
-        assertEquals(set.size(), size);
+        assertEquals(size, set.size());
 
         // Test contents using contains elementSet iterator
         int size2 = 0;

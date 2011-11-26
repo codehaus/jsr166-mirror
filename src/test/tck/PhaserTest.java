@@ -628,7 +628,7 @@ public class PhaserTest extends JSR166TestCase {
                         count.incrementAndGet();
                         assertEquals(2*k+1, phaser.arrive());
                         assertEquals(2*k+2, phaser.awaitAdvance(2*k+1));
-                        assertEquals(count.get(), 4*(k+1));
+                        assertEquals(4*(k+1), count.get());
                     }}}));
 
         for (Thread thread : threads)

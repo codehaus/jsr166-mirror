@@ -1018,7 +1018,7 @@ public class TreeMapTest extends JSR166TestCase {
             if (bsContainsI)
                 size++;
         }
-        assertEquals(map.size(), size);
+        assertEquals(size, map.size());
 
         // Test contents using contains keySet iterator
         int size2 = 0;

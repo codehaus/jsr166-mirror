@@ -1766,8 +1766,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             ArrayList l = new ArrayList();
             q.drainTo(l, i);
             int k = (i < SIZE) ? i : SIZE;
-            assertEquals(l.size(), k);
-            assertEquals(q.size(), SIZE-k);
+            assertEquals(k, l.size());
+            assertEquals(SIZE-k, q.size());
             for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
             while (q.poll() != null) ;

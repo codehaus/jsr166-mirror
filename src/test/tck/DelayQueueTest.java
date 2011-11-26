@@ -620,8 +620,8 @@ public class DelayQueueTest extends JSR166TestCase {
         it.next();
         it.remove();
         it = q.iterator();
-        assertEquals(it.next(), new PDelay(2));
-        assertEquals(it.next(), new PDelay(3));
+        assertEquals(new PDelay(2), it.next());
+        assertEquals(new PDelay(3), it.next());
         assertFalse(it.hasNext());
     }
 
@@ -720,7 +720,7 @@ public class DelayQueueTest extends JSR166TestCase {
         q.drainTo(l);
         assertEquals(0, q.size());
         for (int i = 0; i < SIZE; ++i)
-            assertEquals(l.get(i), elems[i]);
+            assertEquals(elems[i], l.get(i));
         q.add(elems[0]);
         q.add(elems[1]);
         assertFalse(q.isEmpty());
@@ -731,7 +731,7 @@ public class DelayQueueTest extends JSR166TestCase {
         assertEquals(0, q.size());
         assertEquals(2, l.size());
         for (int i = 0; i < 2; ++i)
-            assertEquals(l.get(i), elems[i]);
+            assertEquals(elems[i], l.get(i));
     }
 
     /**
@@ -761,8 +761,8 @@ public class DelayQueueTest extends JSR166TestCase {
             ArrayList l = new ArrayList();
             q.drainTo(l, i);
             int k = (i < SIZE) ? i : SIZE;
-            assertEquals(q.size(), SIZE-k);
-            assertEquals(l.size(), k);
+            assertEquals(SIZE-k, q.size());
+            assertEquals(k, l.size());
         }
     }
 

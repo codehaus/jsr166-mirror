@@ -227,12 +227,12 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      * toArray returns an Object array containing all elements from the set
      */
     public void testToArray() {
-        CopyOnWriteArraySet full = populatedSet(3);
-        Object[] o = full.toArray();
-        assertEquals(3, o.length);
-        assertEquals(0, o[0]);
-        assertEquals(1, o[1]);
-        assertEquals(2, o[2]);
+        CopyOnWriteArraySet<Integer> full = populatedSet(SIZE);
+        Object[] array = full.toArray();
+        Iterator<Integer> it = full.iterator();
+        for (int i = 0; i < SIZE; i++)
+            assertSame(array[i], it.next());
+        assertFalse(it.hasNext());
     }
 
     /**
@@ -240,13 +240,13 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      * the set
      */
     public void testToArray2() {
-        CopyOnWriteArraySet full = populatedSet(3);
-        Integer[] i = new Integer[3];
-        i = (Integer[])full.toArray(i);
-        assertEquals(3, i.length);
-        assertEquals(0, (int) i[0]);
-        assertEquals(1, (int) i[1]);
-        assertEquals(2, (int) i[2]);
+        CopyOnWriteArraySet<Integer> full = populatedSet(SIZE);
+        Integer[] ints = new Integer[SIZE];
+        assertSame(ints, full.toArray(ints));
+        Iterator<Integer> it = full.iterator();
+        for (int i = 0; i < SIZE; i++)
+            assertSame(ints[i], it.next());
+        assertFalse(it.hasNext());
     }
 
     /**

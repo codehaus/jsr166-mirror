@@ -622,14 +622,14 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         await(pleaseTake);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
         assertEquals(0, q.take());
 
         await(pleaseInterrupt);
         assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**
@@ -854,14 +854,14 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         await(pleaseTake);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
         assertEquals(capacity - 1, q.take());
 
         await(pleaseInterrupt);
         assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**
@@ -1201,14 +1201,14 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             }});
 
         await(pleaseTake);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
         assertEquals(0, q.take());
 
         await(pleaseInterrupt);
         assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**
@@ -1718,8 +1718,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         LinkedBlockingDeque q = populatedDeque(SIZE);
         ArrayList l = new ArrayList();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), SIZE);
+        assertEquals(0, q.size());
+        assertEquals(SIZE, l.size());
         for (int i = 0; i < SIZE; ++i)
             assertEquals(l.get(i), new Integer(i));
         q.add(zero);
@@ -1729,8 +1729,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
         assertTrue(q.contains(one));
         l.clear();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), 2);
+        assertEquals(0, q.size());
+        assertEquals(2, l.size());
         for (int i = 0; i < 2; ++i)
             assertEquals(l.get(i), new Integer(i));
     }

@@ -492,7 +492,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, 0);
+        assertEquals(0, i);
     }
 
     /**
@@ -688,7 +688,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
 
     static NavigableSet<Integer> newSet(Class cl) throws Exception {
         NavigableSet<Integer> result = (NavigableSet<Integer>) cl.newInstance();
-        assertEquals(result.size(), 0);
+        assertEquals(0, result.size());
         assertFalse(result.iterator().hasNext());
         return result;
     }

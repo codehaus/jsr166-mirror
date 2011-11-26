@@ -643,8 +643,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         LinkedTransferQueue q = populatedQueue(SIZE);
         ArrayList l = new ArrayList();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), SIZE);
+        assertEquals(0, q.size());
+        assertEquals(SIZE, l.size());
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(l.get(i), i);
         }
@@ -655,8 +655,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
         assertTrue(q.contains(one));
         l.clear();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), 2);
+        assertEquals(0, q.size());
+        assertEquals(2, l.size());
         for (int i = 0; i < 2; ++i) {
             assertEquals(l.get(i), i);
         }
@@ -709,7 +709,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testWaitingConsumer() throws InterruptedException {
         final LinkedTransferQueue q = new LinkedTransferQueue();
-        assertEquals(q.getWaitingConsumerCount(), 0);
+        assertEquals(0, q.getWaitingConsumerCount());
         assertFalse(q.hasWaitingConsumer());
         final CountDownLatch threadStarted = new CountDownLatch(1);
 
@@ -717,17 +717,17 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 threadStarted.countDown();
                 assertSame(one, q.poll(LONG_DELAY_MS, MILLISECONDS));
-                assertEquals(q.getWaitingConsumerCount(), 0);
+                assertEquals(0, q.getWaitingConsumerCount());
                 assertFalse(q.hasWaitingConsumer());
             }});
 
         threadStarted.await();
         waitForThreadToEnterWaitState(t, SMALL_DELAY_MS);
-        assertEquals(q.getWaitingConsumerCount(), 1);
+        assertEquals(1, q.getWaitingConsumerCount());
         assertTrue(q.hasWaitingConsumer());
 
         assertTrue(q.offer(one));
-        assertEquals(q.getWaitingConsumerCount(), 0);
+        assertEquals(0, q.getWaitingConsumerCount());
         assertFalse(q.hasWaitingConsumer());
 
         awaitTermination(t, MEDIUM_DELAY_MS);

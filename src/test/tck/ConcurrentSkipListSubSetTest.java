@@ -454,7 +454,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, 0);
+        assertEquals(0, i);
     }
 
     /**
@@ -954,7 +954,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, 0);
+        assertEquals(0, i);
     }
 
     /**

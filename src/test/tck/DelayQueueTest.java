@@ -718,7 +718,7 @@ public class DelayQueueTest extends JSR166TestCase {
         }
         ArrayList l = new ArrayList();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
+        assertEquals(0, q.size());
         for (int i = 0; i < SIZE; ++i)
             assertEquals(l.get(i), elems[i]);
         q.add(elems[0]);
@@ -728,8 +728,8 @@ public class DelayQueueTest extends JSR166TestCase {
         assertTrue(q.contains(elems[1]));
         l.clear();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), 2);
+        assertEquals(0, q.size());
+        assertEquals(2, l.size());
         for (int i = 0; i < 2; ++i)
             assertEquals(l.get(i), elems[i]);
     }

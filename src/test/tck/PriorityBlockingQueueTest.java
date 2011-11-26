@@ -660,8 +660,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         PriorityBlockingQueue q = populatedQueue(SIZE);
         ArrayList l = new ArrayList();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), SIZE);
+        assertEquals(0, q.size());
+        assertEquals(SIZE, l.size());
         for (int i = 0; i < SIZE; ++i)
             assertEquals(l.get(i), new Integer(i));
         q.add(zero);
@@ -671,8 +671,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         assertTrue(q.contains(one));
         l.clear();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), 2);
+        assertEquals(0, q.size());
+        assertEquals(2, l.size());
         for (int i = 0; i < 2; ++i)
             assertEquals(l.get(i), new Integer(i));
     }

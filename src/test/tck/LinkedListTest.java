@@ -411,11 +411,11 @@ public class LinkedListTest extends JSR166TestCase {
         q.add(new Integer(2));
         q.add(new Integer(3));
         Iterator it = q.iterator();
-        assertEquals(it.next(), 1);
+        assertEquals(1, it.next());
         it.remove();
         it = q.iterator();
-        assertEquals(it.next(), 2);
-        assertEquals(it.next(), 3);
+        assertEquals(2, it.next());
+        assertEquals(3, it.next());
         assertFalse(it.hasNext());
     }
 

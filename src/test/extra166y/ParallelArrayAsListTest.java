@@ -322,11 +322,11 @@ public class ParallelArrayAsListTest extends JSR166TestCase {
         }
 
         List s = a.subList(2, 5);
-        assertEquals(s.size(), 3);
+        assertEquals(3, s.size());
         s.set(2, m1);
         assertEquals(a.get(4), m1);
         s.clear();
-        assertEquals(a.size(), 7);
+        assertEquals(7, a.size());
     }
 
     // Exception tests

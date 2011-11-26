@@ -37,7 +37,7 @@ public class TreeMapTest extends JSR166TestCase {
     public void testClear() {
         TreeMap map = map5();
         map.clear();
-        assertEquals(map.size(), 0);
+        assertEquals(0, map.size());
     }
 
     /**
@@ -173,7 +173,7 @@ public class TreeMapTest extends JSR166TestCase {
             last = k;
             ++count;
         }
-        assertEquals(count ,5);
+        assertEquals(5, count);
     }
 
     /**
@@ -192,7 +192,7 @@ public class TreeMapTest extends JSR166TestCase {
             last = k;
             ++count;
         }
-        assertEquals(count ,5);
+        assertEquals(5, count);
     }
 
     /**
@@ -211,7 +211,7 @@ public class TreeMapTest extends JSR166TestCase {
             last = k;
             ++count;
         }
-        assertEquals(count, 5);
+        assertEquals(5, count);
     }
 
     /**
@@ -230,7 +230,7 @@ public class TreeMapTest extends JSR166TestCase {
             last = k;
             ++count;
         }
-        assertEquals(count, 5);
+        assertEquals(5, count);
     }
 
     /**
@@ -791,7 +791,7 @@ public class TreeMapTest extends JSR166TestCase {
     static NavigableMap<Integer, Integer> newMap(Class cl) throws Exception {
         NavigableMap<Integer, Integer> result
             = (NavigableMap<Integer, Integer>) cl.newInstance();
-        assertEquals(result.size(), 0);
+        assertEquals(0, result.size());
         assertFalse(result.keySet().iterator().hasNext());
         return result;
     }

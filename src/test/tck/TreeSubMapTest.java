@@ -67,7 +67,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     public void testClear() {
         NavigableMap map = map5();
         map.clear();
-        assertEquals(map.size(), 0);
+        assertEquals(0, map.size());
     }
 
     /**
@@ -577,7 +577,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     public void testDescendingClear() {
         NavigableMap map = dmap5();
         map.clear();
-        assertEquals(map.size(), 0);
+        assertEquals(0, map.size());
     }
 
     /**

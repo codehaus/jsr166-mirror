@@ -25,11 +25,12 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         return new TestSuite(CopyOnWriteArrayListTest.class);
     }
 
-    static CopyOnWriteArrayList populatedArray(int n) {
-        CopyOnWriteArrayList a = new CopyOnWriteArrayList();
+    static CopyOnWriteArrayList<Integer> populatedArray(int n) {
+        CopyOnWriteArrayList<Integer> a
+            = new CopyOnWriteArrayList<Integer>();
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; ++i)
-            a.add(new Integer(i));
+            a.add(i);
         assertFalse(a.isEmpty());
         assertEquals(n, a.size());
         return a;
@@ -364,13 +365,14 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      * the list
      */
     public void testToArray2() {
-        CopyOnWriteArrayList full = populatedArray(3);
-        Integer[] i = new Integer[3];
-        i = (Integer[])full.toArray(i);
-        assertEquals(3, i.length);
-        assertEquals(0, i[0].intValue());
-        assertEquals(1, i[1].intValue());
-        assertEquals(2, i[2].intValue());
+        final int size = 3;
+        CopyOnWriteArrayList<Integer> full = populatedArray(size);
+        Integer[] ints = new Integer[size];
+        assertSame(ints, full.toArray(ints));
+        Iterator<Integer> it = full.iterator();
+        for (int i = 0; i < size; i++)
+            assertSame(ints[i], it.next());
+        assertFalse(it.hasNext());
     }
 
     /**
@@ -389,11 +391,11 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         }
 
         List s = a.subList(2, 5);
-        assertEquals(s.size(), 3);
+        assertEquals(3, s.size());
         s.set(2, m1);
         assertEquals(a.get(4), m1);
         s.clear();
-        assertEquals(a.size(), 7);
+        assertEquals(7, a.size());
     }
 
     // Exception tests

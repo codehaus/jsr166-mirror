@@ -92,7 +92,7 @@ public class CyclicBarrierTest extends JSR166TestCase {
         b.await();
         b.await();
         assertEquals(0, b.getNumberWaiting());
-        assertEquals(countAction, 2);
+        assertEquals(2, countAction);
     }
 
     /**

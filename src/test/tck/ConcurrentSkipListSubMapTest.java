@@ -69,7 +69,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     public void testClear() {
         ConcurrentNavigableMap map = map5();
         map.clear();
-        assertEquals(map.size(), 0);
+        assertEquals(0, map.size());
     }
 
     /**
@@ -743,7 +743,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     public void testDescendingClear() {
         ConcurrentNavigableMap map = dmap5();
         map.clear();
-        assertEquals(map.size(), 0);
+        assertEquals(0, map.size());
     }
 
     /**

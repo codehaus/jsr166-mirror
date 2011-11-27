@@ -40,7 +40,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     public void testClear() {
         ConcurrentHashMap map = map5();
         map.clear();
-        assertEquals(map.size(), 0);
+        assertEquals(0, map.size());
     }
 
     /**

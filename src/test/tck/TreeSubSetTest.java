@@ -445,7 +445,7 @@ public class TreeSubSetTest extends JSR166TestCase {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, 0);
+        assertEquals(0, i);
     }
 
     /**
@@ -462,8 +462,8 @@ public class TreeSubSetTest extends JSR166TestCase {
         it.remove();
 
         it = q.iterator();
-        assertEquals(it.next(), 2);
-        assertEquals(it.next(), 3);
+        assertEquals(2, it.next());
+        assertEquals(3, it.next());
         assertFalse(it.hasNext());
     }
 
@@ -934,7 +934,7 @@ public class TreeSubSetTest extends JSR166TestCase {
             assertTrue(q.contains(it.next()));
             ++i;
         }
-        assertEquals(i, 0);
+        assertEquals(0, i);
     }
 
     /**
@@ -951,8 +951,8 @@ public class TreeSubSetTest extends JSR166TestCase {
         it.remove();
 
         it = q.iterator();
-        assertEquals(it.next(), 2);
-        assertEquals(it.next(), 3);
+        assertEquals(2, it.next());
+        assertEquals(3, it.next());
         assertFalse(it.hasNext());
     }
 

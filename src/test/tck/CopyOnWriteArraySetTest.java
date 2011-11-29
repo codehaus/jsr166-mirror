@@ -321,6 +321,8 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
 
         assertTrue(x != y);
         assertEquals(x.size(), y.size());
+        assertEquals(x.toString(), y.toString());
+        assertTrue(Arrays.equals(x.toArray(), y.toArray()));
         assertEquals(x, y);
         assertEquals(y, x);
     }

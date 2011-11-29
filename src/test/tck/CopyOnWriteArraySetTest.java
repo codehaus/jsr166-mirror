@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -168,15 +169,33 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     * iterator() returns an iterator containing the elements of the set
+     * iterator() returns an iterator containing the elements of the
+     * set in insertion order
      */
     public void testIterator() {
-        CopyOnWriteArraySet full = populatedSet(3);
-        Iterator i = full.iterator();
-        int j;
-        for (j = 0; i.hasNext(); j++)
-            assertEquals(j, i.next());
-        assertEquals(3, j);
+        Set empty = new CopyOnWriteArraySet();
+        assertFalse(empty.iterator().hasNext());
+        try {
+            empty.iterator().next();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
+
+        Integer[] elements = new Integer[SIZE];
+        for (int i = 0; i < SIZE; i++)
+            elements[i] = i;
+        Collections.shuffle(Arrays.asList(elements));
+        Collection<Integer> full = populatedSet(elements);
+
+        Iterator it = full.iterator();
+        for (int j = 0; j < SIZE; j++) {
+            assertTrue(it.hasNext());
+            assertEquals(elements[j], it.next());
+        }
+        assertFalse(it.hasNext());
+        try {
+            it.next();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
     }
 
     /**

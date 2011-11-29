@@ -8,6 +8,7 @@
 
 import junit.framework.*;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -25,7 +26,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     static CopyOnWriteArraySet<Integer> populatedSet(int n) {
         CopyOnWriteArraySet<Integer> a = new CopyOnWriteArraySet<Integer>();
         assertTrue(a.isEmpty());
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; i++)
             a.add(i);
         assertFalse(a.isEmpty());
         assertEquals(n, a.size());
@@ -247,7 +248,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; i++)
             elements[i] = i;
         Collections.shuffle(Arrays.asList(elements));
-        CopyOnWriteArraySet<Integer> full = populatedSet(elements);
+        Collection<Integer> full = populatedSet(elements);
 
         assertTrue(Arrays.equals(elements, full.toArray()));
         assertSame(Object[].class, full.toArray().getClass());
@@ -258,7 +259,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      * elements from the set in insertion order
      */
     public void testToArray2() {
-        CopyOnWriteArraySet empty = new CopyOnWriteArraySet();
+        Collection empty = new CopyOnWriteArraySet();
         Integer[] a;
 
         a = new Integer[0];
@@ -275,7 +276,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; i++)
             elements[i] = i;
         Collections.shuffle(Arrays.asList(elements));
-        CopyOnWriteArraySet<Integer> full = populatedSet(elements);
+        Collection<Integer> full = populatedSet(elements);
 
         Arrays.fill(a, 42);
         assertTrue(Arrays.equals(elements, full.toArray(a)));

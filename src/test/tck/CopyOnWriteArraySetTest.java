@@ -8,6 +8,7 @@
 
 import junit.framework.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
@@ -21,13 +22,23 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         return new TestSuite(CopyOnWriteArraySetTest.class);
     }
 
-    static CopyOnWriteArraySet populatedSet(int n) {
-        CopyOnWriteArraySet a = new CopyOnWriteArraySet();
+    static CopyOnWriteArraySet<Integer> populatedSet(int n) {
+        CopyOnWriteArraySet<Integer> a = new CopyOnWriteArraySet<Integer>();
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; ++i)
-            a.add(new Integer(i));
+            a.add(i);
         assertFalse(a.isEmpty());
         assertEquals(n, a.size());
+        return a;
+    }
+
+    static CopyOnWriteArraySet populatedSet(Integer[] elements) {
+        CopyOnWriteArraySet<Integer> a = new CopyOnWriteArraySet<Integer>();
+        assertTrue(a.isEmpty());
+        for (int i = 0; i < elements.length; i++)
+            a.add(elements[i]);
+        assertFalse(a.isEmpty());
+        assertEquals(elements.length, a.size());
         return a;
     }
 
@@ -224,29 +235,66 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     * toArray returns an Object array containing all elements from the set
+     * toArray() returns an Object array containing all elements from
+     * the set in insertion order
      */
     public void testToArray() {
-        CopyOnWriteArraySet<Integer> full = populatedSet(SIZE);
-        Object[] array = full.toArray();
-        Iterator<Integer> it = full.iterator();
+        Object[] a = new CopyOnWriteArraySet().toArray();
+        assertTrue(Arrays.equals(new Object[0], a));
+        assertSame(Object[].class, a.getClass());
+
+        Integer[] elements = new Integer[SIZE];
         for (int i = 0; i < SIZE; i++)
-            assertSame(array[i], it.next());
-        assertFalse(it.hasNext());
+            elements[i] = i;
+        Collections.shuffle(Arrays.asList(elements));
+        CopyOnWriteArraySet<Integer> full = populatedSet(elements);
+
+        assertTrue(Arrays.equals(elements, full.toArray()));
+        assertSame(Object[].class, full.toArray().getClass());
     }
 
     /**
-     * toArray returns an Integer array containing all elements from
-     * the set
+     * toArray(Integer array) returns an Integer array containing all
+     * elements from the set in insertion order
      */
     public void testToArray2() {
-        CopyOnWriteArraySet<Integer> full = populatedSet(SIZE);
-        Integer[] ints = new Integer[SIZE];
-        assertSame(ints, full.toArray(ints));
-        Iterator<Integer> it = full.iterator();
+        CopyOnWriteArraySet empty = new CopyOnWriteArraySet();
+        Integer[] a;
+
+        a = new Integer[0];
+        assertSame(a, empty.toArray(a));
+
+        a = new Integer[SIZE/2];
+        Arrays.fill(a, 42);
+        assertSame(a, empty.toArray(a));
+        assertNull(a[0]);
+        for (int i = 1; i < a.length; i++)
+            assertEquals(42, (int) a[i]);
+
+        Integer[] elements = new Integer[SIZE];
         for (int i = 0; i < SIZE; i++)
-            assertSame(ints[i], it.next());
-        assertFalse(it.hasNext());
+            elements[i] = i;
+        Collections.shuffle(Arrays.asList(elements));
+        CopyOnWriteArraySet<Integer> full = populatedSet(elements);
+
+        Arrays.fill(a, 42);
+        assertTrue(Arrays.equals(elements, full.toArray(a)));
+        for (int i = 0; i < a.length; i++)
+            assertEquals(42, (int) a[i]);
+        assertSame(Integer[].class, full.toArray(a).getClass());
+
+        a = new Integer[SIZE];
+        Arrays.fill(a, 42);
+        assertSame(a, full.toArray(a));
+        assertTrue(Arrays.equals(elements, a));
+
+        a = new Integer[2*SIZE];
+        Arrays.fill(a, 42);
+        assertSame(a, full.toArray(a));
+        assertTrue(Arrays.equals(elements, Arrays.copyOf(a, SIZE)));
+        assertNull(a[SIZE]);
+        for (int i = SIZE + 1; i < a.length; i++)
+            assertEquals(42, (int) a[i]);
     }
 
     /**

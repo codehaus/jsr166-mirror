@@ -7,6 +7,7 @@
  */
 
 import junit.framework.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -173,7 +174,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      * set in insertion order
      */
     public void testIterator() {
-        Set empty = new CopyOnWriteArraySet();
+        Collection empty = new CopyOnWriteArraySet();
         assertFalse(empty.iterator().hasNext());
         try {
             empty.iterator().next();
@@ -215,11 +216,13 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      * toString holds toString of elements
      */
     public void testToString() {
+        assertEquals("[]", new CopyOnWriteArraySet().toString());
         CopyOnWriteArraySet full = populatedSet(3);
         String s = full.toString();
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 3; ++i)
             assertTrue(s.contains(String.valueOf(i)));
-        }
+        assertEquals(new ArrayList(full).toString(),
+                     full.toString());
     }
 
     /**

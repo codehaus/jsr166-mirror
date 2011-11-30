@@ -7,6 +7,7 @@
  */
 
 import junit.framework.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -238,15 +240,33 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     * iterator() returns an iterator containing the elements of the list
+     * iterator() returns an iterator containing the elements of the
+     * list in insertion order
      */
     public void testIterator() {
-        CopyOnWriteArrayList full = populatedArray(SIZE);
-        Iterator i = full.iterator();
-        int j;
-        for (j = 0; i.hasNext(); j++)
-            assertEquals(j, i.next());
-        assertEquals(SIZE, j);
+        Collection empty = new CopyOnWriteArrayList();
+        assertFalse(empty.iterator().hasNext());
+        try {
+            empty.iterator().next();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
+
+        Integer[] elements = new Integer[SIZE];
+        for (int i = 0; i < SIZE; i++)
+            elements[i] = i;
+        Collections.shuffle(Arrays.asList(elements));
+        Collection<Integer> full = populatedArray(elements);
+
+        Iterator it = full.iterator();
+        for (int j = 0; j < SIZE; j++) {
+            assertTrue(it.hasNext());
+            assertEquals(elements[j], it.next());
+        }
+        assertFalse(it.hasNext());
+        try {
+            it.next();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -266,11 +286,13 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      * toString contains toString of elements
      */
     public void testToString() {
+        assertEquals("[]", new CopyOnWriteArrayList().toString());
         CopyOnWriteArrayList full = populatedArray(3);
         String s = full.toString();
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 3; ++i)
             assertTrue(s.contains(String.valueOf(i)));
-        }
+        assertEquals(new ArrayList(full).toString(),
+                     full.toString());
     }
 
     /**

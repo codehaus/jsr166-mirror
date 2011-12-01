@@ -7,11 +7,15 @@
  */
 
 import junit.framework.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -26,13 +30,22 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     static CopyOnWriteArrayList<Integer> populatedArray(int n) {
-        CopyOnWriteArrayList<Integer> a
-            = new CopyOnWriteArrayList<Integer>();
+        CopyOnWriteArrayList<Integer> a = new CopyOnWriteArrayList<Integer>();
         assertTrue(a.isEmpty());
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; i++)
             a.add(i);
         assertFalse(a.isEmpty());
         assertEquals(n, a.size());
+        return a;
+    }
+
+    static CopyOnWriteArrayList<Integer> populatedArray(Integer[] elements) {
+        CopyOnWriteArrayList<Integer> a = new CopyOnWriteArrayList<Integer>();
+        assertTrue(a.isEmpty());
+        for (int i = 0; i < elements.length; i++)
+            a.add(elements[i]);
+        assertFalse(a.isEmpty());
+        assertEquals(elements.length, a.size());
         return a;
     }
 
@@ -227,15 +240,33 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     * iterator() returns an iterator containing the elements of the list
+     * iterator() returns an iterator containing the elements of the
+     * list in insertion order
      */
     public void testIterator() {
-        CopyOnWriteArrayList full = populatedArray(SIZE);
-        Iterator i = full.iterator();
-        int j;
-        for (j = 0; i.hasNext(); j++)
-            assertEquals(j, i.next());
-        assertEquals(SIZE, j);
+        Collection empty = new CopyOnWriteArrayList();
+        assertFalse(empty.iterator().hasNext());
+        try {
+            empty.iterator().next();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
+
+        Integer[] elements = new Integer[SIZE];
+        for (int i = 0; i < SIZE; i++)
+            elements[i] = i;
+        Collections.shuffle(Arrays.asList(elements));
+        Collection<Integer> full = populatedArray(elements);
+
+        Iterator it = full.iterator();
+        for (int j = 0; j < SIZE; j++) {
+            assertTrue(it.hasNext());
+            assertEquals(elements[j], it.next());
+        }
+        assertFalse(it.hasNext());
+        try {
+            it.next();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -255,11 +286,13 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      * toString contains toString of elements
      */
     public void testToString() {
+        assertEquals("[]", new CopyOnWriteArrayList().toString());
         CopyOnWriteArrayList full = populatedArray(3);
         String s = full.toString();
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 3; ++i)
             assertTrue(s.contains(String.valueOf(i)));
-        }
+        assertEquals(new ArrayList(full).toString(),
+                     full.toString());
     }
 
     /**
@@ -349,30 +382,66 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     * toArray returns an Object array containing all elements from the list
+     * toArray() returns an Object array containing all elements from
+     * the list in insertion order
      */
     public void testToArray() {
-        CopyOnWriteArrayList full = populatedArray(3);
-        Object[] o = full.toArray();
-        assertEquals(3, o.length);
-        assertEquals(0, o[0]);
-        assertEquals(1, o[1]);
-        assertEquals(2, o[2]);
+        Object[] a = new CopyOnWriteArrayList().toArray();
+        assertTrue(Arrays.equals(new Object[0], a));
+        assertSame(Object[].class, a.getClass());
+
+        Integer[] elements = new Integer[SIZE];
+        for (int i = 0; i < SIZE; i++)
+            elements[i] = i;
+        Collections.shuffle(Arrays.asList(elements));
+        Collection<Integer> full = populatedArray(elements);
+
+        assertTrue(Arrays.equals(elements, full.toArray()));
+        assertSame(Object[].class, full.toArray().getClass());
     }
 
     /**
-     * toArray returns an Integer array containing all elements from
-     * the list
+     * toArray(Integer array) returns an Integer array containing all
+     * elements from the list in insertion order
      */
     public void testToArray2() {
-        final int size = 3;
-        CopyOnWriteArrayList<Integer> full = populatedArray(size);
-        Integer[] ints = new Integer[size];
-        assertSame(ints, full.toArray(ints));
-        Iterator<Integer> it = full.iterator();
-        for (int i = 0; i < size; i++)
-            assertSame(ints[i], it.next());
-        assertFalse(it.hasNext());
+        Collection empty = new CopyOnWriteArrayList();
+        Integer[] a;
+
+        a = new Integer[0];
+        assertSame(a, empty.toArray(a));
+
+        a = new Integer[SIZE/2];
+        Arrays.fill(a, 42);
+        assertSame(a, empty.toArray(a));
+        assertNull(a[0]);
+        for (int i = 1; i < a.length; i++)
+            assertEquals(42, (int) a[i]);
+
+        Integer[] elements = new Integer[SIZE];
+        for (int i = 0; i < SIZE; i++)
+            elements[i] = i;
+        Collections.shuffle(Arrays.asList(elements));
+        Collection<Integer> full = populatedArray(elements);
+
+        Arrays.fill(a, 42);
+        assertTrue(Arrays.equals(elements, full.toArray(a)));
+        for (int i = 0; i < a.length; i++)
+            assertEquals(42, (int) a[i]);
+        assertSame(Integer[].class, full.toArray(a).getClass());
+
+        a = new Integer[SIZE];
+        Arrays.fill(a, 42);
+        assertSame(a, full.toArray(a));
+        assertTrue(Arrays.equals(elements, a));
+
+        a = new Integer[2*SIZE];
+        Arrays.fill(a, 42);
+        assertSame(a, full.toArray(a));
+        assertTrue(Arrays.equals(elements, Arrays.copyOf(a, SIZE)));
+        assertNull(a[SIZE]);
+        for (int i = SIZE + 1; i < a.length; i++)
+            assertEquals(42, (int) a[i]);
     }
 
     /**

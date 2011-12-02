@@ -249,6 +249,7 @@ public class Exchanger<V> {
      * into hole.  This class cannot be parameterized as "V" because
      * of the use of non-V CANCEL sentinels.
      */
+    @SuppressWarnings("serial")
     private static final class Node extends AtomicReference<Object> {
         /** The element offered by the Thread creating this node. */
         public final Object item;
@@ -273,6 +274,7 @@ public class Exchanger<V> {
      * would improve throughput more than enough to outweigh using
      * extra space.
      */
+    @SuppressWarnings("serial")
     private static final class Slot extends AtomicReference<Object> {
         // Improve likelihood of isolation on <= 128 byte cache lines.
         // We used to target 64 byte cache lines, but some x86s (including
@@ -590,11 +592,13 @@ public class Exchanger<V> {
      */
     public V exchange(V x) throws InterruptedException {
         if (!Thread.interrupted()) {
-            Object v = doExchange((x == null) ? NULL_ITEM : x, false, 0);
-            if (v == NULL_ITEM)
+            Object o = doExchange((x == null) ? NULL_ITEM : x, false, 0);
+            if (o == NULL_ITEM)
                 return null;
-            if (v != CANCEL)
-                return (V)v;
+            if (o != CANCEL) {
+                @SuppressWarnings("unchecked") V v = (V)o;
+                return v;
+            }
             Thread.interrupted(); // Clear interrupt status on IE throw
         }
         throw new InterruptedException();
@@ -645,12 +649,14 @@ public class Exchanger<V> {
     public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
         if (!Thread.interrupted()) {
-            Object v = doExchange((x == null) ? NULL_ITEM : x,
+            Object o = doExchange((x == null) ? NULL_ITEM : x,
                                   true, unit.toNanos(timeout));
-            if (v == NULL_ITEM)
+            if (o == NULL_ITEM)
                 return null;
-            if (v != CANCEL)
-                return (V)v;
+            if (o != CANCEL) {
+                @SuppressWarnings("unchecked") V v = (V)o;
+                return v;
+            }
             if (!Thread.interrupted())
                 throw new TimeoutException();
         }

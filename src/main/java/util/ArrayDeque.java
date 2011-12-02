@@ -792,7 +792,6 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             ArrayDeque<E> result = (ArrayDeque<E>) super.clone();
             result.elements = Arrays.copyOf(elements, elements.length);
             return result;
-
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }

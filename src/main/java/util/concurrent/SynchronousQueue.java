@@ -133,7 +133,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Shared internal API for dual stacks and queues.
      */
-    abstract static class Transferer {
+    abstract static class Transferer<E> {
         /**
          * Performs a put or take.
          *
@@ -147,7 +147,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          *         the caller can distinguish which of these occurred
          *         by checking Thread.interrupted.
          */
-        abstract Object transfer(Object e, boolean timed, long nanos);
+        abstract E transfer(E e, boolean timed, long nanos);
     }
 
     /** The number of CPUs, for spin control */
@@ -176,7 +176,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     static final long spinForTimeoutThreshold = 1000L;
 
     /** Dual stack */
-    static final class TransferStack extends Transferer {
+    static final class TransferStack<E> extends Transferer<E> {
         /*
          * This extends Scherer-Scott dual stack algorithm, differing,
          * among other ways, by using "covering" nodes rather than
@@ -292,7 +292,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Puts or takes an item.
          */
-        Object transfer(Object e, boolean timed, long nanos) {
+        E transfer(E e, boolean timed, long nanos) {
             /*
              * Basic algorithm is to loop trying one of three actions:
              *
@@ -333,7 +333,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                         }
                         if ((h = head) != null && h.next == s)
                             casHead(h, s.next);     // help s's fulfiller
-                        return (mode == REQUEST) ? m.item : s.item;
+                        @SuppressWarnings("unchecked")
+                        E x = (E) ((mode == REQUEST) ? m.item : s.item);
+                        return x;
                     }
                 } else if (!isFulfilling(h.mode)) { // try to fulfill
                     if (h.isCancelled())            // already cancelled
@@ -349,7 +351,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             SNode mn = m.next;
                             if (m.tryMatch(s)) {
                                 casHead(s, mn);     // pop both s and m
-                                return (mode == REQUEST) ? m.item : s.item;
+                                @SuppressWarnings("unchecked")
+                                E x = (E) ((mode == REQUEST) ? m.item : s.item);
+                                return x;
                             } else                  // lost match
                                 s.casNext(m, mn);   // help unlink
                         }
@@ -492,7 +496,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /** Dual Queue */
-    static final class TransferQueue extends Transferer {
+    static final class TransferQueue<E> extends Transferer<E> {
         /*
          * This extends Scherer-Scott dual queue algorithm, differing,
          * among other ways, by using modes within nodes rather than
@@ -609,7 +613,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Puts or takes an item.
          */
-        Object transfer(Object e, boolean timed, long nanos) {
+        E transfer(E e, boolean timed, long nanos) {
             /* Basic algorithm is to loop trying to take either of
              * two actions:
              *
@@ -672,8 +676,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             s.item = s;
                         s.waiter = null;
                     }
-                    return (x != null) ? x : e;
 
+                    if (x == null)
+                        return e;
+                    else {
+                        @SuppressWarnings("unchecked") E ret = (E)x;
+                        return ret;
+                    }
                 } else {                            // complementary-mode
                     QNode m = h.next;               // node to fulfill
                     if (t != tail || m == null || h != head)
@@ -689,7 +698,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
                     advanceHead(h, m);              // successfully fulfilled
                     LockSupport.unpark(m.waiter);
-                    return (x != null) ? x : e;
+
+                    if (x == null)
+                        return e;
+                    else {
+                        @SuppressWarnings("unchecked") E ret = (E)x;
+                        return ret;
+                    }
                 }
             }
         }
@@ -703,7 +718,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * @param nanos timeout value
          * @return matched item, or s if cancelled
          */
-        Object awaitFulfill(QNode s, Object e, boolean timed, long nanos) {
+        Object awaitFulfill(QNode s, E e, boolean timed, long nanos) {
             /* Same idea as TransferStack.awaitFulfill */
             long lastTime = timed ? System.nanoTime() : 0;
             Thread w = Thread.currentThread();
@@ -816,7 +831,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * isn't a noticeable performance penalty for using volatile
      * instead of final here.
      */
-    private transient volatile Transferer transferer;
+    private transient volatile Transferer<E> transferer;
 
     /**
      * Creates a <tt>SynchronousQueue</tt> with nonfair access policy.
@@ -832,7 +847,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *        access; otherwise the order is unspecified.
      */
     public SynchronousQueue(boolean fair) {
-        transferer = fair ? new TransferQueue() : new TransferStack();
+        transferer = fair ? new TransferQueue<E>() : new TransferStack<E>();
     }
 
     /**
@@ -842,9 +857,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
-    public void put(E o) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
-        if (transferer.transfer(o, false, 0) == null) {
+    public void put(E e) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
+        if (transferer.transfer(e, false, 0) == null) {
             Thread.interrupted();
             throw new InterruptedException();
         }
@@ -859,10 +874,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E o, long timeout, TimeUnit unit)
+    public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
-        if (o == null) throw new NullPointerException();
-        if (transferer.transfer(o, true, unit.toNanos(timeout)) != null)
+        if (e == null) throw new NullPointerException();
+        if (transferer.transfer(e, true, unit.toNanos(timeout)) != null)
             return true;
         if (!Thread.interrupted())
             return false;
@@ -891,9 +906,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      */
     public E take() throws InterruptedException {
-        Object e = transferer.transfer(null, false, 0);
+        E e = transferer.transfer(null, false, 0);
         if (e != null)
-            return (E)e;
+            return e;
         Thread.interrupted();
         throw new InterruptedException();
     }
@@ -908,9 +923,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        Object e = transferer.transfer(null, true, unit.toNanos(timeout));
+        E e = transferer.transfer(null, true, unit.toNanos(timeout));
         if (e != null || !Thread.interrupted())
-            return (E)e;
+            return e;
         throw new InterruptedException();
     }
 
@@ -922,7 +937,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *         element is available.
      */
     public E poll() {
-        return (E)transferer.transfer(null, true, 0);
+        return transferer.transfer(null, true, 0);
     }
 
     /**
@@ -1117,6 +1132,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * object is ever serialized or deserialized.
      */
 
+    @SuppressWarnings("serial")
     static class WaitQueue implements java.io.Serializable { }
     static class LifoWaitQueue extends WaitQueue {
         private static final long serialVersionUID = -3633113410248163686L;
@@ -1153,9 +1169,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         if (waitingProducers instanceof FifoWaitQueue)
-            transferer = new TransferQueue();
+            transferer = new TransferQueue<E>();
         else
-            transferer = new TransferStack();
+            transferer = new TransferStack<E>();
     }
 
     // Unsafe mechanics

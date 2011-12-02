@@ -251,12 +251,11 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
             unsafe.putOrderedObject(obj, offset, newValue);
         }
 
+        @SuppressWarnings("unchecked")
         public V get(T obj) {
             if (obj == null || obj.getClass() != tclass || cclass != null)
                 targetCheck(obj);
-            @SuppressWarnings("unchecked")
-            V v = (V)unsafe.getObjectVolatile(obj, offset);
-            return v;
+            return (V)unsafe.getObjectVolatile(obj, offset);
         }
 
         private void ensureProtectedAccess(T obj) {

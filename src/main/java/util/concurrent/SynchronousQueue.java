@@ -292,6 +292,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Puts or takes an item.
          */
+        @SuppressWarnings("unchecked")
         E transfer(E e, boolean timed, long nanos) {
             /*
              * Basic algorithm is to loop trying one of three actions:
@@ -333,9 +334,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                         }
                         if ((h = head) != null && h.next == s)
                             casHead(h, s.next);     // help s's fulfiller
-                        @SuppressWarnings("unchecked")
-                        E x = (E) ((mode == REQUEST) ? m.item : s.item);
-                        return x;
+                        return (E) ((mode == REQUEST) ? m.item : s.item);
                     }
                 } else if (!isFulfilling(h.mode)) { // try to fulfill
                     if (h.isCancelled())            // already cancelled
@@ -351,9 +350,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             SNode mn = m.next;
                             if (m.tryMatch(s)) {
                                 casHead(s, mn);     // pop both s and m
-                                @SuppressWarnings("unchecked")
-                                E x = (E) ((mode == REQUEST) ? m.item : s.item);
-                                return x;
+                                return (E) ((mode == REQUEST) ? m.item : s.item);
                             } else                  // lost match
                                 s.casNext(m, mn);   // help unlink
                         }
@@ -613,6 +610,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Puts or takes an item.
          */
+        @SuppressWarnings("unchecked")
         E transfer(E e, boolean timed, long nanos) {
             /* Basic algorithm is to loop trying to take either of
              * two actions:
@@ -676,13 +674,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                             s.item = s;
                         s.waiter = null;
                     }
+                    return (x != null) ? (E)x : e;
 
-                    if (x == null)
-                        return e;
-                    else {
-                        @SuppressWarnings("unchecked") E ret = (E)x;
-                        return ret;
-                    }
                 } else {                            // complementary-mode
                     QNode m = h.next;               // node to fulfill
                     if (t != tail || m == null || h != head)
@@ -698,13 +691,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
                     advanceHead(h, m);              // successfully fulfilled
                     LockSupport.unpark(m.waiter);
-
-                    if (x == null)
-                        return e;
-                    else {
-                        @SuppressWarnings("unchecked") E ret = (E)x;
-                        return ret;
-                    }
+                    return (x != null) ? (E)x : e;
                 }
             }
         }

@@ -111,9 +111,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns item at index i.
      */
+    @SuppressWarnings("unchecked")
     final E itemAt(int i) {
-        @SuppressWarnings("unchecked") E x = (E) items[i];
-        return x;
+        return (E) items[i];
     }
 
     /**

@@ -301,16 +301,15 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     public E peekFirst() {
-        @SuppressWarnings("unchecked") E result = (E) elements[head];
         // elements[head] is null if deque empty
-        return result;
+        return (E) elements[head];
     }
 
+    @SuppressWarnings("unchecked")
     public E peekLast() {
-        @SuppressWarnings("unchecked")
-        E result = (E) elements[(tail - 1) & (elements.length - 1)];
-        return result;
+        return (E) elements[(tail - 1) & (elements.length - 1)];
     }
 
     /**

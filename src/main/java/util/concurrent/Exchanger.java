@@ -590,15 +590,14 @@ public class Exchanger<V> {
      * @throws InterruptedException if the current thread was
      *         interrupted while waiting
      */
+    @SuppressWarnings("unchecked")
     public V exchange(V x) throws InterruptedException {
         if (!Thread.interrupted()) {
             Object o = doExchange((x == null) ? NULL_ITEM : x, false, 0);
             if (o == NULL_ITEM)
                 return null;
-            if (o != CANCEL) {
-                @SuppressWarnings("unchecked") V v = (V)o;
-                return v;
-            }
+            if (o != CANCEL)
+                return (V)o;
             Thread.interrupted(); // Clear interrupt status on IE throw
         }
         throw new InterruptedException();
@@ -646,6 +645,7 @@ public class Exchanger<V> {
      * @throws TimeoutException if the specified waiting time elapses
      *         before another thread enters the exchange
      */
+    @SuppressWarnings("unchecked")
     public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
         if (!Thread.interrupted()) {
@@ -653,10 +653,8 @@ public class Exchanger<V> {
                                   true, unit.toNanos(timeout));
             if (o == NULL_ITEM)
                 return null;
-            if (o != CANCEL) {
-                @SuppressWarnings("unchecked") V v = (V)o;
-                return v;
-            }
+            if (o != CANCEL)
+                return (V)o;
             if (!Thread.interrupted())
                 throw new TimeoutException();
         }

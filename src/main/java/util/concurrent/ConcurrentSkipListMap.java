@@ -60,6 +60,7 @@ import java.util.*;
  * @param <V> the type of mapped values
  * @since 1.6
  */
+@SuppressWarnings("unchecked")
 public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     implements ConcurrentNavigableMap<K,V>,
                Cloneable,

@@ -1285,6 +1285,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     final class WriteThroughEntry
         extends AbstractMap.SimpleEntry<K,V>
     {
+        static final long serialVersionUID = 7249069246763182397L;
+
         WriteThroughEntry(K k, V v) {
             super(k,v);
         }

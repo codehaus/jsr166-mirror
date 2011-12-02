@@ -97,7 +97,9 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     private E getRaw(long offset) {
-        return (E) unsafe.getObjectVolatile(array, offset);
+        @SuppressWarnings("unchecked")
+        E e = (E) unsafe.getObjectVolatile(array, offset);
+        return e;
     }
 
     /**

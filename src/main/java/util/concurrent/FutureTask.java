@@ -83,12 +83,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
      *
      * @param s completed state value
      */
+    @SuppressWarnings("unchecked")
     private V report(int s) throws ExecutionException {
         Object x = outcome;
-        if (s == NORMAL) {
-            @SuppressWarnings("unchecked") V v = (V)x;
-            return v;
-        }
+        if (s == NORMAL)
+            return (V)x;
         if (s >= CANCELLED)
             throw new CancellationException();
         throw new ExecutionException((Throwable)x);

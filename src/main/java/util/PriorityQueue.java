@@ -77,6 +77,7 @@ package java.util;
  * @author Josh Bloch, Doug Lea
  * @param <E> the type of elements held in this collection
  */
+@SuppressWarnings("unchecked")
 public class PriorityQueue<E> extends AbstractQueue<E>
     implements java.io.Serializable {
 

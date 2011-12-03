@@ -877,6 +877,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * @throws NullPointerException if the specified key is null
      */
+    @SuppressWarnings("unchecked")
     public V get(Object key) {
         Segment<K,V> s; // manually integrate access methods to reduce overhead
         HashEntry<K,V>[] tab;
@@ -1285,6 +1286,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     final class WriteThroughEntry
         extends AbstractMap.SimpleEntry<K,V>
     {
+        static final long serialVersionUID = 7249069246763182397L;
+
         WriteThroughEntry(K k, V v) {
             super(k,v);
         }

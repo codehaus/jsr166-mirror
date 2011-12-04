@@ -2187,7 +2187,7 @@ public class ConcurrentHashMapV8<K, V>
             return true;
         }
 
-        public final boolean removeAll(Collection c) {
+        public final boolean removeAll(Collection<?> c) {
             boolean modified = false;
             for (Iterator<?> it = iter(); it.hasNext();) {
                 if (c.contains(it.next())) {

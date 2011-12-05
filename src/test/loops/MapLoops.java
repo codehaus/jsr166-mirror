@@ -127,7 +127,7 @@ public class MapLoops {
         int position;
         int total;
 
-        Runner(int id, Map<Integer,Integer> map, Integer[] key,  CyclicBarrier barrier) {
+        Runner(int id, Map<Integer,Integer> map, Integer[] key, CyclicBarrier barrier) {
             this.map = map;
             this.key = key;
             this.barrier = barrier;

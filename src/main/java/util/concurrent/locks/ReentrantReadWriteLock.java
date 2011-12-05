@@ -771,7 +771,7 @@ public class ReentrantReadWriteLock
          *
          * @return {@code true} if the read lock was acquired
          */
-        public  boolean tryLock() {
+        public boolean tryLock() {
             return sync.tryReadLock();
         }
 
@@ -854,7 +854,7 @@ public class ReentrantReadWriteLock
          * <p> If the number of readers is now zero then the lock
          * is made available for write lock attempts.
          */
-        public  void unlock() {
+        public void unlock() {
             sync.releaseShared(1);
         }
 

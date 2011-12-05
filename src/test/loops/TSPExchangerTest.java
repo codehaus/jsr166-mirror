@@ -705,7 +705,7 @@ public class TSPExchangerTest {
 
         int seed;
         RNG(int seed) { this.seed = seed; }
-        RNG()         { this.seed = seedGenerator.nextInt() | 1;  }
+        RNG()         { this.seed = seedGenerator.nextInt() | 1; }
 
         int next() {
             int x = seed;

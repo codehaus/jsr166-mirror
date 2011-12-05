@@ -36,12 +36,12 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
         }
         public boolean isCancelled() { return task.isCancelled(); }
         public boolean isDone() { return task.isDone(); }
-        public V get() throws InterruptedException,  ExecutionException {
+        public V get() throws InterruptedException, ExecutionException {
             V v = task.get();
             assertTrue(ran);
             return v;
         }
-        public V get(long time, TimeUnit unit) throws InterruptedException,  ExecutionException, TimeoutException {
+        public V get(long time, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             V v = task.get(time, unit);
             assertTrue(ran);
             return v;

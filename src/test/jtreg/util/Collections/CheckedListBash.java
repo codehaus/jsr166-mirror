@@ -201,7 +201,7 @@ public class CheckedListBash {
     }
 
     static List newList() {
-        List s =  Collections.checkedList(new ArrayList(), Integer.class);
+        List s = Collections.checkedList(new ArrayList(), Integer.class);
         if (!s.isEmpty())
             fail("New instance non empty.");
         return s;

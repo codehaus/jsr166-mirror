@@ -116,7 +116,7 @@ public class MapWordLoops {
         long startTime = System.currentTimeMillis();
         runner.run();
         long afterRun = System.currentTimeMillis();
-        long runTime =  (afterRun - startTime);
+        long runTime = afterRun - startTime;
         int np = runner.total;
         if (runner.total == runner.hashCode())
             System.out.println("Useless Number" + runner.total);
@@ -177,7 +177,7 @@ public class MapWordLoops {
                 if (r < pctrem) {
                     map.remove(k);
                     ++nremoves;
-                    j += ((r >>> 8) & 7) +  n / 2;
+                    j += ((r >>> 8) & 7) + n / 2;
                     if (j >= n) j -= n;
                 }
             }

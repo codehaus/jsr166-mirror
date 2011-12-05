@@ -965,7 +965,7 @@ public abstract class AbstractParallelAnyArray {
 
         public ParallelLongArrayWithLongMapping withIndexedMapping
             (IntAndLongToLong mapper) {
-            return new LULCPap(ex, origin, fence, array,  mapper);
+            return new LULCPap(ex, origin, fence, array, mapper);
         }
 
         public int indexOf(long target) {
@@ -1199,7 +1199,7 @@ public abstract class AbstractParallelAnyArray {
             return new OFLCPap<T>(ex, origin, fence, array, selector, mapper);
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final Predicate s = selector;
             final Object[] a = this.array;
             for (int i = lo; i < hi; ++i) {
@@ -1377,7 +1377,7 @@ public abstract class AbstractParallelAnyArray {
             return new DFLCPap(ex, origin, fence, array, selector, mapper);
         }
 
-        final void leafApply(int lo, int hi, DoubleProcedure  procedure) {
+        final void leafApply(int lo, int hi, DoubleProcedure procedure) {
             final DoublePredicate s = selector;
             final double[] a = this.array;
             for (int i = lo; i < hi; ++i) {
@@ -1557,7 +1557,7 @@ public abstract class AbstractParallelAnyArray {
             return new LFLCPap(ex, origin, fence, array, selector, mapper);
         }
 
-        final void leafApply(int lo, int hi, LongProcedure  procedure) {
+        final void leafApply(int lo, int hi, LongProcedure procedure) {
             final LongPredicate s = selector;
             final long[] a = this.array;
             for (int i = lo; i < hi; ++i) {
@@ -1740,7 +1740,7 @@ public abstract class AbstractParallelAnyArray {
             return new ORLCPap<T>(ex, origin, fence, array, selector, mapper);
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndObjectPredicate s = selector;
             final Object[] a = this.array;
             for (int i = lo; i < hi; ++i) {
@@ -1920,7 +1920,7 @@ public abstract class AbstractParallelAnyArray {
             return new DRLCPap(ex, origin, fence, array, selector, mapper);
         }
 
-        final void leafApply(int lo, int hi, DoubleProcedure  procedure) {
+        final void leafApply(int lo, int hi, DoubleProcedure procedure) {
             final IntAndDoublePredicate s = selector;
             final double[] a = this.array;
             for (int i = lo; i < hi; ++i) {
@@ -2100,7 +2100,7 @@ public abstract class AbstractParallelAnyArray {
             return new LRLCPap(ex, origin, fence, array, selector, mapper);
         }
 
-        final void leafApply(int lo, int hi, LongProcedure  procedure) {
+        final void leafApply(int lo, int hi, LongProcedure procedure) {
             final IntAndLongPredicate s = selector;
             final long[] a = this.array;
             for (int i = lo; i < hi; ++i) {
@@ -2360,7 +2360,7 @@ public abstract class AbstractParallelAnyArray {
                                   compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final Op f = op;
             final Object[] a = this.array;
             for (int i = lo; i < hi; ++i)
@@ -2422,7 +2422,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final double[] a = this.array;
             final DoubleToObject f = op;
             for (int i = lo; i < hi; ++i)
@@ -2484,7 +2484,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final long[] a = this.array;
             final LongToObject f = op;
             for (int i = lo; i < hi; ++i)
@@ -2555,7 +2555,7 @@ public abstract class AbstractParallelAnyArray {
                                   compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final Predicate s = selector;
             final Object[] a = this.array;
             final Op f = op;
@@ -2643,7 +2643,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final DoublePredicate s = selector;
             final DoubleToObject f = op;
             final double[] a = this.array;
@@ -2725,7 +2725,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final LongPredicate s = selector;
             final LongToObject f = op;
             final long[] a = this.array;
@@ -2808,7 +2808,7 @@ public abstract class AbstractParallelAnyArray {
                                   compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndObjectPredicate s = selector;
             final Object[] a = this.array;
             final Op f = op;
@@ -2896,7 +2896,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndDoublePredicate s = selector;
             final DoubleToObject f = op;
             final double[] a = this.array;
@@ -2978,7 +2978,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndLongPredicate s = selector;
             final LongToObject f = op;
             final long[] a = this.array;
@@ -3151,7 +3151,7 @@ public abstract class AbstractParallelAnyArray {
                                   compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndObjectToObject f = op;
             final Object[] a = this.array;
             for (int i = lo; i < hi; ++i)
@@ -3213,7 +3213,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndDoubleToObject f = op;
             final double[] a = this.array;
             for (int i = lo; i < hi; ++i)
@@ -3275,7 +3275,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndLongToObject f = op;
             final long[] a = this.array;
             for (int i = lo; i < hi; ++i)
@@ -3297,7 +3297,7 @@ public abstract class AbstractParallelAnyArray {
 
     // object-combined filtered
 
-    static final class OFOCPap<T,U>   extends OOCPap<T,U> {
+    static final class OFOCPap<T,U> extends OOCPap<T,U> {
         final Predicate<? super T> selector;
         OFOCPap(ForkJoinPool ex, int origin, int fence,
                 T[] array, Predicate<? super T> selector,
@@ -3347,7 +3347,7 @@ public abstract class AbstractParallelAnyArray {
                  (this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final Predicate s = selector;
             final Object[] a = this.array;
             final IntAndObjectToObject f = op;
@@ -3427,7 +3427,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final DoublePredicate s = selector;
             final double[] a = this.array;
             final IntAndDoubleToObject f = op;
@@ -3507,7 +3507,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final LongPredicate s = selector;
             final long[] a = this.array;
             final IntAndLongToObject f = op;
@@ -3540,7 +3540,7 @@ public abstract class AbstractParallelAnyArray {
     }
 
     // Object-combined, relational
-    static final class OROCPap<T,U>   extends OOCPap<T,U> {
+    static final class OROCPap<T,U> extends OOCPap<T,U> {
         final IntAndObjectPredicate<? super T> selector;
         OROCPap(ForkJoinPool ex, int origin, int fence,
                 T[] array, IntAndObjectPredicate<? super T> selector,
@@ -3590,7 +3590,7 @@ public abstract class AbstractParallelAnyArray {
                  (this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndObjectPredicate s = selector;
             final Object[] a = this.array;
             final IntAndObjectToObject f = op;
@@ -3670,7 +3670,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndDoublePredicate s = selector;
             final double[] a = this.array;
             final IntAndDoubleToObject f = op;
@@ -3750,7 +3750,7 @@ public abstract class AbstractParallelAnyArray {
                                compoundIndexedOp(this.op, mapper));
         }
 
-        void leafApply(int lo, int hi, Procedure  procedure) {
+        void leafApply(int lo, int hi, Procedure procedure) {
             final IntAndLongPredicate s = selector;
             final long[] a = this.array;
             final IntAndLongToObject f = op;
@@ -7882,14 +7882,14 @@ public abstract class AbstractParallelAnyArray {
             };
     }
 
-    static  IntAndDoublePredicate compoundIndexedSelector
+    static IntAndDoublePredicate compoundIndexedSelector
         (final IntAndDoublePredicate fst, final IntAndDoublePredicate snd) {
         return new IntAndDoublePredicate() {
                 public boolean op(int i, double a) { return fst.op(i, a) && snd.op(i, a); }
             };
     }
 
-    static  IntAndDoublePredicate compoundIndexedSelector
+    static IntAndDoublePredicate compoundIndexedSelector
         (final IntAndDoublePredicate fst, final DoublePredicate snd) {
         return new IntAndDoublePredicate() {
                 public boolean op(int i, double a) { return fst.op(i, a) && snd.op(a); }
@@ -7903,14 +7903,14 @@ public abstract class AbstractParallelAnyArray {
             };
     }
 
-    static  IntAndLongPredicate compoundIndexedSelector
+    static IntAndLongPredicate compoundIndexedSelector
         (final IntAndLongPredicate fst, final IntAndLongPredicate snd) {
         return new IntAndLongPredicate() {
                 public boolean op(int i, long a) { return fst.op(i, a) && snd.op(i, a); }
             };
     }
 
-    static  IntAndLongPredicate compoundIndexedSelector
+    static IntAndLongPredicate compoundIndexedSelector
         (final IntAndLongPredicate fst, final LongPredicate snd) {
         return new IntAndLongPredicate() {
                 public boolean op(int i, long a) { return fst.op(i, a) && snd.op(a); }

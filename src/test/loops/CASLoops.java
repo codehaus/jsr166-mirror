@@ -579,7 +579,7 @@ public class CASLoops {
             System.out.println("threads : " + i +
                                " base iters per thread per run : " +
                                LoopHelpers.rightJustify(loopIters[i]));
-        long ntime = runNonAtomic(i,  iters);
+        long ntime = runNonAtomic(i, iters);
         if (print)
             report("Base        : ", ntime, ntime, i, iters);
         Thread.sleep(100L);

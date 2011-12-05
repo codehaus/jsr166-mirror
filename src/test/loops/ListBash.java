@@ -174,7 +174,7 @@ public class ListBash {
             if (!all.equals(s))
                 fail("Failed to reconstruct ints from odds and evens.");
 
-            all = clone(odd,  cl, synch);
+            all = clone(odd, cl, synch);
             ListIterator<Integer> itAll = all.listIterator(all.size());
             ListIterator<Integer> itEven = even.listIterator(even.size());
             while (itEven.hasPrevious()) {
@@ -205,7 +205,7 @@ public class ListBash {
             Object o = it.next();
             if (all.indexOf(o) != all.lastIndexOf(o))
                 fail("Apparent duplicate detected.");
-            if (all.subList(i,   all.size()).indexOf(o) != 0) {
+            if (all.subList(i, all.size()).indexOf(o) != 0) {
                 System.out.println("s0: " + all.subList(i,   all.size()).indexOf(o));
                 fail("subList/indexOf is screwy.");
             }

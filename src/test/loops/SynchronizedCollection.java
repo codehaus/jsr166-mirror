@@ -10,8 +10,8 @@ import java.util.*;
 import java.io.*;
 
 public final class SynchronizedCollection<E> implements Collection<E>, Serializable {
-    final Collection<E> c;         // Backing Collection
-    final Object           mutex;  // Object on which to synchronize
+    final Collection<E> c;      // Backing Collection
+    final Object mutex;         // Object on which to synchronize
 
     public SynchronizedCollection(Collection<E> c) {
         if (c==null)

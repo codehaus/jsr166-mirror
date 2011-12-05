@@ -663,7 +663,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the elements to add
      * @return this (to simplify use in expressions)
      */
-    public  ParallelArray<T> addAll(T[] other) {
+    public ParallelArray<T> addAll(T[] other) {
         int csize = other.length;
         int end = fence;
         insertSlotsAt(end, csize);

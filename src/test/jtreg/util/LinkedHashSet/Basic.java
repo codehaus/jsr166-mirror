@@ -99,7 +99,7 @@ public class Basic {
     static Set clone(Set s) throws Exception {
         Set clone;
         int method = rnd.nextInt(3);
-        clone = (method==0 ?  (Set) ((LinkedHashSet)s).clone() :
+        clone = (method==0 ? (Set) ((LinkedHashSet)s).clone() :
                  (method==1 ? new LinkedHashSet(Arrays.asList(s.toArray())) :
                   serClone(s)));
         if (!s.equals(clone))

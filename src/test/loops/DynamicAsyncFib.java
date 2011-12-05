@@ -6,7 +6,7 @@
 
 import java.util.concurrent.*;
 
-public final class DynamicAsyncFib  extends BinaryAsyncAction {
+public final class DynamicAsyncFib extends BinaryAsyncAction {
     int number;
 
     public DynamicAsyncFib(int n) {

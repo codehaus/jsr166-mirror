@@ -18,7 +18,7 @@ public final class LockLoops {
     static boolean doBuiltin = true;
     static boolean doReadWrite = true;
     static boolean doSemaphore = true;
-    static boolean doFair =  true;
+    static boolean doFair = true;
 
     public static void main(String[] args) throws Exception {
         int maxThreads = 100;

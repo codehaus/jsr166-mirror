@@ -76,7 +76,7 @@ public class ConcurrentQueueLoops {
         static int compute(int l) {
             if (l == 0)
                 return (int) System.nanoTime();
-            int nn =  (l >>> 7) & workMask;
+            int nn = (l >>> 7) & workMask;
             while (nn-- > 0)
                 l = LoopHelpers.compute6(l);
             return l;

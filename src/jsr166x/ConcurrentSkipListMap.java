@@ -2305,7 +2305,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * <tt>Comparable</tt>).
      * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>.
      */
-    public ConcurrentNavigableMap<K,V>  tailMap(K fromKey) {
+    public ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
         if (fromKey == null)
             throw new NullPointerException();
         return new ConcurrentSkipListSubMap(this, fromKey, null);
@@ -3241,7 +3241,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new ConcurrentSkipListSubMap(m, least, toKey);
         }
 
-        public  ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
+        public ConcurrentNavigableMap<K,V> tailMap(K fromKey) {
             if (fromKey == null)
                 throw new NullPointerException();
             if (!inOpenRange(fromKey))

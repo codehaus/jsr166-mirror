@@ -39,7 +39,7 @@ import java.util.concurrent.locks.*;
  */
 public class LinkedBlockingDeque<E>
     extends AbstractQueue<E>
-    implements BlockingDeque<E>,  java.io.Serializable {
+    implements BlockingDeque<E>, java.io.Serializable {
 
     /*
      * Implemented as a simple doubly-linked list protected by a
@@ -434,8 +434,8 @@ public class LinkedBlockingDeque<E>
 
     // BlockingQueue methods
 
-    public void put(E o) throws InterruptedException  { putLast(o);  }
-    public E take() throws InterruptedException       { return takeFirst(); }
+    public void put(E o) throws InterruptedException { putLast(o); }
+    public E take() throws InterruptedException      { return takeFirst(); }
     public boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException    { return offerLast(o, timeout, unit); }
     public E poll(long timeout, TimeUnit unit)

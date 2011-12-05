@@ -527,7 +527,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * @return the number of holds on this lock by the current thread,
      *         or zero if this lock is not held by the current thread
      */
-    public long getHoldCount() { return sync.getHoldCount();  }
+    public long getHoldCount() { return sync.getHoldCount(); }
 
     /**
      * Queries if this lock is held by the current thread.

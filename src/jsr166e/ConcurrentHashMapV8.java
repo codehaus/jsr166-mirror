@@ -1150,7 +1150,7 @@ public class ConcurrentHashMapV8<K, V>
                         continue;
                 }
                 else {             // transiently use a locked forwarding node
-                    Node g =  new Node(MOVED|LOCKED, nextTab, null, null);
+                    Node g = new Node(MOVED|LOCKED, nextTab, null, null);
                     if (!casTabAt(tab, i, f, g))
                         continue;
                     setTabAt(nextTab, i, null);
@@ -1460,8 +1460,8 @@ public class ConcurrentHashMapV8<K, V>
         if (initialCapacity < concurrencyLevel)   // Use at least as many bins
             initialCapacity = concurrencyLevel;   // as estimated threads
         long size = (long)(1.0 + (long)initialCapacity / loadFactor);
-        int cap =  ((size >= (long)MAXIMUM_CAPACITY) ?
-                    MAXIMUM_CAPACITY: tableSizeFor((int)size));
+        int cap = ((size >= (long)MAXIMUM_CAPACITY) ?
+                   MAXIMUM_CAPACITY: tableSizeFor((int)size));
         this.counter = new LongAdder();
         this.sizeCtl = cap;
     }
@@ -2267,7 +2267,7 @@ public class ConcurrentHashMapV8<K, V>
         }
     }
 
-    static final class EntrySet<K,V>  extends MapView<K,V>
+    static final class EntrySet<K,V> extends MapView<K,V>
         implements Set<Map.Entry<K,V>> {
         EntrySet(ConcurrentHashMapV8<K, V> map) { super(map); }
 

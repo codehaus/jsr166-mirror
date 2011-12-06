@@ -292,5 +292,5 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>
      * and this map does not support <tt>null</tt> keys.
      */
-    public NavigableMap<K,V>  tailMap(K fromKey);
+    public NavigableMap<K,V> tailMap(K fromKey);
 }

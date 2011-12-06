@@ -188,7 +188,7 @@ public class Heat {
                 }
             }
 
-            edges(newMat, llb, lub,  tu + time * dt);
+            edges(newMat, llb, lub, tu + time * dt);
         }
 
 

@@ -141,7 +141,7 @@ public class CollectionLoops {
         int total;
         int nops;
 
-        Runner(int id, Collection<Integer> collection, Integer[] key,  CyclicBarrier barrier, int nops) {
+        Runner(int id, Collection<Integer> collection, Integer[] key, CyclicBarrier barrier, int nops) {
             this.collection = collection;
             this.key = key;
             this.barrier = barrier;

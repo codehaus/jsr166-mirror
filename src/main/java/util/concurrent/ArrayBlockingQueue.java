@@ -147,7 +147,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // assert lock.getHoldCount() == 1;
         // assert items[takeIndex] != null;
         final Object[] items = this.items;
-        @SuppressWarnings("unchecked") E x = (E) items[takeIndex];
+        @SuppressWarnings("unchecked")
+        E x = (E) items[takeIndex];
         items[takeIndex] = null;
         takeIndex = inc(takeIndex);
         count--;
@@ -674,7 +675,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int i = 0;
             try {
                 while (i < n) {
-                    @SuppressWarnings("unchecked") E x = (E) items[take];
+                    @SuppressWarnings("unchecked")
+                    E x = (E) items[take];
                     c.add(x);
                     items[take] = null;
                     take = inc(take);

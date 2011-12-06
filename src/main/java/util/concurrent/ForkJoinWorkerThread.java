@@ -817,7 +817,7 @@ public class ForkJoinWorkerThread extends Thread {
                     (b = v.queueBase) != v.queueTop &&
                     (q = v.queue) != null &&
                     (i = (q.length - 1) & b) >= 0 &&
-                    q[i] ==  t) {
+                    q[i] == t) {
                     long u = (i << ASHIFT) + ABASE;
                     if (v.queueBase == b &&
                         UNSAFE.compareAndSwapObject(q, u, t, null)) {

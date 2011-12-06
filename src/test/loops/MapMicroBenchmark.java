@@ -147,7 +147,7 @@ public class MapMicroBenchmark {
     }
 
     static void runWork(Job[] jobs, int minIters, int maxIters, long timeLimit) throws Throwable {
-        for (int k = 0; k <  nsizes; ++k) {
+        for (int k = 0; k < nsizes; ++k) {
             int len = sizes[k];
             for (int i = 0; i < jobs.length; i++) {
                 Thread.sleep(50);
@@ -160,7 +160,7 @@ public class MapMicroBenchmark {
 
     // First warmup -- run only mixed job to discourage type specialization
     static void warmup1(Job job) throws Throwable {
-        for (int k = 0; k <  nsizes; ++k)
+        for (int k = 0; k < nsizes; ++k)
             job.work(sizes[k], 1, 1, 0);
     }
 

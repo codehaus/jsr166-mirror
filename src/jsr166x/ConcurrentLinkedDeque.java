@@ -627,7 +627,7 @@ public class ConcurrentLinkedDeque<E>
     public E remove()         { return removeFirst(); }
     public E peek()           { return peekFirst(); }
     public E element()        { return getFirst(); }
-    public void push(E e)     { addFirst(e);  }
+    public void push(E e)     { addFirst(e); }
     public E pop()            { return removeFirst(); }
 
     /**

@@ -79,7 +79,7 @@ public class MapCheck {
         Object[] absent = new Object[size];
         initializeKeys(key, absent, size);
 
-        precheck(size,  key, absent);
+        precheck(size, key, absent);
 
         for (int rep = 0; rep < numTests; ++rep) {
             mainTest(newMap(), key, absent);

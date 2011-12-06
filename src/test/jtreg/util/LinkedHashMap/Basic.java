@@ -34,7 +34,7 @@ public class Basic {
     static Random rnd = new Random(666);
     static Object nil = new Integer(0);
 
-    public static void main(String[] args)  throws Exception {
+    public static void main(String[] args) throws Exception {
         int numItr =  500;
         int mapSize = 500;
 

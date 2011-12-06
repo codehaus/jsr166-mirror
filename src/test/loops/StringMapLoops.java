@@ -148,7 +148,7 @@ public class StringMapLoops {
         int position;
         int total;
 
-        Runner(int id, Map<String,String> map, String[] key,  CyclicBarrier barrier) {
+        Runner(int id, Map<String,String> map, String[] key, CyclicBarrier barrier) {
             this.map = map;
             this.key = key;
             this.barrier = barrier;

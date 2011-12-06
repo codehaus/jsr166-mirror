@@ -62,14 +62,16 @@ public class RacingCollections {
             this.start();
         }
 
-        @SuppressWarnings("unchecked") void clear(Object o) {
+        @SuppressWarnings("unchecked")
+        void clear(Object o) {
             if (o instanceof Collection)
                 ((Collection<?>)o).clear();
             else
                 ((Map<?,?>)o).clear();
         }
 
-        @SuppressWarnings("unchecked") void realRun() {
+        @SuppressWarnings("unchecked")
+        void realRun() {
             // Mutate elLoco wildly forever, checking occasionally for "done"
             clear(elLoco);
             if (elLoco instanceof List) {

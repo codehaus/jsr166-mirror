@@ -676,7 +676,7 @@ class PAS {
             }
         }
 
-        void  atLeaf(int l, int h) {
+        void atLeaf(int l, int h) {
             if (pap.hasFilter())
                 filteredAtLeaf(l, h);
             else {
@@ -689,7 +689,7 @@ class PAS {
             }
         }
 
-        void  filteredAtLeaf(int l, int h) {
+        void filteredAtLeaf(int l, int h) {
             for (int i = l; i < h; ++i) {
                 if (pap.isSelected(i)) {
                     Object x = pap.oget(i);
@@ -772,7 +772,7 @@ class PAS {
             }
         }
 
-        void  filteredAtLeaf(int l, int h) {
+        void filteredAtLeaf(int l, int h) {
             for (int i = l; i < h; ++i) {
                 if (pap.isSelected(i)) {
                     double x = pap.dget(i);
@@ -843,7 +843,7 @@ class PAS {
             }
         }
 
-        void  atLeaf(int l, int h) {
+        void atLeaf(int l, int h) {
             if (pap.hasFilter())
                 filteredAtLeaf(l, h);
             else {
@@ -857,7 +857,7 @@ class PAS {
             }
         }
 
-        void  filteredAtLeaf(int l, int h) {
+        void filteredAtLeaf(int l, int h) {
             for (int i = l; i < h; ++i) {
                 if (pap.isSelected(i)) {
                     long x = pap.lget(i);

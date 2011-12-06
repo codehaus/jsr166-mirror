@@ -191,7 +191,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param op the op
      * @return this (to simplify use in expressions)
      */
-    public ParallelDoubleArray replaceWithMapping(DoubleOp  op) {
+    public ParallelDoubleArray replaceWithMapping(DoubleOp op) {
         super.replaceWithMapping(op);
         return this;
     }

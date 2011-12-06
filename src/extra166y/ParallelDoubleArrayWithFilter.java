@@ -29,7 +29,7 @@ public abstract class ParallelDoubleArrayWithFilter extends ParallelDoubleArrayW
      * @param op the op
      * @return this (to simplify use in expressions)
      */
-    public ParallelDoubleArrayWithFilter replaceWithMapping(DoubleOp  op) {
+    public ParallelDoubleArrayWithFilter replaceWithMapping(DoubleOp op) {
         ex.invoke(new PAS.FJDTransform(this, origin,
                                        fence, null, op));
         return this;

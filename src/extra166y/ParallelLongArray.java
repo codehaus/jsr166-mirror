@@ -231,7 +231,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * @param op the op
      * @return this (to simplify use in expressions)
      */
-    public ParallelLongArray replaceWithMapping(LongOp  op) {
+    public ParallelLongArray replaceWithMapping(LongOp op) {
         super.replaceWithMapping(op);
         return this;
     }

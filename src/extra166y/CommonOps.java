@@ -521,7 +521,7 @@ public class CommonOps {
      */
     public static <T> DoubleOp compoundOp
         (final DoubleToObject<? extends T> first,
-         final ObjectToDouble<? super T>  second) {
+         final ObjectToDouble<? super T> second) {
         return new DoubleOp() {
                 public final double op(double t) { return second.op(first.op(t)); }
             };
@@ -533,7 +533,7 @@ public class CommonOps {
      */
     public static <T> LongToDouble compoundOp
         (final LongToObject<? extends T> first,
-         final ObjectToDouble<? super T>  second) {
+         final ObjectToDouble<? super T> second) {
         return new LongToDouble() {
                 public final double op(long t) { return second.op(first.op(t)); }
             };
@@ -545,7 +545,7 @@ public class CommonOps {
      */
     public static <T> DoubleToLong compoundOp
         (final DoubleToObject<? extends T> first,
-         final ObjectToLong<? super T>  second) {
+         final ObjectToLong<? super T> second) {
         return new DoubleToLong() {
                 public final long op(double t) { return second.op(first.op(t)); }
             };
@@ -557,7 +557,7 @@ public class CommonOps {
      */
     public static <T> LongOp compoundOp
         (final LongToObject<? extends T> first,
-         final ObjectToLong<? super T>  second) {
+         final ObjectToLong<? super T> second) {
         return new LongOp() {
                 public final long op(long t) { return second.op(first.op(t)); }
             };
@@ -711,7 +711,7 @@ public class CommonOps {
     /**
      * Returns a predicate evaluating to true if its argument is non-null
      */
-    public static  Predicate<Object> isNonNullPredicate() {
+    public static Predicate<Object> isNonNullPredicate() {
         return IsNonNullPredicate.predicate;
     }
     static final class IsNonNullPredicate implements Predicate<Object> {
@@ -725,7 +725,7 @@ public class CommonOps {
     /**
      * Returns a predicate evaluating to true if its argument is null
      */
-    public static  Predicate<Object> isNullPredicate() {
+    public static Predicate<Object> isNullPredicate() {
         return IsNullPredicate.predicate;
     }
     static final class IsNullPredicate implements Predicate<Object> {

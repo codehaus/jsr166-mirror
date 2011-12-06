@@ -73,5 +73,5 @@ public interface ConcurrentNavigableMap<K,V> extends ConcurrentMap<K,V>, Navigab
      * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>
      * and this map does not support <tt>null</tt> keys.
      */
-    public ConcurrentNavigableMap<K,V>  tailMap(K fromKey);
+    public ConcurrentNavigableMap<K,V> tailMap(K fromKey);
 }

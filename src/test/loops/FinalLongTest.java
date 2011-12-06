@@ -7,7 +7,7 @@
 public class FinalLongTest {
     static int npairs = 2;
     static int iters = 10000000;
-    static  int LEN = 2;
+    static int LEN = 2;
     static final Long[] nums = new Long[LEN];
     static volatile boolean done;
     static volatile long total;

@@ -606,7 +606,7 @@ public class Microscope extends JPanel {
         // place a tile, taking all adjacent tiles of opponent
 
         public void take(Player player, int row, int col) {
-            int k =  (row + col * RANKS);
+            int k = row + col * RANKS;
             long dest = 1L << k;
             long nbrMask = adjacentMasks[k];
             long sourceBlue = blue_;
@@ -617,7 +617,7 @@ public class Microscope extends JPanel {
             }
             else {
                 blue_ = sourceBlue & ~(sourceBlue & nbrMask);
-                green_ =  sourceGreen | dest | (sourceBlue & nbrMask);
+                green_ = sourceGreen | dest | (sourceBlue & nbrMask);
             }
         }
 
@@ -751,9 +751,9 @@ public class Microscope extends JPanel {
 
         // setters:
 
-        synchronized void player(Player p)       { player_ = p;  }
-        synchronized void board(Board b)         { board_ = b;  }
-        synchronized void from(int sr, int sc)   { fromRow = sr; fromCol = sc;  }
+        synchronized void player(Player p)       { player_ = p; }
+        synchronized void board(Board b)         { board_ = b; }
+        synchronized void from(int sr, int sc)   { fromRow = sr; fromCol = sc; }
         synchronized void to(int dr, int dc)     { toRow = dr;   toCol = dc; }
 
         //  accessors:

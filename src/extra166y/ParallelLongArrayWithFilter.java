@@ -30,7 +30,7 @@ public abstract class ParallelLongArrayWithFilter extends ParallelLongArrayWithL
      * @param op the op
      * @return this (to simplify use in expressions)
      */
-    public ParallelLongArrayWithFilter replaceWithMapping(LongOp  op) {
+    public ParallelLongArrayWithFilter replaceWithMapping(LongOp op) {
         ex.invoke(new PAS.FJLTransform
                   (this, origin, fence, null, op));
         return this;

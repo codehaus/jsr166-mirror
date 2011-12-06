@@ -106,7 +106,7 @@ class LoopHelpers {
     public static final class XorShift32Random {
         static final AtomicInteger seq = new AtomicInteger(8862213);
         int x = -1831433054;
-        public XorShift32Random(int seed) { x = seed;  }
+        public XorShift32Random(int seed) { x = seed; }
         public XorShift32Random() {
             this((int) System.nanoTime() + seq.getAndAdd(129));
         }

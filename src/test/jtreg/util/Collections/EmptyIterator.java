@@ -53,8 +53,8 @@ public class EmptyIterator {
         testEmptyEnumeration(javax.swing.text.SimpleAttributeSet
                              .EMPTY.getAttributeNames());
 
-        @SuppressWarnings("unchecked") Iterator<?> x =
-            new sun.tools.java.MethodSet()
+        @SuppressWarnings("unchecked")
+        Iterator<?> x = new sun.tools.java.MethodSet()
             .lookupName(sun.tools.java.Identifier.lookup(""));
         testEmptyIterator(x);
     }

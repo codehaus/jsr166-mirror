@@ -261,7 +261,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     public E pollFirst() {
         int h = head;
-        @SuppressWarnings("unchecked") E result = (E) elements[h];
+        @SuppressWarnings("unchecked")
+        E result = (E) elements[h];
         // Element is null if deque empty
         if (result == null)
             return null;
@@ -272,7 +273,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     public E pollLast() {
         int t = (tail - 1) & (elements.length - 1);
-        @SuppressWarnings("unchecked") E result = (E) elements[t];
+        @SuppressWarnings("unchecked")
+        E result = (E) elements[t];
         if (result == null)
             return null;
         elements[t] = null;
@@ -284,7 +286,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @throws NoSuchElementException {@inheritDoc}
      */
     public E getFirst() {
-        @SuppressWarnings("unchecked") E result = (E) elements[head];
+        @SuppressWarnings("unchecked")
+        E result = (E) elements[head];
         if (result == null)
             throw new NoSuchElementException();
         return result;
@@ -600,7 +603,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         public E next() {
             if (cursor == fence)
                 throw new NoSuchElementException();
-            @SuppressWarnings("unchecked") E result = (E) elements[cursor];
+            @SuppressWarnings("unchecked")
+            E result = (E) elements[cursor];
             // This check doesn't catch all possible comodifications,
             // but does catch the ones that corrupt traversal
             if (tail != fence || result == null)
@@ -639,7 +643,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             if (cursor == fence)
                 throw new NoSuchElementException();
             cursor = (cursor - 1) & (elements.length - 1);
-            @SuppressWarnings("unchecked") E result = (E) elements[cursor];
+            @SuppressWarnings("unchecked")
+            E result = (E) elements[cursor];
             if (head != fence || result == null)
                 throw new ConcurrentModificationException();
             lastRet = cursor;

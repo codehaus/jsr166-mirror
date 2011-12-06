@@ -1290,7 +1290,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         for (;;) {
-            @SuppressWarnings("unchecked") E item = (E) s.readObject();
+            @SuppressWarnings("unchecked")
+            E item = (E) s.readObject();
             if (item == null)
                 break;
             else

@@ -405,7 +405,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
         a = new Integer[0];
         assertSame(a, q.toArray(a));
-        
+
         a = new Integer[3];
         Arrays.fill(a, 42);
         assertSame(a, q.toArray(a));
@@ -532,7 +532,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         SynchronousQueue[] qs = { x, y, z };
         for (SynchronousQueue q : qs) {
             SynchronousQueue clone = serialClone(q);
-            assert(q != clone);
+            assertNotSame(q, clone);
             assertSerialEquals(q, clone);
             assertTrue(clone.isEmpty());
             assertEquals(0, clone.size());

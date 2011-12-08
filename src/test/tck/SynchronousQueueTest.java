@@ -166,7 +166,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             }});
 
         await(pleaseTake);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
         try { assertSame(one, q.take()); }
         catch (InterruptedException e) { threadUnexpectedException(e); }
 
@@ -174,7 +174,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         assertThreadStaysAlive(t);
         t.interrupt();
         awaitTermination(t);
-        assertEquals(q.remainingCapacity(), 0);
+        assertEquals(0, q.remainingCapacity());
     }
 
     /**
@@ -389,18 +389,29 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testToArray(boolean fair) {
         final SynchronousQueue q = new SynchronousQueue(fair);
         Object[] o = q.toArray();
-        assertEquals(o.length, 0);
+        assertEquals(0, o.length);
     }
 
     /**
-     * toArray(a) is nulled at position 0
+     * toArray(Integer array) returns its argument with the first
+     * element (if present) nulled out
      */
     public void testToArray2()      { testToArray2(false); }
     public void testToArray2_fair() { testToArray2(true); }
     public void testToArray2(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        Integer[] ints = new Integer[1];
-        assertNull(ints[0]);
+        final SynchronousQueue<Integer> q
+            = new SynchronousQueue<Integer>(fair);
+        Integer[] a;
+
+        a = new Integer[0];
+        assertSame(a, q.toArray(a));
+        
+        a = new Integer[3];
+        Arrays.fill(a, 42);
+        assertSame(a, q.toArray(a));
+        assertNull(a[0]);
+        for (int i = 1; i < a.length; i++)
+            assertEquals(42, (int) a[i]);
     }
 
     /**
@@ -512,14 +523,22 @@ public class SynchronousQueueTest extends JSR166TestCase {
     /**
      * a deserialized serialized queue is usable
      */
-    public void testSerialization()      { testSerialization(false); }
-    public void testSerialization_fair() { testSerialization(true); }
-    public void testSerialization(boolean fair) {
-        final SynchronousQueue x = new SynchronousQueue(fair);
-        final SynchronousQueue y = serialClone(x);
-        assertTrue(x != y);
-        assertTrue(x.isEmpty());
-        assertTrue(y.isEmpty());
+    public void testSerialization() {
+        final SynchronousQueue x = new SynchronousQueue();
+        final SynchronousQueue y = new SynchronousQueue(false);
+        final SynchronousQueue z = new SynchronousQueue(true);
+        assertSerialEquals(x, y);
+        assertNotSerialEquals(x, z);
+        SynchronousQueue[] qs = { x, y, z };
+        for (SynchronousQueue q : qs) {
+            SynchronousQueue clone = serialClone(q);
+            assert(q != clone);
+            assertSerialEquals(q, clone);
+            assertTrue(clone.isEmpty());
+            assertEquals(0, clone.size());
+            assertEquals(0, clone.remainingCapacity());
+            assertFalse(clone.offer(zero));
+        }
     }
 
     /**
@@ -531,8 +550,8 @@ public class SynchronousQueueTest extends JSR166TestCase {
         final SynchronousQueue q = new SynchronousQueue(fair);
         ArrayList l = new ArrayList();
         q.drainTo(l);
-        assertEquals(q.size(), 0);
-        assertEquals(l.size(), 0);
+        assertEquals(0, q.size());
+        assertEquals(0, l.size());
     }
 
     /**

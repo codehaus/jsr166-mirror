@@ -298,8 +298,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase {
     public void testToArray2() {
         List full = populatedArray(3);
         Integer[] i = new Integer[3];
-        i = (Integer[])full.toArray(i);
-        assertEquals(3, i.length);
+        assertSame(i, full.toArray(i));
         assertEquals(0, i[0].intValue());
         assertEquals(1, i[1].intValue());
         assertEquals(2, i[2].intValue());

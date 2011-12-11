@@ -1202,16 +1202,33 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    <T> T serialClone(T o) {
+    void assertSerialEquals(Object x, Object y) {
+        assertTrue(Arrays.equals(serialBytes(x), serialBytes(y)));
+    }
+
+    void assertNotSerialEquals(Object x, Object y) {
+        assertFalse(Arrays.equals(serialBytes(x), serialBytes(y)));
+    }
+
+    byte[] serialBytes(Object o) {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(bos);
             oos.writeObject(o);
             oos.flush();
             oos.close();
+            return bos.toByteArray();
+        } catch (Throwable t) {
+            threadUnexpectedException(t);
+            return new byte[0];
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    <T> T serialClone(T o) {
+        try {
             ObjectInputStream ois = new ObjectInputStream
-                (new ByteArrayInputStream(bos.toByteArray()));
+                (new ByteArrayInputStream(serialBytes(o)));
             T clone = (T) ois.readObject();
             assertSame(o.getClass(), clone.getClass());
             return clone;

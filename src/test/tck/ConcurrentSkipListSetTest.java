@@ -461,8 +461,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
     public void testToArray2() {
         ConcurrentSkipListSet<Integer> q = populatedSet(SIZE);
         Integer[] ints = new Integer[SIZE];
-        Integer[] array = q.toArray(ints);
-        assertSame(ints, array);
+        assertSame(ints, q.toArray(ints));
         for (int i = 0; i < ints.length; i++)
             assertSame(ints[i], q.pollFirst());
     }

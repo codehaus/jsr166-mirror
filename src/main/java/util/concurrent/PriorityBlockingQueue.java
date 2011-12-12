@@ -867,10 +867,11 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Saves the state to a stream (that is, serializes it).  For
-     * compatibility with previous version of this class,
-     * elements are first copied to a java.util.PriorityQueue,
-     * which is then serialized.
+     * Saves this queue to a stream (that is, serializes it).
+     *
+     * For compatibility with previous version of this class, elements
+     * are first copied to a java.util.PriorityQueue, which is then
+     * serialized.
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -887,10 +888,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Reconstitutes the {@code PriorityBlockingQueue} instance from a stream
-     * (that is, deserializes it).
-     *
-     * @param s the stream
+     * Reconstitutes this queue from a stream (that is, deserializes it).
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

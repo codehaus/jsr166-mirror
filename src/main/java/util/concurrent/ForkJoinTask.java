@@ -1311,11 +1311,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private static final long serialVersionUID = -7721805057305804111L;
 
     /**
-     * Saves the state to a stream (that is, serializes it).
+     * Saves this task to a stream (that is, serializes it).
      *
      * @serialData the current run status and the exception thrown
      * during execution, or {@code null} if none
-     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -1324,9 +1323,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Reconstitutes the instance from a stream (that is, deserializes it).
-     *
-     * @param s the stream
+     * Reconstitutes this task from a stream (that is, deserializes it).
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

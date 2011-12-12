@@ -624,10 +624,7 @@ public class ReentrantReadWriteLock
         }
 
         /**
-         * Reconstitutes this lock instance from a stream (that is,
-         * deserializes it).
-         *
-         * @param s the stream
+         * Reconstitutes the instance from a stream (that is, deserializes it).
          */
         private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {

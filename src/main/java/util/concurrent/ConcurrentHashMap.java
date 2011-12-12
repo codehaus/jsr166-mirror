@@ -1389,9 +1389,8 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Serialization Support -------------- */
 
     /**
-     * Saves the state of the <tt>ConcurrentHashMap</tt> instance to a
-     * stream (i.e., serializes it).
-     * @param s the stream
+     * Saves this map to a stream (that is, serializes it).
+     *
      * @serialData
      * the key (Object) and value (Object)
      * for each key-value mapping, followed by a null pair.
@@ -1426,9 +1425,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Reconstitutes the <tt>ConcurrentHashMap</tt> instance from a
-     * stream (i.e., deserializes it).
-     * @param s the stream
+     * Reconstitutes this map from a stream (that is, deserializes it).
      */
     @SuppressWarnings("unchecked")
     private void readObject(java.io.ObjectInputStream s)

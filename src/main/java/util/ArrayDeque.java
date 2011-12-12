@@ -802,13 +802,10 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         }
     }
 
-    /**
-     * Appease the serialization gods.
-     */
     private static final long serialVersionUID = 2340985798034038923L;
 
     /**
-     * Serialize this deque.
+     * Saves this deque to a stream (that is, serializes it).
      *
      * @serialData The current size (<tt>int</tt>) of the deque,
      * followed by all of its elements (each an object reference) in
@@ -828,7 +825,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Deserialize this deque.
+     * Reconstitutes this deque from a stream (that is, deserializes it).
      */
     private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {

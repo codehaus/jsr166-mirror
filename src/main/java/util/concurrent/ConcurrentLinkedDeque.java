@@ -1358,11 +1358,10 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Saves the state to a stream (that is, serializes it).
+     * Saves this deque to a stream (that is, serializes it).
      *
      * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
-     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -1382,8 +1381,7 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Reconstitutes the instance from a stream (that is, deserializes it).
-     * @param s the stream
+     * Reconstitutes this deque from a stream (that is, deserializes it).
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

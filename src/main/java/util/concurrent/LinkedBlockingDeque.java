@@ -1123,11 +1123,10 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Saves the state of this deque to a stream (that is, serializes it).
+     * Saves this deque to a stream (that is, serializes it).
      *
      * @serialData The capacity (int), followed by elements (each an
      * {@code Object}) in the proper order, followed by a null
-     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -1148,8 +1147,6 @@ public class LinkedBlockingDeque<E>
 
     /**
      * Reconstitutes this deque from a stream (that is, deserializes it).
-     *
-     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

@@ -1132,9 +1132,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     private WaitQueue waitingConsumers;
 
     /**
-     * Saves the state to a stream (that is, serializes it).
-     *
-     * @param s the stream
+     * Saves this queue to a stream (that is, serializes it).
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -1152,6 +1150,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         s.defaultWriteObject();
     }
 
+    /**
+     * Reconstitutes this queue from a stream (that is, deserializes it).
+     */
     private void readObject(final java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();

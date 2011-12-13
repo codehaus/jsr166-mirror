@@ -725,13 +725,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Saves the state of the instance to a stream (that
-     * is, serializes it).
+     * Saves this queue to a stream (that is, serializes it).
      *
      * @serialData The length of the array backing the instance is
      *             emitted (int), followed by all of its elements
      *             (each an {@code Object}) in the proper order.
-     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -747,10 +745,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Reconstitutes the {@code PriorityQueue} instance from a stream
-     * (that is, deserializes it).
-     *
-     * @param s the stream
+     * Reconstitutes this queue from a stream (that is, deserializes it).
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

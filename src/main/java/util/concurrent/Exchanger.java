@@ -491,19 +491,20 @@ public class Exchanger<V> {
      */
     private Object awaitNanos(Node node, Slot slot, long nanos) {
         int spins = TIMED_SPINS;
-        long lastTime = 0;
+        long deadline = 0L;
         Thread w = null;
         for (;;) {
             Object v = node.get();
             if (v != null)
                 return v;
             long now = System.nanoTime();
-            if (w == null)
+            if (w == null) {
+                deadline = now + nanos;
                 w = Thread.currentThread();
+            }
             else
-                nanos -= now - lastTime;
-            lastTime = now;
-            if (nanos > 0) {
+                nanos = deadline - now;
+            if (nanos > 0L) {
                 if (spins > 0)
                     --spins;
                 else if (node.waiter == null)

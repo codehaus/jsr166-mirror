@@ -401,7 +401,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              * and don't wait at all, so are trapped in transfer
              * method rather than calling awaitFulfill.
              */
-            long lastTime = timed ? System.nanoTime() : 0;
+            final long deadline = timed ? System.nanoTime() + nanos : 0L;
             Thread w = Thread.currentThread();
             int spins = (shouldSpin(s) ?
                          (timed ? maxTimedSpins : maxUntimedSpins) : 0);
@@ -412,10 +412,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 if (m != null)
                     return m;
                 if (timed) {
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
-                    if (nanos <= 0) {
+                    nanos = deadline - System.nanoTime();
+                    if (nanos <= 0L) {
                         s.tryCancel();
                         continue;
                     }
@@ -707,7 +705,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         Object awaitFulfill(QNode s, E e, boolean timed, long nanos) {
             /* Same idea as TransferStack.awaitFulfill */
-            long lastTime = timed ? System.nanoTime() : 0;
+            final long deadline = timed ? System.nanoTime() + nanos : 0L;
             Thread w = Thread.currentThread();
             int spins = ((head.next == s) ?
                          (timed ? maxTimedSpins : maxUntimedSpins) : 0);
@@ -718,10 +716,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 if (x != e)
                     return x;
                 if (timed) {
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
-                    if (nanos <= 0) {
+                    nanos = deadline - System.nanoTime();
+                    if (nanos <= 0L) {
                         s.tryCancel(e);
                         continue;
                     }

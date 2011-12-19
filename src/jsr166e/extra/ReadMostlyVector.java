@@ -1136,7 +1136,7 @@ public class ReadMostlyVector<E>
         }
     }
 
-    static final class Itr<E> implements ListIterator<E>, Enumeration<E>  {
+    static final class Itr<E> implements ListIterator<E>, Enumeration<E> {
         final ReadMostlyVector<E> list;
         final SequenceLock lock;
         Object[] items;

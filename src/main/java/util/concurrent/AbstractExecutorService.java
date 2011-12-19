@@ -227,7 +227,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
                                          long timeout, TimeUnit unit)
         throws InterruptedException {
-        if (tasks == null || unit == null)
+        if (tasks == null)
             throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
         List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());

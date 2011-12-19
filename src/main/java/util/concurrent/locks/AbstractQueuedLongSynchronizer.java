@@ -1893,8 +1893,6 @@ public abstract class AbstractQueuedLongSynchronizer
          */
         public final boolean await(long time, TimeUnit unit)
                 throws InterruptedException {
-            if (unit == null)
-                throw new NullPointerException();
             long nanosTimeout = unit.toNanos(time);
             if (Thread.interrupted())
                 throw new InterruptedException();

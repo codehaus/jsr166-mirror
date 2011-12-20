@@ -2311,7 +2311,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             Collection<?> c = (Collection<?>) o;
             try {
                 return containsAll(c) && c.containsAll(this);
-            } catch (ClassCastException unused)   {
+            } catch (ClassCastException unused) {
                 return false;
             } catch (NullPointerException unused) {
                 return false;
@@ -2420,7 +2420,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             Collection<?> c = (Collection<?>) o;
             try {
                 return containsAll(c) && c.containsAll(this);
-            } catch (ClassCastException unused)   {
+            } catch (ClassCastException unused) {
                 return false;
             } catch (NullPointerException unused) {
                 return false;

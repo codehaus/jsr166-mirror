@@ -194,7 +194,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Creates a one-shot action with given nanoTime-based trigger.
+         * Creates a one-shot action with given nanoTime-based trigger time.
          */
         ScheduledFutureTask(Callable<V> callable, long ns) {
             super(callable);
@@ -222,8 +222,7 @@ public class ScheduledThreadPoolExecutor
                 else
                     return 1;
             }
-            long diff = (getDelay(NANOSECONDS) -
-                         other.getDelay(NANOSECONDS));
+            long diff = getDelay(NANOSECONDS) - other.getDelay(NANOSECONDS);
             return (diff < 0) ? -1 : (diff > 0) ? 1 : 0;
         }
 

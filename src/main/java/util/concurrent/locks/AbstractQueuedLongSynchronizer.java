@@ -656,8 +656,10 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return {@code true} if acquired
      */
     private boolean doAcquireNanos(long arg, long nanosTimeout)
-        throws InterruptedException {
-        long lastTime = System.nanoTime();
+            throws InterruptedException {
+        if (nanosTimeout <= 0L)
+            return false;
+        final long deadline = System.nanoTime() + nanosTimeout;
         final Node node = addWaiter(Node.EXCLUSIVE);
         boolean failed = true;
         try {
@@ -669,14 +671,12 @@ public abstract class AbstractQueuedLongSynchronizer
                     failed = false;
                     return true;
                 }
-                if (nanosTimeout <= 0)
+                if (nanosTimeout <= 0L)
                     return false;
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
-                long now = System.nanoTime();
-                nanosTimeout -= now - lastTime;
-                lastTime = now;
+                nanosTimeout = deadline - System.nanoTime();
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
@@ -756,9 +756,10 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return {@code true} if acquired
      */
     private boolean doAcquireSharedNanos(long arg, long nanosTimeout)
-        throws InterruptedException {
-
-        long lastTime = System.nanoTime();
+            throws InterruptedException {
+        if (nanosTimeout <= 0L)
+            return false;
+        final long deadline = System.nanoTime() + nanosTimeout;
         final Node node = addWaiter(Node.SHARED);
         boolean failed = true;
         try {
@@ -773,14 +774,12 @@ public abstract class AbstractQueuedLongSynchronizer
                         return true;
                     }
                 }
-                if (nanosTimeout <= 0)
+                if (nanosTimeout <= 0L)
                     return false;
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
-                long now = System.nanoTime();
-                nanosTimeout -= now - lastTime;
-                lastTime = now;
+                nanosTimeout = deadline - System.nanoTime();
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
@@ -1490,8 +1489,6 @@ public abstract class AbstractQueuedLongSynchronizer
      * @throws NullPointerException if the condition is null
      */
     public final boolean owns(ConditionObject condition) {
-        if (condition == null)
-            throw new NullPointerException();
         return condition.isOwnedBy(this);
     }
 
@@ -1818,20 +1815,18 @@ public abstract class AbstractQueuedLongSynchronizer
                 throw new InterruptedException();
             Node node = addConditionWaiter();
             long savedState = fullyRelease(node);
-            long lastTime = System.nanoTime();
+            final long deadline = System.nanoTime() + nanosTimeout;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
                     transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(this, nanosTimeout);
+                if (nanosTimeout >= spinForTimeoutThreshold)
+                    LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
-
-                long now = System.nanoTime();
-                nanosTimeout -= now - lastTime;
-                lastTime = now;
+                nanosTimeout = deadline - System.nanoTime();
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
@@ -1839,7 +1834,7 @@ public abstract class AbstractQueuedLongSynchronizer
                 unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
-            return nanosTimeout - (System.nanoTime() - lastTime);
+            return deadline - System.nanoTime();
         }
 
         /**
@@ -1858,8 +1853,6 @@ public abstract class AbstractQueuedLongSynchronizer
          */
         public final boolean awaitUntil(Date deadline)
                 throws InterruptedException {
-            if (deadline == null)
-                throw new NullPointerException();
             long abstime = deadline.getTime();
             if (Thread.interrupted())
                 throw new InterruptedException();
@@ -1901,14 +1894,12 @@ public abstract class AbstractQueuedLongSynchronizer
          */
         public final boolean await(long time, TimeUnit unit)
                 throws InterruptedException {
-            if (unit == null)
-                throw new NullPointerException();
             long nanosTimeout = unit.toNanos(time);
             if (Thread.interrupted())
                 throw new InterruptedException();
             Node node = addConditionWaiter();
             long savedState = fullyRelease(node);
-            long lastTime = System.nanoTime();
+            final long deadline = System.nanoTime() + nanosTimeout;
             boolean timedout = false;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
@@ -1920,9 +1911,7 @@ public abstract class AbstractQueuedLongSynchronizer
                     LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
-                long now = System.nanoTime();
-                nanosTimeout -= now - lastTime;
-                lastTime = now;
+                nanosTimeout = deadline - System.nanoTime();
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;

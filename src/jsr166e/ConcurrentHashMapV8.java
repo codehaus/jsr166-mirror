@@ -2237,7 +2237,7 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     static final class Values<K,V> extends MapView<K,V>
-        implements Collection<V>  {
+        implements Collection<V> {
         Values(ConcurrentHashMapV8<K, V> map)   { super(map); }
         public final boolean contains(Object o) { return map.containsValue(o); }
 

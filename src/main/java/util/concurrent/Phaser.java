@@ -1064,7 +1064,7 @@ public class Phaser {
         final boolean timed;
         boolean wasInterrupted;
         long nanos;
-        long lastTime;
+        final long deadline;
         volatile Thread thread; // nulled to cancel wait
         QNode next;
 
@@ -1075,7 +1075,7 @@ public class Phaser {
             this.interruptible = interruptible;
             this.nanos = nanos;
             this.timed = timed;
-            this.lastTime = timed ? System.nanoTime() : 0L;
+            this.deadline = timed ? System.nanoTime() + nanos : 0L;
             thread = Thread.currentThread();
         }
 
@@ -1094,9 +1094,7 @@ public class Phaser {
             }
             if (timed) {
                 if (nanos > 0L) {
-                    long now = System.nanoTime();
-                    nanos -= now - lastTime;
-                    lastTime = now;
+                    nanos = deadline - System.nanoTime();
                 }
                 if (nanos <= 0L) {
                     thread = null;
@@ -1111,7 +1109,7 @@ public class Phaser {
                 return true;
             else if (!timed)
                 LockSupport.park(this);
-            else if (nanos > 0)
+            else if (nanos > 0L)
                 LockSupport.parkNanos(this, nanos);
             return isReleasable();
         }

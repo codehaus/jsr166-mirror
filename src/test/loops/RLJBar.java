@@ -105,7 +105,7 @@ public class RLJBar                             // ProdConsTest
     public static int quiesce = 0;
     public static Condition EndCondition = End.newCondition();
 
-    public static void main(String[] args)    {
+    public static void main(String[] args) {
         int argix = 0;
         if (argix < args.length && args[argix].equals("-o")) {
             ++argix;

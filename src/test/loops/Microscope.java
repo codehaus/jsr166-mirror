@@ -479,7 +479,7 @@ public class Microscope extends JPanel {
      * threads (instead new ones are constructed), so don't
      * need any synch.
      */
-    static final class Board   {
+    static final class Board {
 
         /*
            First, some Constants and utilities that might as well be here
@@ -761,7 +761,7 @@ public class Microscope extends JPanel {
         synchronized boolean isFrom(int r, int c) {
             return fromRow== r && fromCol == c;
         }
-        synchronized boolean isTo(int r, int c)   {
+        synchronized boolean isTo(int r, int c) {
             return toRow == r && toCol == c;
         }
         synchronized Board board() {

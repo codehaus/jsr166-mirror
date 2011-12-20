@@ -503,7 +503,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * @throws IllegalMonitorStateException if the current thread does not
      *         hold this lock
      */
-    public void unlock()              { sync.release(1); }
+    public void unlock() { sync.release(1); }
 
     /**
      * Throws UnsupportedOperationException. SequenceLocks
@@ -511,7 +511,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      *
      * @throws UnsupportedOperationException
      */
-    public Condition newCondition()   {
+    public Condition newCondition() {
         throw new UnsupportedOperationException();
     }
 

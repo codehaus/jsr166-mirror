@@ -362,7 +362,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     private int awaitDone(boolean timed, long nanos)
         throws InterruptedException {
-        long last = timed ? System.nanoTime() : 0L;
+        final long deadline = timed ? System.nanoTime() + nanos : 0L;
         WaitNode q = null;
         boolean queued = false;
         for (;;) {
@@ -385,12 +385,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 queued = UNSAFE.compareAndSwapObject(this, waitersOffset,
                                                      q.next = waiters, q);
             else if (timed) {
-                long now = System.nanoTime();
-                if ((nanos -= (now - last)) <= 0L) {
+                nanos = deadline - System.nanoTime();
+                if (nanos <= 0L) {
                     removeWaiter(q);
                     return state;
                 }
-                last = now;
                 LockSupport.parkNanos(this, nanos);
             }
             else

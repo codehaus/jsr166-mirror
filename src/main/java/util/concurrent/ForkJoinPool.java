@@ -1031,7 +1031,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 break;
             }
             if (tryPreBlock()) {
-                long last = System.nanoTime();
+                final long deadline = System.nanoTime() + nanos;
                 while (joinMe.status >= 0) {
                     long millis = TimeUnit.NANOSECONDS.toMillis(nanos);
                     if (millis <= 0)
@@ -1043,9 +1043,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         joinMe.cancelIgnoringExceptions();
                         break;
                     }
-                    long now = System.nanoTime();
-                    nanos -= now - last;
-                    last = now;
+                    nanos = deadline - System.nanoTime();
                 }
                 postBlock();
                 break;

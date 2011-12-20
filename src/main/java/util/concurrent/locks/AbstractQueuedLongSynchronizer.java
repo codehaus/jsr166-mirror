@@ -1820,7 +1820,8 @@ public abstract class AbstractQueuedLongSynchronizer
                     transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(this, nanosTimeout);
+                if (nanosTimeout >= spinForTimeoutThreshold)
+                    LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
                 nanosTimeout = deadline - System.nanoTime();

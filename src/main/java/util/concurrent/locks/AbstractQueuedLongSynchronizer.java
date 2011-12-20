@@ -1485,8 +1485,6 @@ public abstract class AbstractQueuedLongSynchronizer
      * @throws NullPointerException if the condition is null
      */
     public final boolean owns(ConditionObject condition) {
-        if (condition == null)
-            throw new NullPointerException();
         return condition.isOwnedBy(this);
     }
 
@@ -1851,8 +1849,6 @@ public abstract class AbstractQueuedLongSynchronizer
          */
         public final boolean awaitUntil(Date deadline)
                 throws InterruptedException {
-            if (deadline == null)
-                throw new NullPointerException();
             long abstime = deadline.getTime();
             if (Thread.interrupted())
                 throw new InterruptedException();

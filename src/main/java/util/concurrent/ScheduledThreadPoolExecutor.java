@@ -222,8 +222,7 @@ public class ScheduledThreadPoolExecutor
                 else
                     return 1;
             }
-            long diff = (getDelay(NANOSECONDS) -
-                         other.getDelay(NANOSECONDS));
+            long diff = getDelay(NANOSECONDS) - other.getDelay(NANOSECONDS);
             return (diff < 0) ? -1 : (diff > 0) ? 1 : 0;
         }
 

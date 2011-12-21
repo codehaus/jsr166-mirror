@@ -621,6 +621,7 @@ public class CopyOnWriteArrayList<E>
      * @see #remove(Object)
      */
     public boolean removeAll(Collection<?> c) {
+        if (c == null) throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -663,6 +664,7 @@ public class CopyOnWriteArrayList<E>
      * @see #remove(Object)
      */
     public boolean retainAll(Collection<?> c) {
+        if (c == null) throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {

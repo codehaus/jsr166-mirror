@@ -5,8 +5,8 @@
  */
 
 package java.util.concurrent.locks;
-import java.util.concurrent.*;
-import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.Collection;
 
 /**
  * An implementation of {@link ReadWriteLock} supporting similar

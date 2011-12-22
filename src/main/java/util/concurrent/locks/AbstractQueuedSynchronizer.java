@@ -5,8 +5,10 @@
  */
 
 package java.util.concurrent.locks;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import sun.misc.Unsafe;
 
 /**

@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent.locks;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 import java.util.Date;
 
 /**

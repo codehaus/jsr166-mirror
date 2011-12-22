@@ -6,7 +6,8 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
 
 /**

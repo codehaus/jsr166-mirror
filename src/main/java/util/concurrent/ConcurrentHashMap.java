@@ -5,7 +5,7 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
 import java.io.Serializable;
 

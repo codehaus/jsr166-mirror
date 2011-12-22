@@ -16,7 +16,7 @@
 
 package java.util.concurrent;
 import java.util.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A thread-safe variant of {@link java.util.ArrayList} in which all mutative

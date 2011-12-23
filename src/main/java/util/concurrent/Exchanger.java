@@ -327,7 +327,7 @@ public class Exchanger<V> {
      *
      * @param item the (nonnull) item to exchange
      * @param timed true if the wait is timed
-     * @param ns if timed, the maximum wait time else 0L
+     * @param ns if timed, the maximum wait time, else 0L
      * @return the other thread's item; or null if interrupted; or
      * TIMED_OUT if timed and timed out
      */
@@ -419,7 +419,7 @@ public class Exchanger<V> {
      *
      * @param item the item to exchange
      * @param timed true if the wait is timed
-     * @param ns if timed, the maximum wait time else 0L
+     * @param ns if timed, the maximum wait time, else 0L
      * @return the other thread's item; or null if either the arena
      * was enabled or the thread was interrupted before completion; or
      * TIMED_OUT if timed and timed out

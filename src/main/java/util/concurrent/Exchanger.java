@@ -79,7 +79,7 @@ public class Exchanger<V> {
      * Oveview: The core algorithm is, for an exchange "slot",
      * and a participant (caller) with an item:
      *
-     *   for(;;) {
+     *   for (;;) {
      *       if (slot is empty) {                       // offer
      *           place item in a Node;
      *           if (can CAS slot from empty to node) {
@@ -348,7 +348,7 @@ public class Exchanger<V> {
             else if (i <= (m = (b = bound) & MMASK) && q == null) {
                 p.item = item;                         // offer
                 if (U.compareAndSwapObject(a, j, null, p)) {
-                    long end = (timed && m == 0)? System.nanoTime() + ns : 0L;
+                    long end = (timed && m == 0) ? System.nanoTime() + ns : 0L;
                     Thread t = Thread.currentThread(); // wait
                     for (int h = p.hash, spins = SPINS;;) {
                         Object v = p.match;
@@ -457,7 +457,7 @@ public class Exchanger<V> {
 
         // await release
         int h = p.hash;
-        long end = timed? System.nanoTime() + ns : 0L;
+        long end = timed ? System.nanoTime() + ns : 0L;
         int spins = (NCPU > 1) ? SPINS : 1;
         Object v;
         while ((v = p.match) == null) {
@@ -533,13 +533,13 @@ public class Exchanger<V> {
     @SuppressWarnings("unchecked")
     public V exchange(V x) throws InterruptedException {
         Object v;
-        Object item = (x == null)? NULL_ITEM : x; // translate null args
+        Object item = (x == null) ? NULL_ITEM : x; // translate null args
         if ((arena != null ||
              (v = slotExchange(item, false, 0L)) == null) &&
             ((Thread.interrupted() || // disambiguates null return
               (v = arenaExchange(item, false, 0L)) == null)))
             throw new InterruptedException();
-        return (v == NULL_ITEM)? null : (V)v;
+        return (v == NULL_ITEM) ? null : (V)v;
     }
 
     /**
@@ -588,7 +588,7 @@ public class Exchanger<V> {
     public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
         Object v;
-        Object item = (x == null)? NULL_ITEM : x;
+        Object item = (x == null) ? NULL_ITEM : x;
         long ns = unit.toNanos(timeout);
         if ((arena != null ||
              (v = slotExchange(item, true, ns)) == null) &&
@@ -597,7 +597,7 @@ public class Exchanger<V> {
             throw new InterruptedException();
         if (v == TIMED_OUT)
             throw new TimeoutException();
-        return (v == NULL_ITEM)? null : (V)v;
+        return (v == NULL_ITEM) ? null : (V)v;
     }
 
     // Unsafe mechanics

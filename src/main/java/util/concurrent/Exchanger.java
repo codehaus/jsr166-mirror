@@ -236,13 +236,13 @@ public class Exchanger<V> {
      * than (1<<(31-ASHIFT)). The cap of 255 (0xff) more than suffices
      * for the expected scaling limits of the main algorithms.
      */
-    private static final int MMASK  = 0xff;
+    private static final int MMASK = 0xff;
 
     /**
      * Unit for sequence/version bits of bound field. Each successful
      * change to the bound also adds SEQ.
      */
-    private static final int SEQ    = MMASK + 1;
+    private static final int SEQ = MMASK + 1;
 
     /** The number of CPUs, for sizing and spin control */
     private static final int NCPU = Runtime.getRuntime().availableProcessors();

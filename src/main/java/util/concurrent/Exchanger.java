@@ -76,7 +76,7 @@ import java.util.concurrent.locks.LockSupport;
 public class Exchanger<V> {
 
     /*
-     * Oveview: The core algorithm is, for an exchange "slot",
+     * Overview: The core algorithm is, for an exchange "slot",
      * and a participant (caller) with an item:
      *
      *   for (;;) {
@@ -114,7 +114,7 @@ public class Exchanger<V> {
      * and related bookkeeping state. (We can safely reuse per-thread
      * nodes rather than creating them fresh each time because slots
      * alternate between pointing to a node vs null, so cannot
-     * encounter ABA problems. However, we do need som care in
+     * encounter ABA problems. However, we do need some care in
      * resetting them between uses.)
      *
      * Implementing an effective arena requires allocating a bunch of
@@ -203,19 +203,19 @@ public class Exchanger<V> {
      * both methods may be called. This is done by using null return
      * as a sentinel to recheck interrupt status.)
      *
-     * As is too common in this sort of code, methods are monolothic
+     * As is too common in this sort of code, methods are monolithic
      * because most of the logic relies on reads of fields that are
      * maintained as local variables so can't be nicely factored --
      * mainly, here, bulky spin->yield->block/cancel code), and
      * heavily dependent on intrinsics (Unsafe) to use inlined
-     * embedded CAS and related mameory access operations (that tend
+     * embedded CAS and related memory access operations (that tend
      * not to be as readily inlined by dynamic compilers when they are
      * hidden behind other methods that would more nicely name and
      * encapsulate the intended effects). This includes the use of
      * putOrderedX to clear fields of the per-thread Nodes between
      * uses. Note that field Node.item is not declared as volatile
      * even though it is read by releasing threads, because they only
-     * do so after CAS operations that must preceed access, and all
+     * do so after CAS operations that must precede access, and all
      * uses by the owning thread are otherwise acceptably ordered by
      * other operations. (Because the actual points of atomicity are
      * slot CASes, it would also be legal for the write to Node.match

@@ -1070,7 +1070,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
     }
 
-    // Creating, registering and deregistring workers
+    // Creating, registering and deregistering workers
 
     /**
      * Tries to create and start a worker; minimally rolls back counts

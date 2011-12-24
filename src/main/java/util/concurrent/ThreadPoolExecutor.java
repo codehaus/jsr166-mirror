@@ -464,10 +464,15 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * policy limiting the number of threads.  Even though it is not
      * treated as an error, failure to create threads may result in
      * new tasks being rejected or existing ones remaining stuck in
-     * the queue. On the other hand, no special precautions exist to
-     * handle OutOfMemoryErrors that might be thrown while trying to
-     * create threads, since there is generally no recourse from
-     * within this class.
+     * the queue.
+     *
+     * We go further and preserve pool invariants even in the face of
+     * errors such as OutOfMemoryError, that might be thrown while
+     * trying to create threads.  Such errors are rather common due to
+     * the need to allocate a native stack in Thread#start, and users
+     * will want to perform clean pool shutdown to clean up.  There
+     * will likely be enough memory available for the cleanup code to
+     * complete without encountering yet another OutOfMemoryError.
      */
     private volatile ThreadFactory threadFactory;
 
@@ -835,12 +840,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Checks if a new worker can be added with respect to current
      * pool state and the given bound (either core or maximum). If so,
      * the worker count is adjusted accordingly, and, if possible, a
-     * new worker is created and started running firstTask as its
+     * new worker is created and started, running firstTask as its
      * first task. This method returns false if the pool is stopped or
      * eligible to shut down. It also returns false if the thread
-     * factory fails to create a thread when asked, which requires a
-     * backout of workerCount, and a recheck for termination, in case
-     * the existence of this worker was holding up termination.
+     * factory fails to create a thread when asked.  If the thread
+     * creation fails, either due to the thread factory returning
+     * null, or due to an exception (typically OutOfMemoryError in
+     * Thread#start), we roll back cleanly.
      *
      * @param firstTask the task the new thread should run first (or
      * null if none). Workers are created with an initial first task
@@ -883,46 +889,69 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             }
         }
 
-        Worker w = new Worker(firstTask);
-        Thread t = w.thread;
+        boolean workerStarted = false;
+        Worker w = null;
+        try {
+            w = new Worker(firstTask);
+            final Thread t = w.thread;
+            final ReentrantLock mainLock = this.mainLock;
+            mainLock.lock();
+            try {
+                // Recheck while holding lock.
+                // Back out on ThreadFactory failure or if
+                // shut down before lock acquired.
+                int c = ctl.get();
+                int rs = runStateOf(c);
 
+                if (t == null ||
+                    (rs >= SHUTDOWN &&
+                     ! (rs == SHUTDOWN &&
+                        firstTask == null)))
+                    return false;
+
+                workers.add(w);
+
+                int s = workers.size();
+                if (s > largestPoolSize)
+                    largestPoolSize = s;
+            } finally {
+                mainLock.unlock();
+            }
+
+            t.start();
+            // It is possible (but unlikely) for a thread to have been
+            // added to workers, but not yet started, during transition to
+            // STOP, which could result in a rare missed interrupt,
+            // because Thread.interrupt is not guaranteed to have any
+            // effect on a non-yet-started Thread (see Thread#interrupt).
+            if (runStateOf(ctl.get()) == STOP && ! t.isInterrupted())
+                t.interrupt();
+
+            return workerStarted = true;
+        } finally {
+            if (! workerStarted)
+                addWorkerFailed(w);
+        }
+    }
+
+    /**
+     * Rolls back the worker thread creation.
+     * - removes worker from workers, if present
+     * - decrements worker count
+     * - rechecks for termination, in case the existence of this
+     *   worker was holding up termination
+     */
+    private void addWorkerFailed(Worker w) {
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
-            // Recheck while holding lock.
-            // Back out on ThreadFactory failure or if
-            // shut down before lock acquired.
-            int c = ctl.get();
-            int rs = runStateOf(c);
-
-            if (t == null ||
-                (rs >= SHUTDOWN &&
-                 ! (rs == SHUTDOWN &&
-                    firstTask == null))) {
-                decrementWorkerCount();
-                tryTerminate();
-                return false;
-            }
-
-            workers.add(w);
-
-            int s = workers.size();
-            if (s > largestPoolSize)
-                largestPoolSize = s;
+            if (w != null)
+                workers.remove(w);
+            decrementWorkerCount();
+            tryTerminate();
         } finally {
             mainLock.unlock();
         }
-
-        t.start();
-        // It is possible (but unlikely) for a thread to have been
-        // added to workers, but not yet started, during transition to
-        // STOP, which could result in a rare missed interrupt,
-        // because Thread.interrupt is not guaranteed to have any effect
-        // on a non-yet-started Thread (see Thread#interrupt).
-        if (runStateOf(ctl.get()) == STOP && ! t.isInterrupted())
-            t.interrupt();
-
-        return true;
     }
 
     /**

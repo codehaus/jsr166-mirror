@@ -5,8 +5,10 @@
  */
 
 package java.util.concurrent.locks;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import sun.misc.Unsafe;
 
 /**
@@ -671,12 +673,12 @@ public abstract class AbstractQueuedLongSynchronizer
                     failed = false;
                     return true;
                 }
+                nanosTimeout = deadline - System.nanoTime();
                 if (nanosTimeout <= 0L)
                     return false;
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
-                nanosTimeout = deadline - System.nanoTime();
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
@@ -774,12 +776,12 @@ public abstract class AbstractQueuedLongSynchronizer
                         return true;
                     }
                 }
+                nanosTimeout = deadline - System.nanoTime();
                 if (nanosTimeout <= 0L)
                     return false;
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
-                nanosTimeout = deadline - System.nanoTime();
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }

@@ -1068,34 +1068,40 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
     }
 
-    // Creating, registering and deregistring workers
+    // Creating, registering and deregistering workers
 
     /**
      * Tries to create and start a worker; minimally rolls back counts
      * on failure.
      */
     private void addWorker() {
-        Throwable ex = null;
-        ForkJoinWorkerThread t = null;
+        Throwable newThreadFailure = null;
+        boolean threadStarted = false;
         try {
-            t = factory.newThread(this);
-        } catch (Throwable e) {
-            ex = e;
+            ForkJoinWorkerThread t = null;
+            try {
+                t = factory.newThread(this);
+            } catch (Throwable e) {
+                newThreadFailure = e;
+            }
+            if (t != null) {
+                t.start();
+                threadStarted = true;
+            }
+        } finally {
+            if (!threadStarted) {
+                long c;       // adjust counts
+                do {} while (!UNSAFE.compareAndSwapLong
+                             (this, ctlOffset, c = ctl,
+                              (((c - AC_UNIT) & AC_MASK) |
+                               ((c - TC_UNIT) & TC_MASK) |
+                               (c & ~(AC_MASK|TC_MASK)))));
+                // Propagate exception if originating from an external caller
+                if (!tryTerminate(false) && newThreadFailure != null &&
+                    !(Thread.currentThread() instanceof ForkJoinWorkerThread))
+                    UNSAFE.throwException(newThreadFailure);
+            }
         }
-        if (t == null) {  // null or exceptional factory return
-            long c;       // adjust counts
-            do {} while (!UNSAFE.compareAndSwapLong
-                         (this, ctlOffset, c = ctl,
-                          (((c - AC_UNIT) & AC_MASK) |
-                           ((c - TC_UNIT) & TC_MASK) |
-                           (c & ~(AC_MASK|TC_MASK)))));
-            // Propagate exception if originating from an external caller
-            if (!tryTerminate(false) && ex != null &&
-                !(Thread.currentThread() instanceof ForkJoinWorkerThread))
-                UNSAFE.throwException(ex);
-        }
-        else
-            t.start();
     }
 
     /**

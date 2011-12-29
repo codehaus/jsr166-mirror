@@ -6,7 +6,8 @@
 
 package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 /**
  * A reflection-based utility that enables atomic updates to

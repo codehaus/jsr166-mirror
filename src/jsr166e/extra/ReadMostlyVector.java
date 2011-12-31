@@ -691,7 +691,7 @@ public class ReadMostlyVector<E>
                     if (lock.getSequence() != seq) {
                         lock.lock();
                         try {
-                            return rawLastIndexOf(o, count, 0);
+                            return rawLastIndexOf(o, count - 1, 0);
                         } finally {
                             lock.unlock();
                         }

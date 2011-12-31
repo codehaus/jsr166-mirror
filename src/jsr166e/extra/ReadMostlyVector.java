@@ -667,28 +667,7 @@ public class ReadMostlyVector<E>
     }
 
     public int indexOf(Object o) {
-        final SequenceLock lock = this.lock;
-        for (;;) {
-            long seq = lock.awaitAvailability();
-            Object[] items = array;
-            int n = count;
-            if (n <= items.length) {
-                for (int i = 0; i < n; ++i) {
-                    Object e = items[i];
-                    if (lock.getSequence() != seq) {
-                        lock.lock();
-                        try {
-                            return rawIndexOf(o, 0, count);
-                        } finally {
-                            lock.unlock();
-                        }
-                    }
-                    else if ((o == null) ? e == null : o.equals(e))
-                        return i;
-                }
-                return -1;
-            }
-        }
+        return indexOf(o, 0);
     }
 
     public boolean isEmpty() {

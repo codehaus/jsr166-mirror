@@ -954,7 +954,7 @@ public class ReadMostlyVector<E>
                 if (index < 0)
                     ex = true;
                 else
-                    idx = rawIndexOf(o, 0, count);
+                    idx = rawIndexOf(o, index, count);
             } finally {
                 lock.unlock();
             }

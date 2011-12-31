@@ -49,6 +49,11 @@ public class ReadMostlyVector<E>
      * read-only mode, and then lock. When in read-only mode, they
      * validate only at the end of an array scan unless the element is
      * actually used (for example, as an argument of method equals).
+     *
+     * We rely on some invariants that are always true, even for field
+     * reads in read-only mode that have not yet been validated:
+     * - array != null
+     * - count >= 0
      */
 
     /**

@@ -870,18 +870,13 @@ public class ReadMostlyVector<E>
         for (;;) {
             long seq = lock.awaitAvailability();
             Object[] items = array;
-            int len = items.length;
             int n = count;
-            if (n > len)
-                continue;
-            boolean empty = (n == 0);
             @SuppressWarnings("unchecked")
-            E e = empty ? null : (E) items[0];
+            E e = (items.length > 0) ? (E) items[0] : null;
             if (lock.getSequence() == seq) {
-                if (empty)
+                if (n <= 0)
                     throw new NoSuchElementException();
-                else
-                    return e;
+                return e;
             }
         }
     }
@@ -892,18 +887,13 @@ public class ReadMostlyVector<E>
         for (;;) {
             long seq = lock.awaitAvailability();
             Object[] items = array;
-            int len = items.length;
             int n = count;
-            if (n > len)
-                continue;
-            boolean empty = (n == 0);
             @SuppressWarnings("unchecked")
-            E e = empty ? null : (E) items[n - 1];
+            E e = (n > 0 && items.length >= n) ? (E) items[n - 1] : null;
             if (lock.getSequence() == seq) {
-                if (empty)
+                if (n <= 0)
                     throw new NoSuchElementException();
-                else
-                    return e;
+                return e;
             }
         }
     }

@@ -648,16 +648,12 @@ public class ReadMostlyVector<E>
             long seq = lock.awaitAvailability();
             int n = count;
             Object[] items = array;
-            if (n > items.length)
-                continue;
-            boolean outOfBounds = (index < 0 || index >= n);
             @SuppressWarnings("unchecked")
-            E e = outOfBounds ? null : (E) items[index];
+            E e = (index < items.length) ? (E) items[index] : null;
             if (lock.getSequence() == seq) {
-                if (outOfBounds)
+                if (index >= n)
                     throw new ArrayIndexOutOfBoundsException(index);
-                else
-                    return e;
+                return e;
             }
         }
     }

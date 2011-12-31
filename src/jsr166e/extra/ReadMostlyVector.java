@@ -648,16 +648,12 @@ public class ReadMostlyVector<E>
             long seq = lock.awaitAvailability();
             int n = count;
             Object[] items = array;
-            if (n > items.length)
-                continue;
-            boolean outOfBounds = (index < 0 || index >= n);
             @SuppressWarnings("unchecked")
-            E e = outOfBounds ? null : (E) items[index];
+            E e = (index < items.length) ? (E) items[index] : null;
             if (lock.getSequence() == seq) {
-                if (outOfBounds)
+                if (index >= n)
                     throw new ArrayIndexOutOfBoundsException(index);
-                else
-                    return e;
+                return e;
             }
         }
     }
@@ -667,28 +663,7 @@ public class ReadMostlyVector<E>
     }
 
     public int indexOf(Object o) {
-        final SequenceLock lock = this.lock;
-        for (;;) {
-            long seq = lock.awaitAvailability();
-            Object[] items = array;
-            int n = count;
-            if (n <= items.length) {
-                for (int i = 0; i < n; ++i) {
-                    Object e = items[i];
-                    if (lock.getSequence() != seq) {
-                        lock.lock();
-                        try {
-                            return rawIndexOf(o, 0, count);
-                        } finally {
-                            lock.unlock();
-                        }
-                    }
-                    else if ((o == null) ? e == null : o.equals(e))
-                        return i;
-                }
-                return -1;
-            }
-        }
+        return indexOf(o, 0);
     }
 
     public boolean isEmpty() {
@@ -895,18 +870,13 @@ public class ReadMostlyVector<E>
         for (;;) {
             long seq = lock.awaitAvailability();
             Object[] items = array;
-            int len = items.length;
             int n = count;
-            if (n > len)
-                continue;
-            boolean empty = (n == 0);
             @SuppressWarnings("unchecked")
-            E e = empty ? null : (E) items[0];
+            E e = (items.length > 0) ? (E) items[0] : null;
             if (lock.getSequence() == seq) {
-                if (empty)
+                if (n <= 0)
                     throw new NoSuchElementException();
-                else
-                    return e;
+                return e;
             }
         }
     }
@@ -917,18 +887,13 @@ public class ReadMostlyVector<E>
         for (;;) {
             long seq = lock.awaitAvailability();
             Object[] items = array;
-            int len = items.length;
             int n = count;
-            if (n > len)
-                continue;
-            boolean empty = (n == 0);
             @SuppressWarnings("unchecked")
-            E e = empty ? null : (E) items[n - 1];
+            E e = (n > 0 && items.length >= n) ? (E) items[n - 1] : null;
             if (lock.getSequence() == seq) {
-                if (empty)
+                if (n <= 0)
                     throw new NoSuchElementException();
-                else
-                    return e;
+                return e;
             }
         }
     }
@@ -954,7 +919,7 @@ public class ReadMostlyVector<E>
                 if (index < 0)
                     ex = true;
                 else
-                    idx = rawIndexOf(o, 0, count);
+                    idx = rawIndexOf(o, index, count);
             } finally {
                 lock.unlock();
             }

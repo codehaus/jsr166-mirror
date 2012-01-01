@@ -49,6 +49,11 @@ public class ReadMostlyVector<E>
      * read-only mode, and then lock. When in read-only mode, they
      * validate only at the end of an array scan unless the element is
      * actually used (for example, as an argument of method equals).
+     *
+     * We rely on some invariants that are always true, even for field
+     * reads in read-only mode that have not yet been validated:
+     * - array != null
+     * - count >= 0
      */
 
     /**
@@ -155,7 +160,11 @@ public class ReadMostlyVector<E>
      * as well as sublist and iterator classes.
      */
 
-    // Version of indexOf that returns -1 if either not present or invalid
+    /**
+     * Version of indexOf that returns -1 if either not present or invalid.
+     *
+     * @throws ArrayIndexOutOfBoundsException if index is negative
+     */
     final int validatedIndexOf(Object x, Object[] items, int index, int fence,
                                long seq) {
         for (int i = index; i < fence; ++i) {
@@ -168,6 +177,9 @@ public class ReadMostlyVector<E>
         return -1;
     }
 
+    /**
+     * @throws ArrayIndexOutOfBoundsException if index is negative
+     */
     final int rawIndexOf(Object x, int index, int fence) {
         Object[] items = array;
         for (int i = index; i < fence; ++i) {
@@ -686,7 +698,7 @@ public class ReadMostlyVector<E>
                     if (lock.getSequence() != seq) {
                         lock.lock();
                         try {
-                            return rawLastIndexOf(o, 0, count);
+                            return rawLastIndexOf(o, count - 1, 0);
                         } finally {
                             lock.unlock();
                         }
@@ -901,62 +913,45 @@ public class ReadMostlyVector<E>
     /** See {@link Vector#indexOf(Object, int)} */
     public int indexOf(Object o, int index) {
         final SequenceLock lock = this.lock;
-        int idx = 0;
-        boolean ex = false;
         long seq = lock.awaitAvailability();
         Object[] items = array;
         int n = count;
-        boolean retry = false;
-        if (n > items.length)
-            retry = true;
-        else if (index < 0)
-            ex = true;
-        else
+        int idx = -1;
+        if (n <= items.length)
             idx = validatedIndexOf(o, items, index, n, seq);
-        if (retry || lock.getSequence() != seq) {
+        if (lock.getSequence() != seq) {
             lock.lock();
             try {
-                if (index < 0)
-                    ex = true;
-                else
-                    idx = rawIndexOf(o, index, count);
+                idx = rawIndexOf(o, index, count);
             } finally {
                 lock.unlock();
             }
         }
-        if (ex)
-            throw new ArrayIndexOutOfBoundsException(index);
+        // Above code will throw AIOOBE when index < 0
         return idx;
     }
 
     /** See {@link Vector#lastIndexOf(Object, int)} */
     public int lastIndexOf(Object o, int index) {
         final SequenceLock lock = this.lock;
-        int idx = 0;
-        boolean ex = false;
         long seq = lock.awaitAvailability();
         Object[] items = array;
         int n = count;
-        boolean retry = false;
-        if (n > items.length)
-            retry = true;
-        else if (index >= n)
-            ex = true;
-        else
+        int idx = -1;
+        if (index < Math.min(n, items.length))
             idx = validatedLastIndexOf(o, items, index, 0, seq);
-        if (retry || lock.getSequence() != seq) {
+        if (lock.getSequence() != seq) {
             lock.lock();
             try {
-                if (index >= count)
-                    ex = true;
-                else
+                n = count;
+                if (index < n)
                     idx = rawLastIndexOf(o, index, 0);
             } finally {
                 lock.unlock();
             }
         }
-        if (ex)
-            throw new ArrayIndexOutOfBoundsException(index);
+        if (index >= n)
+            throw new IndexOutOfBoundsException(index + " >= " + n);
         return idx;
     }
 

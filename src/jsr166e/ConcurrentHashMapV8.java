@@ -1291,7 +1291,7 @@ public class ConcurrentHashMapV8<K, V>
      *
      * At each step, the iterator snapshots the key ("nextKey") and
      * value ("nextVal") of a valid node (i.e., one that, at point of
-     * snapshot, has a nonnull user value). Because val fields can
+     * snapshot, has a non-null user value). Because val fields can
      * change (including to null, indicating deletion), field nextVal
      * might not be accurate at point of use, but still maintains the
      * weak consistency property of holding a value that was once

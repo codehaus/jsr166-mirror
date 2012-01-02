@@ -206,7 +206,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Gets the ith element of given table (if nonnull) with volatile
+     * Gets the ith element of given table (if non-null) with volatile
      * read semantics. Note: This is manually integrated into a few
      * performance-sensitive methods to reduce call overhead.
      */
@@ -614,7 +614,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     // Accessing segments
 
     /**
-     * Gets the jth element of given segment array (if nonnull) with
+     * Gets the jth element of given segment array (if non-null) with
      * volatile element access semantics via Unsafe. (The null check
      * can trigger harmlessly only during deserialization.) Note:
      * because each element of segments array is set only once (using

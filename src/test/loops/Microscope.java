@@ -1005,7 +1005,7 @@ public class Microscope extends JPanel {
             Finder forked = null; // list of forked subtasks when level > 1
 
             long open = ~(ours | theirs);  // currently empty cells
-            long here = 1;                 // travserse through bits
+            long here = 1;                 // traverse through bits
 
             for (int k = 0; k < Board.CELLS; ++k, here <<= 1) {
                 if ((here & ours) != 0) {

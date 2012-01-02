@@ -351,7 +351,7 @@ public class ConcurrentHashMapV8<K, V>
      * Encodings for special uses of Node hash fields. See above for
      * explanation.
      */
-    static final int MOVED     = 0x80000000; // hash field for fowarding nodes
+    static final int MOVED     = 0x80000000; // hash field for forwarding nodes
     static final int LOCKED    = 0x40000000; // set/tested only as a bit
     static final int WAITING   = 0xc0000000; // both bits set/tested together
     static final int HASH_BITS = 0x3fffffff; // usable bits of normal node hash

@@ -62,7 +62,7 @@ public class ReadMostlyVector<E>
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
-    // fields are non-private to simpify nested class access
+    // fields are non-private to simplify nested class access
     volatile Object[] array;
     final SequenceLock lock;
     volatile int count;

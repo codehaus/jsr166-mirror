@@ -130,7 +130,7 @@ public class MapLoops {
                     throw new Error("bad mapping: " + x + " to " + k);
 
                 if (r < removesPerMaxRandom) {
-                    // get awy from this position
+                    // get away from this position
                     position = r % key.length;
                     map.remove(k);
                     return 2;

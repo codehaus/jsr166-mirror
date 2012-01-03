@@ -121,7 +121,7 @@ class Random implements java.io.Serializable {
         if (getClass() == Random.class)
             this.seed = new AtomicLong(initialScramble(seed));
         else {
-            // subclass might have overriden setSeed
+            // subclass might have overridden setSeed
             this.seed = new AtomicLong();
             setSeed(seed);
         }

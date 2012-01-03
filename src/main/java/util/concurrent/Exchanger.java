@@ -325,7 +325,7 @@ public class Exchanger<V> {
     /**
      * Exchange function when arenas enabled. See above for explanation.
      *
-     * @param item the (nonnull) item to exchange
+     * @param item the (non-null) item to exchange
      * @param timed true if the wait is timed
      * @param ns if timed, the maximum wait time, else 0L
      * @return the other thread's item; or null if interrupted; or

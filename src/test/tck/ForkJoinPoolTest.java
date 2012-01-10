@@ -242,8 +242,11 @@ public class ForkJoinPoolTest extends JSR166TestCase {
                                           eh, false);
         try {
             assertSame(eh, p.getUncaughtExceptionHandler());
-            p.execute(new FibTask(8));
-            assertTrue(uehInvoked.await(MEDIUM_DELAY_MS, MILLISECONDS));
+            try {
+                p.execute(new FibTask(8));
+                assertTrue(uehInvoked.await(10000, MILLISECONDS));
+            } catch(RejectedExecutionException ok) {
+            }
         } finally {
             p.shutdownNow(); // failure might have prevented processing task
             joinPool(p);

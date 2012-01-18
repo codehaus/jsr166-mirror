@@ -54,7 +54,7 @@
  *
  * write your utility method as follows:
  *  <pre> {@code
- * boolean getAndTransform(AtomicLong var) {
+ * long getAndTransform(AtomicLong var) {
  *   while (true) {
  *     long current = var.get();
  *     long next = transform(current);

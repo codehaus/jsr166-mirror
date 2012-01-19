@@ -60,6 +60,7 @@
  *     long next = transform(current);
  *     if (var.compareAndSet(current, next))
  *         return current;
+ *         // return next; for transformAndGet
  *   }
  * }}</pre>
  *

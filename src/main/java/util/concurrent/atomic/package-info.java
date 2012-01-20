@@ -54,12 +54,13 @@
  *
  * write your utility method as follows:
  *  <pre> {@code
- * boolean getAndTransform(AtomicLong var) {
+ * long getAndTransform(AtomicLong var) {
  *   while (true) {
  *     long current = var.get();
  *     long next = transform(current);
  *     if (var.compareAndSet(current, next))
  *         return current;
+ *         // return next; for transformAndGet
  *   }
  * }}</pre>
  *

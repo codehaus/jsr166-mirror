@@ -395,11 +395,16 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return status upon completion
      */
     private int doInvoke() {
-        int s;
-        if ((s = doExec()) < 0)
-            return s;
-        else
-            return doJoin();
+        int s; Thread t;
+        if ((s = doExec()) >= 0) {
+            if (!((t = Thread.currentThread()) instanceof ForkJoinWorkerThread))
+                s = externalAwaitDone();
+            else {
+                ForkJoinWorkerThread wt = (ForkJoinWorkerThread)t;
+                s = awaitJoin(wt.workQueue, wt.pool);
+            }
+        }
+        return s;
     }
 
     // Exception table support
@@ -1070,9 +1075,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * ClassCastException}.
      */
     public static void helpQuiesce() {
-        ForkJoinWorkerThread w =
+        ForkJoinWorkerThread wt =
             (ForkJoinWorkerThread)Thread.currentThread();
-        w.pool.helpQuiescePool(w.workQueue);
+        wt.pool.helpQuiescePool(wt.workQueue);
     }
 
     /**
@@ -1225,9 +1230,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
          * have zero queued tasks, so compensate by a factor of
          * (#idle/#active) threads.
          */
-        ForkJoinWorkerThread w =
+        ForkJoinWorkerThread wt =
             (ForkJoinWorkerThread)Thread.currentThread();
-        return w.workQueue.queueSize() - w.pool.idlePerActive();
+        return wt.workQueue.queueSize() - wt.pool.idlePerActive();
     }
 
     // Extension methods
@@ -1325,9 +1330,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return a task, or {@code null} if none are available
      */
     protected static ForkJoinTask<?> pollTask() {
-        ForkJoinWorkerThread w =
+        ForkJoinWorkerThread wt =
             (ForkJoinWorkerThread)Thread.currentThread();
-        return w.pool.nextTaskFor(w.workQueue);
+        return wt.pool.nextTaskFor(wt.workQueue);
     }
 
     // Mark-bit operations

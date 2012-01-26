@@ -180,7 +180,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * progress, it suffices for any in-progress poll or new push on
      * any empty queue to complete.
      *
-     * This approach also enables support a user mode in which local
+     * This approach also enables support of a user mode in which local
      * task processing is in FIFO, not LIFO order, simply by using
      * poll rather than pop.  This can be useful in message-passing
      * frameworks in which tasks are never joined.  However neither
@@ -207,7 +207,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * avoid imbalance.  Insertion of tasks in shared mode requires a
      * lock (mainly to protect in the case of resizing) but we use
      * only a simple spinlock (using bits in field runState), because
-     * submitters encountering a busy queue try others so never block.
+     * submitters encountering a busy queue try or create others so
+     * never block.
      *
      * Management.
      * ==========
@@ -298,7 +299,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * some other queued worker rather than itself, which has the same
      * net effect. Because enqueued workers may actually be rescanning
      * rather than waiting, we set and clear the "parker" field of
-     * Workqueues to reduce unnecessary calls to unpark.  (this
+     * Workqueues to reduce unnecessary calls to unpark.  (This
      * requires a secondary recheck to avoid missed signals.)  Note
      * the unusual conventions about Thread.interrupts surrounding
      * parking and other blocking: Because interrupts are used solely
@@ -745,7 +746,6 @@ public class ForkJoinPool extends AbstractExecutorService {
          * be resized
          */
         final void push(ForkJoinTask<?> task, ForkJoinPool p) {
-            boolean signal = false;
             ForkJoinTask<?>[] a;
             int s = top, m, n;
             if ((a = array) != null) {    // ignore if queue removed
@@ -1652,7 +1652,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns a non-empty steal queue, if is found during a random,
+     * Returns a non-empty steal queue, if one is found during a random,
      * then cyclic scan, else null.  This method must be retried by
      * caller if, by the time it tries to use the queue, it is empty.
      */

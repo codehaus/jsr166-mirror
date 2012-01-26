@@ -2553,7 +2553,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * <p>If the caller is not a {@link ForkJoinTask}, this method is
      * behaviorally equivalent to
-a     *  <pre> {@code
+     *  <pre> {@code
      * while (!blocker.isReleasable())
      *   if (blocker.block())
      *     return;

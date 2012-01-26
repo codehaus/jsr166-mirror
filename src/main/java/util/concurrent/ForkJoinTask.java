@@ -236,7 +236,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Marks completion and wakes up threads waiting to join this
      * task, also clearing signal request bits. A specialization for
-     * NORMAL completion is in method doExec
+     * NORMAL completion is in method doExec.
      *
      * @param completion one of NORMAL, CANCELLED, EXCEPTIONAL
      * @return completion status on exit

@@ -649,7 +649,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * for push, or under lock for trySharedPush, and accessed by
      * other threads only after reading (volatile) base.  Both top and
      * base are allowed to wrap around on overflow, but (top - base)
-     * (or more comonly -(base - top) to force volatile read of base
+     * (or more commonly -(base - top) to force volatile read of base
      * before top) still estimates size.
      *
      * The array slots are read and written using the emulation of

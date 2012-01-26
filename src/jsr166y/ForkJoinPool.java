@@ -1090,7 +1090,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * method hashCode().
      */
     static final int hashThread(Thread t) {
-        long id = (t == null)? 0L : t.getId(); // Use MurmurHash of thread id
+        long id = (t == null) ? 0L : t.getId(); // Use MurmurHash of thread id
         int h = (int)id ^ (int)(id >>> 32);
         h ^= h >>> 16;
         h *= 0x85ebca6b;

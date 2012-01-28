@@ -1441,7 +1441,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * another worker, but with same net effect. Releasing in other
      * cases as well ensures that we have enough workers running.
      *
-     * * If the caller has run a task since the the last empty scan,
+     * * If the caller has run a task since the last empty scan,
      * return (to allow rescan) if other workers are not also yet
      * enqueued.  Field WorkQueue.rescans counts down on each scan to
      * ensure eventual inactivation, and occasional calls to

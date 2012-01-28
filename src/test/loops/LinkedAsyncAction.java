@@ -141,7 +141,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * Overridable callback action triggered by <tt>complete</tt>.  Upon
      * invocation, all subtasks have completed.  After return, this
      * task <tt>isDone</tt> and is joinable by other tasks. The
-     * default version of this method does nothing. But it may may be
+     * default version of this method does nothing. But it may be
      * overridden in subclasses to perform some action when this task
      * is about to complete.
      */

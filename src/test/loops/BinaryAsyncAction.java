@@ -102,7 +102,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
      * subtasks.  Upon invocation, both subtasks have completed.
      * After return, this task <tt>isDone</tt> and is joinable by
      * other tasks. The default version of this method does
-     * nothing. But it may may be overridden in subclasses to perform
+     * nothing. But it may be overridden in subclasses to perform
      * some action (for example a reduction) when this task is
      * completes.
      * @param x one subtask
@@ -174,7 +174,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
                 break;
             try {
                 p.onComplete(a, s);
-            } catch(Throwable rex) {
+            } catch (Throwable rex) {
                 p.completeExceptionally(rex);
                 return;
             }

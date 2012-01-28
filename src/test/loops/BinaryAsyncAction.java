@@ -101,10 +101,9 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
      * Overridable callback action triggered upon <tt>complete</tt> of
      * subtasks.  Upon invocation, both subtasks have completed.
      * After return, this task <tt>isDone</tt> and is joinable by
-     * other tasks. The default version of this method does
-     * nothing. But it may be overridden in subclasses to perform
-     * some action (for example a reduction) when this task is
-     * completes.
+     * other tasks. The default version of this method does nothing.
+     * But it may be overridden in subclasses to perform some action
+     * (for example a reduction) when this task is completes.
      * @param x one subtask
      * @param y the other subtask
      */

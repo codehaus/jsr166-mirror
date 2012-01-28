@@ -60,17 +60,16 @@ import java.util.concurrent.locks.Condition;
  * convenient form for informal monitoring.
  *
  * <p> As is the case with other ExecutorServices, there are three
- * main task execution methods summarized in the following
- * table. These are designed to be used primarily by clients not
- * already engaged in fork/join computations in the current pool.  The
- * main forms of these methods accept instances of {@code
- * ForkJoinTask}, but overloaded forms also allow mixed execution of
- * plain {@code Runnable}- or {@code Callable}- based activities as
- * well.  However, tasks that are already executing in a pool should
- * normally instead use the within-computation forms listed in the
- * table unless using async event-style tasks that are not usually
- * joined, in which case there is little difference among choice of
- * methods.
+ * main task execution methods summarized in the following table.
+ * These are designed to be used primarily by clients not already
+ * engaged in fork/join computations in the current pool.  The main
+ * forms of these methods accept instances of {@code ForkJoinTask},
+ * but overloaded forms also allow mixed execution of plain {@code
+ * Runnable}- or {@code Callable}- based activities as well.  However,
+ * tasks that are already executing in a pool should normally instead
+ * use the within-computation forms listed in the table unless using
+ * async event-style tasks that are not usually joined, in which case
+ * there is little difference among choice of methods.
  *
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
@@ -131,14 +130,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * This class and its nested classes provide the main
      * functionality and control for a set of worker threads:
-     * Submissions from non-FJ threads enter into submission
-     * queues. Workers take these tasks and typically split them into
-     * subtasks that may be stolen by other workers.  Preference rules
-     * give first priority to processing tasks from their own queues
-     * (LIFO or FIFO, depending on mode), then to randomized FIFO
-     * steals of tasks in other queues.
+     * Submissions from non-FJ threads enter into submission queues.
+     * Workers take these tasks and typically split them into subtasks
+     * that may be stolen by other workers.  Preference rules give
+     * first priority to processing tasks from their own queues (LIFO
+     * or FIFO, depending on mode), then to randomized FIFO steals of
+     * tasks in other queues.
      *
-     * WorkQueues.
+     * WorkQueues
      * ==========
      *
      * Most operations occur within work-stealing queues (in nested
@@ -156,7 +155,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * (http://research.sun.com/scalable/pubs/index.html) and
      * "Idempotent work stealing" by Michael, Saraswat, and Vechev,
      * PPoPP 2009 (http://portal.acm.org/citation.cfm?id=1504186).
-     * The main differences ultimately stem from gc requirements that
+     * The main differences ultimately stem from GC requirements that
      * we null out taken slots as soon as we can, to maintain as small
      * a footprint as possible even in programs generating huge
      * numbers of tasks. To accomplish this, we shift the CAS
@@ -188,9 +187,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      * rarely provide the best possible performance on a given
      * machine, but portably provide good throughput by averaging over
      * these factors.  (Further, even if we did try to use such
-     * information, we do not usually have a basis for exploiting
-     * it. For example, some sets of tasks profit from cache
-     * affinities, but others are harmed by cache pollution effects.)
+     * information, we do not usually have a basis for exploiting it.
+     * For example, some sets of tasks profit from cache affinities,
+     * but others are harmed by cache pollution effects.)
      *
      * WorkQueues are also used in a similar way for tasks submitted
      * to the pool. We cannot mix these tasks in the same queues used
@@ -212,7 +211,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * because submitters encountering a busy queue try or create
      * others so never block.
      *
-     * Management.
+     * Management
      * ==========
      *
      * The main throughput advantages of work-stealing stem from
@@ -222,7 +221,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * tactic for avoiding bottlenecks is packing nearly all
      * essentially atomic control state into two volatile variables
      * that are by far most often read (not written) as status and
-     * consistency checks
+     * consistency checks.
      *
      * Field "ctl" contains 64 bits holding all the information needed
      * to atomically decide to add, inactivate, enqueue (on an event
@@ -301,7 +300,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * some other queued worker rather than itself, which has the same
      * net effect. Because enqueued workers may actually be rescanning
      * rather than waiting, we set and clear the "parker" field of
-     * Workqueues to reduce unnecessary calls to unpark.  (This
+     * WorkQueues to reduce unnecessary calls to unpark.  (This
      * requires a secondary recheck to avoid missed signals.)  Note
      * the unusual conventions about Thread.interrupts surrounding
      * parking and other blocking: Because interrupts are used solely
@@ -329,7 +328,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * terminating all workers after long periods of non-use.
      *
      * Shutdown and Termination. A call to shutdownNow atomically sets
-     * a runState bit and then (non-atomically) sets each workers
+     * a runState bit and then (non-atomically) sets each worker's
      * runState status, cancels all unprocessed tasks, and wakes up
      * all waiting workers.  Detecting whether termination should
      * commence after a non-abrupt shutdown() call requires more work
@@ -338,18 +337,18 @@ public class ForkJoinPool extends AbstractExecutorService {
      * indication but non-abrupt shutdown still requires a rechecking
      * scan for any workers that are inactive but not queued.
      *
-     * Joining Tasks.
-     * ==============
+     * Joining Tasks
+     * =============
      *
      * Any of several actions may be taken when one worker is waiting
-     * to join a task stolen (or always held by) another.  Because we
+     * to join a task stolen (or always held) by another.  Because we
      * are multiplexing many tasks on to a pool of workers, we can't
      * just let them block (as in Thread.join).  We also cannot just
      * reassign the joiner's run-time stack with another and replace
      * it later, which would be a form of "continuation", that even if
      * possible is not necessarily a good idea since we sometimes need
-     * both an unblocked task and its continuation to
-     * progress. Instead we combine two tactics:
+     * both an unblocked task and its continuation to progress.
+     * Instead we combine two tactics:
      *
      *   Helping: Arranging for the joiner to execute some task that it
      *      would be running if the steal had not occurred.
@@ -425,7 +424,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * enable the processing of billions of tasks per second, at the
      * expense of some ugliness.
      *
-     * Methods signalWork() and scan() are the main bottlenecks so are
+     * Methods signalWork() and scan() are the main bottlenecks, so are
      * especially heavily micro-optimized/mangled.  There are lots of
      * inline assignments (of form "while ((local = field) != 0)")
      * which are usually the simplest way to ensure the required read
@@ -437,14 +436,17 @@ public class ForkJoinPool extends AbstractExecutorService {
      * coding oddities that help some methods perform reasonably even
      * when interpreted (not compiled).
      *
-     * The order of declarations in this file is: (1) declarations of
-     * statics (2) fields (along with constants used when unpacking
-     * some of them), listed in an order that tends to reduce
-     * contention among them a bit under most JVMs; (3) nested
-     * classes; (4) internal control methods; (5) callbacks and other
-     * support for ForkJoinTask methods; (6) exported methods (plus a
-     * few little helpers); (7) static block initializing all statics
-     * in a minimally dependent order.
+     * The order of declarations in this file is:
+     * (1) statics
+     * (2) fields (along with constants used when unpacking some of
+     *     them), listed in an order that tends to reduce contention
+     *     among them a bit under most JVMs;
+     * (3) nested classes
+     * (4) internal control methods
+     * (5) callbacks and other support for ForkJoinTask methods
+     * (6) exported methods (plus a few little helpers)
+     * (7) static block initializing all statics in a minimally
+     *     dependent order.
      */
 
     /**
@@ -539,7 +541,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * consistency checks: Staleness of read-only operations on the
      * workers and queues arrays can be checked by comparing runState
      * before vs after the reads. The low 16 bits (i.e, anding with
-     * SMASK) hold (the smallest power of two covering all worker
+     * SMASK) hold the smallest power of two covering all worker
      * indices, minus one.  The mask for queues (vs workers) is twice
      * this value plus 1.
      */
@@ -732,7 +734,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Returns number of tasks in the queue
+         * Returns number of tasks in the queue.
          */
         final int queueSize() {
             int n = base - top; // non-owner callers must read base first
@@ -743,9 +745,8 @@ public class ForkJoinPool extends AbstractExecutorService {
          * Pushes a task. Call only by owner in unshared queues.
          *
          * @param task the task. Caller must ensure non-null.
-         * @param p, if non-null, pool to signal if necessary
-         * @throw RejectedExecutionException if array cannot
-         * be resized
+         * @param p if non-null, pool to signal if necessary
+         * @throw RejectedExecutionException if array cannot be resized
          */
         final void push(ForkJoinTask<?> task, ForkJoinPool p) {
             ForkJoinTask<?>[] a;
@@ -980,7 +981,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Removes and cancels all known tasks, ignoring any exceptions
+         * Removes and cancels all known tasks, ignoring any exceptions.
          */
         final void cancelAll() {
             ForkJoinTask.cancelIgnoringExceptions(currentJoin);
@@ -1023,7 +1024,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Executes a non-top-level (stolen) task
+         * Executes a non-top-level (stolen) task.
          */
         final void runSubtask(ForkJoinTask<?> t) {
             if (t != null) {
@@ -1087,10 +1088,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-<<<<<<< ForkJoinPool.java
      * Per-thread records for (typically non-FJ) threads that submit
      * to pools. Cureently holds only psuedo-random seed / index that
-     * is used to chose submission queues in method doSubmit. In the
+     * is used to choose submission queues in method doSubmit. In the
      * future, this may incorporate a means to implement different
      * task rejection and resubmission policies.
      */
@@ -1175,7 +1175,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Callback from ForkJoinWorkerThread constructor to establish and
-     * record its WorkQueue
+     * record its WorkQueue.
      *
      * @param wt the worker thread
      */
@@ -1286,7 +1286,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     // Maintaining ctl counts
 
     /**
-     * Increments active count; mainly called upon return from blocking
+     * Increments active count; mainly called upon return from blocking.
      */
     final void incrementActiveCount() {
         long c;
@@ -1294,7 +1294,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Activates or creates a worker
+     * Activates or creates a worker.
      */
     final void signalWork() {
         /*
@@ -1448,7 +1448,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Thread.yield to help avoid interference with more useful
      * activities on the system.
      *
-     * * If pool is terminating, terminate the worker
+     * * If pool is terminating, terminate the worker.
      *
      * * If not already enqueued, try to inactivate and enqueue the
      * worker on wait queue.
@@ -1470,15 +1470,15 @@ public class ForkJoinPool extends AbstractExecutorService {
             ForkJoinTask<?> task = null;
             for (int k = 0, j = -2 - m; ; ++j) {
                 WorkQueue q; int b;
-                if (j < 0) {                    // random probes while j negative
+                if (j < 0) {                   // random probes while j negative
                     r ^= r << 13; r ^= r >>> 17; k = (r ^= r << 5) | (j & 1);
-                }                               // worker (not submit) for odd j
-                else                            // cyclic scan when j >= 0
-                    k += (m >>> 1) | 1;         // step by half to reduce bias
+                }                              // worker (not submit) for odd j
+                else                           // cyclic scan when j >= 0
+                    k += (m >>> 1) | 1;        // step by half to reduce bias
 
                 if ((q = ws[k & m]) != null && (b = q.base) - q.top < 0) {
                     if (ec >= 0)
-                        task = q.pollAt(b);     // steal
+                        task = q.pollAt(b);    // steal
                     break;
                 }
                 else if (j > m) {
@@ -1546,11 +1546,11 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * If inactivating worker w has caused pool to become quiescent,
-     * check for pool termination, and, so long as this is not the
-     * only worker, wait for event for up to SHRINK_RATE nanosecs On
-     * timeout, if ctl has not changed, terminate the worker, which
-     * will in turn wake up another worker to possibly repeat this
-     * process.
+     * checks for pool termination, and, so long as this is not the
+     * only worker, waits for event for up to SHRINK_RATE nanosecs.
+     * On timeout, if ctl has not changed, terminates the worker,
+     * which will in turn wake up another worker to possibly repeat
+     * this process.
      *
      * @param w the calling worker
      */
@@ -1746,7 +1746,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Gets and removes a local or stolen task for the given worker
+     * Gets and removes a local or stolen task for the given worker.
      *
      * @return a task, if available
      */

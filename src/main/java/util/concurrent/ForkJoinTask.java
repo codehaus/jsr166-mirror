@@ -94,7 +94,7 @@ import java.lang.reflect.Constructor;
  * performs the most common form of parallel invocation: forking a set
  * of tasks and joining them all.
  *
- * <p>In the most typical usages, a fork-join pair act like a a call
+ * <p>In the most typical usages, a fork-join pair act like a call
  * (fork) and return (join) from a parallel recursive function. As is
  * the case with other forms of recursive calls, returns (joins)
  * should be performed innermost-first. For example, {@code a.fork();
@@ -144,10 +144,10 @@ import java.lang.reflect.Constructor;
  * use these {@code protected} methods or marks for any purpose, but
  * they may be of use in the construction of specialized subclasses.
  * For example, parallel graph traversals can use the supplied methods
- * to avoid revisiting nodes/tasks that have already been
- * processed. Also, completion based designs can use them to record
- * that one subtask has completed. (Method names for marking are bulky
- * in part to encourage definition of methods that reflect their usage
+ * to avoid revisiting nodes/tasks that have already been processed.
+ * Also, completion based designs can use them to record that one
+ * subtask has completed. (Method names for marking are bulky in part
+ * to encourage definition of methods that reflect their usage
  * patterns.)
  *
  * <p>Most base support methods are {@code final}, to prevent

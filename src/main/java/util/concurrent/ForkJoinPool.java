@@ -1001,7 +1001,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Per-thread records for threads that submit to pools. Currently
-     * holds only psuedo-random seed / index that is used to choose
+     * holds only pseudo-random seed / index that is used to choose
      * submission queues in method doSubmit. In the future, this may
      * also incorporate a means to implement different task rejection
      * and resubmission policies.
@@ -1818,7 +1818,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param now if true, unconditionally terminate, else only
      * if no work and no active workers
-     * @paran enable if true, enable shutdown when next possible
+     * @param enable if true, enable shutdown when next possible
      * @return true if now terminating or terminated
      */
     private boolean tryTerminate(boolean now, boolean enable) {

@@ -1553,7 +1553,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     w.totalSteals += ns;
                 }
             }
-            else{                            // already queued
+            else {                           // already queued
                 if (parallelism == -a)
                     idleAwaitWork(w);        // quiescent
                 if (w.eventCount == ec) {

@@ -18,7 +18,7 @@ import java.lang.reflect.Array;
  * methods of ParallelArray or its other prefix classes.
  */
 public abstract class ParallelArrayWithFilter<T>
-    extends ParallelArrayWithMapping<T,T>{
+    extends ParallelArrayWithMapping<T,T> {
     ParallelArrayWithFilter(ForkJoinPool ex, int origin, int fence, T[] array) {
         super(ex, origin, fence, array);
     }

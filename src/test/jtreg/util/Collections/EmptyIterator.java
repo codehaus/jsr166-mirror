@@ -60,14 +60,12 @@ public class EmptyIterator {
     }
 
     <T> void testEmptyEnumeration(final Enumeration<T> e) {
-        check(e == emptyEnumeration());
         check(! e.hasMoreElements());
         THROWS(NoSuchElementException.class,
                new F(){void f(){ e.nextElement(); }});
     }
 
     <T> void testEmptyIterator(final Iterator<T> it) {
-        check(it == emptyIterator());
         check(! it.hasNext());
         THROWS(NoSuchElementException.class,
                new F(){void f(){ it.next(); }});
@@ -76,7 +74,6 @@ public class EmptyIterator {
     }
 
     void testEmptyMap(Map<Object, Object> m) {
-        check(m == emptyMap());
         check(m.entrySet().iterator() ==
               Collections.<Map.Entry<Object,Object>>emptyIterator());
         check(m.values().iterator() == emptyIterator());
@@ -111,11 +108,6 @@ public class EmptyIterator {
 
     <E> void testEmptyCollection(final Collection<E> c) {
         testEmptyIterator(c.iterator());
-
-        check(c.iterator() == emptyIterator());
-        if (c instanceof List)
-            check(((List<?>)c).listIterator() == emptyListIterator());
-
         testToArray(c);
     }
 

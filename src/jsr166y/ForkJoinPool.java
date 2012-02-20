@@ -1588,7 +1588,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 else {
                     if ((ns = w.nsteals) != 0) {
                         w.nsteals = 0;        // set rescans if ran task
-                        w.rescans = (a > 0)? 0 : a + parallelism;
+                        w.rescans = (a > 0) ? 0 : a + parallelism;
                         w.totalSteals += ns;
                     }
                     if (a == 1 - parallelism) // quiescent

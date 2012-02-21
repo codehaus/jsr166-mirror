@@ -17,7 +17,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
     }
 
     /**
-     * Creates a map from Integers 1-5 to Strings "A"-"E".
+     * Returns a new map from Integers 1-5 to Strings "A"-"E".
      */
     private static ConcurrentSkipListMap map5() {
         ConcurrentSkipListMap map = new ConcurrentSkipListMap();

@@ -32,7 +32,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
     }
 
     /**
-     * Creates a set of given size containing consecutive
+     * Returns a new set of given size containing consecutive
      * Integers 0 ... n.
      */
     private ConcurrentSkipListSet<Integer> populatedSet(int n) {
@@ -49,7 +49,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
     }
 
     /**
-     * Creates set of first 5 ints.
+     * Returns a new set of first 5 ints.
      */
     private ConcurrentSkipListSet set5() {
         ConcurrentSkipListSet q = new ConcurrentSkipListSet();

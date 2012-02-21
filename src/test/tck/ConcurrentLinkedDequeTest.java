@@ -26,7 +26,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Creates a deque of given size containing consecutive
+     * Returns a new deque of given size containing consecutive
      * Integers 0 ... n.
      */
     private ConcurrentLinkedDeque<Integer> populatedDeque(int n) {

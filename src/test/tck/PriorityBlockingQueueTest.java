@@ -55,7 +55,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * Creates a queue of given size containing consecutive
+     * Returns a new queue of given size containing consecutive
      * Integers 0 ... n.
      */
     private PriorityBlockingQueue<Integer> populatedQueue(int n) {

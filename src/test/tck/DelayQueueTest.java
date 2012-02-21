@@ -112,7 +112,7 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     * Creates a queue of given size containing consecutive
+     * Returns a new queue of given size containing consecutive
      * PDelays 0 ... n.
      */
     private DelayQueue<PDelay> populatedQueue(int n) {

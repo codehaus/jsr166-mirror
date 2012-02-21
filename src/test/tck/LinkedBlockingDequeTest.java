@@ -44,7 +44,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     }
 
     /**
-     * Creates a deque of given size containing consecutive
+     * Returns a new deque of given size containing consecutive
      * Integers 0 ... n.
      */
     private LinkedBlockingDeque<Integer> populatedDeque(int n) {

@@ -32,7 +32,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     }
 
     /**
-     * Creates a set of given size containing consecutive
+     * Returns a new set of given size containing consecutive
      * Integers 0 ... n.
      */
     private NavigableSet<Integer> populatedSet(int n) {
@@ -53,7 +53,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     }
 
     /**
-     * Creates set of first 5 ints.
+     * Returns a new set of first 5 ints.
      */
     private NavigableSet set5() {
         ConcurrentSkipListSet q = new ConcurrentSkipListSet();
@@ -71,7 +71,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     }
 
     /**
-     * Creates set of first 5 negative ints.
+     * Returns a new set of first 5 negative ints.
      */
     private NavigableSet dset5() {
         ConcurrentSkipListSet q = new ConcurrentSkipListSet();

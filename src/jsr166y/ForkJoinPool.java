@@ -1761,8 +1761,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * check requires a full scan, it is worthwhile in reducing false
      * alarms.
      *
-     * @param task if nonnull, a task being waited for
-     * @param blocker if nonnull, a blocker being waited for
+     * @param task if non-null, a task being waited for
+     * @param blocker if non-null, a blocker being waited for
      * @return true if the caller can block, else should recheck and retry
      */
     final boolean tryCompensate(ForkJoinTask<?> task, ManagedBlocker blocker) {
@@ -1821,7 +1821,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Helps and/or blocks until the given task is done
+     * Helps and/or blocks until the given task is done.
      *
      * @param joiner the joining worker
      * @param task the task

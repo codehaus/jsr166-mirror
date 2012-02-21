@@ -413,7 +413,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * unblocked threads to the point that we know they are available)
      * leading to more situations requiring more threads, and so
      * on. This aspect of control can be seen as an (analytically
-     * intractible) game with an opponent that may choose the worst
+     * intractable) game with an opponent that may choose the worst
      * (for us) active thread to stall at any time.  We take several
      * precautions to bound losses (and thus bound gains), mainly in
      * methods tryCompensate and awaitJoin: (1) We only try
@@ -1399,7 +1399,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * range). If no queue exists at the index, one is created.  If
      * the queue is busy, another index is randomly chosen. The
      * submitMask bounds the effective number of queues to the
-     * (nearest poswer of two for) parallelism level.
+     * (nearest power of two for) parallelism level.
      *
      * @param task the task. Caller must ensure non-null.
      */
@@ -1757,7 +1757,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * adds a new thread if no idle workers are available and either
      * pool would become completely starved or: (at least half
      * starved, and fewer than 50% spares exist, and there is at least
-     * one task apparently available). Even though the availablity
+     * one task apparently available). Even though the availability
      * check requires a full scan, it is worthwhile in reducing false
      * alarms.
      *

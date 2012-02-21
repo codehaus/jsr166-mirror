@@ -710,7 +710,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Returns true if given key greater than or equal to least and
      * strictly less than fence, bypassing either test if least or
-     * fence oare null. Needed mainly in submap operations.
+     * fence are null. Needed mainly in submap operations.
      */
     boolean inHalfOpenRange(K key, K least, K fence) {
         if (key == null)

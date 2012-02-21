@@ -177,19 +177,19 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * mapped ParallelLongArray.
      */
     public static interface SummaryStatistics {
-        /** Return the number of elements */
+        /** Returns the number of elements */
         public int size();
-        /** Return the minimum element, or Long.MAX_VALUE if empty */
+        /** Returns the minimum element, or Long.MAX_VALUE if empty */
         public long min();
-        /** Return the maximum element, or Long.MIN_VALUE if empty */
+        /** Returns the maximum element, or Long.MIN_VALUE if empty */
         public long max();
-        /** Return the index of the minimum element, or -1 if empty */
+        /** Returns the index of the minimum element, or -1 if empty */
         public int indexOfMin();
-        /** Return the index of the maximum element, or -1 if empty */
+        /** Returns the index of the maximum element, or -1 if empty */
         public int indexOfMax();
-        /** Return the sum of all elements */
+        /** Returns the sum of all elements */
         public long sum();
-        /** Return the arithmetic average of all elements */
+        /** Returns the arithmetic average of all elements */
         public double average();
     }
 
@@ -965,7 +965,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
     }
 
     /**
-     * Make len slots available at index
+     * Makes len slots available at index.
      */
     final void insertSlotsAt(int index, int len) {
         if (len <= 0)

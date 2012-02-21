@@ -87,7 +87,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     // ******  Array allocation and resizing utilities ******
 
     /**
-     * Allocate empty array to hold the given number of elements.
+     * Allocates empty array to hold the given number of elements.
      *
      * @param numElements  the number of elements to hold
      */
@@ -111,7 +111,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Double the capacity of this deque.  Call only when full, i.e.,
+     * Doubles the capacity of this deque.  Call only when full, i.e.,
      * when head and tail have wrapped around to become equal.
      */
     private void doubleCapacity() {

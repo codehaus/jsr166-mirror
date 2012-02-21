@@ -16,7 +16,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     * Create a map from Integers 1-5 to Strings "A"-"E".
+     * Creates a map from Integers 1-5 to Strings "A"-"E".
      */
     private static TreeMap map5() {
         TreeMap map = new TreeMap();

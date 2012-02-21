@@ -16,7 +16,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     * Create a map from Integers 1-5 to Strings "A"-"E".
+     * Creates a map from Integers 1-5 to Strings "A"-"E".
      */
     private static NavigableMap map5() {
         TreeMap map = new TreeMap();
@@ -40,7 +40,7 @@ public class TreeSubMapTest extends JSR166TestCase {
     }
 
     /**
-     * Create a map from Integers -5 to -1 to Strings "A"-"E".
+     * Creates a map from Integers -5 to -1 to Strings "A"-"E".
      */
     private static NavigableMap dmap5() {
         TreeMap map = new TreeMap();

@@ -45,7 +45,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * Create a queue of given size containing consecutive
+     * Creates a queue of given size containing consecutive
      * Integers 0 ... n.
      */
     private LinkedBlockingQueue<Integer> populatedQueue(int n) {

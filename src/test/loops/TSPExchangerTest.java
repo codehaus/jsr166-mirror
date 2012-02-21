@@ -201,7 +201,7 @@ public class TSPExchangerTest {
     }
 
     /**
-     * Perform one run with the given parameters.  Each run complete
+     * Performs one run with the given parameters.  Each run completes
      * when there are fewer than 2 active threads.  When there is
      * only one remaining thread, it will have no one to exchange
      * with, so it is terminated (via interrupt).
@@ -416,8 +416,8 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Choose a breeder, exchange strand with another subpop, and
-         * cross them to create new chromosome to replace a chosen
+         * Chooses a breeder, exchanges strand with another subpop, and
+         * crosses them to create new chromosome to replace a chosen
          * dyer.
          */
         void update() throws InterruptedException {
@@ -432,7 +432,7 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Choose a breeder, with exponentially decreasing probability
+         * Chooses a breeder, with exponentially decreasing probability
          * starting at best.
          * @return index of selected breeder
          */
@@ -447,9 +447,9 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Choose a chromosome that will be replaced, with
+         * Chooses a chromosome that will be replaced, with
          * exponentially decreasing probability starting at
-         * worst, ignoring the excluded index
+         * worst, ignoring the excluded index.
          * @param exclude index to ignore; use -1 to not exclude any
          * @return index of selected dyer
          */
@@ -484,7 +484,7 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Copy current strand to start of c's, and then append all
+         * Copies current strand to start of c's, and then appends all
          * remaining b's that aren't in the strand.
          * @param breeder the breeder
          * @param child the child
@@ -522,7 +522,7 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Fix the sort order of a changed Chromosome c at position k
+         * Fixes the sort order of a changed Chromosome c at position k.
          * @param c the chromosome
          * @param k the index
          */
@@ -561,7 +561,7 @@ public class TSPExchangerTest {
         int fitness;
 
         /**
-         * Initialize to random tour
+         * Initializes to random tour.
          */
         Chromosome(int length, RNG random) {
             alleles = new int[length];
@@ -596,7 +596,7 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Return tour length for points scaled in [0, 1).
+         * Returns tour length for points scaled in [0, 1).
          */
         double unitTourLength() {
             int[] a = alleles;
@@ -612,7 +612,7 @@ public class TSPExchangerTest {
         }
 
         /**
-         * Check that this tour visits each city
+         * Checks that this tour visits each city.
          */
         void validate() {
             int len = alleles.length;

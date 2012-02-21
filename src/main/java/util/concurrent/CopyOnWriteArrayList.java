@@ -133,7 +133,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Test for equality, coping with nulls.
+     * Tests for equality, coping with nulls.
      */
     private static boolean eq(Object o1, Object o2) {
         return (o1 == null ? o2 == null : o1.equals(o2));
@@ -556,7 +556,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Append the element if not present.
+     * Appends the element, if not present.
      *
      * @param e element to be added to this list, if absent
      * @return <tt>true</tt> if the element was added

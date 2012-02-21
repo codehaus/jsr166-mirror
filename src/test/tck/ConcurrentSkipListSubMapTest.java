@@ -18,7 +18,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     }
 
     /**
-     * Create a map from Integers 1-5 to Strings "A"-"E".
+     * Creates a map from Integers 1-5 to Strings "A"-"E".
      */
     private static ConcurrentNavigableMap map5() {
         ConcurrentSkipListMap map = new ConcurrentSkipListMap();
@@ -36,7 +36,7 @@ public class ConcurrentSkipListSubMapTest extends JSR166TestCase {
     }
 
     /**
-     * Create a map from Integers -5 to -1 to Strings "A"-"E".
+     * Creates a map from Integers -5 to -1 to Strings "A"-"E".
      */
     private static ConcurrentNavigableMap dmap5() {
         ConcurrentSkipListMap map = new ConcurrentSkipListMap();

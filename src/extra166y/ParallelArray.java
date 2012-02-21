@@ -273,20 +273,20 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * mapped ParallelArray.
      */
     public static interface SummaryStatistics<T> {
-        /** Return the number of elements */
+        /** Returns the number of elements */
         public int size();
-        /** Return the minimum element, or null if empty */
+        /** Returns the minimum element, or null if empty */
         public T min();
-        /** Return the maximum element, or null if empty */
+        /** Returns the maximum element, or null if empty */
         public T max();
-        /** Return the index of the minimum element, or -1 if empty */
+        /** Returns the index of the minimum element, or -1 if empty */
         public int indexOfMin();
-        /** Return the index of the maximum element, or -1 if empty */
+        /** Returns the index of the maximum element, or -1 if empty */
         public int indexOfMax();
     }
 
     /**
-     * Returns the executor used for computations
+     * Returns the executor used for computations.
      * @return the executor
      */
     public ForkJoinPool getExecutor() { return ex; }
@@ -1096,7 +1096,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     }
 
     /**
-     * Make len slots available at index
+     * Makes len slots available at index.
      */
     final void insertSlotsAt(int index, int len) {
         if (len <= 0)

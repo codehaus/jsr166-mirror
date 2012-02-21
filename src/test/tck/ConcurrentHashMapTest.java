@@ -19,7 +19,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
-     * Create a map from Integers 1-5 to Strings "A"-"E".
+     * Creates a map from Integers 1-5 to Strings "A"-"E".
      */
     private static ConcurrentHashMap map5() {
         ConcurrentHashMap map = new ConcurrentHashMap(5);

@@ -1574,7 +1574,7 @@ class PAS {
         }
 
         /**
-         * Return new array holding all elements.
+         * Returns new array holding all elements.
          */
         Object[] uniqueObjects(int size) {
             Object[] src = pap.ogetArray();
@@ -1887,7 +1887,7 @@ class PAS {
     }
 
     /**
-     * Perform merging for FJSorter. If big enough, splits Left
+     * Performs merging for FJSorter. If big enough, splits Left
      * partition in half; finds the greatest point in Right partition
      * less than the beginning of the second half of Left via binary
      * search; and then, in parallel, merges left half of Left with

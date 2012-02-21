@@ -37,7 +37,7 @@ public class TreeSetTest extends JSR166TestCase {
     static final int SIZE = 20;
 
     /**
-     * Create a set of given size containing consecutive
+     * Creates a set of given size containing consecutive
      * Integers 0 ... n.
      */
     private TreeSet<Integer> populatedSet(int n) {
@@ -53,7 +53,7 @@ public class TreeSetTest extends JSR166TestCase {
     }
 
     /**
-     * Create set of first 5 ints
+     * Creates set of first 5 ints.
      */
     private TreeSet set5() {
         TreeSet q = new TreeSet();

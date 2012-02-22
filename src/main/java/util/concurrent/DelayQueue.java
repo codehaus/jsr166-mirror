@@ -287,7 +287,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
     }
 
     /**
-     * Return first element only if it is expired.
+     * Returns first element only if it is expired.
      * Used only by drainTo.  Call only when holding lock.
      */
     private E peekExpired() {

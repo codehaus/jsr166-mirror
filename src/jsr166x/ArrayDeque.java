@@ -86,7 +86,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     // ******  Array allocation and resizing utilities ******
 
     /**
-     * Allocate empty array to hold the given number of elements.
+     * Allocates empty array to hold the given number of elements.
      *
      * @param numElements  the number of elements to hold.
      */
@@ -110,7 +110,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Double the capacity of this deque.  Call only when full, i.e.,
+     * Doubles the capacity of this deque.  Call only when full, i.e.,
      * when head and tail have wrapped around to become equal.
      */
     private void doubleCapacity() {
@@ -130,7 +130,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Copy the elements from our element array into the specified array,
+     * Copies the elements from our element array into the specified array,
      * in order (from first to last element in the deque).  It is assumed
      * that the array is large enough to hold all elements in the deque.
      *
@@ -517,7 +517,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Remove the element at the specified position in the elements array,
+     * Removes the element at the specified position in the elements array,
      * adjusting head, tail, and size as necessary.  This can result in
      * motion of elements backwards or forwards in the array.
      *
@@ -737,7 +737,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     private static final long serialVersionUID = 2340985798034038923L;
 
     /**
-     * Serialize this deque.
+     * Serializes this deque.
      *
      * @serialData The current size (<tt>int</tt>) of the deque,
      * followed by all of its elements (each an object reference) in
@@ -760,7 +760,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Deserialize this deque.
+     * Deserializes this deque.
      */
     private void readObject(ObjectInputStream s)
             throws IOException, ClassNotFoundException {

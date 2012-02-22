@@ -194,7 +194,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /** Node is fulfilling another unfulfilled DATA or REQUEST */
         static final int FULFILLING = 2;
 
-        /** Return true if m has fulfilling bit set */
+        /** Returns true if m has fulfilling bit set. */
         static boolean isFulfilling(int m) { return (m & FULFILLING) != 0; }
 
         /** Node class for TransferStacks. */

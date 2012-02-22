@@ -832,7 +832,7 @@ public class ScheduledThreadPoolExecutor
         private final Condition available = lock.newCondition();
 
         /**
-         * Set f's heapIndex if it is a ScheduledFutureTask.
+         * Sets f's heapIndex if it is a ScheduledFutureTask.
          */
         private void setIndex(RunnableScheduledFuture<?> f, int idx) {
             if (f instanceof ScheduledFutureTask)
@@ -840,7 +840,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Sift element added at bottom up to its heap-ordered spot.
+         * Sifts element added at bottom up to its heap-ordered spot.
          * Call only when holding lock.
          */
         private void siftUp(int k, RunnableScheduledFuture<?> key) {
@@ -858,7 +858,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Sift element added at top down to its heap-ordered spot.
+         * Sifts element added at top down to its heap-ordered spot.
          * Call only when holding lock.
          */
         private void siftDown(int k, RunnableScheduledFuture<?> key) {
@@ -880,7 +880,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Resize the heap array.  Call only when holding lock.
+         * Resizes the heap array.  Call only when holding lock.
          */
         private void grow() {
             int oldCapacity = queue.length;
@@ -891,7 +891,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Find index of given object, or -1 if absent
+         * Finds index of given object, or -1 if absent.
          */
         private int indexOf(Object x) {
             if (x != null) {
@@ -1132,7 +1132,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Return first element only if it is expired.
+         * Returns first element only if it is expired.
          * Used only by drainTo.  Call only when holding lock.
          */
         private RunnableScheduledFuture<?> peekExpired() {

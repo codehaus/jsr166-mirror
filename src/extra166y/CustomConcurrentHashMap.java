@@ -942,7 +942,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Remove node if its key or value are null
+     * Removes node if its key or value are null.
      */
     final void removeIfReclaimed(Node r) {
         int hash = r.getLocator();

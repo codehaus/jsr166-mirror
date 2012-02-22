@@ -795,7 +795,7 @@ public class ReadMostlyVector<E>
     // ReadMostlyVector-only methods
 
     /**
-     * Append the element if not present.
+     * Appends the element, if not present.
      *
      * @param e element to be added to this list, if absent
      * @return {@code true} if the element was added

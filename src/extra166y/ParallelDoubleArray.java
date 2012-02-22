@@ -137,19 +137,19 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * mapped ParallelDoubleArray.
      */
     public static interface SummaryStatistics {
-        /** Return the number of elements */
+        /** Returns the number of elements */
         public int size();
-        /** Return the minimum element, or Double.MAX_VALUE if empty */
+        /** Returns the minimum element, or Double.MAX_VALUE if empty */
         public double min();
-        /** Return the maximum element, or -Double.MAX_VALUE if empty */
+        /** Returns the maximum element, or -Double.MAX_VALUE if empty */
         public double max();
-        /** Return the index of the minimum element, or -1 if empty */
+        /** Returns the index of the minimum element, or -1 if empty */
         public int indexOfMin();
-        /** Return the index of the maximum element, or -1 if empty */
+        /** Returns the index of the maximum element, or -1 if empty */
         public int indexOfMax();
-        /** Return the sum of all elements */
+        /** Returns the sum of all elements */
         public double sum();
-        /** Return the arithmetic average of all elements */
+        /** Returns the arithmetic average of all elements */
         public double average();
     }
 
@@ -922,7 +922,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Make len slots available at index
+     * Makes len slots available at index.
      */
     final void insertSlotsAt(int index, int len) {
         if (len <= 0)

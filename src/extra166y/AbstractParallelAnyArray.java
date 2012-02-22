@@ -65,7 +65,7 @@ public abstract class AbstractParallelAnyArray {
     // A few public methods exported across all subclasses
 
     /**
-     * Return the number of elements selected using bound or
+     * Returns the number of elements selected using bound or
      * filter restrictions. Note that this method must evaluate
      * all selectors to return its result.
      * @return the number of elements

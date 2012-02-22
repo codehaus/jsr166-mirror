@@ -149,7 +149,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Remove and return first element, or null if empty
+     * Removes and returns first element, or null if empty.
      */
     private E unlinkFirst() {
         Node<E> f = first;
@@ -167,7 +167,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Remove and return last element, or null if empty
+     * Removes and returns last element, or null if empty.
      */
     private E unlinkLast() {
         Node<E> l = last;

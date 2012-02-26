@@ -14,17 +14,19 @@ package java.util;
  * {@link Stack} when used as a stack, and faster than {@link LinkedList}
  * when used as a queue.
  *
- * <p>Most <tt>ArrayDeque</tt> operations run in amortized constant time.
- * Exceptions include {@link #remove(Object) remove}, {@link
- * #removeFirstOccurrence removeFirstOccurrence}, {@link #removeLastOccurrence
- * removeLastOccurrence}, {@link #contains contains}, {@link #iterator
- * iterator.remove()}, and the bulk operations, all of which run in linear
- * time.
+ * <p>Most {@code ArrayDeque} operations run in amortized constant time.
+ * Exceptions include
+ * {@link #remove(Object) remove},
+ * {@link #removeFirstOccurrence removeFirstOccurrence},
+ * {@link #removeLastOccurrence removeLastOccurrence},
+ * {@link #contains contains},
+ * {@link #iterator iterator.remove()},
+ * and the bulk operations, all of which run in linear time.
  *
- * <p>The iterators returned by this class's <tt>iterator</tt> method are
- * <i>fail-fast</i>: If the deque is modified at any time after the iterator
- * is created, in any way except through the iterator's own <tt>remove</tt>
- * method, the iterator will generally throw a {@link
+ * <p>The iterators returned by this class's {@link #iterator() iterator}
+ * method are <em>fail-fast</em>: If the deque is modified at any time after
+ * the iterator is created, in any way except through the iterator's own
+ * {@code remove} method, the iterator will generally throw a {@link
  * ConcurrentModificationException}.  Thus, in the face of concurrent
  * modification, the iterator fails quickly and cleanly, rather than risking
  * arbitrary, non-deterministic behavior at an undetermined time in the
@@ -33,7 +35,7 @@ package java.util;
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification.  Fail-fast iterators
- * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
+ * throw {@code ConcurrentModificationException} on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
  * exception for its correctness: <i>the fail-fast behavior of iterators
  * should be used only to detect bugs.</i>
@@ -219,7 +221,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Inserts the specified element at the front of this deque.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as specified by {@link Deque#offerFirst})
+     * @return {@code true} (as specified by {@link Deque#offerFirst})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offerFirst(E e) {
@@ -231,7 +233,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Inserts the specified element at the end of this deque.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as specified by {@link Deque#offerLast})
+     * @return {@code true} (as specified by {@link Deque#offerLast})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offerLast(E e) {
@@ -319,13 +321,13 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Removes the first occurrence of the specified element in this
      * deque (when traversing the deque from head to tail).
      * If the deque does not contain the element, it is unchanged.
-     * More formally, removes the first element <tt>e</tt> such that
-     * <tt>o.equals(e)</tt> (if such an element exists).
-     * Returns <tt>true</tt> if this deque contained the specified element
+     * More formally, removes the first element {@code e} such that
+     * {@code o.equals(e)} (if such an element exists).
+     * Returns {@code true} if this deque contained the specified element
      * (or equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @return {@code true} if the deque contained the specified element
      */
     public boolean removeFirstOccurrence(Object o) {
         if (o == null)
@@ -347,13 +349,13 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Removes the last occurrence of the specified element in this
      * deque (when traversing the deque from head to tail).
      * If the deque does not contain the element, it is unchanged.
-     * More formally, removes the last element <tt>e</tt> such that
-     * <tt>o.equals(e)</tt> (if such an element exists).
-     * Returns <tt>true</tt> if this deque contained the specified element
+     * More formally, removes the last element {@code e} such that
+     * {@code o.equals(e)} (if such an element exists).
+     * Returns {@code true} if this deque contained the specified element
      * (or equivalently, if this deque changed as a result of the call).
      *
      * @param o element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @return {@code true} if the deque contained the specified element
      */
     public boolean removeLastOccurrence(Object o) {
         if (o == null)
@@ -379,7 +381,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>This method is equivalent to {@link #addLast}.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as specified by {@link Collection#add})
+     * @return {@code true} (as specified by {@link Collection#add})
      * @throws NullPointerException if the specified element is null
      */
     public boolean add(E e) {
@@ -393,7 +395,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>This method is equivalent to {@link #offerLast}.
      *
      * @param e the element to add
-     * @return <tt>true</tt> (as specified by {@link Queue#offer})
+     * @return {@code true} (as specified by {@link Queue#offer})
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
@@ -418,12 +420,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Retrieves and removes the head of the queue represented by this deque
      * (in other words, the first element of this deque), or returns
-     * <tt>null</tt> if this deque is empty.
+     * {@code null} if this deque is empty.
      *
      * <p>This method is equivalent to {@link #pollFirst}.
      *
      * @return the head of the queue represented by this deque, or
-     *         <tt>null</tt> if this deque is empty
+     *         {@code null} if this deque is empty
      */
     public E poll() {
         return pollFirst();
@@ -445,12 +447,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
-     * this deque, or returns <tt>null</tt> if this deque is empty.
+     * this deque, or returns {@code null} if this deque is empty.
      *
      * <p>This method is equivalent to {@link #peekFirst}.
      *
      * @return the head of the queue represented by this deque, or
-     *         <tt>null</tt> if this deque is empty
+     *         {@code null} if this deque is empty
      */
     public E peek() {
         return peekFirst();
@@ -554,9 +556,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this deque contains no elements.
+     * Returns {@code true} if this deque contains no elements.
      *
-     * @return <tt>true</tt> if this deque contains no elements
+     * @return {@code true} if this deque contains no elements
      */
     public boolean isEmpty() {
         return head == tail;
@@ -663,12 +665,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this deque contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this deque contains
-     * at least one element <tt>e</tt> such that <tt>o.equals(e)</tt>.
+     * Returns {@code true} if this deque contains the specified element.
+     * More formally, returns {@code true} if and only if this deque contains
+     * at least one element {@code e} such that {@code o.equals(e)}.
      *
      * @param o object to be checked for containment in this deque
-     * @return <tt>true</tt> if this deque contains the specified element
+     * @return {@code true} if this deque contains the specified element
      */
     public boolean contains(Object o) {
         if (o == null)
@@ -687,15 +689,15 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Removes a single instance of the specified element from this deque.
      * If the deque does not contain the element, it is unchanged.
-     * More formally, removes the first element <tt>e</tt> such that
-     * <tt>o.equals(e)</tt> (if such an element exists).
-     * Returns <tt>true</tt> if this deque contained the specified element
+     * More formally, removes the first element {@code e} such that
+     * {@code o.equals(e)} (if such an element exists).
+     * Returns {@code true} if this deque contained the specified element
      * (or equivalently, if this deque changed as a result of the call).
      *
      * <p>This method is equivalent to {@link #removeFirstOccurrence}.
      *
      * @param o element to be removed from this deque, if present
-     * @return <tt>true</tt> if this deque contained the specified element
+     * @return {@code true} if this deque contained the specified element
      */
     public boolean remove(Object o) {
         return removeFirstOccurrence(o);
@@ -747,21 +749,21 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>If this deque fits in the specified array with room to spare
      * (i.e., the array has more elements than this deque), the element in
      * the array immediately following the end of the deque is set to
-     * <tt>null</tt>.
+     * {@code null}.
      *
      * <p>Like the {@link #toArray()} method, this method acts as bridge between
      * array-based and collection-based APIs.  Further, this method allows
      * precise control over the runtime type of the output array, and may,
      * under certain circumstances, be used to save allocation costs.
      *
-     * <p>Suppose <tt>x</tt> is a deque known to contain only strings.
+     * <p>Suppose {@code x} is a deque known to contain only strings.
      * The following code can be used to dump the deque into a newly
-     * allocated array of <tt>String</tt>:
+     * allocated array of {@code String}:
      *
      *  <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
      *
-     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
-     * <tt>toArray()</tt>.
+     * Note that {@code toArray(new Object[0])} is identical in function to
+     * {@code toArray()}.
      *
      * @param a the array into which the elements of the deque are to
      *          be stored, if it is big enough; otherwise, a new array of the
@@ -807,7 +809,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Saves this deque to a stream (that is, serializes it).
      *
-     * @serialData The current size (<tt>int</tt>) of the deque,
+     * @serialData The current size ({@code int}) of the deque,
      * followed by all of its elements (each an object reference) in
      * first-to-last order.
      */

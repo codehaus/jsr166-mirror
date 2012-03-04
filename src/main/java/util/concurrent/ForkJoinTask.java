@@ -1342,7 +1342,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Atomically conditionally sets the tag value for this task.
      * Among other applications, tags can be used as visit markers
-     * in tasks operating on graphs, as in mathods that check: {@code
+     * in tasks operating on graphs, as in methods that check: {@code
      * if (task.compareAndSetForkJoinTaskTag((short)0, (short)1))}
      * before processing, otherwise exiting because the node has
      * already been visited.

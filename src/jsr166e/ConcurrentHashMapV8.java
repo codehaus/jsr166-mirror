@@ -20,6 +20,7 @@ import java.util.Enumeration;
 import java.util.ConcurrentModificationException;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.LockSupport;
 import java.io.Serializable;
 
@@ -435,11 +436,13 @@ public class ConcurrentHashMapV8<K, V>
          */
         final void tryAwaitLock(Node[] tab, int i) {
             if (tab != null && i >= 0 && i < tab.length) { // bounds check
+                int r = ThreadLocalRandom.current().nextInt(); // randomize spins
                 int spins = MAX_SPINS, h;
                 while (tabAt(tab, i) == this && ((h = hash) & LOCKED) != 0) {
                     if (spins >= 0) {
-                        if (--spins == MAX_SPINS >>> 1)
-                            Thread.yield();  // heuristically yield mid-way
+                        r ^= r << 1; r ^= r >>> 3; r ^= r << 10; // xorshift
+                        if (r >= 0 && --spins == 0)
+                            Thread.yield();  // yield before block
                     }
                     else if (casHash(h, h | WAITING)) {
                         synchronized (this) {

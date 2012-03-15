@@ -6,14 +6,14 @@
 
 //  Author:  Russel Winder <russel@russel.org.uk>
 
-isSnapshot = true
+final isSnapshot = true
 
 allprojects {
   group = 'org.codehaus.jsr166-mirror'
-  versionRoot = ( new File ( 'version.properties' ) ).text.trim ( ) 
+  final versionRoot = ( new File ( 'version.properties' ) ).text.trim ( ) 
   version = versionRoot + ( isSnapshot ? '-SNAPSHOT' : '' )
-  bundleVersion = versionRoot + ( isSnapshot ? '.SNAPSHOT' : '' )
-  projectWebsite = 'http://jsr166.codehaus.org'
+  ext.bundleVersion = versionRoot + ( isSnapshot ? '.SNAPSHOT' : '' )
+  ext.projectWebsite = 'http://jsr166.codehaus.org'
 }
 
 subprojects {
@@ -31,8 +31,8 @@ subprojects {
   //  whole of the bootclasspath, which is going to be a nightmare to handle in a platform independent way
   //  :-(
   //
-  bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rt.jar' )
-  bootClasspath = bootClasspathCollection.asPath
+  ext.bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rt.jar' )
+  ext.bootClasspath = bootClasspathCollection.asPath
   //
   configurations {
     deployJars
@@ -107,7 +107,7 @@ subprojects {
 
 project ( ':jsr166' ) {
   sourceCompatibility = 6
-  targetComaptibility = 6
+  targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/main' } } }
   jar {
     manifest { 
@@ -133,7 +133,7 @@ project ( ':jsr166' ) {
 
 project ( ':jsr166tck' ) {
   sourceCompatibility = 6
-  targetComaptibility = 6
+  targetCompatibility = 6
   sourceSets {
     main { java { srcDir '../src/test/tck' } }
     test { java { srcDir '../src/test/tck' } }
@@ -246,5 +246,5 @@ task clobber ( description : 'Clean all the Gradle subproject directories since 
 }
 
 task wrapper ( type : Wrapper ) {
-    gradleVersion = '1.0-milestone-8a'
+    gradleVersion = '1.0-milestone-9'
 }

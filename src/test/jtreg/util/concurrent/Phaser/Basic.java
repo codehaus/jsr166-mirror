@@ -69,7 +69,7 @@ public class Basic {
             int phase = atTheStartingGate.getPhase();
             equal(phase, atTheStartingGate.arrive());
             int awaitPhase = atTheStartingGate.awaitAdvanceInterruptibly
-                (phase, 10, SECONDS);
+                (phase, 30, SECONDS);
             if (expectNextPhase) check(awaitPhase == (phase + 1));
 
             pass();
@@ -161,7 +161,7 @@ public class Basic {
                     case 2: case 6: case 7:
                         return awaiter(phaser, -1, SECONDS);
                     default:
-                        return awaiter(phaser, 10, SECONDS); }}
+                        return awaiter(phaser, 30, SECONDS); }}
             public void remove() {throw new UnsupportedOperationException();}};
     }
 
@@ -177,7 +177,7 @@ public class Basic {
                     case 2: case 5:
                         return awaiter(phaser, -1, SECONDS);
                     default:
-                        return awaiter(phaser, 10, SECONDS); }}
+                        return awaiter(phaser, 30, SECONDS); }}
             public void remove() {throw new UnsupportedOperationException();}};
     }
 
@@ -224,7 +224,7 @@ public class Basic {
             int phase = phaser.getPhase();
             for (int i = 0; i < 4; i++) {
                 check(phaser.getPhase() == phase);
-                Awaiter a1 = awaiter(phaser, 10, SECONDS); a1.start();
+                Awaiter a1 = awaiter(phaser, 30, SECONDS); a1.start();
                 Arriver a2 = arrivers.next(); a2.start();
                 toTheStartingGate();
                 a1.interrupt();

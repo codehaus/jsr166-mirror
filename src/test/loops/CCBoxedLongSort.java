@@ -7,16 +7,17 @@
 import java.util.concurrent.*;
 import java.util.*;
 
-class BoxedLongSort {
+class CCBoxedLongSort {
     static final long NPS = (1000L * 1000 * 1000);
 
-    static int THRESHOLD;
+    static final int INSERTION_SORT_THRESHOLD = 8;
     //    static final int THRESHOLD = 64;
+    static int THRESHOLD;
 
     public static void main(String[] args) throws Exception {
         int procs = 0;
         int n = 1 << 22;
-        int reps = 20;
+        int reps = 30;
         int sreps = 2;
         try {
             if (args.length > 0)
@@ -60,18 +61,16 @@ class BoxedLongSort {
         System.out.printf("Sorting %d longs, %d replications\n", n, reps);
         long start = System.nanoTime();
         for (int i = 0; i < reps; ++i) {
-            pool.invoke(new RandomRepacker(numbers, a, 0, n, n));
-            //            pool.invoke(new TaskChecker());
+            pool.invoke(new RandomRepacker(null, numbers, a, 0, n, n));
             long last = System.nanoTime();
-            //            quickSort(a, 0, n-1);
-            java.util.Arrays.sort(a);
+            quickSort(a, 0, n-1);
+            //            java.util.Arrays.sort(a);
             long now = System.nanoTime();
             double total = (double)(now - start) / NPS;
             double elapsed = (double)(now - last) / NPS;
             System.out.printf("Arrays.sort   time:  %7.3f total %9.3f\n", 
                               elapsed, total);
-            if (i == 0)
-                checkSorted(a);
+            pool.invoke(new OrderChecker(null, a, 0, n, n));
         }
     }
 
@@ -81,102 +80,113 @@ class BoxedLongSort {
         System.out.printf("Sorting %d longs, %d replications\n", n, reps);
         long start = System.nanoTime();
         for (int i = 0; i < reps; ++i) {
-            //            Arrays.fill(w, 0, n, null);
-            pool.invoke(new RandomRepacker(numbers, a, 0, n, n));
-            //            pool.invoke(new TaskChecker());
+            pool.invoke(new RandomRepacker(null, numbers, a, 0, n, n));
             long last = System.nanoTime();
-            pool.invoke(new Sorter(a, w, 0, n));
+            pool.invoke(new Sorter(null, a, w, 0, n));
             long now = System.nanoTime();
-            //            pool.invoke(new TaskChecker());
             double total = (double)(now - start) / NPS;
             double elapsed = (double)(now - last) / NPS;
             System.out.printf("Parallel sort time:  %7.3f total %9.3f\n", 
                               elapsed, total);
-            if (i == 0)
-                checkSorted(a);
+            pool.invoke(new OrderChecker(null, a, 0, n, n));
         }
     }
 
-    static final class Sorter extends RecursiveAction {
-        final Long[] a;
-        final Long[] w;
-        final int origin;
-        final int n;
-        Sorter(Long[] a, Long[] w, int origin, int n) {
-            this.a = a; this.w = w; this.origin = origin; this.n = n;
-        }
-
-        public void compute() {
-            int l = origin;
-            if (n <= THRESHOLD) {
-                //                Arrays.sort(a, l, l+n);
-                quickSort(a, l, l+n-1);
-            }
-            else { // divide in quarters to ensure sorted array in a not w
-                int h = n >>> 1;
-                int q = n >>> 2;
-                int u = h + q;
-                SubSorter rs = new SubSorter
-                    (new Sorter(a, w, l+h, q),
-                     new Sorter(a, w, l+u, n-u),
-                     new Merger(a, w, l+h, q, l+u, n-u, l+h, null));
-                rs.fork();
-                Sorter rl = new Sorter(a, w, l+q, h-q);
-                rl.fork();
-                (new Sorter(a, w, l,   q)).compute();
-                rl.join();
-                (new Merger(a, w, l,   q, l+q, h-q, l, null)).compute();
-                rs.join();
-                new Merger(w, a, l, h, l+h, n-h, l, null).compute();
-            }
-        }
+    /*
+     * Merge sort alternates placing elements in the given array vs
+     * the workspace array. To make sure the final elements are in the
+     * given array, we descend in double steps.  So we need some
+     * little tasks to serve as the place holders for triggering the
+     * merges and re-merges. These don't need to keep track of the
+     * arrays, and are never themselves forked, so are mostly empty.
+     */
+    static final class Subsorter extends CountedCompleter {
+        Subsorter(CountedCompleter p) { super(p); }
+        public final void compute() { }
     }
 
-    static final class SubSorter extends RecursiveAction {
-        final Sorter left;
-        final Sorter right;
+    static final class Comerger extends CountedCompleter {
         final Merger merger;
-        SubSorter(Sorter left, Sorter right, Merger merger) {
-            this.left = left; this.right = right; this.merger = merger;
+        Comerger(Merger merger) {
+            super(null, 1);
+            this.merger = merger;
         }
-        public void compute() {
-            right.fork();
-            left.compute();
-            right.join();
+        public final void compute() { }
+        public final void onCompletion(CountedCompleter t) {
             merger.compute();
         }
     }
 
-    static final class Merger extends RecursiveAction {
+    static final class Sorter extends CountedCompleter {
+        final Long[] a;
+        final Long[] w;
+        final int origin;
+        final int size;
+        Sorter(CountedCompleter par, Long[] a, Long[] w, int origin, int n) {
+            super(par);
+            this.a = a; this.w = w; this.origin = origin; this.size = n;
+        }
+
+        public final void compute() {
+            Long[] a = this.a;
+            Long[] w = this.w;
+            int l = this.origin;
+            int n = this.size;
+            CountedCompleter s = this;
+            int thr = THRESHOLD;
+            while (n > thr) {
+                int h = n >>> 1;
+                int q = n >>> 2;
+                int u = h + q;
+                int lq = l + q, lh = l + h, lu = l + u;
+                int nh = n - h, nu = n - u, hq = h - q;
+                Comerger fc = 
+                    new Comerger(new Merger(s, w, a, l, h, lh, nh, l));
+                Comerger rc = 
+                    new Comerger(new Merger(fc, a, w, lh, q, lu, nu, lh));
+                Comerger lc = 
+                    new Comerger(new Merger(fc, a, w, l, q, lq, hq, l));
+                Sorter su = new Sorter(rc, a, w, lu, nu);
+                Sorter sh = new Sorter(rc, a, w, lh, q);
+                Sorter sq = new Sorter(lc, a, w, lq, hq);
+                su.fork();
+                sh.fork();
+                sq.fork();
+                s = new Subsorter(lc);
+                n = q;
+            }
+            //            Arrays.sort(a, l, l+n);
+            quickSort(a, l, l+n-1);
+            s.tryComplete(); 
+        }
+    }
+
+    static final class Merger extends CountedCompleter {
         final Long[] a; final Long[] w;
         final int lo; final int ln; final int ro; final int rn; final int wo;
-        Merger next;
-        Merger(Long[] a, Long[] w, int lo, int ln, int ro, int rn, int wo,
-               Merger next) {
+        Merger(CountedCompleter par,
+               Long[] a, Long[] w, int lo, int ln, int ro, int rn, int wo) {
+            super(par);
             this.a = a;    this.w = w;
             this.lo = lo;  this.ln = ln;
             this.ro = ro;  this.rn = rn;
             this.wo = wo;
-            this.next = next;
         }
 
         /**
          * Merge left and right by splitting left in half,
          * and finding index of right closest to split point.
-         * Uses left-spine decomposition to generate all
-         * merge tasks before bottomming out at base case.
-         *
          */
         public final void compute() {
-            Merger rights = null;
-            Long[] a = this.a;
-            Long[] w = this.w;
             int ln = this.ln;
             int rn = this.rn;
             int l = this.lo;
             int r = this.ro;
             int k = this.wo;
-            while (ln > THRESHOLD && rn > 4) {
+            Long[] a = this.a;
+            Long[] w = this.w;
+            int thr = THRESHOLD;
+            while (ln > thr && rn > 4) {
                 int lh = ln >>> 1;
                 int lm = l + lh;
                 Long split = a[lm];
@@ -190,11 +200,12 @@ class BoxedLongSort {
                     else
                         rl = rm + 1;
                 }
-                (rights = new Merger(a, w, lm, ln-lh, r+rh, rn-rh, k+lh+rh, rights)).fork();
+                addToPendingCount(1);
+                new Merger(this, a, w, lm, ln-lh, r+rh, rn-rh, k+lh+rh).fork();
                 rn = rh;
                 ln = lh;
             }
-
+            
             int lFence = l + ln;
             int rFence = r + rn;
             for (Long t;;) {
@@ -214,89 +225,27 @@ class BoxedLongSort {
                     break;
                 w[k++] = t;
             }
-
-            //            merge(nleft, nright);
-            if (rights != null)
-                collectRights(rights);
-
+            tryComplete();
         }
-
-        final void merge(int nleft, int nright) {
-            int l = lo;
-            int lFence = lo + nleft;
-            int r = ro;
-            int rFence = ro + nright;
-            int k = wo;
-            while (l < lFence && r < rFence) {
-                Long al = a[l];
-                Long ar = a[r];
-                Long t;
-                if (al <= ar) { ++l; t = al; } else { ++r; t = ar; }
-                w[k++] = t;
-            }
-            while (l < lFence)
-                w[k++] = a[l++];
-            while (r < rFence)
-                w[k++] = a[r++];
-        }
-
-        static void collectRights(Merger rt) {
-            while (rt != null) {
-                Merger next = rt.next;
-                rt.next = null;
-                if (rt.tryUnfork()) rt.compute(); else rt.join();
-                rt = next;
-            }
-        }
-
     }
 
     static void checkSorted(Long[] a) {
         int n = a.length;
+        long x = a[0].longValue(), y;
         for (int i = 0; i < n - 1; i++) {
-            if (a[i] > a[i+1]) {
-                throw new Error("Unsorted at " + i + ": " +
-                                a[i] + " / " + a[i+1]);
-            }
+            if (x > (y = a[i+1].longValue()))
+                throw new Error("Unsorted at " + i + ": " + x + " / " + y);
+            x = y;
         }
     }
 
-    static void seqRandomFill(Long[] array, int lo, int hi) {
-        ThreadLocalRandom rng = ThreadLocalRandom.current();
-        for (int i = lo; i < hi; ++i)
-            array[i] = rng.nextLong();
-    }
-
-    static final class RandomFiller extends RecursiveAction {
-        final Long[] array;
-        final int lo, hi;
-        RandomFiller(Long[] array, int lo, int hi) {
-            this.array = array; this.lo = lo; this.hi = hi;
-        }
-        public void compute() {
-            if (hi - lo <= THRESHOLD) {
-                Long[] a = array;
-                ThreadLocalRandom rng = ThreadLocalRandom.current();
-                for (int i = lo; i < hi; ++i)
-                    a[i] = rng.nextLong();
-            }
-            else {
-                int mid = (lo + hi) >>> 1;
-                RandomFiller r = new RandomFiller(array, mid, hi);
-                r.fork();
-                (new RandomFiller(array, lo, mid)).compute();
-                r.join();
-            }
-        }
-    }
-
-
-    static final class RandomRepacker extends RecursiveAction {
+    static final class RandomRepacker extends CountedCompleter {
         final Long[] src;
         final Long[] dst;
         final int lo, hi, size;
-        RandomRepacker(Long[] src, Long[] dst, 
+        RandomRepacker(CountedCompleter par, Long[] src, Long[] dst, 
                        int lo, int hi, int size) {
+            super(par);
             this.src = src; this.dst = dst;
             this.lo = lo; this.hi = hi; this.size = size;
         }
@@ -305,20 +254,48 @@ class BoxedLongSort {
             Long[] s = src;
             Long[] d = dst;
             int l = lo, h = hi, n = size;
-            if (h - l > THRESHOLD) {
+            while (h - l > THRESHOLD) {
                 int m = (l + h) >>> 1;
-                invokeAll(new RandomRepacker(s, d, l, m, n),
-                          new RandomRepacker(s, d, m, h, n));
+                addToPendingCount(1);
+                new RandomRepacker(this, s, d, m, h, n).fork();
+                h = m;
             }
-            else {
-                ThreadLocalRandom rng = ThreadLocalRandom.current();
-                for (int i = l; i < h; ++i)
-                    d[i] = s[rng.nextInt(n)];
-            }
+            ThreadLocalRandom rng = ThreadLocalRandom.current();
+            for (int i = l; i < h; ++i)
+                d[i] = s[rng.nextInt(n)];
+            tryComplete();
         }
     }
 
-    static final int INSERTION_SORT_THRESHOLD = 8;
+    static final class OrderChecker extends CountedCompleter {
+        final Long[] array;
+        final int lo, hi, size;
+        OrderChecker(CountedCompleter par, Long[] a, int lo, int hi, int size) {
+            super(par);
+            this.array = a; 
+            this.lo = lo; this.hi = hi; this.size = size;
+        }
+
+        public final void compute() {
+            Long[] a = this.array;
+            int l = lo, h = hi, n = size;
+            while (h - l > THRESHOLD) {
+                int m = (l + h) >>> 1;
+                addToPendingCount(1);
+                new OrderChecker(this, a, m, h, n).fork();
+                h = m;
+            }
+            int bound = h < n ? h : n - 1;
+            int i = l;
+            long x = a[i].longValue(), y;
+            while (i < bound) {
+                if (x > (y = a[++i].longValue()))
+                    throw new Error("Unsorted " + x + " / " + y);
+                x = y;
+            }
+            tryComplete();
+        }
+    }
 
     static void quickSort(Long[] a, int lo, int hi) {
         for (;;) {

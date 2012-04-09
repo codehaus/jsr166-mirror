@@ -70,7 +70,8 @@ public class Basic {
             equal(phase, atTheStartingGate.arrive());
             int awaitPhase = atTheStartingGate.awaitAdvanceInterruptibly
                 (phase, 30, SECONDS);
-            if (expectNextPhase) check(awaitPhase == (phase + 1));
+            if (expectNextPhase) check(awaitPhase == phase + 1);
+            else check(awaitPhase == phase || awaitPhase == phase + 1);
 
             pass();
         } catch (Throwable t) {

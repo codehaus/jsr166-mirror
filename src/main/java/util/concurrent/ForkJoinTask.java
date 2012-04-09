@@ -116,18 +116,19 @@ import java.lang.reflect.Constructor;
  * <p>The ForkJoinTask class is not usually directly subclassed.
  * Instead, you subclass one of the abstract classes that support a
  * particular style of fork/join processing, typically {@link
- * RecursiveAction} for computations that do not return results, or
- * {@link RecursiveTask} for those that do.  Normally, a concrete
- * ForkJoinTask subclass declares fields comprising its parameters,
- * established in a constructor, and then defines a {@code compute}
- * method that somehow uses the control methods supplied by this base
- * class. While these methods have {@code public} access (to allow
- * instances of different task subclasses to call each other's
- * methods), some of them may only be called from within other
- * ForkJoinTasks (as may be determined using method {@link
- * #inForkJoinPool}).  Attempts to invoke them in other contexts
- * result in exceptions or errors, possibly including
- * {@code ClassCastException}.
+ * RecursiveAction} for most computations that do not return results,
+ * {@link RecursiveTask} for those that do, and {@link
+ * CountedCompleter} for those in which completed actions trigger
+ * other actions.  Normally, a concrete ForkJoinTask subclass declares
+ * fields comprising its parameters, established in a constructor, and
+ * then defines a {@code compute} method that somehow uses the control
+ * methods supplied by this base class. While these methods have
+ * {@code public} access (to allow instances of different task
+ * subclasses to call each other's methods), some of them may only be
+ * called from within other ForkJoinTasks (as may be determined using
+ * method {@link #inForkJoinPool}).  Attempts to invoke them in other
+ * contexts result in exceptions or errors, possibly including {@code
+ * ClassCastException}.
  *
  * <p>Method {@link #join} and its variants are appropriate for use
  * only when completion dependencies are acyclic; that is, the
@@ -270,14 +271,15 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Tries to set SIGNAL status. Used by ForkJoinPool. Other
-     * variants are directly incorporated into externalAwaitDone etc.
+     * Tries to set SIGNAL status unless already completed. Used by
+     * ForkJoinPool. Other variants are directly incorporated into
+     * externalAwaitDone etc.
      *
      * @return true if successful
      */
     final boolean trySetSignal() {
-        int s;
-        return U.compareAndSwapInt(this, STATUS, s = status, s | SIGNAL);
+        int s = status;
+        return s >= 0 && U.compareAndSwapInt(this, STATUS, s, s | SIGNAL);
     }
 
     /**
@@ -415,25 +417,39 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return status on exit
      */
     private int setExceptionalCompletion(Throwable ex) {
-        int h = System.identityHashCode(this);
-        final ReentrantLock lock = exceptionTableLock;
-        lock.lock();
-        try {
-            expungeStaleExceptions();
-            ExceptionNode[] t = exceptionTable;
-            int i = h & (t.length - 1);
-            for (ExceptionNode e = t[i]; ; e = e.next) {
-                if (e == null) {
-                    t[i] = new ExceptionNode(this, ex, t[i]);
-                    break;
+        int s;
+        if ((s = status) >= 0) {
+            int h = System.identityHashCode(this);
+            final ReentrantLock lock = exceptionTableLock;
+            lock.lock();
+            try {
+                expungeStaleExceptions();
+                ExceptionNode[] t = exceptionTable;
+                int i = h & (t.length - 1);
+                for (ExceptionNode e = t[i]; ; e = e.next) {
+                    if (e == null) {
+                        t[i] = new ExceptionNode(this, ex, t[i]);
+                        break;
+                    }
+                    if (e.get() == this) // already present
+                        break;
                 }
-                if (e.get() == this) // already present
-                    break;
+            } finally {
+                lock.unlock();
             }
-        } finally {
-            lock.unlock();
+            s = setCompletion(EXCEPTIONAL);
         }
-        return setCompletion(EXCEPTIONAL);
+        ForkJoinTask<?> p = internalGetCompleter(); // propagate
+        if (p != null && p.status >= 0)
+            p.setExceptionalCompletion(ex);
+        return s;
+    }
+
+    /**
+     * Exception propagation support for tasks with completers.
+     */
+    ForkJoinTask<?> internalGetCompleter() {
+        return null;
     }
 
     /**
@@ -515,7 +531,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         Throwable ex;
         if (e == null || (ex = e.ex) == null)
             return null;
-        if (e.thrower != Thread.currentThread().getId()) {
+        if (false && e.thrower != Thread.currentThread().getId()) {
             Class<? extends Throwable> ec = ex.getClass();
             try {
                 Constructor<?> noArgCtor = null;
@@ -905,12 +921,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Completes this task. The most recent value established by
-     * {@link #setRawResult} (or {@code null}) will be returned as the
-     * result of subsequent invocations of {@code join} and related
-     * operations. This method may be useful when processing sets of
-     * tasks when some do not otherwise complete normally. Its use in
-     * other situations is discouraged.
+     * Completes this task normally without setting a value. The most
+     * recent value established by {@link #setRawResult} (or {@code
+     * null} by default) will be returned as the result of subsequent
+     * invocations of {@code join} and related operations.
+     *
+     * @since 1.8
      */
     public final void quietlyComplete() {
         setCompletion(NORMAL);
@@ -1235,15 +1251,18 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     protected abstract void setRawResult(V value);
 
     /**
-     * Immediately performs the base action of this task.  This method
-     * is designed to support extensions, and should not in general be
-     * called otherwise. The return value controls whether this task
-     * is considered to be done normally. It may return false in
+     * Immediately performs the base action of this task and returns
+     * true if, upon return from this method, this task is guaranteed
+     * to have completed normally. This method may return false
+     * otherwise, to indicate that this task is not necessarily
+     * complete (or is not known to be complete), for example in
      * asynchronous actions that require explicit invocations of
-     * {@link #complete} to become joinable. It may also throw an
-     * (unchecked) exception to indicate abnormal exit.
+     * completion methods. This method may also throw an (unchecked)
+     * exception to indicate abnormal exit. This method is designed to
+     * support extensions, and should not in general be called
+     * otherwise.
      *
-     * @return {@code true} if completed normally
+     * @return {@code true} if this task is known to have completed normally
      */
     protected abstract boolean exec();
 

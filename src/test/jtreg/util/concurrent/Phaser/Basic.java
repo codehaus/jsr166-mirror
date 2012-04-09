@@ -223,7 +223,7 @@ public class Basic {
             Phaser phaser = new Phaser(3);
             Iterator<Arriver> arrivers = arriverIterator(phaser);
             int phase = phaser.getPhase();
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 10; i++) {
                 check(phaser.getPhase() == phase);
                 Awaiter a1 = awaiter(phaser, 30, SECONDS); a1.start();
                 Arriver a2 = arrivers.next(); a2.start();
@@ -245,7 +245,7 @@ public class Basic {
         // Phaser is terminated while threads are waiting
         //----------------------------------------------------------------
         try {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 10; i++) {
                 Phaser phaser = new Phaser(3);
                 Iterator<Awaiter> awaiters = awaiterIterator(phaser);
                 Arriver a1 = awaiters.next(); a1.start();

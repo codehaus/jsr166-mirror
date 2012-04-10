@@ -8,7 +8,7 @@
 
 import java.util.concurrent.*;
 
-public class FJJacobi {
+public class CCJacobi {
 
     //    static final int DEFAULT_GRANULARITY = 4096;
     static final int DEFAULT_GRANULARITY = 256;
@@ -78,24 +78,10 @@ public class FJJacobi {
     }
 
 
-    abstract static class MatrixTree extends RecursiveAction {
+    abstract static class MatrixTree extends CountedCompleter {
         // maximum difference between old and new values
         double maxDiff;
-        public final double directCompute() {
-            compute();
-            return maxDiff;
-        }
-        public final double joinAndReinitialize(double md) {
-            if (tryUnfork())
-                compute();
-            else {
-                quietlyJoin();
-                reinitialize();
-            }
-            double m = maxDiff;
-            return (md > m) ? md : m;
-        }
-
+        MatrixTree(CountedCompleter p, int c) { super(p, c); }
     }
 
 
@@ -109,15 +95,17 @@ public class FJJacobi {
 
         int steps = 0; // track even/odd steps
 
-        LeafNode(double[][] A, double[][] B,
+        LeafNode(CountedCompleter p,
+                 double[][] A, double[][] B,
                  int loRow, int hiRow,
                  int loCol, int hiCol) {
+            super(p, 0);
             this.A = A;   this.B = B;
             this.loRow = loRow; this.hiRow = hiRow;
             this.loCol = loCol; this.hiCol = hiCol;
         }
 
-        public void compute() {
+        public final void compute() {
             boolean AtoB = (steps++ & 1) == 0;
             double[][] a = AtoB ? A : B;
             double[][] b = AtoB ? B : A;
@@ -137,47 +125,62 @@ public class FJJacobi {
             }
 
             maxDiff = md;
+            tryComplete(); 
         }
     }
 
     static final class FourNode extends MatrixTree {
-        final MatrixTree q1;
-        final MatrixTree q2;
-        final MatrixTree q3;
-        final MatrixTree q4;
-        FourNode(MatrixTree q1, MatrixTree q2,
-                 MatrixTree q3, MatrixTree q4) {
-            this.q1 = q1; this.q2 = q2; this.q3 = q3; this.q4 = q4;
+        MatrixTree q1;
+        MatrixTree q2;
+        MatrixTree q3;
+        MatrixTree q4;
+        FourNode(CountedCompleter p) {
+            super(p, 3);
         }
 
-        public void compute() {
+        public void onCompletion(CountedCompleter caller) {
+            double md = q1.maxDiff, m;
+            if ((m = q2.maxDiff) > md)
+                md = m;
+            if ((m = q3.maxDiff) > md)
+                md = m;
+            if ((m = q4.maxDiff) > md)
+                md = m;
+            maxDiff = md;
+            setPendingCount(3);
+        }
+
+        public final void compute() {
             q4.fork();
             q3.fork();
             q2.fork();
-            double md = q1.directCompute();
-            md = q2.joinAndReinitialize(md);
-            md = q3.joinAndReinitialize(md);
-            md = q4.joinAndReinitialize(md);
-            maxDiff = md;
+            q1.compute();
         }
     }
 
 
     static final class TwoNode extends MatrixTree {
-        final MatrixTree q1;
-        final MatrixTree q2;
+        MatrixTree q1;
+        MatrixTree q2;
 
-        TwoNode(MatrixTree q1, MatrixTree q2) {
-            this.q1 = q1; this.q2 = q2;
+        TwoNode(CountedCompleter p) {
+            super(p, 1);
         }
 
-        public void compute() {
+        public void onCompletion(CountedCompleter caller) {
+            double md = q1.maxDiff, m;
+            if ((m = q2.maxDiff) > md)
+                md = m;
+            maxDiff = md;
+            setPendingCount(1);
+        }
+
+        public final void compute() {
             q2.fork();
-            maxDiff = q2.joinAndReinitialize(q1.directCompute());
+            q1.compute();
         }
 
     }
-
 
     static final class Driver extends RecursiveAction {
         MatrixTree mat;
@@ -200,12 +203,13 @@ public class FJJacobi {
             this.lastCol = lastCol;
             this.steps = steps;
             this.leafs = leafs;
-            mat = build(A, B, firstRow, lastRow, firstCol, lastCol, leafs);
+            mat = build(null, A, B, firstRow, lastRow, firstCol, lastCol, leafs);
             System.out.println("Using " + nleaf + " segments");
 
         }
 
-        MatrixTree build(double[][] a, double[][] b,
+        MatrixTree build(MatrixTree p,
+                         double[][] a, double[][] b,
                          int lr, int hr, int lc, int hc, int leafs) {
             int rows = (hr - lr + 1);
             int cols = (hc - lc + 1);
@@ -218,27 +222,33 @@ public class FJJacobi {
 
             if (rows * cols <= leafs) {
                 ++nleaf;
-                return new LeafNode(a, b, lr, hr, lc, hc);
+                return new LeafNode(p, a, b, lr, hr, lc, hc);
             }
             else if (hrows * hcols >= leafs) {
-                return new FourNode(build(a, b, lr,   mr, lc,   mc, leafs),
-                                    build(a, b, lr,   mr, mc+1, hc, leafs),
-                                    build(a, b, mr+1, hr, lc,   mc, leafs),
-                                    build(a, b, mr+1, hr, mc+1, hc, leafs));
+                FourNode q = new FourNode(p);
+                q.q1 = build(q, a, b, lr,   mr, lc,   mc, leafs);
+                q.q2 = build(q, a, b, lr,   mr, mc+1, hc, leafs);
+                q.q3 = build(q, a, b, mr+1, hr, lc,   mc, leafs);
+                q.q4 = build(q, a, b, mr+1, hr, mc+1, hc, leafs);
+                return q;
             }
             else if (cols >= rows) {
-                return new TwoNode(build(a, b, lr, hr, lc,   mc, leafs),
-                                   build(a, b, lr, hr, mc+1, hc, leafs));
+                TwoNode q = new TwoNode(p);
+                q.q1 = build(q, a, b, lr, hr, lc,   mc, leafs);
+                q.q2 = build(q, a, b, lr, hr, mc+1, hc, leafs);
+                return q;
             }
             else {
-                return new TwoNode(build(a, b, lr,   mr, lc, hc, leafs),
-                                   build(a, b, mr+1, hr, lc, hc, leafs));
-
+                TwoNode q = new TwoNode(p);
+                q.q1 = build(q, a, b, lr,   mr, lc, hc, leafs);
+                q.q2 = build(q, a, b, mr+1, hr, lc, hc, leafs);
+                return q;
             }
         }
 
         static void doCompute(MatrixTree m, int s) {
             for (int i = 0; i < s; ++i) {
+                m.setPendingCount(3);
                 m.invoke();
                 m.reinitialize();
             }

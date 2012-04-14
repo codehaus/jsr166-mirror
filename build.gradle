@@ -138,7 +138,7 @@ project ( ':jsr166tck' ) {
     main { java { srcDir '../src/test/tck' } }
     test { java { srcDir '../src/test/tck' } }
   }
-  dependencies { compile 'junit:junit:4.8.2' }
+  dependencies { compile 'junit:junit:4.10' }
   compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
   compileTestJava.options.bootClasspath = bootClasspath
@@ -209,7 +209,7 @@ project ( ':extra166y' ) {
     //  deprecated.  Leave the new versions commented out pending upgrade from 1.0-milestone-3 which doesn't
     //  have the change.
     compile files ( project ( ':jsr166y' ).sourceSets.main.output )
-    testCompile 'junit:junit:4.8.2' , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
+    testCompile 'junit:junit:4.10' , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
   }
   jar {
     manifest { 

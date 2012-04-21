@@ -71,9 +71,10 @@ import java.lang.reflect.Constructor;
  * but doing do requires three further considerations: (1) Completion
  * of few if any <em>other</em> tasks should be dependent on a task
  * that blocks on external synchronization or IO. Event-style async
- * tasks that are never joined often fall into this category.  (2) To
- * minimize resource impact, tasks should be small; ideally performing
- * only the (possibly) blocking action. (3) Unless the {@link
+ * tasks that are never joined (for example, those subclassing {@link
+ * CountedCompleter}) often fall into this category.  (2) To minimize
+ * resource impact, tasks should be small; ideally performing only the
+ * (possibly) blocking action. (3) Unless the {@link
  * ForkJoinPool.ManagedBlocker} API is used, or the number of possibly
  * blocked tasks is known to be less than the pool's {@link
  * ForkJoinPool#getParallelism} level, the pool cannot guarantee that
@@ -139,17 +140,16 @@ import java.lang.reflect.Constructor;
  * {@link Phaser}, {@link #helpQuiesce}, and {@link #complete}) that
  * may be of use in constructing custom subclasses for problems that
  * are not statically structured as DAGs. To support such usages a
- * ForkJoinTask may be atomically <em>tagged</em> with a {@code
- * short} value using {@link #setForkJoinTaskTag} or {@link
+ * ForkJoinTask may be atomically <em>tagged</em> with a {@code short}
+ * value using {@link #setForkJoinTaskTag} or {@link
  * #compareAndSetForkJoinTaskTag} and checked using {@link
- * #getForkJoinTaskTag}. The ForkJoinTask implementation does not
- * use these {@code protected} methods or tags for any purpose, but
- * they may be of use in the construction of specialized subclasses.
- * For example, parallel graph traversals can use the supplied methods
- * to avoid revisiting nodes/tasks that have already been processed.
- * Also, completion based designs can use them to record that subtasks
- * have completed. (Method names for tagging are bulky in part to
- * encourage definition of methods that reflect their usage patterns.)
+ * #getForkJoinTaskTag}. The ForkJoinTask implementation does not use
+ * these {@code protected} methods or tags for any purpose, but they
+ * may be of use in the construction of specialized subclasses.  For
+ * example, parallel graph traversals can use the supplied methods to
+ * avoid revisiting nodes/tasks that have already been processed.
+ * (Method names for tagging are bulky in part to encourage definition
+ * of methods that reflect their usage patterns.)
  *
  * <p>Most base support methods are {@code final}, to prevent
  * overriding of implementations that are intrinsically tied to the
@@ -412,11 +412,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Records exception and sets exceptional completion.
+     * Records exception and sets status.
      *
      * @return status on exit
      */
-    private int setExceptionalCompletion(Throwable ex) {
+    final int recordExceptionalCompletion(Throwable ex) {
         int s;
         if ((s = status) >= 0) {
             int h = System.identityHashCode(this);
@@ -439,17 +439,25 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             }
             s = setCompletion(EXCEPTIONAL);
         }
-        ForkJoinTask<?> p = internalGetCompleter(); // propagate
-        if (p != null && p.status >= 0)
-            p.setExceptionalCompletion(ex);
         return s;
     }
 
     /**
-     * Exception propagation support for tasks with completers.
+     * Records exception and possibly propagates
+     *
+     * @return status on exit
      */
-    ForkJoinTask<?> internalGetCompleter() {
-        return null;
+    private int setExceptionalCompletion(Throwable ex) {
+        int s = recordExceptionalCompletion(ex);
+        if ((s & DONE_MASK) == EXCEPTIONAL)
+            internalPropagateException(ex);
+        return s;
+    }
+
+    /**
+     * Hook for exception propagation support for tasks with completers.
+     */
+    void internalPropagateException(Throwable ex) {
     }
 
     /**

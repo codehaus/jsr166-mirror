@@ -63,6 +63,42 @@ public class Executors {
     }
 
     /**
+     * Creates a thread pool that maintains enough threads to support
+     * the given parallelism level, and may use multiple queues to
+     * reduce contention. The parallelism level corresponds to the
+     * maximum number of threads actively engaged in, or available to
+     * engage in, task processing. The actual number of threads may
+     * grow and shrink dynamically. A work-stealing pool makes no
+     * guarantees about the order in which submitted tasks are
+     * executed.
+     * 
+     * @param parallelism the targeted parallelism level 
+     * @return the newly created thread pool
+     * @throws IllegalArgumentException if {@code parallelism <= 0}
+     * @since 1.8
+     */
+    public static ExecutorService newWorkStealingPool(int parallelism) {
+        return new ForkJoinPool
+            (parallelism,
+             ForkJoinPool.defaultForkJoinWorkerThreadFactory, 
+             null, true);
+    }
+
+    /**
+     * Creates a work-stealing thread pool using all 
+     * (@link Runtime#availableProcessors available processors}
+     * as its target parallelism level.
+     * @return the newly created thread pool
+     * @since 1.8
+     */
+    public static ExecutorService newWorkStealingPool() {
+        return new ForkJoinPool
+            (Runtime.getRuntime().availableProcessors(),
+             ForkJoinPool.defaultForkJoinWorkerThreadFactory, 
+             null, true);
+    }
+
+    /**
      * Creates a thread pool that reuses a fixed number of threads
      * operating off a shared unbounded queue, using the provided
      * ThreadFactory to create new threads when needed.  At any point,

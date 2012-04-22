@@ -21,18 +21,20 @@ package jsr166y;
  * #tryComplete}, if the pending action count is nonzero, it is
  * decremented; otherwise, the completion action is performed, and if
  * this completer itself has a completer, the process is continued
- * with its completer.  As is the case with most basic synchronization
- * constructs, these methods affect only internal counts; they do not
- * establish any further internal bookkeeping. In particular, the
- * identities of pending tasks are not maintained. As illustrated
- * below, you can create subclasses that do record some or all pended
- * tasks or their results when needed.
+ * with its completer.  As is the case with related synchronization
+ * components such as {@link Phaser} and {@link
+ * java.util.concurrent.Semaphore} these methods affect only internal
+ * counts; they do not establish any further internal bookkeeping. In
+ * particular, the identities of pending tasks are not maintained. As
+ * illustrated below, you can create subclasses that do record some or
+ * all pended tasks or their results when needed.
  *
  * <p>A concrete CountedCompleter class must define method {@link
  * #compute}, that should, in almost all use cases, invoke {@code
- * tryComplete()} before returning. The class may also optionally
+ * tryComplete()} once before returning. The class may also optionally
  * override method {@link #onCompletion} to perform an action upon
- * normal completion.
+ * normal completion, and method {@link #onExceptionalCompletion} to
+ * perform an action upon any exception.
  *
  * <p>A CountedCompleter that does not itself have a completer (i.e.,
  * one for which {@link #getCompleter} returns {@code null}) can be
@@ -44,8 +46,9 @@ package jsr166y;
  * {@link #complete}, {@link ForkJoinTask#cancel}, {@link
  * ForkJoinTask#completeExceptionally} or upon exceptional completion
  * of method {@code compute}. Upon any exceptional completion, the
- * exception is relayed to a task's completer (and its completer, and
- * so on), if one exists and it has not otherwise already completed.
+ * exception may be relayed to a task's completer (and its completer,
+ * and so on), if one exists and it has not otherwise already
+ * completed.
  *
  * <p><b>Sample Usages.</b>
  *
@@ -237,6 +240,8 @@ package jsr166y;
  * @author Doug Lea
  */
 public abstract class CountedCompleter extends ForkJoinTask<Void> {
+    private static final long serialVersionUID = 5232453752276485070L;
+
     /** This task's completer, or null if none */
     final CountedCompleter completer;
     /** The number of pending tasks until completion */
@@ -279,15 +284,36 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
     public abstract void compute();
 
     /**
-     * Executes the completion action when method {@link #tryComplete}
-     * is invoked and there are no pending counts, or when the
-     * unconditional method {@link #complete} is invoked.  By default,
-     * this method does nothing.
+     * Performs an action when method {@link #tryComplete} is invoked
+     * and there are no pending counts, or when the unconditional
+     * method {@link #complete} is invoked.  By default, this method
+     * does nothing.
      *
      * @param caller the task invoking this method (which may
      * be this task itself).
      */
     public void onCompletion(CountedCompleter caller) {
+    }
+
+    /**
+     * Performs an action when method {@link #completeExceptionally}
+     * is invoked or method {@link #compute} throws an exception, and
+     * this task has not otherwise already completed normally. On
+     * entry to this method, this task {@link
+     * ForkJoinTask#isCompletedAbnormally}.  The return value of this
+     * method controls further propagation: If {@code true} and this
+     * task has a completer, then this completer is also completed
+     * exceptionally.  The default implementation of this method does
+     * nothing except return {@code true}.
+     *
+     * @param ex the exception
+     * @param caller the task invoking this method (which may
+     * be this task itself).
+     * @return true if this exception should be propagated to this
+     * tasks completer, if one exists.
+     */
+    public boolean onExceptionalCompletion(Throwable ex, CountedCompleter caller) {
+        return true;
     }
 
     /**
@@ -347,8 +373,8 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      * else marks this task as complete.
      */
     public final void tryComplete() {
-        for (CountedCompleter a = this, s = a;;) {
-            int c;
+        CountedCompleter a = this, s = a;
+        for (int c;;) {
             if ((c = a.pending) == 0) {
                 a.onCompletion(s);
                 if ((a = (s = a).completer) == null) {
@@ -380,6 +406,16 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
     }
 
     /**
+     * Support for FJT exception propagation
+     */
+    void internalPropagateException(Throwable ex) {
+        CountedCompleter a = this, s = a;
+        while (a.onExceptionalCompletion(ex, s) &&
+               (a = (s = a).completer) != null && a.status >= 0)
+            a.recordExceptionalCompletion(ex);
+    }
+
+    /**
      * Implements execution conventions for CountedCompleters
      */
     protected final boolean exec() {
@@ -398,11 +434,6 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      * Requires null completion value.
      */
     protected final void setRawResult(Void mustBeNull) { }
-
-    /**
-     * Support for FJT exception propagation
-     */
-    final ForkJoinTask<?> internalGetCompleter() { return completer; }
 
     // Unsafe mechanics
     private static final sun.misc.Unsafe U;

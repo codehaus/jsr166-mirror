@@ -62,7 +62,7 @@ subprojects {
     }
     task sourceArtifact ( type : Jar ) {
       classifier = 'sources'
-      //  specification of the file set in the per module specification to allow for variant structuring.
+      //  Specification of the file set is in the per module specification to allow for variant structuring.
     }
     artifacts {
       archives ( javadocArtifact )
@@ -159,8 +159,9 @@ project ( ':jsr166x' ) {
   sourceCompatibility = 6
   targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/jsr166x' } } }
-  compileJava.dependsOn project ( ':jsr166' ).jar
-  compileJava.options.bootClasspath = bootClasspath
+  // Assume using Java 7 replaces this need.
+  //compileJava.dependsOn project ( ':jsr166' ).jar
+  //compileJava.options.bootClasspath = bootClasspath
   jar {
     manifest { 
       name = 'jsr166x'
@@ -177,8 +178,9 @@ project ( ':jsr166y' ) {
   sourceCompatibility = 6
   targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/jsr166y' } } }
-  compileJava.dependsOn project ( ':jsr166' ).jar
-  compileJava.options.bootClasspath = bootClasspath
+  // Assume using Java 7 replaces this need.
+  //compileJava.dependsOn project ( ':jsr166' ).jar
+  //compileJava.options.bootClasspath = bootClasspath
   jar {
     manifest { 
       name = 'jsr166y'
@@ -198,10 +200,11 @@ project ( ':extra166y' ) {
     main { java { srcDir '../src/extra166y' } }
     test { java { srcDir '../src/test/extra166y' } }
   }
-  compileJava.dependsOn project ( ':jsr166' ).jar
-  compileJava.options.bootClasspath = bootClasspath
-  compileTestJava.options.bootClasspath = bootClasspath
-  test.bootstrapClasspath = bootClasspathCollection
+  // Assume using Java 7 replaces this need.
+  //compileJava.dependsOn project ( ':jsr166' ).jar
+  //compileJava.options.bootClasspath = bootClasspath
+  //compileTestJava.options.bootClasspath = bootClasspath
+  //test.bootstrapClasspath = bootClasspathCollection
   //  It seems that the jars are never not rebuilt -- something in the manifest means that the jars are
   //  rebuilt on every run.  Do not therefore depend on the jars, but instead on the compiled classes.
   dependencies {
@@ -209,7 +212,7 @@ project ( ':extra166y' ) {
     //  deprecated.  Leave the new versions commented out pending upgrade from 1.0-milestone-3 which doesn't
     //  have the change.
     compile files ( project ( ':jsr166y' ).sourceSets.main.output )
-    testCompile 'junit:junit:4.10' , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
+    testCompile 'junit:junit:4.10' // , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
   }
   jar {
     manifest { 
@@ -227,8 +230,6 @@ project ( ':jsr166e' ) {
   sourceCompatibility = 7
   targetCompatibility = 7
   sourceSets { main { java { srcDir '../src/jsr166e' } } }
-  //compileJava.dependsOn project ( ':jsr166' ).jar
-  //compileJava.options.bootClasspath = bootClasspath
   jar {
     manifest { 
       name = 'jsr166e'
@@ -246,5 +247,5 @@ task clobber ( description : 'Clean all the Gradle subproject directories since 
 }
 
 task wrapper ( type : Wrapper ) {
-    gradleVersion = '1.0-milestone-9'
+    gradleVersion = '1.0-rc-1'
 }

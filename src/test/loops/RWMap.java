@@ -13,7 +13,7 @@ import java.util.concurrent.locks.*;
  * that places read-write locks around unsynchronized Maps.
  * Exists as a sample input for MapLoops test.
  */
-public class RWMap implements Map {
+public class RWMap implements ConcurrentMap {
     private final Map m;
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 
@@ -103,10 +103,57 @@ public class RWMap implements Map {
         finally { l.unlock(); }
     }
 
+    public Object putIfAbsent(Object key, Object value) {
+        ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
+        l.lock();
+        try { 
+            Object v = m.get(key);
+            return v == null?  m.put(key, value) : v;
+        }
+        finally { l.unlock(); }
+    }
+
+    public boolean replace(Object key, Object oldValue, Object newValue) {
+        ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
+        l.lock();
+        try { 
+            if (m.get(key).equals(oldValue)) {
+                m.put(key, newValue);
+                return true;
+            }
+            return false;
+        }
+        finally { l.unlock(); }
+    }
+
+    public Object replace(Object key, Object newValue) {
+        ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
+        l.lock();
+        try { 
+            if (m.containsKey(key))
+                return m.put(key, newValue);
+            return null;
+        }
+        finally { l.unlock(); }
+    }
+
     public Object remove(Object key) {
         ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
         l.lock();
         try { return m.remove(key); }
+        finally { l.unlock(); }
+    }
+
+    public boolean remove(Object key, Object value) {
+        ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
+        l.lock();
+        try { 
+            if (m.get(key).equals(value)) {
+                m.remove(key);
+                return true;
+            }
+            return false;
+        }
         finally { l.unlock(); }
     }
 

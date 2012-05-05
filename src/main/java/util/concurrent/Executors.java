@@ -71,8 +71,8 @@ public class Executors {
      * grow and shrink dynamically. A work-stealing pool makes no
      * guarantees about the order in which submitted tasks are
      * executed.
-     * 
-     * @param parallelism the targeted parallelism level 
+     *
+     * @param parallelism the targeted parallelism level
      * @return the newly created thread pool
      * @throws IllegalArgumentException if {@code parallelism <= 0}
      * @since 1.8
@@ -80,12 +80,12 @@ public class Executors {
     public static ExecutorService newWorkStealingPool(int parallelism) {
         return new ForkJoinPool
             (parallelism,
-             ForkJoinPool.defaultForkJoinWorkerThreadFactory, 
+             ForkJoinPool.defaultForkJoinWorkerThreadFactory,
              null, true);
     }
 
     /**
-     * Creates a work-stealing thread pool using all 
+     * Creates a work-stealing thread pool using all
      * (@link Runtime#availableProcessors available processors}
      * as its target parallelism level.
      * @return the newly created thread pool
@@ -94,7 +94,7 @@ public class Executors {
     public static ExecutorService newWorkStealingPool() {
         return new ForkJoinPool
             (Runtime.getRuntime().availableProcessors(),
-             ForkJoinPool.defaultForkJoinWorkerThreadFactory, 
+             ForkJoinPool.defaultForkJoinWorkerThreadFactory,
              null, true);
     }
 

@@ -106,7 +106,7 @@ public class RWMap implements ConcurrentMap {
     public Object putIfAbsent(Object key, Object value) {
         ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
         l.lock();
-        try { 
+        try {
             Object v = m.get(key);
             return v == null?  m.put(key, value) : v;
         }
@@ -116,7 +116,7 @@ public class RWMap implements ConcurrentMap {
     public boolean replace(Object key, Object oldValue, Object newValue) {
         ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
         l.lock();
-        try { 
+        try {
             if (m.get(key).equals(oldValue)) {
                 m.put(key, newValue);
                 return true;
@@ -129,7 +129,7 @@ public class RWMap implements ConcurrentMap {
     public Object replace(Object key, Object newValue) {
         ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
         l.lock();
-        try { 
+        try {
             if (m.containsKey(key))
                 return m.put(key, newValue);
             return null;
@@ -147,7 +147,7 @@ public class RWMap implements ConcurrentMap {
     public boolean remove(Object key, Object value) {
         ReentrantReadWriteLock.WriteLock l = rwl.writeLock();
         l.lock();
-        try { 
+        try {
             if (m.get(key).equals(value)) {
                 m.remove(key);
                 return true;

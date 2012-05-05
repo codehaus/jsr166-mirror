@@ -108,7 +108,7 @@ public class RWMap implements ConcurrentMap {
         l.lock();
         try {
             Object v = m.get(key);
-            return v == null?  m.put(key, value) : v;
+            return (v == null) ? m.put(key, value) : v;
         }
         finally { l.unlock(); }
     }

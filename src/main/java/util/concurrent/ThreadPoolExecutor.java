@@ -892,9 +892,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         boolean workerStarted = false;
         Worker w = null;
         try {
+            final ReentrantLock mainLock = this.mainLock;
             w = new Worker(firstTask);
             final Thread t = w.thread;
-            final ReentrantLock mainLock = this.mainLock;
+            if (t.isAlive()) // precheck that t is startable
+                throw new IllegalThreadStateException();
             mainLock.lock();
             try {
                 // Recheck while holding lock.

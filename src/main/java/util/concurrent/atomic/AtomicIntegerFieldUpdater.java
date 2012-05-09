@@ -43,7 +43,7 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * volatile integer type
      * @throws RuntimeException with a nested reflection-based
      * exception if the class does not hold field or is the wrong type,
-     * or the field is inaccessible to the caller according to Java language 
+     * or the field is inaccessible to the caller according to Java language
      * access control
      */
     public static <U> AtomicIntegerFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
@@ -252,7 +252,7 @@ public abstract class AtomicIntegerFieldUpdater<T> {
                 field = AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Field>() {
                         public Field run() throws NoSuchFieldException {
-			    return tclass.getDeclaredField(fieldName);
+                            return tclass.getDeclaredField(fieldName);
                         }
                     });
                 caller = sun.reflect.Reflection.getCallerClass(3);
@@ -265,41 +265,41 @@ public abstract class AtomicIntegerFieldUpdater<T> {
                     ((cl == null) || !isAncestor(cl, ccl))) {
                   sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
                 }
-	    } catch (PrivilegedActionException pae) {
-		throw new RuntimeException(pae.getException());
+            } catch (PrivilegedActionException pae) {
+                throw new RuntimeException(pae.getException());
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
-            
+
             Class<?> fieldt = field.getType();
             if (fieldt != int.class)
                 throw new IllegalArgumentException("Must be integer type");
 
             if (!Modifier.isVolatile(modifiers))
                 throw new IllegalArgumentException("Must be volatile type");
-            
+
             this.cclass = (Modifier.isProtected(modifiers) &&
                            caller != tclass) ? caller : null;
             this.tclass = tclass;
             offset = unsafe.objectFieldOffset(field);
         }
-       
-	/** 
-	 * Returns true if the second classloader can be found in the first 
-	 * classloader's delegation chain. 
-	 * Equivalent to the inaccessible: first.isAncestor(second).
-	 */
-	private static boolean isAncestor(ClassLoader first, ClassLoader second) {
-	    ClassLoader acl = first;
-	    do {
-		acl = acl.getParent();
-		if (second == acl) {
-		    return true;
-		}
-	    } while (acl != null);
-	    return false;
-	}
-	
+
+        /**
+         * Returns true if the second classloader can be found in the first
+         * classloader's delegation chain.
+         * Equivalent to the inaccessible: first.isAncestor(second).
+         */
+        private static boolean isAncestor(ClassLoader first, ClassLoader second) {
+            ClassLoader acl = first;
+            do {
+                acl = acl.getParent();
+                if (second == acl) {
+                    return true;
+                }
+            } while (acl != null);
+            return false;
+        }
+
         private void fullCheck(T obj) {
             if (!tclass.isInstance(obj))
                 throw new ClassCastException();

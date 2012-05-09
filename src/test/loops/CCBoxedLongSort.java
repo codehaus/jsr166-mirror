@@ -68,7 +68,7 @@ class CCBoxedLongSort {
             long now = System.nanoTime();
             double total = (double)(now - start) / NPS;
             double elapsed = (double)(now - last) / NPS;
-            System.out.printf("Arrays.sort   time:  %7.3f total %9.3f\n", 
+            System.out.printf("Arrays.sort   time:  %7.3f total %9.3f\n",
                               elapsed, total);
             pool.invoke(new OrderChecker(null, a, 0, n, n));
         }
@@ -86,7 +86,7 @@ class CCBoxedLongSort {
             long now = System.nanoTime();
             double total = (double)(now - start) / NPS;
             double elapsed = (double)(now - last) / NPS;
-            System.out.printf("Parallel sort time:  %7.3f total %9.3f\n", 
+            System.out.printf("Parallel sort time:  %7.3f total %9.3f\n",
                               elapsed, total);
             pool.invoke(new OrderChecker(null, a, 0, n, n));
         }
@@ -140,11 +140,11 @@ class CCBoxedLongSort {
                 int u = h + q;
                 int lq = l + q, lh = l + h, lu = l + u;
                 int nh = n - h, nu = n - u, hq = h - q;
-                Comerger fc = 
+                Comerger fc =
                     new Comerger(new Merger(s, w, a, l, h, lh, nh, l));
-                Comerger rc = 
+                Comerger rc =
                     new Comerger(new Merger(fc, a, w, lh, q, lu, nu, lh));
-                Comerger lc = 
+                Comerger lc =
                     new Comerger(new Merger(fc, a, w, l, q, lq, hq, l));
                 Sorter su = new Sorter(rc, a, w, lu, nu);
                 Sorter sh = new Sorter(rc, a, w, lh, q);
@@ -157,7 +157,7 @@ class CCBoxedLongSort {
             }
             //            Arrays.sort(a, l, l+n);
             quickSort(a, l, l+n-1);
-            s.tryComplete(); 
+            s.tryComplete();
         }
     }
 
@@ -205,7 +205,7 @@ class CCBoxedLongSort {
                 rn = rh;
                 ln = lh;
             }
-            
+
             int lFence = l + ln;
             int rFence = r + rn;
             for (Long t;;) {
@@ -213,15 +213,15 @@ class CCBoxedLongSort {
                     Long al = a[l], ar;
                     if (r >= rFence ||
                         al.longValue() <= (ar = a[r]).longValue()) {
-                        ++l; t = al; 
-                    } 
-                    else { 
-                        ++r; t = ar; 
+                        ++l; t = al;
+                    }
+                    else {
+                        ++r; t = ar;
                     }
                 }
                 else if (r < rFence)
                     t = a[r++];
-                else 
+                else
                     break;
                 w[k++] = t;
             }
@@ -243,13 +243,13 @@ class CCBoxedLongSort {
         final Long[] src;
         final Long[] dst;
         final int lo, hi, size;
-        RandomRepacker(CountedCompleter par, Long[] src, Long[] dst, 
+        RandomRepacker(CountedCompleter par, Long[] src, Long[] dst,
                        int lo, int hi, int size) {
             super(par);
             this.src = src; this.dst = dst;
             this.lo = lo; this.hi = hi; this.size = size;
         }
-        
+
         public final void compute() {
             Long[] s = src;
             Long[] d = dst;
@@ -272,7 +272,7 @@ class CCBoxedLongSort {
         final int lo, hi, size;
         OrderChecker(CountedCompleter par, Long[] a, int lo, int hi, int size) {
             super(par);
-            this.array = a; 
+            this.array = a;
             this.lo = lo; this.hi = hi; this.size = size;
         }
 

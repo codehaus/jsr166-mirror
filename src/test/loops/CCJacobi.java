@@ -125,7 +125,7 @@ public class CCJacobi {
             }
 
             maxDiff = md;
-            tryComplete(); 
+            tryComplete();
         }
     }
 

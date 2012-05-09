@@ -43,7 +43,7 @@ public abstract class AtomicLongFieldUpdater<T> {
      * volatile long type.
      * @throws RuntimeException with a nested reflection-based
      * exception if the class does not hold field or is the wrong type,
-     * or the field is inaccessible to the caller according to Java language 
+     * or the field is inaccessible to the caller according to Java language
      * access control
      */
     public static <U> AtomicLongFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
@@ -252,7 +252,7 @@ public abstract class AtomicLongFieldUpdater<T> {
                 field = AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Field>() {
                         public Field run() throws NoSuchFieldException {
-			    return tclass.getDeclaredField(fieldName);
+                            return tclass.getDeclaredField(fieldName);
                         }
                     });
                 caller = sun.reflect.Reflection.getCallerClass(3);
@@ -265,8 +265,8 @@ public abstract class AtomicLongFieldUpdater<T> {
                     ((cl == null) || !isAncestor(cl, ccl))) {
                   sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
                 }
-	    } catch (PrivilegedActionException pae) {
-		throw new RuntimeException(pae.getException());
+            } catch (PrivilegedActionException pae) {
+                throw new RuntimeException(pae.getException());
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -347,7 +347,7 @@ public abstract class AtomicLongFieldUpdater<T> {
                 field = AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Field>() {
                         public Field run() throws NoSuchFieldException {
-			    return tclass.getDeclaredField(fieldName);
+                            return tclass.getDeclaredField(fieldName);
                         }
                     });
                 caller = sun.reflect.Reflection.getCallerClass(3);
@@ -360,8 +360,8 @@ public abstract class AtomicLongFieldUpdater<T> {
                     ((cl == null) || !isAncestor(cl, ccl))) {
                   sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
                 }
-	    } catch (PrivilegedActionException pae) {
-		throw new RuntimeException(pae.getException());
+            } catch (PrivilegedActionException pae) {
+                throw new RuntimeException(pae.getException());
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -435,19 +435,19 @@ public abstract class AtomicLongFieldUpdater<T> {
         }
     }
 
-    /** 
-     * Returns true if the second classloader can be found in the first 
-     * classloader's delegation chain. 
+    /**
+     * Returns true if the second classloader can be found in the first
+     * classloader's delegation chain.
      * Equivalent to the inaccessible: first.isAncestor(second).
      */
     private static boolean isAncestor(ClassLoader first, ClassLoader second) {
-	ClassLoader acl = first;
-	do {
-	    acl = acl.getParent();
-	    if (second == acl) {
-		return true;
-	    }
-	} while (acl != null);
-	return false;
+        ClassLoader acl = first;
+        do {
+            acl = acl.getParent();
+            if (second == acl) {
+                return true;
+            }
+        } while (acl != null);
+        return false;
     }
 }

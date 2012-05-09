@@ -68,7 +68,7 @@ class BoxedLongSort {
             long now = System.nanoTime();
             double total = (double)(now - start) / NPS;
             double elapsed = (double)(now - last) / NPS;
-            System.out.printf("Arrays.sort   time:  %7.3f total %9.3f\n", 
+            System.out.printf("Arrays.sort   time:  %7.3f total %9.3f\n",
                               elapsed, total);
             if (i == 0)
                 checkSorted(a);
@@ -90,7 +90,7 @@ class BoxedLongSort {
             //            pool.invoke(new TaskChecker());
             double total = (double)(now - start) / NPS;
             double elapsed = (double)(now - last) / NPS;
-            System.out.printf("Parallel sort time:  %7.3f total %9.3f\n", 
+            System.out.printf("Parallel sort time:  %7.3f total %9.3f\n",
                               elapsed, total);
             if (i == 0)
                 checkSorted(a);
@@ -202,15 +202,15 @@ class BoxedLongSort {
                     Long al = a[l], ar;
                     if (r >= rFence ||
                         al.longValue() <= (ar = a[r]).longValue()) {
-                        ++l; t = al; 
-                    } 
-                    else { 
-                        ++r; t = ar; 
+                        ++l; t = al;
+                    }
+                    else {
+                        ++r; t = ar;
                     }
                 }
                 else if (r < rFence)
                     t = a[r++];
-                else 
+                else
                     break;
                 w[k++] = t;
             }
@@ -295,12 +295,12 @@ class BoxedLongSort {
         final Long[] src;
         final Long[] dst;
         final int lo, hi, size;
-        RandomRepacker(Long[] src, Long[] dst, 
+        RandomRepacker(Long[] src, Long[] dst,
                        int lo, int hi, int size) {
             this.src = src; this.dst = dst;
             this.lo = lo; this.hi = hi; this.size = size;
         }
-        
+
         public final void compute() {
             Long[] s = src;
             Long[] d = dst;

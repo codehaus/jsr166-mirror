@@ -1535,7 +1535,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                     t = (ForkJoinTask<?>)U.getObjectVolatile(a, i);
                     if (q.base == b && ec >= 0 && t != null &&
                         U.compareAndSwapObject(a, i, t, null)) {
-                        q.base = b + 1;       // specialization of pollAt
+                        if (q.top - (q.base = b + 1) > 1)
+                            signalWork();    // help pushes signal
                         return t;
                     }
                     else if (ec < 0 || j <= m) {

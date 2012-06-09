@@ -1025,7 +1025,7 @@ public class ConcurrentHashMapV8<K, V>
      * we apply a transform that spreads the impact of higher bits
      * downward. There is a tradeoff between speed, utility, and
      * quality of bit-spreading. Because many common sets of hashes
-     * are already reaonably distributed across bits (so don't benefit
+     * are already reasonably distributed across bits (so don't benefit
      * from spreading), and because we use trees to handle large sets
      * of collisions in bins, we don't need excessively high quality.
      */

@@ -960,7 +960,7 @@ public class ConcurrentHashMapV8<K, V>
                                 sib = (xp = x.parent) == null ? null : xp.right;
                             }
                             if (sib != null) {
-                                sib.red = (xp == null)? false : xp.red;
+                                sib.red = (xp == null) ? false : xp.red;
                                 if ((sr = sib.right) != null)
                                     sr.red = false;
                             }
@@ -998,7 +998,7 @@ public class ConcurrentHashMapV8<K, V>
                                 sib = (xp = x.parent) == null ? null : xp.left;
                             }
                             if (sib != null) {
-                                sib.red = (xp == null)? false : xp.red;
+                                sib.red = (xp == null) ? false : xp.red;
                                 if ((sl = sib.left) != null)
                                     sl.red = false;
                             }
@@ -1553,7 +1553,7 @@ public class ConcurrentHashMapV8<K, V>
                         if (tabAt(tab, i) == f) {
                             count = 1;
                             TreeNode p = t.getTreeNode(h, k, t.root);
-                            Object pv = (p == null)? null : p.val;
+                            Object pv = (p == null) ? null : p.val;
                             if ((val = mf.remap(k, (V)pv)) != null) {
                                 if (p != null)
                                     p.val = val;

@@ -353,39 +353,43 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      */
     private static <T> void siftDownComparable(int k, T x, Object[] array,
                                                int n) {
-        Comparable<? super T> key = (Comparable<? super T>)x;
-        int half = n >>> 1;           // loop while a non-leaf
-        while (k < half) {
-            int child = (k << 1) + 1; // assume left child is least
-            Object c = array[child];
-            int right = child + 1;
-            if (right < n &&
-                ((Comparable<? super T>) c).compareTo((T) array[right]) > 0)
-                c = array[child = right];
-            if (key.compareTo((T) c) <= 0)
-                break;
-            array[k] = c;
-            k = child;
+        if (n > 0) {
+            Comparable<? super T> key = (Comparable<? super T>)x;
+            int half = n >>> 1;           // loop while a non-leaf
+            while (k < half) {
+                int child = (k << 1) + 1; // assume left child is least
+                Object c = array[child];
+                int right = child + 1;
+                if (right < n &&
+                    ((Comparable<? super T>) c).compareTo((T) array[right]) > 0)
+                    c = array[child = right];
+                if (key.compareTo((T) c) <= 0)
+                    break;
+                array[k] = c;
+                k = child;
+            }
+            array[k] = key;
         }
-        array[k] = key;
     }
 
     private static <T> void siftDownUsingComparator(int k, T x, Object[] array,
                                                     int n,
                                                     Comparator<? super T> cmp) {
-        int half = n >>> 1;
-        while (k < half) {
-            int child = (k << 1) + 1;
-            Object c = array[child];
-            int right = child + 1;
-            if (right < n && cmp.compare((T) c, (T) array[right]) > 0)
-                c = array[child = right];
-            if (cmp.compare(x, (T) c) <= 0)
-                break;
-            array[k] = c;
-            k = child;
+        if (n > 0) {
+            int half = n >>> 1;
+            while (k < half) {
+                int child = (k << 1) + 1;
+                Object c = array[child];
+                int right = child + 1;
+                if (right < n && cmp.compare((T) c, (T) array[right]) > 0)
+                    c = array[child = right];
+                if (cmp.compare(x, (T) c) <= 0)
+                    break;
+                array[k] = c;
+                k = child;
+            }
+            array[k] = x;
         }
-        array[k] = x;
     }
 
     /**

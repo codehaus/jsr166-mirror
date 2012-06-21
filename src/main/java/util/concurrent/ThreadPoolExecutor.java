@@ -891,10 +891,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         boolean workerAdded = false;
         Worker w = null;
         try {
-            final ReentrantLock mainLock = this.mainLock;
             w = new Worker(firstTask);
             final Thread t = w.thread;
             if (t != null) {
+                final ReentrantLock mainLock = this.mainLock;
                 mainLock.lock();
                 try {
                     // Recheck while holding lock.

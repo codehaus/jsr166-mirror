@@ -307,7 +307,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * bookkeeping before terminating. The user-visible pool size is
      * reported as the current size of the workers set.
      *
-     * The runState provides the main lifecyle control, taking on values:
+     * The runState provides the main lifecycle control, taking on values:
      *
      *   RUNNING:  Accept new tasks and process queued tasks
      *   SHUTDOWN: Don't accept new tasks, but process queued tasks

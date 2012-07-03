@@ -4,8 +4,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Snapshot Tue Jun  5 14:56:09 2012  Doug Lea  (dl at altair)
-
 package jsr166e;
 import jsr166e.LongAdder;
 import java.util.Arrays;
@@ -107,10 +105,10 @@ public class ConcurrentHashMapV8<K, V>
      */
     public static interface MappingFunction<K, V> {
         /**
-         * Returns a non-null value for the given key.
+         * Returns a value for the given key, or null if there is no mapping
          *
          * @param key the (non-null) key
-         * @return a non-null value
+         * @return a value for the key, or null if none
          */
         V map(K key);
     }
@@ -127,9 +125,88 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param key the (non-null) key
          * @param value the current value, or null if there is no mapping
-         * @return a non-null value
+         * @return a value for the key, or null if none
          */
         V remap(K key, V value);
+    }
+
+    /**
+     * A partitionable iterator. A Spliterator can be traversed
+     * directly, but can also be partitioned (before traversal) by
+     * creating another Spliterator that covers a non-overlapping
+     * portion of the elements, and so may be amenable to parallel
+     * execution.
+     *
+     * <p> This interface exports a subset of expected JDK8
+     * functionality.
+     *
+     * <p>Sample usage: Here is one (of the several) ways to compute
+     * the sum of the values held in a map using the ForkJoin
+     * framework. As illustrated here, Spliterators are well suited to
+     * designs in which a task repeatedly splits off half its work
+     * into forked subtasks until small enough to process directly,
+     * and then joins these subtasks. Variants of this style can be
+     * also be used in completion-based designs.
+     *
+     * <pre>
+     * {@code ConcurrentHashMapV8<String, Long> m = ...
+     * // Uses parallel depth of log2 of size / (parallelism * slack of 8).
+     * int depth = 32 - Integer.numberOfLeadingZeros(m.size() / (aForkJoinPool.getParallelism() * 8));
+     * long sum = aForkJoinPool.invoke(new SumValues(m.valueSpliterator(), depth, null));
+     * // ...
+     * static class SumValues extends RecursiveTask<Long> {
+     *   final Spliterator<Long> s;
+     *   final int depth;             // number of splits before processing
+     *   final SumValues nextJoin;    // records forked subtasks to join
+     *   SumValues(Spliterator<Long> s, int depth, SumValues nextJoin) {
+     *     this.s = s; this.depth = depth; this.nextJoin = nextJoin;
+     *   }
+     *   public Long compute() {
+     *     long sum = 0;
+     *     SumValues subtasks = null; // fork subtasks
+     *     for (int d = depth - 1; d >= 0; --d)
+     *       (subtasks = new SumValues(s.split(), d, subtasks)).fork();
+     *     while (s.hasNext())        // directly process remaining elements
+     *       sum += s.next();
+     *     for (SumValues t = subtasks; t != null; t = t.nextJoin)
+     *       sum += t.join();         // collect subtask results
+     *     return sum;
+     *   }
+     * }
+     * }</pre>
+     */
+    public static interface Spliterator<T> extends Iterator<T> {
+        /**
+         * Returns a Spliterator covering approximately half of the
+         * elements, guaranteed not to overlap with those subsequently
+         * returned by this Spliterator.  After invoking this method,
+         * the current Spliterator will <em>not</em> produce any of
+         * the elements of the returned Spliterator, but the two
+         * Spliterators together will produce all of the elements that
+         * would have been produced by this Spliterator had this
+         * method not been called. The exact number of elements
+         * produced by the returned Spliterator is not guaranteed, and
+         * may be zero (i.e., with {@code hasNext()} reporting {@code
+         * false}) if this Spliterator cannot be further split.
+         *
+         * @return a Spliterator covering approximately half of the
+         * elements
+         * @throws IllegalStateException if this Spliterator has
+         * already commenced traversing elements.
+         */
+        Spliterator<T> split();
+
+        /**
+         * Returns a Spliterator producing the same elements as this
+         * Spliterator. This method may be used for example to create
+         * a second Spliterator before a traversal, in order to later
+         * perform a second traversal.
+         *
+         * @return a Spliterator covering the same range as this Spliterator.
+         * @throws IllegalStateException if this Spliterator has
+         * already commenced traversing elements.
+         */
+        Spliterator<T> clone();
     }
 
     /*
@@ -294,11 +371,10 @@ public class ConcurrentHashMapV8<K, V>
      *
      * The traversal scheme also applies to partial traversals of
      * ranges of bins (via an alternate InternalIterator constructor)
-     * to support partitioned aggregate operations (that are not
-     * otherwise implemented yet).  Also, read-only operations give up
-     * if ever forwarded to a null table, which provides support for
-     * shutdown-style clearing, which is also not currently
-     * implemented.
+     * to support partitioned aggregate operations.  Also, read-only
+     * operations give up if ever forwarded to a null table, which
+     * provides support for shutdown-style clearing, which is also not
+     * currently implemented.
      *
      * Lazy table initialization minimizes footprint until first use,
      * and also avoids resizings when the first operation is from a
@@ -452,13 +528,13 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * Key-value entry. Note that this is never exported out as a
-     * user-visible Map.Entry (see WriteThroughEntry and SnapshotEntry
-     * below). Nodes with a hash field of MOVED are special, and do
-     * not contain user keys or values.  Otherwise, keys are never
-     * null, and null val fields indicate that a node is in the
-     * process of being deleted or created. For purposes of read-only
-     * access, a key may be read before a val, but can only be used
-     * after checking val to be non-null.
+     * user-visible Map.Entry (see MapEntry below). Nodes with a hash
+     * field of MOVED are special, and do not contain user keys or
+     * values.  Otherwise, keys are never null, and null val fields
+     * indicate that a node is in the process of being deleted or
+     * created. For purposes of read-only access, a key may be read
+     * before a val, but can only be used after checking val to be
+     * non-null.
      */
     static class Node {
         volatile int hash;
@@ -571,10 +647,15 @@ public class ConcurrentHashMapV8<K, V>
      * handle this, the tree is ordered primarily by hash value, then
      * by getClass().getName() order, and then by Comparator order
      * among elements of the same class.  On lookup at a node, if
-     * non-Comparable, both left and right children may need to be
-     * searched in the case of tied hash values. (This corresponds to
-     * the full list search that would be necessary if all elements
-     * were non-Comparable and had tied hashes.)
+     * elements are not comparable or compare as 0, both left and
+     * right children may need to be searched in the case of tied hash
+     * values. (This corresponds to the full list search that would be
+     * necessary if all elements were non-Comparable and had tied
+     * hashes.)  The red-black balancing code is updated from
+     * pre-jdk-collections
+     * (http://gee.cs.oswego.edu/dl/classes/collections/RBCell.java)
+     * based in turn on Cormen, Leiserson, and Rivest "Introduction to
+     * Algorithms" (CLR).
      *
      * TreeBins also maintain a separate locking discipline than
      * regular bins. Because they are forwarded via special MOVED
@@ -598,8 +679,8 @@ public class ConcurrentHashMapV8<K, V>
      */
     static final class TreeBin extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = 2249069246763182397L;
-        TreeNode root;  // root of tree
-        TreeNode first; // head of next-pointer list
+        transient TreeNode root;  // root of tree
+        transient TreeNode first; // head of next-pointer list
 
         /* AQS overrides */
         public final boolean isHeldExclusively() { return getState() > 0; }
@@ -629,6 +710,40 @@ public class ConcurrentHashMapV8<K, V>
             return c == -1;
         }
 
+        /** From CLR */
+        private void rotateLeft(TreeNode p) {
+            if (p != null) {
+                TreeNode r = p.right, pp, rl;
+                if ((rl = p.right = r.left) != null)
+                    rl.parent = p;
+                if ((pp = r.parent = p.parent) == null)
+                    root = r;
+                else if (pp.left == p)
+                    pp.left = r;
+                else
+                    pp.right = r;
+                r.left = p;
+                p.parent = r;
+            }
+        }
+
+        /** From CLR */
+        private void rotateRight(TreeNode p) {
+            if (p != null) {
+                TreeNode l = p.left, pp, lr;
+                if ((lr = p.left = l.right) != null)
+                    lr.parent = p;
+                if ((pp = l.parent = p.parent) == null)
+                    root = l;
+                else if (pp.right == p)
+                    pp.right = l;
+                else
+                    pp.left = l;
+                l.right = p;
+                p.parent = l;
+            }
+        }
+
         /**
          * Return the TreeNode (or null if not found) for the given key
          * starting at given root.
@@ -637,27 +752,28 @@ public class ConcurrentHashMapV8<K, V>
         final TreeNode getTreeNode(int h, Object k, TreeNode p) {
             Class<?> c = k.getClass();
             while (p != null) {
-                int dir, ph;  Object pk; Class<?> pc; TreeNode r;
-                if (h < (ph = p.hash))
-                    dir = -1;
-                else if (h > ph)
-                    dir = 1;
-                else if ((pk = p.key) == k || k.equals(pk))
-                    return p;
-                else if (c != (pc = pk.getClass()))
-                    dir = c.getName().compareTo(pc.getName());
-                else if (k instanceof Comparable)
-                    dir = ((Comparable)k).compareTo((Comparable)pk);
+                int dir, ph;  Object pk; Class<?> pc;
+                if ((ph = p.hash) == h) {
+                    if ((pk = p.key) == k || k.equals(pk))
+                        return p;
+                    if (c != (pc = pk.getClass()) ||
+                        !(k instanceof Comparable) ||
+                        (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
+                        dir = (c == pc)? 0 : c.getName().compareTo(pc.getName());
+                        TreeNode r = null, s = null, pl, pr;
+                        if (dir >= 0) {
+                            if ((pl = p.left) != null && h <= pl.hash)
+                                s = pl;
+                        }
+                        else if ((pr = p.right) != null && h >= pr.hash)
+                            s = pr;
+                        if (s != null && (r = getTreeNode(h, k, s)) != null)
+                            return r;
+                    }
+                }
                 else
-                    dir = 0;
-                TreeNode pr = p.right;
-                if (dir > 0)
-                    p = pr;
-                else if (dir == 0 && pr != null && h >= pr.hash &&
-                         (r = getTreeNode(h, k, pr)) != null)
-                    return r;
-                else
-                    p = p.left;
+                    dir = (h < ph) ? -1 : 1;
+                p = (dir > 0) ? p.right : p.left;
             }
             return null;
         }
@@ -696,50 +812,98 @@ public class ConcurrentHashMapV8<K, V>
         @SuppressWarnings("unchecked") // suppress Comparable cast warning
         final TreeNode putTreeNode(int h, Object k, Object v) {
             Class<?> c = k.getClass();
-            TreeNode p = root;
+            TreeNode pp = root, p = null;
             int dir = 0;
-            if (p != null) {
-                for (;;) {
-                    int ph;  Object pk; Class<?> pc; TreeNode r;
-                    if (h < (ph = p.hash))
-                        dir = -1;
-                    else if (h > ph)
-                        dir = 1;
-                    else if ((pk = p.key) == k || k.equals(pk))
+            while (pp != null) { // find existing node or leaf to insert at
+                int ph;  Object pk; Class<?> pc;
+                p = pp;
+                if ((ph = p.hash) == h) {
+                    if ((pk = p.key) == k || k.equals(pk))
                         return p;
-                    else if (c != (pc = (pk = p.key).getClass()))
-                        dir = c.getName().compareTo(pc.getName());
-                    else if (k instanceof Comparable)
-                        dir = ((Comparable)k).compareTo((Comparable)pk);
-                    else
-                        dir = 0;
-                    TreeNode pr = p.right, pl;
-                    if (dir > 0) {
-                        if (pr == null)
-                            break;
-                        p = pr;
+                    if (c != (pc = pk.getClass()) ||
+                        !(k instanceof Comparable) ||
+                        (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
+                        dir = (c == pc)? 0 : c.getName().compareTo(pc.getName());
+                        TreeNode r = null, s = null, pl, pr;
+                        if (dir >= 0) {
+                            if ((pl = p.left) != null && h <= pl.hash)
+                                s = pl;
+                        }
+                        else if ((pr = p.right) != null && h >= pr.hash)
+                            s = pr;
+                        if (s != null && (r = getTreeNode(h, k, s)) != null)
+                            return r;
                     }
-                    else if (dir == 0 && pr != null && h >= pr.hash &&
-                             (r = getTreeNode(h, k, pr)) != null)
-                        return r;
-                    else if ((pl = p.left) == null)
-                        break;
-                    else
-                        p = pl;
                 }
-            }
-            TreeNode f = first;
-            TreeNode r = first = new TreeNode(h, k, v, f, p);
-            if (p == null)
-                root = r;
-            else {
-                if (dir <= 0)
-                    p.left = r;
                 else
-                    p.right = r;
+                    dir = (h < ph) ? -1 : 1;
+                pp = (dir > 0) ? p.right : p.left;
+            }
+
+            TreeNode f = first;
+            TreeNode x = first = new TreeNode(h, k, v, f, p);
+            if (p == null)
+                root = x;
+            else { // attach and rebalance; adapted from CLR
+                TreeNode xp, xpp;
                 if (f != null)
-                    f.prev = r;
-                fixAfterInsertion(r);
+                    f.prev = x;
+                if (dir <= 0)
+                    p.left = x;
+                else
+                    p.right = x;
+                x.red = true;
+                while (x != null && (xp = x.parent) != null && xp.red &&
+                       (xpp = xp.parent) != null) {
+                    TreeNode xppl = xpp.left;
+                    if (xp == xppl) {
+                        TreeNode y = xpp.right;
+                        if (y != null && y.red) {
+                            y.red = false;
+                            xp.red = false;
+                            xpp.red = true;
+                            x = xpp;
+                        }
+                        else {
+                            if (x == xp.right) {
+                                rotateLeft(x = xp);
+                                xpp = (xp = x.parent) == null ? null : xp.parent;
+                            }
+                            if (xp != null) {
+                                xp.red = false;
+                                if (xpp != null) {
+                                    xpp.red = true;
+                                    rotateRight(xpp);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        TreeNode y = xppl;
+                        if (y != null && y.red) {
+                            y.red = false;
+                            xp.red = false;
+                            xpp.red = true;
+                            x = xpp;
+                        }
+                        else {
+                            if (x == xp.left) {
+                                rotateRight(x = xp);
+                                xpp = (xp = x.parent) == null ? null : xp.parent;
+                            }
+                            if (xp != null) {
+                                xp.red = false;
+                                if (xpp != null) {
+                                    xpp.red = true;
+                                    rotateLeft(xpp);
+                                }
+                            }
+                        }
+                    }
+                }
+                TreeNode r = root;
+                if (r != null && r.red)
+                    r.red = false;
             }
             return null;
         }
@@ -765,9 +929,9 @@ public class ConcurrentHashMapV8<K, V>
             TreeNode pl = p.left;
             TreeNode pr = p.right;
             if (pl != null && pr != null) {
-                TreeNode s = pr;
-                while (s.left != null) // find successor
-                    s = s.left;
+                TreeNode s = pr, sl;
+                while ((sl = s.left) != null) // find successor
+                    s = sl;
                 boolean c = s.red; s.red = p.red; p.red = c; // swap colors
                 TreeNode sr = s.right;
                 TreeNode pp = p.parent;
@@ -819,197 +983,98 @@ public class ConcurrentHashMapV8<K, V>
                     pp.right = replacement;
                 p.left = p.right = p.parent = null;
             }
-            if (!p.red)
-                fixAfterDeletion(replacement);
+            if (!p.red) { // rebalance, from CLR
+                TreeNode x = replacement;
+                while (x != null) {
+                    TreeNode xp, xpl;
+                    if (x.red || (xp = x.parent) == null) {
+                        x.red = false;
+                        break;
+                    }
+                    if (x == (xpl = xp.left)) {
+                        TreeNode sib = xp.right;
+                        if (sib != null && sib.red) {
+                            sib.red = false;
+                            xp.red = true;
+                            rotateLeft(xp);
+                            sib = (xp = x.parent) == null ? null : xp.right;
+                        }
+                        if (sib == null)
+                            x = xp;
+                        else {
+                            TreeNode sl = sib.left, sr = sib.right;
+                            if ((sr == null || !sr.red) &&
+                                (sl == null || !sl.red)) {
+                                sib.red = true;
+                                x = xp;
+                            }
+                            else {
+                                if (sr == null || !sr.red) {
+                                    if (sl != null)
+                                        sl.red = false;
+                                    sib.red = true;
+                                    rotateRight(sib);
+                                    sib = (xp = x.parent) == null ? null : xp.right;
+                                }
+                                if (sib != null) {
+                                    sib.red = (xp == null)? false : xp.red;
+                                    if ((sr = sib.right) != null)
+                                        sr.red = false;
+                                }
+                                if (xp != null) {
+                                    xp.red = false;
+                                    rotateLeft(xp);
+                                }
+                                x = root;
+                            }
+                        }
+                    }
+                    else { // symmetric
+                        TreeNode sib = xpl;
+                        if (sib != null && sib.red) {
+                            sib.red = false;
+                            xp.red = true;
+                            rotateRight(xp);
+                            sib = (xp = x.parent) == null ? null : xp.left;
+                        }
+                        if (sib == null)
+                            x = xp;
+                        else {
+                            TreeNode sl = sib.left, sr = sib.right;
+                            if ((sl == null || !sl.red) &&
+                                (sr == null || !sr.red)) {
+                                sib.red = true;
+                                x = xp;
+                            }
+                            else {
+                                if (sl == null || !sl.red) {
+                                    if (sr != null)
+                                        sr.red = false;
+                                    sib.red = true;
+                                    rotateLeft(sib);
+                                    sib = (xp = x.parent) == null ? null : xp.left;
+                                }
+                                if (sib != null) {
+                                    sib.red = (xp == null)? false : xp.red;
+                                    if ((sl = sib.left) != null)
+                                        sl.red = false;
+                                }
+                                if (xp != null) {
+                                    xp.red = false;
+                                    rotateRight(xp);
+                                }
+                                x = root;
+                            }
+                        }
+                    }
+                }
+            }
             if (p == replacement && (pp = p.parent) != null) {
                 if (p == pp.left) // detach pointers
                     pp.left = null;
                 else if (p == pp.right)
                     pp.right = null;
                 p.parent = null;
-            }
-        }
-
-        // CLR code updated from pre-jdk-collections version at
-        // http://gee.cs.oswego.edu/dl/classes/collections/RBCell.java
-
-        /** From CLR */
-        private void rotateLeft(TreeNode p) {
-            if (p != null) {
-                TreeNode r = p.right, pp, rl;
-                if ((rl = p.right = r.left) != null)
-                    rl.parent = p;
-                if ((pp = r.parent = p.parent) == null)
-                    root = r;
-                else if (pp.left == p)
-                    pp.left = r;
-                else
-                    pp.right = r;
-                r.left = p;
-                p.parent = r;
-            }
-        }
-
-        /** From CLR */
-        private void rotateRight(TreeNode p) {
-            if (p != null) {
-                TreeNode l = p.left, pp, lr;
-                if ((lr = p.left = l.right) != null)
-                    lr.parent = p;
-                if ((pp = l.parent = p.parent) == null)
-                    root = l;
-                else if (pp.right == p)
-                    pp.right = l;
-                else
-                    pp.left = l;
-                l.right = p;
-                p.parent = l;
-            }
-        }
-
-        /** From CLR */
-        private void fixAfterInsertion(TreeNode x) {
-            x.red = true;
-            TreeNode xp, xpp;
-            while (x != null && (xp = x.parent) != null && xp.red &&
-                   (xpp = xp.parent) != null) {
-                TreeNode xppl = xpp.left;
-                if (xp == xppl) {
-                    TreeNode y = xpp.right;
-                    if (y != null && y.red) {
-                        y.red = false;
-                        xp.red = false;
-                        xpp.red = true;
-                        x = xpp;
-                    }
-                    else {
-                        if (x == xp.right) {
-                            x = xp;
-                            rotateLeft(x);
-                            xpp = (xp = x.parent) == null ? null : xp.parent;
-                        }
-                        if (xp != null) {
-                            xp.red = false;
-                            if (xpp != null) {
-                                xpp.red = true;
-                                rotateRight(xpp);
-                            }
-                        }
-                    }
-                }
-                else {
-                    TreeNode y = xppl;
-                    if (y != null && y.red) {
-                        y.red = false;
-                        xp.red = false;
-                        xpp.red = true;
-                        x = xpp;
-                    }
-                    else {
-                        if (x == xp.left) {
-                            x = xp;
-                            rotateRight(x);
-                            xpp = (xp = x.parent) == null ? null : xp.parent;
-                        }
-                        if (xp != null) {
-                            xp.red = false;
-                            if (xpp != null) {
-                                xpp.red = true;
-                                rotateLeft(xpp);
-                            }
-                        }
-                    }
-                }
-            }
-            TreeNode r = root;
-            if (r != null && r.red)
-                r.red = false;
-        }
-
-        /** From CLR */
-        private void fixAfterDeletion(TreeNode x) {
-            while (x != null) {
-                TreeNode xp, xpl;
-                if (x.red || (xp = x.parent) == null) {
-                    x.red = false;
-                    break;
-                }
-                if (x == (xpl = xp.left)) {
-                    TreeNode sib = xp.right;
-                    if (sib != null && sib.red) {
-                        sib.red = false;
-                        xp.red = true;
-                        rotateLeft(xp);
-                        sib = (xp = x.parent) == null ? null : xp.right;
-                    }
-                    if (sib == null)
-                        x = xp;
-                    else {
-                        TreeNode sl = sib.left, sr = sib.right;
-                        if ((sr == null || !sr.red) &&
-                            (sl == null || !sl.red)) {
-                            sib.red = true;
-                            x = xp;
-                        }
-                        else {
-                            if (sr == null || !sr.red) {
-                                if (sl != null)
-                                    sl.red = false;
-                                sib.red = true;
-                                rotateRight(sib);
-                                sib = (xp = x.parent) == null ? null : xp.right;
-                            }
-                            if (sib != null) {
-                                sib.red = (xp == null) ? false : xp.red;
-                                if ((sr = sib.right) != null)
-                                    sr.red = false;
-                            }
-                            if (xp != null) {
-                                xp.red = false;
-                                rotateLeft(xp);
-                            }
-                            x = root;
-                        }
-                    }
-                }
-                else { // symmetric
-                    TreeNode sib = xpl;
-                    if (sib != null && sib.red) {
-                        sib.red = false;
-                        xp.red = true;
-                        rotateRight(xp);
-                        sib = (xp = x.parent) == null ? null : xp.left;
-                    }
-                    if (sib == null)
-                        x = xp;
-                    else {
-                        TreeNode sl = sib.left, sr = sib.right;
-                        if ((sl == null || !sl.red) &&
-                            (sr == null || !sr.red)) {
-                            sib.red = true;
-                            x = xp;
-                        }
-                        else {
-                            if (sl == null || !sl.red) {
-                                if (sr != null)
-                                    sr.red = false;
-                                sib.red = true;
-                                rotateLeft(sib);
-                                sib = (xp = x.parent) == null ? null : xp.left;
-                            }
-                            if (sib != null) {
-                                sib.red = (xp == null) ? false : xp.red;
-                                if ((sl = sib.left) != null)
-                                    sl.red = false;
-                            }
-                            if (xp != null) {
-                                xp.red = false;
-                                rotateRight(xp);
-                            }
-                            x = root;
-                        }
-                    }
-                }
             }
         }
     }
@@ -1504,11 +1569,11 @@ public class ConcurrentHashMapV8<K, V>
                 }
             }
         }
-        if (val == null)
-            throw new NullPointerException();
-        counter.add(1L);
-        if (count > 1)
-            checkForResize();
+        if (val != null) {
+            counter.add(1L);
+            if (count > 1)
+                checkForResize();
+        }
         return val;
     }
 
@@ -1518,7 +1583,7 @@ public class ConcurrentHashMapV8<K, V>
                                          RemappingFunction<? super K, V> mf) {
         int h = spread(k.hashCode());
         Object val = null;
-        boolean added = false;
+        int delta = 0;
         int count = 0;
         for (Node[] tab = table;;) {
             Node f; int i, fh; Object fk;
@@ -1531,10 +1596,10 @@ public class ConcurrentHashMapV8<K, V>
                         count = 1;
                         if ((val = mf.remap(k, null)) != null) {
                             node.val = val;
-                            added = true;
+                            delta = 1;
                         }
                     } finally {
-                        if (!added)
+                        if (delta == 0)
                             setTabAt(tab, i, null);
                         if (!node.casHash(fh, h)) {
                             node.hash = h;
@@ -1559,9 +1624,13 @@ public class ConcurrentHashMapV8<K, V>
                                     p.val = val;
                                 else {
                                     count = 2;
-                                    added = true;
+                                    delta = 1;
                                     t.putTreeNode(h, k, val);
                                 }
+                            }
+                            else if (p != null) {
+                                delta = -1;
+                                t.deleteTreeNode(p);
                             }
                         }
                     } finally {
@@ -1581,7 +1650,7 @@ public class ConcurrentHashMapV8<K, V>
                 try {
                     if (tabAt(tab, i) == f) {
                         count = 1;
-                        for (Node e = f;; ++count) {
+                        for (Node e = f, pred = null;; ++count) {
                             Object ek, ev;
                             if ((e.hash & HASH_BITS) == h &&
                                 (ev = e.val) != null &&
@@ -1589,13 +1658,21 @@ public class ConcurrentHashMapV8<K, V>
                                 val = mf.remap(k, (V)ev);
                                 if (val != null)
                                     e.val = val;
+                                else {
+                                    delta = -1;
+                                    Node en = e.next;
+                                    if (pred != null)
+                                        pred.next = en;
+                                    else
+                                        setTabAt(tab, i, en);
+                                }
                                 break;
                             }
-                            Node last = e;
+                            pred = e;
                             if ((e = e.next) == null) {
                                 if ((val = mf.remap(k, null)) != null) {
-                                    last.next = new Node(h, k, val, null);
-                                    added = true;
+                                    pred.next = new Node(h, k, val, null);
+                                    delta = 1;
                                     if (count >= TREE_THRESHOLD)
                                         replaceWithTreeBin(tab, i, k);
                                 }
@@ -1616,10 +1693,8 @@ public class ConcurrentHashMapV8<K, V>
                 }
             }
         }
-        if (val == null)
-            throw new NullPointerException();
-        if (added) {
-            counter.add(1L);
+        if (delta != 0) {
+            counter.add((long)delta);
             if (count > 1)
                 checkForResize();
         }
@@ -2082,11 +2157,12 @@ public class ConcurrentHashMapV8<K, V>
      * valid.
      *
      * Internal traversals directly access these fields, as in:
-     * {@code while (it.next != null) { process(it.nextKey); it.advance(); }}
+     * {@code while (it.advance() != null) { process(it.nextKey); }}
      *
-     * Exported iterators (subclasses of ViewIterator) extract key,
-     * value, or key-value pairs as return values of Iterator.next(),
-     * and encapsulate the it.next check as hasNext();
+     * Exported iterators must track whether the iterator has advanced
+     * (in hasNext vs next) (by setting/checking/nulling field
+     * nextVal), and then extract key, value, or key-value pairs as
+     * return values of next().
      *
      * The iterator visits once each still-valid node that was
      * reachable upon iterator construction. It might miss some that
@@ -2104,11 +2180,9 @@ public class ConcurrentHashMapV8<K, V>
      * paranoically cope with potential sharing by users of iterators
      * across threads, iteration terminates if a bounds checks fails
      * for a table read.
-     *
-     * The range-based constructor enables creation of parallel
-     * range-splitting traversals. (Not yet implemented.)
      */
-    static class InternalIterator {
+    static class InternalIterator<K,V> {
+        final ConcurrentHashMapV8<K, V> map;
         Node next;           // the next entry to use
         Node last;           // the last entry used
         Object nextKey;      // cached key field of next
@@ -2116,31 +2190,33 @@ public class ConcurrentHashMapV8<K, V>
         Node[] tab;          // current table; updated if resized
         int index;           // index of bin to use next
         int baseIndex;       // current index of initial table
-        final int baseLimit; // index bound for initial table
+        int baseLimit;       // index bound for initial table
         final int baseSize;  // initial table size
 
         /** Creates iterator for all entries in the table. */
-        InternalIterator(Node[] tab) {
-            this.tab = tab;
+        InternalIterator(ConcurrentHashMapV8<K, V> map) {
+            this.tab = (this.map = map).table;
             baseLimit = baseSize = (tab == null) ? 0 : tab.length;
-            index = baseIndex = 0;
-            next = null;
-            advance();
         }
 
-        /** Creates iterator for the given range of the table */
-        InternalIterator(Node[] tab, int lo, int hi) {
-            this.tab = tab;
-            baseSize = (tab == null) ? 0 : tab.length;
-            baseLimit = (hi <= baseSize) ? hi : baseSize;
-            index = baseIndex = (lo >= 0) ? lo : 0;
-            next = null;
-            advance();
+        /** Creates iterator for clone() and split() methods */
+        InternalIterator(InternalIterator<K,V> it, boolean split) {
+            this.map = it.map;
+            this.tab = it.tab;
+            this.baseSize = it.baseSize;
+            int lo = it.baseIndex;
+            int hi = this.baseLimit = it.baseLimit;
+            this.index = this.baseIndex =
+                (split) ? (it.baseLimit = (lo + hi + 1) >>> 1) : lo;
         }
 
-        /** Advances next. See above for explanation. */
-        final void advance() {
+        /**
+         * Advances next; returns nextVal or null if terminated
+         * See above for explanation.
+         */
+        final Object advance() {
             Node e = last = next;
+            Object ev = null;
             outer: do {
                 if (e != null)                  // advance past used/skipped node
                     e = e.next;
@@ -2160,9 +2236,26 @@ public class ConcurrentHashMapV8<K, V>
                     index = (i += baseSize) < n ? i : (baseIndex = b + 1);
                 }
                 nextKey = e.key;
-            } while ((nextVal = e.val) == null);// skip deleted or special nodes
+            } while ((ev = e.val) == null);    // skip deleted or special nodes
             next = e;
+            return nextVal = ev;
         }
+
+        public final void remove() {
+            if (nextVal == null)
+                advance();
+            Node e = last;
+            if (e == null)
+                throw new IllegalStateException();
+            last = null;
+            map.remove(e.key);
+        }
+
+        public final boolean hasNext() {
+            return nextVal != null || advance() != null;
+        }
+
+        public final boolean hasMoreElements() { return hasNext(); }
     }
 
     /* ---------------- Public operations -------------- */
@@ -2324,11 +2417,10 @@ public class ConcurrentHashMapV8<K, V>
         if (value == null)
             throw new NullPointerException();
         Object v;
-        InternalIterator it = new InternalIterator(table);
-        while (it.next != null) {
-            if ((v = it.nextVal) == value || value.equals(v))
+        InternalIterator<K,V> it = new InternalIterator<K,V>(this);
+        while ((v = it.advance()) != null) {
+            if (v == value || value.equals(v))
                 return true;
-            it.advance();
         }
         return false;
     }
@@ -2399,26 +2491,26 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * If the specified key is not already associated with a value,
-     * computes its value using the given mappingFunction and
-     * enters it into the map.  This is equivalent to
+     * computes its value using the given mappingFunction and enters
+     * it into the map unless null.  This is equivalent to
      * <pre> {@code
      * if (map.containsKey(key))
      *   return map.get(key);
      * value = mappingFunction.map(key);
-     * map.put(key, value);
+     * if (value != null)
+     *   map.put(key, value);
      * return value;}</pre>
      *
      * except that the action is performed atomically.  If the
-     * function returns {@code null} (in which case a {@code
-     * NullPointerException} is thrown), or the function itself throws
-     * an (unchecked) exception, the exception is rethrown to its
-     * caller, and no mapping is recorded.  Some attempted update
-     * operations on this map by other threads may be blocked while
-     * computation is in progress, so the computation should be short
-     * and simple, and must not attempt to update any other mappings
-     * of this Map. The most appropriate usage is to construct a new
-     * object serving as an initial mapped value, or memoized result,
-     * as in:
+     * function returns {@code null} no mapping is recorded. If the
+     * function itself throws an (unchecked) exception, the exception
+     * is rethrown to its caller, and no mapping is recorded.  Some
+     * attempted update operations on this map by other threads may be
+     * blocked while computation is in progress, so the computation
+     * should be short and simple, and must not attempt to update any
+     * other mappings of this Map. The most appropriate usage is to
+     * construct a new object serving as an initial mapped value, or
+     * memoized result, as in:
      *
      *  <pre> {@code
      * map.computeIfAbsent(key, new MappingFunction<K, V>() {
@@ -2427,9 +2519,9 @@ public class ConcurrentHashMapV8<K, V>
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
      * @return the current (existing or computed) value associated with
-     *         the specified key.
-     * @throws NullPointerException if the specified key, mappingFunction,
-     *         or computed value is null
+     *         the specified key, or null if the computed value is null.
+     * @throws NullPointerException if the specified key or mappingFunction
+     *         is null
      * @throws IllegalStateException if the computation detectably
      *         attempts a recursive update to this map that would
      *         otherwise never complete
@@ -2444,23 +2536,26 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Computes and enters a new mapping value given a key and
+     * Computes a new mapping value given a key and
      * its current mapped value (or {@code null} if there is no current
      * mapping). This is equivalent to
      *  <pre> {@code
-     *  map.put(key, remappingFunction.remap(key, map.get(key));
+     *   value = remappingFunction.remap(key, map.get(key));
+     *   if (value != null)
+     *     map.put(key, value);
+     *   else
+     *     map.remove(key);
      * }</pre>
      *
      * except that the action is performed atomically.  If the
-     * function returns {@code null} (in which case a {@code
-     * NullPointerException} is thrown), or the function itself throws
-     * an (unchecked) exception, the exception is rethrown to its
-     * caller, and current mapping is left unchanged.  Some attempted
-     * update operations on this map by other threads may be blocked
-     * while computation is in progress, so the computation should be
-     * short and simple, and must not attempt to update any other
-     * mappings of this Map. For example, to either create or
-     * append new messages to a value mapping:
+     * function returns {@code null}, the mapping is removed.  If the
+     * function itself throws an (unchecked) exception, the exception
+     * is rethrown to its caller, and the current mapping is left
+     * unchanged.  Some attempted update operations on this map by
+     * other threads may be blocked while computation is in progress,
+     * so the computation should be short and simple, and must not
+     * attempt to update any other mappings of this Map. For example,
+     * to either create or append new messages to a value mapping:
      *
      * <pre> {@code
      * Map<Key, String> map = ...;
@@ -2472,9 +2567,9 @@ public class ConcurrentHashMapV8<K, V>
      * @param key key with which the specified value is to be associated
      * @param remappingFunction the function to compute a value
      * @return the new value associated with
-     *         the specified key.
+     *         the specified key, or null if none.
      * @throws NullPointerException if the specified key or remappingFunction
-     *         or computed value is null
+     *         is null
      * @throws IllegalStateException if the computation detectably
      *         attempts a recursive update to this map that would
      *         otherwise never complete
@@ -2633,6 +2728,33 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
+     * Returns a partionable iterator of the keys in this map.
+     *
+     * @return a partionable iterator of the keys in this map
+     */
+    public Spliterator<K> keySpliterator() {
+        return new KeyIterator<K,V>(this);
+    }
+
+    /**
+     * Returns a partionable iterator of the values in this map.
+     *
+     * @return a partionable iterator of the values in this map
+     */
+    public Spliterator<V> valueSpliterator() {
+        return new ValueIterator<K,V>(this);
+    }
+
+    /**
+     * Returns a partionable iterator of the entries in this map.
+     *
+     * @return a partionable iterator of the entries in this map
+     */
+    public Spliterator<Map.Entry<K,V>> entrySpliterator() {
+        return new EntryIterator<K,V>(this);
+    }
+
+    /**
      * Returns the hash code value for this {@link Map}, i.e.,
      * the sum of, for each key-value pair in the map,
      * {@code key.hashCode() ^ value.hashCode()}.
@@ -2641,10 +2763,10 @@ public class ConcurrentHashMapV8<K, V>
      */
     public int hashCode() {
         int h = 0;
-        InternalIterator it = new InternalIterator(table);
-        while (it.next != null) {
-            h += it.nextKey.hashCode() ^ it.nextVal.hashCode();
-            it.advance();
+        InternalIterator<K,V> it = new InternalIterator<K,V>(this);
+        Object v;
+        while ((v = it.advance()) != null) {
+            h += it.nextKey.hashCode() ^ v.hashCode();
         }
         return h;
     }
@@ -2661,17 +2783,17 @@ public class ConcurrentHashMapV8<K, V>
      * @return a string representation of this map
      */
     public String toString() {
-        InternalIterator it = new InternalIterator(table);
+        InternalIterator<K,V> it = new InternalIterator<K,V>(this);
         StringBuilder sb = new StringBuilder();
         sb.append('{');
-        if (it.next != null) {
+        Object v;
+        if ((v = it.advance()) != null) {
             for (;;) {
-                Object k = it.nextKey, v = it.nextVal;
+                Object k = it.nextKey;
                 sb.append(k == this ? "(this Map)" : k);
                 sb.append('=');
                 sb.append(v == this ? "(this Map)" : v);
-                it.advance();
-                if (it.next == null)
+                if ((v = it.advance()) == null)
                     break;
                 sb.append(',').append(' ');
             }
@@ -2694,13 +2816,12 @@ public class ConcurrentHashMapV8<K, V>
             if (!(o instanceof Map))
                 return false;
             Map<?,?> m = (Map<?,?>) o;
-            InternalIterator it = new InternalIterator(table);
-            while (it.next != null) {
-                Object val = it.nextVal;
+            InternalIterator<K,V> it = new InternalIterator<K,V>(this);
+            Object val;
+            while ((val = it.advance()) != null) {
                 Object v = m.get(it.nextKey);
                 if (v == null || (v != val && !v.equals(val)))
                     return false;
-                it.advance();
             }
             for (Map.Entry<?,?> e : m.entrySet()) {
                 Object mk, mv, v;
@@ -2716,97 +2837,105 @@ public class ConcurrentHashMapV8<K, V>
 
     /* ----------------Iterators -------------- */
 
-    /**
-     * Base class for key, value, and entry iterators.  Adds a map
-     * reference to InternalIterator to support Iterator.remove.
-     */
-    static abstract class ViewIterator<K,V> extends InternalIterator {
-        final ConcurrentHashMapV8<K, V> map;
-        ViewIterator(ConcurrentHashMapV8<K, V> map) {
-            super(map.table);
-            this.map = map;
-        }
-
-        public final void remove() {
-            if (last == null)
-                throw new IllegalStateException();
-            map.remove(last.key);
-            last = null;
-        }
-
-        public final boolean hasNext()         { return next != null; }
-        public final boolean hasMoreElements() { return next != null; }
-    }
-
-    static final class KeyIterator<K,V> extends ViewIterator<K,V>
-        implements Iterator<K>, Enumeration<K> {
+    static final class KeyIterator<K,V> extends InternalIterator<K,V>
+        implements Spliterator<K>, Enumeration<K> {
         KeyIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
+        KeyIterator(InternalIterator<K,V> it, boolean split) {
+            super(it, split);
+        }
+        public KeyIterator<K,V> split() {
+            if (last != null || (next != null && nextVal == null))
+                throw new IllegalStateException();
+            return new KeyIterator<K,V>(this, true);
+        }
+        public KeyIterator<K,V> clone() {
+            if (last != null || (next != null && nextVal == null))
+                throw new IllegalStateException();
+            return new KeyIterator<K,V>(this, false);
+        }
 
         @SuppressWarnings("unchecked")
         public final K next() {
-            if (next == null)
+            if (nextVal == null && advance() == null)
                 throw new NoSuchElementException();
             Object k = nextKey;
-            advance();
-            return (K)k;
+            nextVal = null;
+            return (K) k;
         }
 
         public final K nextElement() { return next(); }
     }
 
-    static final class ValueIterator<K,V> extends ViewIterator<K,V>
-        implements Iterator<V>, Enumeration<V> {
+    static final class ValueIterator<K,V> extends InternalIterator<K,V>
+        implements Spliterator<V>, Enumeration<V> {
         ValueIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
+        ValueIterator(InternalIterator<K,V> it, boolean split) {
+            super(it, split);
+        }
+        public ValueIterator<K,V> split() {
+            if (last != null || (next != null && nextVal == null))
+                throw new IllegalStateException();
+            return new ValueIterator<K,V>(this, true);
+        }
+
+        public ValueIterator<K,V> clone() {
+            if (last != null || (next != null && nextVal == null))
+                throw new IllegalStateException();
+            return new ValueIterator<K,V>(this, false);
+        }
 
         @SuppressWarnings("unchecked")
         public final V next() {
-            if (next == null)
+            Object v;
+            if ((v = nextVal) == null && (v = advance()) == null)
                 throw new NoSuchElementException();
-            Object v = nextVal;
-            advance();
-            return (V)v;
+            nextVal = null;
+            return (V) v;
         }
 
         public final V nextElement() { return next(); }
     }
 
-    static final class EntryIterator<K,V> extends ViewIterator<K,V>
-        implements Iterator<Map.Entry<K,V>> {
+    static final class EntryIterator<K,V> extends InternalIterator<K,V>
+        implements Spliterator<Map.Entry<K,V>> {
         EntryIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
-
-        @SuppressWarnings("unchecked")
-        public final Map.Entry<K,V> next() {
-            if (next == null)
-                throw new NoSuchElementException();
-            Object k = nextKey;
-            Object v = nextVal;
-            advance();
-            return new WriteThroughEntry<K,V>((K)k, (V)v, map);
+        EntryIterator(InternalIterator<K,V> it, boolean split) {
+            super(it, split);
         }
-    }
-
-    static final class SnapshotEntryIterator<K,V> extends ViewIterator<K,V>
-        implements Iterator<Map.Entry<K,V>> {
-        SnapshotEntryIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
+        public EntryIterator<K,V> split() {
+            if (last != null || (next != null && nextVal == null))
+                throw new IllegalStateException();
+            return new EntryIterator<K,V>(this, true);
+        }
+        public EntryIterator<K,V> clone() {
+            if (last != null || (next != null && nextVal == null))
+                throw new IllegalStateException();
+            return new EntryIterator<K,V>(this, false);
+        }
 
         @SuppressWarnings("unchecked")
         public final Map.Entry<K,V> next() {
-            if (next == null)
+            Object v;
+            if ((v = nextVal) == null && (v = advance()) == null)
                 throw new NoSuchElementException();
             Object k = nextKey;
-            Object v = nextVal;
-            advance();
-            return new SnapshotEntry<K,V>((K)k, (V)v);
+            nextVal = null;
+            return new MapEntry<K,V>((K)k, (V)v, map);
         }
     }
 
     /**
-     * Base of writeThrough and Snapshot entry classes
+     * Exported Entry for iterators
      */
-    static abstract class MapEntry<K,V> implements Map.Entry<K, V> {
+    static final class MapEntry<K,V> implements Map.Entry<K, V> {
         final K key; // non-null
         V val;       // non-null
-        MapEntry(K key, V val)        { this.key = key; this.val = val; }
+        final ConcurrentHashMapV8<K, V> map;
+        MapEntry(K key, V val, ConcurrentHashMapV8<K, V> map) {
+            this.key = key;
+            this.val = val;
+            this.map = map;
+        }
         public final K getKey()       { return key; }
         public final V getValue()     { return val; }
         public final int hashCode()   { return key.hashCode() ^ val.hashCode(); }
@@ -2821,29 +2950,13 @@ public class ConcurrentHashMapV8<K, V>
                     (v == val || v.equals(val)));
         }
 
-        public abstract V setValue(V value);
-    }
-
-    /**
-     * Entry used by EntryIterator.next(), that relays setValue
-     * changes to the underlying map.
-     */
-    static final class WriteThroughEntry<K,V> extends MapEntry<K,V>
-        implements Map.Entry<K, V> {
-        final ConcurrentHashMapV8<K, V> map;
-        WriteThroughEntry(K key, V val, ConcurrentHashMapV8<K, V> map) {
-            super(key, val);
-            this.map = map;
-        }
-
         /**
          * Sets our entry's value and writes through to the map. The
-         * value to return is somewhat arbitrary here. Since a
-         * WriteThroughEntry does not necessarily track asynchronous
-         * changes, the most recent "previous" value could be
-         * different from what we return (or could even have been
-         * removed in which case the put will re-establish). We do not
-         * and cannot guarantee more.
+         * value to return is somewhat arbitrary here. Since a we do
+         * not necessarily track asynchronous changes, the most recent
+         * "previous" value could be different from what we return (or
+         * could even have been removed in which case the put will
+         * re-establish). We do not and cannot guarantee more.
          */
         public final V setValue(V value) {
             if (value == null) throw new NullPointerException();
@@ -2854,25 +2967,10 @@ public class ConcurrentHashMapV8<K, V>
         }
     }
 
-    /**
-     * Internal version of entry, that doesn't write though changes
-     */
-    static final class SnapshotEntry<K,V> extends MapEntry<K,V>
-        implements Map.Entry<K, V> {
-        SnapshotEntry(K key, V val) { super(key, val); }
-        public final V setValue(V value) { // only locally update
-            if (value == null) throw new NullPointerException();
-            V v = val;
-            val = value;
-            return v;
-        }
-    }
-
     /* ----------------Views -------------- */
 
     /**
-     * Base class for views. This is done mainly to allow adding
-     * customized parallel traversals (not yet implemented.)
+     * Base class for views.
      */
     static abstract class MapView<K, V> {
         final ConcurrentHashMapV8<K, V> map;
@@ -2882,7 +2980,7 @@ public class ConcurrentHashMapV8<K, V>
         public final void clear()               { map.clear(); }
 
         // implementations below rely on concrete classes supplying these
-        abstract Iterator<?> iter();
+        abstract public Iterator<?> iterator();
         abstract public boolean contains(Object o);
         abstract public boolean remove(Object o);
 
@@ -2895,7 +2993,7 @@ public class ConcurrentHashMapV8<K, V>
             int n = (int)sz;
             Object[] r = new Object[n];
             int i = 0;
-            Iterator<?> it = iter();
+            Iterator<?> it = iterator();
             while (it.hasNext()) {
                 if (i == n) {
                     if (n >= MAX_ARRAY_SIZE)
@@ -2922,7 +3020,7 @@ public class ConcurrentHashMapV8<K, V>
                 .newInstance(a.getClass().getComponentType(), m);
             int n = r.length;
             int i = 0;
-            Iterator<?> it = iter();
+            Iterator<?> it = iterator();
             while (it.hasNext()) {
                 if (i == n) {
                     if (n >= MAX_ARRAY_SIZE)
@@ -2944,7 +3042,7 @@ public class ConcurrentHashMapV8<K, V>
 
         public final int hashCode() {
             int h = 0;
-            for (Iterator<?> it = iter(); it.hasNext();)
+            for (Iterator<?> it = iterator(); it.hasNext();)
                 h += it.next().hashCode();
             return h;
         }
@@ -2952,7 +3050,7 @@ public class ConcurrentHashMapV8<K, V>
         public final String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append('[');
-            Iterator<?> it = iter();
+            Iterator<?> it = iterator();
             if (it.hasNext()) {
                 for (;;) {
                     Object e = it.next();
@@ -2978,7 +3076,7 @@ public class ConcurrentHashMapV8<K, V>
 
         public final boolean removeAll(Collection<?> c) {
             boolean modified = false;
-            for (Iterator<?> it = iter(); it.hasNext();) {
+            for (Iterator<?> it = iterator(); it.hasNext();) {
                 if (c.contains(it.next())) {
                     it.remove();
                     modified = true;
@@ -2989,7 +3087,7 @@ public class ConcurrentHashMapV8<K, V>
 
         public final boolean retainAll(Collection<?> c) {
             boolean modified = false;
-            for (Iterator<?> it = iter(); it.hasNext();) {
+            for (Iterator<?> it = iterator(); it.hasNext();) {
                 if (!c.contains(it.next())) {
                     it.remove();
                     modified = true;
@@ -3004,11 +3102,7 @@ public class ConcurrentHashMapV8<K, V>
         KeySet(ConcurrentHashMapV8<K, V> map)   { super(map); }
         public final boolean contains(Object o) { return map.containsKey(o); }
         public final boolean remove(Object o)   { return map.remove(o) != null; }
-
         public final Iterator<K> iterator() {
-            return new KeyIterator<K,V>(map);
-        }
-        final Iterator<?> iter() {
             return new KeyIterator<K,V>(map);
         }
         public final boolean add(K e) {
@@ -3029,7 +3123,6 @@ public class ConcurrentHashMapV8<K, V>
         implements Collection<V> {
         Values(ConcurrentHashMapV8<K, V> map)   { super(map); }
         public final boolean contains(Object o) { return map.containsValue(o); }
-
         public final boolean remove(Object o) {
             if (o != null) {
                 Iterator<V> it = new ValueIterator<K,V>(map);
@@ -3045,9 +3138,6 @@ public class ConcurrentHashMapV8<K, V>
         public final Iterator<V> iterator() {
             return new ValueIterator<K,V>(map);
         }
-        final Iterator<?> iter() {
-            return new ValueIterator<K,V>(map);
-        }
         public final boolean add(V e) {
             throw new UnsupportedOperationException();
         }
@@ -3059,7 +3149,6 @@ public class ConcurrentHashMapV8<K, V>
     static final class EntrySet<K,V> extends MapView<K,V>
         implements Set<Map.Entry<K,V>> {
         EntrySet(ConcurrentHashMapV8<K, V> map) { super(map); }
-
         public final boolean contains(Object o) {
             Object k, v, r; Map.Entry<?,?> e;
             return ((o instanceof Map.Entry) &&
@@ -3068,7 +3157,6 @@ public class ConcurrentHashMapV8<K, V>
                     (v = e.getValue()) != null &&
                     (v == r || v.equals(r)));
         }
-
         public final boolean remove(Object o) {
             Object k, v; Map.Entry<?,?> e;
             return ((o instanceof Map.Entry) &&
@@ -3076,12 +3164,8 @@ public class ConcurrentHashMapV8<K, V>
                     (v = e.getValue()) != null &&
                     map.remove(k, v));
         }
-
         public final Iterator<Map.Entry<K,V>> iterator() {
             return new EntryIterator<K,V>(map);
-        }
-        final Iterator<?> iter() {
-            return new SnapshotEntryIterator<K,V>(map);
         }
         public final boolean add(Entry<K,V> e) {
             throw new UnsupportedOperationException();
@@ -3128,11 +3212,11 @@ public class ConcurrentHashMapV8<K, V>
                 segments[i] = new Segment<K,V>(LOAD_FACTOR);
         }
         s.defaultWriteObject();
-        InternalIterator it = new InternalIterator(table);
-        while (it.next != null) {
+        InternalIterator<K,V> it = new InternalIterator<K,V>(this);
+        Object v;
+        while ((v = it.advance()) != null) {
             s.writeObject(it.nextKey);
-            s.writeObject(it.nextVal);
-            it.advance();
+            s.writeObject(v);
         }
         s.writeObject(null);
         s.writeObject(null);
@@ -3219,7 +3303,6 @@ public class ConcurrentHashMapV8<K, V>
                     p = p.next;
                 }
             }
-
         }
     }
 

@@ -145,8 +145,8 @@ public class ConcurrentHashMapV8<K, V>
      * framework. As illustrated here, Spliterators are well suited to
      * designs in which a task repeatedly splits off half its work
      * into forked subtasks until small enough to process directly,
-     * and then joins these subtasks. Variants of this style can be
-     * also be used in completion-based designs.
+     * and then joins these subtasks. Variants of this style can also
+     * be used in completion-based designs.
      *
      * <pre>
      * {@code ConcurrentHashMapV8<String, Long> m = ...

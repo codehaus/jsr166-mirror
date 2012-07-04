@@ -102,4 +102,3 @@ public final class FibTask extends RecursiveTask<Integer> {
         return r;
     }
 }
-

@@ -1,4 +1,3 @@
-
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -121,4 +120,3 @@ public final class LeftSpineFib extends RecursiveAction {
     }
 
 }
-

@@ -105,7 +105,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     public static interface MappingFunction<K, V> {
         /**
-         * Returns a value for the given key, or null if there is no mapping
+         * Returns a value for the given key, or null if there is no mapping.
          *
          * @param key the (non-null) key
          * @return a value for the key, or null if none

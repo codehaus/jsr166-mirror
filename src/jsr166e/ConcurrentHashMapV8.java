@@ -759,7 +759,7 @@ public class ConcurrentHashMapV8<K, V>
                     if (c != (pc = pk.getClass()) ||
                         !(k instanceof Comparable) ||
                         (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
-                        dir = (c == pc)? 0 : c.getName().compareTo(pc.getName());
+                        dir = (c == pc) ? 0 : c.getName().compareTo(pc.getName());
                         TreeNode r = null, s = null, pl, pr;
                         if (dir >= 0) {
                             if ((pl = p.left) != null && h <= pl.hash)
@@ -823,7 +823,7 @@ public class ConcurrentHashMapV8<K, V>
                     if (c != (pc = pk.getClass()) ||
                         !(k instanceof Comparable) ||
                         (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
-                        dir = (c == pc)? 0 : c.getName().compareTo(pc.getName());
+                        dir = (c == pc) ? 0 : c.getName().compareTo(pc.getName());
                         TreeNode r = null, s = null, pl, pr;
                         if (dir >= 0) {
                             if ((pl = p.left) != null && h <= pl.hash)
@@ -1017,7 +1017,7 @@ public class ConcurrentHashMapV8<K, V>
                                     sib = (xp = x.parent) == null ? null : xp.right;
                                 }
                                 if (sib != null) {
-                                    sib.red = (xp == null)? false : xp.red;
+                                    sib.red = (xp == null) ? false : xp.red;
                                     if ((sr = sib.right) != null)
                                         sr.red = false;
                                 }
@@ -1055,7 +1055,7 @@ public class ConcurrentHashMapV8<K, V>
                                     sib = (xp = x.parent) == null ? null : xp.left;
                                 }
                                 if (sib != null) {
-                                    sib.red = (xp == null)? false : xp.red;
+                                    sib.red = (xp == null) ? false : xp.red;
                                     if ((sl = sib.left) != null)
                                         sl.red = false;
                                 }

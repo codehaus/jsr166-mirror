@@ -342,4 +342,3 @@ public abstract class ParallelDoubleArrayWithDoubleMapping extends AbstractParal
         return new SequentiallyAsDouble();
     }
 }
-

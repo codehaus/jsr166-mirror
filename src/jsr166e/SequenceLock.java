@@ -636,4 +636,3 @@ public class SequenceLock implements Lock, java.io.Serializable {
     }
 
 }
-

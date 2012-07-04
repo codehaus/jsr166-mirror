@@ -190,4 +190,3 @@ public abstract class ParallelDoubleArrayWithFilter extends ParallelDoubleArrayW
     final double dget(int i) { return this.array[i]; }
 
 }
-

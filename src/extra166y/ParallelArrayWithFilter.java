@@ -224,4 +224,3 @@ public abstract class ParallelArrayWithFilter<T>
 
     final Object oget(int i) { return this.array[i]; }
 }
-

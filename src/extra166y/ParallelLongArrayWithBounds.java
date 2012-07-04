@@ -119,4 +119,3 @@ public abstract class ParallelLongArrayWithBounds extends ParallelLongArrayWithF
     public abstract ParallelLongArrayWithBounds sort();
 
 }
-

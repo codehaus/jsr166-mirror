@@ -119,4 +119,3 @@ public abstract class ParallelDoubleArrayWithBounds extends ParallelDoubleArrayW
      */
     public abstract ParallelDoubleArrayWithBounds sort();
 }
-

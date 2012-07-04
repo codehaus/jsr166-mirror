@@ -343,4 +343,3 @@ public abstract class ParallelArrayWithLongMapping<T> extends AbstractParallelAn
         return new SequentiallyAsLong();
     }
 }
-

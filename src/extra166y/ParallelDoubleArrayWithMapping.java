@@ -363,4 +363,3 @@ public abstract class ParallelDoubleArrayWithMapping<U> extends AbstractParallel
     }
 
 }
-

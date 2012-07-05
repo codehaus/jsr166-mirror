@@ -195,18 +195,6 @@ public class ConcurrentHashMapV8<K, V>
          * already commenced traversing elements
          */
         Spliterator<T> split();
-
-        /**
-         * Returns a Spliterator producing the same elements as this
-         * Spliterator. This method may be used for example to create
-         * a second Spliterator before a traversal, in order to later
-         * perform a second traversal.
-         *
-         * @return a Spliterator covering the same range as this Spliterator.
-         * @throws IllegalStateException if this Spliterator has
-         * already commenced traversing elements
-         */
-        Spliterator<T> clone();
     }
 
     /*

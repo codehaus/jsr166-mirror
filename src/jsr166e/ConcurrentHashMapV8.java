@@ -192,7 +192,7 @@ public class ConcurrentHashMapV8<K, V>
          * @return a Spliterator covering approximately half of the
          * elements
          * @throws IllegalStateException if this Spliterator has
-         * already commenced traversing elements.
+         * already commenced traversing elements
          */
         Spliterator<T> split();
 
@@ -204,7 +204,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @return a Spliterator covering the same range as this Spliterator.
          * @throws IllegalStateException if this Spliterator has
-         * already commenced traversing elements.
+         * already commenced traversing elements
          */
         Spliterator<T> clone();
     }
@@ -806,7 +806,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Find or add a node
+         * Finds or adds a node.
          * @return null if added
          */
         @SuppressWarnings("unchecked") // suppress Comparable cast warning
@@ -2012,8 +2012,8 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Split a normal bin with list headed by e into lo and hi parts;
-     * install in given table
+     * Splits a normal bin with list headed by e into lo and hi parts;
+     * installs in given table.
      */
     private static void splitBin(Node[] nextTab, int i, Node e) {
         int bit = nextTab.length >>> 1; // bit to split on
@@ -2043,7 +2043,7 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Split a tree bin into lo and hi parts; install in given table
+     * Splits a tree bin into lo and hi parts; installs in given table.
      */
     private static void splitTreeBin(Node[] nextTab, int i, TreeBin t) {
         int bit = nextTab.length >>> 1;

@@ -2187,7 +2187,7 @@ public class ConcurrentHashMapV8<K, V>
             baseLimit = baseSize = (tab == null) ? 0 : tab.length;
         }
 
-        /** Creates iterator for clone() and split() methods */
+        /** Creates iterator for clone() and split() methods. */
         InternalIterator(InternalIterator<K,V> it, boolean split) {
             this.map = it.map;
             this.tab = it.tab;

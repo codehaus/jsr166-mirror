@@ -2330,8 +2330,8 @@ public class ConcurrentHashMapV8<K, V>
         if (initialCapacity < concurrencyLevel)   // Use at least as many bins
             initialCapacity = concurrencyLevel;   // as estimated threads
         long size = (long)(1.0 + (long)initialCapacity / loadFactor);
-        int cap = ((size >= (long)MAXIMUM_CAPACITY) ?
-                   MAXIMUM_CAPACITY: tableSizeFor((int)size));
+        int cap = (size >= (long)MAXIMUM_CAPACITY) ?
+            MAXIMUM_CAPACITY : tableSizeFor((int)size);
         this.counter = new LongAdder();
         this.sizeCtl = cap;
     }

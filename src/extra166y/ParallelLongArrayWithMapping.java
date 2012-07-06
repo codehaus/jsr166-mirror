@@ -363,4 +363,3 @@ public abstract class ParallelLongArrayWithMapping<U> extends AbstractParallelAn
     }
 
 }
-

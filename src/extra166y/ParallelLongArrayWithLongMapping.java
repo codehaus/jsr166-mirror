@@ -343,4 +343,3 @@ public abstract class ParallelLongArrayWithLongMapping extends AbstractParallelA
     }
 
 }
-

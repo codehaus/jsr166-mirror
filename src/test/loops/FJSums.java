@@ -276,5 +276,3 @@ public class FJSums {
     }
 
 }
-
-

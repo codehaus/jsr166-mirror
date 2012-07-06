@@ -364,4 +364,3 @@ public abstract class ParallelArrayWithMapping<T,U> extends AbstractParallelAnyA
     }
 
 }
-

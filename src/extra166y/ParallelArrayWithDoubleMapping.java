@@ -313,4 +313,3 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
         return new SequentiallyAsDouble();
     }
 }
-

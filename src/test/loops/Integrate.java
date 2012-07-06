@@ -226,5 +226,3 @@ public final class Integrate {
     }
 
 }
-
-

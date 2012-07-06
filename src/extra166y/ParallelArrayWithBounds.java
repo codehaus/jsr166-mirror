@@ -106,4 +106,3 @@ public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter
      */
     public abstract ParallelArrayWithBounds<T> sort();
 }
-

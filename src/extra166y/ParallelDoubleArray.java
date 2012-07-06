@@ -1164,4 +1164,3 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
 }
-

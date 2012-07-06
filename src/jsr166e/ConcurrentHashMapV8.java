@@ -2199,7 +2199,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Advances next; returns nextVal or null if terminated
+         * Advances next; returns nextVal or null if terminated.
          * See above for explanation.
          */
         final Object advance() {
@@ -2249,7 +2249,7 @@ public class ConcurrentHashMapV8<K, V>
     /* ---------------- Public operations -------------- */
 
     /**
-     * Creates a new, empty map with the default initial table size (16),
+     * Creates a new, empty map with the default initial table size (16).
      */
     public ConcurrentHashMapV8() {
         this.counter = new LongAdder();

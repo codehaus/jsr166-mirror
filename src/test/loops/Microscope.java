@@ -1173,7 +1173,7 @@ public class Microscope extends JPanel {
                 long nextOurs = bestFinder.theirs;
                 long nextTheirs = bestFinder.ours;
                 long blue = player.isBlue() ? nextOurs : nextTheirs;
-                long green = player.isBlue() ? nextTheirs: nextOurs;
+                long green = player.isBlue() ? nextTheirs : nextOurs;
                 move = new Move(player, new Board(blue, green), true);
             }
             automover.relay(move);

@@ -2187,7 +2187,7 @@ public class ConcurrentHashMapV8<K, V>
             baseLimit = baseSize = (tab == null) ? 0 : tab.length;
         }
 
-        /** Creates iterator for clone() and split() methods */
+        /** Creates iterator for clone() and split() methods. */
         InternalIterator(InternalIterator<K,V> it, boolean split) {
             this.map = it.map;
             this.tab = it.tab;
@@ -2199,7 +2199,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Advances next; returns nextVal or null if terminated
+         * Advances next; returns nextVal or null if terminated.
          * See above for explanation.
          */
         final Object advance() {
@@ -2249,7 +2249,7 @@ public class ConcurrentHashMapV8<K, V>
     /* ---------------- Public operations -------------- */
 
     /**
-     * Creates a new, empty map with the default initial table size (16),
+     * Creates a new, empty map with the default initial table size (16).
      */
     public ConcurrentHashMapV8() {
         this.counter = new LongAdder();
@@ -2330,8 +2330,8 @@ public class ConcurrentHashMapV8<K, V>
         if (initialCapacity < concurrencyLevel)   // Use at least as many bins
             initialCapacity = concurrencyLevel;   // as estimated threads
         long size = (long)(1.0 + (long)initialCapacity / loadFactor);
-        int cap = ((size >= (long)MAXIMUM_CAPACITY) ?
-                   MAXIMUM_CAPACITY: tableSizeFor((int)size));
+        int cap = (size >= (long)MAXIMUM_CAPACITY) ?
+            MAXIMUM_CAPACITY : tableSizeFor((int)size);
         this.counter = new LongAdder();
         this.sizeCtl = cap;
     }

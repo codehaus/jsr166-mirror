@@ -648,7 +648,7 @@ public class ConcurrentHashMapV8<K, V>
      * TreeBins also maintain a separate locking discipline than
      * regular bins. Because they are forwarded via special MOVED
      * nodes at bin heads (which can never change once established),
-     * we cannot use use those nodes as locks. Instead, TreeBin
+     * we cannot use those nodes as locks. Instead, TreeBin
      * extends AbstractQueuedSynchronizer to support a simple form of
      * read-write lock. For update operations and table validation,
      * the exclusive form of lock behaves in the same way as bin-head

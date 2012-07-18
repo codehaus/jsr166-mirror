@@ -1064,7 +1064,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
 
                 pleaseInterrupt.countDown();
                 try {
-                    q.pollFirst(SMALL_DELAY_MS, MILLISECONDS);
+                    q.pollFirst(LONG_DELAY_MS, MILLISECONDS);
                     shouldThrow();
                 } catch (InterruptedException success) {}
                 assertFalse(Thread.interrupted());

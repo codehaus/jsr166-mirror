@@ -245,9 +245,9 @@ public abstract class AtomicIntegerFieldUpdater<T> {
         private final Class<?> cclass;
 
         AtomicIntegerFieldUpdaterImpl(final Class<T> tclass, final String fieldName) {
-            Field field = null;
-            Class<?> caller = null;
-            int modifiers = 0;
+            final Field field;
+            final Class<?> caller;
+            final int modifiers;
             try {
                 field = AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Field>() {

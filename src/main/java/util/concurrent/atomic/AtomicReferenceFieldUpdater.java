@@ -177,10 +177,10 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
         AtomicReferenceFieldUpdaterImpl(final Class<T> tclass,
                                         Class<V> vclass,
                                         final String fieldName) {
-            Field field = null;
-            Class<?> fieldClass = null;
-            Class<?> caller = null;
-            int modifiers = 0;
+            final Field field;
+            final Class<?> fieldClass;
+            final Class<?> caller;
+            final int modifiers;
             try {
                 field = AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Field>() {

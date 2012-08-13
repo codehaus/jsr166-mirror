@@ -3518,7 +3518,7 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * An extended view of a ConcurrentHashMap supporting bulk
-     * parallel operations. These operations are designed to be be
+     * parallel operations. These operations are designed to be
      * safely, and often sensibly, applied even with maps that are
      * being concurrently updated by other threads; for example, when
      * computing a snapshot summary of the values in a shared

@@ -4,8 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package jsr166e;
-import jsr166e.LongAdder;
+package java.util.concurrent.atomic;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.io.Serializable;
@@ -28,10 +29,10 @@ public class LongAdderTable<K> implements Serializable {
     private static final long serialVersionUID = 7249369246863182397L;
 
     /** The underlying map */
-    private final ConcurrentHashMapV8<K, LongAdder> map;
+    private final ConcurrentHashMap<K, LongAdder> map;
 
     static final class CreateAdder
-        implements ConcurrentHashMapV8.Fun<Object, LongAdder> {
+        implements ConcurrentHashMap.Fun<Object, LongAdder> {
         public LongAdder apply(Object unused) { return new LongAdder(); }
     }
 
@@ -41,7 +42,7 @@ public class LongAdderTable<K> implements Serializable {
      * Creates a new empty table.
      */
     public LongAdderTable() {
-        map = new ConcurrentHashMapV8<K, LongAdder>();
+        map = new ConcurrentHashMap<K, LongAdder>();
     }
 
     /**

@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package java.util.concurrent;
+package jsr166e;
 
 /**
  * A resultless {@link ForkJoinTask} with a completion action
@@ -172,7 +172,7 @@ package java.util.concurrent;
  * class MapReducer<E> extends CountedCompleter {
  *     final E[] array; final MyMapper<E> mapper;
  *     final MyReducer<E> reducer; final int lo, hi;
- *     MapReducer leftSibling, rightSibling;
+ *     MapReducer sibling;
  *     E result;
  *     MapReducer(CountedCompleter p, E[] array, MyMapper<E> mapper,
  *                MyReducer<E> reducer, int lo, int hi) {
@@ -185,8 +185,8 @@ package java.util.concurrent;
  *             int mid = (lo + hi) >>> 1;
  *             MapReducer<E> left = new MapReducer(this, array, mapper, reducer, lo, mid);
  *             MapReducer<E> right = new MapReducer(this, array, mapper, reducer, mid, hi);
- *             left.rightSibling = right;
- *             right.leftSibling = left;
+ *             left.sibling = right;
+ *             right.sibling = left;
  *             setPendingCount(1); // only right is pending
  *             right.fork();
  *             left.compute();     // directly execute left
@@ -200,14 +200,11 @@ package java.util.concurrent;
  *     public void onCompletion(CountedCompleter caller) {
  *         if (caller != this) {
  *            MapReducer<E> child = (MapReducer<E>)caller;
- *            MapReducer<E> left = (t.leftSibling == null) ? t : t.leftSibling;
- *            MapReducer<E> right = (t.rightSibling == null) ? t : t.rightSibling;
- *            if (left == null)
- *                result = right.result;
- *            else if (right == null)
- *                result = left.result;
+ *            MapReducer<E> sib = child.sibling;
+ *            if (sib == null || sib.result == null)
+ *                result = child.result;
  *            else
- *                result = reducer.apply(left.result, right.result);
+ *                result = reducer.apply(child.result, sib.result);
  *         }
  *     }
  *
@@ -438,17 +435,46 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      */
     protected final void setRawResult(Void mustBeNull) { }
 
-
     // Unsafe mechanics
     private static final sun.misc.Unsafe U;
     private static final long PENDING;
     static {
         try {
-            U = sun.misc.Unsafe.getUnsafe();
+            U = getUnsafe();
             PENDING = U.objectFieldOffset
                 (CountedCompleter.class.getDeclaredField("pending"));
         } catch (Exception e) {
             throw new Error(e);
         }
     }
+
+
+    /**
+     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+     * Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a jdk.
+     *
+     * @return a sun.misc.Unsafe
+     */
+    private static sun.misc.Unsafe getUnsafe() {
+        try {
+            return sun.misc.Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security
+                     .PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                        public sun.misc.Unsafe run() throws Exception {
+                            java.lang.reflect.Field f = sun.misc
+                                .Unsafe.class.getDeclaredField("theUnsafe");
+                            f.setAccessible(true);
+                            return (sun.misc.Unsafe) f.get(null);
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw new RuntimeException("Could not initialize intrinsics",
+                                           e.getCause());
+            }
+        }
+    }
+
 }

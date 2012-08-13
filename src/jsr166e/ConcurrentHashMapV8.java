@@ -712,7 +712,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Return the TreeNode (or null if not found) for the given key
+         * Returns the TreeNode (or null if not found) for the given key
          * starting at given root.
          */
         @SuppressWarnings("unchecked") // suppress Comparable cast warning
@@ -2657,8 +2657,7 @@ public class ConcurrentHashMapV8<K, V>
      *
      * @param key key with which the specified value is to be associated
      * @param remappingFunction the function to compute a value
-     * @return the new value associated with
-     *         the specified key, or null if none.
+     * @return the new value associated with the specified key, or null if none
      * @throws NullPointerException if the specified key or remappingFunction
      *         is null
      * @throws IllegalStateException if the computation detectably
@@ -2704,8 +2703,7 @@ public class ConcurrentHashMapV8<K, V>
      *
      * @param key key with which the specified value is to be associated
      * @param remappingFunction the function to compute a value
-     * @return the new value associated with
-     *         the specified key, or null if none.
+     * @return the new value associated with the specified key, or null if none
      * @throws NullPointerException if the specified key or remappingFunction
      *         is null
      * @throws IllegalStateException if the computation detectably
@@ -3750,7 +3748,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Performs the given action for each key
+         * Performs the given action for each key.
          *
          * @param action the action
          */
@@ -3761,7 +3759,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Performs the given action for each non-null transformation
-         * of each key
+         * of each key.
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
@@ -3880,7 +3878,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Performs the given action for each value
+         * Performs the given action for each value.
          *
          * @param action the action
          */
@@ -3891,7 +3889,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Performs the given action for each non-null transformation
-         * of each value
+         * of each value.
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
@@ -4009,7 +4007,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Perform the given action for each entry
+         * Performs the given action for each entry.
          *
          * @param action the action
          */
@@ -4019,8 +4017,8 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Perform the given action for each non-null transformation
-         * of each entry
+         * Performs the given action for each non-null transformation
+         * of each entry.
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
@@ -4304,7 +4302,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Returns a task that when invoked, performs the given action
-         * for each key
+         * for each key.
          *
          * @param map the map
          * @param action the action
@@ -4319,7 +4317,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Returns a task that when invoked, performs the given action
-         * for each non-null transformation of each key
+         * for each non-null transformation of each key.
          *
          * @param map the map
          * @param transformer a function returning the transformation
@@ -4472,7 +4470,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Returns a task that when invoked, performs the given action
-         * for each value
+         * for each value.
          *
          * @param map the map
          * @param action the action
@@ -4486,7 +4484,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Returns a task that when invoked, performs the given action
-         * for each non-null transformation of each value
+         * for each non-null transformation of each value.
          *
          * @param map the map
          * @param transformer a function returning the transformation
@@ -4640,7 +4638,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Returns a task that when invoked, perform the given action
-         * for each entry
+         * for each entry.
          *
          * @param map the map
          * @param action the action
@@ -4654,7 +4652,7 @@ public class ConcurrentHashMapV8<K, V>
 
         /**
          * Returns a task that when invoked, perform the given action
-         * for each non-null transformation of each entry
+         * for each non-null transformation of each entry.
          *
          * @param map the map
          * @param transformer a function returning the transformation
@@ -4842,7 +4840,7 @@ public class ConcurrentHashMapV8<K, V>
         // FJ methods
 
         /**
-         * Propagate completion. Note that all reduce actions
+         * Propagates completion. Note that all reduce actions
          * bypass this method to combine while completing.
          */
         final void tryComplete() {
@@ -4860,7 +4858,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Force root task to throw exception unless already complete.
+         * Forces root task to throw exception unless already complete.
          */
         final void tryAbortComputation(Throwable ex) {
             for (BulkTask<K,V,?> a = this;;) {
@@ -4893,7 +4891,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         /**
-         * Return approx exp2 of the number of times (minus one) to
+         * Returns approx exp2 of the number of times (minus one) to
          * split task by two before executing leaf action. This value
          * is faster to compute and more convenient to use as a guide
          * to splitting than is the depth, since it is used while
@@ -4916,7 +4914,7 @@ public class ConcurrentHashMapV8<K, V>
             "Unexpected null function";
 
         /**
-         * Return exportable snapshot entry
+         * Returns exportable snapshot entry.
          */
         static <K,V> AbstractMap.SimpleEntry<K,V> entryFor(K k, V v) {
             return new AbstractMap.SimpleEntry(k, v);

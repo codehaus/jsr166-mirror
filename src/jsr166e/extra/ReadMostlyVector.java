@@ -1166,7 +1166,7 @@ public class ReadMostlyVector<E>
 
         public E next() {
             if (validNext || hasNext()) {
-                validNext = false;
+                validNext = validPrev = false;
                 lastRet = cursor++;
                 return next;
             }
@@ -1175,7 +1175,7 @@ public class ReadMostlyVector<E>
 
         public E previous() {
             if (validPrev || hasPrevious()) {
-                validPrev = false;
+                validNext = validPrev = false;
                 lastRet = cursor--;
                 return prev;
             }
@@ -1557,7 +1557,7 @@ public class ReadMostlyVector<E>
 
         public E next() {
             if (validNext || hasNext()) {
-                validNext = false;
+                validNext = validPrev = false;
                 lastRet = cursor++;
                 return next;
             }
@@ -1566,7 +1566,7 @@ public class ReadMostlyVector<E>
 
         public E previous() {
             if (validPrev || hasPrevious()) {
-                validPrev = false;
+                validNext = validPrev = false;
                 lastRet = cursor--;
                 return prev;
             }

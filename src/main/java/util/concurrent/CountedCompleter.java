@@ -172,7 +172,7 @@ package java.util.concurrent;
  * class MapReducer<E> extends CountedCompleter {
  *     final E[] array; final MyMapper<E> mapper;
  *     final MyReducer<E> reducer; final int lo, hi;
- *     MapReducer sibling;
+ *     MapReducer leftSibling, rightSibling;
  *     E result;
  *     MapReducer(CountedCompleter p, E[] array, MyMapper<E> mapper,
  *                MyReducer<E> reducer, int lo, int hi) {
@@ -185,8 +185,8 @@ package java.util.concurrent;
  *             int mid = (lo + hi) >>> 1;
  *             MapReducer<E> left = new MapReducer(this, array, mapper, reducer, lo, mid);
  *             MapReducer<E> right = new MapReducer(this, array, mapper, reducer, mid, hi);
- *             left.sibling = right;
- *             right.sibling = left;
+ *             left.rightSibling = right;
+ *             right.leftSibling = left;
  *             setPendingCount(1); // only right is pending
  *             right.fork();
  *             left.compute();     // directly execute left
@@ -200,11 +200,14 @@ package java.util.concurrent;
  *     public void onCompletion(CountedCompleter caller) {
  *         if (caller != this) {
  *            MapReducer<E> child = (MapReducer<E>)caller;
- *            MapReducer<E> sib = child.sibling;
- *            if (sib == null || sib.result == null)
- *                result = child.result;
+ *            MapReducer<E> left = (t.leftSibling == null) ? t : t.leftSibling;
+ *            MapReducer<E> right = (t.rightSibling == null) ? t : t.rightSibling;
+ *            if (left == null)
+ *                result = right.result;
+ *            else if (right == null)
+ *                result = left.result;
  *            else
- *                result = reducer.apply(child.result, sib.result);
+ *                result = reducer.apply(left.result, right.result);
  *         }
  *     }
  *

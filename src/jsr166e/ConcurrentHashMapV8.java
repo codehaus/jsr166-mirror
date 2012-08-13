@@ -3636,7 +3636,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param action the action
          */
-	public void forEach(BiAction<K,V> action) {
+        public void forEach(BiAction<K,V> action) {
             fjp.invoke(ForkJoinTasks.forEach
                        (ConcurrentHashMapV8.this, action));
         }
@@ -3650,7 +3650,7 @@ public class ConcurrentHashMapV8<K, V>
          * which case the action is not applied).
          * @param action the action
          */
-	public <U> void forEach(BiFun<? super K, ? super V, ? extends U> transformer,
+        public <U> void forEach(BiFun<? super K, ? super V, ? extends U> transformer,
                                 Action<U> action) {
             fjp.invoke(ForkJoinTasks.forEach
                        (ConcurrentHashMapV8.this, transformer, action));
@@ -3754,7 +3754,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param action the action
          */
-	public void forEachKey(Action<K> action) {
+        public void forEachKey(Action<K> action) {
             fjp.invoke(ForkJoinTasks.forEachKey
                        (ConcurrentHashMapV8.this, action));
         }
@@ -3768,7 +3768,7 @@ public class ConcurrentHashMapV8<K, V>
          * which case the action is not applied).
          * @param action the action
          */
-	public <U> void forEachKey(Fun<? super K, ? extends U> transformer,
+        public <U> void forEachKey(Fun<? super K, ? extends U> transformer,
                                    Action<U> action) {
             fjp.invoke(ForkJoinTasks.forEachKey
                        (ConcurrentHashMapV8.this, transformer, action));
@@ -3884,7 +3884,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param action the action
          */
-	public void forEachValue(Action<V> action) {
+        public void forEachValue(Action<V> action) {
             fjp.invoke(ForkJoinTasks.forEachValue
                        (ConcurrentHashMapV8.this, action));
         }
@@ -3897,7 +3897,7 @@ public class ConcurrentHashMapV8<K, V>
          * for an element, or null of there is no transformation (in
          * which case the action is not applied).
          */
-	public <U> void forEachValue(Fun<? super V, ? extends U> transformer,
+        public <U> void forEachValue(Fun<? super V, ? extends U> transformer,
                                      Action<U> action) {
             fjp.invoke(ForkJoinTasks.forEachValue
                        (ConcurrentHashMapV8.this, transformer, action));
@@ -4013,7 +4013,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param action the action
          */
-	public void forEachEntry(Action<Map.Entry<K,V>> action) {
+        public void forEachEntry(Action<Map.Entry<K,V>> action) {
             fjp.invoke(ForkJoinTasks.forEachEntry
                        (ConcurrentHashMapV8.this, action));
         }
@@ -4027,7 +4027,7 @@ public class ConcurrentHashMapV8<K, V>
          * which case the action is not applied).
          * @param action the action
          */
-	public <U> void forEachEntry(Fun<Map.Entry<K,V>, ? extends U> transformer,
+        public <U> void forEachEntry(Fun<Map.Entry<K,V>, ? extends U> transformer,
                                      Action<U> action) {
             fjp.invoke(ForkJoinTasks.forEachEntry
                        (ConcurrentHashMapV8.this, transformer, action));
@@ -4159,7 +4159,7 @@ public class ConcurrentHashMapV8<K, V>
          * @param action the action
          * @return the task
          */
-	public static <K,V> ForkJoinTask<Void> forEach
+        public static <K,V> ForkJoinTask<Void> forEach
             (ConcurrentHashMapV8<K,V> map,
              BiAction<K,V> action) {
             if (action == null) throw new NullPointerException();
@@ -4177,7 +4177,7 @@ public class ConcurrentHashMapV8<K, V>
          * @param action the action
          * @return the task
          */
-	public static <K,V,U> ForkJoinTask<Void> forEach
+        public static <K,V,U> ForkJoinTask<Void> forEach
             (ConcurrentHashMapV8<K,V> map,
              BiFun<? super K, ? super V, ? extends U> transformer,
              Action<U> action) {
@@ -4310,7 +4310,7 @@ public class ConcurrentHashMapV8<K, V>
          * @param action the action
          * @return the task
          */
-	public static <K,V> ForkJoinTask<Void> forEachKey
+        public static <K,V> ForkJoinTask<Void> forEachKey
             (ConcurrentHashMapV8<K,V> map,
              Action<K> action) {
             if (action == null) throw new NullPointerException();
@@ -4328,7 +4328,7 @@ public class ConcurrentHashMapV8<K, V>
          * @param action the action
          * @return the task
          */
-	public static <K,V,U> ForkJoinTask<Void> forEachKey
+        public static <K,V,U> ForkJoinTask<Void> forEachKey
             (ConcurrentHashMapV8<K,V> map,
              Fun<? super K, ? extends U> transformer,
              Action<U> action) {
@@ -4477,7 +4477,7 @@ public class ConcurrentHashMapV8<K, V>
          * @param map the map
          * @param action the action
          */
-	public static <K,V> ForkJoinTask<Void> forEachValue
+        public static <K,V> ForkJoinTask<Void> forEachValue
             (ConcurrentHashMapV8<K,V> map,
              Action<V> action) {
             if (action == null) throw new NullPointerException();
@@ -4494,7 +4494,7 @@ public class ConcurrentHashMapV8<K, V>
          * which case the action is not applied).
          * @param action the action
          */
-	public static <K,V,U> ForkJoinTask<Void> forEachValue
+        public static <K,V,U> ForkJoinTask<Void> forEachValue
             (ConcurrentHashMapV8<K,V> map,
              Fun<? super V, ? extends U> transformer,
              Action<U> action) {
@@ -4645,7 +4645,7 @@ public class ConcurrentHashMapV8<K, V>
          * @param map the map
          * @param action the action
          */
-	public static <K,V> ForkJoinTask<Void> forEachEntry
+        public static <K,V> ForkJoinTask<Void> forEachEntry
             (ConcurrentHashMapV8<K,V> map,
              Action<Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
@@ -4662,7 +4662,7 @@ public class ConcurrentHashMapV8<K, V>
          * which case the action is not applied).
          * @param action the action
          */
-	public static <K,V,U> ForkJoinTask<Void> forEachEntry
+        public static <K,V,U> ForkJoinTask<Void> forEachEntry
             (ConcurrentHashMapV8<K,V> map,
              Fun<Map.Entry<K,V>, ? extends U> transformer,
              Action<U> action) {
@@ -4877,7 +4877,7 @@ public class ConcurrentHashMapV8<K, V>
             try {
                 compute();
             }
-            catch(Throwable ex) {
+            catch (Throwable ex) {
                 tryAbortComputation(ex);
             }
             return false;
@@ -4904,7 +4904,7 @@ public class ConcurrentHashMapV8<K, V>
             if (b < 0) {
                 long n = map.counter.sum();
                 int sp = getPool().getParallelism() << 3; // slack of 8
-                b = batch = (n <= 0L)? 0 : (n < (long)sp) ? (int)n : sp;
+                b = batch = (n <= 0L) ? 0 : (n < (long)sp) ? (int)n : sp;
             }
             return b;
         }

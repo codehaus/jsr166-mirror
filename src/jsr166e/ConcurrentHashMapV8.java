@@ -2327,7 +2327,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         public final void remove() {
-            if (nextVal == null)
+            if (nextVal == null && last == null)
                 advance();
             Node e = last;
             if (e == null)

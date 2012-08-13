@@ -2898,27 +2898,27 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
-     * Returns a partionable iterator of the keys in this map.
+     * Returns a partitionable iterator of the keys in this map.
      *
-     * @return a partionable iterator of the keys in this map
+     * @return a partitionable iterator of the keys in this map
      */
     public Spliterator<K> keySpliterator() {
         return new KeyIterator<K,V>(this);
     }
 
     /**
-     * Returns a partionable iterator of the values in this map.
+     * Returns a partitionable iterator of the values in this map.
      *
-     * @return a partionable iterator of the values in this map
+     * @return a partitionable iterator of the values in this map
      */
     public Spliterator<V> valueSpliterator() {
         return new ValueIterator<K,V>(this);
     }
 
     /**
-     * Returns a partionable iterator of the entries in this map.
+     * Returns a partitionable iterator of the entries in this map.
      *
-     * @return a partionable iterator of the entries in this map
+     * @return a partitionable iterator of the entries in this map
      */
     public Spliterator<Map.Entry<K,V>> entrySpliterator() {
         return new EntryIterator<K,V>(this);
@@ -4811,7 +4811,7 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * Base for FJ tasks for bulk operations. This adds a variant of
-     * CountedCompleters and some split and merge bookeeping to
+     * CountedCompleters and some split and merge bookkeeping to
      * iterator functionality. The forEach and reduce methods are
      * similar to those illustrated in CountedCompleter documentation,
      * except that bottom-up reduction completions perform them within

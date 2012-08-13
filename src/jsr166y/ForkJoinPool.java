@@ -1103,7 +1103,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final RuntimePermission modifyThreadPermission;
 
     /**
-     * Per-thread submission bookeeping. Shared across all pools
+     * Per-thread submission bookkeeping. Shared across all pools
      * to reduce ThreadLocal pollution and because random motion
      * to avoid contention in one pool is likely to hold for others.
      */

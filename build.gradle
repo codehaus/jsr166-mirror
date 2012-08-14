@@ -10,7 +10,7 @@ final isSnapshot = true
 
 allprojects {
   group = 'org.codehaus.jsr166-mirror'
-  final versionRoot = ( new File ( 'version.properties' ) ).text.trim ( ) 
+  final versionRoot = ( new File ( 'version.properties' ) ).text.trim ( )
   version = versionRoot + ( isSnapshot ? '-SNAPSHOT' : '' )
   ext.bundleVersion = versionRoot + ( isSnapshot ? '.SNAPSHOT' : '' )
   ext.projectWebsite = 'http://jsr166.codehaus.org'
@@ -75,7 +75,7 @@ subprojects {
       repositories.mavenDeployer {
         uniqueVersion = false
         configuration = configurations.deployJars
-        
+
         repository ( url : 'https://dav.codehaus.org/repository/jsr166-mirror/' ) {
           authentication ( userName : codehausUsername , password : codehausPassword )
         }
@@ -93,7 +93,7 @@ subprojects {
       }
     }
   }
-  catch ( Exception e ) { 
+  catch ( Exception e ) {
     //  If codehausUsername and/or codehausPassword are not defined, do nothing.
   }
 }
@@ -110,7 +110,7 @@ project ( ':jsr166' ) {
   targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/main' } } }
   jar {
-    manifest { 
+    manifest {
       name = 'jsr166'
       symbolicName = 'jsr166'
       instruction 'Extension-Name' , 'jsr166'
@@ -138,13 +138,13 @@ project ( ':jsr166tck' ) {
     main { java { srcDir '../src/test/tck' } }
     test { java { srcDir '../src/test/tck' } }
   }
-  dependencies { compile 'junit:junit:4.10' }
+  dependencies { compile 'junit:junit:3.8.2' }
   compileJava.dependsOn project ( ':jsr166' ).jar
   compileJava.options.bootClasspath = bootClasspath
   compileTestJava.options.bootClasspath = bootClasspath
   test.bootstrapClasspath = bootClasspathCollection
   jar {
-    manifest { 
+    manifest {
       name = 'jsr166tck'
       symbolicName = 'jsr166tck'
       instruction 'Extension-Name' , 'jsr166tck'
@@ -163,7 +163,7 @@ project ( ':jsr166x' ) {
   //compileJava.dependsOn project ( ':jsr166' ).jar
   //compileJava.options.bootClasspath = bootClasspath
   jar {
-    manifest { 
+    manifest {
       name = 'jsr166x'
       symbolicName = 'jsr166x'
       instruction 'Extension-Name' , 'jsr166x'
@@ -182,7 +182,7 @@ project ( ':jsr166y' ) {
   //compileJava.dependsOn project ( ':jsr166' ).jar
   //compileJava.options.bootClasspath = bootClasspath
   jar {
-    manifest { 
+    manifest {
       name = 'jsr166y'
       symbolicName = 'jsr166y'
       instruction 'Extension-Name' , 'jsr166y'
@@ -212,10 +212,10 @@ project ( ':extra166y' ) {
     //  deprecated.  Leave the new versions commented out pending upgrade from 1.0-milestone-3 which doesn't
     //  have the change.
     compile files ( project ( ':jsr166y' ).sourceSets.main.output )
-    testCompile 'junit:junit:4.10' // , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
+    testCompile 'junit:junit:3.8.2' // , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
   }
   jar {
-    manifest { 
+    manifest {
       name = 'extra166y'
       symbolicName = 'extra166y'
       instruction 'Extension-Name' , 'extra166y'
@@ -231,7 +231,7 @@ project ( ':jsr166e' ) {
   targetCompatibility = 7
   sourceSets { main { java { srcDir '../src/jsr166e' } } }
   jar {
-    manifest { 
+    manifest {
       name = 'jsr166e'
       symbolicName = 'jsr166e'
       instruction 'Extension-Name' , 'jsr166e'

@@ -1047,6 +1047,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             ASHIFT = 31 - Integer.numberOfLeadingZeros(s);
         }
     }
+
     /**
      * Per-thread records for threads that submit to pools. Currently
      * holds only pseudo-random seed / index that is used to choose

@@ -502,6 +502,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
         removeSlotsAt(f.offset, fence);
         return this;
     }
+
     /**
      * Returns true if all elements at the same relative positions
      * of this and other array are equal.

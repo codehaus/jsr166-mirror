@@ -2468,7 +2468,7 @@ public class ConcurrentHashMapV8<K, V>
      * instead of {@link #size} because a ConcurrentHashMap may
      * contain more mappings than can be represented as an int. The
      * value returned is a snapshot; the actual count may differ if
-     * there are ongoing concurrent insertions of removals.
+     * there are ongoing concurrent insertions or removals.
      *
      * @return the number of mappings
      */

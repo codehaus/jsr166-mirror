@@ -78,10 +78,10 @@ public class CCJacobi {
     }
 
 
-    abstract static class MatrixTree extends CountedCompleter {
+    abstract static class MatrixTree extends CountedCompleter<Void> {
         // maximum difference between old and new values
         double maxDiff;
-        MatrixTree(CountedCompleter p, int c) { super(p, c); }
+        MatrixTree(CountedCompleter<?> p, int c) { super(p, c); }
     }
 
 
@@ -95,7 +95,7 @@ public class CCJacobi {
 
         int steps = 0; // track even/odd steps
 
-        LeafNode(CountedCompleter p,
+        LeafNode(CountedCompleter<?> p,
                  double[][] A, double[][] B,
                  int loRow, int hiRow,
                  int loCol, int hiCol) {
@@ -134,11 +134,11 @@ public class CCJacobi {
         MatrixTree q2;
         MatrixTree q3;
         MatrixTree q4;
-        FourNode(CountedCompleter p) {
+        FourNode(CountedCompleter<?> p) {
             super(p, 3);
         }
 
-        public void onCompletion(CountedCompleter caller) {
+        public void onCompletion(CountedCompleter<?> caller) {
             double md = q1.maxDiff, m;
             if ((m = q2.maxDiff) > md)
                 md = m;
@@ -163,11 +163,11 @@ public class CCJacobi {
         MatrixTree q1;
         MatrixTree q2;
 
-        TwoNode(CountedCompleter p) {
+        TwoNode(CountedCompleter<?> p) {
             super(p, 1);
         }
 
-        public void onCompletion(CountedCompleter caller) {
+        public void onCompletion(CountedCompleter<?> caller) {
             double md = q1.maxDiff, m;
             if ((m = q2.maxDiff) > md)
                 md = m;

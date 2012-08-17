@@ -7,7 +7,7 @@
 package java.util.concurrent;
 
 /**
- * A resultless {@link ForkJoinTask} with a completion action
+ * A {@link ForkJoinTask} with a completion action
  * performed when triggered and there are no remaining pending
  * actions. Uses of CountedCompleter are similar to those of other
  * completion based components (such as {@link
@@ -36,6 +36,15 @@ package java.util.concurrent;
  * normal completion, and method {@link #onExceptionalCompletion} to
  * perform an action upon any exception.
  *
+ * <p>CountedCompleters most often do not bear results, in which case
+ * they are normally declared as {@code CountedCompleter<Void>}, and
+ * will always return {@code null} as a result value.  In other cases,
+ * you should override method {@link #getRawResult} to provide a
+ * result from {@code join(), invoke()}, and related methods. (Method
+ * {@link #setRawResult} by default plays no role in CountedCompleters
+ * but may be overridden for example to maintain fields holding result
+ * data.)
+ *
  * <p>A CountedCompleter that does not itself have a completer (i.e.,
  * one for which {@link #getCompleter} returns {@code null}) can be
  * used as a regular ForkJoinTask with this added functionality.
@@ -55,7 +64,8 @@ package java.util.concurrent;
  * <p><b>Parallel recursive decomposition.</b> CountedCompleters may
  * be arranged in trees similar to those often used with {@link
  * RecursiveAction}s, although the constructions involved in setting
- * them up typically vary. Even though they entail a bit more
+ * them up typically vary. Here, the completer of each task is its
+ * parent in the computation tree. Even though they entail a bit more
  * bookkeeping, CountedCompleters may be better choices when applying
  * a possibly time-consuming operation (that cannot be further
  * subdivided) to each element of an array or collection; especially
@@ -80,14 +90,14 @@ package java.util.concurrent;
  * <pre> {@code
  * class MyOperation<E> { void apply(E e) { ... }  }
  *
- * class ForEach<E> extends CountedCompleter {
+ * class ForEach<E> extends CountedCompleter<Void> {
  *
  *     public static <E> void forEach(ForkJoinPool pool, E[] array, MyOperation<E> op) {
  *         pool.invoke(new ForEach<E>(null, array, op, 0, array.length));
  *     }
  *
  *     final E[] array; final MyOperation<E> op; final int lo, hi;
- *     ForEach(CountedCompleter p, E[] array, MyOperation<E> op, int lo, int hi) {
+ *     ForEach(CountedCompleter<?> p, E[] array, MyOperation<E> op, int lo, int hi) {
  *         super(p);
  *         this.array = array; this.op = op; this.lo = lo; this.hi = hi;
  *     }
@@ -162,17 +172,18 @@ package java.util.concurrent;
  * and reductions are all of type {@code E}), one way to do this in
  * divide and conquer designs is to have each subtask record its
  * sibling, so that it can be accessed in method {@code onCompletion}.
- * For clarity, this class uses explicit left and right subtasks, but
- * variants of other streamlinings seen in the above example may also
- * apply.
+ * This technique applies to reductions in which the order of
+ * combining left and right results does not matter; ordered
+ * reductions require explicit left/right designations.  Variants of
+ * other streamlinings seen in the above examples may also apply.
  *
  * <pre> {@code
  * class MyMapper<E> { E apply(E v) {  ...  } }
  * class MyReducer<E> { E apply(E x, E y) {  ...  } }
- * class MapReducer<E> extends CountedCompleter {
+ * class MapReducer<E> extends CountedCompleter<E> {
  *     final E[] array; final MyMapper<E> mapper;
  *     final MyReducer<E> reducer; final int lo, hi;
- *     MapReducer leftSibling, rightSibling;
+ *     MapReducer<E> sibling;
  *     E result;
  *     MapReducer(CountedCompleter p, E[] array, MyMapper<E> mapper,
  *                MyReducer<E> reducer, int lo, int hi) {
@@ -185,8 +196,8 @@ package java.util.concurrent;
  *             int mid = (lo + hi) >>> 1;
  *             MapReducer<E> left = new MapReducer(this, array, mapper, reducer, lo, mid);
  *             MapReducer<E> right = new MapReducer(this, array, mapper, reducer, mid, hi);
- *             left.rightSibling = right;
- *             right.leftSibling = left;
+ *             left.sibling = right;
+ *             right.sibling = left;
  *             setPendingCount(1); // only right is pending
  *             right.fork();
  *             left.compute();     // directly execute left
@@ -200,23 +211,19 @@ package java.util.concurrent;
  *     public void onCompletion(CountedCompleter caller) {
  *         if (caller != this) {
  *            MapReducer<E> child = (MapReducer<E>)caller;
- *            MapReducer<E> left = (t.leftSibling == null) ? t : t.leftSibling;
- *            MapReducer<E> right = (t.rightSibling == null) ? t : t.rightSibling;
- *            if (left == null)
- *                result = right.result;
- *            else if (right == null)
- *                result = left.result;
+ *            MapReducer<E> sib = child.sibling;
+ *            if (sib == null || sib.result == null)
+ *                result = child.result;
  *            else
- *                result = reducer.apply(left.result, right.result);
+ *                result = reducer.apply(child.result, sib.result);
  *         }
  *     }
+ *     public E getRawResult() { return result; }
  *
  *     public static <E> E mapReduce(ForkJoinPool pool, E[] array,
  *                                   MyMapper<E> mapper, MyReducer<E> reducer) {
- *         MapReducer<E> mr = new MapReducer<E>(null, array, mapper,
- *                                              reducer, 0, array.length);
- *         pool.invoke(mr);
- *         return mr.result;
+ *         return pool.invoke(new MapReducer<E>(null, array, mapper,
+ *                                              reducer, 0, array.length));
  *     }
  * } }</pre>
  *
@@ -226,12 +233,12 @@ package java.util.concurrent;
  * triggers another async task. For example:
  *
  * <pre> {@code
- * class HeaderBuilder extends CountedCompleter { ... }
- * class BodyBuilder extends CountedCompleter { ... }
- * class PacketSender extends CountedCompleter {
+ * class HeaderBuilder extends CountedCompleter<...> { ... }
+ * class BodyBuilder extends CountedCompleter<...> { ... }
+ * class PacketSender extends CountedCompleter<...> {
  *     PacketSender(...) { super(null, 1); ... } // trigger on second completion
  *     public void compute() { } // never called
- *     public void onCompletion(CountedCompleter caller) { sendPacket(); }
+ *     public void onCompletion(CountedCompleter<?> caller) { sendPacket(); }
  * }
  * // sample use:
  * PacketSender p = new PacketSender();
@@ -242,11 +249,11 @@ package java.util.concurrent;
  * @since 1.8
  * @author Doug Lea
  */
-public abstract class CountedCompleter extends ForkJoinTask<Void> {
+public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     private static final long serialVersionUID = 5232453752276485070L;
 
     /** This task's completer, or null if none */
-    final CountedCompleter completer;
+    final CountedCompleter<?> completer;
     /** The number of pending tasks until completion */
     volatile int pending;
 
@@ -257,7 +264,7 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      * @param completer this tasks completer, or {@code null} if none
      * @param initialPendingCount the initial pending count
      */
-    protected CountedCompleter(CountedCompleter completer,
+    protected CountedCompleter(CountedCompleter<?> completer,
                                int initialPendingCount) {
         this.completer = completer;
         this.pending = initialPendingCount;
@@ -269,7 +276,7 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      *
      * @param completer this tasks completer, or {@code null} if none
      */
-    protected CountedCompleter(CountedCompleter completer) {
+    protected CountedCompleter(CountedCompleter<?> completer) {
         this.completer = completer;
     }
 
@@ -295,7 +302,7 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      * @param caller the task invoking this method (which may
      * be this task itself).
      */
-    public void onCompletion(CountedCompleter caller) {
+    public void onCompletion(CountedCompleter<?> caller) {
     }
 
     /**
@@ -315,7 +322,7 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      * @return true if this exception should be propagated to this
      * tasks completer, if one exists.
      */
-    public boolean onExceptionalCompletion(Throwable ex, CountedCompleter caller) {
+    public boolean onExceptionalCompletion(Throwable ex, CountedCompleter<?> caller) {
         return true;
     }
 
@@ -325,7 +332,7 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      *
      * @return the completer
      */
-    public final CountedCompleter getCompleter() {
+    public final CountedCompleter<?> getCompleter() {
         return completer;
     }
 
@@ -376,7 +383,7 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      * else marks this task as complete.
      */
     public final void tryComplete() {
-        CountedCompleter a = this, s = a;
+        CountedCompleter<?> a = this, s = a;
         for (int c;;) {
             if ((c = a.pending) == 0) {
                 a.onCompletion(s);
@@ -392,17 +399,20 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
 
     /**
      * Regardless of pending count, invokes {@link #onCompletion},
-     * marks this task as complete with a {@code null} return value,
-     * and further triggers {@link #tryComplete} on this task's
-     * completer, if one exists. This method may be useful when
-     * forcing completion as soon as any one (versus all) of several
-     * subtask results are obtained.
+     * marks this task as complete and further triggers {@link
+     * #tryComplete} on this task's completer, if one exists. This
+     * method may be useful when forcing completion as soon as any one
+     * (versus all) of several subtask results are obtained.  The
+     * given rawResult is used as an argument to {@link #setRawResult}
+     * before marking this task as complete; its value is meaningful
+     * only for classes overriding {@code setRawResult}.
      *
-     * @param mustBeNull the {@code null} completion value
+     * @param rawResult the raw result
      */
-    public void complete(Void mustBeNull) {
-        CountedCompleter p;
+    public void complete(T rawResult) {
+        CountedCompleter<?> p;
         onCompletion(this);
+        setRawResult(rawResult);
         quietlyComplete();
         if ((p = completer) != null)
             p.tryComplete();
@@ -412,7 +422,7 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
      * Support for FJT exception propagation
      */
     void internalPropagateException(Throwable ex) {
-        CountedCompleter a = this, s = a;
+        CountedCompleter<?> a = this, s = a;
         while (a.onExceptionalCompletion(ex, s) &&
                (a = (s = a).completer) != null && a.status >= 0)
             a.recordExceptionalCompletion(ex);
@@ -427,17 +437,19 @@ public abstract class CountedCompleter extends ForkJoinTask<Void> {
     }
 
     /**
-     * Always returns {@code null}.
+     * Returns the result of the computation. By default
+     * returns {@code null}, which is appropriate for {@code Void}
+     * actions, but in other cases should be overridden.
      *
-     * @return {@code null} always
+     * @return the result of the computation
      */
-    public final Void getRawResult() { return null; }
+    public T getRawResult() { return null; }
 
     /**
-     * Requires null completion value.
+     * A method that result-bearing CountedCompleters may optionally
+     * use to help maintain result data.  By default, does nothing.
      */
-    protected final void setRawResult(Void mustBeNull) { }
-
+    protected void setRawResult(T t) { }
 
     // Unsafe mechanics
     private static final sun.misc.Unsafe U;

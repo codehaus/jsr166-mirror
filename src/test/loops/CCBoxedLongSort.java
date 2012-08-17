@@ -100,29 +100,29 @@ class CCBoxedLongSort {
      * merges and re-merges. These don't need to keep track of the
      * arrays, and are never themselves forked, so are mostly empty.
      */
-    static final class Subsorter extends CountedCompleter {
-        Subsorter(CountedCompleter p) { super(p); }
+    static final class Subsorter extends CountedCompleter<Void> {
+        Subsorter(CountedCompleter<?> p) { super(p); }
         public final void compute() { }
     }
 
-    static final class Comerger extends CountedCompleter {
+    static final class Comerger extends CountedCompleter<Void> {
         final Merger merger;
         Comerger(Merger merger) {
             super(null, 1);
             this.merger = merger;
         }
         public final void compute() { }
-        public final void onCompletion(CountedCompleter t) {
+        public final void onCompletion(CountedCompleter<?> t) {
             merger.compute();
         }
     }
 
-    static final class Sorter extends CountedCompleter {
+    static final class Sorter extends CountedCompleter<Void> {
         final Long[] a;
         final Long[] w;
         final int origin;
         final int size;
-        Sorter(CountedCompleter par, Long[] a, Long[] w, int origin, int n) {
+        Sorter(CountedCompleter<?> par, Long[] a, Long[] w, int origin, int n) {
             super(par);
             this.a = a; this.w = w; this.origin = origin; this.size = n;
         }
@@ -132,7 +132,7 @@ class CCBoxedLongSort {
             Long[] w = this.w;
             int l = this.origin;
             int n = this.size;
-            CountedCompleter s = this;
+            CountedCompleter<?> s = this;
             int thr = THRESHOLD;
             while (n > thr) {
                 int h = n >>> 1;
@@ -161,10 +161,10 @@ class CCBoxedLongSort {
         }
     }
 
-    static final class Merger extends CountedCompleter {
+    static final class Merger extends CountedCompleter<Void> {
         final Long[] a; final Long[] w;
         final int lo; final int ln; final int ro; final int rn; final int wo;
-        Merger(CountedCompleter par,
+        Merger(CountedCompleter<?> par,
                Long[] a, Long[] w, int lo, int ln, int ro, int rn, int wo) {
             super(par);
             this.a = a;    this.w = w;
@@ -239,11 +239,11 @@ class CCBoxedLongSort {
         }
     }
 
-    static final class RandomRepacker extends CountedCompleter {
+    static final class RandomRepacker extends CountedCompleter<Void> {
         final Long[] src;
         final Long[] dst;
         final int lo, hi, size;
-        RandomRepacker(CountedCompleter par, Long[] src, Long[] dst,
+        RandomRepacker(CountedCompleter<?> par, Long[] src, Long[] dst,
                        int lo, int hi, int size) {
             super(par);
             this.src = src; this.dst = dst;
@@ -267,10 +267,10 @@ class CCBoxedLongSort {
         }
     }
 
-    static final class OrderChecker extends CountedCompleter {
+    static final class OrderChecker extends CountedCompleter<Void> {
         final Long[] array;
         final int lo, hi, size;
-        OrderChecker(CountedCompleter par, Long[] a, int lo, int hi, int size) {
+        OrderChecker(CountedCompleter<?> par, Long[] a, int lo, int hi, int size) {
             super(par);
             this.array = a;
             this.lo = lo; this.hi = hi; this.size = size;

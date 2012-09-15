@@ -21,7 +21,7 @@ subprojects {
   apply plugin: 'osgi'
   apply plugin: 'maven'
   // Without the -XDignore.symbol.file=true option there are compilation errors.
-  compileJava.options.compilerArgs = [ '-Xlint' , '-XDignore.symbol.file=true' ]
+  compileJava.options.compilerArgs = [ '-XDignore.symbol.file=true' ]
   repositories { mavenCentral ( ) }
   defaultTasks 'build'
   //
@@ -31,8 +31,8 @@ subprojects {
   //  whole of the bootclasspath, which is going to be a nightmare to handle in a platform independent way
   //  :-(
   //
-  ext.bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rt.jar' )
-  ext.bootClasspath = bootClasspathCollection.asPath
+  //ext.bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rt.jar' )
+  //ext.bootClasspath = bootClasspathCollection.asPath
   //
   configurations {
     deployJars
@@ -140,9 +140,9 @@ project ( ':jsr166tck' ) {
   }
   dependencies { compile 'junit:junit:3.8.2' }
   compileJava.dependsOn project ( ':jsr166' ).jar
-  compileJava.options.bootClasspath = bootClasspath
-  compileTestJava.options.bootClasspath = bootClasspath
-  test.bootstrapClasspath = bootClasspathCollection
+  //compileJava.options.bootClasspath = bootClasspath
+  //compileTestJava.options.bootClasspath = bootClasspath
+  //test.bootstrapClasspath = bootClasspathCollection
   jar {
     manifest {
       name = 'jsr166tck'

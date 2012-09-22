@@ -2494,6 +2494,23 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
+     * Returns the value to which the specified key is mapped,
+     * or the gieven defaultValue if this map contains no mapping for the key.
+     *
+     * @param key the key
+     * @param defaultValue the value to return if this map contains
+     * no mapping for the given key.
+     * @return the mapping for the key, if present; else the defaultValue
+     * @throws NullPointerException if the specified key is null
+     */
+    @SuppressWarnings("unchecked") public V getValueOrDefault(Object key, V defaultValue) {
+        if (key == null)
+            throw new NullPointerException();
+        V v = (V) internalGet(key);
+        return v == null ? defaultValue : v;
+    }
+
+    /**
      * Tests if the specified object is a key in this table.
      *
      * @param  key   possible key

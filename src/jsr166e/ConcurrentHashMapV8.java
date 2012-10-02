@@ -4846,7 +4846,7 @@ public class ConcurrentHashMapV8<K, V>
         int batch;                     // split control; -1 for unknown
         int pending;                   // completion control
 
-        BulkTask(ConcurrentHashMapV8<K,V> map, BulkTask<K,V,?> parent, 
+        BulkTask(ConcurrentHashMapV8<K,V> map, BulkTask<K,V,?> parent,
                  int batch) {
             super(map);
             this.parent = parent;

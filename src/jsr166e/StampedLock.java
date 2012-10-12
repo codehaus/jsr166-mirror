@@ -1019,7 +1019,7 @@ public class StampedLock implements java.io.Serializable {
             }
         }
         writerPrefSignal();
-        return (interrupted || Thread.interrupted())? INTERRUPTED : 0L;
+        return (interrupted || Thread.interrupted()) ? INTERRUPTED : 0L;
     }
 
     /*
@@ -1127,7 +1127,7 @@ public class StampedLock implements java.io.Serializable {
             }
         }
         readerPrefSignal();
-        return (interrupted || Thread.interrupted())? INTERRUPTED : 0L;
+        return (interrupted || Thread.interrupted()) ? INTERRUPTED : 0L;
     }
 
     // Unsafe mechanics
@@ -1201,4 +1201,3 @@ public class StampedLock implements java.io.Serializable {
     }
 
 }
-

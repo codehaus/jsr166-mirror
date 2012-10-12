@@ -172,7 +172,7 @@ public class ReadMostlyVector<E>
     static int findFirstIndex(Object[] items, Object x, int index, int fence) {
         int len;
         if (items != null && (len = items.length) > 0) {
-            int start = (index < 0)? 0 : index;
+            int start = (index < 0) ? 0 : index;
             int bound = (fence < len) ? fence : len;
             for (int i = start; i < bound; ++i) {
                 Object e = items[i];
@@ -406,7 +406,7 @@ public class ReadMostlyVector<E>
                 sb.append('[');
                 for (;;) {
                     Object e = items[i];
-                    sb.append((e == this)? "(this Collection)" : e.toString());
+                    sb.append((e == this) ? "(this Collection)" : e.toString());
                     if (++i < fence)
                         sb.append(',').append(' ');
                     else
@@ -1039,7 +1039,7 @@ public class ReadMostlyVector<E>
             long stamp = lock.writeLock();
             try {
                 Object[] items = array;
-                int cap = (items == null)? 0 : items.length;
+                int cap = (items == null) ? 0 : items.length;
                 if (minCapacity - cap > 0)
                     grow(minCapacity);
             } finally {

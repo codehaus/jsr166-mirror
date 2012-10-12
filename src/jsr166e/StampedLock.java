@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  *   in method {@link #unlockWrite} to release the lock. Untimed and
  *   timed versions of {@code tryWriteLock} are also provided. When
  *   the lock is held in write mode, no read locks may be obtained,
- *   and all observer validations will fail.  </li>
+ *   and all optimistic read validations will fail.  </li>
  *
  *  <li><b>Reading.</b> Method {@link #readLock} possibly blocks
  *   waiting for non-exclusive access, returning a stamp that can be
@@ -87,7 +87,7 @@ import java.util.concurrent.TimeUnit;
  *
  *  <pre>{@code
  * class Point {
- *   private volatile double x, y;
+ *   private double x, y;
  *   private final StampedLock sl = new StampedLock();
  *
  *   void move(double deltaX, double deltaY) { // an exclusively locked method
@@ -237,7 +237,7 @@ public class StampedLock implements java.io.Serializable {
     /** Maximum number of retries before blocking on acquisition */
     private static final int SPINS = (NCPU > 1) ? 1 << 6 : 1;
 
-    /** Maximum number of retries before re-blocking on write lock */
+    /** Maximum number of retries before re-blocking */
     private static final int MAX_HEAD_SPINS = (NCPU > 1) ? 1 << 12 : 1;
 
     /** The period for yielding when waiting for overflow spinlock */
@@ -1103,8 +1103,7 @@ public class StampedLock implements java.io.Serializable {
     /**
      * If node non-null, forces cancel status and unsplices from queue
      * if possible, by traversing entire queue looking for cancelled
-     * nodes, cleaning out all at head, but stopping upon first
-     * encounter otherwise.
+     * nodes.
      */
     private long cancelReader(RNode node, boolean interrupted) {
         Thread w;
@@ -1119,7 +1118,7 @@ public class StampedLock implements java.io.Serializable {
                     }
                     else {
                         U.compareAndSwapObject(pred, RNEXT, p, q);
-                        break;
+                        p = pred.next;
                     }
                 }
                 else {

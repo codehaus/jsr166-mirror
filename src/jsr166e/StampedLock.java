@@ -76,8 +76,11 @@ import java.util.concurrent.TimeUnit;
  * into initial unlocked state, so they are not useful for remote
  * locking.
  *
- * <p>The scheduling policy of StampedLock does not consistently prefer
- * readers over writers or vice versa.
+ * <p>The scheduling policy of StampedLock does not consistently
+ * prefer readers over writers or vice versa.  A zero return from any
+ * "try" method for acquiring or converting locks does carry any
+ * information about the state of the lock; a subsequent invocation
+ * may succeed.
  *
  * <p><b>Sample Usage.</b> The following illustrates some usage idioms
  * in a class that maintains simple two-dimensional points. The sample
@@ -119,7 +122,7 @@ import java.util.concurrent.TimeUnit;
  *   }
  *
  *   double distanceFromOriginV2() { // combines code paths
- *     for (long stamp = sl.optimisticRead(); ; stamp = sl.readLock()) {
+ *     for (long stamp = sl.tryOptimisticRead(); ; stamp = sl.readLock()) {
  *       double currentX, currentY;
  *       try {
  *         currentX = x;

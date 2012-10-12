@@ -673,7 +673,7 @@ public class StampedLock implements java.io.Serializable {
      */
     public long tryConvertToOptimisticRead(long stamp) {
         long a = stamp & ABITS, m, s, next;
-        while (((s = U.getLongVolatile(this, STATE)) & 
+        while (((s = U.getLongVolatile(this, STATE)) &
                 SBITS) == (stamp & SBITS)) {
             if ((m = s & ABITS) == 0L) {
                 if (a != 0L)
@@ -784,7 +784,7 @@ public class StampedLock implements java.io.Serializable {
                 return s;
             }
         }
-        else if ((ThreadLocalRandom.current().nextInt() & 
+        else if ((ThreadLocalRandom.current().nextInt() &
                   OVERFLOW_YIELD_RATE) == 0)
             Thread.yield();
         return 0L;
@@ -809,7 +809,7 @@ public class StampedLock implements java.io.Serializable {
                  return next;
             }
         }
-        else if ((ThreadLocalRandom.current().nextInt() & 
+        else if ((ThreadLocalRandom.current().nextInt() &
                   OVERFLOW_YIELD_RATE) == 0)
             Thread.yield();
         return 0L;

@@ -177,7 +177,7 @@ public class StampedLock implements java.io.Serializable {
      * read-locked.  The read count is ignored when validating
      * "optimistic" seqlock-reader-style stamps.  Because we must use
      * a small finite number of bits (currently 7) for readers, a
-     * supplementatry reader overflow word is used when then number of
+     * supplementary reader overflow word is used when then number of
      * readers exceeds the count field. We do this by treating the max
      * reader count value (RBITS) as a spinlock protecting overflow
      * updates.
@@ -235,10 +235,10 @@ public class StampedLock implements java.io.Serializable {
     private static final int NCPU = Runtime.getRuntime().availableProcessors();
 
     /** Maximum number of retries before blocking on acquisition */
-    private static final int SPINS = NCPU > 1 ? 1 << 6 : 1;
+    private static final int SPINS = (NCPU > 1) ? 1 << 6 : 1;
 
     /** Maximum number of retries before re-blocking on write lock */
-    private static final int MAX_HEAD_SPINS = NCPU > 1 ? 1 << 12 : 1;
+    private static final int MAX_HEAD_SPINS = (NCPU > 1) ? 1 << 12 : 1;
 
     /** The period for yielding when waiting for overflow spinlock */
     private static final int OVERFLOW_YIELD_RATE = 7; // must be power 2 - 1
@@ -303,7 +303,7 @@ public class StampedLock implements java.io.Serializable {
      * Exclusively acquires the lock, blocking if necessary
      * until available.
      *
-     * @return a stamp that can be used to unlock or convert mode.
+     * @return a stamp that can be used to unlock or convert mode
      */
     public long writeLock() {
         long s, next;
@@ -332,13 +332,13 @@ public class StampedLock implements java.io.Serializable {
      * given time and the current thread has not been interrupted
      *
      * @return a stamp that can be used to unlock or convert mode,
-     * or zero if the lock is not available.
+     * or zero if the lock is not available
      * @throws InterruptedException if the current thread is interrupted
-     * before acquiring the lock.
+     * before acquiring the lock
      */
     public long tryWriteLock(long time, TimeUnit unit)
         throws InterruptedException {
-        long nanos =  unit.toNanos(time);
+        long nanos = unit.toNanos(time);
         if (!Thread.interrupted()) {
             long s, next, deadline;
             if (((s = state) & ABITS) == 0L &&
@@ -358,9 +358,9 @@ public class StampedLock implements java.io.Serializable {
      * Exclusively acquires the lock, blocking if necessary
      * until available or the current thread is interrupted.
      *
-     * @return a stamp that can be used to unlock or convert mode.
+     * @return a stamp that can be used to unlock or convert mode
      * @throws InterruptedException if the current thread is interrupted
-     * before acquiring the lock.
+     * before acquiring the lock
      */
     public long writeLockInterruptibly() throws InterruptedException {
         if (!Thread.interrupted()) {
@@ -378,7 +378,7 @@ public class StampedLock implements java.io.Serializable {
      * Non-exclusively acquires the lock, blocking if necessary
      * until available.
      *
-     * @return a stamp that can be used to unlock or convert mode.
+     * @return a stamp that can be used to unlock or convert mode
      */
     public long readLock() {
         for (;;) {
@@ -401,7 +401,7 @@ public class StampedLock implements java.io.Serializable {
      * Non-exclusively acquires the lock if it is immediately available.
      *
      * @return a stamp that can be used to unlock or convert mode,
-     * or zero if the lock is not available.
+     * or zero if the lock is not available
      */
     public long tryReadLock() {
         for (;;) {
@@ -422,9 +422,9 @@ public class StampedLock implements java.io.Serializable {
      * given time and the current thread has not been interrupted
      *
      * @return a stamp that can be used to unlock or convert mode,
-     * or zero if the lock is not available.
+     * or zero if the lock is not available
      * @throws InterruptedException if the current thread is interrupted
-     * before acquiring the lock.
+     * before acquiring the lock
      */
     public long tryReadLock(long time, TimeUnit unit)
         throws InterruptedException {
@@ -457,9 +457,9 @@ public class StampedLock implements java.io.Serializable {
      * Non-exclusively acquires the lock, blocking if necessary
      * until available or the current thread is interrupted.
      *
-     * @return a stamp that can be used to unlock or convert mode.
+     * @return a stamp that can be used to unlock or convert mode
      * @throws InterruptedException if the current thread is interrupted
-     * before acquiring the lock.
+     * before acquiring the lock
      */
     public long readLockInterruptibly() throws InterruptedException {
         if (!Thread.interrupted()) {
@@ -512,7 +512,7 @@ public class StampedLock implements java.io.Serializable {
      *
      * @param stamp a stamp returned by a write-lock operation
      * @throws IllegalMonitorStateException if the stamp does
-     * not match the current state of this lock.
+     * not match the current state of this lock
      */
     public void unlockWrite(long stamp) {
         if (state != stamp || (stamp & WBIT) == 0L)
@@ -527,7 +527,7 @@ public class StampedLock implements java.io.Serializable {
      *
      * @param stamp a stamp returned by a read-lock operation
      * @throws IllegalMonitorStateException if the stamp does
-     * not match the current state of this lock.
+     * not match the current state of this lock
      */
     public void unlockRead(long stamp) {
         long s, m;
@@ -557,7 +557,7 @@ public class StampedLock implements java.io.Serializable {
      *
      * @param stamp a stamp returned by a lock operation
      * @throws IllegalMonitorStateException if the stamp does
-     * not match the current state of this lock.
+     * not match the current state of this lock
      */
     public void unlock(long stamp) {
         long a = stamp & ABITS, m, s;
@@ -707,7 +707,7 @@ public class StampedLock implements java.io.Serializable {
      * stamp value. This method may be useful for recovery after
      * errors.
      *
-     * @return true if the lock was held, else false.
+     * @return true if the lock was held, else false
      */
     public boolean tryUnlockWrite() {
         long s;
@@ -724,7 +724,7 @@ public class StampedLock implements java.io.Serializable {
      * requiring a stamp value. This method may be useful for recovery
      * after errors.
      *
-     * @return true if the read lock was held, else false.
+     * @return true if the read lock was held, else false
      */
     public boolean tryUnlockRead() {
         long s, m;
@@ -773,6 +773,7 @@ public class StampedLock implements java.io.Serializable {
      * Tries to increment readerOverflow by first setting state
      * access bits value to RBITS, indicating hold of spinlock,
      * then updating, then releasing.
+     *
      * @param stamp, assumed that (stamp & ABITS) >= RFULL
      * @return new stamp on success, else zero
      */
@@ -792,6 +793,7 @@ public class StampedLock implements java.io.Serializable {
 
     /**
      * Tries to decrement readerOverflow.
+     *
      * @param stamp, assumed that (stamp & ABITS) >= RFULL
      * @return new stamp on success, else zero
      */
@@ -911,14 +913,14 @@ public class StampedLock implements java.io.Serializable {
 
     /**
      * Possibly spins trying to obtain write lock, then enqueues and
-     * blocks while not head of write queue or cannot aquire lock,
+     * blocks while not head of write queue or cannot acquire lock,
      * possibly spinning when at head; cancelling on timeout or
      * interrupt.
      *
      * @param interruptible true if should check interrupts and if so
      * return INTERRUPTED
      * @param deadline if nonzero, the System.nanoTime value to timeout
-     * at (and return zero).
+     * at (and return zero)
      */
     private long awaitWrite(boolean interruptible, long deadline) {
         WNode node = null;
@@ -1022,7 +1024,7 @@ public class StampedLock implements java.io.Serializable {
         return (interrupted || Thread.interrupted()) ? INTERRUPTED : 0L;
     }
 
-    /*
+    /**
      * Waits for read lock or timeout or interrupt. The form of
      * awaitRead differs from awaitWrite mainly because it must
      * restart (with a new wait node) if the thread was unqueued and

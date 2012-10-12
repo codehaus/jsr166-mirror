@@ -329,7 +329,7 @@ public class StampedLock implements java.io.Serializable {
 
     /**
      * Exclusively acquires the lock if it is available within the
-     * given time and the current thread has not been interrupted
+     * given time and the current thread has not been interrupted.
      *
      * @return a stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available
@@ -419,7 +419,7 @@ public class StampedLock implements java.io.Serializable {
 
     /**
      * Non-exclusively acquires the lock if it is available within the
-     * given time and the current thread has not been interrupted
+     * given time and the current thread has not been interrupted.
      *
      * @return a stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available

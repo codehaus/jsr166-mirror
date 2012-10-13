@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
  * <p>This class also supports methods that conditionally provide
  * conversions across the three modes. For example, method {@link
  * #tryConvertToWriteLock} attempts to "upgrade" a mode, returning
- * valid write stamp if (1) already in writing mode (2) in reading
+ * a valid write stamp if (1) already in writing mode (2) in reading
  * mode and there are no other readers or (3) in optimistic mode and
  * the lock is available. The forms of these methods are designed to
  * help reduce some of the code bloat that otherwise occurs in

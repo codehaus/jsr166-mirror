@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A capability-based lock with three modes for controlling read/write
- * access.  The state of a StampedLock consists of a version and
- * mode. Lock acquisition methods return a stamp that represents and
+ * access.  The state of a StampedLock consists of a version and mode.
+ * Lock acquisition methods return a stamp that represents and
  * controls access with respect to a lock state; "try" versions of
  * these methods may instead return the special value zero to
  * represent failure to acquire access. Lock release and conversion

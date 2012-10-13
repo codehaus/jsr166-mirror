@@ -78,7 +78,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The scheduling policy of StampedLock does not consistently
  * prefer readers over writers or vice versa.  A zero return from any
- * "try" method for acquiring or converting locks does carry any
+ * "try" method for acquiring or converting locks does not carry any
  * information about the state of the lock; a subsequent invocation
  * may succeed.
  *
@@ -215,6 +215,20 @@ public class StampedLock implements java.io.Serializable {
      * different contexts -- some checks do not account for
      * in-progress spins/signals, and others do not account for
      * cancellations.
+     *
+     * Controlled, randomized spinning is used in the two await
+     * methods to reduce (increasingly expensive) context switching
+     * while also avoiding sustained memory thrashing among many
+     * threads.  Both await methods use a similar spin strategy: If
+     * the associated queue appears to be empty, then the thread
+     * spin-waits up to SPINS times (where each iteration decreases
+     * spin count with 50% probablility) before enqueing, and then, if
+     * it is the first thread to be enqueued, spins again up to SPINS
+     * times before blocking. If, upon wakening it fails to obtain
+     * lock, and is still (or becomes) the first waiting thread (which
+     * indicates that some other thread barged and obtained lock), it
+     * escalates spins (up to MAX_HEAD_SPINS) to reduce the likelihood
+     * of continually losing to barging threads.
      *
      * As noted in Boehm's paper (above), sequence validation (mainly
      * method validate()) requires stricter ordering rules than apply
@@ -894,16 +908,7 @@ public class StampedLock implements java.io.Serializable {
     /**
      * RNG for local spins. The first call from await{Read,Write}
      * produces a thread-local value. Unless zero, subsequent calls
-     * use an xorShift to further reduce memory traffic.  Both await
-     * methods use a similar spin strategy: If associated queue
-     * appears to be empty, then the thread spin-waits up to SPINS
-     * times before enqueing, and then, if the first thread to be
-     * enqueued, spins again up to SPINS times before blocking. If,
-     * upon wakening it fails to obtain lock, and is still (or
-     * becomes) the first waiting thread (which indicates that some
-     * other thread barged and obtained lock), it escalates spins (up
-     * to MAX_HEAD_SPINS) to reduce the likelihood of continually
-     * losing to barging threads.
+     * use an xorShift to further reduce memory traffic.
      */
     private static int nextRandom(int r) {
         if (r == 0)
@@ -952,8 +957,9 @@ public class StampedLock implements java.io.Serializable {
                 p.next = node;
                 for (int headSpins = SPINS;;) {
                     WNode np; int ps;
-                    if ((np = node.prev) != p && np != null)
-                        (p = np).next = node; // stale
+                    if ((np = node.prev) != p && np != null &&
+                        (p = np).next != node)
+                        p.next = node; // stale
                     if (p == whead) {
                         for (int k = headSpins;;) {
                             if (((s = state) & ABITS) == 0L) {
@@ -1010,16 +1016,18 @@ public class StampedLock implements java.io.Serializable {
             WNode predNext = pred.next;
             node.status = CANCELLED;
             if (predNext != null) {
-                Thread w = null;
+                Thread w;
                 WNode succ = node.next;
-                while (succ != null && succ.status == CANCELLED)
-                    succ = succ.next;
-                if (succ != null)
-                    w = succ.thread;
-                else if (node == wtail)
-                    U.compareAndSwapObject(this, WTAIL, node, pred);
+                if (succ == null || succ.status == CANCELLED) {
+                    succ = null;
+                    for (WNode t = wtail; t != null && t != node; t = t.prev)
+                        if (t.status <= 0)
+                            succ = t;
+                    if (succ == null && node == wtail)
+                        U.compareAndSwapObject(this, WTAIL, node, pred);
+                }
                 U.compareAndSwapObject(pred, WNEXT, predNext, succ);
-                if (w != null)
+                if (succ != null && (w = succ.thread) != null)
                     U.unpark(w);
             }
         }

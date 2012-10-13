@@ -1308,7 +1308,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         try {
             WorkQueue[] ws = workQueues;
             if (w != null && ws != null) {          // skip on shutdown/failure
-                int rs, n =  ws.length, m = n - 1;
+                int rs, n = ws.length, m = n - 1;
                 int s = nextSeed += SEED_INCREMENT; // rarely-colliding sequence
                 w.seed = (s == 0) ? 1 : s;          // ensure non-zero seed
                 int r = (s << 1) | 1;               // use odd-numbered indices

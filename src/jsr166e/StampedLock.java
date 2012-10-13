@@ -539,7 +539,7 @@ public class StampedLock implements java.io.Serializable {
     }
 
     /**
-     * If the lock state matches the given stamp, releases
+     * If the lock state matches the given stamp, releases the
      * non-exclusive lock.
      *
      * @param stamp a stamp returned by a read-lock operation

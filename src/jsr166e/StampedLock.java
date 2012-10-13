@@ -606,10 +606,11 @@ public class StampedLock implements java.io.Serializable {
     /**
      * If the lock state matches the given stamp then performs one of
      * the following actions. If the stamp represents holding a write
-     * lock, returns it. Or, if a read lock, if the write lock is
-     * available, releases the read and returns a write stamp. Or, if
-     * an optimistic read, returns a write stamp only if immediately
-     * available. This method returns zero in all other cases.
+     * lock, returns it.  Or, if a read lock, if the write lock is
+     * available, releases the read lock and returns a write stamp.
+     * Or, if an optimistic read, returns a write stamp only if
+     * immediately available. This method returns zero in all other
+     * cases.
      *
      * @param stamp a stamp
      * @return a valid write stamp, or zero on failure

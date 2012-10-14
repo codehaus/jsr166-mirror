@@ -261,7 +261,7 @@ public class StampedLock implements java.io.Serializable {
     private static final int OVERFLOW_YIELD_RATE = 7; // must be power 2 - 1
 
     /** The number of bits to use for reader count before overflowing */
-    private static final int  LG_READERS = 7;
+    private static final int LG_READERS = 7;
 
     // Values for lock state and stamp operations
     private static final long RUNIT = 1L;

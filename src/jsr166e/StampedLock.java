@@ -701,7 +701,7 @@ public class StampedLock implements java.io.Serializable {
             else if (m == WBIT) {
                 if (a != m)
                     break;
-                next = state = (s += WBIT) == 0L ? ORIGIN : s;
+                state = next = (s += WBIT) == 0L ? ORIGIN : s;
                 readerPrefSignal();
                 return next;
             }

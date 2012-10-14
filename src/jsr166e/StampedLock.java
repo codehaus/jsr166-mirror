@@ -334,7 +334,7 @@ public class StampedLock implements java.io.Serializable {
      * Exclusively acquires the lock if it is immediately available.
      *
      * @return a stamp that can be used to unlock or convert mode,
-     * or zero if the lock is not available.
+     * or zero if the lock is not available
      */
     public long tryWriteLock() {
         long s, next;

@@ -180,7 +180,7 @@ public class StampedLock implements java.io.Serializable {
      * read-locked.  The read count is ignored when validating
      * "optimistic" seqlock-reader-style stamps.  Because we must use
      * a small finite number of bits (currently 7) for readers, a
-     * supplementary reader overflow word is used when then number of
+     * supplementary reader overflow word is used when the number of
      * readers exceeds the count field. We do this by treating the max
      * reader count value (RBITS) as a spinlock protecting overflow
      * updates.

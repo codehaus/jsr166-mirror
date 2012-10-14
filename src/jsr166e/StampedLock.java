@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A capability-based lock with three modes for controlling read/write
- * access.  The state of a StampedLock consists of a version and
- * mode. Lock acquisition methods return a stamp that represents and
+ * access.  The state of a StampedLock consists of a version and mode.
+ * Lock acquisition methods return a stamp that represents and
  * controls access with respect to a lock state; "try" versions of
  * these methods may instead return the special value zero to
  * represent failure to acquire access. Lock release and conversion
@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
  * <p>This class also supports methods that conditionally provide
  * conversions across the three modes. For example, method {@link
  * #tryConvertToWriteLock} attempts to "upgrade" a mode, returning
- * valid write stamp if (1) already in writing mode (2) in reading
+ * a valid write stamp if (1) already in writing mode (2) in reading
  * mode and there are no other readers or (3) in optimistic mode and
  * the lock is available. The forms of these methods are designed to
  * help reduce some of the code bloat that otherwise occurs in
@@ -78,7 +78,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The scheduling policy of StampedLock does not consistently
  * prefer readers over writers or vice versa.  A zero return from any
- * "try" method for acquiring or converting locks does carry any
+ * "try" method for acquiring or converting locks does not carry any
  * information about the state of the lock; a subsequent invocation
  * may succeed.
  *
@@ -216,6 +216,20 @@ public class StampedLock implements java.io.Serializable {
      * in-progress spins/signals, and others do not account for
      * cancellations.
      *
+     * Controlled, randomized spinning is used in the two await
+     * methods to reduce (increasingly expensive) context switching
+     * while also avoiding sustained memory thrashing among many
+     * threads.  Both await methods use a similar spin strategy: If
+     * the associated queue appears to be empty, then the thread
+     * spin-waits up to SPINS times (where each iteration decreases
+     * spin count with 50% probablility) before enqueing, and then, if
+     * it is the first thread to be enqueued, spins again up to SPINS
+     * times before blocking. If, upon wakening it fails to obtain
+     * lock, and is still (or becomes) the first waiting thread (which
+     * indicates that some other thread barged and obtained lock), it
+     * escalates spins (up to MAX_HEAD_SPINS) to reduce the likelihood
+     * of continually losing to barging threads.
+     *
      * As noted in Boehm's paper (above), sequence validation (mainly
      * method validate()) requires stricter ordering rules than apply
      * to normal volatile reads (of "state").  In the absence of (but
@@ -320,7 +334,7 @@ public class StampedLock implements java.io.Serializable {
      * Exclusively acquires the lock if it is immediately available.
      *
      * @return a stamp that can be used to unlock or convert mode,
-     * or zero if the lock is not available.
+     * or zero if the lock is not available
      */
     public long tryWriteLock() {
         long s, next;
@@ -525,7 +539,7 @@ public class StampedLock implements java.io.Serializable {
     }
 
     /**
-     * If the lock state matches the given stamp, releases
+     * If the lock state matches the given stamp, releases the
      * non-exclusive lock.
      *
      * @param stamp a stamp returned by a read-lock operation
@@ -592,10 +606,11 @@ public class StampedLock implements java.io.Serializable {
     /**
      * If the lock state matches the given stamp then performs one of
      * the following actions. If the stamp represents holding a write
-     * lock, returns it. Or, if a read lock, if the write lock is
-     * available, releases the read and returns a write stamp. Or, if
-     * an optimistic read, returns a write stamp only if immediately
-     * available. This method returns zero in all other cases.
+     * lock, returns it.  Or, if a read lock, if the write lock is
+     * available, releases the read lock and returns a write stamp.
+     * Or, if an optimistic read, returns a write stamp only if
+     * immediately available. This method returns zero in all other
+     * cases.
      *
      * @param stamp a stamp
      * @return a valid write stamp, or zero on failure
@@ -894,16 +909,7 @@ public class StampedLock implements java.io.Serializable {
     /**
      * RNG for local spins. The first call from await{Read,Write}
      * produces a thread-local value. Unless zero, subsequent calls
-     * use an xorShift to further reduce memory traffic.  Both await
-     * methods use a similar spin strategy: If associated queue
-     * appears to be empty, then the thread spin-waits up to SPINS
-     * times before enqueing, and then, if the first thread to be
-     * enqueued, spins again up to SPINS times before blocking. If,
-     * upon wakening it fails to obtain lock, and is still (or
-     * becomes) the first waiting thread (which indicates that some
-     * other thread barged and obtained lock), it escalates spins (up
-     * to MAX_HEAD_SPINS) to reduce the likelihood of continually
-     * losing to barging threads.
+     * use an xorShift to further reduce memory traffic.
      */
     private static int nextRandom(int r) {
         if (r == 0)
@@ -952,8 +958,9 @@ public class StampedLock implements java.io.Serializable {
                 p.next = node;
                 for (int headSpins = SPINS;;) {
                     WNode np; int ps;
-                    if ((np = node.prev) != p && np != null)
-                        (p = np).next = node; // stale
+                    if ((np = node.prev) != p && np != null &&
+                        (p = np).next != node)
+                        p.next = node; // stale
                     if (p == whead) {
                         for (int k = headSpins;;) {
                             if (((s = state) & ABITS) == 0L) {
@@ -1010,16 +1017,18 @@ public class StampedLock implements java.io.Serializable {
             WNode predNext = pred.next;
             node.status = CANCELLED;
             if (predNext != null) {
-                Thread w = null;
+                Thread w;
                 WNode succ = node.next;
-                while (succ != null && succ.status == CANCELLED)
-                    succ = succ.next;
-                if (succ != null)
-                    w = succ.thread;
-                else if (node == wtail)
-                    U.compareAndSwapObject(this, WTAIL, node, pred);
+                if (succ == null || succ.status == CANCELLED) {
+                    succ = null;
+                    for (WNode t = wtail; t != null && t != node; t = t.prev)
+                        if (t.status <= 0)
+                            succ = t;
+                    if (succ == null && node == wtail)
+                        U.compareAndSwapObject(this, WTAIL, node, pred);
+                }
                 U.compareAndSwapObject(pred, WNEXT, predNext, succ);
-                if (w != null)
+                if (succ != null && (w = succ.thread) != null)
                     U.unpark(w);
             }
         }

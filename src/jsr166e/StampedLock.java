@@ -125,16 +125,17 @@ import java.util.concurrent.TimeUnit;
  *   }
  *
  *   double distanceFromOriginV2() { // combines code paths
+ *     double currentX = 0.0, currentY = 0.0;
  *     for (long stamp = sl.tryOptimisticRead(); ; stamp = sl.readLock()) {
- *       double currentX = 0.0, currentY = 0.0;
  *       try {
  *         currentX = x;
  *         currentY = y;
  *       } finally {
  *         if (sl.tryConvertToOptimisticRead(stamp) != 0L) // unlock or validate
- *           return Math.sqrt(currentX * currentX + currentY * currentY);
+ *           break;
  *       }
  *     }
+ *     return Math.sqrt(currentX * currentX + currentY * currentY);
  *   }
  *
  *   void moveIfAtOrigin(double newX, double newY) { // upgrade
@@ -1007,9 +1008,9 @@ public class StampedLock implements java.io.Serializable {
     /**
      * If node non-null, forces cancel status and unsplices from queue
      * if possible. This is a variant of cancellation methods in
-     * AbstractQueuedSynchronizer (see its detailed explanation in
+     * AbstractQueuedSynchronizer (see its detailed explanation in AQS
      * internal documentation) that more conservatively wakes up other
-     * threads that may have had their links changed so as to preserve
+     * threads that may have had their links changed, so as to preserve
      * liveness in the main signalling methods.
      */
     private long cancelWriter(WNode node, boolean interrupted) {

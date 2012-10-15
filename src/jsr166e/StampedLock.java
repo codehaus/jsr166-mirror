@@ -310,7 +310,7 @@ public class StampedLock implements java.io.Serializable {
     private transient int readerOverflow;
 
     /**
-     * Creates a new lock initially in unlocked state.
+     * Creates a new lock, initially in unlocked state.
      */
     public StampedLock() {
         state = ORIGIN;

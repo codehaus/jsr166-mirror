@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>StampedLocks are designed for use as internal utilities in the
  * development of thread-safe components. Their use relies on
- * knowledge of the internal properties of the the data, objects, and
+ * knowledge of the internal properties of the data, objects, and
  * methods they are protecting.  They are not reentrant, so locked
  * bodies should not call other unknown methods that may try to
  * re-acquire locks (although you may pass a stamp to other methods

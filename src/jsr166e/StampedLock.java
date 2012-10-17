@@ -61,12 +61,15 @@ import java.util.concurrent.TimeUnit;
  * help reduce some of the code bloat that otherwise occurs in
  * retry-based designs.
  *
- * <p>StampedLocks are designed for use in a different (and generally
- * narrower) range of contexts than most other locks: They are not
- * reentrant, so locked bodies should not call other unknown methods
- * that may try to re-acquire locks (although you may pass a stamp to
- * other methods that can use or convert it). Unvalidated optimistic
- * read sections should further not call methods that are not known to
+ * <p>StampedLocks are designed for use as internal utilities in the
+ * development of thread-safe components. Their use relies on
+ * knowledge of the internal properties of the data, objects, and
+ * methods they are protecting.  They are not reentrant, so locked
+ * bodies should not call other unknown methods that may try to
+ * re-acquire locks (although you may pass a stamp to other methods
+ * that can use or convert it).  The use of read lock modes relies on
+ * the associated code sections being side-effect-free.  Unvalidated
+ * optimistic read sections cannot call methods that are not known to
  * tolerate potential inconsistencies.  Stamps use finite
  * representations, and are not cryptographically secure (i.e., a
  * valid stamp may be guessable). Stamp values may recycle after (no
@@ -122,16 +125,17 @@ import java.util.concurrent.TimeUnit;
  *   }
  *
  *   double distanceFromOriginV2() { // combines code paths
+ *     double currentX = 0.0, currentY = 0.0;
  *     for (long stamp = sl.tryOptimisticRead(); ; stamp = sl.readLock()) {
- *       double currentX, currentY;
  *       try {
  *         currentX = x;
  *         currentY = y;
  *       } finally {
  *         if (sl.tryConvertToOptimisticRead(stamp) != 0L) // unlock or validate
- *           return Math.sqrt(currentX * currentX + currentY * currentY);
+ *           break;
  *       }
  *     }
+ *     return Math.sqrt(currentX * currentX + currentY * currentY);
  *   }
  *
  *   void moveIfAtOrigin(double newX, double newY) { // upgrade
@@ -139,7 +143,7 @@ import java.util.concurrent.TimeUnit;
  *     long stamp = sl.readLock();
  *     try {
  *       while (x == 0.0 && y == 0.0) {
- *         long ws = tryConvertToWriteLock(stamp);
+ *         long ws = sl.tryConvertToWriteLock(stamp);
  *         if (ws != 0L) {
  *           stamp = ws;
  *           x = newX;
@@ -180,7 +184,7 @@ public class StampedLock implements java.io.Serializable {
      * read-locked.  The read count is ignored when validating
      * "optimistic" seqlock-reader-style stamps.  Because we must use
      * a small finite number of bits (currently 7) for readers, a
-     * supplementary reader overflow word is used when then number of
+     * supplementary reader overflow word is used when the number of
      * readers exceeds the count field. We do this by treating the max
      * reader count value (RBITS) as a spinlock protecting overflow
      * updates.
@@ -222,7 +226,7 @@ public class StampedLock implements java.io.Serializable {
      * threads.  Both await methods use a similar spin strategy: If
      * the associated queue appears to be empty, then the thread
      * spin-waits up to SPINS times (where each iteration decreases
-     * spin count with 50% probablility) before enqueing, and then, if
+     * spin count with 50% probability) before enqueing, and then, if
      * it is the first thread to be enqueued, spins again up to SPINS
      * times before blocking. If, upon wakening it fails to obtain
      * lock, and is still (or becomes) the first waiting thread (which
@@ -261,7 +265,7 @@ public class StampedLock implements java.io.Serializable {
     private static final int OVERFLOW_YIELD_RATE = 7; // must be power 2 - 1
 
     /** The number of bits to use for reader count before overflowing */
-    private static final int  LG_READERS = 7;
+    private static final int LG_READERS = 7;
 
     // Values for lock state and stamp operations
     private static final long RUNIT = 1L;
@@ -310,7 +314,7 @@ public class StampedLock implements java.io.Serializable {
     private transient int readerOverflow;
 
     /**
-     * Creates a new lock initially in unlocked state.
+     * Creates a new lock, initially in unlocked state.
      */
     public StampedLock() {
         state = ORIGIN;
@@ -511,15 +515,16 @@ public class StampedLock implements java.io.Serializable {
     }
 
     /**
-     * Returns true if the lock has not been exclusively held since
-     * issuance of the given stamp. Always returns false if the stamp
-     * is zero. Always returns true if the stamp represents a
+     * Returns true if the lock has not been exclusively acquired
+     * since issuance of the given stamp. Always returns false if the
+     * stamp is zero. Always returns true if the stamp represents a
      * currently held lock.
      *
-     * @return true if the lock has not been exclusively held since
-     * issuance of the given stamp; else false
+     * @return true if the lock has not been exclusively acquired
+     * since issuance of the given stamp; else false
      */
     public boolean validate(long stamp) {
+        // See above about current use of getLongVolatile here
         return (stamp & SBITS) == (U.getLongVolatile(this, STATE) & SBITS);
     }
 
@@ -629,7 +634,7 @@ public class StampedLock implements java.io.Serializable {
                     break;
                 return stamp;
             }
-            else if (m == RUNIT && a != 0L && a < WBIT) {
+            else if (m == RUNIT && a != 0L) {
                 if (U.compareAndSwapLong(this, STATE, s,
                                          next = s - RUNIT + WBIT))
                     return next;
@@ -667,7 +672,7 @@ public class StampedLock implements java.io.Serializable {
             else if (m == WBIT) {
                 if (a != m)
                     break;
-                next = state = s + (WBIT + RUNIT);
+                state = next = s + (WBIT + RUNIT);
                 readerPrefSignal();
                 return next;
             }
@@ -701,7 +706,7 @@ public class StampedLock implements java.io.Serializable {
             else if (m == WBIT) {
                 if (a != m)
                     break;
-                next = state = (s += WBIT) == 0L ? ORIGIN : s;
+                state = next = (s += WBIT) == 0L ? ORIGIN : s;
                 readerPrefSignal();
                 return next;
             }
@@ -775,8 +780,7 @@ public class StampedLock implements java.io.Serializable {
      * @return true if the lock is currently held non-exclusively
      */
     public boolean isReadLocked() {
-        long m;
-        return (m = state & ABITS) > 0L && m < WBIT;
+        return (state & RBITS) != 0L;
     }
 
     private void readObject(java.io.ObjectInputStream s)
@@ -792,7 +796,7 @@ public class StampedLock implements java.io.Serializable {
      * access bits value to RBITS, indicating hold of spinlock,
      * then updating, then releasing.
      *
-     * @param stamp, assumed that (stamp & ABITS) >= RFULL
+     * @param s, assumed that (s & ABITS) >= RFULL
      * @return new stamp on success, else zero
      */
     private long tryIncReaderOverflow(long s) {
@@ -812,7 +816,7 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Tries to decrement readerOverflow.
      *
-     * @param stamp, assumed that (stamp & ABITS) >= RFULL
+     * @param s, assumed that (s & ABITS) >= RFULL
      * @return new stamp on success, else zero
      */
     private long tryDecReaderOverflow(long s) {
@@ -868,11 +872,10 @@ public class StampedLock implements java.io.Serializable {
                 U.compareAndSwapObject(p, WAITER, w, null))
                 U.unpark(w);
         }
-        if (!readers && (state & ABITS) == 0L &&
-            (h = whead) != null && h.status != 0) {
+        if (!readers && (h = whead) != null && h.status != 0 &&
+            (state & ABITS) == 0L) {
             U.compareAndSwapInt(h, STATUS, WAITING, 0);
             if ((q = h.next) == null || q.status == CANCELLED) {
-                q = null;
                 for (WNode t = wtail; t != null && t != h; t = t.prev)
                     if (t.status <= 0)
                         q = t;
@@ -887,7 +890,6 @@ public class StampedLock implements java.io.Serializable {
         if ((h = whead) != null && h.status != 0) {
             U.compareAndSwapInt(h, STATUS, WAITING, 0);
             if ((q = h.next) == null || q.status == CANCELLED) {
-                q = null;
                 for (WNode t = wtail; t != null && t != h; t = t.prev)
                     if (t.status <= 0)
                         q = t;
@@ -957,10 +959,9 @@ public class StampedLock implements java.io.Serializable {
             else if (U.compareAndSwapObject(this, WTAIL, p, node)) {
                 p.next = node;
                 for (int headSpins = SPINS;;) {
-                    WNode np; int ps;
-                    if ((np = node.prev) != p && np != null &&
-                        (p = np).next != node)
-                        p.next = node; // stale
+                    WNode np, pp; int ps;
+                    while ((np = node.prev) != p && np != null)
+                        (p = np).next = node; // stale
                     if (p == whead) {
                         for (int k = headSpins;;) {
                             if (((s = state) & ABITS) == 0L) {
@@ -981,8 +982,12 @@ public class StampedLock implements java.io.Serializable {
                     }
                     if ((ps = p.status) == 0)
                         U.compareAndSwapInt(p, STATUS, 0, WAITING);
-                    else if (ps == CANCELLED)
-                        node.prev = p.prev;
+                    else if (ps == CANCELLED) {
+                        if ((pp = p.prev) != null) {
+                            node.prev = pp;
+                            pp.next = node;
+                        }
+                    }
                     else {
                         long time; // 0 argument to park means no timeout
                         if (deadline == 0L)
@@ -990,11 +995,10 @@ public class StampedLock implements java.io.Serializable {
                         else if ((time = deadline - System.nanoTime()) <= 0L)
                             return cancelWriter(node, false);
                         if (node.prev == p && p.status == WAITING &&
-                            (p != whead || (state & WBIT) != 0L)) { // recheck
+                            (p != whead || (state & WBIT) != 0L)) // recheck
                             U.park(false, time);
-                            if (interruptible && Thread.interrupted())
-                                return cancelWriter(node, true);
-                        }
+                        if (interruptible && Thread.interrupted())
+                            return cancelWriter(node, true);
                     }
                 }
             }
@@ -1003,33 +1007,39 @@ public class StampedLock implements java.io.Serializable {
 
     /**
      * If node non-null, forces cancel status and unsplices from queue
-     * if possible. This is a streamlined variant of cancellation
-     * methods in AbstractQueuedSynchronizer that includes a detailed
-     * explanation.
+     * if possible. This is a variant of cancellation methods in
+     * AbstractQueuedSynchronizer (see its detailed explanation in AQS
+     * internal documentation) that more conservatively wakes up other
+     * threads that may have had their links changed, so as to preserve
+     * liveness in the main signalling methods.
      */
     private long cancelWriter(WNode node, boolean interrupted) {
-        WNode pred;
-        if (node != null && (pred = node.prev) != null) {
-            WNode pp;
+        if (node != null) {
             node.thread = null;
-            while (pred.status == CANCELLED && (pp = pred.prev) != null)
-                pred = node.prev = pp;
-            WNode predNext = pred.next;
             node.status = CANCELLED;
-            if (predNext != null) {
-                Thread w;
-                WNode succ = node.next;
-                if (succ == null || succ.status == CANCELLED) {
-                    succ = null;
+            for (WNode pred = node.prev; pred != null; ) {
+                WNode succ, pp; Thread w;
+                while ((succ = node.next) == null || succ.status == CANCELLED) {
+                    WNode q = null;
                     for (WNode t = wtail; t != null && t != node; t = t.prev)
-                        if (t.status <= 0)
-                            succ = t;
-                    if (succ == null && node == wtail)
-                        U.compareAndSwapObject(this, WTAIL, node, pred);
+                        if (t.status != CANCELLED)
+                            q = t;
+                    if (succ == q ||
+                        U.compareAndSwapObject(node, WNEXT, succ, succ = q)) {
+                        if (succ == null && node == wtail)
+                            U.compareAndSwapObject(this, WTAIL, node, pred);
+                        break;
+                    }
                 }
-                U.compareAndSwapObject(pred, WNEXT, predNext, succ);
+                if (pred.next == node)
+                    U.compareAndSwapObject(pred, WNEXT, node, succ);
                 if (succ != null && (w = succ.thread) != null)
                     U.unpark(w);
+                if (pred.status != CANCELLED || (pp = pred.prev) == null)
+                    break;
+                node.prev = pp; // repeat for new pred
+                U.compareAndSwapObject(pp, WNEXT, pred, succ);
+                pred = pp;
             }
         }
         writerPrefSignal();
@@ -1103,11 +1113,10 @@ public class StampedLock implements java.io.Serializable {
                     time = 0L;
                 else if ((time = deadline - System.nanoTime()) <= 0L)
                     return cancelReader(node, false);
-                if ((state & WBIT) != 0L && node.waiter != null) { // recheck
+                if ((state & WBIT) != 0L && node.waiter != null) // recheck
                     U.park(false, time);
-                    if (interruptible && Thread.interrupted())
-                        return cancelReader(node, true);
-                }
+                if (interruptible && Thread.interrupted())
+                    return cancelReader(node, true);
             }
         }
     }

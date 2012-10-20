@@ -20,8 +20,6 @@ subprojects {
   apply plugin: 'java'
   apply plugin: 'osgi'
   apply plugin: 'maven'
-  // Without the -XDignore.symbol.file=true option there are compilation errors.
-  compileJava.options.compilerArgs = [ '-XDignore.symbol.file=true' ]
   repositories { mavenCentral ( ) }
   defaultTasks 'build'
   //
@@ -109,6 +107,8 @@ project ( ':jsr166' ) {
   sourceCompatibility = 6
   targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/main' } } }
+  // Without the -XDignore.symbol.file=true option there are compilation errors. Even this doesn't work now. :-(
+  compileJava.options.compilerArgs = [ '-XDignore.symbol.file=true' ]
   jar {
     manifest {
       name = 'jsr166'

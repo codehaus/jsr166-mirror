@@ -2505,7 +2505,7 @@ public class ConcurrentHashMap<K, V>
 
     /**
      * Returns the value to which the specified key is mapped,
-     * or the gieven defaultValue if this map contains no mapping for the key.
+     * or the given defaultValue if this map contains no mapping for the key.
      *
      * @param key the key
      * @param defaultValue the value to return if this map contains

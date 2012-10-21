@@ -22,12 +22,13 @@ package java.util.concurrent;
  * decremented; otherwise, the completion action is performed, and if
  * this completer itself has a completer, the process is continued
  * with its completer.  As is the case with related synchronization
- * components such as {@link Phaser} and {@link
- * java.util.concurrent.Semaphore} these methods affect only internal
- * counts; they do not establish any further internal bookkeeping. In
- * particular, the identities of pending tasks are not maintained. As
- * illustrated below, you can create subclasses that do record some or
- * all pended tasks or their results when needed.
+ * components such as {@link java.util.concurrent.Phaser Phaser} and
+ * {@link java.util.concurrent.Semaphore Semaphore}, these methods
+ * affect only internal counts; they do not establish any further
+ * internal bookkeeping. In particular, the identities of pending
+ * tasks are not maintained. As illustrated below, you can create
+ * subclasses that do record some or all pended tasks or their results
+ * when needed.
  *
  * <p>A concrete CountedCompleter class must define method {@link
  * #compute}, that should, in almost all use cases, invoke {@code

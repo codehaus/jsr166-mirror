@@ -7,13 +7,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
-
 /**
  * This is an incomplete implementation of a wrapper class
  * that places read-write locks around unsynchronized Maps.
  * Exists as a sample input for MapLoops test.
  */
-
 public class SMap implements Map {
     private final Map m;
     public SMap(Map m) {

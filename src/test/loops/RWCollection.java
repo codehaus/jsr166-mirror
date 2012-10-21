@@ -7,13 +7,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
-
 /**
  * This is an incomplete implementation of a wrapper class
  * that places read-write locks around unsynchronized Collections.
  * Exists as a sample input for CollectionLoops test.
  */
-
 public final class RWCollection<E> implements Collection<E> {
     private final Collection c;
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();

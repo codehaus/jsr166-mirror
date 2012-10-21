@@ -61,7 +61,6 @@ import java.util.Queue;
  * @author Martin Buchholz
  * @param <E> the type of elements held in this collection
  */
-
 public class ConcurrentLinkedDeque<E>
     extends AbstractCollection<E>
     implements Deque<E>, java.io.Serializable {

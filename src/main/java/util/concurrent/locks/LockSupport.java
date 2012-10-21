@@ -88,7 +88,6 @@ import sun.misc.Unsafe;
  *   }
  * }}</pre>
  */
-
 public class LockSupport {
     private LockSupport() {} // Cannot be instantiated.
 

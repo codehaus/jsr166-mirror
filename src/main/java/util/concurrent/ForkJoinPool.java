@@ -1302,7 +1302,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param w the worker's queue
      */
-
     final void registerWorker(WorkQueue w) {
         Mutex lock = this.lock;
         lock.lock();

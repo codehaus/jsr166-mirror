@@ -27,8 +27,8 @@ package java.util.concurrent;
  * affect only internal counts; they do not establish any further
  * internal bookkeeping. In particular, the identities of pending
  * tasks are not maintained. As illustrated below, you can create
- * subclasses that do record some or all pended tasks or their results
- * when needed.
+ * subclasses that do record some or all pending tasks or their
+ * results when needed.
  *
  * <p>A concrete CountedCompleter class must define method {@link
  * #compute}, that should, in almost all use cases, invoke {@code

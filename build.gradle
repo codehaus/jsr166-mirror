@@ -101,13 +101,18 @@ subprojects {
 //  of the Java core, thus it must be loaded by the bootstrap loader and not the system loader -- loading
 //  with the system loader leads to a number of security exceptions.  A project is not allowed to depend on
 //  itself so we cannot use the standard Java lifecycle.  Hence break out the TCK as a separate project to
-//  allow for the appropirate dependencies.
+//  allow for the appropriate dependencies.
 
 project ( ':jsr166' ) {
   sourceCompatibility = 6
   targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/main' } } }
-  // Without the -XDignore.symbol.file=true option there are compilation errors. Even this doesn't work now. :-(
+  // Without the -XDignore.symbol.file=true option there are compilation errors. When Gradle switched from
+  // using the Ant task for handling compilation to handling it internally this broke. So we have to enforce
+  // using the Ant task so as to get the parameter into place.
+  //
+  // cf. http://forums.gradle.org/gradle/topics/how_to_set_xdignore_symbol_file_true_on_some_compiles_in_multi_project_build
+  compileJava.options.useAnt = true
   compileJava.options.compilerArgs = [ '-XDignore.symbol.file=true' ]
   jar {
     manifest {

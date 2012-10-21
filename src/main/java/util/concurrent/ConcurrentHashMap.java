@@ -5438,7 +5438,7 @@ public class ConcurrentHashMap<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof ReduceKeysTask)) {
@@ -5493,7 +5493,7 @@ public class ConcurrentHashMap<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof ReduceValuesTask)) {
@@ -5548,7 +5548,7 @@ public class ConcurrentHashMap<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof ReduceEntriesTask)) {
@@ -5607,7 +5607,7 @@ public class ConcurrentHashMap<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceKeysTask)) {
@@ -5667,7 +5667,7 @@ public class ConcurrentHashMap<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceValuesTask)) {
@@ -5727,7 +5727,7 @@ public class ConcurrentHashMap<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceEntriesTask)) {
@@ -5787,7 +5787,7 @@ public class ConcurrentHashMap<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceMappingsTask)) {

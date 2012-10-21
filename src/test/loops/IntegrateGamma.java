@@ -12,7 +12,6 @@ import java.util.concurrent.*;
  * Inspired by a
  * <A href="http://www.cs.uga.edu/~dkl/filaments/dist.html"> Filaments</A>
  * demo program.
- *
  */
 
 public class IntegrateGamma {

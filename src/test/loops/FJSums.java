@@ -157,7 +157,6 @@ public class FJSums {
      * internal nodes, it becomes true when one child is cumulated.
      * When second child finishes cumulating, it then moves up tree,
      * executing complete() at the root.
-     *
      */
     static final class Cumulater extends ForkJoinTask<Void> {
         static final short CUMULATE = (short)1;

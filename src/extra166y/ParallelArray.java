@@ -139,7 +139,6 @@ import java.lang.reflect.Array;
  *   static final GpaField gpaField = new GpaField();
  * }
  * </pre>
- *
  */
 public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implements Iterable<T> {
     /*

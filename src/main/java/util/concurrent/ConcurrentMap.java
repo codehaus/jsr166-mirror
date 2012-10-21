@@ -55,7 +55,6 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         and this map does not permit null keys or values
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
-     *
      */
     V putIfAbsent(K key, V value);
 

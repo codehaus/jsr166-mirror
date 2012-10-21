@@ -471,7 +471,6 @@ public class ConcurrentSkipListSet<E>
      * in {@link IllegalArgumentException}.  Instances of this class are
      * constructed only using the <tt>subSet</tt>, <tt>headSet</tt>, and
      * <tt>tailSet</tt> methods of their underlying sets.
-     *
      */
     static class ConcurrentSkipListSubSet<E>
         extends AbstractSet<E>

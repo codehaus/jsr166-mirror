@@ -3937,7 +3937,6 @@ public class ConcurrentHashMap<K, V>
          * result on success, else null
          * @return a non-null result from applying the given search
          * function on each value, or null if none
-         *
          */
         public <U> U searchValues(Fun<? super V, ? extends U> searchFunction) {
             return fjp.invoke(ForkJoinTasks.searchValues
@@ -4537,7 +4536,6 @@ public class ConcurrentHashMap<K, V>
          * @param searchFunction a function returning a non-null
          * result on success, else null
          * @return the task
-         *
          */
         public static <K,V,U> ForkJoinTask<U> searchValues
             (ConcurrentHashMap<K,V> map,
@@ -4704,7 +4702,6 @@ public class ConcurrentHashMap<K, V>
          * @param searchFunction a function returning a non-null
          * result on success, else null
          * @return the task
-         *
          */
         public static <K,V,U> ForkJoinTask<U> searchEntries
             (ConcurrentHashMap<K,V> map,

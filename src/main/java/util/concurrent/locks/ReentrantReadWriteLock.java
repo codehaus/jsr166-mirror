@@ -183,7 +183,6 @@ import java.util.Collection;
  *
  * @since 1.5
  * @author Doug Lea
- *
  */
 public class ReentrantReadWriteLock
         implements ReadWriteLock, java.io.Serializable {
@@ -838,7 +837,6 @@ public class ReentrantReadWriteLock
          * @return {@code true} if the read lock was acquired
          * @throws InterruptedException if the current thread is interrupted
          * @throws NullPointerException if the time unit is null
-         *
          */
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {
@@ -1083,7 +1081,6 @@ public class ReentrantReadWriteLock
          *
          * @throws InterruptedException if the current thread is interrupted
          * @throws NullPointerException if the time unit is null
-         *
          */
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {

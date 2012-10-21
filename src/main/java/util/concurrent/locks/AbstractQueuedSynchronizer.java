@@ -224,7 +224,8 @@ import sun.misc.Unsafe;
  *   }
  * }}</pre>
  *
- * <p>Here is a latch class that is like a {@link CountDownLatch}
+ * <p>Here is a latch class that is like a
+ * {@link java.util.concurrent.CountDownLatch CountDownLatch}
  * except that it only requires a single <tt>signal</tt> to
  * fire. Because a latch is non-exclusive, it uses the <tt>shared</tt>
  * acquire and release methods.

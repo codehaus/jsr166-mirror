@@ -2509,7 +2509,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param key the key
      * @param defaultValue the value to return if this map contains
-     * no mapping for the given key.
+     * no mapping for the given key
      * @return the mapping for the key, if present; else the defaultValue
      * @throws NullPointerException if the specified key is null
      */
@@ -2649,7 +2649,7 @@ public class ConcurrentHashMap<K, V>
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
      * @return the current (existing or computed) value associated with
-     *         the specified key, or null if the computed value is null.
+     *         the specified key, or null if the computed value is null
      * @throws NullPointerException if the specified key or mappingFunction
      *         is null
      * @throws IllegalStateException if the computation detectably
@@ -3671,7 +3671,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          * @param action the action
          */
         public <U> void forEach(BiFun<? super K, ? super V, ? extends U> transformer,
@@ -3704,7 +3704,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case it is not combined).
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the result of accumulating the given transformation
          * of all (key, value) pairs
@@ -3788,7 +3788,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          * @param action the action
          */
         public <U> void forEachKey(Fun<? super K, ? extends U> transformer,
@@ -3834,7 +3834,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case it is not combined).
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the result of accumulating the given transformation
          * of all keys
@@ -3918,7 +3918,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          */
         public <U> void forEachValue(Fun<? super V, ? extends U> transformer,
                                      Action<U> action) {
@@ -3963,7 +3963,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case it is not combined).
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the result of accumulating the given transformation
          * of all values
@@ -4047,7 +4047,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          * @param action the action
          */
         public <U> void forEachEntry(Fun<Map.Entry<K,V>, ? extends U> transformer,
@@ -4196,7 +4196,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          * @param action the action
          * @return the task
          */
@@ -4346,7 +4346,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          * @param action the action
          * @return the task
          */
@@ -4513,7 +4513,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          * @param action the action
          */
         public static <K,V,U> ForkJoinTask<Void> forEachValue
@@ -4680,7 +4680,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * which case the action is not applied)
          * @param action the action
          */
         public static <K,V,U> ForkJoinTask<Void> forEachEntry

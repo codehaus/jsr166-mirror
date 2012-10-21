@@ -69,7 +69,6 @@ import java.util.Queue;
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
- *
  */
 public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {

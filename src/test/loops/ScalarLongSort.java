@@ -148,7 +148,6 @@ class ScalarLongSort {
          * and finding index of right closest to split point.
          * Uses left-spine decomposition to generate all
          * merge tasks before bottomming out at base case.
-         *
          */
         public final void compute() {
             Merger rights = null;

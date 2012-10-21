@@ -8,10 +8,9 @@ import java.util.*;
 import java.util.concurrent.*;
 //import jsr166y.*;
 
-/*
+/**
  * Based loosely on Java Grande Forum barrierBench
  */
-
 public class FJPhaserLoops {
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
     static final int FIRST_SIZE =   10000;

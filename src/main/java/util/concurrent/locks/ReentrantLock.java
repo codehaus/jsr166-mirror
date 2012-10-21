@@ -409,7 +409,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *         the lock could be acquired
      * @throws InterruptedException if the current thread is interrupted
      * @throws NullPointerException if the time unit is null
-     *
      */
     public boolean tryLock(long timeout, TimeUnit unit)
             throws InterruptedException {

@@ -2506,11 +2506,11 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * Returns the value to which the specified key is mapped,
-     * or the gieven defaultValue if this map contains no mapping for the key.
+     * or the given defaultValue if this map contains no mapping for the key.
      *
      * @param key the key
      * @param defaultValue the value to return if this map contains
-     * no mapping for the given key.
+     * no mapping for the given key
      * @return the mapping for the key, if present; else the defaultValue
      * @throws NullPointerException if the specified key is null
      */
@@ -2650,7 +2650,7 @@ public class ConcurrentHashMapV8<K, V>
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
      * @return the current (existing or computed) value associated with
-     *         the specified key, or null if the computed value is null.
+     *         the specified key, or null if the computed value is null
      * @throws NullPointerException if the specified key or mappingFunction
      *         is null
      * @throws IllegalStateException if the computation detectably
@@ -3671,8 +3671,8 @@ public class ConcurrentHashMapV8<K, V>
          * of each (key, value).
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          * @param action the action
          */
         public <U> void forEach(BiFun<? super K, ? super V, ? extends U> transformer,
@@ -3704,8 +3704,8 @@ public class ConcurrentHashMapV8<K, V>
          * combine values, or null if none.
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case it is not combined).
+         * for an element, or null if there is no transformation (in
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the result of accumulating the given transformation
          * of all (key, value) pairs
@@ -3788,8 +3788,8 @@ public class ConcurrentHashMapV8<K, V>
          * of each key.
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          * @param action the action
          */
         public <U> void forEachKey(Fun<? super K, ? extends U> transformer,
@@ -3834,8 +3834,8 @@ public class ConcurrentHashMapV8<K, V>
          * null if none.
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case it is not combined).
+         * for an element, or null if there is no transformation (in
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the result of accumulating the given transformation
          * of all keys
@@ -3918,8 +3918,8 @@ public class ConcurrentHashMapV8<K, V>
          * of each value.
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          */
         public <U> void forEachValue(Fun<? super V, ? extends U> transformer,
                                      Action<U> action) {
@@ -3938,7 +3938,6 @@ public class ConcurrentHashMapV8<K, V>
          * result on success, else null
          * @return a non-null result from applying the given search
          * function on each value, or null if none
-         *
          */
         public <U> U searchValues(Fun<? super V, ? extends U> searchFunction) {
             return fjp.invoke(ForkJoinTasks.searchValues
@@ -3963,8 +3962,8 @@ public class ConcurrentHashMapV8<K, V>
          * null if none.
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case it is not combined).
+         * for an element, or null if there is no transformation (in
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the result of accumulating the given transformation
          * of all values
@@ -4047,8 +4046,8 @@ public class ConcurrentHashMapV8<K, V>
          * of each entry.
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          * @param action the action
          */
         public <U> void forEachEntry(Fun<Map.Entry<K,V>, ? extends U> transformer,
@@ -4092,7 +4091,7 @@ public class ConcurrentHashMapV8<K, V>
          * or null if none.
          *
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
+         * for an element, or null if there is no transformation (in
          * which case it is not combined).
          * @param reducer a commutative associative combining function
          * @return the result of accumulating the given transformation
@@ -4196,8 +4195,8 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          * @param action the action
          * @return the task
          */
@@ -4239,7 +4238,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
+         * for an element, or null if there is no transformation (in
          * which case it is not combined).
          * @param reducer a commutative associative combining function
          * @return the task
@@ -4346,8 +4345,8 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          * @param action the action
          * @return the task
          */
@@ -4406,7 +4405,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
+         * for an element, or null if there is no transformation (in
          * which case it is not combined).
          * @param reducer a commutative associative combining function
          * @return the task
@@ -4513,8 +4512,8 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          * @param action the action
          */
         public static <K,V,U> ForkJoinTask<Void> forEachValue
@@ -4538,7 +4537,6 @@ public class ConcurrentHashMapV8<K, V>
          * @param searchFunction a function returning a non-null
          * result on success, else null
          * @return the task
-         *
          */
         public static <K,V,U> ForkJoinTask<U> searchValues
             (ConcurrentHashMapV8<K,V> map,
@@ -4573,7 +4571,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
+         * for an element, or null if there is no transformation (in
          * which case it is not combined).
          * @param reducer a commutative associative combining function
          * @return the task
@@ -4680,8 +4678,8 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
-         * which case the action is not applied).
+         * for an element, or null if there is no transformation (in
+         * which case the action is not applied)
          * @param action the action
          */
         public static <K,V,U> ForkJoinTask<Void> forEachEntry
@@ -4705,7 +4703,6 @@ public class ConcurrentHashMapV8<K, V>
          * @param searchFunction a function returning a non-null
          * result on success, else null
          * @return the task
-         *
          */
         public static <K,V,U> ForkJoinTask<U> searchEntries
             (ConcurrentHashMapV8<K,V> map,
@@ -4740,7 +4737,7 @@ public class ConcurrentHashMapV8<K, V>
          *
          * @param map the map
          * @param transformer a function returning the transformation
-         * for an element, or null of there is no transformation (in
+         * for an element, or null if there is no transformation (in
          * which case it is not combined).
          * @param reducer a commutative associative combining function
          * @return the task
@@ -5439,7 +5436,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof ReduceKeysTask)) {
@@ -5494,7 +5491,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof ReduceValuesTask)) {
@@ -5549,7 +5546,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof ReduceEntriesTask)) {
@@ -5608,7 +5605,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceKeysTask)) {
@@ -5668,7 +5665,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceValuesTask)) {
@@ -5728,7 +5725,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceEntriesTask)) {
@@ -5788,7 +5785,7 @@ public class ConcurrentHashMapV8<K, V>
                     if ((c = t.pending) == 0) {
                         for (s = t.rights; s != null; s = t.rights = s.nextRight) {
                             if ((sr = s.result) != null)
-                                t.result = (tr = t.result) == null? sr : reducer.apply(tr, sr);
+                                t.result = ((tr = t.result) == null) ? sr : reducer.apply(tr, sr);
                         }
                         if ((par = t.parent) == null ||
                             !(par instanceof MapReduceMappingsTask)) {

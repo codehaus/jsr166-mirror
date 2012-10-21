@@ -50,7 +50,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author  Doug Lea
  * @param <E> the type of elements held in this collection
  */
-
 public class ConcurrentLinkedDeque<E>
     extends AbstractCollection<E>
     implements Deque<E>, java.io.Serializable {

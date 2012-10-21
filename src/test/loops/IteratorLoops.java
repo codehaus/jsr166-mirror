@@ -14,7 +14,6 @@ import java.util.*;
  * and long iterators.  Reports include times for adds and other
  * checks, so overestimate times per iteration.
  */
-
 public final class IteratorLoops {
     static final int DEFAULT_SIZE = 16384;
     static final int DEFAULT_TRIALS = 4;

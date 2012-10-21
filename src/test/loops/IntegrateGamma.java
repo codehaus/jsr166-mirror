@@ -12,9 +12,7 @@ import java.util.concurrent.*;
  * Inspired by a
  * <A href="http://www.cs.uga.edu/~dkl/filaments/dist.html"> Filaments</A>
  * demo program.
- *
  */
-
 public class IntegrateGamma {
     /** for time conversion */
     static final long NPS = (1000L * 1000 * 1000);

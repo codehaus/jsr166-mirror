@@ -1301,7 +1301,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param w the worker's queue
      */
-
     final void registerWorker(WorkQueue w) {
         Mutex lock = this.lock;
         lock.lock();
@@ -1519,7 +1518,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * awaiting signal,
      *
      * @param w the worker (via its WorkQueue)
-     * @return a task or null of none found
+     * @return a task or null if none found
      */
     private final ForkJoinTask<?> scan(WorkQueue w) {
         WorkQueue[] ws;                       // first update random seed

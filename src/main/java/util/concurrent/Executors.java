@@ -429,7 +429,6 @@ public class Executors {
      * @param callable the underlying task
      * @return a callable object
      * @throws NullPointerException if callable null
-     *
      */
     public static <T> Callable<T> privilegedCallable(Callable<T> callable) {
         if (callable == null)

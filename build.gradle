@@ -14,6 +14,18 @@ allprojects {
   version = versionRoot + ( isSnapshot ? '-SNAPSHOT' : '' )
   ext.bundleVersion = versionRoot + ( isSnapshot ? '.SNAPSHOT' : '' )
   ext.projectWebsite = 'http://jsr166.codehaus.org'
+  //
+  //  Gradle currently has facility to append to the bootclasspath but not prepend, which is what is needed
+  //  here since some of the JSR166 classes replace ones in the Java distribution, so the JSR 166 classes
+  //  must appear earlier in the classpath than the Java distribution ones.  This means we have to provide
+  //  the whole of the bootclasspath, which is going to be a nightmare :-(
+  //
+  //  http://forums.gradle.org/gradle/topics/gradle_version_of_ants_bootclasspath
+  //  http://forums.gradle.org/gradle/topics/can_a_jar_be_prepend_to_the_bootclasspath
+  //
+  ext.bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , System.getenv().JAVA_HOME + '/jre/lib/rt.jar' )
+  ext.bootClasspath = bootClasspathCollection.asPath
+  //
 }
 
 subprojects {
@@ -22,16 +34,7 @@ subprojects {
   apply plugin: 'maven'
   repositories { mavenCentral ( ) }
   defaultTasks 'build'
-  //
-  //  Gradle currently has facility to append to the bootclasspath but not prepend, which is what is needed
-  //  since some of the JSR166 classes replace ones in the Java distribution, so the JSR 166 classes must
-  //  appear earlier in the classpath than the Java distribution ones.  This means we have to provide the
-  //  whole of the bootclasspath, which is going to be a nightmare to handle in a platform independent way
-  //  :-(
-  //
-  //ext.bootClasspathCollection = files ( '../jsr166/build/libs/jsr166-' + version + '.jar' , '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/rt.jar' )
-  //ext.bootClasspath = bootClasspathCollection.asPath
-  //
+
   configurations {
     deployJars
   }
@@ -145,9 +148,9 @@ project ( ':jsr166tck' ) {
   }
   dependencies { compile 'junit:junit:3.8.2' }
   compileJava.dependsOn project ( ':jsr166' ).jar
-  //compileJava.options.bootClasspath = bootClasspath
-  //compileTestJava.options.bootClasspath = bootClasspath
-  //test.bootstrapClasspath = bootClasspathCollection
+  compileJava.options.bootClasspath = bootClasspath
+  compileTestJava.options.bootClasspath = bootClasspath
+  test.bootstrapClasspath = bootClasspathCollection
   jar {
     manifest {
       name = 'jsr166tck'
@@ -217,7 +220,7 @@ project ( ':extra166y' ) {
     //  deprecated.  Leave the new versions commented out pending upgrade from 1.0-milestone-3 which doesn't
     //  have the change.
     compile files ( project ( ':jsr166y' ).sourceSets.main.output )
-    testCompile 'junit:junit:3.8.2' // , files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
+    testCompile 'junit:junit:3.8.2', files ( project ( ':jsr166tck' ).sourceSets.main.output )  // The extra166y tests depend on classes in the TCK.
   }
   jar {
     manifest {

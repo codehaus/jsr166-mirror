@@ -8,7 +8,6 @@ package jsr166e;
 import jsr166e.LongAdder;
 import jsr166e.ForkJoinPool;
 import jsr166e.ForkJoinTask;
-
 import java.util.Comparator;
 import java.util.Arrays;
 import java.util.Map;
@@ -85,6 +84,19 @@ import java.io.Serializable;
  * {@code hashCode()} is a sure way to slow down performance of any
  * hash table.
  *
+ * <p> A {@link Set} projection of a ConcurrentHashMap may be created
+ * (using {@link #newKeySet()} or {@link #newKeySet(int)}), or viewed
+ * (using {@link #keySet(Object)} when only keys are of interest, and the
+ * mapped values are (perhaps transiently) not used or all take the
+ * same mapping value.
+ *
+ * <p> A ConcurrentHashMapV8 can be used as scalable frequency map (a
+ * form of histogram or multiset) by using {@link LongAdder} values
+ * and initializing via {@link #computeIfAbsent}. For example, to add
+ * a count to a {@code ConcurrentHashMapV8<String,LongAdder> freqs}, you
+ * can use {@code freqs.computeIfAbsent(k -> new
+ * LongAdder()).increment();}
+ *
  * <p>This class and its views and iterators implement all of the
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
  * interfaces.
@@ -92,14 +104,110 @@ import java.io.Serializable;
  * <p> Like {@link Hashtable} but unlike {@link HashMap}, this class
  * does <em>not</em> allow {@code null} to be used as a key or value.
  *
+ * <p>ConcurrentHashMapV8s support parallel operations using the {@link
+ * ForkJoinPool#commonPool}. (Task that may be used in other contexts
+ * are available in class {@link ForkJoinTasks}). These operations are
+ * designed to be safely, and often sensibly, applied even with maps
+ * that are being concurrently updated by other threads; for example,
+ * when computing a snapshot summary of the values in a shared
+ * registry.  There are three kinds of operation, each with four
+ * forms, accepting functions with Keys, Values, Entries, and (Key,
+ * Value) arguments and/or return values. Because the elements of a
+ * ConcurrentHashMapV8 are not ordered in any particular way, and may be
+ * processed in different orders in different parallel executions, the
+ * correctness of supplied functions should not depend on any
+ * ordering, or on any other objects or values that may transiently
+ * change while computation is in progress; and except for forEach
+ * actions, should ideally be side-effect-free.
+ *
+ * <ul>
+ * <li> forEach: Perform a given action on each element.
+ * A variant form applies a given transformation on each element
+ * before performing the action.</li>
+ *
+ * <li> search: Return the first available non-null result of
+ * applying a given function on each element; skipping further
+ * search when a result is found.</li>
+ *
+ * <li> reduce: Accumulate each element.  The supplied reduction
+ * function cannot rely on ordering (more formally, it should be
+ * both associative and commutative).  There are five variants:
+ *
+ * <ul>
+ *
+ * <li> Plain reductions. (There is not a form of this method for
+ * (key, value) function arguments since there is no corresponding
+ * return type.)</li>
+ *
+ * <li> Mapped reductions that accumulate the results of a given
+ * function applied to each element.</li>
+ *
+ * <li> Reductions to scalar doubles, longs, and ints, using a
+ * given basis value.</li>
+ *
+ * </li>
+ * </ul>
+ * </ul>
+ *
+ * <p>The concurrency properties of bulk operations follow
+ * from those of ConcurrentHashMapV8: Any non-null result returned
+ * from {@code get(key)} and related access methods bears a
+ * happens-before relation with the associated insertion or
+ * update.  The result of any bulk operation reflects the
+ * composition of these per-element relations (but is not
+ * necessarily atomic with respect to the map as a whole unless it
+ * is somehow known to be quiescent).  Conversely, because keys
+ * and values in the map are never null, null serves as a reliable
+ * atomic indicator of the current lack of any result.  To
+ * maintain this property, null serves as an implicit basis for
+ * all non-scalar reduction operations. For the double, long, and
+ * int versions, the basis should be one that, when combined with
+ * any other value, returns that other value (more formally, it
+ * should be the identity element for the reduction). Most common
+ * reductions have these properties; for example, computing a sum
+ * with basis 0 or a minimum with basis MAX_VALUE.
+ *
+ * <p>Search and transformation functions provided as arguments
+ * should similarly return null to indicate the lack of any result
+ * (in which case it is not used). In the case of mapped
+ * reductions, this also enables transformations to serve as
+ * filters, returning null (or, in the case of primitive
+ * specializations, the identity basis) if the element should not
+ * be combined. You can create compound transformations and
+ * filterings by composing them yourself under this "null means
+ * there is nothing there now" rule before using them in search or
+ * reduce operations.
+ *
+ * <p>Methods accepting and/or returning Entry arguments maintain
+ * key-value associations. They may be useful for example when
+ * finding the key for the greatest value. Note that "plain" Entry
+ * arguments can be supplied using {@code new
+ * AbstractMap.SimpleEntry(k,v)}.
+ *
+ * <p> Bulk operations may complete abruptly, throwing an
+ * exception encountered in the application of a supplied
+ * function. Bear in mind when handling such exceptions that other
+ * concurrently executing functions could also have thrown
+ * exceptions, or would have done so if the first exception had
+ * not occurred.
+ *
+ * <p>Parallel speedups for bulk operations compared to sequential
+ * processing are common but not guaranteed.  Operations involving
+ * brief functions on small maps may execute more slowly than
+ * sequential loops if the underlying work to parallelize the
+ * computation is more expensive than the computation
+ * itself. Similarly, parallelization may not lead to much actual
+ * parallelism if all processors are busy performing unrelated tasks.
+ *
+ * <p> All arguments to all task methods must be non-null.
+ *
+ * <p><em>jsr166e note: During transition, this class
+ * uses nested functional interfaces with different names but the
+ * same forms as those expected for JDK8.<em>
+ *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
- *
- * <p><em>jsr166e note: This class is a candidate replacement for
- * java.util.concurrent.ConcurrentHashMap.  During transition, this
- * class declares and uses nested functional interfaces with different
- * names but the same forms as those expected for JDK8.<em>
  *
  * @since 1.5
  * @author Doug Lea
@@ -177,6 +285,77 @@ public class ConcurrentHashMapV8<K, V>
          * already commenced traversing elements
          */
         Spliterator<T> split();
+    }
+
+    /**
+     * A view of a ConcurrentHashMapV8 as a {@link Set} of keys, in
+     * which additions may optionally be enabled by mapping to a
+     * common value.  This class cannot be directly instantiated. See
+     * {@link #keySet}, {@link #keySet(Object)}, {@link #newKeySet()},
+     * {@link #newKeySet(int)}.
+     *
+     * <p>The view's {@code iterator} is a "weakly consistent" iterator
+     * that will never throw {@link ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed to)
+     * reflect any modifications subsequent to construction.
+     */
+    public static class KeySetView<K,V> extends CHMView<K,V> implements Set<K>, java.io.Serializable {
+        private static final long serialVersionUID = 7249069246763182397L;
+        private final V value;
+        KeySetView(ConcurrentHashMapV8<K, V> map, V value) {  // non-public
+            super(map);
+            this.value = value;
+        }
+
+        /**
+         * Returns the map backing this view.
+         *
+         * @return the map backing this view
+         */
+        public ConcurrentHashMapV8<K,V> getMap() { return map; }
+
+        /**
+         * Returns the default mapped value for additions,
+         * or {@code null} if additions are not supported.
+         *
+         * @return the default mapped value for additions, or {@code null}
+         * if not supported.
+         */
+        public V getMappedValue() { return value; }
+
+        // implement Set API
+
+        public boolean contains(Object o) { return map.containsKey(o); }
+        public boolean remove(Object o)   { return map.remove(o) != null; }
+        public Iterator<K> iterator()     { return new KeyIterator<K,V>(map); }
+        public boolean add(K e) {
+            V v;
+            if ((v = value) == null)
+                throw new UnsupportedOperationException();
+            if (e == null)
+                throw new NullPointerException();
+            return map.internalPutIfAbsent(e, v) == null;
+        }
+        public boolean addAll(Collection<? extends K> c) {
+            boolean added = false;
+            V v;
+            if ((v = value) == null)
+                throw new UnsupportedOperationException();
+            for (K e : c) {
+                if (e == null)
+                    throw new NullPointerException();
+                if (map.internalPutIfAbsent(e, v) == null)
+                    added = true;
+            }
+            return added;
+        }
+        public boolean equals(Object o) {
+            Set<?> c;
+            return ((o instanceof Set) &&
+                    ((c = (Set<?>)o) == this ||
+                     (containsAll(c) && c.containsAll(this))));
+        }
     }
 
     /*
@@ -461,7 +640,7 @@ public class ConcurrentHashMapV8<K, V>
     private transient volatile int sizeCtl;
 
     // views
-    private transient KeySet<K,V> keySet;
+    private transient KeySetView<K,V> keySet;
     private transient Values<K,V> values;
     private transient EntrySet<K,V> entrySet;
 
@@ -2243,7 +2422,8 @@ public class ConcurrentHashMapV8<K, V>
      * change (including to null, indicating deletion), field nextVal
      * might not be accurate at point of use, but still maintains the
      * weak consistency property of holding a value that was once
-     * valid.
+     * valid. To support iterator.remove, the nextKey field is not
+     * updated (nulled out) when the iterator cannot advance.
      *
      * Internal traversals directly access these fields, as in:
      * {@code while (it.advance() != null) { process(it.nextKey); }}
@@ -2280,7 +2460,6 @@ public class ConcurrentHashMapV8<K, V>
     @SuppressWarnings("serial") static class Traverser<K,V,R> extends ForkJoinTask<R> {
         final ConcurrentHashMapV8<K, V> map;
         Node next;           // the next entry to use
-        Node last;           // the last entry used
         Object nextKey;      // cached key field of next
         Object nextVal;      // cached val field of next
         Node[] tab;          // current table; updated if resized
@@ -2313,7 +2492,7 @@ public class ConcurrentHashMapV8<K, V>
          * See above for explanation.
          */
         final Object advance() {
-            Node e = last = next;
+            Node e = next;
             Object ev = null;
             outer: do {
                 if (e != null)                  // advance past used/skipped node
@@ -2347,13 +2526,10 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         public final void remove() {
-            if (nextVal == null && last == null)
-                advance();
-            Node e = last;
-            if (e == null)
+            Object k = nextKey;
+            if (k == null && (advance() == null || (k = nextKey) == null))
                 throw new IllegalStateException();
-            last = null;
-            map.remove(e.key);
+            map.internalReplace(k, null, null);
         }
 
         public final boolean hasNext() {
@@ -2457,6 +2633,32 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
+     * Creates a new {@link Set} backed by a ConcurrentHashMapV8
+     * from the given type to {@code Boolean.TRUE}.
+     *
+     * @return the new set
+     */
+    public static <K> KeySetView<K,Boolean> newKeySet() {
+        return new KeySetView<K,Boolean>(new ConcurrentHashMapV8<K,Boolean>(),
+                                      Boolean.TRUE);
+    }
+
+    /**
+     * Creates a new {@link Set} backed by a ConcurrentHashMapV8
+     * from the given type to {@code Boolean.TRUE}.
+     *
+     * @param initialCapacity The implementation performs internal
+     * sizing to accommodate this many elements.
+     * @throws IllegalArgumentException if the initial capacity of
+     * elements is negative
+     * @return the new set
+     */
+    public static <K> KeySetView<K,Boolean> newKeySet(int initialCapacity) {
+        return new KeySetView<K,Boolean>(new ConcurrentHashMapV8<K,Boolean>(initialCapacity),
+                                      Boolean.TRUE);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public boolean isEmpty() {
@@ -2475,7 +2677,7 @@ public class ConcurrentHashMapV8<K, V>
 
     /**
      * Returns the number of mappings. This method should be used
-     * instead of {@link #size} because a ConcurrentHashMap may
+     * instead of {@link #size} because a ConcurrentHashMapV8 may
      * contain more mappings than can be represented as an int. The
      * value returned is a snapshot; the actual count may differ if
      * there are ongoing concurrent insertions or removals.
@@ -2848,22 +3050,31 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * Returns a {@link Set} view of the keys contained in this map.
      * The set is backed by the map, so changes to the map are
-     * reflected in the set, and vice-versa.  The set supports element
-     * removal, which removes the corresponding mapping from this map,
-     * via the {@code Iterator.remove}, {@code Set.remove},
-     * {@code removeAll}, {@code retainAll}, and {@code clear}
-     * operations.  It does not support the {@code add} or
-     * {@code addAll} operations.
+     * reflected in the set, and vice-versa.
      *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * @return the set view
      */
-    public Set<K> keySet() {
-        KeySet<K,V> ks = keySet;
-        return (ks != null) ? ks : (keySet = new KeySet<K,V>(this));
+    public KeySetView<K,V> keySet() {
+        KeySetView<K,V> ks = keySet;
+        return (ks != null) ? ks : (keySet = new KeySetView<K,V>(this, null));
+    }
+
+    /**
+     * Returns a {@link Set} view of the keys in this map, using the
+     * given common mapped value for any additions (i.e., {@link
+     * Collection#add} and {@link Collection#addAll}). This is of
+     * course only appropriate if it is acceptable to use the same
+     * value for all additions from this view.
+     *
+     * @param mappedValue the mapped value to use for any
+     * additions.
+     * @return the set view
+     * @throws NullPointerException if the mappedValue is null
+     */
+    public KeySetView<K,V> keySet(V mappedValue) {
+        if (mappedValue == null)
+            throw new NullPointerException();
+        return new KeySetView<K,V>(this, mappedValue);
     }
 
     /**
@@ -3045,7 +3256,7 @@ public class ConcurrentHashMapV8<K, V>
             super(it);
         }
         public KeyIterator<K,V> split() {
-            if (last != null || (next != null && nextVal == null))
+            if (nextKey != null)
                 throw new IllegalStateException();
             return new KeyIterator<K,V>(this);
         }
@@ -3067,7 +3278,7 @@ public class ConcurrentHashMapV8<K, V>
             super(it);
         }
         public ValueIterator<K,V> split() {
-            if (last != null || (next != null && nextVal == null))
+            if (nextKey != null)
                 throw new IllegalStateException();
             return new ValueIterator<K,V>(this);
         }
@@ -3090,7 +3301,7 @@ public class ConcurrentHashMapV8<K, V>
             super(it);
         }
         public EntryIterator<K,V> split() {
-            if (last != null || (next != null && nextVal == null))
+            if (nextKey != null)
                 throw new IllegalStateException();
             return new EntryIterator<K,V>(this);
         }
@@ -3277,30 +3488,6 @@ public class ConcurrentHashMapV8<K, V>
         }
 
     }
-
-    static final class KeySet<K,V> extends CHMView<K,V> implements Set<K> {
-        KeySet(ConcurrentHashMapV8<K, V> map)  {
-            super(map);
-        }
-        public final boolean contains(Object o) { return map.containsKey(o); }
-        public final boolean remove(Object o)   { return map.remove(o) != null; }
-        public final Iterator<K> iterator() {
-            return new KeyIterator<K,V>(map);
-        }
-        public final boolean add(K e) {
-            throw new UnsupportedOperationException();
-        }
-        public final boolean addAll(Collection<? extends K> c) {
-            throw new UnsupportedOperationException();
-        }
-        public boolean equals(Object o) {
-            Set<?> c;
-            return ((o instanceof Set) &&
-                    ((c = (Set<?>)o) == this ||
-                     (containsAll(c) && c.containsAll(this))));
-        }
-    }
-
 
     static final class Values<K,V> extends CHMView<K,V>
         implements Collection<V> {
@@ -3531,645 +3718,503 @@ public class ConcurrentHashMapV8<K, V>
     // -------------------------------------------------------
 
     /**
-     * Returns an extended {@link Parallel} view of this map using the
-     * given executor for bulk parallel operations.
+     * Performs the given action for each (key, value).
      *
-     * @param executor the executor
-     * @return a parallel view
+     * @param action the action
      */
-    public Parallel parallel(ForkJoinPool executor)  {
-        return new Parallel(executor);
+    public void forEach(BiAction<K,V> action) {
+        ForkJoinTasks.forEach
+            (this, action).invoke();
     }
 
     /**
-     * An extended view of a ConcurrentHashMap supporting bulk
-     * parallel operations. These operations are designed to be
-     * safely, and often sensibly, applied even with maps that are
-     * being concurrently updated by other threads; for example, when
-     * computing a snapshot summary of the values in a shared
-     * registry.  There are three kinds of operation, each with four
-     * forms, accepting functions with Keys, Values, Entries, and
-     * (Key, Value) arguments and/or return values. Because the
-     * elements of a ConcurrentHashMap are not ordered in any
-     * particular way, and may be processed in different orders in
-     * different parallel executions, the correctness of supplied
-     * functions should not depend on any ordering, or on any other
-     * objects or values that may transiently change while computation
-     * is in progress; and except for forEach actions, should ideally
-     * be side-effect-free.
+     * Performs the given action for each non-null transformation
+     * of each (key, value).
      *
-     * <ul>
-     * <li> forEach: Perform a given action on each element.
-     * A variant form applies a given transformation on each element
-     * before performing the action.</li>
-     *
-     * <li> search: Return the first available non-null result of
-     * applying a given function on each element; skipping further
-     * search when a result is found.</li>
-     *
-     * <li> reduce: Accumulate each element.  The supplied reduction
-     * function cannot rely on ordering (more formally, it should be
-     * both associative and commutative).  There are five variants:
-     *
-     * <ul>
-     *
-     * <li> Plain reductions. (There is not a form of this method for
-     * (key, value) function arguments since there is no corresponding
-     * return type.)</li>
-     *
-     * <li> Mapped reductions that accumulate the results of a given
-     * function applied to each element.</li>
-     *
-     * <li> Reductions to scalar doubles, longs, and ints, using a
-     * given basis value.</li>
-     *
-     * </li>
-     * </ul>
-     * </ul>
-     *
-     * <p>The concurrency properties of the bulk operations follow
-     * from those of ConcurrentHashMap: Any non-null result returned
-     * from {@code get(key)} and related access methods bears a
-     * happens-before relation with the associated insertion or
-     * update.  The result of any bulk operation reflects the
-     * composition of these per-element relations (but is not
-     * necessarily atomic with respect to the map as a whole unless it
-     * is somehow known to be quiescent).  Conversely, because keys
-     * and values in the map are never null, null serves as a reliable
-     * atomic indicator of the current lack of any result.  To
-     * maintain this property, null serves as an implicit basis for
-     * all non-scalar reduction operations. For the double, long, and
-     * int versions, the basis should be one that, when combined with
-     * any other value, returns that other value (more formally, it
-     * should be the identity element for the reduction). Most common
-     * reductions have these properties; for example, computing a sum
-     * with basis 0 or a minimum with basis MAX_VALUE.
-     *
-     * <p>Search and transformation functions provided as arguments
-     * should similarly return null to indicate the lack of any result
-     * (in which case it is not used). In the case of mapped
-     * reductions, this also enables transformations to serve as
-     * filters, returning null (or, in the case of primitive
-     * specializations, the identity basis) if the element should not
-     * be combined. You can create compound transformations and
-     * filterings by composing them yourself under this "null means
-     * there is nothing there now" rule before using them in search or
-     * reduce operations.
-     *
-     * <p>Methods accepting and/or returning Entry arguments maintain
-     * key-value associations. They may be useful for example when
-     * finding the key for the greatest value. Note that "plain" Entry
-     * arguments can be supplied using {@code new
-     * AbstractMap.SimpleEntry(k,v)}.
-     *
-     * <p> Bulk operations may complete abruptly, throwing an
-     * exception encountered in the application of a supplied
-     * function. Bear in mind when handling such exceptions that other
-     * concurrently executing functions could also have thrown
-     * exceptions, or would have done so if the first exception had
-     * not occurred.
-     *
-     * <p>Parallel speedups compared to sequential processing are
-     * common but not guaranteed.  Operations involving brief
-     * functions on small maps may execute more slowly than sequential
-     * loops if the underlying work to parallelize the computation is
-     * more expensive than the computation itself. Similarly,
-     * parallelization may not lead to much actual parallelism if all
-     * processors are busy performing unrelated tasks.
-     *
-     * <p> All arguments to all task methods must be non-null.
-     *
-     * <p><em>jsr166e note: During transition, this class
-     * uses nested functional interfaces with different names but the
-     * same forms as those expected for JDK8.<em>
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case the action is not applied).
+     * @param action the action
      */
-    public class Parallel {
-        final ForkJoinPool fjp;
+    public <U> void forEach(BiFun<? super K, ? super V, ? extends U> transformer,
+                            Action<U> action) {
+        ForkJoinTasks.forEach
+            (this, transformer, action).invoke();
+    }
 
-        /**
-         * Returns an extended view of this map using the given
-         * executor for bulk parallel operations.
-         *
-         * @param executor the executor
-         */
-        public Parallel(ForkJoinPool executor)  {
-            this.fjp = executor;
-        }
+    /**
+     * Returns a non-null result from applying the given search
+     * function on each (key, value), or null if none.  Upon
+     * success, further element processing is suppressed and the
+     * results of any other parallel invocations of the search
+     * function are ignored.
+     *
+     * @param searchFunction a function returning a non-null
+     * result on success, else null
+     * @return a non-null result from applying the given search
+     * function on each (key, value), or null if none
+     */
+    public <U> U search(BiFun<? super K, ? super V, ? extends U> searchFunction) {
+        return ForkJoinTasks.search
+            (this, searchFunction).invoke();
+    }
 
-        /**
-         * Performs the given action for each (key, value).
-         *
-         * @param action the action
-         */
-        public void forEach(BiAction<K,V> action) {
-            fjp.invoke(ForkJoinTasks.forEach
-                       (ConcurrentHashMapV8.this, action));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all (key, value) pairs using the given reducer to
+     * combine values, or null if none.
+     *
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case it is not combined).
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all (key, value) pairs
+     */
+    public <U> U reduce(BiFun<? super K, ? super V, ? extends U> transformer,
+                        BiFun<? super U, ? super U, ? extends U> reducer) {
+        return ForkJoinTasks.reduce
+            (this, transformer, reducer).invoke();
+    }
 
-        /**
-         * Performs the given action for each non-null transformation
-         * of each (key, value).
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case the action is not applied)
-         * @param action the action
-         */
-        public <U> void forEach(BiFun<? super K, ? super V, ? extends U> transformer,
-                                Action<U> action) {
-            fjp.invoke(ForkJoinTasks.forEach
-                       (ConcurrentHashMapV8.this, transformer, action));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all (key, value) pairs using the given reducer to
+     * combine values, and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all (key, value) pairs
+     */
+    public double reduceToDouble(ObjectByObjectToDouble<? super K, ? super V> transformer,
+                                 double basis,
+                                 DoubleByDoubleToDouble reducer) {
+        return ForkJoinTasks.reduceToDouble
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns a non-null result from applying the given search
-         * function on each (key, value), or null if none.  Upon
-         * success, further element processing is suppressed and the
-         * results of any other parallel invocations of the search
-         * function are ignored.
-         *
-         * @param searchFunction a function returning a non-null
-         * result on success, else null
-         * @return a non-null result from applying the given search
-         * function on each (key, value), or null if none
-         */
-        public <U> U search(BiFun<? super K, ? super V, ? extends U> searchFunction) {
-            return fjp.invoke(ForkJoinTasks.search
-                              (ConcurrentHashMapV8.this, searchFunction));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all (key, value) pairs using the given reducer to
+     * combine values, and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all (key, value) pairs
+     */
+    public long reduceToLong(ObjectByObjectToLong<? super K, ? super V> transformer,
+                             long basis,
+                             LongByLongToLong reducer) {
+        return ForkJoinTasks.reduceToLong
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all (key, value) pairs using the given reducer to
-         * combine values, or null if none.
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case it is not combined)
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all (key, value) pairs
-         */
-        public <U> U reduce(BiFun<? super K, ? super V, ? extends U> transformer,
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all (key, value) pairs using the given reducer to
+     * combine values, and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all (key, value) pairs
+     */
+    public int reduceToInt(ObjectByObjectToInt<? super K, ? super V> transformer,
+                           int basis,
+                           IntByIntToInt reducer) {
+        return ForkJoinTasks.reduceToInt
+            (this, transformer, basis, reducer).invoke();
+    }
+
+    /**
+     * Performs the given action for each key.
+     *
+     * @param action the action
+     */
+    public void forEachKey(Action<K> action) {
+        ForkJoinTasks.forEachKey
+            (this, action).invoke();
+    }
+
+    /**
+     * Performs the given action for each non-null transformation
+     * of each key.
+     *
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case the action is not applied).
+     * @param action the action
+     */
+    public <U> void forEachKey(Fun<? super K, ? extends U> transformer,
+                               Action<U> action) {
+        ForkJoinTasks.forEachKey
+            (this, transformer, action).invoke();
+    }
+
+    /**
+     * Returns the result of accumulating all keys using the given
+     * reducer to combine values, or null if none.
+     *
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating all keys using the given
+     * reducer to combine values, or null if none
+     */
+    public K reduceKeys(BiFun<? super K, ? super K, ? extends K> reducer) {
+        return ForkJoinTasks.reduceKeys
+            (this, reducer).invoke();
+    }
+
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all keys using the given reducer to combine values, or
+     * null if none.
+     *
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case it is not combined).
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all keys
+     */
+    public <U> U reduceKeys(Fun<? super K, ? extends U> transformer,
                             BiFun<? super U, ? super U, ? extends U> reducer) {
-            return fjp.invoke(ForkJoinTasks.reduce
-                              (ConcurrentHashMapV8.this, transformer, reducer));
-        }
+        return ForkJoinTasks.reduceKeys
+            (this, transformer, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all (key, value) pairs using the given reducer to
-         * combine values, and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all (key, value) pairs
-         */
-        public double reduceToDouble(ObjectByObjectToDouble<? super K, ? super V> transformer,
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all keys using the given reducer to combine values, and
+     * the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return  the result of accumulating the given transformation
+     * of all keys
+     */
+    public double reduceKeysToDouble(ObjectToDouble<? super K> transformer,
                                      double basis,
                                      DoubleByDoubleToDouble reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceToDouble
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+        return ForkJoinTasks.reduceKeysToDouble
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all (key, value) pairs using the given reducer to
-         * combine values, and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all (key, value) pairs
-         */
-        public long reduceToLong(ObjectByObjectToLong<? super K, ? super V> transformer,
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all keys using the given reducer to combine values, and
+     * the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all keys
+     */
+    public long reduceKeysToLong(ObjectToLong<? super K> transformer,
                                  long basis,
                                  LongByLongToLong reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceToLong
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+        return ForkJoinTasks.reduceKeysToLong
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all (key, value) pairs using the given reducer to
-         * combine values, and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all (key, value) pairs
-         */
-        public int reduceToInt(ObjectByObjectToInt<? super K, ? super V> transformer,
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all keys using the given reducer to combine values, and
+     * the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all keys
+     */
+    public int reduceKeysToInt(ObjectToInt<? super K> transformer,
                                int basis,
                                IntByIntToInt reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceToInt
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+        return ForkJoinTasks.reduceKeysToInt
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Performs the given action for each key.
-         *
-         * @param action the action
-         */
-        public void forEachKey(Action<K> action) {
-            fjp.invoke(ForkJoinTasks.forEachKey
-                       (ConcurrentHashMapV8.this, action));
-        }
+    /**
+     * Performs the given action for each value.
+     *
+     * @param action the action
+     */
+    public void forEachValue(Action<V> action) {
+        ForkJoinTasks.forEachValue
+            (this, action).invoke();
+    }
 
-        /**
-         * Performs the given action for each non-null transformation
-         * of each key.
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case the action is not applied)
-         * @param action the action
-         */
-        public <U> void forEachKey(Fun<? super K, ? extends U> transformer,
-                                   Action<U> action) {
-            fjp.invoke(ForkJoinTasks.forEachKey
-                       (ConcurrentHashMapV8.this, transformer, action));
-        }
+    /**
+     * Performs the given action for each non-null transformation
+     * of each value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case the action is not applied).
+     */
+    public <U> void forEachValue(Fun<? super V, ? extends U> transformer,
+                                 Action<U> action) {
+        ForkJoinTasks.forEachValue
+            (this, transformer, action).invoke();
+    }
 
-        /**
-         * Returns a non-null result from applying the given search
-         * function on each key, or null if none. Upon success,
-         * further element processing is suppressed and the results of
-         * any other parallel invocations of the search function are
-         * ignored.
-         *
-         * @param searchFunction a function returning a non-null
-         * result on success, else null
-         * @return a non-null result from applying the given search
-         * function on each key, or null if none
-         */
-        public <U> U searchKeys(Fun<? super K, ? extends U> searchFunction) {
-            return fjp.invoke(ForkJoinTasks.searchKeys
-                              (ConcurrentHashMapV8.this, searchFunction));
-        }
+    /**
+     * Returns a non-null result from applying the given search
+     * function on each value, or null if none.  Upon success,
+     * further element processing is suppressed and the results of
+     * any other parallel invocations of the search function are
+     * ignored.
+     *
+     * @param searchFunction a function returning a non-null
+     * result on success, else null
+     * @return a non-null result from applying the given search
+     * function on each value, or null if none
+     *
+     */
+    public <U> U searchValues(Fun<? super V, ? extends U> searchFunction) {
+        return ForkJoinTasks.searchValues
+            (this, searchFunction).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating all keys using the given
-         * reducer to combine values, or null if none.
-         *
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating all keys using the given
-         * reducer to combine values, or null if none
-         */
-        public K reduceKeys(BiFun<? super K, ? super K, ? extends K> reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceKeys
-                              (ConcurrentHashMapV8.this, reducer));
-        }
+    /**
+     * Returns the result of accumulating all values using the
+     * given reducer to combine values, or null if none.
+     *
+     * @param reducer a commutative associative combining function
+     * @return  the result of accumulating all values
+     */
+    public V reduceValues(BiFun<? super V, ? super V, ? extends V> reducer) {
+        return ForkJoinTasks.reduceValues
+            (this, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all keys using the given reducer to combine values, or
-         * null if none.
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case it is not combined)
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all keys
-         */
-        public <U> U reduceKeys(Fun<? super K, ? extends U> transformer,
-                                BiFun<? super U, ? super U, ? extends U> reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceKeys
-                              (ConcurrentHashMapV8.this, transformer, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all values using the given reducer to combine values, or
+     * null if none.
+     *
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case it is not combined).
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all values
+     */
+    public <U> U reduceValues(Fun<? super V, ? extends U> transformer,
+                              BiFun<? super U, ? super U, ? extends U> reducer) {
+        return ForkJoinTasks.reduceValues
+            (this, transformer, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all keys using the given reducer to combine values, and
-         * the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return  the result of accumulating the given transformation
-         * of all keys
-         */
-        public double reduceKeysToDouble(ObjectToDouble<? super K> transformer,
-                                         double basis,
-                                         DoubleByDoubleToDouble reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceKeysToDouble
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all values using the given reducer to combine values,
+     * and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all values
+     */
+    public double reduceValuesToDouble(ObjectToDouble<? super V> transformer,
+                                       double basis,
+                                       DoubleByDoubleToDouble reducer) {
+        return ForkJoinTasks.reduceValuesToDouble
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all keys using the given reducer to combine values, and
-         * the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all keys
-         */
-        public long reduceKeysToLong(ObjectToLong<? super K> transformer,
-                                     long basis,
-                                     LongByLongToLong reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceKeysToLong
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all values using the given reducer to combine values,
+     * and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all values
+     */
+    public long reduceValuesToLong(ObjectToLong<? super V> transformer,
+                                   long basis,
+                                   LongByLongToLong reducer) {
+        return ForkJoinTasks.reduceValuesToLong
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all keys using the given reducer to combine values, and
-         * the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all keys
-         */
-        public int reduceKeysToInt(ObjectToInt<? super K> transformer,
-                                   int basis,
-                                   IntByIntToInt reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceKeysToInt
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all values using the given reducer to combine values,
+     * and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all values
+     */
+    public int reduceValuesToInt(ObjectToInt<? super V> transformer,
+                                 int basis,
+                                 IntByIntToInt reducer) {
+        return ForkJoinTasks.reduceValuesToInt
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Performs the given action for each value.
-         *
-         * @param action the action
-         */
-        public void forEachValue(Action<V> action) {
-            fjp.invoke(ForkJoinTasks.forEachValue
-                       (ConcurrentHashMapV8.this, action));
-        }
+    /**
+     * Performs the given action for each entry.
+     *
+     * @param action the action
+     */
+    public void forEachEntry(Action<Map.Entry<K,V>> action) {
+        ForkJoinTasks.forEachEntry
+            (this, action).invoke();
+    }
 
-        /**
-         * Performs the given action for each non-null transformation
-         * of each value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case the action is not applied)
-         */
-        public <U> void forEachValue(Fun<? super V, ? extends U> transformer,
-                                     Action<U> action) {
-            fjp.invoke(ForkJoinTasks.forEachValue
-                       (ConcurrentHashMapV8.this, transformer, action));
-        }
+    /**
+     * Performs the given action for each non-null transformation
+     * of each entry.
+     *
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case the action is not applied).
+     * @param action the action
+     */
+    public <U> void forEachEntry(Fun<Map.Entry<K,V>, ? extends U> transformer,
+                                 Action<U> action) {
+        ForkJoinTasks.forEachEntry
+            (this, transformer, action).invoke();
+    }
 
-        /**
-         * Returns a non-null result from applying the given search
-         * function on each value, or null if none.  Upon success,
-         * further element processing is suppressed and the results of
-         * any other parallel invocations of the search function are
-         * ignored.
-         *
-         * @param searchFunction a function returning a non-null
-         * result on success, else null
-         * @return a non-null result from applying the given search
-         * function on each value, or null if none
-         */
-        public <U> U searchValues(Fun<? super V, ? extends U> searchFunction) {
-            return fjp.invoke(ForkJoinTasks.searchValues
-                              (ConcurrentHashMapV8.this, searchFunction));
-        }
+    /**
+     * Returns a non-null result from applying the given search
+     * function on each entry, or null if none.  Upon success,
+     * further element processing is suppressed and the results of
+     * any other parallel invocations of the search function are
+     * ignored.
+     *
+     * @param searchFunction a function returning a non-null
+     * result on success, else null
+     * @return a non-null result from applying the given search
+     * function on each entry, or null if none
+     */
+    public <U> U searchEntries(Fun<Map.Entry<K,V>, ? extends U> searchFunction) {
+        return ForkJoinTasks.searchEntries
+            (this, searchFunction).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating all values using the
-         * given reducer to combine values, or null if none.
-         *
-         * @param reducer a commutative associative combining function
-         * @return  the result of accumulating all values
-         */
-        public V reduceValues(BiFun<? super V, ? super V, ? extends V> reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceValues
-                              (ConcurrentHashMapV8.this, reducer));
-        }
+    /**
+     * Returns the result of accumulating all entries using the
+     * given reducer to combine values, or null if none.
+     *
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating all entries
+     */
+    public Map.Entry<K,V> reduceEntries(BiFun<Map.Entry<K,V>, Map.Entry<K,V>, ? extends Map.Entry<K,V>> reducer) {
+        return ForkJoinTasks.reduceEntries
+            (this, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all values using the given reducer to combine values, or
-         * null if none.
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case it is not combined)
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all values
-         */
-        public <U> U reduceValues(Fun<? super V, ? extends U> transformer,
-                                  BiFun<? super U, ? super U, ? extends U> reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceValues
-                              (ConcurrentHashMapV8.this, transformer, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all entries using the given reducer to combine values,
+     * or null if none.
+     *
+     * @param transformer a function returning the transformation
+     * for an element, or null of there is no transformation (in
+     * which case it is not combined).
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all entries
+     */
+    public <U> U reduceEntries(Fun<Map.Entry<K,V>, ? extends U> transformer,
+                               BiFun<? super U, ? super U, ? extends U> reducer) {
+        return ForkJoinTasks.reduceEntries
+            (this, transformer, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all values using the given reducer to combine values,
-         * and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all values
-         */
-        public double reduceValuesToDouble(ObjectToDouble<? super V> transformer,
-                                           double basis,
-                                           DoubleByDoubleToDouble reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceValuesToDouble
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all entries using the given reducer to combine values,
+     * and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all entries
+     */
+    public double reduceEntriesToDouble(ObjectToDouble<Map.Entry<K,V>> transformer,
+                                        double basis,
+                                        DoubleByDoubleToDouble reducer) {
+        return ForkJoinTasks.reduceEntriesToDouble
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all values using the given reducer to combine values,
-         * and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all values
-         */
-        public long reduceValuesToLong(ObjectToLong<? super V> transformer,
-                                       long basis,
-                                       LongByLongToLong reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceValuesToLong
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all entries using the given reducer to combine values,
+     * and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return  the result of accumulating the given transformation
+     * of all entries
+     */
+    public long reduceEntriesToLong(ObjectToLong<Map.Entry<K,V>> transformer,
+                                    long basis,
+                                    LongByLongToLong reducer) {
+        return ForkJoinTasks.reduceEntriesToLong
+            (this, transformer, basis, reducer).invoke();
+    }
 
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all values using the given reducer to combine values,
-         * and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all values
-         */
-        public int reduceValuesToInt(ObjectToInt<? super V> transformer,
-                                     int basis,
-                                     IntByIntToInt reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceValuesToInt
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
-
-        /**
-         * Performs the given action for each entry.
-         *
-         * @param action the action
-         */
-        public void forEachEntry(Action<Map.Entry<K,V>> action) {
-            fjp.invoke(ForkJoinTasks.forEachEntry
-                       (ConcurrentHashMapV8.this, action));
-        }
-
-        /**
-         * Performs the given action for each non-null transformation
-         * of each entry.
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case the action is not applied)
-         * @param action the action
-         */
-        public <U> void forEachEntry(Fun<Map.Entry<K,V>, ? extends U> transformer,
-                                     Action<U> action) {
-            fjp.invoke(ForkJoinTasks.forEachEntry
-                       (ConcurrentHashMapV8.this, transformer, action));
-        }
-
-        /**
-         * Returns a non-null result from applying the given search
-         * function on each entry, or null if none.  Upon success,
-         * further element processing is suppressed and the results of
-         * any other parallel invocations of the search function are
-         * ignored.
-         *
-         * @param searchFunction a function returning a non-null
-         * result on success, else null
-         * @return a non-null result from applying the given search
-         * function on each entry, or null if none
-         */
-        public <U> U searchEntries(Fun<Map.Entry<K,V>, ? extends U> searchFunction) {
-            return fjp.invoke(ForkJoinTasks.searchEntries
-                              (ConcurrentHashMapV8.this, searchFunction));
-        }
-
-        /**
-         * Returns the result of accumulating all entries using the
-         * given reducer to combine values, or null if none.
-         *
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating all entries
-         */
-        public Map.Entry<K,V> reduceEntries(BiFun<Map.Entry<K,V>, Map.Entry<K,V>, ? extends Map.Entry<K,V>> reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceEntries
-                              (ConcurrentHashMapV8.this, reducer));
-        }
-
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all entries using the given reducer to combine values,
-         * or null if none.
-         *
-         * @param transformer a function returning the transformation
-         * for an element, or null if there is no transformation (in
-         * which case it is not combined).
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all entries
-         */
-        public <U> U reduceEntries(Fun<Map.Entry<K,V>, ? extends U> transformer,
-                                   BiFun<? super U, ? super U, ? extends U> reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceEntries
-                              (ConcurrentHashMapV8.this, transformer, reducer));
-        }
-
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all entries using the given reducer to combine values,
-         * and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all entries
-         */
-        public double reduceEntriesToDouble(ObjectToDouble<Map.Entry<K,V>> transformer,
-                                            double basis,
-                                            DoubleByDoubleToDouble reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceEntriesToDouble
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
-
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all entries using the given reducer to combine values,
-         * and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return  the result of accumulating the given transformation
-         * of all entries
-         */
-        public long reduceEntriesToLong(ObjectToLong<Map.Entry<K,V>> transformer,
-                                        long basis,
-                                        LongByLongToLong reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceEntriesToLong
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
-
-        /**
-         * Returns the result of accumulating the given transformation
-         * of all entries using the given reducer to combine values,
-         * and the given basis as an identity value.
-         *
-         * @param transformer a function returning the transformation
-         * for an element
-         * @param basis the identity (initial default value) for the reduction
-         * @param reducer a commutative associative combining function
-         * @return the result of accumulating the given transformation
-         * of all entries
-         */
-        public int reduceEntriesToInt(ObjectToInt<Map.Entry<K,V>> transformer,
-                                      int basis,
-                                      IntByIntToInt reducer) {
-            return fjp.invoke(ForkJoinTasks.reduceEntriesToInt
-                              (ConcurrentHashMapV8.this, transformer, basis, reducer));
-        }
+    /**
+     * Returns the result of accumulating the given transformation
+     * of all entries using the given reducer to combine values,
+     * and the given basis as an identity value.
+     *
+     * @param transformer a function returning the transformation
+     * for an element
+     * @param basis the identity (initial default value) for the reduction
+     * @param reducer a commutative associative combining function
+     * @return the result of accumulating the given transformation
+     * of all entries
+     */
+    public int reduceEntriesToInt(ObjectToInt<Map.Entry<K,V>> transformer,
+                                  int basis,
+                                  IntByIntToInt reducer) {
+        return ForkJoinTasks.reduceEntriesToInt
+            (this, transformer, basis, reducer).invoke();
     }
 
     // ---------------------------------------------------------------------
 
     /**
      * Predefined tasks for performing bulk parallel operations on
-     * ConcurrentHashMaps. These tasks follow the forms and rules used
-     * in class {@link Parallel}. Each method has the same name, but
-     * returns a task rather than invoking it. These methods may be
-     * useful in custom applications such as submitting a task without
-     * waiting for completion, or combining with other tasks.
+     * ConcurrentHashMapV8s. These tasks follow the forms and rules used
+     * for bulk operations. Each method has the same name, but returns
+     * a task rather than invoking it. These methods may be useful in
+     * custom applications such as submitting a task without waiting
+     * for completion, using a custom pool, or combining with other
+     * tasks.
      */
     public static class ForkJoinTasks {
         private ForkJoinTasks() {}
@@ -4186,7 +4231,7 @@ public class ConcurrentHashMapV8<K, V>
             (ConcurrentHashMapV8<K,V> map,
              BiAction<K,V> action) {
             if (action == null) throw new NullPointerException();
-            return new ForEachMappingTask<K,V>(map, null, -1, action);
+            return new ForEachMappingTask<K,V>(map, null, -1, null, action);
         }
 
         /**
@@ -4207,7 +4252,7 @@ public class ConcurrentHashMapV8<K, V>
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedMappingTask<K,V,U>
-                (map, null, -1, transformer, action);
+                (map, null, -1, null, transformer, action);
         }
 
         /**
@@ -4227,7 +4272,7 @@ public class ConcurrentHashMapV8<K, V>
              BiFun<? super K, ? super V, ? extends U> searchFunction) {
             if (searchFunction == null) throw new NullPointerException();
             return new SearchMappingsTask<K,V,U>
-                (map, null, -1, searchFunction,
+                (map, null, -1, null, searchFunction,
                  new AtomicReference<U>());
         }
 
@@ -4336,7 +4381,7 @@ public class ConcurrentHashMapV8<K, V>
             (ConcurrentHashMapV8<K,V> map,
              Action<K> action) {
             if (action == null) throw new NullPointerException();
-            return new ForEachKeyTask<K,V>(map, null, -1, action);
+            return new ForEachKeyTask<K,V>(map, null, -1, null, action);
         }
 
         /**
@@ -4357,7 +4402,7 @@ public class ConcurrentHashMapV8<K, V>
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedKeyTask<K,V,U>
-                (map, null, -1, transformer, action);
+                (map, null, -1, null, transformer, action);
         }
 
         /**
@@ -4377,7 +4422,7 @@ public class ConcurrentHashMapV8<K, V>
              Fun<? super K, ? extends U> searchFunction) {
             if (searchFunction == null) throw new NullPointerException();
             return new SearchKeysTask<K,V,U>
-                (map, null, -1, searchFunction,
+                (map, null, -1, null, searchFunction,
                  new AtomicReference<U>());
         }
 
@@ -4503,7 +4548,7 @@ public class ConcurrentHashMapV8<K, V>
             (ConcurrentHashMapV8<K,V> map,
              Action<V> action) {
             if (action == null) throw new NullPointerException();
-            return new ForEachValueTask<K,V>(map, null, -1, action);
+            return new ForEachValueTask<K,V>(map, null, -1, null, action);
         }
 
         /**
@@ -4523,7 +4568,7 @@ public class ConcurrentHashMapV8<K, V>
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedValueTask<K,V,U>
-                (map, null, -1, transformer, action);
+                (map, null, -1, null, transformer, action);
         }
 
         /**
@@ -4543,7 +4588,7 @@ public class ConcurrentHashMapV8<K, V>
              Fun<? super V, ? extends U> searchFunction) {
             if (searchFunction == null) throw new NullPointerException();
             return new SearchValuesTask<K,V,U>
-                (map, null, -1, searchFunction,
+                (map, null, -1, null, searchFunction,
                  new AtomicReference<U>());
         }
 
@@ -4669,7 +4714,7 @@ public class ConcurrentHashMapV8<K, V>
             (ConcurrentHashMapV8<K,V> map,
              Action<Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
-            return new ForEachEntryTask<K,V>(map, null, -1, action);
+            return new ForEachEntryTask<K,V>(map, null, -1, null, action);
         }
 
         /**
@@ -4689,7 +4734,7 @@ public class ConcurrentHashMapV8<K, V>
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedEntryTask<K,V,U>
-                (map, null, -1, transformer, action);
+                (map, null, -1, null, transformer, action);
         }
 
         /**
@@ -4709,7 +4754,7 @@ public class ConcurrentHashMapV8<K, V>
              Fun<Map.Entry<K,V>, ? extends U> searchFunction) {
             if (searchFunction == null) throw new NullPointerException();
             return new SearchEntriesTask<K,V,U>
-                (map, null, -1, searchFunction,
+                (map, null, -1, null, searchFunction,
                  new AtomicReference<U>());
         }
 
@@ -4922,13 +4967,16 @@ public class ConcurrentHashMapV8<K, V>
          * dividing by two anyway.
          */
         final int batch() {
-            ConcurrentHashMapV8<K, V> m; int b; Node[] t;
+            ConcurrentHashMapV8<K, V> m; int b; Node[] t;  ForkJoinPool pool;
             if ((b = batch) < 0 && (m = map) != null) { // force initialization
                 if ((t = tab) == null && (t = tab = m.table) != null)
                     baseLimit = baseSize = t.length;
                 if (t != null) {
                     long n = m.counter.sum();
-                    int sp = getPool().getParallelism() << 3; // slack of 8
+                    int par = (pool = getPool()) == null?
+                        ForkJoinPool.getCommonPoolParallelism() :
+                        pool.getParallelism();
+                    int sp = par << 3; // slack of 8
                     b = batch = (n <= 0L) ? 0 : (n < (long)sp) ? (int)n : sp;
                 }
             }
@@ -4965,21 +5013,26 @@ public class ConcurrentHashMapV8<K, V>
     @SuppressWarnings("serial") static final class ForEachKeyTask<K,V>
         extends BulkTask<K,V,Void> {
         final Action<K> action;
+        ForEachKeyTask<K,V> nextRight;
         ForEachKeyTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachKeyTask<K,V> nextRight,
              Action<K> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final Action<K> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
+            ForEachKeyTask<K,V> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachKeyTask<K,V>(map, this, b >>>= 1, action).fork();
+                    (rights = new ForEachKeyTask<K,V>
+                     (map, this, b >>>= 1, rights, action)).fork();
                 }
                 while (advance() != null)
                     action.apply((K)nextKey);
@@ -4987,28 +5040,37 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachValueTask<K,V>
         extends BulkTask<K,V,Void> {
+        ForEachValueTask<K,V> nextRight;
         final Action<V> action;
         ForEachValueTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachValueTask<K,V> nextRight,
              Action<V> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final Action<V> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
+            ForEachValueTask<K,V> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachValueTask<K,V>(map, this, b >>>= 1, action).fork();
+                    (rights = new ForEachValueTask<K,V>
+                     (map, this, b >>>= 1, rights, action)).fork();
                 }
                 Object v;
                 while ((v = advance()) != null)
@@ -5017,28 +5079,37 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachEntryTask<K,V>
         extends BulkTask<K,V,Void> {
+        ForEachEntryTask<K,V> nextRight;
         final Action<Entry<K,V>> action;
         ForEachEntryTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachEntryTask<K,V> nextRight,
              Action<Entry<K,V>> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final Action<Entry<K,V>> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
+            ForEachEntryTask<K,V> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachEntryTask<K,V>(map, this, b >>>= 1, action).fork();
+                    (rights = new ForEachEntryTask<K,V>
+                     (map, this, b >>>= 1, rights, action)).fork();
                 }
                 Object v;
                 while ((v = advance()) != null)
@@ -5047,29 +5118,37 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachMappingTask<K,V>
         extends BulkTask<K,V,Void> {
+        ForEachMappingTask<K,V> nextRight;
         final BiAction<K,V> action;
         ForEachMappingTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachMappingTask<K,V> nextRight,
              BiAction<K,V> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final BiAction<K,V> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
+            ForEachMappingTask<K,V> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachMappingTask<K,V>(map, this, b >>>= 1,
-                                                action).fork();
+                    (rights = new ForEachMappingTask<K,V>
+                     (map, this, b >>>= 1, rights, action)).fork();
                 }
                 Object v;
                 while ((v = advance()) != null)
@@ -5078,19 +5157,26 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedKeyTask<K,V,U>
         extends BulkTask<K,V,Void> {
+        ForEachTransformedKeyTask<K,V,U> nextRight;
         final Fun<? super K, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedKeyTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachTransformedKeyTask<K,V,U> nextRight,
              Fun<? super K, ? extends U> transformer,
              Action<U> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.transformer = transformer;
             this.action = action;
 
@@ -5101,12 +5187,13 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
+            ForEachTransformedKeyTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachTransformedKeyTask<K,V,U>
-                        (map, this, b >>>= 1, transformer, action).fork();
+                    (rights = new ForEachTransformedKeyTask<K,V,U>
+                     (map, this, b >>>= 1, rights, transformer, action)).fork();
                 }
                 U u;
                 while (advance() != null) {
@@ -5117,19 +5204,26 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedValueTask<K,V,U>
         extends BulkTask<K,V,Void> {
+        ForEachTransformedValueTask<K,V,U> nextRight;
         final Fun<? super V, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedValueTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachTransformedValueTask<K,V,U> nextRight,
              Fun<? super V, ? extends U> transformer,
              Action<U> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.transformer = transformer;
             this.action = action;
 
@@ -5140,12 +5234,13 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
+            ForEachTransformedValueTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachTransformedValueTask<K,V,U>
-                        (map, this, b >>>= 1, transformer, action).fork();
+                    (rights = new ForEachTransformedValueTask<K,V,U>
+                     (map, this, b >>>= 1, rights, transformer, action)).fork();
                 }
                 Object v; U u;
                 while ((v = advance()) != null) {
@@ -5156,19 +5251,26 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedEntryTask<K,V,U>
         extends BulkTask<K,V,Void> {
+        ForEachTransformedEntryTask<K,V,U> nextRight;
         final Fun<Map.Entry<K,V>, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedEntryTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachTransformedEntryTask<K,V,U> nextRight,
              Fun<Map.Entry<K,V>, ? extends U> transformer,
              Action<U> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.transformer = transformer;
             this.action = action;
 
@@ -5179,12 +5281,13 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
+            ForEachTransformedEntryTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachTransformedEntryTask<K,V,U>
-                        (map, this, b >>>= 1, transformer, action).fork();
+                    (rights = new ForEachTransformedEntryTask<K,V,U>
+                     (map, this, b >>>= 1, rights, transformer, action)).fork();
                 }
                 Object v; U u;
                 while ((v = advance()) != null) {
@@ -5195,19 +5298,26 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedMappingTask<K,V,U>
         extends BulkTask<K,V,Void> {
+        ForEachTransformedMappingTask<K,V,U> nextRight;
         final BiFun<? super K, ? super V, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedMappingTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             ForEachTransformedMappingTask<K,V,U> nextRight,
              BiFun<? super K, ? super V, ? extends U> transformer,
              Action<U> action) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.transformer = transformer;
             this.action = action;
 
@@ -5218,12 +5328,13 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
+            ForEachTransformedMappingTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    new ForEachTransformedMappingTask<K,V,U>
-                        (map, this, b >>>= 1, transformer, action).fork();
+                    (rights = new ForEachTransformedMappingTask<K,V,U>
+                     (map, this, b >>>= 1, rights, transformer, action)).fork();
                 }
                 Object v; U u;
                 while ((v = advance()) != null) {
@@ -5234,19 +5345,26 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class SearchKeysTask<K,V,U>
         extends BulkTask<K,V,U> {
+        SearchKeysTask<K,V,U> nextRight;
         final Fun<? super K, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchKeysTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             SearchKeysTask<K,V,U> nextRight,
              Fun<? super K, ? extends U> searchFunction,
              AtomicReference<U> result) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5255,12 +5373,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
+            SearchKeysTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    new SearchKeysTask<K,V,U>(map, this, b >>>= 1,
-                                              searchFunction, result).fork();
+                    (rights = new SearchKeysTask<K,V,U>
+                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
                 }
                 U u;
                 while (result.get() == null && advance() != null) {
@@ -5274,6 +5393,10 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && result.get() == null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
         public final U getRawResult() { return result.get(); }
@@ -5281,13 +5404,16 @@ public class ConcurrentHashMapV8<K, V>
 
     @SuppressWarnings("serial") static final class SearchValuesTask<K,V,U>
         extends BulkTask<K,V,U> {
+        SearchValuesTask<K,V,U> nextRight;
         final Fun<? super V, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchValuesTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             SearchValuesTask<K,V,U> nextRight,
              Fun<? super V, ? extends U> searchFunction,
              AtomicReference<U> result) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5296,12 +5422,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
+            SearchValuesTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    new SearchValuesTask<K,V,U>(map, this, b >>>= 1,
-                                                searchFunction, result).fork();
+                    (rights = new SearchValuesTask<K,V,U>
+                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
                 }
                 Object v; U u;
                 while (result.get() == null && (v = advance()) != null) {
@@ -5315,6 +5442,10 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && result.get() == null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
         public final U getRawResult() { return result.get(); }
@@ -5322,13 +5453,16 @@ public class ConcurrentHashMapV8<K, V>
 
     @SuppressWarnings("serial") static final class SearchEntriesTask<K,V,U>
         extends BulkTask<K,V,U> {
+        SearchEntriesTask<K,V,U> nextRight;
         final Fun<Entry<K,V>, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchEntriesTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             SearchEntriesTask<K,V,U> nextRight,
              Fun<Entry<K,V>, ? extends U> searchFunction,
              AtomicReference<U> result) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5337,12 +5471,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
+            SearchEntriesTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    new SearchEntriesTask<K,V,U>(map, this, b >>>= 1,
-                                                 searchFunction, result).fork();
+                    (rights = new SearchEntriesTask<K,V,U>
+                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
                 }
                 Object v; U u;
                 while (result.get() == null && (v = advance()) != null) {
@@ -5356,6 +5491,10 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            while (rights != null && result.get() == null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
+            }
             return false;
         }
         public final U getRawResult() { return result.get(); }
@@ -5363,13 +5502,16 @@ public class ConcurrentHashMapV8<K, V>
 
     @SuppressWarnings("serial") static final class SearchMappingsTask<K,V,U>
         extends BulkTask<K,V,U> {
+        SearchMappingsTask<K,V,U> nextRight;
         final BiFun<? super K, ? super V, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchMappingsTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
+             SearchMappingsTask<K,V,U> nextRight,
              BiFun<? super K, ? super V, ? extends U> searchFunction,
              AtomicReference<U> result) {
             super(m, p, b);
+            this.nextRight = nextRight;
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5378,12 +5520,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
+            SearchMappingsTask<K,V,U> rights = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    new SearchMappingsTask<K,V,U>(map, this, b >>>= 1,
-                                                  searchFunction, result).fork();
+                    (rights = new SearchMappingsTask<K,V,U>
+                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
                 }
                 Object v; U u;
                 while (result.get() == null && (v = advance()) != null) {
@@ -5396,6 +5539,10 @@ public class ConcurrentHashMapV8<K, V>
                 tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
+            }
+            while (rights != null && result.get() == null && rights.tryUnfork()) {
+                rights.exec();
+                rights = rights.nextRight;
             }
             return false;
         }
@@ -5451,6 +5598,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (ReduceKeysTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final K getRawResult() { return result; }
@@ -5506,6 +5655,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (ReduceValuesTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final V getRawResult() { return result; }
@@ -5561,6 +5712,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (ReduceEntriesTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Map.Entry<K,V> getRawResult() { return result; }
@@ -5620,6 +5773,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceKeysTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final U getRawResult() { return result; }
@@ -5680,6 +5835,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceValuesTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final U getRawResult() { return result; }
@@ -5740,6 +5897,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceEntriesTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final U getRawResult() { return result; }
@@ -5800,6 +5959,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceMappingsTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final U getRawResult() { return result; }
@@ -5858,6 +6019,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceKeysToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -5917,6 +6080,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceValuesToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -5976,6 +6141,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceEntriesToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -6035,6 +6202,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceMappingsToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -6093,6 +6262,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceKeysToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6152,6 +6323,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceValuesToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6211,6 +6384,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceEntriesToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6270,6 +6445,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceMappingsToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6328,6 +6505,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceKeysToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Integer getRawResult() { return result; }
@@ -6387,6 +6566,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceValuesToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Integer getRawResult() { return result; }
@@ -6446,6 +6627,8 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceEntriesToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Integer getRawResult() { return result; }
@@ -6505,11 +6688,12 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
+            for (MapReduceMappingsToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
+                s.exec();
             return false;
         }
         public final Integer getRawResult() { return result; }
     }
-
 
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;

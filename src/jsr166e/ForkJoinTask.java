@@ -30,15 +30,18 @@ import java.lang.reflect.Constructor;
  * subtasks may be hosted by a small number of actual threads in a
  * ForkJoinPool, at the price of some usage limitations.
  *
- * <p>A "main" {@code ForkJoinTask} begins execution when submitted
- * to a {@link ForkJoinPool}.  Once started, it will usually in turn
- * start other subtasks.  As indicated by the name of this class,
- * many programs using {@code ForkJoinTask} employ only methods
- * {@link #fork} and {@link #join}, or derivatives such as {@link
+ * <p>A "main" {@code ForkJoinTask} begins execution when it is
+ * explicitly submitted to a {@link ForkJoinPool}, or, if not already
+ * engaged in a ForkJoin computation, commenced in the {@link
+ * ForkJoinPool#commonPool} via {@link #fork}, {@link #invoke}, or
+ * related methods.  Once started, it will usually in turn start other
+ * subtasks.  As indicated by the name of this class, many programs
+ * using {@code ForkJoinTask} employ only methods {@link #fork} and
+ * {@link #join}, or derivatives such as {@link
  * #invokeAll(ForkJoinTask...) invokeAll}.  However, this class also
  * provides a number of other methods that can come into play in
- * advanced usages, as well as extension mechanics that allow
- * support of new forms of fork/join processing.
+ * advanced usages, as well as extension mechanics that allow support
+ * of new forms of fork/join processing.
  *
  * <p>A {@code ForkJoinTask} is a lightweight form of {@link Future}.
  * The efficiency of {@code ForkJoinTask}s stems from a set of
@@ -123,13 +126,7 @@ import java.lang.reflect.Constructor;
  * other actions.  Normally, a concrete ForkJoinTask subclass declares
  * fields comprising its parameters, established in a constructor, and
  * then defines a {@code compute} method that somehow uses the control
- * methods supplied by this base class. While these methods have
- * {@code public} access (to allow instances of different task
- * subclasses to call each other's methods), some of them may only be
- * called from within other ForkJoinTasks (as may be determined using
- * method {@link #inForkJoinPool}).  Attempts to invoke them in other
- * contexts result in exceptions or errors, possibly including {@code
- * ClassCastException}.
+ * methods supplied by this base class.
  *
  * <p>Method {@link #join} and its variants are appropriate for use
  * only when completion dependencies are acyclic; that is, the
@@ -287,9 +284,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return status upon completion
      */
     private int externalAwaitDone() {
-        boolean interrupted = false;
         int s;
-        while ((s = status) >= 0) {
+        boolean interrupted = false;
+        if ((s = status) >= 0 && ForkJoinPool.tryUnsubmitFromCommonPool(this))
+            s = doExec();
+        while (s >= 0) {
             if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
                 synchronized (this) {
                     if (status >= 0) {
@@ -303,6 +302,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                         notifyAll();
                 }
             }
+            s = status;
         }
         if (interrupted)
             Thread.currentThread().interrupt();
@@ -313,10 +313,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * Blocks a non-worker-thread until completion or interruption.
      */
     private int externalInterruptibleAwaitDone() throws InterruptedException {
-        int s;
         if (Thread.interrupted())
             throw new InterruptedException();
-        while ((s = status) >= 0) {
+        int s;
+        if ((s = status) >= 0 && ForkJoinPool.tryUnsubmitFromCommonPool(this))
+            s = doExec();
+        while (s >= 0) {
             if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
                 synchronized (this) {
                     if (status >= 0)
@@ -325,6 +327,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                         notifyAll();
                 }
             }
+            s = status;
         }
         return s;
     }
@@ -338,16 +341,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int doJoin() {
         int s; Thread t; ForkJoinWorkerThread wt; ForkJoinPool.WorkQueue w;
-        if ((s = status) >= 0) {
-            if (((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)) {
-                if (!(w = (wt = (ForkJoinWorkerThread)t).workQueue).
-                    tryUnpush(this) || (s = doExec()) >= 0)
-                    s = wt.pool.awaitJoin(w, this);
-            }
-            else
-                s = externalAwaitDone();
-        }
-        return s;
+        return (s = status) < 0 ? s :
+            ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            (w = (wt = (ForkJoinWorkerThread)t).workQueue).
+            tryUnpush(this) && (s = doExec()) < 0 ? s :
+            wt.pool.awaitJoin(w, this) :
+            externalAwaitDone();
     }
 
     /**
@@ -357,14 +356,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int doInvoke() {
         int s; Thread t; ForkJoinWorkerThread wt;
-        if ((s = doExec()) >= 0) {
-            if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)
-                s = (wt = (ForkJoinWorkerThread)t).pool.awaitJoin(wt.workQueue,
-                                                                  this);
-            else
-                s = externalAwaitDone();
-        }
-        return s;
+        return (s = doExec()) < 0 ? s :
+            ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            (wt = (ForkJoinWorkerThread)t).pool.awaitJoin(wt.workQueue, this) :
+            externalAwaitDone();
     }
 
     // Exception table support
@@ -619,25 +614,26 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     // public methods
 
     /**
-     * Arranges to asynchronously execute this task.  While it is not
-     * necessarily enforced, it is a usage error to fork a task more
-     * than once unless it has completed and been reinitialized.
-     * Subsequent modifications to the state of this task or any data
-     * it operates on are not necessarily consistently observable by
-     * any thread other than the one executing it unless preceded by a
-     * call to {@link #join} or related methods, or a call to {@link
-     * #isDone} returning {@code true}.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
+     * Arranges to asynchronously execute this task in the pool the
+     * current task is running in, if applicable, or using the {@link
+     * ForkJoinPool#commonPool} if not {@link #inForkJoinPool}.  While
+     * it is not necessarily enforced, it is a usage error to fork a
+     * task more than once unless it has completed and been
+     * reinitialized.  Subsequent modifications to the state of this
+     * task or any data it operates on are not necessarily
+     * consistently observable by any thread other than the one
+     * executing it unless preceded by a call to {@link #join} or
+     * related methods, or a call to {@link #isDone} returning {@code
+     * true}.
      *
      * @return {@code this}, to simplify usage
      */
     public final ForkJoinTask<V> fork() {
-        ((ForkJoinWorkerThread)Thread.currentThread()).workQueue.push(this);
+        Thread t;
+        if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)
+            ((ForkJoinWorkerThread)t).workQueue.push(this);
+        else
+            ForkJoinPool.submitToCommonPool(this);
         return this;
     }
 
@@ -687,12 +683,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * cancelled, completed normally or exceptionally, or left
      * unprocessed.
      *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
-     *
      * @param t1 the first task
      * @param t2 the second task
      * @throws NullPointerException if any task is null
@@ -717,12 +707,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * each task may be obtained using {@link #getException()} and
      * related methods to check if they have been cancelled, completed
      * normally or exceptionally, or left unprocessed.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
      *
      * @param tasks the tasks
      * @throws NullPointerException if any task is null
@@ -766,12 +750,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * #getException()} and related methods to check if they have been
      * cancelled, completed normally or exceptionally, or left
      * unprocessed.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
      *
      * @param tasks the collection of tasks
      * @return the tasks argument, to simplify usage
@@ -1068,17 +1046,15 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * be of use in designs in which many tasks are forked, but none
      * are explicitly joined, instead executing them until all are
      * processed.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
      */
     public static void helpQuiesce() {
-        ForkJoinWorkerThread wt =
-            (ForkJoinWorkerThread)Thread.currentThread();
-        wt.pool.helpQuiescePool(wt.workQueue);
+        Thread t;
+        if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) {
+            ForkJoinWorkerThread wt = (ForkJoinWorkerThread)t;
+            wt.pool.helpQuiescePool(wt.workQueue);
+        }
+        else
+            ForkJoinPool.externalHelpQuiescePool();
     }
 
     /**
@@ -1131,23 +1107,19 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Tries to unschedule this task for execution. This method will
-     * typically succeed if this task is the most recently forked task
-     * by the current thread, and has not commenced executing in
-     * another thread.  This method may be useful when arranging
-     * alternative local processing of tasks that could have been, but
-     * were not, stolen.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
+     * typically (but is not guaranteed to) succeed if this task is
+     * the most recently forked task by the current thread, and has
+     * not commenced executing in another thread.  This method may be
+     * useful when arranging alternative local processing of tasks
+     * that could have been, but were not, stolen.
      *
      * @return {@code true} if unforked
      */
     public boolean tryUnfork() {
-        return ((ForkJoinWorkerThread)Thread.currentThread())
-            .workQueue.tryUnpush(this);
+        Thread t;
+        return ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            ((ForkJoinWorkerThread)t).workQueue.tryUnpush(this) :
+            ForkJoinPool.tryUnsubmitFromCommonPool(this);
     }
 
     /**
@@ -1156,34 +1128,25 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * value may be useful for heuristic decisions about whether to
      * fork other tasks.
      *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
-     *
      * @return the number of tasks
      */
     public static int getQueuedTaskCount() {
-        return ((ForkJoinWorkerThread) Thread.currentThread())
-            .workQueue.queueSize();
+        Thread t;
+        return ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            ((ForkJoinWorkerThread)t).workQueue.queueSize() :
+            ForkJoinPool.getEstimatedSubmitterQueueLength();
     }
 
     /**
      * Returns an estimate of how many more locally queued tasks are
      * held by the current worker thread than there are other worker
-     * threads that might steal them.  This value may be useful for
+     * threads that might steal them, or zero if this thread is not
+     * operating in a ForkJoinPool. This value may be useful for
      * heuristic decisions about whether to fork other tasks. In many
      * usages of ForkJoinTasks, at steady state, each worker should
      * aim to maintain a small constant surplus (for example, 3) of
      * tasks, and to process computations locally if this threshold is
      * exceeded.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
      *
      * @return the surplus number of tasks, which may be negative
      */
@@ -1231,9 +1194,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
          * have zero queued tasks, so compensate by a factor of
          * (#idle/#active) threads.
          */
-        ForkJoinWorkerThread wt =
-            (ForkJoinWorkerThread)Thread.currentThread();
-        return wt.workQueue.queueSize() - wt.pool.idlePerActive();
+        Thread t; ForkJoinWorkerThread wt;
+        return ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            (wt = (ForkJoinWorkerThread)t).workQueue.queueSize() - wt.pool.idlePerActive() :
+            0;
     }
 
     // Extension methods
@@ -1277,66 +1241,57 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Returns, but does not unschedule or execute, a task queued by
      * the current thread but not yet executed, if one is immediately
-     * available. There is no guarantee that this task will actually
-     * be polled or executed next. Conversely, this method may return
-     * null even if a task exists but cannot be accessed without
-     * contention with other threads.  This method is designed
+     * available and the current thread is operating in a
+     * ForkJoinPool. There is no guarantee that this task will
+     * actually be polled or executed next. Conversely, this method
+     * may return null even if a task exists but cannot be accessed
+     * without contention with other threads.  This method is designed
      * primarily to support extensions, and is unlikely to be useful
      * otherwise.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
      *
      * @return the next task, or {@code null} if none are available
      */
     protected static ForkJoinTask<?> peekNextLocalTask() {
-        return ((ForkJoinWorkerThread) Thread.currentThread()).workQueue.peek();
+        Thread t;
+        return ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            ((ForkJoinWorkerThread)t).workQueue.peek() :
+            null;
     }
 
     /**
      * Unschedules and returns, without executing, the next task
-     * queued by the current thread but not yet executed.  This method
-     * is designed primarily to support extensions, and is unlikely to
-     * be useful otherwise.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
+     * queued by the current thread but not yet executed, if the
+     * current thread is operating in a ForkJoinPool.  This method is
+     * designed primarily to support extensions, and is unlikely to be
+     * useful otherwise.
      *
      * @return the next task, or {@code null} if none are available
      */
     protected static ForkJoinTask<?> pollNextLocalTask() {
-        return ((ForkJoinWorkerThread) Thread.currentThread())
-            .workQueue.nextLocalTask();
+        Thread t;
+        return ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            ((ForkJoinWorkerThread)t).workQueue.nextLocalTask() :
+            null;
     }
 
     /**
-     * Unschedules and returns, without executing, the next task
+     * If the current thread is operating in a ForkJoinPool,
+     * unschedules and returns, without executing, the next task
      * queued by the current thread but not yet executed, if one is
      * available, or if not available, a task that was forked by some
      * other thread, if available. Availability may be transient, so a
-     * {@code null} result does not necessarily imply quiescence
-     * of the pool this task is operating in.  This method is designed
+     * {@code null} result does not necessarily imply quiescence of
+     * the pool this task is operating in.  This method is designed
      * primarily to support extensions, and is unlikely to be useful
      * otherwise.
-     *
-     * <p>This method may be invoked only from within {@code
-     * ForkJoinPool} computations (as may be determined using method
-     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts
-     * result in exceptions or errors, possibly including {@code
-     * ClassCastException}.
      *
      * @return a task, or {@code null} if none are available
      */
     protected static ForkJoinTask<?> pollTask() {
-        ForkJoinWorkerThread wt =
-            (ForkJoinWorkerThread)Thread.currentThread();
-        return wt.pool.nextTaskFor(wt.workQueue);
+        Thread t; ForkJoinWorkerThread wt;
+        return ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
+            (wt = (ForkJoinWorkerThread)t).pool.nextTaskFor(wt.workQueue) :
+            null;
     }
 
     // tag operations

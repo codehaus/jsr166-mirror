@@ -995,7 +995,7 @@ public class StampedLock implements java.io.Serializable {
                         else if ((time = deadline - System.nanoTime()) <= 0L)
                             return cancelWriter(node, false);
                         if (node.prev == p && p.status == WAITING &&
-                            (p != whead || (state & WBIT) != 0L)) // recheck
+                            (p != whead || (state & ABITS) != 0L)) // recheck
                             U.park(false, time);
                         if (interruptible && Thread.interrupted())
                             return cancelWriter(node, true);

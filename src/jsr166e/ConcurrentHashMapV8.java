@@ -193,9 +193,9 @@ import java.io.Serializable;
  * processing are common but not guaranteed.  Operations involving
  * brief functions on small maps may execute more slowly than
  * sequential loops if the underlying work to parallelize the
- * computation is more expensive than the computation
- * itself. Similarly, parallelization may not lead to much actual
- * parallelism if all processors are busy performing unrelated tasks.
+ * computation is more expensive than the computation itself.
+ * Similarly, parallelization may not lead to much actual parallelism
+ * if all processors are busy performing unrelated tasks.
  *
  * <p> All arguments to all task methods must be non-null.
  *

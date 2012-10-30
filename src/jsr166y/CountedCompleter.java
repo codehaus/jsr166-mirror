@@ -142,7 +142,9 @@ package jsr166y;
  *
  * As a further improvement, notice that the left task need not even
  * exist.  Instead of creating a new one, we can iterate using the
- * original task, and add a pending count for each fork:
+ * original task, and add a pending count for each fork. Additionally,
+ * this version uses {@code helpComplete} to streamline assistance in
+ * the execution of forked tasks.
  *
  * <pre> {@code
  * class ForEach<E> ...
@@ -156,7 +158,7 @@ package jsr166y;
  *         }
  *         if (h > l)
  *             op.apply(array[l]);
- *         tryComplete();
+ *         helpComplete();
  *     }
  * }</pre>
  *
@@ -378,6 +380,19 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
+     * Returns the root of the current computation; i.e., this
+     * task if it has no completer, else its completer's root.
+     *
+     * @return the root of the current computation
+     */
+    public final CountedCompleter<?> getRoot() {
+        CountedCompleter<?> a = this, p;
+        while ((p = a.completer) != null)
+            a = p;
+        return a;
+    }
+
+    /**
      * If the pending count is nonzero, decrements the count;
      * otherwise invokes {@link #onCompletion} and then similarly
      * tries to complete this task's completer, if one exists,
@@ -395,6 +410,39 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
             }
             else if (U.compareAndSwapInt(a, PENDING, c, c - 1))
                 return;
+        }
+    }
+
+    /**
+     * Identical to {@link #tryComplete}, but may additionally execute
+     * other tasks within the current computation (i.e., those
+     * with the same {@link #getRoot}.
+     */
+    public final void helpComplete() {
+        CountedCompleter<?> a = this, s = a;
+        for (int c;;) {
+            if ((c = a.pending) == 0) {
+                a.onCompletion(s);
+                if ((a = (s = a).completer) == null) {
+                    s.quietlyComplete();
+                    return;
+                }
+            }
+            else if (U.compareAndSwapInt(a, PENDING, c, c - 1)) {
+                CountedCompleter<?> root = a.getRoot();
+                Thread thread = Thread.currentThread();
+                ForkJoinPool.WorkQueue wq =
+                    (thread instanceof ForkJoinWorkerThread)?
+                    ((ForkJoinWorkerThread)thread).workQueue : null;
+                ForkJoinTask<?> t;
+                while ((t = (wq != null) ? wq.popCC(root) :
+                        ForkJoinPool.popCCFromCommonPool(root)) != null) {
+                    t.doExec();
+                    if (root.isDone())
+                        break;
+                }
+                return;
+            }
         }
     }
 
@@ -464,7 +512,6 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
             throw new Error(e);
         }
     }
-
 
     /**
      * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.

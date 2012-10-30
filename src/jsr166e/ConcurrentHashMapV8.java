@@ -5,9 +5,7 @@
  */
 
 package jsr166e;
-import jsr166e.LongAdder;
-import jsr166e.ForkJoinPool;
-import jsr166e.ForkJoinTask;
+
 import java.util.Comparator;
 import java.util.Arrays;
 import java.util.Map;
@@ -84,7 +82,7 @@ import java.io.Serializable;
  * {@code hashCode()} is a sure way to slow down performance of any
  * hash table.
  *
- * <p> A {@link Set} projection of a ConcurrentHashMap may be created
+ * <p> A {@link Set} projection of a ConcurrentHashMapV8 may be created
  * (using {@link #newKeySet()} or {@link #newKeySet(int)}), or viewed
  * (using {@link #keySet(Object)} when only keys are of interest, and the
  * mapped values are (perhaps transiently) not used or all take the
@@ -3860,6 +3858,23 @@ public class ConcurrentHashMapV8<K, V>
     }
 
     /**
+     * Returns a non-null result from applying the given search
+     * function on each key, or null if none. Upon success,
+     * further element processing is suppressed and the results of
+     * any other parallel invocations of the search function are
+     * ignored.
+     *
+     * @param searchFunction a function returning a non-null
+     * result on success, else null
+     * @return a non-null result from applying the given search
+     * function on each key, or null if none
+     */
+    public <U> U searchKeys(Fun<? super K, ? extends U> searchFunction) {
+        return ForkJoinTasks.searchKeys
+            (this, searchFunction).invoke();
+    }
+
+    /**
      * Returns the result of accumulating all keys using the given
      * reducer to combine values, or null if none.
      *
@@ -4906,26 +4921,6 @@ public class ConcurrentHashMapV8<K, V>
             }
         }
 
-        // FJ methods
-
-        /**
-         * Propagates completion. Note that all reduce actions
-         * bypass this method to combine while completing.
-         */
-        final void tryComplete() {
-            BulkTask<K,V,?> a = this, s = a;
-            for (int c;;) {
-                if ((c = a.pending) == 0) {
-                    if ((a = (s = a).parent) == null) {
-                        s.quietlyComplete();
-                        break;
-                    }
-                }
-                else if (U.compareAndSwapInt(a, PENDING, c, c - 1))
-                    break;
-            }
-        }
-
         /**
          * Forces root task to complete.
          * @param ex if null, complete normally, else exceptionally
@@ -5004,6 +4999,50 @@ public class ConcurrentHashMapV8<K, V>
         }
     }
 
+    /**
+     * Base class for non-reductive actions
+     */
+    @SuppressWarnings("serial") static abstract class BulkAction<K,V,R> extends BulkTask<K,V,R> {
+        BulkAction<K,V,?> nextTask;
+        BulkAction(ConcurrentHashMapV8<K,V> map, BulkTask<K,V,?> parent,
+                   int batch, BulkAction<K,V,?> nextTask) {
+            super(map, parent, batch);
+            this.nextTask = nextTask;
+        }
+
+        /**
+         * Try to complete task and upward parents. Upon hitting
+         * non-completed parent, if a non-FJ task, try to help out the
+         * computation.
+         */
+        final void tryComplete(BulkAction<K,V,?> subtasks) {
+            BulkTask<K,V,?> a = this, s = a;
+            for (int c;;) {
+                if ((c = a.pending) == 0) {
+                    if ((a = (s = a).parent) == null) {
+                        s.quietlyComplete();
+                        break;
+                    }
+                }
+                else if (a.casPending(c, c - 1)) {
+                    if (subtasks != null && !inForkJoinPool()) {
+                        while ((s = a.parent) != null)
+                            a = s;
+                        while (!a.isDone()) {
+                            BulkAction<K,V,?> next = subtasks.nextTask;
+                            if (subtasks.tryUnfork())
+                                subtasks.exec();
+                            if ((subtasks = next) == null)
+                                break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+    }
+
     /*
      * Task classes. Coded in a regular but ugly format/style to
      * simplify checks that each variant differs in the right way from
@@ -5011,172 +5050,146 @@ public class ConcurrentHashMapV8<K, V>
      */
 
     @SuppressWarnings("serial") static final class ForEachKeyTask<K,V>
-        extends BulkTask<K,V,Void> {
+        extends BulkAction<K,V,Void> {
         final Action<K> action;
-        ForEachKeyTask<K,V> nextRight;
         ForEachKeyTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachKeyTask<K,V> nextRight,
+             ForEachKeyTask<K,V> nextTask,
              Action<K> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final Action<K> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
-            ForEachKeyTask<K,V> rights = null;
+            ForEachKeyTask<K,V> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachKeyTask<K,V>
-                     (map, this, b >>>= 1, rights, action)).fork();
+                    (subtasks = new ForEachKeyTask<K,V>
+                     (map, this, b >>>= 1, subtasks, action)).fork();
                 }
                 while (advance() != null)
                     action.apply((K)nextKey);
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachValueTask<K,V>
-        extends BulkTask<K,V,Void> {
-        ForEachValueTask<K,V> nextRight;
+        extends BulkAction<K,V,Void> {
         final Action<V> action;
         ForEachValueTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachValueTask<K,V> nextRight,
+             ForEachValueTask<K,V> nextTask,
              Action<V> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final Action<V> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
-            ForEachValueTask<K,V> rights = null;
+            ForEachValueTask<K,V> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachValueTask<K,V>
-                     (map, this, b >>>= 1, rights, action)).fork();
+                    (subtasks = new ForEachValueTask<K,V>
+                     (map, this, b >>>= 1, subtasks, action)).fork();
                 }
                 Object v;
                 while ((v = advance()) != null)
                     action.apply((V)v);
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachEntryTask<K,V>
-        extends BulkTask<K,V,Void> {
-        ForEachEntryTask<K,V> nextRight;
+        extends BulkAction<K,V,Void> {
         final Action<Entry<K,V>> action;
         ForEachEntryTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachEntryTask<K,V> nextRight,
+             ForEachEntryTask<K,V> nextTask,
              Action<Entry<K,V>> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final Action<Entry<K,V>> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
-            ForEachEntryTask<K,V> rights = null;
+            ForEachEntryTask<K,V> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachEntryTask<K,V>
-                     (map, this, b >>>= 1, rights, action)).fork();
+                    (subtasks = new ForEachEntryTask<K,V>
+                     (map, this, b >>>= 1, subtasks, action)).fork();
                 }
                 Object v;
                 while ((v = advance()) != null)
                     action.apply(entryFor((K)nextKey, (V)v));
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachMappingTask<K,V>
-        extends BulkTask<K,V,Void> {
-        ForEachMappingTask<K,V> nextRight;
+        extends BulkAction<K,V,Void> {
         final BiAction<K,V> action;
         ForEachMappingTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachMappingTask<K,V> nextRight,
+             ForEachMappingTask<K,V> nextTask,
              BiAction<K,V> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.action = action;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
             final BiAction<K,V> action = this.action;
             if (action == null)
                 return abortOnNullFunction();
-            ForEachMappingTask<K,V> rights = null;
+            ForEachMappingTask<K,V> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachMappingTask<K,V>
-                     (map, this, b >>>= 1, rights, action)).fork();
+                    (subtasks = new ForEachMappingTask<K,V>
+                     (map, this, b >>>= 1, subtasks, action)).fork();
                 }
                 Object v;
                 while ((v = advance()) != null)
                     action.apply((K)nextKey, (V)v);
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedKeyTask<K,V,U>
-        extends BulkTask<K,V,Void> {
-        ForEachTransformedKeyTask<K,V,U> nextRight;
+        extends BulkAction<K,V,Void> {
         final Fun<? super K, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedKeyTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachTransformedKeyTask<K,V,U> nextRight,
+             ForEachTransformedKeyTask<K,V,U> nextTask,
              Fun<? super K, ? extends U> transformer,
              Action<U> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.transformer = transformer;
             this.action = action;
 
@@ -5187,43 +5200,37 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
-            ForEachTransformedKeyTask<K,V,U> rights = null;
+            ForEachTransformedKeyTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachTransformedKeyTask<K,V,U>
-                     (map, this, b >>>= 1, rights, transformer, action)).fork();
+                    (subtasks = new ForEachTransformedKeyTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, transformer, action)).fork();
                 }
                 U u;
                 while (advance() != null) {
                     if ((u = transformer.apply((K)nextKey)) != null)
                         action.apply(u);
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedValueTask<K,V,U>
-        extends BulkTask<K,V,Void> {
-        ForEachTransformedValueTask<K,V,U> nextRight;
+        extends BulkAction<K,V,Void> {
         final Fun<? super V, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedValueTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachTransformedValueTask<K,V,U> nextRight,
+             ForEachTransformedValueTask<K,V,U> nextTask,
              Fun<? super V, ? extends U> transformer,
              Action<U> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.transformer = transformer;
             this.action = action;
 
@@ -5234,43 +5241,37 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
-            ForEachTransformedValueTask<K,V,U> rights = null;
+            ForEachTransformedValueTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachTransformedValueTask<K,V,U>
-                     (map, this, b >>>= 1, rights, transformer, action)).fork();
+                    (subtasks = new ForEachTransformedValueTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, transformer, action)).fork();
                 }
                 Object v; U u;
                 while ((v = advance()) != null) {
                     if ((u = transformer.apply((V)v)) != null)
                         action.apply(u);
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedEntryTask<K,V,U>
-        extends BulkTask<K,V,Void> {
-        ForEachTransformedEntryTask<K,V,U> nextRight;
+        extends BulkAction<K,V,Void> {
         final Fun<Map.Entry<K,V>, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedEntryTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachTransformedEntryTask<K,V,U> nextRight,
+             ForEachTransformedEntryTask<K,V,U> nextTask,
              Fun<Map.Entry<K,V>, ? extends U> transformer,
              Action<U> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.transformer = transformer;
             this.action = action;
 
@@ -5281,43 +5282,37 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
-            ForEachTransformedEntryTask<K,V,U> rights = null;
+            ForEachTransformedEntryTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachTransformedEntryTask<K,V,U>
-                     (map, this, b >>>= 1, rights, transformer, action)).fork();
+                    (subtasks = new ForEachTransformedEntryTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, transformer, action)).fork();
                 }
                 Object v; U u;
                 while ((v = advance()) != null) {
                     if ((u = transformer.apply(entryFor((K)nextKey, (V)v))) != null)
                         action.apply(u);
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class ForEachTransformedMappingTask<K,V,U>
-        extends BulkTask<K,V,Void> {
-        ForEachTransformedMappingTask<K,V,U> nextRight;
+        extends BulkAction<K,V,Void> {
         final BiFun<? super K, ? super V, ? extends U> transformer;
         final Action<U> action;
         ForEachTransformedMappingTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             ForEachTransformedMappingTask<K,V,U> nextRight,
+             ForEachTransformedMappingTask<K,V,U> nextTask,
              BiFun<? super K, ? super V, ? extends U> transformer,
              Action<U> action) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.transformer = transformer;
             this.action = action;
 
@@ -5328,43 +5323,37 @@ public class ConcurrentHashMapV8<K, V>
             final Action<U> action = this.action;
             if (transformer == null || action == null)
                 return abortOnNullFunction();
-            ForEachTransformedMappingTask<K,V,U> rights = null;
+            ForEachTransformedMappingTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new ForEachTransformedMappingTask<K,V,U>
-                     (map, this, b >>>= 1, rights, transformer, action)).fork();
+                    (subtasks = new ForEachTransformedMappingTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, transformer, action)).fork();
                 }
                 Object v; U u;
                 while ((v = advance()) != null) {
                     if ((u = transformer.apply((K)nextKey, (V)v)) != null)
                         action.apply(u);
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
     }
 
     @SuppressWarnings("serial") static final class SearchKeysTask<K,V,U>
-        extends BulkTask<K,V,U> {
-        SearchKeysTask<K,V,U> nextRight;
+        extends BulkAction<K,V,U> {
         final Fun<? super K, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchKeysTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             SearchKeysTask<K,V,U> nextRight,
+             SearchKeysTask<K,V,U> nextTask,
              Fun<? super K, ? extends U> searchFunction,
              AtomicReference<U> result) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5373,13 +5362,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
-            SearchKeysTask<K,V,U> rights = null;
+            SearchKeysTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new SearchKeysTask<K,V,U>
-                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
+                    (subtasks = new SearchKeysTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, searchFunction, result)).fork();
                 }
                 U u;
                 while (result.get() == null && advance() != null) {
@@ -5389,31 +5378,25 @@ public class ConcurrentHashMapV8<K, V>
                         break;
                     }
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && result.get() == null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
         public final U getRawResult() { return result.get(); }
     }
 
     @SuppressWarnings("serial") static final class SearchValuesTask<K,V,U>
-        extends BulkTask<K,V,U> {
-        SearchValuesTask<K,V,U> nextRight;
+        extends BulkAction<K,V,U> {
         final Fun<? super V, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchValuesTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             SearchValuesTask<K,V,U> nextRight,
+             SearchValuesTask<K,V,U> nextTask,
              Fun<? super V, ? extends U> searchFunction,
              AtomicReference<U> result) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5422,13 +5405,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
-            SearchValuesTask<K,V,U> rights = null;
+            SearchValuesTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new SearchValuesTask<K,V,U>
-                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
+                    (subtasks = new SearchValuesTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, searchFunction, result)).fork();
                 }
                 Object v; U u;
                 while (result.get() == null && (v = advance()) != null) {
@@ -5438,31 +5421,25 @@ public class ConcurrentHashMapV8<K, V>
                         break;
                     }
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && result.get() == null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
         public final U getRawResult() { return result.get(); }
     }
 
     @SuppressWarnings("serial") static final class SearchEntriesTask<K,V,U>
-        extends BulkTask<K,V,U> {
-        SearchEntriesTask<K,V,U> nextRight;
+        extends BulkAction<K,V,U> {
         final Fun<Entry<K,V>, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchEntriesTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             SearchEntriesTask<K,V,U> nextRight,
+             SearchEntriesTask<K,V,U> nextTask,
              Fun<Entry<K,V>, ? extends U> searchFunction,
              AtomicReference<U> result) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5471,13 +5448,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
-            SearchEntriesTask<K,V,U> rights = null;
+            SearchEntriesTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new SearchEntriesTask<K,V,U>
-                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
+                    (subtasks = new SearchEntriesTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, searchFunction, result)).fork();
                 }
                 Object v; U u;
                 while (result.get() == null && (v = advance()) != null) {
@@ -5487,31 +5464,25 @@ public class ConcurrentHashMapV8<K, V>
                         break;
                     }
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && result.get() == null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
         public final U getRawResult() { return result.get(); }
     }
 
     @SuppressWarnings("serial") static final class SearchMappingsTask<K,V,U>
-        extends BulkTask<K,V,U> {
-        SearchMappingsTask<K,V,U> nextRight;
+        extends BulkAction<K,V,U> {
         final BiFun<? super K, ? super V, ? extends U> searchFunction;
         final AtomicReference<U> result;
         SearchMappingsTask
             (ConcurrentHashMapV8<K,V> m, BulkTask<K,V,?> p, int b,
-             SearchMappingsTask<K,V,U> nextRight,
+             SearchMappingsTask<K,V,U> nextTask,
              BiFun<? super K, ? super V, ? extends U> searchFunction,
              AtomicReference<U> result) {
-            super(m, p, b);
-            this.nextRight = nextRight;
+            super(m, p, b, nextTask);
             this.searchFunction = searchFunction; this.result = result;
         }
         @SuppressWarnings("unchecked") public final boolean exec() {
@@ -5520,13 +5491,13 @@ public class ConcurrentHashMapV8<K, V>
                 this.searchFunction;
             if (searchFunction == null || result == null)
                 return abortOnNullFunction();
-            SearchMappingsTask<K,V,U> rights = null;
+            SearchMappingsTask<K,V,U> subtasks = null;
             try {
                 int b = batch(), c;
                 while (b > 1 && baseIndex != baseLimit && result.get() == null) {
                     do {} while (!casPending(c = pending, c+1));
-                    (rights = new SearchMappingsTask<K,V,U>
-                     (map, this, b >>>= 1, rights, searchFunction, result)).fork();
+                    (subtasks = new SearchMappingsTask<K,V,U>
+                     (map, this, b >>>= 1, subtasks, searchFunction, result)).fork();
                 }
                 Object v; U u;
                 while (result.get() == null && (v = advance()) != null) {
@@ -5536,14 +5507,10 @@ public class ConcurrentHashMapV8<K, V>
                         break;
                     }
                 }
-                tryComplete();
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            while (rights != null && result.get() == null && rights.tryUnfork()) {
-                rights.exec();
-                rights = rights.nextRight;
-            }
+            tryComplete(subtasks);
             return false;
         }
         public final U getRawResult() { return result.get(); }
@@ -5598,8 +5565,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (ReduceKeysTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            ReduceKeysTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final K getRawResult() { return result; }
@@ -5655,8 +5627,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (ReduceValuesTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            ReduceValuesTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final V getRawResult() { return result; }
@@ -5712,8 +5689,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (ReduceEntriesTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            ReduceEntriesTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Map.Entry<K,V> getRawResult() { return result; }
@@ -5773,8 +5755,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceKeysTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceKeysTask<K,V,U> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final U getRawResult() { return result; }
@@ -5835,8 +5822,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceValuesTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceValuesTask<K,V,U> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final U getRawResult() { return result; }
@@ -5897,8 +5889,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceEntriesTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceEntriesTask<K,V,U> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final U getRawResult() { return result; }
@@ -5959,8 +5956,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceMappingsTask<K,V,U> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceMappingsTask<K,V,U> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final U getRawResult() { return result; }
@@ -6019,8 +6021,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceKeysToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceKeysToDoubleTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -6080,8 +6087,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceValuesToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceValuesToDoubleTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -6141,8 +6153,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceEntriesToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceEntriesToDoubleTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -6202,8 +6219,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceMappingsToDoubleTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceMappingsToDoubleTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Double getRawResult() { return result; }
@@ -6262,8 +6284,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceKeysToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceKeysToLongTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6323,8 +6350,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceValuesToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceValuesToLongTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6384,8 +6416,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceEntriesToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceEntriesToLongTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6445,8 +6482,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceMappingsToLongTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceMappingsToLongTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Long getRawResult() { return result; }
@@ -6505,8 +6547,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceKeysToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceKeysToIntTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Integer getRawResult() { return result; }
@@ -6566,8 +6613,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceValuesToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceValuesToIntTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Integer getRawResult() { return result; }
@@ -6627,8 +6679,13 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceEntriesToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceEntriesToIntTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Integer getRawResult() { return result; }
@@ -6688,12 +6745,18 @@ public class ConcurrentHashMapV8<K, V>
             } catch (Throwable ex) {
                 return tryCompleteComputation(ex);
             }
-            for (MapReduceMappingsToIntTask<K,V> s = rights; s != null && s.tryUnfork(); s = s.nextRight)
-                s.exec();
+            MapReduceMappingsToIntTask<K,V> s = rights;
+            if (s != null && !inForkJoinPool()) {
+                do  {
+                    if (s.tryUnfork())
+                        s.exec();
+                } while ((s = s.nextRight) != null);
+            }
             return false;
         }
         public final Integer getRawResult() { return result; }
     }
+
 
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;

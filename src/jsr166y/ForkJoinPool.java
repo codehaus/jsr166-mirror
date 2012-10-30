@@ -1417,8 +1417,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final String nextWorkerName() {
         int n;
-        do {} while(!U.compareAndSwapInt(this, NEXTWORKERNUMBER,
-                                         n = nextWorkerNumber, ++n));
+        do {} while (!U.compareAndSwapInt(this, NEXTWORKERNUMBER,
+                                          n = nextWorkerNumber, ++n));
         return workerNamePrefix.concat(Integer.toString(n));
     }
 
@@ -1481,8 +1481,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (wt != null && (w = wt.workQueue) != null) {
             w.runState = -1;                // ensure runState is set
             long steals = w.totalSteals + w.nsteals, sc;
-            do {} while(!U.compareAndSwapLong(this, STEALCOUNT,
-                                              sc = stealCount, sc + steals));
+            do {} while (!U.compareAndSwapLong(this, STEALCOUNT,
+                                               sc = stealCount, sc + steals));
             int idx = w.poolIndex;
             while (!U.compareAndSwapInt(this, MAINLOCK, 0, 1))
                 tryAwaitMainLock();
@@ -2275,7 +2275,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         for (long c;;) {
             if (((c = ctl) & STOP_BIT) != 0) {      // already terminating
                 if ((short)(c >>> TC_SHIFT) == -parallelism) {
-                    synchronized(this) {
+                    synchronized (this) {
                         notifyAll();                // signal when 0 workers
                     }
                 }
@@ -2999,7 +2999,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             return true;
         long startTime = System.nanoTime();
         boolean terminated = false;
-        synchronized(this) {
+        synchronized (this) {
             for (long waitTime = nanos, millis = 0L;;) {
                 if (terminated = isTerminated() ||
                     waitTime <= 0L ||
@@ -3184,7 +3184,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 defaultForkJoinWorkerThreadFactory :
                 ((ForkJoinWorkerThreadFactory)ClassLoader.
                  getSystemClassLoader().loadClass(fp).newInstance());
-            Thread.UncaughtExceptionHandler ueh = (up == null)? null :
+            Thread.UncaughtExceptionHandler ueh = (up == null) ? null :
                 ((Thread.UncaughtExceptionHandler)ClassLoader.
                  getSystemClassLoader().loadClass(up).newInstance());
             int par;

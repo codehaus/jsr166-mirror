@@ -4968,7 +4968,7 @@ public class ConcurrentHashMapV8<K, V>
                     baseLimit = baseSize = t.length;
                 if (t != null) {
                     long n = m.counter.sum();
-                    int par = (pool = getPool()) == null?
+                    int par = ((pool = getPool()) == null) ?
                         ForkJoinPool.getCommonPoolParallelism() :
                         pool.getParallelism();
                     int sp = par << 3; // slack of 8

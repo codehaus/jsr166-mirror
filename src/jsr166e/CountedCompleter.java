@@ -431,7 +431,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
                 CountedCompleter<?> root = a.getRoot();
                 Thread thread = Thread.currentThread();
                 ForkJoinPool.WorkQueue wq =
-                    (thread instanceof ForkJoinWorkerThread)?
+                    (thread instanceof ForkJoinWorkerThread) ?
                     ((ForkJoinWorkerThread)thread).workQueue : null;
                 ForkJoinTask<?> t;
                 while ((t = (wq != null) ? wq.popCC(root) :

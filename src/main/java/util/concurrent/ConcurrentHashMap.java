@@ -106,7 +106,7 @@ import java.io.Serializable;
  * does <em>not</em> allow {@code null} to be used as a key or value.
  *
  * <p>ConcurrentHashMaps support parallel operations using the {@link
- * ForkJoinPool#commonPool}. (Task that may be used in other contexts
+ * ForkJoinPool#commonPool}. (Tasks that may be used in other contexts
  * are available in class {@link ForkJoinTasks}). These operations are
  * designed to be safely, and often sensibly, applied even with maps
  * that are being concurrently updated by other threads; for example,

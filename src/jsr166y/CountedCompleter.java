@@ -429,18 +429,8 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
                 }
             }
             else if (U.compareAndSwapInt(a, PENDING, c, c - 1)) {
-                CountedCompleter<?> root = a.getRoot();
-                Thread thread = Thread.currentThread();
-                ForkJoinPool.WorkQueue wq =
-                    (thread instanceof ForkJoinWorkerThread) ?
-                    ((ForkJoinWorkerThread)thread).workQueue : null;
-                ForkJoinTask<?> t;
-                while ((t = (wq != null) ? wq.popCC(root) :
-                        ForkJoinPool.popCCFromCommonPool(root)) != null) {
-                    t.doExec();
-                    if (root.isDone())
-                        break;
-                }
+                if (!(Thread.currentThread() instanceof ForkJoinWorkerThread)) 
+                    ForkJoinPool.popAndExecCCFromCommonPool(a);
                 return;
             }
         }

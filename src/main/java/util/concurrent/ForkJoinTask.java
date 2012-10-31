@@ -601,14 +601,36 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
+     * A version of "sneaky throw" to relay exceptions
+     */
+    static void rethrow(final Throwable ex) {
+        if (ex != null) {
+            if (ex instanceof Error)
+                throw (Error)ex;
+            if (ex instanceof RuntimeException)
+                throw (RuntimeException)ex;
+            throw uncheckedThrowable(ex, RuntimeException.class);
+        }
+    }
+
+    /**
+     * The sneaky part of sneaky throw, relying on generics
+     * limitations to evade compiler complaints about rethrowing
+     * unchecked exceptions
+     */
+    @SuppressWarnings("unchecked") static <T extends Throwable>
+        T uncheckedThrowable(final Throwable t, final Class<T> c) {
+        return (T)t; // rely on vacuous cast
+    }
+
+    /**
      * Throws exception, if any, associated with the given status.
      */
     private void reportException(int s) {
-        Throwable ex = ((s == CANCELLED) ?  new CancellationException() :
-                        (s == EXCEPTIONAL) ? getThrowableException() :
-                        null);
-        if (ex != null)
-            U.throwException(ex);
+        if (s == CANCELLED)
+            throw new CancellationException();
+        if (s == EXCEPTIONAL)
+            rethrow(getThrowableException());
     }
 
     // public methods
@@ -735,7 +757,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             }
         }
         if (ex != null)
-            U.throwException(ex);
+            rethrow(ex);
     }
 
     /**
@@ -786,7 +808,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             }
         }
         if (ex != null)
-            U.throwException(ex);
+            rethrow(ex);
         return tasks;
     }
 

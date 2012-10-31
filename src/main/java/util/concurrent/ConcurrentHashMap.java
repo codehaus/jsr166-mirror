@@ -113,7 +113,9 @@ import java.io.Serializable;
  * when computing a snapshot summary of the values in a shared
  * registry.  There are three kinds of operation, each with four
  * forms, accepting functions with Keys, Values, Entries, and (Key,
- * Value) arguments and/or return values. Because the elements of a
+ * Value) arguments and/or return values. (The first three forms are
+ * also available via the {@link #keySet()}, {@link #values()} and
+ * {@link #entrySet()} views). Because the elements of a
  * ConcurrentHashMap are not ordered in any particular way, and may be
  * processed in different orders in different parallel executions, the
  * correctness of supplied functions should not depend on any
@@ -288,76 +290,6 @@ public class ConcurrentHashMap<K, V>
         Spliterator<T> split();
     }
 
-    /**
-     * A view of a ConcurrentHashMap as a {@link Set} of keys, in
-     * which additions may optionally be enabled by mapping to a
-     * common value.  This class cannot be directly instantiated. See
-     * {@link #keySet}, {@link #keySet(Object)}, {@link #newKeySet()},
-     * {@link #newKeySet(int)}.
-     *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
-     */
-    public static class KeySetView<K,V> extends CHMView<K,V> implements Set<K>, java.io.Serializable {
-        private static final long serialVersionUID = 7249069246763182397L;
-        private final V value;
-        KeySetView(ConcurrentHashMap<K, V> map, V value) {  // non-public
-            super(map);
-            this.value = value;
-        }
-
-        /**
-         * Returns the map backing this view.
-         *
-         * @return the map backing this view
-         */
-        public ConcurrentHashMap<K,V> getMap() { return map; }
-
-        /**
-         * Returns the default mapped value for additions,
-         * or {@code null} if additions are not supported.
-         *
-         * @return the default mapped value for additions, or {@code null}
-         * if not supported.
-         */
-        public V getMappedValue() { return value; }
-
-        // implement Set API
-
-        public boolean contains(Object o) { return map.containsKey(o); }
-        public boolean remove(Object o)   { return map.remove(o) != null; }
-        public Iterator<K> iterator()     { return new KeyIterator<K,V>(map); }
-        public boolean add(K e) {
-            V v;
-            if ((v = value) == null)
-                throw new UnsupportedOperationException();
-            if (e == null)
-                throw new NullPointerException();
-            return map.internalPutIfAbsent(e, v) == null;
-        }
-        public boolean addAll(Collection<? extends K> c) {
-            boolean added = false;
-            V v;
-            if ((v = value) == null)
-                throw new UnsupportedOperationException();
-            for (K e : c) {
-                if (e == null)
-                    throw new NullPointerException();
-                if (map.internalPutIfAbsent(e, v) == null)
-                    added = true;
-            }
-            return added;
-        }
-        public boolean equals(Object o) {
-            Set<?> c;
-            return ((o instanceof Set) &&
-                    ((c = (Set<?>)o) == this ||
-                     (containsAll(c) && c.containsAll(this))));
-        }
-    }
 
     /*
      * Overview:
@@ -642,8 +574,8 @@ public class ConcurrentHashMap<K, V>
 
     // views
     private transient KeySetView<K,V> keySet;
-    private transient Values<K,V> values;
-    private transient EntrySet<K,V> entrySet;
+    private transient ValuesView<K,V> values;
+    private transient EntrySetView<K,V> entrySet;
 
     /** For serialization compatibility. Null unless serialized; see below */
     private Segment<K,V>[] segments;
@@ -742,7 +674,10 @@ public class ConcurrentHashMap<K, V>
                                 try {
                                     wait();
                                 } catch (InterruptedException ie) {
-                                    Thread.currentThread().interrupt();
+                                    try {
+                                        Thread.currentThread().interrupt();
+                                    } catch (SecurityException ignore) {
+                                    }
                                 }
                             }
                             else
@@ -3081,22 +3016,11 @@ public class ConcurrentHashMap<K, V>
     /**
      * Returns a {@link Collection} view of the values contained in this map.
      * The collection is backed by the map, so changes to the map are
-     * reflected in the collection, and vice-versa.  The collection
-     * supports element removal, which removes the corresponding
-     * mapping from this map, via the {@code Iterator.remove},
-     * {@code Collection.remove}, {@code removeAll},
-     * {@code retainAll}, and {@code clear} operations.  It does not
-     * support the {@code add} or {@code addAll} operations.
-     *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * reflected in the collection, and vice-versa. 
      */
-    public Collection<V> values() {
-        Values<K,V> vs = values;
-        return (vs != null) ? vs : (values = new Values<K,V>(this));
+    public ValuesView<K,V> values() {
+        ValuesView<K,V> vs = values;
+        return (vs != null) ? vs : (values = new ValuesView<K,V>(this));
     }
 
     /**
@@ -3116,8 +3040,8 @@ public class ConcurrentHashMap<K, V>
      * reflect any modifications subsequent to construction.
      */
     public Set<Map.Entry<K,V>> entrySet() {
-        EntrySet<K,V> es = entrySet;
-        return (es != null) ? es : (entrySet = new EntrySet<K,V>(this));
+        EntrySetView<K,V> es = entrySet;
+        return (es != null) ? es : (entrySet = new EntrySetView<K,V>(this));
     }
 
     /**
@@ -3357,199 +3281,6 @@ public class ConcurrentHashMap<K, V>
             val = value;
             map.put(key, value);
             return v;
-        }
-    }
-
-    /* ----------------Views -------------- */
-
-    /**
-     * Base class for views.
-     */
-    static abstract class CHMView<K, V> {
-        final ConcurrentHashMap<K, V> map;
-        CHMView(ConcurrentHashMap<K, V> map)  { this.map = map; }
-        public final int size()                 { return map.size(); }
-        public final boolean isEmpty()          { return map.isEmpty(); }
-        public final void clear()               { map.clear(); }
-
-        // implementations below rely on concrete classes supplying these
-        abstract public Iterator<?> iterator();
-        abstract public boolean contains(Object o);
-        abstract public boolean remove(Object o);
-
-        private static final String oomeMsg = "Required array size too large";
-
-        public final Object[] toArray() {
-            long sz = map.mappingCount();
-            if (sz > (long)(MAX_ARRAY_SIZE))
-                throw new OutOfMemoryError(oomeMsg);
-            int n = (int)sz;
-            Object[] r = new Object[n];
-            int i = 0;
-            Iterator<?> it = iterator();
-            while (it.hasNext()) {
-                if (i == n) {
-                    if (n >= MAX_ARRAY_SIZE)
-                        throw new OutOfMemoryError(oomeMsg);
-                    if (n >= MAX_ARRAY_SIZE - (MAX_ARRAY_SIZE >>> 1) - 1)
-                        n = MAX_ARRAY_SIZE;
-                    else
-                        n += (n >>> 1) + 1;
-                    r = Arrays.copyOf(r, n);
-                }
-                r[i++] = it.next();
-            }
-            return (i == n) ? r : Arrays.copyOf(r, i);
-        }
-
-        @SuppressWarnings("unchecked") public final <T> T[] toArray(T[] a) {
-            long sz = map.mappingCount();
-            if (sz > (long)(MAX_ARRAY_SIZE))
-                throw new OutOfMemoryError(oomeMsg);
-            int m = (int)sz;
-            T[] r = (a.length >= m) ? a :
-                (T[])java.lang.reflect.Array
-                .newInstance(a.getClass().getComponentType(), m);
-            int n = r.length;
-            int i = 0;
-            Iterator<?> it = iterator();
-            while (it.hasNext()) {
-                if (i == n) {
-                    if (n >= MAX_ARRAY_SIZE)
-                        throw new OutOfMemoryError(oomeMsg);
-                    if (n >= MAX_ARRAY_SIZE - (MAX_ARRAY_SIZE >>> 1) - 1)
-                        n = MAX_ARRAY_SIZE;
-                    else
-                        n += (n >>> 1) + 1;
-                    r = Arrays.copyOf(r, n);
-                }
-                r[i++] = (T)it.next();
-            }
-            if (a == r && i < n) {
-                r[i] = null; // null-terminate
-                return r;
-            }
-            return (i == n) ? r : Arrays.copyOf(r, i);
-        }
-
-        public final int hashCode() {
-            int h = 0;
-            for (Iterator<?> it = iterator(); it.hasNext();)
-                h += it.next().hashCode();
-            return h;
-        }
-
-        public final String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append('[');
-            Iterator<?> it = iterator();
-            if (it.hasNext()) {
-                for (;;) {
-                    Object e = it.next();
-                    sb.append(e == this ? "(this Collection)" : e);
-                    if (!it.hasNext())
-                        break;
-                    sb.append(',').append(' ');
-                }
-            }
-            return sb.append(']').toString();
-        }
-
-        public final boolean containsAll(Collection<?> c) {
-            if (c != this) {
-                for (Iterator<?> it = c.iterator(); it.hasNext();) {
-                    Object e = it.next();
-                    if (e == null || !contains(e))
-                        return false;
-                }
-            }
-            return true;
-        }
-
-        public final boolean removeAll(Collection<?> c) {
-            boolean modified = false;
-            for (Iterator<?> it = iterator(); it.hasNext();) {
-                if (c.contains(it.next())) {
-                    it.remove();
-                    modified = true;
-                }
-            }
-            return modified;
-        }
-
-        public final boolean retainAll(Collection<?> c) {
-            boolean modified = false;
-            for (Iterator<?> it = iterator(); it.hasNext();) {
-                if (!c.contains(it.next())) {
-                    it.remove();
-                    modified = true;
-                }
-            }
-            return modified;
-        }
-
-    }
-
-    static final class Values<K,V> extends CHMView<K,V>
-        implements Collection<V> {
-        Values(ConcurrentHashMap<K, V> map)   { super(map); }
-        public final boolean contains(Object o) { return map.containsValue(o); }
-        public final boolean remove(Object o) {
-            if (o != null) {
-                Iterator<V> it = new ValueIterator<K,V>(map);
-                while (it.hasNext()) {
-                    if (o.equals(it.next())) {
-                        it.remove();
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        public final Iterator<V> iterator() {
-            return new ValueIterator<K,V>(map);
-        }
-        public final boolean add(V e) {
-            throw new UnsupportedOperationException();
-        }
-        public final boolean addAll(Collection<? extends V> c) {
-            throw new UnsupportedOperationException();
-        }
-
-    }
-
-    static final class EntrySet<K,V> extends CHMView<K,V>
-        implements Set<Map.Entry<K,V>> {
-        EntrySet(ConcurrentHashMap<K, V> map) { super(map); }
-        public final boolean contains(Object o) {
-            Object k, v, r; Map.Entry<?,?> e;
-            return ((o instanceof Map.Entry) &&
-                    (k = (e = (Map.Entry<?,?>)o).getKey()) != null &&
-                    (r = map.get(k)) != null &&
-                    (v = e.getValue()) != null &&
-                    (v == r || v.equals(r)));
-        }
-        public final boolean remove(Object o) {
-            Object k, v; Map.Entry<?,?> e;
-            return ((o instanceof Map.Entry) &&
-                    (k = (e = (Map.Entry<?,?>)o).getKey()) != null &&
-                    (v = e.getValue()) != null &&
-                    map.remove(k, v));
-        }
-        public final Iterator<Map.Entry<K,V>> iterator() {
-            return new EntryIterator<K,V>(map);
-        }
-        public final boolean add(Entry<K,V> e) {
-            throw new UnsupportedOperationException();
-        }
-        public final boolean addAll(Collection<? extends Entry<K,V>> c) {
-            throw new UnsupportedOperationException();
-        }
-        public boolean equals(Object o) {
-            Set<?> c;
-            return ((o instanceof Set) &&
-                    ((c = (Set<?>)o) == this ||
-                     (containsAll(c) && c.containsAll(this))));
         }
     }
 
@@ -4221,6 +3952,697 @@ public class ConcurrentHashMap<K, V>
                                   IntByIntToInt reducer) {
         return ForkJoinTasks.reduceEntriesToInt
             (this, transformer, basis, reducer).invoke();
+    }
+
+    /* ----------------Views -------------- */
+
+    /**
+     * Base class for views.
+     */
+    static abstract class CHMView<K, V> {
+        final ConcurrentHashMap<K, V> map;
+        CHMView(ConcurrentHashMap<K, V> map)  { this.map = map; }
+
+        /**
+         * Returns the map backing this view.
+         *
+         * @return the map backing this view
+         */
+        public ConcurrentHashMap<K,V> getMap() { return map; }
+
+        public final int size()                 { return map.size(); }
+        public final boolean isEmpty()          { return map.isEmpty(); }
+        public final void clear()               { map.clear(); }
+
+        // implementations below rely on concrete classes supplying these
+        abstract public Iterator<?> iterator();
+        abstract public boolean contains(Object o);
+        abstract public boolean remove(Object o);
+
+        private static final String oomeMsg = "Required array size too large";
+
+        public final Object[] toArray() {
+            long sz = map.mappingCount();
+            if (sz > (long)(MAX_ARRAY_SIZE))
+                throw new OutOfMemoryError(oomeMsg);
+            int n = (int)sz;
+            Object[] r = new Object[n];
+            int i = 0;
+            Iterator<?> it = iterator();
+            while (it.hasNext()) {
+                if (i == n) {
+                    if (n >= MAX_ARRAY_SIZE)
+                        throw new OutOfMemoryError(oomeMsg);
+                    if (n >= MAX_ARRAY_SIZE - (MAX_ARRAY_SIZE >>> 1) - 1)
+                        n = MAX_ARRAY_SIZE;
+                    else
+                        n += (n >>> 1) + 1;
+                    r = Arrays.copyOf(r, n);
+                }
+                r[i++] = it.next();
+            }
+            return (i == n) ? r : Arrays.copyOf(r, i);
+        }
+
+        @SuppressWarnings("unchecked") public final <T> T[] toArray(T[] a) {
+            long sz = map.mappingCount();
+            if (sz > (long)(MAX_ARRAY_SIZE))
+                throw new OutOfMemoryError(oomeMsg);
+            int m = (int)sz;
+            T[] r = (a.length >= m) ? a :
+                (T[])java.lang.reflect.Array
+                .newInstance(a.getClass().getComponentType(), m);
+            int n = r.length;
+            int i = 0;
+            Iterator<?> it = iterator();
+            while (it.hasNext()) {
+                if (i == n) {
+                    if (n >= MAX_ARRAY_SIZE)
+                        throw new OutOfMemoryError(oomeMsg);
+                    if (n >= MAX_ARRAY_SIZE - (MAX_ARRAY_SIZE >>> 1) - 1)
+                        n = MAX_ARRAY_SIZE;
+                    else
+                        n += (n >>> 1) + 1;
+                    r = Arrays.copyOf(r, n);
+                }
+                r[i++] = (T)it.next();
+            }
+            if (a == r && i < n) {
+                r[i] = null; // null-terminate
+                return r;
+            }
+            return (i == n) ? r : Arrays.copyOf(r, i);
+        }
+
+        public final int hashCode() {
+            int h = 0;
+            for (Iterator<?> it = iterator(); it.hasNext();)
+                h += it.next().hashCode();
+            return h;
+        }
+
+        public final String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append('[');
+            Iterator<?> it = iterator();
+            if (it.hasNext()) {
+                for (;;) {
+                    Object e = it.next();
+                    sb.append(e == this ? "(this Collection)" : e);
+                    if (!it.hasNext())
+                        break;
+                    sb.append(',').append(' ');
+                }
+            }
+            return sb.append(']').toString();
+        }
+
+        public final boolean containsAll(Collection<?> c) {
+            if (c != this) {
+                for (Iterator<?> it = c.iterator(); it.hasNext();) {
+                    Object e = it.next();
+                    if (e == null || !contains(e))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public final boolean removeAll(Collection<?> c) {
+            boolean modified = false;
+            for (Iterator<?> it = iterator(); it.hasNext();) {
+                if (c.contains(it.next())) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+            return modified;
+        }
+
+        public final boolean retainAll(Collection<?> c) {
+            boolean modified = false;
+            for (Iterator<?> it = iterator(); it.hasNext();) {
+                if (!c.contains(it.next())) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+            return modified;
+        }
+
+    }
+
+    /**
+     * A view of a ConcurrentHashMap as a {@link Set} of keys, in
+     * which additions may optionally be enabled by mapping to a
+     * common value.  This class cannot be directly instantiated. See
+     * {@link #keySet}, {@link #keySet(Object)}, {@link #newKeySet()},
+     * {@link #newKeySet(int)}.
+     */
+    public static class KeySetView<K,V> extends CHMView<K,V> implements Set<K>, java.io.Serializable {
+        private static final long serialVersionUID = 7249069246763182397L;
+        private final V value;
+        KeySetView(ConcurrentHashMap<K, V> map, V value) {  // non-public
+            super(map);
+            this.value = value;
+        }
+
+        /**
+         * Returns the default mapped value for additions,
+         * or {@code null} if additions are not supported.
+         *
+         * @return the default mapped value for additions, or {@code null}
+         * if not supported.
+         */
+        public V getMappedValue() { return value; }
+
+        // implement Set API
+
+        public boolean contains(Object o) { return map.containsKey(o); }
+        public boolean remove(Object o)   { return map.remove(o) != null; }
+
+        /**
+         * Returns a "weakly consistent" iterator that will never
+         * throw {@link ConcurrentModificationException}, and
+         * guarantees to traverse elements as they existed upon
+         * construction of the iterator, and may (but is not
+         * guaranteed to) reflect any modifications subsequent to
+         * construction.
+         *
+         * @return an iterator over the keys of this map
+         */
+        public Iterator<K> iterator()     { return new KeyIterator<K,V>(map); }
+        public boolean add(K e) {
+            V v;
+            if ((v = value) == null)
+                throw new UnsupportedOperationException();
+            if (e == null)
+                throw new NullPointerException();
+            return map.internalPutIfAbsent(e, v) == null;
+        }
+        public boolean addAll(Collection<? extends K> c) {
+            boolean added = false;
+            V v;
+            if ((v = value) == null)
+                throw new UnsupportedOperationException();
+            for (K e : c) {
+                if (e == null)
+                    throw new NullPointerException();
+                if (map.internalPutIfAbsent(e, v) == null)
+                    added = true;
+            }
+            return added;
+        }
+        public boolean equals(Object o) {
+            Set<?> c;
+            return ((o instanceof Set) &&
+                    ((c = (Set<?>)o) == this ||
+                     (containsAll(c) && c.containsAll(this))));
+        }
+
+        /**
+         * Performs the given action for each key.
+         *
+         * @param action the action
+         */
+        public void forEach(Action<K> action) {
+            ForkJoinTasks.forEachKey
+                (map, action).invoke();
+        }
+
+        /**
+         * Performs the given action for each non-null transformation
+         * of each key.
+         *
+         * @param transformer a function returning the transformation
+         * for an element, or null of there is no transformation (in
+         * which case the action is not applied).
+         * @param action the action
+         */
+        public <U> void forEach(Fun<? super K, ? extends U> transformer,
+                                Action<U> action) {
+            ForkJoinTasks.forEachKey
+                (map, transformer, action).invoke();
+        }
+
+        /**
+         * Returns a non-null result from applying the given search
+         * function on each key, or null if none. Upon success,
+         * further element processing is suppressed and the results of
+         * any other parallel invocations of the search function are
+         * ignored.
+         *
+         * @param searchFunction a function returning a non-null
+         * result on success, else null
+         * @return a non-null result from applying the given search
+         * function on each key, or null if none
+         */
+        public <U> U search(Fun<? super K, ? extends U> searchFunction) {
+            return ForkJoinTasks.searchKeys
+                (map, searchFunction).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating all keys using the given
+         * reducer to combine values, or null if none.
+         *
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating all keys using the given
+         * reducer to combine values, or null if none
+         */
+        public K reduce(BiFun<? super K, ? super K, ? extends K> reducer) {
+            return ForkJoinTasks.reduceKeys
+                (map, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all keys using the given reducer to combine values, and
+         * the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return  the result of accumulating the given transformation
+         * of all keys
+         */
+        public double reduceToDouble(ObjectToDouble<? super K> transformer,
+                                     double basis,
+                                     DoubleByDoubleToDouble reducer) {
+            return ForkJoinTasks.reduceKeysToDouble
+                (map, transformer, basis, reducer).invoke();
+        }
+
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all keys using the given reducer to combine values, and
+         * the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all keys
+         */
+        public long reduceToLong(ObjectToLong<? super K> transformer,
+                                 long basis,
+                                 LongByLongToLong reducer) {
+            return ForkJoinTasks.reduceKeysToLong
+                (map, transformer, basis, reducer).invoke();
+        }
+        
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all keys using the given reducer to combine values, and
+         * the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all keys
+         */
+        public int reduceToInt(ObjectToInt<? super K> transformer,
+                               int basis,
+                               IntByIntToInt reducer) {
+            return ForkJoinTasks.reduceKeysToInt
+                (map, transformer, basis, reducer).invoke();
+        }
+        
+    }
+
+    /**
+     * A view of a ConcurrentHashMap as a {@link Collection} of
+     * values, in which additions are disabled. This class cannot be
+     * directly instantiated. See {@link #values},
+     *
+     * <p>The view's {@code iterator} is a "weakly consistent" iterator
+     * that will never throw {@link ConcurrentModificationException},
+     * and guarantees to traverse elements as they existed upon
+     * construction of the iterator, and may (but is not guaranteed to)
+     * reflect any modifications subsequent to construction.
+     */
+    public static final class ValuesView<K,V> extends CHMView<K,V>
+        implements Collection<V> {
+        ValuesView(ConcurrentHashMap<K, V> map)   { super(map); }
+        public final boolean contains(Object o) { return map.containsValue(o); }
+        public final boolean remove(Object o) {
+            if (o != null) {
+                Iterator<V> it = new ValueIterator<K,V>(map);
+                while (it.hasNext()) {
+                    if (o.equals(it.next())) {
+                        it.remove();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Returns a "weakly consistent" iterator that will never
+         * throw {@link ConcurrentModificationException}, and
+         * guarantees to traverse elements as they existed upon
+         * construction of the iterator, and may (but is not
+         * guaranteed to) reflect any modifications subsequent to
+         * construction.
+         *
+         * @return an iterator over the values of this map
+         */
+        public final Iterator<V> iterator() {
+            return new ValueIterator<K,V>(map);
+        }
+        public final boolean add(V e) {
+            throw new UnsupportedOperationException();
+        }
+        public final boolean addAll(Collection<? extends V> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Performs the given action for each value.
+         *
+         * @param action the action
+         */
+        public void forEach(Action<V> action) {
+            ForkJoinTasks.forEachValue
+                (map, action).invoke();
+        }
+
+        /**
+         * Performs the given action for each non-null transformation
+         * of each value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element, or null of there is no transformation (in
+         * which case the action is not applied).
+         */
+        public <U> void forEach(Fun<? super V, ? extends U> transformer,
+                                     Action<U> action) {
+            ForkJoinTasks.forEachValue
+                (map, transformer, action).invoke();
+        }
+
+        /**
+         * Returns a non-null result from applying the given search
+         * function on each value, or null if none.  Upon success,
+         * further element processing is suppressed and the results of
+         * any other parallel invocations of the search function are
+         * ignored.
+         *
+         * @param searchFunction a function returning a non-null
+         * result on success, else null
+         * @return a non-null result from applying the given search
+         * function on each value, or null if none
+         *
+         */
+        public <U> U search(Fun<? super V, ? extends U> searchFunction) {
+            return ForkJoinTasks.searchValues
+                (map, searchFunction).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating all values using the
+         * given reducer to combine values, or null if none.
+         *
+         * @param reducer a commutative associative combining function
+         * @return  the result of accumulating all values
+         */
+        public V reduce(BiFun<? super V, ? super V, ? extends V> reducer) {
+            return ForkJoinTasks.reduceValues
+                (map, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all values using the given reducer to combine values, or
+         * null if none.
+         *
+         * @param transformer a function returning the transformation
+         * for an element, or null of there is no transformation (in
+         * which case it is not combined).
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all values
+         */
+        public <U> U reduce(Fun<? super V, ? extends U> transformer,
+                            BiFun<? super U, ? super U, ? extends U> reducer) {
+            return ForkJoinTasks.reduceValues
+                (map, transformer, reducer).invoke();
+        }
+        
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all values using the given reducer to combine values,
+         * and the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all values
+         */
+        public double reduceToDouble(ObjectToDouble<? super V> transformer,
+                                     double basis,
+                                     DoubleByDoubleToDouble reducer) {
+            return ForkJoinTasks.reduceValuesToDouble
+                (map, transformer, basis, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all values using the given reducer to combine values,
+         * and the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all values
+         */
+        public long reduceToLong(ObjectToLong<? super V> transformer,
+                                 long basis,
+                                 LongByLongToLong reducer) {
+            return ForkJoinTasks.reduceValuesToLong
+                (map, transformer, basis, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all values using the given reducer to combine values,
+         * and the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all values
+         */
+        public int reduceToInt(ObjectToInt<? super V> transformer,
+                               int basis,
+                               IntByIntToInt reducer) {
+            return ForkJoinTasks.reduceValuesToInt
+                (map, transformer, basis, reducer).invoke();
+        }
+
+    }
+
+    /**
+     * A view of a ConcurrentHashMap as a {@link Set} of (key, value)
+     * entries.  This class cannot be directly instantiated. See
+     * {@link #entrySet}.
+     */
+    public static final class EntrySetView<K,V> extends CHMView<K,V>
+        implements Set<Map.Entry<K,V>> {
+        EntrySetView(ConcurrentHashMap<K, V> map) { super(map); }
+        public final boolean contains(Object o) {
+            Object k, v, r; Map.Entry<?,?> e;
+            return ((o instanceof Map.Entry) &&
+                    (k = (e = (Map.Entry<?,?>)o).getKey()) != null &&
+                    (r = map.get(k)) != null &&
+                    (v = e.getValue()) != null &&
+                    (v == r || v.equals(r)));
+        }
+        public final boolean remove(Object o) {
+            Object k, v; Map.Entry<?,?> e;
+            return ((o instanceof Map.Entry) &&
+                    (k = (e = (Map.Entry<?,?>)o).getKey()) != null &&
+                    (v = e.getValue()) != null &&
+                    map.remove(k, v));
+        }
+
+        /**
+         * Returns a "weakly consistent" iterator that will never
+         * throw {@link ConcurrentModificationException}, and
+         * guarantees to traverse elements as they existed upon
+         * construction of the iterator, and may (but is not
+         * guaranteed to) reflect any modifications subsequent to
+         * construction.
+         *
+         * @return an iterator over the entries of this map
+         */
+        public final Iterator<Map.Entry<K,V>> iterator() {
+            return new EntryIterator<K,V>(map);
+        }
+
+        public final boolean add(Entry<K,V> e) {
+            K key = e.getKey();
+            V value = e.getValue();
+            if (key == null || value == null)
+                throw new NullPointerException();
+            return map.internalPut(key, value) == null;
+        }
+        public final boolean addAll(Collection<? extends Entry<K,V>> c) {
+            boolean added = false;
+            for (Entry<K,V> e : c) {
+                if (add(e))
+                    added = true;
+            }
+            return added;
+        }
+        public boolean equals(Object o) {
+            Set<?> c;
+            return ((o instanceof Set) &&
+                    ((c = (Set<?>)o) == this ||
+                     (containsAll(c) && c.containsAll(this))));
+        }
+
+        /**
+         * Performs the given action for each entry.
+         *
+         * @param action the action
+         */
+        public void forEach(Action<Map.Entry<K,V>> action) {
+            ForkJoinTasks.forEachEntry
+                (map, action).invoke();
+        }
+
+        /**
+         * Performs the given action for each non-null transformation
+         * of each entry.
+         *
+         * @param transformer a function returning the transformation
+         * for an element, or null of there is no transformation (in
+         * which case the action is not applied).
+         * @param action the action
+         */
+        public <U> void forEach(Fun<Map.Entry<K,V>, ? extends U> transformer,
+                                Action<U> action) {
+            ForkJoinTasks.forEachEntry
+                (map, transformer, action).invoke();
+        }
+
+        /**
+         * Returns a non-null result from applying the given search
+         * function on each entry, or null if none.  Upon success,
+         * further element processing is suppressed and the results of
+         * any other parallel invocations of the search function are
+         * ignored.
+         *
+         * @param searchFunction a function returning a non-null
+         * result on success, else null
+         * @return a non-null result from applying the given search
+         * function on each entry, or null if none
+         */
+        public <U> U search(Fun<Map.Entry<K,V>, ? extends U> searchFunction) {
+            return ForkJoinTasks.searchEntries
+                (map, searchFunction).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating all entries using the
+         * given reducer to combine values, or null if none.
+         *
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating all entries
+         */
+        public Map.Entry<K,V> reduce(BiFun<Map.Entry<K,V>, Map.Entry<K,V>, ? extends Map.Entry<K,V>> reducer) {
+            return ForkJoinTasks.reduceEntries
+                (map, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all entries using the given reducer to combine values,
+         * or null if none.
+         *
+         * @param transformer a function returning the transformation
+         * for an element, or null of there is no transformation (in
+         * which case it is not combined).
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all entries
+         */
+        public <U> U reduce(Fun<Map.Entry<K,V>, ? extends U> transformer,
+                            BiFun<? super U, ? super U, ? extends U> reducer) {
+            return ForkJoinTasks.reduceEntries
+                (map, transformer, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all entries using the given reducer to combine values,
+         * and the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all entries
+         */
+        public double reduceToDouble(ObjectToDouble<Map.Entry<K,V>> transformer,
+                                     double basis,
+                                     DoubleByDoubleToDouble reducer) {
+            return ForkJoinTasks.reduceEntriesToDouble
+                (map, transformer, basis, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all entries using the given reducer to combine values,
+         * and the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return  the result of accumulating the given transformation
+         * of all entries
+         */
+        public long reduceToLong(ObjectToLong<Map.Entry<K,V>> transformer,
+                                 long basis,
+                                 LongByLongToLong reducer) {
+            return ForkJoinTasks.reduceEntriesToLong
+                (map, transformer, basis, reducer).invoke();
+        }
+
+        /**
+         * Returns the result of accumulating the given transformation
+         * of all entries using the given reducer to combine values,
+         * and the given basis as an identity value.
+         *
+         * @param transformer a function returning the transformation
+         * for an element
+         * @param basis the identity (initial default value) for the reduction
+         * @param reducer a commutative associative combining function
+         * @return the result of accumulating the given transformation
+         * of all entries
+         */
+        public int reduceToInt(ObjectToInt<Map.Entry<K,V>> transformer,
+                               int basis,
+                               IntByIntToInt reducer) {
+            return ForkJoinTasks.reduceEntriesToInt
+                (map, transformer, basis, reducer).invoke();
+        }
+
     }
 
     // ---------------------------------------------------------------------

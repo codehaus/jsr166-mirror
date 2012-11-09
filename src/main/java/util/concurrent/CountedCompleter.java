@@ -429,7 +429,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
                 }
             }
             else if (U.compareAndSwapInt(a, PENDING, c, c - 1)) {
-                if (!(Thread.currentThread() instanceof ForkJoinWorkerThread)) 
+                if (!(Thread.currentThread() instanceof ForkJoinWorkerThread))
                     ForkJoinPool.popAndExecCCFromCommonPool(a);
                 return;
             }

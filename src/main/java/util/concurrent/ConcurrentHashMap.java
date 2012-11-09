@@ -3016,7 +3016,7 @@ public class ConcurrentHashMap<K, V>
     /**
      * Returns a {@link Collection} view of the values contained in this map.
      * The collection is backed by the map, so changes to the map are
-     * reflected in the collection, and vice-versa. 
+     * reflected in the collection, and vice-versa.
      */
     public ValuesView<K,V> values() {
         ValuesView<K,V> vs = values;
@@ -4253,7 +4253,7 @@ public class ConcurrentHashMap<K, V>
             return ForkJoinTasks.reduceKeysToLong
                 (map, transformer, basis, reducer).invoke();
         }
-        
+
         /**
          * Returns the result of accumulating the given transformation
          * of all keys using the given reducer to combine values, and
@@ -4272,7 +4272,7 @@ public class ConcurrentHashMap<K, V>
             return ForkJoinTasks.reduceKeysToInt
                 (map, transformer, basis, reducer).invoke();
         }
-        
+
     }
 
     /**
@@ -4394,7 +4394,7 @@ public class ConcurrentHashMap<K, V>
             return ForkJoinTasks.reduceValues
                 (map, transformer, reducer).invoke();
         }
-        
+
         /**
          * Returns the result of accumulating the given transformation
          * of all values using the given reducer to combine values,

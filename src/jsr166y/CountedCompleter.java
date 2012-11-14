@@ -142,9 +142,7 @@ package jsr166y;
  *
  * As a further improvement, notice that the left task need not even
  * exist.  Instead of creating a new one, we can iterate using the
- * original task, and add a pending count for each fork. Additionally,
- * this version uses {@code helpComplete} to streamline assistance in
- * the execution of forked tasks.
+ * original task, and add a pending count for each fork. 
  *
  * <pre> {@code
  * class ForEach<E> ...
@@ -158,7 +156,7 @@ package jsr166y;
  *         }
  *         if (h > l)
  *             op.apply(array[l]);
- *         helpComplete();
+ *         tryComplete();
  *     }
  * }</pre>
  *
@@ -414,29 +412,6 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
-     * Identical to {@link #tryComplete}, but may additionally execute
-     * other tasks within the current computation (i.e., those
-     * with the same {@link #getRoot}.
-     */
-    public final void helpComplete() {
-        CountedCompleter<?> a = this, s = a;
-        for (int c;;) {
-            if ((c = a.pending) == 0) {
-                a.onCompletion(s);
-                if ((a = (s = a).completer) == null) {
-                    s.quietlyComplete();
-                    return;
-                }
-            }
-            else if (U.compareAndSwapInt(a, PENDING, c, c - 1)) {
-                if (!(Thread.currentThread() instanceof ForkJoinWorkerThread))
-                    ForkJoinPool.popAndExecCCFromCommonPool(a);
-                return;
-            }
-        }
-    }
-
-    /**
      * Regardless of pending count, invokes {@link #onCompletion},
      * marks this task as complete and further triggers {@link
      * #tryComplete} on this task's completer, if one exists. This
@@ -502,7 +477,6 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
             throw new Error(e);
         }
     }
-
     /**
      * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
      * Replace with a simple call to Unsafe.getUnsafe when integrating

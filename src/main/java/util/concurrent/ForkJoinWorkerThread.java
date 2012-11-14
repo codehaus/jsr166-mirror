@@ -31,17 +31,24 @@ public class ForkJoinWorkerThread extends Thread {
     final ForkJoinPool pool;                // the pool this thread works in
 
     /**
+     * An initial name for a newly constructed worker, used until
+     * onStart can establish a useful name. This removes need to
+     * establish a name from worker startup path.
+     */
+    static final String provisionalName = "aForkJoinWorkerThread";
+
+    /**
      * Creates a ForkJoinWorkerThread operating in the given pool.
      *
      * @param pool the pool this thread works in
      * @throws NullPointerException if pool is null
      */
     protected ForkJoinWorkerThread(ForkJoinPool pool) {
-        super(pool.nextWorkerName());
-        setDaemon(true);
+        super(provisionalName); // bootstrap name
         Thread.UncaughtExceptionHandler ueh = pool.ueh;
         if (ueh != null)
             setUncaughtExceptionHandler(ueh);
+        setDaemon(true);
         this.pool = pool;
         pool.registerWorker(this.workQueue = new ForkJoinPool.WorkQueue
                             (pool, this, pool.localMode));
@@ -79,6 +86,10 @@ public class ForkJoinWorkerThread extends Thread {
      * processing tasks.
      */
     protected void onStart() {
+        String pref; // replace bootstrap name
+        if (provisionalName.equals(getName()) &&
+            (pref = pool.workerNamePrefix) != null)
+            setName(pref.concat(Long.toString(getId())));
     }
 
     /**

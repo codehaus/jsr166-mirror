@@ -142,7 +142,7 @@ package java.util.concurrent;
  *
  * As a further improvement, notice that the left task need not even
  * exist.  Instead of creating a new one, we can iterate using the
- * original task, and add a pending count for each fork. 
+ * original task, and add a pending count for each fork.
  *
  * <pre> {@code
  * class ForEach<E> ...

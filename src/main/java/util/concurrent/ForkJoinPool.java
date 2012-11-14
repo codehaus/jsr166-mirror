@@ -1291,7 +1291,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     --spins;
             }
             else if (U.compareAndSwapInt(this, PLOCK, ps, ps | PL_SIGNAL)) {
-                synchronized(this) {
+                synchronized (this) {
                     if ((plock & PL_SIGNAL) != 0) {
                         try {
                             wait();
@@ -1315,7 +1315,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private void releasePlock(int ps) {
         plock = ps;
-        synchronized(this) { notifyAll(); }
+        synchronized (this) { notifyAll(); }
     }
 
     //  Registering and deregistering workers
@@ -2305,7 +2305,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                                 }
                                 break;
                             }
-                        } while((r = r.completer) != null);
+                        } while ((r = r.completer) != null);
                     }
                 }
                 if (task != null)
@@ -3196,7 +3196,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                            getSystemClassLoader().loadClass(hp).newInstance());
             if (pp != null)
                 par = Integer.parseInt(pp);
-        } catch(Exception ignore) {
+        } catch (Exception ignore) {
         }
 
         int s; // initialize field offsets for CAS etc

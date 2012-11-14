@@ -477,6 +477,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
             throw new Error(e);
         }
     }
+
     /**
      * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
      * Replace with a simple call to Unsafe.getUnsafe when integrating
@@ -504,5 +505,4 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
             }
         }
     }
-
 }

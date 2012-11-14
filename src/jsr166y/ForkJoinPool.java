@@ -448,7 +448,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * perform some subtask processing (see externalHelpJoin and
      * related methods).  We do not need to record whether these
      * submissions are to the common pool -- if not, externalHelpJoin
-     * returns quicky (at the most helping to signal some common pool
+     * returns quickly (at the most helping to signal some common pool
      * workers). These submitters would otherwise be blocked waiting
      * for completion, so the extra effort (with liberally sprinkled
      * task status checks) in inapplicable cases amounts to an odd
@@ -653,7 +653,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
         /**
          * Pushes a task. Call only by owner in unshared queues.
-         * Cases needing resizing or rejection are relyaed to fullPush
+         * Cases needing resizing or rejection are relayed to fullPush
          * (that also handles shared queues).
          *
          * @param task the task. Caller must ensure non-null.
@@ -1631,7 +1631,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * termination and possibly shrink pool.
      *
      * * If already enqueued and none of the above apply, possibly
-     * (with 1/2 probablility) park awaiting signal, else lingering to
+     * (with 1/2 probability) park awaiting signal, else lingering to
      * help scan and signal.
      *
      * @param w the worker (via its WorkQueue)

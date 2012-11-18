@@ -104,6 +104,7 @@ import java.util.concurrent.TimeUnit;
  * an integer greater than zero, {@code threadFactory} -- the class
  * name of a {@link ForkJoinWorkerThreadFactory}, and {@code
  * exceptionHandler} -- the class name of a {@link
+ * java.lang.Thread.UncaughtExceptionHandler
  * Thread.UncaughtExceptionHandler}. Upon any error in establishing
  * these settings, default parameters are used.
  *

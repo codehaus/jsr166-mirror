@@ -106,7 +106,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <h3>Implementation Considerations</h3>
  *
- * <p> The three forms of lock acquisition (interruptible,
+ * <p>The three forms of lock acquisition (interruptible,
  * non-interruptible, and timed) may differ in their performance
  * characteristics, ordering guarantees, or other implementation
  * qualities.  Further, the ability to interrupt the <em>ongoing</em>

@@ -10,13 +10,13 @@ package java.util.concurrent;
  * An {@link ExecutorService} that can schedule commands to run after a given
  * delay, or to execute periodically.
  *
- * <p> The <tt>schedule</tt> methods create tasks with various delays
+ * <p>The <tt>schedule</tt> methods create tasks with various delays
  * and return a task object that can be used to cancel or check
  * execution. The <tt>scheduleAtFixedRate</tt> and
  * <tt>scheduleWithFixedDelay</tt> methods create and execute tasks
  * that run periodically until cancelled.
  *
- * <p> Commands submitted using the {@link Executor#execute} and
+ * <p>Commands submitted using the {@link Executor#execute} and
  * {@link ExecutorService} <tt>submit</tt> methods are scheduled with
  * a requested delay of zero. Zero and negative delays (but not
  * periods) are also allowed in <tt>schedule</tt> methods, and are

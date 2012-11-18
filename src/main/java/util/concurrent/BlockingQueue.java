@@ -68,7 +68,7 @@ import java.util.Queue;
  * A <tt>BlockingQueue</tt> without any intrinsic capacity constraints always
  * reports a remaining capacity of <tt>Integer.MAX_VALUE</tt>.
  *
- * <p> <tt>BlockingQueue</tt> implementations are designed to be used
+ * <p><tt>BlockingQueue</tt> implementations are designed to be used
  * primarily for producer-consumer queues, but additionally support
  * the {@link java.util.Collection} interface.  So, for example, it is
  * possible to remove an arbitrary element from a queue using
@@ -76,7 +76,7 @@ import java.util.Queue;
  * <em>not</em> performed very efficiently, and are intended for only
  * occasional use, such as when a queued message is cancelled.
  *
- * <p> <tt>BlockingQueue</tt> implementations are thread-safe.  All
+ * <p><tt>BlockingQueue</tt> implementations are thread-safe.  All
  * queuing methods achieve their effects atomically using internal
  * locks or other forms of concurrency control. However, the
  * <em>bulk</em> Collection operations <tt>addAll</tt>,

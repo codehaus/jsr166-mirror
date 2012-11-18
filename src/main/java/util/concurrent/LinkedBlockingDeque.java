@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * An optionally-bounded {@linkplain BlockingDeque blocking deque} based on
  * linked nodes.
  *
- * <p> The optional capacity bound constructor argument serves as a
+ * <p>The optional capacity bound constructor argument serves as a
  * way to prevent excessive expansion. The capacity, if unspecified,
  * is equal to {@link Integer#MAX_VALUE}.  Linked nodes are
  * dynamically created upon each insertion unless this would bring the

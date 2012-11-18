@@ -27,7 +27,7 @@ package java.util;
  * Subsets of any {@code NavigableSet} must implement the {@code
  * NavigableSet} interface.
  *
- * <p> The return values of navigation methods may be ambiguous in
+ * <p>The return values of navigation methods may be ambiguous in
  * implementations that permit {@code null} elements. However, even
  * in this case the result can be disambiguated by checking
  * {@code contains(null)}. To avoid such issues, implementations of

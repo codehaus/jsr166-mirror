@@ -304,7 +304,7 @@ package java.util.concurrent.atomic;
  * 17, the rules governing the semantics of the methods of this class
  * are as follows:
  *
- * <p> The following is still under construction.
+ * <p>The following is still under construction.
  *
  * <dl>
  *

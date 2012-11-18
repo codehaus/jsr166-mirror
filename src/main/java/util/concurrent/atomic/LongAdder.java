@@ -18,7 +18,7 @@ import java.io.ObjectOutputStream;
  * #longValue}) returns the current total combined across the
  * variables maintaining the sum.
  *
- * <p> This class is usually preferable to {@link AtomicLong} when
+ * <p>This class is usually preferable to {@link AtomicLong} when
  * multiple threads update a common sum that is used for purposes such
  * as collecting statistics, not for fine-grained synchronization
  * control.  Under low update contention, the two classes have similar

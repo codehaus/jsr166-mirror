@@ -23,7 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * operations (<tt>add</tt>, <tt>set</tt>, and so on) are implemented by
  * making a fresh copy of the underlying array.
  *
- * <p> This is ordinarily too costly, but may be <em>more</em> efficient
+ * <p>This is ordinarily too costly, but may be <em>more</em> efficient
  * than alternatives when traversal operations vastly outnumber
  * mutations, and is useful when you cannot or don't want to
  * synchronize traversals, yet need to preclude interference among

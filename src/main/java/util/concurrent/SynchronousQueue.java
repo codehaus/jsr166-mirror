@@ -33,7 +33,7 @@ import java.util.*;
  * in another thread in order to hand it some information, event, or
  * task.
  *
- * <p> This class supports an optional fairness policy for ordering
+ * <p>This class supports an optional fairness policy for ordering
  * waiting producer and consumer threads.  By default, this ordering
  * is not guaranteed. However, a queue constructed with fairness set
  * to <tt>true</tt> grants threads access in FIFO order.

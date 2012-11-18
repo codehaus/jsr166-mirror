@@ -62,7 +62,7 @@ import java.util.concurrent.TimeUnit;
  * {@link #toString} returns indications of pool state in a
  * convenient form for informal monitoring.
  *
- * <p> As is the case with other ExecutorServices, there are three
+ * <p>As is the case with other ExecutorServices, there are three
  * main task execution methods summarized in the following table.
  * These are designed to be used primarily by clients not already
  * engaged in fork/join computations in the current pool.  The main

@@ -77,7 +77,7 @@ package jsr166y;
  * continuations, other threads need not block waiting to perform
  * them.
  *
- * <p> For example, here is an initial version of a class that uses
+ * <p>For example, here is an initial version of a class that uses
  * divide-by-two recursive decomposition to divide work into single
  * pieces (leaf tasks). Even when work is split into individual calls,
  * tree-based techniques are usually preferable to directly forking

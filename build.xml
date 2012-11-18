@@ -64,6 +64,7 @@
   <property name="jsr166esrc.dir"       location="${basedir}/src/jsr166e"/>
   <property name="extra166ysrc.dir"     location="${basedir}/src/extra166y"/>
   <property name="jdksrc.dir"           location="/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"/>
+
   <!-- Distribution locations -->
   <property name="dist.javadocs.dir"           location="${dist.dir}/docs"/>
   <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
@@ -81,6 +82,16 @@
 
   <!-- Bootclasspath argument -->
   <property name="bootclasspath.args"   value="-Xbootclasspath/p:${product.jar}"/>
+
+  <!-- Canonical location of jdk API docs, to use with javadoc link attribute -->
+  <property name="jdkapi5docs.url"      value="http://docs.oracle.com/javase/1.5.0/docs/api/"/>
+  <property name="jdkapi6docs.url"      value="http://docs.oracle.com/javase/6/docs/api/"/>
+  <property name="jdkapi7docs.url"      value="http://docs.oracle.com/javase/7/docs/api/"/>
+
+  <property name="jdkapi8docs.url"      value="http://download.java.net/jdk8/docs/api/"/>
+  <!-- The below does not yet exist as of 2012-11 -->
+  <!-- <property name="jdkapi8docs.url" value="http://docs.oracle.com/javase/8/docs/api/"/> -->
+  <property name="jdkapidocs.url"       value="${jdkapi7docs.url}"/>
 
   <!-- Test classpath -->
   <path id="test.classpath">
@@ -160,7 +171,7 @@
 
     <javadoc destdir="${build.javadocs.dir}"
              packagenames="none"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              overview="${src.dir}/intro.html"
              sourcepath="${src.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" >
@@ -229,7 +240,7 @@
 
     <javadoc destdir="${dist.javadocs.dir}"
              packagenames="none"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              overview="${src.dir}/intro.html"
              sourcepath="${src.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" >
@@ -514,7 +525,7 @@
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
              packagenames="jsr166x"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />
@@ -553,7 +564,7 @@
 
     <javadoc destdir="${dist.jsr166xjavadocs.dir}"
              packagenames="jsr166x"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />
@@ -619,7 +630,7 @@
 
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
              packagenames="jsr166y"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />
@@ -656,7 +667,7 @@
 
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
              packagenames="jsr166y"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />
@@ -724,7 +735,7 @@
 
     <javadoc destdir="${build.extra166yjavadocs.dir}"
              packagenames="extra166y"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />
@@ -761,7 +772,7 @@
 
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
              packagenames="extra166y"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />
@@ -827,7 +838,7 @@
 
     <javadoc destdir="${build.jsr166ejavadocs.dir}"
              packagenames="jsr166e,jsr166e.extra"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="1.7"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />
@@ -864,7 +875,7 @@
 
     <javadoc destdir="${dist.jsr166ejavadocs.dir}"
              packagenames="jsr166e,jsr166e.extra"
-             link="http://download.oracle.com/javase/7/docs/api/"
+             link="${jdkapidocs.url}"
              source="1.7"
              sourcepath="${topsrc.dir}:${jdksrc.dir}"
              additionalparam="-XDignore.symbol.file=true" />

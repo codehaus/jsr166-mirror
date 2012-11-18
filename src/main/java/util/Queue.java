@@ -50,7 +50,7 @@ package java.util;
  * Whatever the ordering used, the <em>head</em> of the queue is that
  * element which would be removed by a call to {@link #remove() } or
  * {@link #poll()}.  In a FIFO queue, all new elements are inserted at
- * the <em> tail</em> of the queue. Other kinds of queues may use
+ * the <em>tail</em> of the queue. Other kinds of queues may use
  * different placement rules.  Every <tt>Queue</tt> implementation
  * must specify its ordering properties.
  *

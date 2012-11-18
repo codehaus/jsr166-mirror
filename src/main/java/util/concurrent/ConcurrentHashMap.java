@@ -206,7 +206,7 @@ import java.io.Serializable;
  *
  * <p><em>jsr166e note: During transition, this class
  * uses nested functional interfaces with different names but the
- * same forms as those expected for JDK8.<em>
+ * same forms as those expected for JDK8.</em>
  *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">

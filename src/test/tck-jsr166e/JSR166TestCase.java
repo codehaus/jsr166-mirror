@@ -69,7 +69,7 @@ import java.security.SecurityPermission;
  *
  * </ol>
  *
- * <p> <b>Other notes</b>
+ * <p><b>Other notes</b>
  * <ul>
  *
  * <li> Usually, there is one testcase method per JSR166 method

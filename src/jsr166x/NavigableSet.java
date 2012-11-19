@@ -23,7 +23,7 @@ import java.util.*;
  * <t>pollLast</tt> that return and remove the lowest and highest key,
  * if one exists, else returning <tt>null</tt>.
  *
- * <p> The return values of navigation methods may be ambiguous in
+ * <p>The return values of navigation methods may be ambiguous in
  * implementations that permit <tt>null</tt> elements. However, even
  * in this case the result can be disambiguated by checking
  * <tt>contains(null)</tt>. To avoid such issues, implementations of

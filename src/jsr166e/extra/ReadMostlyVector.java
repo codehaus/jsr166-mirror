@@ -14,7 +14,7 @@ import java.util.*;
  * throughput when invocations of read-only methods by multiple
  * threads are most common.
  *
- * <p> The iterators returned by this class's {@link #iterator()
+ * <p>The iterators returned by this class's {@link #iterator()
  * iterator} and {@link #listIterator(int) listIterator} methods are
  * best-effort in the presence of concurrent modifications, and do
  * <em>NOT</em> throw {@link ConcurrentModificationException}.  An
@@ -93,7 +93,6 @@ public class ReadMostlyVector<E>
      * Creates an empty vector with the given initial capacity.
      *
      * @param initialCapacity the initial capacity of the underlying array
-     *
      * @throws IllegalArgumentException if initial capacity is negative
      */
     public ReadMostlyVector(int initialCapacity) {

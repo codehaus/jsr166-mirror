@@ -40,7 +40,7 @@ import java.io.IOException;
  * threads invoke short read-only methods much more frequently than
  * fully locked methods.
  *
- * <p> Methods {@code awaitAvailability} and {@code getSequence} can
+ * <p>Methods {@code awaitAvailability} and {@code getSequence} can
  * be used together to define (partially) optimistic read-only methods
  * that are usually more efficient than ReadWriteLocks when they
  * apply.  These methods should in general be structured as loops that

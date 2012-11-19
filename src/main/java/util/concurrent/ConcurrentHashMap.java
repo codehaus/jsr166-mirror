@@ -43,7 +43,7 @@ import java.io.Serializable;
  * interoperable with {@code Hashtable} in programs that rely on its
  * thread safety but not on its synchronization details.
  *
- * <p> Retrieval operations (including {@code get}) generally do not
+ * <p>Retrieval operations (including {@code get}) generally do not
  * block, so may overlap with update operations (including {@code put}
  * and {@code remove}). Retrievals reflect the results of the most
  * recently <em>completed</em> update operations holding upon their
@@ -64,7 +64,7 @@ import java.io.Serializable;
  * that may be adequate for monitoring or estimation purposes, but not
  * for program control.
  *
- * <p> The table is dynamically expanded when there are too many
+ * <p>The table is dynamically expanded when there are too many
  * collisions (i.e., keys that have distinct hash codes but fall into
  * the same slot modulo the table size), with the expected average
  * effect of maintaining roughly two bins per mapping (corresponding
@@ -85,13 +85,13 @@ import java.io.Serializable;
  * {@code hashCode()} is a sure way to slow down performance of any
  * hash table.
  *
- * <p> A {@link Set} projection of a ConcurrentHashMap may be created
+ * <p>A {@link Set} projection of a ConcurrentHashMap may be created
  * (using {@link #newKeySet()} or {@link #newKeySet(int)}), or viewed
  * (using {@link #keySet(Object)} when only keys are of interest, and the
  * mapped values are (perhaps transiently) not used or all take the
  * same mapping value.
  *
- * <p> A ConcurrentHashMap can be used as scalable frequency map (a
+ * <p>A ConcurrentHashMap can be used as scalable frequency map (a
  * form of histogram or multiset) by using {@link LongAdder} values
  * and initializing via {@link #computeIfAbsent}. For example, to add
  * a count to a {@code ConcurrentHashMap<String,LongAdder> freqs}, you
@@ -102,7 +102,7 @@ import java.io.Serializable;
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
  * interfaces.
  *
- * <p> Like {@link Hashtable} but unlike {@link HashMap}, this class
+ * <p>Like {@link Hashtable} but unlike {@link HashMap}, this class
  * does <em>not</em> allow {@code null} to be used as a key or value.
  *
  * <p>ConcurrentHashMaps support parallel operations using the {@link
@@ -187,7 +187,7 @@ import java.io.Serializable;
  * arguments can be supplied using {@code new
  * AbstractMap.SimpleEntry(k,v)}.
  *
- * <p> Bulk operations may complete abruptly, throwing an
+ * <p>Bulk operations may complete abruptly, throwing an
  * exception encountered in the application of a supplied
  * function. Bear in mind when handling such exceptions that other
  * concurrently executing functions could also have thrown
@@ -202,7 +202,7 @@ import java.io.Serializable;
  * Similarly, parallelization may not lead to much actual parallelism
  * if all processors are busy performing unrelated tasks.
  *
- * <p> All arguments to all task methods must be non-null.
+ * <p>All arguments to all task methods must be non-null.
  *
  * <p><em>jsr166e note: During transition, this class
  * uses nested functional interfaces with different names but the
@@ -228,7 +228,7 @@ public class ConcurrentHashMap<K, V>
      * portion of the elements, and so may be amenable to parallel
      * execution.
      *
-     * <p> This interface exports a subset of expected JDK8
+     * <p>This interface exports a subset of expected JDK8
      * functionality.
      *
      * <p>Sample usage: Here is one (of the several) ways to compute
@@ -2719,7 +2719,7 @@ public class ConcurrentHashMap<K, V>
      * Maps the specified key to the specified value in this table.
      * Neither the key nor the value can be null.
      *
-     * <p> The value can be retrieved by calling the {@code get} method
+     * <p>The value can be retrieved by calling the {@code get} method
      * with a key that is equal to the original key.
      *
      * @param key key with which the specified value is to be associated

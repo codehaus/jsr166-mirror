@@ -34,7 +34,7 @@ import java.util.*;
  * <tt>pollLastEntry</tt> that return and/or remove the least and
  * greatest mappings, if any exist, else returning <tt>null</tt>.
  *
- * <p> Implementations of entry-returning methods are expected to
+ * <p>Implementations of entry-returning methods are expected to
  * return <tt>Map.Entry</tt> pairs representing snapshots of mappings
  * at the time they were produced, and thus generally do <em>not</em>
  * support the optional <tt>Entry.setValue</tt> method. Note however

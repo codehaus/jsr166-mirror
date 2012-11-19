@@ -19,7 +19,7 @@ import java.util.*;
  * to return <tt>RunnableFuture</tt> implementations other than
  * <tt>FutureTask</tt>.
  *
- * <p> <b>Extension example</b>. Here is a sketch of a class
+ * <p><b>Extension example</b>. Here is a sketch of a class
  * that customizes {@link ThreadPoolExecutor} to use
  * a <tt>CustomTask</tt> class instead of the default <tt>FutureTask</tt>:
  *  <pre> {@code

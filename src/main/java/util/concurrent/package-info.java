@@ -88,7 +88,7 @@
  * for producer-consumer, messaging, parallel tasking, and
  * related concurrent designs.
  *
- * <p> Extended interface {@link java.util.concurrent.TransferQueue},
+ * <p>Extended interface {@link java.util.concurrent.TransferQueue},
  * and implementation {@link java.util.concurrent.LinkedTransferQueue}
  * introduce a synchronous {@code transfer} method (along with related
  * features) in which a producer may optionally block awaiting its

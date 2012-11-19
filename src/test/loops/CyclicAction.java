@@ -15,7 +15,7 @@ import java.util.*;
  * <tt>compute</tt> method is repeatedly invoked until the barrier
  * <tt>isTerminated</tt> or until its execution throws an exception.
  *
- * <p> <b>Sample Usage.</b> Here is a sketch of a set of CyclicActions
+ * <p><b>Sample Usage.</b> Here is a sketch of a set of CyclicActions
  * that each perform 500 iterations of an imagined image smoothing
  * operation. Note that the aggregate ImageSmoother task itself is not
  * a CyclicTask.

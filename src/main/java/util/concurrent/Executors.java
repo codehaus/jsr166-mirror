@@ -336,7 +336,7 @@ public class Executors {
      * current thread's access control context to create threads with
      * the selected permission settings holding within that action.
      *
-     * <p> Note that while tasks running within such threads will have
+     * <p>Note that while tasks running within such threads will have
      * the same access control and class loader settings as the
      * current thread, they need not have the same {@link
      * java.lang.ThreadLocal} or {@link

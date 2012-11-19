@@ -22,7 +22,7 @@ import java.lang.reflect.Array;
  * matching a predicate or ranges of indices, and to <em>reduce</em>
  * all elements into a single value such as a sum.
  *
- * <p> A ParallelArray is constructed by allocating, using, or copying
+ * <p>A ParallelArray is constructed by allocating, using, or copying
  * an array, using one of the static factory methods {@link #create},
  * {@link #createEmpty}, {@link #createUsingHandoff} and {@link
  * #createFromCopy}. Upon construction, the encapsulated array managed
@@ -31,7 +31,7 @@ import java.lang.reflect.Array;
  * array, access by another thread of an element of a ParallelArray
  * while another operation is in progress has undefined effects.
  *
- * <p> The ForkJoinPool used to construct a ParallelArray can be
+ * <p>The ForkJoinPool used to construct a ParallelArray can be
  * shared safely by other threads (and used in other
  * ParallelArrays). To avoid the overhead associated with creating
  * multiple executors, it is often a good idea to use the {@link
@@ -67,7 +67,7 @@ import java.lang.reflect.Array;
  * significantly improving performance beyond that of the Long and
  * Double versions.)
  *
- * <p> Most usages of ParallelArray involve sets of operations prefixed
+ * <p>Most usages of ParallelArray involve sets of operations prefixed
  * with range bounds, filters, and mappings (including mappings that
  * combine elements from other ParallelArrays), using
  * <tt>withBounds</tt>, <tt>withFilter</tt>, and <tt>withMapping</tt>,

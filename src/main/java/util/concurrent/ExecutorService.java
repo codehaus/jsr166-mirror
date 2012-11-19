@@ -13,7 +13,7 @@ import java.util.Collection;
  * methods that can produce a {@link Future} for tracking progress of
  * one or more asynchronous tasks.
  *
- * <p> An <tt>ExecutorService</tt> can be shut down, which will cause
+ * <p>An <tt>ExecutorService</tt> can be shut down, which will cause
  * it to reject new tasks.  Two different methods are provided for
  * shutting down an <tt>ExecutorService</tt>. The {@link #shutdown}
  * method will allow previously submitted tasks to execute before
@@ -24,7 +24,7 @@ import java.util.Collection;
  * unused <tt>ExecutorService</tt> should be shut down to allow
  * reclamation of its resources.
  *
- * <p> Method <tt>submit</tt> extends base method {@link
+ * <p>Method <tt>submit</tt> extends base method {@link
  * Executor#execute} by creating and returning a {@link Future} that
  * can be used to cancel execution and/or wait for completion.
  * Methods <tt>invokeAny</tt> and <tt>invokeAll</tt> perform the most
@@ -192,7 +192,7 @@ public interface ExecutorService extends Executor {
      * for a task, you can use constructions of the form
      * <tt>result = exec.submit(aCallable).get();</tt>
      *
-     * <p> Note: The {@link Executors} class includes a set of methods
+     * <p>Note: The {@link Executors} class includes a set of methods
      * that can convert some other common closure-like objects,
      * for example, {@link java.security.PrivilegedAction} to
      * {@link Callable} form so they can be submitted.

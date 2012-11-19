@@ -16,7 +16,7 @@ import java.util.Collection;
  * <ul>
  * <li><b>Acquisition order</b>
  *
- * <p> This class does not impose a reader or writer preference
+ * <p>This class does not impose a reader or writer preference
  * ordering for lock access.  However, it does support an optional
  * <em>fairness</em> policy.
  *
@@ -846,7 +846,7 @@ public class ReentrantReadWriteLock
         /**
          * Attempts to release this lock.
          *
-         * <p> If the number of readers is now zero then the lock
+         * <p>If the number of readers is now zero then the lock
          * is made available for write lock attempts.
          */
         public void unlock() {
@@ -988,7 +988,7 @@ public class ReentrantReadWriteLock
          * #tryLock(long, TimeUnit) tryLock(0, TimeUnit.SECONDS) }
          * which is almost equivalent (it also detects interruption).
          *
-         * <p> If the current thread already holds this lock then the
+         * <p>If the current thread already holds this lock then the
          * hold count is incremented by one and the method returns
          * {@code true}.
          *

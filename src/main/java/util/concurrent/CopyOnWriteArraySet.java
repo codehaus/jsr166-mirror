@@ -26,7 +26,7 @@ import java.util.*;
  *      constructed.
  * </ul>
  *
- * <p> <b>Sample Usage.</b> The following code sketch uses a
+ * <p><b>Sample Usage.</b> The following code sketch uses a
  * copy-on-write set to maintain a set of Handler objects that
  * perform some action upon state updates.
  *

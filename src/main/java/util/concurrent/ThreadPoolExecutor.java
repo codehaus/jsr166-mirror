@@ -238,7 +238,7 @@ import java.util.*;
  *
  * </dl>
  *
- * <p> <b>Extension example</b>. Most extensions of this class
+ * <p><b>Extension example</b>. Most extensions of this class
  * override one or more of the protected hook methods. For example,
  * here is a subclass that adds a simple pause/resume feature:
  *
@@ -1708,7 +1708,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * present, thus causing it not to be run if it has not already
      * started.
      *
-     * <p> This method may be useful as one part of a cancellation
+     * <p>This method may be useful as one part of a cancellation
      * scheme.  It may fail to remove tasks that have been converted
      * into other forms before being placed on the internal queue. For
      * example, a task entered using {@code submit} might be

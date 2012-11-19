@@ -33,7 +33,7 @@ import java.lang.reflect.Constructor;
  * <p>A "main" {@code ForkJoinTask} begins execution when it is
  * explicitly submitted to a {@link ForkJoinPool}, or, if not already
  * engaged in a ForkJoin computation, commenced in the {@link
- * ForkJoinPool#commonPool} via {@link #fork}, {@link #invoke}, or
+ * ForkJoinPool#commonPool()} via {@link #fork}, {@link #invoke}, or
  * related methods.  Once started, it will usually in turn start other
  * subtasks.  As indicated by the name of this class, many programs
  * using {@code ForkJoinTask} employ only methods {@link #fork} and
@@ -635,7 +635,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Arranges to asynchronously execute this task in the pool the
      * current task is running in, if applicable, or using the {@link
-     * ForkJoinPool#commonPool} if not {@link #inForkJoinPool}.  While
+     * ForkJoinPool#commonPool()} if not {@link #inForkJoinPool}.  While
      * it is not necessarily enforced, it is a usage error to fork a
      * task more than once unless it has completed and been
      * reinitialized.  Subsequent modifications to the state of this

@@ -7,16 +7,18 @@
 package jsr166e;
 
 /**
- * A {@link ForkJoinTask} with a completion action
- * performed when triggered and there are no remaining pending
- * actions. Uses of CountedCompleter are similar to those of other
- * completion based components (such as {@link
- * java.nio.channels.CompletionHandler}) except that multiple
- * <em>pending</em> completions may be necessary to trigger the {@link
- * #onCompletion} action, not just one. Unless initialized otherwise,
- * the {@link #getPendingCount pending count} starts at zero, but may
- * be (atomically) changed using methods {@link #setPendingCount},
- * {@link #addToPendingCount}, and {@link
+ * A {@link ForkJoinTask} with a completion action performed when
+ * triggered and there are no remaining pending
+ * actions. CountedCompleters are in general more robust in the
+ * presence of subtask stalls and blockage than are other forms for
+ * ForkJoinTasks, but are in general less intuitive to program.  Uses
+ * of CountedCompleter are similar to those of other completion based
+ * components (such as {@link java.nio.channels.CompletionHandler})
+ * except that multiple <em>pending</em> completions may be necessary
+ * to trigger the {@link #onCompletion} action, not just one. Unless
+ * initialized otherwise, the {@link #getPendingCount pending count}
+ * starts at zero, but may be (atomically) changed using methods
+ * {@link #setPendingCount}, {@link #addToPendingCount}, and {@link
  * #compareAndSetPendingCount}. Upon invocation of {@link
  * #tryComplete}, if the pending action count is nonzero, it is
  * decremented; otherwise, the completion action is performed, and if
@@ -28,23 +30,29 @@ package jsr166e;
  * internal bookkeeping. In particular, the identities of pending
  * tasks are not maintained. As illustrated below, you can create
  * subclasses that do record some or all pending tasks or their
- * results when needed.
+ * results when needed. Because CountedCompleters provide only basic
+ * synchronization mechanisms, it may be useful to create further
+ * abstract subclasses that maintain linkages and fields and support
+ * methods appropriate for a set of related usages.
  *
  * <p>A concrete CountedCompleter class must define method {@link
- * #compute}, that should, in almost all use cases, invoke {@code
- * tryComplete()} once before returning. The class may also optionally
- * override method {@link #onCompletion} to perform an action upon
- * normal completion, and method {@link #onExceptionalCompletion} to
- * perform an action upon any exception.
+ * #compute}, that should in most cases (as illustrated below), invoke
+ * {@code tryComplete()} once before returning. The class may also
+ * optionally override method {@link #onCompletion} to perform an
+ * action upon normal completion, and method {@link
+ * #onExceptionalCompletion} to perform an action upon any exception.
  *
  * <p>CountedCompleters most often do not bear results, in which case
  * they are normally declared as {@code CountedCompleter<Void>}, and
  * will always return {@code null} as a result value.  In other cases,
  * you should override method {@link #getRawResult} to provide a
- * result from {@code join(), invoke()}, and related methods. (Method
- * {@link #setRawResult} by default plays no role in CountedCompleters
- * but may be overridden for example to maintain fields holding result
- * data.)
+ * result from {@code join(), invoke()}, and related methods.  In
+ * general, this method should return the value of a field (or a
+ * function of one or more fields) of the CountedCompleter object that
+ * holds the result upon completion. Method {@link #setRawResult} by
+ * default plays no role in CountedCompleters.  It is possible, but
+ * not usually applicable, to override this method to maintain other
+ * objects or fields holding result data.
  *
  * <p>A CountedCompleter that does not itself have a completer (i.e.,
  * one for which {@link #getCompleter} returns {@code null}) can be
@@ -58,7 +66,8 @@ package jsr166e;
  * of method {@code compute}. Upon any exceptional completion, the
  * exception may be relayed to a task's completer (and its completer,
  * and so on), if one exists and it has not otherwise already
- * completed.
+ * completed. Similarly, cancelling an internal CountedCompleter has
+ * only a local effect on that completer, so is not often useful.
  *
  * <p><b>Sample Usages.</b>
  *
@@ -86,15 +95,16 @@ package jsr166e;
  * pair of subtasks to finish triggers completion of its parent
  * (because no result combination is performed, the default no-op
  * implementation of method {@code onCompletion} is not overridden). A
- * static utility method sets up the base task and invokes it:
+ * static utility method sets up the base task and invokes it
+ * (here, implicitly using the {@link ForkJoinPool#commonPool()}).
  *
  * <pre> {@code
  * class MyOperation<E> { void apply(E e) { ... }  }
  *
  * class ForEach<E> extends CountedCompleter<Void> {
  *
- *     public static <E> void forEach(ForkJoinPool pool, E[] array, MyOperation<E> op) {
- *         pool.invoke(new ForEach<E>(null, array, op, 0, array.length));
+ *     public static <E> void forEach(E[] array, MyOperation<E> op) {
+ *         new ForEach<E>(null, array, op, 0, array.length).invoke();
  *     }
  *
  *     final E[] array; final MyOperation<E> op; final int lo, hi;
@@ -221,12 +231,74 @@ package jsr166e;
  *     }
  *     public E getRawResult() { return result; }
  *
- *     public static <E> E mapReduce(ForkJoinPool pool, E[] array,
- *                                   MyMapper<E> mapper, MyReducer<E> reducer) {
- *         return pool.invoke(new MapReducer<E>(null, array, mapper,
- *                                              reducer, 0, array.length));
+ *     public static <E> E mapReduce(E[] array, MyMapper<E> mapper, MyReducer<E> reducer) {
+ *         return new MapReducer<E>(null, array, mapper, reducer,
+ *                                  0, array.length).invoke();
  *     }
  * } }</pre>
+ *
+ * Here, method {@code onCompletion} takes a form common to many
+ * completion designs that combine results. This callback-style method
+ * is triggered once per task, in either of the two different contexts
+ * in which the pending count is, or becomes, zero: (1) by a task
+ * itself, if its pending count is zero upon invocation of {@code
+ * tryComplete}, or (2) by any of its subtasks when they complete and
+ * decrement the pending count to zero. The {@code caller} argument
+ * distinguishes cases.  Most often, when the caller is {@code this},
+ * no action is necessary. Otherwise the caller argument can be used
+ * (usually via a cast) to supply a value (and/or links to other
+ * values) to be combined.  Asuuming proper use of pending counts, the
+ * actions inside {@code onCompletion} occur (once) upon completion of
+ * a task and its subtasks. No additional synchronization is required
+ * within this method to ensure thread safety of accesses to fields of
+ * this task or other completed tasks.
+ *
+ * <p><b>Searching.</b> A tree of CountedCompleters can search for a
+ * value or property in different parts of a data structure, and
+ * report a result in an {@link java.util.concurrent.AtomicReference}
+ * as soon as one is found. The others can poll the result to avoid
+ * unnecessary work. (You could additionally {@link #cancel} other
+ * tasks, but it is usually simpler and more efficient to just let
+ * them notice that the result is set and if so skip further
+ * processing.)  Illustrating again with an array using full
+ * partitioning (again, in practice, leaf tasks will almost always
+ * process more than one element):
+ *
+ * <pre> {@code
+ * class Searcher<E> extends CountedCompleter<E> {
+ *     final E[] array; final AtomicReference<E> result; final int lo, hi;
+ *     Searcher(CountedCompleter<?> p, E[] array, AtomicReference<E> result, int lo, int hi) {
+ *         super(p);
+ *         this.array = array; this.result = result; this.lo = lo; this.hi = hi;
+ *     }
+ *     public E getRawResult() { return result.get(); }
+ *     public void compute() { // similar to ForEach version 3
+ *         int l = lo,  h = hi;
+ *         while (h - l >= 2 && result.get() == null) {
+ *             int mid = (l + h) >>> 1;
+ *             addToPendingCount(1);
+ *             new Searcher(this, array, result, mid, h).fork();
+ *             h = mid;
+ *         }
+ *         if (h > l && result.get() == null && matches(array[l]) &&
+ *             result.compareAndSet(null, array[l]))
+ *             getRoot().quietlyComplete(); // root task is now joinable
+ *
+ *         tryComplete(); // normally complete whether or not found
+ *     }
+ *     boolean matches(E e) { ... } // return true if found
+ *
+ *     public static <E> E search(E[] array) {
+ *         return new Searcher<E>(null, array, new AtomicReference<E>(), 0, array.length).invoke();
+ *     }
+ *}}</pre>
+ *
+ * In this example, as well as others in which tasks have no other
+ * effects except to compareAndSet a common result, the trailing
+ * unconditional invocation of {@code tryComplete} could be made
+ * conditional ({@code if (result.get() == null) tryComplete();})
+ * because no further bookkeeping is required to manage completions
+ * once the root task completes.
  *
  * <p><b>Triggers.</b> Some CountedCompleters are themselves never
  * forked, but instead serve as bits of plumbing in other designs;
@@ -298,7 +370,10 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * Performs an action when method {@link #tryComplete} is invoked
      * and there are no pending counts, or when the unconditional
      * method {@link #complete} is invoked.  By default, this method
-     * does nothing.
+     * does nothing. You can distinguish cases by checking the
+     * identity of the given caller argument. If not equal to {@code
+     * this}, then it is typically a subtask that may contain results
+     * (and/or links to other results) to combine.
      *
      * @param caller the task invoking this method (which may
      * be this task itself).
@@ -414,19 +489,24 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     /**
      * Regardless of pending count, invokes {@link #onCompletion},
      * marks this task as complete and further triggers {@link
-     * #tryComplete} on this task's completer, if one exists. This
-     * method may be useful when forcing completion as soon as any one
-     * (versus all) of several subtask results are obtained.  The
+     * #tryComplete} on this task's completer, if one exists.  The
      * given rawResult is used as an argument to {@link #setRawResult}
-     * before marking this task as complete; its value is meaningful
-     * only for classes overriding {@code setRawResult}.
+     * before invoking {@link #onCompletion} or marking this task as
+     * complete; its value is meaningful only for classes overriding
+     * {@code setRawResult}.
+     *
+     * <p>This method may be useful when forcing completion as soon as
+     * any one (versus all) of several subtask results are obtained.
+     * However, in the common (and recommended) case in which {@code
+     * setRawResult} is not overridden, this effect can be obtained
+     * more simply using {@code getRoot().quietlyComplete();}.
      *
      * @param rawResult the raw result
      */
     public void complete(T rawResult) {
         CountedCompleter<?> p;
-        onCompletion(this);
         setRawResult(rawResult);
+        onCompletion(this);
         quietlyComplete();
         if ((p = completer) != null)
             p.tryComplete();
@@ -462,6 +542,8 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     /**
      * A method that result-bearing CountedCompleters may optionally
      * use to help maintain result data.  By default, does nothing.
+     * If this method is overridden to update existing objects or
+     * fields, then it must in general be defined to be thread-safe.
      */
     protected void setRawResult(T t) { }
 
@@ -470,7 +552,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     private static final long PENDING;
     static {
         try {
-            U = getUnsafe();
+            U = sun.misc.Unsafe.getUnsafe();
             PENDING = U.objectFieldOffset
                 (CountedCompleter.class.getDeclaredField("pending"));
         } catch (Exception e) {

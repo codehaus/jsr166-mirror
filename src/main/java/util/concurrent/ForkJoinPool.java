@@ -1851,7 +1851,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Analog of tryHelpStealer for CountedCompleters. Tries to steal
-     * and run tasks within the target's computation
+     * and run tasks within the target's computation.
      *
      * @param task the task to join
      * @param mode if shared, exit upon completing any task

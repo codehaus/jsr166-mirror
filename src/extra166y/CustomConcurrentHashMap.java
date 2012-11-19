@@ -697,7 +697,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * Returns the value associated with a key equivalent to the given
      * key with respect to this map's key Equivalence, or {@code null}
-     * if no such mapping exists
+     * if no such mapping exists.
      *
      * @param  key   possible key
      * @return the value associated with the key or <tt>null</tt> if

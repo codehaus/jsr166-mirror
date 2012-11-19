@@ -93,7 +93,6 @@ public class ReadMostlyVector<E>
      * Creates an empty vector with the given initial capacity.
      *
      * @param initialCapacity the initial capacity of the underlying array
-     *
      * @throws IllegalArgumentException if initial capacity is negative
      */
     public ReadMostlyVector(int initialCapacity) {

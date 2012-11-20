@@ -103,12 +103,8 @@ import java.util.concurrent.TimeUnit;
  * java.util.concurrent.ForkJoinPool.common}: {@code parallelism} --
  * an integer greater than zero, {@code threadFactory} -- the class
  * name of a {@link ForkJoinWorkerThreadFactory}, and {@code
-<<<<<<< ForkJoinPool.java
- * exceptionHandler} -- the class name of a {@code
-=======
  * exceptionHandler} -- the class name of a {@link
  * java.lang.Thread.UncaughtExceptionHandler
->>>>>>> 1.111
  * Thread.UncaughtExceptionHandler}. Upon any error in establishing
  * these settings, default parameters are used.
  *

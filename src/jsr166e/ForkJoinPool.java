@@ -2480,7 +2480,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             throw new IllegalArgumentException();
         this.factory = factory;
         this.ueh = handler;
-        this.config = parallelism | (asyncMode? (FIFO_QUEUE << 16) : 0);
+        this.config = parallelism | (asyncMode ? (FIFO_QUEUE << 16) : 0);
         long np = (long)(-parallelism); // offset ctl counts
         this.ctl = ((np << AC_SHIFT) & AC_MASK) | ((np << TC_SHIFT) & TC_MASK);
         int pn = nextPoolId();

@@ -6,8 +6,6 @@
 
 package jsr166e;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * A thread managed by a {@link ForkJoinPool}, which executes
  * {@link ForkJoinTask}s.
@@ -29,21 +27,15 @@ public class ForkJoinWorkerThread extends Thread {
      * of class ForkJoinPool.
      *
      * This class just maintains links to its pool and WorkQueue.  The
-     * pool field is set upon construction, but the workQueue field is
-     * not set until the thread has started (unless forced early by a
-     * subclass constructor call to poolIndex()).  This provides
-     * better memory placement (because this thread allocates queue
-     * and bookkeeping fields) but because the field is non-final, we
-     * require that it never be accessed except by the owning thread.
+     * pool field is set immediately upon construction, but the
+     * workQueue field is not set until a call to registerWorker
+     * completes. This leads to a visibility race, that is tolerated
+     * by requiring that the workQueue field is only accessed by the
+     * owning thread.
      */
 
     final ForkJoinPool pool;                // the pool this thread works in
-    ForkJoinPool.WorkQueue workQueue;       // Work-stealing mechanics
-
-    /**
-     * Sequence number for creating worker Names
-     */
-    private static final AtomicInteger threadNumber = new AtomicInteger();
+    final ForkJoinPool.WorkQueue workQueue; // work-stealing mechanics
 
     /**
      * Creates a ForkJoinWorkerThread operating in the given pool.
@@ -52,12 +44,10 @@ public class ForkJoinWorkerThread extends Thread {
      * @throws NullPointerException if pool is null
      */
     protected ForkJoinWorkerThread(ForkJoinPool pool) {
-        super(pool.workerNamePrefix.concat(Integer.toString(threadNumber.incrementAndGet())));
-        setDaemon(true);
+        // Use a placeholder until a useful name can be set in registerWorker
+        super("aForkJoinWorkerThread");
         this.pool = pool;
-        Thread.UncaughtExceptionHandler ueh = pool.ueh;
-        if (ueh != null)
-            setUncaughtExceptionHandler(ueh);
+        this.workQueue = pool.registerWorker(this);
     }
 
     /**
@@ -79,13 +69,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return the index number
      */
     public int getPoolIndex() {
-        // force early registration if called before started
-        ForkJoinPool.WorkQueue q;
-        if ((q = workQueue) == null) {
-            pool.registerWorker(this);
-            q = workQueue;
-        }
-        return q.poolIndex;
+        return workQueue.poolIndex;
     }
 
     /**
@@ -119,7 +103,6 @@ public class ForkJoinWorkerThread extends Thread {
     public void run() {
         Throwable exception = null;
         try {
-            pool.registerWorker(this);
             onStart();
             pool.runWorker(workQueue);
         } catch (Throwable ex) {

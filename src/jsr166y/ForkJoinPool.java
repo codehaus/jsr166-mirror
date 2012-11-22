@@ -99,7 +99,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The common pool is by default constructed with default
  * parameters, but these may be controlled by setting three {@link
- * System#getProperty properties} with prefix {@code
+ * System#getProperty system properties} with prefix {@code
  * java.util.concurrent.ForkJoinPool.common}: {@code parallelism} --
  * an integer greater than zero, {@code threadFactory} -- the class
  * name of a {@link ForkJoinWorkerThreadFactory}, and {@code
@@ -1788,7 +1788,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         WorkQueue[] ws; WorkQueue w; Thread p; long c; int m, u, e, i, s;
         if ((u = (int)(ctl >>> 32)) < 0 && (u >> UAC_SHIFT) < 0 &&
             (ws = workQueues) != null && (m = ws.length - 1) >= 0) {
-            outer: for (int k = origin, j = once? 0 : m; j >= 0; --j) {
+            outer: for (int k = origin, j = once ? 0 : m; j >= 0; --j) {
                 WorkQueue q = ws[k++ & m];
                 for (int n = m;;) { // limit to at most m signals
                     if (task != null && task.status < 0)

@@ -1326,7 +1326,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * wrap around zero, this method harmlessly fails to reinitialize
      * if workQueues exists, while still advancing plock.
      *
-     * Additonally tries to create the first worker.
+     * Additionally tries to create the first worker.
      */
     private void initWorkers() {
         WorkQueue[] ws, nws; int ps;

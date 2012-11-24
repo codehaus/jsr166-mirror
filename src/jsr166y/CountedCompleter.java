@@ -626,7 +626,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * this task's pending count is non-zero, decrements its pending
      * count and returns {@code null}.  Otherwise, returns the
      * completer.  This method can be used as part of a completion
-     * traversal loop for homogenous task hierarchies:
+     * traversal loop for homogeneous task hierarchies:
      *
      * <pre> {@code
      * for (CountedCompleter<?> c = firstComplete();

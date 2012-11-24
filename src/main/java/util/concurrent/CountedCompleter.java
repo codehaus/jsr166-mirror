@@ -509,7 +509,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     /**
      * If the pending count is nonzero, (atomically) decrements it.
      *
-     * @return the initial (undecremented) pending count holding on entry 
+     * @return the initial (undecremented) pending count holding on entry
      * to this method
      */
     public final int decrementPendingCountUnlessZero() {
@@ -629,7 +629,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * traversal loop for homogenous task hierarchies:
      *
      * <pre> {@code
-     * for(CountedCompleter<?> c = firstComplete(); c != null; c = c.nextComplete()) {
+     * for (CountedCompleter<?> c = firstComplete(); c != null; c = c.nextComplete()) {
      *   // ... process c ...
      * }}</pre>
      *

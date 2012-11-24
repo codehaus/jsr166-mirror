@@ -2504,7 +2504,7 @@ public class ConcurrentHashMap<K, V>
                     b = (n <= 0L) ? 0 : (n < (long)sp) ? (int)n : sp;
                 }
             }
-            b = (b <= 1 || baseIndex == baseLimit)? 0 : (b >>> 1);
+            b = (b <= 1 || baseIndex == baseLimit) ? 0 : (b >>> 1);
             if ((batch = b) > 0)
                 addToPendingCount(1);
             return b;

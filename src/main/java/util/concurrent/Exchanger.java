@@ -83,8 +83,8 @@ public class Exchanger<V> {
      *   if (slot is empty) {                       // offer
      *     place item in a Node;
      *     if (can CAS slot from empty to node) {
-     *        wait for release;
-     *        return matching item in node;
+     *       wait for release;
+     *       return matching item in node;
      *     }
      *   }
      *   else if (can CAS slot from node to empty) { // release

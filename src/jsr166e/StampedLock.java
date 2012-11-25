@@ -156,7 +156,7 @@ import java.util.concurrent.TimeUnit;
  *         }
  *       }
  *     } finally {
- *        sl.unlock(stamp);
+ *       sl.unlock(stamp);
  *     }
  *   }
  * }}</pre>

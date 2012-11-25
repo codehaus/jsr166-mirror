@@ -27,10 +27,10 @@ import java.util.concurrent.atomic.*;
  *   Fib(int n) { this.n = n; }
  *   protected void compute() {
  *     if (n &gt; 1) {
- *        linkAndForkSubtasks(new Fib(n-1), new Fib(n-2));
+ *       linkAndForkSubtasks(new Fib(n-1), new Fib(n-2));
  *     else {
- *        result = n; // fib(0)==0; fib(1)==1
- *        complete();
+ *       result = n; // fib(0)==0; fib(1)==1
+ *       complete();
  *     }
  *   }
  *   protected void onComplete(BinaryAsyncAction x, BinaryAsyncAction y) {
@@ -44,11 +44,11 @@ import java.util.concurrent.atomic.*;
  *   protected void compute() {
  *     Fib f = this;
  *     while (f.n &gt; 1) {
- *        Fib left = new Fib(f.n - 1);
- *        Fib right = new Fib(f.n - 2);
- *        f.linkSubtasks(left, right);
- *        right.fork(); // fork right
- *        f = left;     // loop on left
+ *       Fib left = new Fib(f.n - 1);
+ *       Fib right = new Fib(f.n - 2);
+ *       f.linkSubtasks(left, right);
+ *       right.fork(); // fork right
+ *       f = left;     // loop on left
  *     }
  *     f.result = f.n;
  *     f.complete();

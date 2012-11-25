@@ -277,12 +277,12 @@ package jsr166e;
  *   }
  *   public void onCompletion(CountedCompleter<?> caller) {
  *     if (caller != this) {
- *      MapReducer<E> child = (MapReducer<E>)caller;
- *      MapReducer<E> sib = child.sibling;
- *      if (sib == null || sib.result == null)
- *        result = child.result;
- *      else
- *        result = reducer.apply(child.result, sib.result);
+ *       MapReducer<E> child = (MapReducer<E>)caller;
+ *       MapReducer<E> sib = child.sibling;
+ *       if (sib == null || sib.result == null)
+ *         result = child.result;
+ *       else
+ *         result = reducer.apply(child.result, sib.result);
  *     }
  *   }
  *   public E getRawResult() { return result; }

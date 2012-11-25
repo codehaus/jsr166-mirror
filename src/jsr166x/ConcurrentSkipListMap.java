@@ -2094,9 +2094,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * This is equivalent to
      * <pre>
      *   if (!map.containsKey(key))
-     *      return map.put(key, value);
+     *     return map.put(key, value);
      *   else
-     *      return map.get(key);
+     *     return map.get(key);
      * </pre>
      * except that the action is performed atomically.
      * @param key key with which the specified value is to be associated.

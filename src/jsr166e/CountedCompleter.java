@@ -126,7 +126,7 @@ package jsr166e;
  *       op.apply(array[lo]);
  *     tryComplete();
  *   }
- * } }</pre>
+ * }}</pre>
  *
  * This design can be improved by noticing that in the recursive case,
  * the task has nothing to do after forking its right task, so can
@@ -291,7 +291,7 @@ package jsr166e;
  *     return new MapReducer<E>(null, array, mapper, reducer,
  *                              0, array.length).invoke();
  *   }
- * } }</pre>
+ * }}</pre>
  *
  * Here, method {@code onCompletion} takes a form common to many
  * completion designs that combine results. This callback-style method

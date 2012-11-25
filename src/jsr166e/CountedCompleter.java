@@ -133,7 +133,7 @@ package jsr166e;
  * directly invoke its left task before returning. (This is an analog
  * of tail recursion removal.)  Also, because the task returns upon
  * executing its left task (rather than falling through to invoke
- * tryComplete) the pending count is set to one:
+ * {@code tryComplete}) the pending count is set to one:
  *
  * <pre> {@code
  * class ForEach<E> ...

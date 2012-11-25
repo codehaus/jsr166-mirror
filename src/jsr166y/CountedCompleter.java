@@ -303,7 +303,7 @@ package jsr166y;
  * distinguishes cases.  Most often, when the caller is {@code this},
  * no action is necessary. Otherwise the caller argument can be used
  * (usually via a cast) to supply a value (and/or links to other
- * values) to be combined.  Asuuming proper use of pending counts, the
+ * values) to be combined.  Assuming proper use of pending counts, the
  * actions inside {@code onCompletion} occur (once) upon completion of
  * a task and its subtasks. No additional synchronization is required
  * within this method to ensure thread safety of accesses to fields of

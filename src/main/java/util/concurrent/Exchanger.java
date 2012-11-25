@@ -79,21 +79,21 @@ public class Exchanger<V> {
      * Overview: The core algorithm is, for an exchange "slot",
      * and a participant (caller) with an item:
      *
-     *   for (;;) {
-     *       if (slot is empty) {                       // offer
-     *           place item in a Node;
-     *           if (can CAS slot from empty to node) {
-     *                wait for release;
-     *                return matching item in node;
-     *           }
-     *      }
-     *      else if (can CAS slot from node to empty) { // release
-     *          get the item in node;
-     *          set matching item in node;
-     *          release waiting thread;
+     * for (;;) {
+     *   if (slot is empty) {                       // offer
+     *     place item in a Node;
+     *     if (can CAS slot from empty to node) {
+     *        wait for release;
+     *        return matching item in node;
      *     }
-     *     // else retry on CAS failure
-     *  }
+     *   }
+     *   else if (can CAS slot from node to empty) { // release
+     *     get the item in node;
+     *     set matching item in node;
+     *     release waiting thread;
+     *   }
+     *   // else retry on CAS failure
+     * }
      *
      * This is among the simplest forms of a "dual data structure" --
      * see Scott and Scherer's DISC 04 paper and

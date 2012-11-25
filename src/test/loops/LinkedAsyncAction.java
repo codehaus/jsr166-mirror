@@ -39,20 +39,20 @@ import java.util.concurrent.atomic.*;
  *
  * <pre>
  * class GraphVisitor extends LinkedAsyncAction {
- *    final Node node;
- *    GraphVisitor(GraphVistor parent, Node node) {
- *      super(parent); this.node = node;
- *    }
- *    protected void compute() {
- *      if (node.mark.compareAndSet(false, true)) {
- *         for (Edge e : node.edges()) {
- *            Node dest = e.getDestination();
- *            if (!dest.mark.get())
- *               new GraphVisitor(this, dest).fork();
- *         }
- *         visit(node);
- *      }
- *      complete();
+ *   final Node node;
+ *   GraphVisitor(GraphVistor parent, Node node) {
+ *     super(parent); this.node = node;
+ *   }
+ *   protected void compute() {
+ *     if (node.mark.compareAndSet(false, true)) {
+ *       for (Edge e : node.edges()) {
+ *         Node dest = e.getDestination();
+ *         if (!dest.mark.get())
+ *           new GraphVisitor(this, dest).fork();
+ *       }
+ *       visit(node);
+ *     }
+ *     complete();
  *   }
  * }
  * </pre>

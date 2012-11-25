@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.*;
  *     }
  *   }
  *   protected void onComplete(BinaryAsyncAction x, BinaryAsyncAction y) {
- *      result = ((Fib)x).result + ((Fib)y).result;
+ *     result = ((Fib)x).result + ((Fib)y).result;
  *   }
  * }
  * </pre>

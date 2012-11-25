@@ -63,15 +63,15 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  *   private final CountDownLatch startSignal;
  *   private final CountDownLatch doneSignal;
  *   Worker(CountDownLatch startSignal, CountDownLatch doneSignal) {
- *      this.startSignal = startSignal;
- *      this.doneSignal = doneSignal;
+ *     this.startSignal = startSignal;
+ *     this.doneSignal = doneSignal;
  *   }
  *   public void run() {
- *      try {
- *        startSignal.await();
- *        doWork();
- *        doneSignal.countDown();
- *      } catch (InterruptedException ex) {} // return;
+ *     try {
+ *       startSignal.await();
+ *       doWork();
+ *       doneSignal.countDown();
+ *     } catch (InterruptedException ex) {} // return;
  *   }
  *
  *   void doWork() { ... }
@@ -101,14 +101,14 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  *   private final CountDownLatch doneSignal;
  *   private final int i;
  *   WorkerRunnable(CountDownLatch doneSignal, int i) {
- *      this.doneSignal = doneSignal;
- *      this.i = i;
+ *     this.doneSignal = doneSignal;
+ *     this.i = i;
  *   }
  *   public void run() {
- *      try {
- *        doWork(i);
- *        doneSignal.countDown();
- *      } catch (InterruptedException ex) {} // return;
+ *     try {
+ *       doWork(i);
+ *       doneSignal.countDown();
+ *     } catch (InterruptedException ex) {} // return;
  *   }
  *
  *   void doWork() { ... }

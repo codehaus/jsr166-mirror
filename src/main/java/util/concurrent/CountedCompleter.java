@@ -661,7 +661,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
-     * Support for FJT exception propagation
+     * Supports ForkJoinTask exception propagation.
      */
     void internalPropagateException(Throwable ex) {
         CountedCompleter<?> a = this, s = a;
@@ -671,7 +671,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
-     * Implements execution conventions for CountedCompleters
+     * Implements execution conventions for CountedCompleters.
      */
     protected final boolean exec() {
         compute();

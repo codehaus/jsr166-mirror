@@ -15,13 +15,13 @@ import java.util.concurrent.atomic.*;
  * subtask of a given parent task. In this case, completion of this
  * task will propagate to its parent. If the parent's pending subtask
  * completion count becomes zero, it too will complete.
- * LinkedAsyncActions rarely use methods <tt>join</tt> or
- * <tt>invoke</tt> but instead propagate completion to parents
- * implicitly via <tt>complete</tt>.  While typical, it is not necessary
- * for each task to <tt>complete</tt> itself. For example, it is
+ * LinkedAsyncActions rarely use methods {@code join} or
+ * {@code invoke} but instead propagate completion to parents
+ * implicitly via {@code complete}.  While typical, it is not necessary
+ * for each task to {@code complete} itself. For example, it is
  * possible to treat one subtask as a continuation of the current task
  * by not registering it on construction.  In this case, a
- * <tt>complete</tt> of the subtask will trigger <tt>complete</tt> of the
+ * {@code complete} of the subtask will trigger {@code complete} of the
  * parent without the parent explicitly doing so.
  *
  * <p>In addition to supporting these different computation styles
@@ -32,9 +32,9 @@ import java.util.concurrent.atomic.*;
  * <p><b>Sample Usage.</b> Here is a sketch of a LinkedAsyncAction
  * that visits all of the nodes of a graph. The details of the graph's
  * Node and Edge classes are omitted, but we assume each node contains
- * an <tt>AtomicBoolean</tt> mark that starts out false. To execute
+ * an {@code AtomicBoolean} mark that starts out false. To execute
  * this, you would create a GraphVisitor for the root node with null
- * parent, and <tt>invoke</tt> in a ForkJoinPool. Upon return, all
+ * parent, and {@code invoke} in a ForkJoinPool. Upon return, all
  * reachable nodes will have been visited.
  *
  * <pre>
@@ -77,7 +77,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Creates a new action with no parent. (You can add a parent
-     * later (but before forking) via <tt>reinitialize</tt>).
+     * later (but before forking) via {@code reinitialize}).
      */
     protected LinkedAsyncAction() {
     }
@@ -97,7 +97,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     /**
      * Creates a new action with the given parent, optionally
      * registering with the parent. If the parent is non-null and
-     * <tt>register</tt> is true, this task registers with the
+     * {@code register} is true, this task registers with the
      * parent, in which case, the parent task cannot complete until
      * this task completes.
      * @param parent the parent task, or null if none
@@ -114,7 +114,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * Creates a new action with the given parent, optionally
      * registering with the parent, and setting the pending join count
      * to the given value. If the parent is non-null and
-     * <tt>register</tt> is true, this task registers with the
+     * {@code register} is true, this task registers with the
      * parent, in which case, the parent task cannot complete until
      * this task completes. Setting the pending join count requires
      * care -- it is correct only if child tasks do not themselves
@@ -137,9 +137,9 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     protected final void setRawResult(Void mustBeNull) { }
 
     /**
-     * Overridable callback action triggered by <tt>complete</tt>.  Upon
+     * Overridable callback action triggered by {@code complete}.  Upon
      * invocation, all subtasks have completed.  After return, this
-     * task <tt>isDone</tt> and is joinable by other tasks. The
+     * task {@code isDone} and is joinable by other tasks. The
      * default version of this method does nothing. But it may be
      * overridden in subclasses to perform some action when this task
      * is about to complete.
@@ -149,13 +149,13 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Overridable callback action triggered by
-     * <tt>completeExceptionally</tt>.  Upon invocation, this task has
+     * {@code completeExceptionally}.  Upon invocation, this task has
      * aborted due to an exception (accessible via
-     * <tt>getException</tt>). If this method returns <tt>true</tt>,
+     * {@code getException}). If this method returns {@code true},
      * the exception propagates to the current task's
      * parent. Otherwise, normal completion is propagated.  The
      * default version of this method does nothing and returns
-     * <tt>true</tt>.
+     * {@code true}.
      * @return true if this task's exception should be propagated to
      * this task's parent.
      */
@@ -175,12 +175,12 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Completes this task. If the pending subtask completion count is
-     * zero, invokes <tt>onCompletion</tt>, then causes this task to
-     * be joinable (<tt>isDone</tt> becomes true), and then
+     * zero, invokes {@code onCompletion}, then causes this task to
+     * be joinable ({@code isDone} becomes true), and then
      * recursively applies to this task's parent, if it exists. If an
-     * exception is encountered in any <tt>onCompletion</tt>
+     * exception is encountered in any {@code onCompletion}
      * invocation, that task and its ancestors
-     * <tt>completeExceptionally</tt>.
+     * {@code completeExceptionally}.
      */
     public final void complete() {
         LinkedAsyncAction a = this;
@@ -204,15 +204,15 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     /**
      * Completes this task abnormally. Unless this task already
      * cancelled or aborted, upon invocation, this method invokes
-     * <tt>onException</tt>, and then, depending on its return value,
+     * {@code onException}, and then, depending on its return value,
      * completees parent (if one exists) exceptionally or normally.  To
      * avoid unbounded exception loops, this method aborts if an
-     * exception is encountered in any <tt>onException</tt>
+     * exception is encountered in any {@code onException}
      * invocation.
      * @param ex the exception to throw when joining this task
      * @throws NullPointerException if ex is null
      * @throws Throwable if any invocation of
-     * <tt>onException</tt> does so.
+     * {@code onException} does so.
      */
     public final void completeExceptionally(Throwable ex) {
         LinkedAsyncAction a = this;

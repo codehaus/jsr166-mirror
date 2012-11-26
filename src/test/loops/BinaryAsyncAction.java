@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.*;
  *
  * <p>Upon construction, a BinaryAsyncAction does not bear any
  * linkages. For non-root tasks, links must be established using
- * method <tt>linkSubtasks</tt> before use.
+ * method {@link #linkSubtasks} before use.
  *
  * <p><b>Sample Usage.</b>  A version of Fibonacci:
  * <pre>
@@ -75,7 +75,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Creates a new action. Unless this is a root task, you will need
-     * to link it using method <tt>linkSubtasks</tt> before forking as
+     * to link it using method {@link #linkSubtasks} before forking as
      * a subtask.
      */
     protected BinaryAsyncAction() {
@@ -98,9 +98,9 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Overridable callback action triggered upon <tt>complete</tt> of
+     * Overridable callback action triggered upon {@code complete} of
      * subtasks.  Upon invocation, both subtasks have completed.
-     * After return, this task <tt>isDone</tt> and is joinable by
+     * After return, this task {@code isDone} and is joinable by
      * other tasks. The default version of this method does nothing.
      * But it may be overridden in subclasses to perform some action
      * (for example a reduction) when this task is completes.
@@ -112,13 +112,13 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Overridable callback action triggered by
-     * <tt>completeExceptionally</tt>.  Upon invocation, this task has
+     * {@code completeExceptionally}.  Upon invocation, this task has
      * aborted due to an exception (accessible via
-     * <tt>getException</tt>). If this method returns <tt>true</tt>,
+     * {@code getException}). If this method returns {@code true},
      * the exception propagates to the current task's
      * parent. Otherwise, normal completion is propagated.  The
      * default version of this method does nothing and returns
-     * <tt>true</tt>.
+     * {@code true}.
      * @return true if this task's exception should be propagated to
      * this task's parent.
      */
@@ -127,7 +127,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Equivalent in effect to invoking <tt>linkSubtasks</tt> and then
+     * Equivalent in effect to invoking {@link #linkSubtasks} and then
      * forking both tasks.
      * @param x one subtask
      * @param y the other subtask
@@ -156,9 +156,9 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Completes this task, and if this task has a sibling that is
-     * also complete, invokes <tt>onComplete</tt> of parent task, and so
+     * also complete, invokes {@code onComplete} of parent task, and so
      * on. If an exception is encountered, tasks instead
-     * <tt>completeExceptionally</tt>.
+     * {@code completeExceptionally}.
      */
     public final void complete() {
         // todo: Use tryUnfork without possibly blowing stack
@@ -184,15 +184,15 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
     /**
      * Completes this task abnormally. Unless this task already
      * cancelled or aborted, upon invocation, this method invokes
-     * <tt>onException</tt>, and then, depending on its return value,
+     * {@code onException}, and then, depending on its return value,
      * completees parent (if one exists) exceptionally or normally.  To
      * avoid unbounded exception loops, this method aborts if an
-     * exception is encountered in any <tt>onException</tt>
+     * exception is encountered in any {@code onException}
      * invocation.
      * @param ex the exception to throw when joining this task
      * @throws NullPointerException if ex is null
      * @throws Throwable if any invocation of
-     * <tt>onException</tt> does so.
+     * {@code onException} does so.
      */
     public final void completeExceptionally(Throwable ex) {
         BinaryAsyncAction a = this;

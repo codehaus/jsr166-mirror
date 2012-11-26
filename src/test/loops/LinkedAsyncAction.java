@@ -212,7 +212,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * @param ex the exception to throw when joining this task
      * @throws NullPointerException if ex is null
      * @throws Throwable if any invocation of
-     * {@code onException} does so.
+     * {@code onException} does so
      */
     public final void completeExceptionally(Throwable ex) {
         LinkedAsyncAction a = this;
@@ -231,7 +231,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Returns this task's parent, or null if none.
-     * @return this task's parent, or null if none.
+     * @return this task's parent, or null if none
      */
     public final LinkedAsyncAction getParent() {
         return parent;
@@ -239,7 +239,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
 
     /**
      * Returns the number of subtasks that have not yet completed.
-     * @return the number of subtasks that have not yet completed.
+     * @return the number of subtasks that have not yet completed
      */
     public final int getPendingSubtaskCount() {
         return getControlState();
@@ -339,6 +339,5 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     protected final void decrementControlState() {
         controlStateUpdater.decrementAndGet(this);
     }
-
 
 }

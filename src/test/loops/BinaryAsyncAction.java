@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.*;
  *   }
  * }
  * </pre>
- * An alternative, and usually faster strategy is to instead use a
+ * An alternative, and usually faster, strategy is to instead use a
  * loop to fork subtasks:
  * <pre>
  *   protected void compute() {
@@ -89,7 +89,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
      * as parent, and each other as siblings.
      * @param x one subtask
      * @param y the other subtask
-     * @throws NullPointerException if either argument is null.
+     * @throws NullPointerException if either argument is null
      */
     public final void linkSubtasks(BinaryAsyncAction x, BinaryAsyncAction y) {
         x.parent = y.parent = this;
@@ -192,7 +192,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
      * @param ex the exception to throw when joining this task
      * @throws NullPointerException if ex is null
      * @throws Throwable if any invocation of
-     * {@code onException} does so.
+     * {@code onException} does so
      */
     public final void completeExceptionally(Throwable ex) {
         BinaryAsyncAction a = this;
@@ -209,7 +209,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
     /**
      * Returns this task's parent, or null if none or this task
      * is already complete.
-     * @return this task's parent, or null if none.
+     * @return this task's parent, or null if none
      */
     public final BinaryAsyncAction getParent() {
         return parent;
@@ -218,7 +218,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
     /**
      * Returns this task's sibling, or null if none or this task is
      * already complete.
-     * @return this task's sibling, or null if none.
+     * @return this task's sibling, or null if none
      */
     public BinaryAsyncAction getSibling() {
         return sibling;
@@ -267,7 +267,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Sets the control state to the given value,
+     * Increments the control state.
      * @param value the new value
      */
     protected final void incrementControlState() {
@@ -275,7 +275,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
     }
 
     /**
-     * Decrement the control state
+     * Decrements the control state.
      * @return true if successful
      */
     protected final void decrementControlState() {

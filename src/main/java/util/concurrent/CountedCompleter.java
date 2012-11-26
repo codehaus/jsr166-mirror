@@ -183,12 +183,13 @@ package java.util.concurrent;
  *
  * <p><b>Searching.</b> A tree of CountedCompleters can search for a
  * value or property in different parts of a data structure, and
- * report a result in an {@link java.util.concurrent.AtomicReference}
- * as soon as one is found. The others can poll the result to avoid
- * unnecessary work. (You could additionally {@link #cancel} other
- * tasks, but it is usually simpler and more efficient to just let
- * them notice that the result is set and if so skip further
- * processing.)  Illustrating again with an array using full
+ * report a result in an {@link
+ * java.util.concurrent.atomic.AtomicReference AtomicReference} as
+ * soon as one is found. The others can poll the result to avoid
+ * unnecessary work. (You could additionally {@linkplain #cancel
+ * cancel} other tasks, but it is usually simpler and more efficient
+ * to just let them notice that the result is set and if so skip
+ * further processing.)  Illustrating again with an array using full
  * partitioning (again, in practice, leaf tasks will almost always
  * process more than one element):
  *

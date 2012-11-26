@@ -55,7 +55,7 @@ import java.lang.reflect.Constructor;
  * minimize other blocking synchronization apart from joining other
  * tasks or using synchronizers such as Phasers that are advertised to
  * cooperate with fork/join scheduling. Subdividable tasks should also
- * not perform blocking IO, and should ideally access variables that
+ * not perform blocking I/O, and should ideally access variables that
  * are completely independent of those accessed by other running
  * tasks. These guidelines are loosely enforced by not permitting
  * checked exceptions such as {@code IOExceptions} to be
@@ -73,7 +73,7 @@ import java.lang.reflect.Constructor;
  * <p>It is possible to define and use ForkJoinTasks that may block,
  * but doing do requires three further considerations: (1) Completion
  * of few if any <em>other</em> tasks should be dependent on a task
- * that blocks on external synchronization or IO. Event-style async
+ * that blocks on external synchronization or I/O. Event-style async
  * tasks that are never joined (for example, those subclassing {@link
  * CountedCompleter}) often fall into this category.  (2) To minimize
  * resource impact, tasks should be small; ideally performing only the

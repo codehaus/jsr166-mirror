@@ -83,7 +83,7 @@ package java.util.concurrent;
  * subdivided) to each element of an array or collection; especially
  * when the operation takes a significantly different amount of time
  * to complete for some elements than others, either because of
- * intrinsic variation (for example IO) or auxiliary effects such as
+ * intrinsic variation (for example I/O) or auxiliary effects such as
  * garbage collection.  Because CountedCompleters provide their own
  * continuations, other threads need not block waiting to perform
  * them.

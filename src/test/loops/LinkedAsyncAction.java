@@ -205,7 +205,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * Completes this task abnormally. Unless this task already
      * cancelled or aborted, upon invocation, this method invokes
      * {@code onException}, and then, depending on its return value,
-     * completees parent (if one exists) exceptionally or normally.  To
+     * completes parent (if one exists) exceptionally or normally.  To
      * avoid unbounded exception loops, this method aborts if an
      * exception is encountered in any {@code onException}
      * invocation.

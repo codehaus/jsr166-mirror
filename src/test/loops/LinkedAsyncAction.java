@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
 /**
  * AsyncActions that may be linked in parent-child relationships.
  *
- * <p>Upon construction, an LinkedAsyncAction may register as a
+ * <p>Upon construction, a LinkedAsyncAction may register as a
  * subtask of a given parent task. In this case, completion of this
  * task will propagate to its parent. If the parent's pending subtask
  * completion count becomes zero, it too will complete.
@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.*;
  * stack space footprints while executing, but may have greater
  * per-task overhead.
  *
- * <p><b>Sample Usage.</b> Here is a sketch of an LinkedAsyncAction
+ * <p><b>Sample Usage.</b> Here is a sketch of a LinkedAsyncAction
  * that visits all of the nodes of a graph. The details of the graph's
  * Node and Edge classes are omitted, but we assume each node contains
  * an <tt>AtomicBoolean</tt> mark that starts out false. To execute

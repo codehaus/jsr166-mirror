@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.*;
  * BinaryAsyncActions are simpler to use and have less overhead in
  * typical uasges but are restricted to binary computation trees.
  *
- * <p>Upon construction, an BinaryAsyncAction does not bear any
+ * <p>Upon construction, a BinaryAsyncAction does not bear any
  * linkages. For non-root tasks, links must be established using
  * method <tt>linkSubtasks</tt> before use.
  *

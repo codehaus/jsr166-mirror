@@ -120,7 +120,7 @@ public abstract class BinaryAsyncAction extends ForkJoinTask<Void> {
      * default version of this method does nothing and returns
      * <tt>true</tt>.
      * @return true if this task's exception should be propagated to
-     * this tasks parent.
+     * this task's parent.
      */
     protected boolean onException() {
         return true;

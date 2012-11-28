@@ -19,7 +19,7 @@
  *
  * {@link java.util.concurrent.Executor} is a simple standardized
  * interface for defining custom thread-like subsystems, including
- * thread pools, asynchronous IO, and lightweight task frameworks.
+ * thread pools, asynchronous I/O, and lightweight task frameworks.
  * Depending on which concrete Executor class is being used, tasks may
  * execute in a newly created thread, an existing task-execution thread,
  * or the thread calling {@link java.util.concurrent.Executor#execute

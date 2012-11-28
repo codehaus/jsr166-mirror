@@ -131,19 +131,19 @@ package java.util.concurrent.atomic;
  *
  *  <pre> {@code
  * class C {
- *    Object data;  // need volatile access but not volatile
- *    // ...
+ *   Object data;  // need volatile access but not volatile
+ *   // ...
  * }
  *
  * class App {
  *   Object getData(C c) {
- *      return Fences.orderReads(c).data;
+ *     return Fences.orderReads(c).data;
  *   }
  *
  *   void setData(C c) {
- *      Object newValue = ...;
- *      c.data = Fences.orderWrites(newValue);
- *      Fences.orderAccesses(c);
+ *     Object newValue = ...;
+ *     c.data = Fences.orderWrites(newValue);
+ *     Fences.orderAccesses(c);
  *   }
  *   // ...
  * }}</pre>
@@ -186,18 +186,18 @@ package java.util.concurrent.atomic;
  *
  *  <pre> {@code
  * class Item {
- *    synchronized f(); // ALL methods are synchronized
- *    // ...
+ *   synchronized f(); // ALL methods are synchronized
+ *   // ...
  * }
  *
  * class ItemHolder {
  *   private Item item;
  *   Item acquireItem() {
- *      return Fences.orderReads(item);
+ *     return Fences.orderReads(item);
  *   }
  *
  *   void releaseItem(Item x) {
- *      item = Fences.orderWrites(x);
+ *     item = Fences.orderWrites(x);
  *   }
  *
  *   // ...

@@ -12,7 +12,7 @@ package java.util.concurrent;
  * <tt>submit</tt> tasks for execution. Consumers <tt>take</tt>
  * completed tasks and process their results in the order they
  * complete.  A <tt>CompletionService</tt> can for example be used to
- * manage asynchronous IO, in which tasks that perform reads are
+ * manage asynchronous I/O, in which tasks that perform reads are
  * submitted in one part of a program or system, and then acted upon
  * in a different part of the program when the reads complete,
  * possibly in a different order than they were requested.

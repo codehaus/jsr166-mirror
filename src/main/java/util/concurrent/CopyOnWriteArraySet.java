@@ -44,7 +44,7 @@ import java.util.*;
  *   public void update() {
  *     changeState();
  *     for (Handler handler : handlers)
- *        handler.handle();
+ *       handler.handle();
  *   }
  * }}</pre>
  *

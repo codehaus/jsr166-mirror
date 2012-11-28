@@ -15,11 +15,11 @@ package jsr166y;
  * CountedCompleter are similar to those of other completion based
  * components (such as {@link java.nio.channels.CompletionHandler})
  * except that multiple <em>pending</em> completions may be necessary
- * to trigger the {@link #onCompletion} action, not just one. Unless
- * initialized otherwise, the {@link #getPendingCount pending count}
- * starts at zero, but may be (atomically) changed using methods
- * {@link #setPendingCount}, {@link #addToPendingCount}, and {@link
- * #compareAndSetPendingCount}. Upon invocation of {@link
+ * to trigger the completion action {@link #onCompletion}, not just one.
+ * Unless initialized otherwise, the {@linkplain #getPendingCount pending
+ * count} starts at zero, but may be (atomically) changed using
+ * methods {@link #setPendingCount}, {@link #addToPendingCount}, and
+ * {@link #compareAndSetPendingCount}. Upon invocation of {@link
  * #tryComplete}, if the pending action count is nonzero, it is
  * decremented; otherwise, the completion action is performed, and if
  * this completer itself has a completer, the process is continued
@@ -83,7 +83,7 @@ package jsr166y;
  * subdivided) to each element of an array or collection; especially
  * when the operation takes a significantly different amount of time
  * to complete for some elements than others, either because of
- * intrinsic variation (for example IO) or auxiliary effects such as
+ * intrinsic variation (for example I/O) or auxiliary effects such as
  * garbage collection.  Because CountedCompleters provide their own
  * continuations, other threads need not block waiting to perform
  * them.
@@ -126,14 +126,14 @@ package jsr166y;
  *       op.apply(array[lo]);
  *     tryComplete();
  *   }
- * } }</pre>
+ * }}</pre>
  *
  * This design can be improved by noticing that in the recursive case,
  * the task has nothing to do after forking its right task, so can
  * directly invoke its left task before returning. (This is an analog
  * of tail recursion removal.)  Also, because the task returns upon
  * executing its left task (rather than falling through to invoke
- * tryComplete) the pending count is set to one:
+ * {@code tryComplete}) the pending count is set to one:
  *
  * <pre> {@code
  * class ForEach<E> ...
@@ -183,12 +183,13 @@ package jsr166y;
  *
  * <p><b>Searching.</b> A tree of CountedCompleters can search for a
  * value or property in different parts of a data structure, and
- * report a result in an {@link java.util.concurrent.AtomicReference}
- * as soon as one is found. The others can poll the result to avoid
- * unnecessary work. (You could additionally {@link #cancel} other
- * tasks, but it is usually simpler and more efficient to just let
- * them notice that the result is set and if so skip further
- * processing.)  Illustrating again with an array using full
+ * report a result in an {@link
+ * java.util.concurrent.atomic.AtomicReference AtomicReference} as
+ * soon as one is found. The others can poll the result to avoid
+ * unnecessary work. (You could additionally {@linkplain #cancel
+ * cancel} other tasks, but it is usually simpler and more efficient
+ * to just let them notice that the result is set and if so skip
+ * further processing.)  Illustrating again with an array using full
  * partitioning (again, in practice, leaf tasks will almost always
  * process more than one element):
  *
@@ -277,12 +278,12 @@ package jsr166y;
  *   }
  *   public void onCompletion(CountedCompleter<?> caller) {
  *     if (caller != this) {
- *      MapReducer<E> child = (MapReducer<E>)caller;
- *      MapReducer<E> sib = child.sibling;
- *      if (sib == null || sib.result == null)
- *        result = child.result;
- *      else
- *        result = reducer.apply(child.result, sib.result);
+ *       MapReducer<E> child = (MapReducer<E>)caller;
+ *       MapReducer<E> sib = child.sibling;
+ *       if (sib == null || sib.result == null)
+ *         result = child.result;
+ *       else
+ *         result = reducer.apply(child.result, sib.result);
  *     }
  *   }
  *   public E getRawResult() { return result; }
@@ -291,7 +292,7 @@ package jsr166y;
  *     return new MapReducer<E>(null, array, mapper, reducer,
  *                              0, array.length).invoke();
  *   }
- * } }</pre>
+ * }}</pre>
  *
  * Here, method {@code onCompletion} takes a form common to many
  * completion designs that combine results. This callback-style method
@@ -303,7 +304,7 @@ package jsr166y;
  * distinguishes cases.  Most often, when the caller is {@code this},
  * no action is necessary. Otherwise the caller argument can be used
  * (usually via a cast) to supply a value (and/or links to other
- * values) to be combined.  Asuuming proper use of pending counts, the
+ * values) to be combined.  Assuming proper use of pending counts, the
  * actions inside {@code onCompletion} occur (once) upon completion of
  * a task and its subtasks. No additional synchronization is required
  * within this method to ensure thread safety of accesses to fields of
@@ -388,7 +389,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * Creates a new CountedCompleter with the given completer
      * and initial pending count.
      *
-     * @param completer this tasks completer, or {@code null} if none
+     * @param completer this task's completer, or {@code null} if none
      * @param initialPendingCount the initial pending count
      */
     protected CountedCompleter(CountedCompleter<?> completer,
@@ -401,7 +402,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * Creates a new CountedCompleter with the given completer
      * and an initial pending count of zero.
      *
-     * @param completer this tasks completer, or {@code null} if none
+     * @param completer this task's completer, or {@code null} if none
      */
     protected CountedCompleter(CountedCompleter<?> completer) {
         this.completer = completer;
@@ -422,7 +423,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
 
     /**
      * Performs an action when method {@link #tryComplete} is invoked
-     * and there are no pending counts, or when the unconditional
+     * and the pending count is zero, or when the unconditional
      * method {@link #complete} is invoked.  By default, this method
      * does nothing. You can distinguish cases by checking the
      * identity of the given caller argument. If not equal to {@code
@@ -450,7 +451,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * @param caller the task invoking this method (which may
      * be this task itself).
      * @return true if this exception should be propagated to this
-     * tasks completer, if one exists.
+     * task's completer, if one exists.
      */
     public boolean onExceptionalCompletion(Throwable ex, CountedCompleter<?> caller) {
         return true;
@@ -661,7 +662,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
-     * Support for FJT exception propagation
+     * Supports ForkJoinTask exception propagation.
      */
     void internalPropagateException(Throwable ex) {
         CountedCompleter<?> a = this, s = a;
@@ -671,7 +672,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
-     * Implements execution conventions for CountedCompleters
+     * Implements execution conventions for CountedCompleters.
      */
     protected final boolean exec() {
         compute();

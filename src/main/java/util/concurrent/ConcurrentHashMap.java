@@ -848,16 +848,17 @@ public class ConcurrentHashMap<K, V>
                     if (c != (pc = pk.getClass()) ||
                         !(k instanceof Comparable) ||
                         (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
-                        dir = (c == pc) ? 0 : c.getName().compareTo(pc.getName());
-                        TreeNode r = null, s = null, pl, pr;
-                        if (dir >= 0) {
-                            if ((pl = p.left) != null && h <= pl.hash)
-                                s = pl;
+                        if ((dir = (c == pc) ? 0 :
+                             c.getName().compareTo(pc.getName())) == 0) {
+                            TreeNode r = null, pl, pr; // check both sides
+                            if ((pr = p.right) != null && h >= pr.hash &&
+                                (r = getTreeNode(h, k, pr)) != null)
+                                return r;
+                            else if ((pl = p.left) != null && h <= pl.hash)
+                                dir = -1;
+                            else // nothing there
+                                return null;
                         }
-                        else if ((pr = p.right) != null && h >= pr.hash)
-                            s = pr;
-                        if (s != null && (r = getTreeNode(h, k, s)) != null)
-                            return r;
                     }
                 }
                 else
@@ -912,11 +913,14 @@ public class ConcurrentHashMap<K, V>
                     if (c != (pc = pk.getClass()) ||
                         !(k instanceof Comparable) ||
                         (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
-                        dir = (c == pc) ? 0 : c.getName().compareTo(pc.getName());
-                        TreeNode r = null, s = null, pl, pr;
-                        if (dir >= 0) {
-                            if ((pl = p.left) != null && h <= pl.hash)
-                                s = pl;
+                        TreeNode s = null, r = null, pr;
+                        if ((dir = (c == pc) ? 0 :
+                             c.getName().compareTo(pc.getName())) == 0) {
+                            if ((pr = p.right) != null && h >= pr.hash &&
+                                (r = getTreeNode(h, k, pr)) != null)
+                                return r;
+                            else // continue left
+                                dir = -1;
                         }
                         else if ((pr = p.right) != null && h >= pr.hash)
                             s = pr;
@@ -2858,8 +2862,7 @@ public class ConcurrentHashMap<K, V>
      * unchanged.  Some attempted update operations on this map by
      * other threads may be blocked while computation is in progress,
      * so the computation should be short and simple, and must not
-     * attempt to update any other mappings of this Map. For example,
-     * to either create or append new messages to a value mapping:
+     * attempt to update any other mappings of this Map.
      *
      * @param key key with which the specified value is to be associated
      * @param remappingFunction the function to compute a value

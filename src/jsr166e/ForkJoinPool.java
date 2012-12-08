@@ -1852,7 +1852,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             (q = ws[h & m]) != null) {
             caller.hint = -1;
             for (int n = 2;;) { // limit to at most 2 signals
-                int idleCount = (caller.eventCount < 0)? 0 : -1;
+                int idleCount = (caller.eventCount < 0) ? 0 : -1;
                 if (((s = idleCount - q.base + q.top) <= n && (n = s) <= 0) ||
                     (u = (int)((c = ctl) >>> 32)) >= 0 ||
                     (e = (int)c) <= 0 || m < (i = e & SMASK) ||

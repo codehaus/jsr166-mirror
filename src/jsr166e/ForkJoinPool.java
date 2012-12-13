@@ -1846,28 +1846,30 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private void helpSignalHint(WorkQueue caller) {
         WorkQueue[] ws; WorkQueue q, w; Thread p; long c; int h, m, u, e, i, s;
-        if (caller != null && (h = caller.hint) >= 0 &&
-            (u = (int)(ctl >>> 32)) < 0 && (u >> UAC_SHIFT) < 0 &&
-            (ws = workQueues) != null && (m = ws.length - 1) >= 0 &&
-            (q = ws[h & m]) != null) {
+        if (caller != null && (h = caller.hint) >= 0) {
             caller.hint = -1;
-            for (int n = 2;;) { // limit to at most 2 signals
-                int idleCount = (caller.eventCount < 0) ? 0 : -1;
-                if (((s = idleCount - q.base + q.top) <= n && (n = s) <= 0) ||
-                    (u = (int)((c = ctl) >>> 32)) >= 0 ||
-                    (e = (int)c) <= 0 || m < (i = e & SMASK) ||
-                    (w = ws[i]) == null)
-                    break;
-                long nc = (((long)(w.nextWait & E_MASK)) |
-                           ((long)(u + UAC_UNIT) << 32));
-                if (w.eventCount == (e | INT_SIGN) &&
-                    U.compareAndSwapLong(this, CTL, c, nc)) {
-                    w.hint = h;
-                    w.eventCount = (e + E_SEQ) & E_MASK;
-                    if ((p = w.parker) != null)
-                        U.unpark(p);
-                    if (--n <= 0)
+            if ((u = (int)(ctl >>> 32)) < 0 && (u >> UAC_SHIFT) < 0 &&
+                (ws = workQueues) != null && (m = ws.length - 1) >= 0 &&
+                (q = ws[h & m]) != null) {
+                for (int n = 2;;) { // limit to at most 2 signals
+                    int idleCount = (caller.eventCount < 0) ? 0 : -1;
+                    if (((s = idleCount - q.base + q.top) <= n && 
+                         (n = s) <= 0) ||
+                        (u = (int)((c = ctl) >>> 32)) >= 0 ||
+                        (e = (int)c) <= 0 || m < (i = e & SMASK) ||
+                        (w = ws[i]) == null)
                         break;
+                    long nc = (((long)(w.nextWait & E_MASK)) |
+                               ((long)(u + UAC_UNIT) << 32));
+                    if (w.eventCount == (e | INT_SIGN) &&
+                        U.compareAndSwapLong(this, CTL, c, nc)) {
+                        w.hint = h;
+                        w.eventCount = (e + E_SEQ) & E_MASK;
+                        if ((p = w.parker) != null)
+                            U.unpark(p);
+                        if (--n <= 0)
+                            break;
+                    }
                 }
             }
         }

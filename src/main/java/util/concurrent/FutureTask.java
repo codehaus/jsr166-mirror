@@ -143,7 +143,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 if (t != null)
                     t.interrupt();
             } finally { // final state
-                UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED); 
+                UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
             }
         }
         else if (!UNSAFE.compareAndSwapInt(this, stateOffset, NEW, CANCELLED))

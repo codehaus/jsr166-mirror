@@ -1263,7 +1263,7 @@ public class ConcurrentHashMap<K, V>
             else {
                 boolean validated = false;
                 boolean deleted = false;
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         validated = true;
                         for (Node e = f, pred = null;;) {
@@ -1364,7 +1364,7 @@ public class ConcurrentHashMap<K, V>
                 return (V)fv;
             else {
                 Object oldVal = null;
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         len = 1;
                         for (Node e = f;; ++len) {
@@ -1412,7 +1412,7 @@ public class ConcurrentHashMap<K, V>
                 tab = initTable();
             else if ((f = tabAt(tab, i = (tab.length - 1) & h)) == null) {
                 Node node = new Node(h, k, null, null);
-                synchronized(node) {
+                synchronized (node) {
                     if (casTabAt(tab, i, null, node)) {
                         len = 1;
                         try {
@@ -1464,7 +1464,7 @@ public class ConcurrentHashMap<K, V>
                         return (V)ev;
                 }
                 boolean added = false;
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         len = 1;
                         for (Node e = f;; ++len) {
@@ -1518,7 +1518,7 @@ public class ConcurrentHashMap<K, V>
                 if (onlyIfPresent)
                     break;
                 Node node = new Node(h, k, null, null);
-                synchronized(node) {
+                synchronized (node) {
                     if (casTabAt(tab, i, null, node)) {
                         try {
                             len = 1;
@@ -1570,7 +1570,7 @@ public class ConcurrentHashMap<K, V>
                     tab = (Node[])fk;
             }
             else {
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         len = 1;
                         for (Node e = f, pred = null;; ++len) {
@@ -1667,7 +1667,7 @@ public class ConcurrentHashMap<K, V>
                     tab = (Node[])fk;
             }
             else {
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         len = 1;
                         for (Node e = f, pred = null;; ++len) {
@@ -1760,7 +1760,7 @@ public class ConcurrentHashMap<K, V>
                     }
                     else {
                         int len = 0;
-                        synchronized(f) {
+                        synchronized (f) {
                             if (tabAt(tab, i) == f) {
                                 len = 1;
                                 for (Node e = f;; ++len) {
@@ -1835,7 +1835,7 @@ public class ConcurrentHashMap<K, V>
                     tab = (Node[])fk;
             }
             else {
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         for (Node e = f; e != null; e = e.next) {
                             if (e.val != null) {  // (currently always true)
@@ -1982,7 +1982,7 @@ public class ConcurrentHashMap<K, V>
         if (nextTab == null) {            // initiating
             try {
                 nextTab = new Node[n << 1];
-            } catch(Throwable ex) {       // try to cope with OOME
+            } catch (Throwable ex) {      // try to cope with OOME
                 sizeCtl = Integer.MAX_VALUE;
                 return;
             }
@@ -1991,7 +1991,7 @@ public class ConcurrentHashMap<K, V>
             transferIndex = n;
             Node rev = new Node(MOVED, tab, null, null);
             for (int k = n; k > 0;) {    // progressively reveal ready slots
-                int nextk = k > stride? k - stride : 0;
+                int nextk = (k > stride) ? k - stride : 0;
                 for (int m = nextk; m < k; ++m)
                     nextTab[m] = rev;
                 for (int m = n + nextk; m < n + k; ++m)
@@ -2013,7 +2013,7 @@ public class ConcurrentHashMap<K, V>
                 }
                 else if (U.compareAndSwapInt
                          (this, TRANSFERINDEX, nextIndex,
-                          nextBound = (nextIndex > stride?
+                          nextBound = (nextIndex > stride ?
                                        nextIndex - stride : 0))) {
                     bound = nextBound;
                     i = nextIndex - 1;
@@ -2040,7 +2040,7 @@ public class ConcurrentHashMap<K, V>
                 }
             }
             else if (f.hash >= 0) {
-                synchronized(f) {
+                synchronized (f) {
                     if (tabAt(tab, i) == f) {
                         int runBit = f.hash & n;
                         Node lastRun = f, lo = null, hi = null;

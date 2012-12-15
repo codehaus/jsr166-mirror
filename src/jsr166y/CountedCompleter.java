@@ -224,7 +224,7 @@ package jsr166y;
  *   public static <E> E search(E[] array) {
  *       return new Searcher<E>(null, array, new AtomicReference<E>(), 0, array.length).invoke();
  *   }
- *}}</pre>
+ * }}</pre>
  *
  * In this example, as well as others in which tasks have no other
  * effects except to compareAndSet a common result, the trailing

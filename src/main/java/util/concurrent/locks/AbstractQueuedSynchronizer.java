@@ -86,7 +86,7 @@ import sun.misc.Unsafe;
  * <li> {@link #tryAcquireShared}
  * <li> {@link #tryReleaseShared}
  * <li> {@link #isHeldExclusively}
- *</ul>
+ * </ul>
  *
  * Each of these methods by default throws {@link
  * UnsupportedOperationException}.  Implementations of these methods

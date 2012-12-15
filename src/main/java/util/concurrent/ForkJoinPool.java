@@ -1851,7 +1851,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             if ((u = (int)(ctl >>> 32)) < 0 && (u >> UAC_SHIFT) < 0 &&
                 (ws = workQueues) != null && (m = ws.length - 1) >= 0 &&
                 (q = ws[h & m]) != null) {
-                for (int n = (m >>> 2) | 1;;) { // limit signals
+                for (int n = 2;;) { // limit to at most 2 signals
                     int idleCount = (caller.eventCount < 0) ? 0 : -1;
                     if (((s = idleCount - q.base + q.top) <= n &&
                          (n = s) <= 0) ||

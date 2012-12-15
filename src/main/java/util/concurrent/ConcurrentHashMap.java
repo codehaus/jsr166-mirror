@@ -6835,5 +6835,5 @@ public class ConcurrentHashMap<K, V>
         if ((ss & (ss-1)) != 0)
             throw new Error("data type scale not a power of two");
     }
-    
+
 }

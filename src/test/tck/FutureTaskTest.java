@@ -154,10 +154,10 @@ public class FutureTaskTest extends JSR166TestCase {
         private PublicFutureTask(final Runnable runnable, Object result,
                                  final AtomicInteger runCount) {
             super(new Runnable() {
-                    public void run() {
-                        runCount.getAndIncrement();
-                        runnable.run();
-                    }}, result);
+                public void run() {
+                    runCount.getAndIncrement();
+                    runnable.run();
+                }}, result);
             this.runCount = runCount;
         }
         PublicFutureTask(Callable callable) {

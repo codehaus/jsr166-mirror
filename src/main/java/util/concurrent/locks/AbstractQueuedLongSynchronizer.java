@@ -75,7 +75,7 @@ public abstract class AbstractQueuedLongSynchronizer
      *
      * <p>Insertion into a CLH queue requires only a single atomic
      * operation on "tail", so there is a simple atomic point of
-     * demarcation from unqueued to queued. Similarly, dequeing
+     * demarcation from unqueued to queued. Similarly, dequeuing
      * involves only updating the "head". However, it takes a bit
      * more work for nodes to determine who their successors are,
      * in part to deal with possible cancellation due to timeouts
@@ -182,7 +182,7 @@ public abstract class AbstractQueuedLongSynchronizer
 
         /**
          * Link to predecessor node that current node/thread relies on
-         * for checking waitStatus. Assigned during enqueing, and nulled
+         * for checking waitStatus. Assigned during enqueuing, and nulled
          * out (for sake of GC) only upon dequeuing.  Also, upon
          * cancellation of a predecessor, we short-circuit while
          * finding a non-cancelled one, which will always exist

@@ -433,7 +433,7 @@ package java.util.concurrent.atomic;
  *
  *     <li><em>b</em>, an action (by a garbage collector) taking
  *     the form of an invocation of {@code
- *     p.finalize()} or of enqueing any {@link
+ *     p.finalize()} or of enqueuing any {@link
  *     java.lang.ref.Reference} constructed with argument <em>p</em>
  *
  *   </ul>

@@ -226,7 +226,7 @@ public class StampedLock implements java.io.Serializable {
      * threads.  Both await methods use a similar spin strategy: If
      * the associated queue appears to be empty, then the thread
      * spin-waits up to SPINS times (where each iteration decreases
-     * spin count with 50% probability) before enqueing, and then, if
+     * spin count with 50% probability) before enqueuing, and then, if
      * it is the first thread to be enqueued, spins again up to SPINS
      * times before blocking. If, upon wakening it fails to obtain
      * lock, and is still (or becomes) the first waiting thread (which

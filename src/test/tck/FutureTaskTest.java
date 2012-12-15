@@ -172,20 +172,20 @@ public class FutureTaskTest extends JSR166TestCase {
                 }});
             this.runCount = runCount;
         }
-        public void done() {
+        @Override public void done() {
             assertTrue(isDone());
             doneCount.incrementAndGet();
             super.done();
         }
-        public boolean runAndReset() {
+        @Override public boolean runAndReset() {
             runAndResetCount.incrementAndGet();
             return super.runAndReset();
         }
-        public void set(Object x) {
+        @Override public void set(Object x) {
             setCount.incrementAndGet();
             super.set(x);
         }
-        public void setException(Throwable t) {
+        @Override public void setException(Throwable t) {
             setExceptionCount.incrementAndGet();
             super.setException(t);
         }

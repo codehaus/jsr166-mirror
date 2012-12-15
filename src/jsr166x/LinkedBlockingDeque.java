@@ -664,7 +664,7 @@ public class LinkedBlockingDeque<E>
          * an element exists in hasNext(), we must return item read
          * under lock (in advance()) even if it was in the process of
          * being removed when hasNext() was called.
-         **/
+         */
         private E nextItem;
 
         /**

@@ -133,22 +133,23 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     public boolean cancel(boolean mayInterruptIfRunning) {
-        if (state != NEW)
+        if (!(state == NEW &&
+              UNSAFE.compareAndSwapInt(this, stateOffset, NEW,
+                  mayInterruptIfRunning ? INTERRUPTING : CANCELLED)))
             return false;
-        if (mayInterruptIfRunning) {
-            if (!UNSAFE.compareAndSwapInt(this, stateOffset, NEW, INTERRUPTING))
-                return false;
-            try {       // in case call to interrupt throws exception
-                Thread t = runner;
-                if (t != null)
-                    t.interrupt();
-            } finally { // final state
-                UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
+        try {    // in case call to interrupt throws exception
+            if (mayInterruptIfRunning) {
+                try {
+                    Thread t = runner;
+                    if (t != null)
+                        t.interrupt();
+                } finally { // final state
+                    UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
+                }
             }
+        } finally {
+            finishCompletion();
         }
-        else if (!UNSAFE.compareAndSwapInt(this, stateOffset, NEW, CANCELLED))
-            return false;
-        finishCompletion();
         return true;
     }
 

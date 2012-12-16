@@ -7,6 +7,7 @@
  */
 
 import junit.framework.*;
+import java.security.Permission;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
@@ -319,11 +320,14 @@ public class FutureTaskTest extends JSR166TestCase {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
         task.run();
+        assertEquals(0, task.runCount());
         assertEquals(0, task.setCount());
         assertEquals(0, task.setExceptionCount());
+        assertTrue(task.isCancelled());
+        assertTrue(task.isDone());
         tryToConfuseDoneTask(task);
-        checkCancelled(task);
         assertEquals(0, task.runCount());
+        checkCancelled(task);
     }
 
     /**
@@ -333,11 +337,14 @@ public class FutureTaskTest extends JSR166TestCase {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         assertTrue(task.cancel(true));
         task.run();
+        assertEquals(0, task.runCount());
         assertEquals(0, task.setCount());
         assertEquals(0, task.setExceptionCount());
+        assertTrue(task.isCancelled());
+        assertTrue(task.isDone());
         tryToConfuseDoneTask(task);
-        checkCancelled(task);
         assertEquals(0, task.runCount());
+        checkCancelled(task);
     }
 
     /**
@@ -347,6 +354,7 @@ public class FutureTaskTest extends JSR166TestCase {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.run();
         assertFalse(task.cancel(false));
+        assertEquals(1, task.runCount());
         assertEquals(1, task.setCount());
         assertEquals(0, task.setExceptionCount());
         tryToConfuseDoneTask(task);
@@ -361,6 +369,7 @@ public class FutureTaskTest extends JSR166TestCase {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.run();
         assertFalse(task.cancel(true));
+        assertEquals(1, task.runCount());
         assertEquals(1, task.setCount());
         assertEquals(0, task.setExceptionCount());
         tryToConfuseDoneTask(task);
@@ -387,8 +396,56 @@ public class FutureTaskTest extends JSR166TestCase {
         await(pleaseCancel);
         assertTrue(task.cancel(true));
         assertTrue(task.isCancelled());
+        assertTrue(task.isDone());
         awaitTermination(t);
         assertEquals(1, task.runCount());
+        assertEquals(1, task.setCount());
+        assertEquals(0, task.setExceptionCount());
+        tryToConfuseDoneTask(task);
+        checkCancelled(task);
+    }
+
+    /**
+     * cancel(true) interrupts a running task that subsequently
+     * succeeds, with a security manager that does not permit
+     * Thread.interrupt
+     */
+    public void testCancelInterrupt_ThrowsSecurityException() {
+        if (System.getSecurityManager() != null)
+            return;
+
+        final CountDownLatch pleaseCancel = new CountDownLatch(1);
+        final CountDownLatch cancelled = new CountDownLatch(1);
+        final PublicFutureTask task =
+            new PublicFutureTask(new CheckedRunnable() {
+                public void realRun() {
+                    pleaseCancel.countDown();
+                    await(cancelled);
+                    assertFalse(Thread.interrupted());
+                }});
+
+        final Thread t = newStartedThread(task);
+        await(pleaseCancel);
+        System.setSecurityManager(new SecurityManager() {
+            public void checkAccess(Thread t) { throw new SecurityException(); }
+            public void checkPermission(Permission p) {}});
+        try {
+            try {
+                task.cancel(true);
+                shouldThrow();
+            }
+            catch (SecurityException expected) {}
+        } finally {
+            System.setSecurityManager(null);
+        }
+        assertTrue(task.isCancelled());
+        assertTrue(task.isDone());
+        assertEquals(1, task.runCount());
+        assertEquals(1, task.doneCount());
+        assertEquals(0, task.setCount());
+        assertEquals(0, task.setExceptionCount());
+        cancelled.countDown();
+        awaitTermination(t);
         assertEquals(1, task.setCount());
         assertEquals(0, task.setExceptionCount());
         tryToConfuseDoneTask(task);

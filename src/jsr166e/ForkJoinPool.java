@@ -2579,7 +2579,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns the common pool instance. This pool is statically
      * constructed; its run state is unaffected by attempts to
-     * {@link @shutdown} or {@link #shutdownNow}.
+     * {@link #shutdown} or {@link #shutdownNow}.
      *
      * @return the common pool instance
      */

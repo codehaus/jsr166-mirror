@@ -11,8 +11,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.PropertyPermission;
 import java.util.concurrent.*;
@@ -623,11 +626,26 @@ public class JSR166TestCase extends TestCase {
         SecurityManager sm = System.getSecurityManager();
         if (sm == null) {
             r.run();
+        }
+        runWithSecurityManagerWithPermissions(r, permissions);
+    }
+
+    /**
+     * Runs Runnable r with a security policy that permits precisely
+     * the specified permissions.  If there is no current security
+     * manager, a temporary one is set for the duration of the
+     * Runnable.  We require that any security manager permit
+     * getPolicy/setPolicy.
+     */
+    public void runWithSecurityManagerWithPermissions(Runnable r,
+                                                      Permission... permissions) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm == null) {
             Policy savedPolicy = Policy.getPolicy();
             try {
                 Policy.setPolicy(permissivePolicy());
                 System.setSecurityManager(new SecurityManager());
-                runWithPermissions(r, permissions);
+                runWithSecurityManagerWithPermissions(r, permissions);
             } finally {
                 System.setSecurityManager(null);
                 Policy.setPolicy(savedPolicy);
@@ -675,6 +693,12 @@ public class JSR166TestCase extends TestCase {
             return perms.implies(p);
         }
         public void refresh() {}
+        public String toString() {
+            List<Permission> ps = new ArrayList<Permission>();
+            for (Enumeration<Permission> e = perms.elements(); e.hasMoreElements();)
+                ps.add(e.nextElement());
+            return "AdjustablePolicy with permissions " + ps;
+        }
     }
 
     /**

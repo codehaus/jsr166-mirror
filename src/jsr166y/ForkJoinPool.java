@@ -987,14 +987,13 @@ public class ForkJoinPool extends AbstractExecutorService {
             if (t != null) {
                 (currentSteal = t).doExec();
                 currentSteal = null;
+                ++nsteals;
                 if (base - top < 0) {       // process remaining local tasks
                     if (mode == 0)
                         popAndExecAll();
                     else
                         pollAndExecAll();
                 }
-                ++nsteals;
-                hint = -1;
             }
         }
 
@@ -1019,22 +1018,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                     (s = wt.getState()) != Thread.State.BLOCKED &&
                     s != Thread.State.WAITING &&
                     s != Thread.State.TIMED_WAITING);
-        }
-
-        /**
-         * If this owned and is not already interrupted, try to
-         * interrupt and/or unpark, ignoring exceptions.
-         */
-        final void interruptOwner() {
-            Thread wt, p;
-            if ((wt = owner) != null && !wt.isInterrupted()) {
-                try {
-                    wt.interrupt();
-                } catch (SecurityException ignore) {
-                }
-            }
-            if ((p = parker) != null)
-                U.unpark(p);
         }
 
         // Unsafe mechanics
@@ -1268,9 +1251,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * fails. This acts as a spinLock for normal cases, but falls back
      * to builtin monitor to block when (rarely) needed. This would be
      * a terrible idea for a highly contended lock, but works fine as
-     * a more conservative alternative to a pure spinlock.  See
-     * internal ConcurrentHashMap documentation for further
-     * explanation of nearly the same construction.
+     * a more conservative alternative to a pure spinlock.
      */
     private int acquirePlock() {
         int spins = PL_SPINS, r = 0, ps, nps;
@@ -1466,31 +1447,31 @@ public class ForkJoinPool extends AbstractExecutorService {
             }
         }
 
-        long c;                             // adjust ctl counts
+        long c;                          // adjust ctl counts
         do {} while (!U.compareAndSwapLong
                      (this, CTL, c = ctl, (((c - AC_UNIT) & AC_MASK) |
                                            ((c - TC_UNIT) & TC_MASK) |
                                            (c & ~(AC_MASK|TC_MASK)))));
 
         if (!tryTerminate(false, false) && w != null && w.array != null) {
-            w.cancelAll();                  // cancel remaining tasks
-            int e, u, i, n; WorkQueue[] ws; WorkQueue v; Thread p;
-            while ((u = (int)((c = ctl) >>> 32)) < 0) {
-                if ((e = (int)c) > 0) {     // activate or create replacement
-                    if ((ws = workQueues) != null &&
-                        ws.length > (i = e & SMASK) &&
-                        (v = ws[i]) != null && v.eventCount == (e | INT_SIGN)) {
-                        long nc = (((long)(v.nextWait & E_MASK)) |
-                                   ((long)(u + UAC_UNIT) << 32));
-                        if (U.compareAndSwapLong(this, CTL, c, nc)) {
-                            v.eventCount = (e + E_SEQ) & E_MASK;
-                            if ((p = v.parker) != null)
-                                U.unpark(p);
-                            break;
-                        }
-                    }
-                    else
+            w.cancelAll();               // cancel remaining tasks
+            WorkQueue[] ws; WorkQueue v; Thread p; int u, i, e;
+            while ((u = (int)((c = ctl) >>> 32)) < 0 && (e = (int)c) >= 0) {
+                if (e > 0) {             // activate or create replacement
+                    if ((ws = workQueues) == null ||
+                        (i = e & SMASK) >= ws.length ||
+                        (v = ws[i]) != null)
                         break;
+                    long nc = (((long)(v.nextWait & E_MASK)) |
+                               ((long)(u + UAC_UNIT) << 32));
+                    if (v.eventCount != (e | INT_SIGN))
+                        break;
+                    if (U.compareAndSwapLong(this, CTL, c, nc)) {
+                        v.eventCount = (e + E_SEQ) & E_MASK;
+                        if ((p = v.parker) != null)
+                            U.unpark(p);
+                        break;
+                    }
                 }
                 else {
                     if ((short)u < 0)
@@ -1686,12 +1667,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * * If not already enqueued, try to inactivate and enqueue the
      * worker on wait queue. Or, if inactivating has caused the pool
-     * to be quiescent, relay to idleAwaitWork to check for
-     * termination and possibly shrink pool.
+     * to be quiescent, relay to idleAwaitWork to possibly shrink
+     * pool.
      *
      * * If already enqueued and none of the above apply, possibly
-     * (with 1/2 probability) park awaiting signal, else lingering to
-     * help scan and signal.
+     * park awaiting signal, else lingering to help scan and signal.
+     *
+     * * If a non-empty queue discovered or left as a hint,
+     * help wake up other workers before return
      *
      * @param w the worker (via its WorkQueue)
      * @return a task or null if none found
@@ -1702,6 +1685,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (w != null && (ws = workQueues) != null && (m = ws.length - 1) >= 0) {
             int ec = w.eventCount;               // ec is negative if inactive
             int r = w.seed; r ^= r << 13; r ^= r >>> 17; w.seed = r ^= r << 5;
+            w.hint = -1;                         // update seed and clear hint
             int j = ((m + m + 1) | MIN_SCAN) & MAX_SCAN;
             do {
                 WorkQueue q; ForkJoinTask<?>[] a; int b;
@@ -1723,39 +1707,66 @@ public class ForkJoinPool extends AbstractExecutorService {
                 }
             } while (--j >= 0);
 
-            long c, sc; int e, ns, h;
-            if ((h = w.hint) < 0) {
-                if ((ns = w.nsteals) != 0) {
-                    if (U.compareAndSwapLong(this, STEALCOUNT,
-                                             sc = stealCount, sc + ns))
-                        w.nsteals = 0;           // collect steals
+            int h, e, ns; long c, sc; WorkQueue q;
+            if ((ns = w.nsteals) != 0) {
+                if (U.compareAndSwapLong(this, STEALCOUNT,
+                                         sc = stealCount, sc + ns))
+                    w.nsteals = 0;               // collect steals and rescan
+            }
+            else if (plock != ps)                // consistency check
+                ;                                // skip
+            else if ((e = (int)(c = ctl)) < 0)
+                w.qlock = -1;                    // pool is terminating
+            else {
+                if ((h = w.hint) < 0) {
+                    if (ec >= 0) {               // try to enqueue/inactivate
+                        long nc = (((long)ec |
+                                    ((c - AC_UNIT) & (AC_MASK|TC_MASK))));
+                        w.nextWait = e;          // link and mark inactive
+                        w.eventCount = ec | INT_SIGN;
+                        if (ctl != c || !U.compareAndSwapLong(this, CTL, c, nc))
+                            w.eventCount = ec;   // unmark on CAS failure
+                        else if ((int)(c >> AC_SHIFT) == 1 - (config & SMASK))
+                            idleAwaitWork(w, nc, c);
+                    }
+                    else if (w.eventCount < 0 && !tryTerminate(false, false) &&
+                             ctl == c) {         // block
+                        Thread wt = Thread.currentThread();
+                        Thread.interrupted();    // clear status
+                        U.putObject(wt, PARKBLOCKER, this);
+                        w.parker = wt;           // emulate LockSupport.park
+                        if (w.eventCount < 0)    // recheck
+                            U.park(false, 0L);
+                        w.parker = null;
+                        U.putObject(wt, PARKBLOCKER, null);
+                    }
                 }
-                else if (plock != ps)            // consistency check
-                    ;                            // skip
-                else if ((e = (int)(c = ctl)) < 0)
-                    w.qlock = -1;                // pool is terminating
-                else if (ec >= 0) {              // try to enqueue/inactivate
-                    long nc = ((long)ec | ((c - AC_UNIT) & (AC_MASK|TC_MASK)));
-                    w.nextWait = e;              // link and mark inactive
-                    w.eventCount = ec | INT_SIGN;
-                    if (ctl != c || !U.compareAndSwapLong(this, CTL, c, nc))
-                        w.eventCount = ec;       // unmark on CAS failure
-                    else if ((int)(c >> AC_SHIFT) == 1 - (config & SMASK))
-                        idleAwaitWork(w, nc, c);
-                }
-                else if (w.eventCount < 0) {     // block
-                    Thread wt = Thread.currentThread();
-                    Thread.interrupted();        // clear status
-                    U.putObject(wt, PARKBLOCKER, this);
-                    w.parker = wt;               // emulate LockSupport.park
-                    if (w.eventCount < 0)        // recheck
-                        U.park(false, 0L);
-                    w.parker = null;
-                    U.putObject(wt, PARKBLOCKER, null);
+                if ((h >= 0 || (h = w.hint) >= 0) &&
+                    (ws = workQueues) != null && h < ws.length &&
+                    (q = ws[h]) != null) {      // signal others before retry
+                    WorkQueue v; Thread p; int u, i, s;
+                    for (int n = (config & SMASK) >>> 1;;) {
+                        int idleCount = (w.eventCount < 0) ? 0 : -1;
+                        if (((s = idleCount - q.base + q.top) <= n &&
+                             (n = s) <= 0) ||
+                            (u = (int)((c = ctl) >>> 32)) >= 0 ||
+                            (e = (int)c) <= 0 || m < (i = e & SMASK) ||
+                            (v = ws[i]) == null)
+                            break;
+                        long nc = (((long)(v.nextWait & E_MASK)) |
+                                   ((long)(u + UAC_UNIT) << 32));
+                        if (v.eventCount != (e | INT_SIGN) ||
+                            !U.compareAndSwapLong(this, CTL, c, nc))
+                            break;
+                        v.hint = h;
+                        v.eventCount = (e + E_SEQ) & E_MASK;
+                        if ((p = v.parker) != null)
+                            U.unpark(p);
+                        if (--n <= 0)
+                            break;
+                    }
                 }
             }
-            if (h >= 0 || w.hint >= 0)           // signal others before retry
-                helpSignalHint(w);
         }
         return null;
     }
@@ -1826,44 +1837,9 @@ public class ForkJoinPool extends AbstractExecutorService {
                         break outer;
                     long nc = (((long)(w.nextWait & E_MASK)) |
                                ((long)(u + UAC_UNIT) << 32));
-                    if (w.eventCount == (e | INT_SIGN) &&
-                        U.compareAndSwapLong(this, CTL, c, nc)) {
-                        w.eventCount = (e + E_SEQ) & E_MASK;
-                        if ((p = w.parker) != null)
-                            U.unpark(p);
-                        if (--n <= 0)
-                            break;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Signals other workers if tasks are present in hinted queue.
-     *
-     * @param caller the worker with the hint
-     */
-    private void helpSignalHint(WorkQueue caller) {
-        WorkQueue[] ws; WorkQueue q, w; Thread p; long c; int h, m, u, e, i, s;
-        if (caller != null && (h = caller.hint) >= 0) {
-            caller.hint = -1;
-            if ((u = (int)(ctl >>> 32)) < 0 && (u >> UAC_SHIFT) < 0 &&
-                (ws = workQueues) != null && (m = ws.length - 1) >= 0 &&
-                (q = ws[h & m]) != null) {
-                for (int n = 2;;) { // limit to at most 2 signals
-                    int idleCount = (caller.eventCount < 0) ? 0 : -1;
-                    if (((s = idleCount - q.base + q.top) <= n &&
-                         (n = s) <= 0) ||
-                        (u = (int)((c = ctl) >>> 32)) >= 0 ||
-                        (e = (int)c) <= 0 || m < (i = e & SMASK) ||
-                        (w = ws[i]) == null)
-                        break;
-                    long nc = (((long)(w.nextWait & E_MASK)) |
-                               ((long)(u + UAC_UNIT) << 32));
-                    if (w.eventCount == (e | INT_SIGN) &&
-                        U.compareAndSwapLong(this, CTL, c, nc)) {
-                        w.hint = h;
+                    if (w.eventCount != (e | INT_SIGN))
+                        break outer;
+                    if (U.compareAndSwapLong(this, CTL, c, nc)) {
                         w.eventCount = (e + E_SEQ) & E_MASK;
                         if ((p = w.parker) != null)
                             U.unpark(p);
@@ -2301,9 +2277,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if (((ps = plock) & PL_LOCK) != 0 ||
                     !U.compareAndSwapInt(this, PLOCK, ps, ps += PL_LOCK))
                     ps = acquirePlock();
-                int nps = SHUTDOWN;
-                if (!U.compareAndSwapInt(this, PLOCK, ps, nps))
-                    releasePlock(nps);
+                if (!U.compareAndSwapInt(this, PLOCK, ps, SHUTDOWN))
+                    releasePlock(SHUTDOWN);
             }
             if (!now) {                             // check if idle & no tasks
                 if ((int)(c >> AC_SHIFT) != -(config & SMASK) ||
@@ -2322,15 +2297,22 @@ public class ForkJoinPool extends AbstractExecutorService {
                 for (int pass = 0; pass < 3; ++pass) {
                     WorkQueue[] ws = workQueues;
                     if (ws != null) {
-                        WorkQueue w;
+                        WorkQueue w; Thread wt;
                         int n = ws.length;
                         for (int i = 0; i < n; ++i) {
                             if ((w = ws[i]) != null) {
                                 w.qlock = -1;
                                 if (pass > 0) {
                                     w.cancelAll();
-                                    if (pass > 1)
-                                        w.interruptOwner();
+                                    if (pass > 1 && (wt = w.owner) != null) {
+                                        if (!wt.isInterrupted()) {
+                                            try {
+                                                wt.interrupt();
+                                            } catch (SecurityException ignore) {
+                                            }
+                                        }
+                                        U.unpark(wt);
+                                    }
                                 }
                             }
                         }

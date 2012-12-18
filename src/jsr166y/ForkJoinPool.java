@@ -1114,7 +1114,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Tolerance for idle timeouts, to cope with timer undershoots
      */
-    private static final long TIMEOUT_SLOP = 2000000L; // 20ms
+    private static final long TIMEOUT_SLOP = 2000000L;
 
     /**
      * The maximum stolen->joining link depth allowed in method
@@ -2577,7 +2577,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns the common pool instance.
+     * Returns the common pool instance. This pool is statically
+     * constructed; its run state is unaffected by attempts to
+     * {@link #shutdown} or {@link #shutdownNow}.
      *
      * @return the common pool instance
      */

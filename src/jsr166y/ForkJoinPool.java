@@ -1460,7 +1460,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if (e > 0) {             // activate or create replacement
                     if ((ws = workQueues) == null ||
                         (i = e & SMASK) >= ws.length ||
-                        (v = ws[i]) != null)
+                        (v = ws[i]) == null)
                         break;
                     long nc = (((long)(v.nextWait & E_MASK)) |
                                ((long)(u + UAC_UNIT) << 32));
@@ -2103,16 +2103,13 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private WorkQueue findNonEmptyStealQueue(int r) {
         for (WorkQueue[] ws;;) {
-            int ps = plock, m, n;
+            int ps = plock, m;
             if ((ws = workQueues) == null || (m = ws.length - 1) < 1)
                 return null;
             for (int j = (m + 1) << 2; ;) {
                 WorkQueue q = ws[(((r + j) << 1) | 1) & m];
-                if (q != null && (n = q.base - q.top) < 0) {
-                    if (n < -1)
-                        signalWork(q);
+                if (q != null && q.base - q.top < 0)
                     return q;
-                }
                 else if (--j < 0) {
                     if (plock == ps)
                         return null;
@@ -2143,8 +2140,11 @@ public class ForkJoinPool extends AbstractExecutorService {
                     do {} while (!U.compareAndSwapLong
                                  (this, CTL, c = ctl, c + AC_UNIT));
                 }
-                if ((b = q.base) - q.top < 0 && (t = q.pollAt(b)) != null)
+                if ((b = q.base) - q.top < 0 && (t = q.pollAt(b)) != null) {
+                    if (q.base - q.top < 0)
+                        signalWork(q);
                     w.runSubtask(t);
+                }
             }
             else {
                 long c;
@@ -2176,8 +2176,11 @@ public class ForkJoinPool extends AbstractExecutorService {
                 return t;
             if ((q = findNonEmptyStealQueue(w.nextSeed())) == null)
                 return null;
-            if ((b = q.base) - q.top < 0 && (t = q.pollAt(b)) != null)
+            if ((b = q.base) - q.top < 0 && (t = q.pollAt(b)) != null) {
+                if (q.base - q.top < 0)
+                    signalWork(q);
                 return t;
+            }
         }
     }
 
@@ -2475,8 +2478,11 @@ public class ForkJoinPool extends AbstractExecutorService {
         if ((p = commonPool) != null &&
             (q = p.findNonEmptyStealQueue(1)) != null &&
             (b = q.base) - q.top < 0 &&
-            (t = q.pollAt(b)) != null)
+            (t = q.pollAt(b)) != null) {
+            if (q.base - q.top < 0)
+                p.signalWork(q);
             t.doExec();
+        }
     }
 
     // Exported methods

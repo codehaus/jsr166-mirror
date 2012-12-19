@@ -978,8 +978,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         if (Thread.interrupted())
             throw new InterruptedException();
         // Messy in part because we measure in nanosecs, but wait in millisecs
-        int s; long ns, ms;
-        if ((s = status) >= 0 && (ns = unit.toNanos(timeout)) > 0L) {
+        int s; long ms;
+        long ns = unit.toNanos(timeout);
+        if ((s = status) >= 0 && ns > 0L) {
             long deadline = System.nanoTime() + ns;
             ForkJoinPool p = null;
             ForkJoinPool.WorkQueue w = null;
@@ -1500,4 +1501,5 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             }
         }
     }
+
 }

@@ -406,14 +406,11 @@ public class FutureTaskTest extends JSR166TestCase {
     }
 
     /**
-     * cancel(true) interrupts a running task that subsequently
-     * succeeds, with a security manager that does not permit
-     * Thread.interrupt
+     * cancel(true) tries to interrupt a running task, but
+     * Thread.interrupt throws (simulating a restrictive security
+     * manager)
      */
     public void testCancelInterrupt_ThrowsSecurityException() {
-        if (System.getSecurityManager() != null)
-            return;
-
         final CountDownLatch pleaseCancel = new CountDownLatch(1);
         final CountDownLatch cancelled = new CountDownLatch(1);
         final PublicFutureTask task =
@@ -424,20 +421,22 @@ public class FutureTaskTest extends JSR166TestCase {
                     assertFalse(Thread.interrupted());
                 }});
 
-        final Thread t = newStartedThread(task);
+        final Thread t = new Thread(task) {
+            // Simulate a restrictive security manager.
+            @Override public void interrupt() {
+                throw new SecurityException();
+            }};
+        t.setDaemon(true);
+        t.start();
+
         await(pleaseCancel);
-        System.setSecurityManager(new SecurityManager() {
-            public void checkAccess(Thread t) { throw new SecurityException(); }
-            public void checkPermission(Permission p) {}});
         try {
-            try {
-                task.cancel(true);
-                shouldThrow();
-            }
-            catch (SecurityException expected) {}
-        } finally {
-            System.setSecurityManager(null);
-        }
+            task.cancel(true);
+            shouldThrow();
+        } catch (SecurityException expected) {}
+
+        // We failed to deliver the interrupt, but the world retains
+        // its sanity, as if we had done task.cancel(false)
         assertTrue(task.isCancelled());
         assertTrue(task.isDone());
         assertEquals(1, task.runCount());

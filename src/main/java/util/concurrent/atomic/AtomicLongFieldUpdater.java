@@ -5,6 +5,8 @@
  */
 
 package java.util.concurrent.atomic;
+import java.util.function.LongUnaryOperator;
+import java.util.function.LongBinaryOperator;
 import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -236,6 +238,90 @@ public abstract class AtomicLongFieldUpdater<T> {
             if (compareAndSet(obj, current, next))
                 return next;
         }
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param obj An object whose field to get and set
+     * @param updateFunction a side-effect-free function
+     * @return the previous value
+     * @since 1.8
+     */
+    public final long getAndUpdate(T obj, LongUnaryOperator updateFunction) {
+        long v;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, updateFunction.applyAsLong(v)));
+        return v;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param obj An object whose field to get and set
+     * @param updateFunction a side-effect-free function
+     * @return the updated value
+     * @since 1.8
+     */
+    public final long updateAndGet(T obj, LongUnaryOperator updateFunction) {
+        long v, r;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, r = updateFunction.applyAsLong(v)));
+        return r;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param obj An object whose field to get and set
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the previous value
+     * @since 1.8
+     */
+    public final long getAndAccumulate(T obj, long x, 
+                                       LongBinaryOperator accumulatorFunction) {
+        long v;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, accumulatorFunction.applyAsLong(v, x)));
+        return v;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param obj An object whose field to get and set
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final long accumulateAndGet(T obj, long x, 
+                                       LongBinaryOperator accumulatorFunction) {
+        long v, r;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, r = accumulatorFunction.applyAsLong(v, x)));
+        return r;
     }
 
     private static class CASUpdater<T> extends AtomicLongFieldUpdater<T> {

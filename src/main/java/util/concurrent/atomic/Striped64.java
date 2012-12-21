@@ -5,7 +5,8 @@
  */
 
 package java.util.concurrent.atomic;
-import java.util.Random;
+import java.util.function.LongBinaryOperator;
+import java.util.function.DoubleBinaryOperator;
 
 /**
  * A package-local class holding common representation and mechanics
@@ -38,23 +39,23 @@ abstract class Striped64 extends Number {
      * number of CPUS. Table slots remain empty (null) until they are
      * needed.
      *
-     * A single spinlock ("busy") is used for initializing and
+     * A single spinlock ("cellsBusy") is used for initializing and
      * resizing the table, as well as populating slots with new Cells.
      * There is no need for a blocking lock: When the lock is not
      * available, threads try other slots (or the base).  During these
      * retries, there is increased contention and reduced locality,
      * which is still better than alternatives.
      *
-     * Per-thread hash codes are initialized to random values.
-     * Contention and/or table collisions are indicated by failed
-     * CASes when performing an update operation (see method
-     * retryUpdate). Upon a collision, if the table size is less than
-     * the capacity, it is doubled in size unless some other thread
-     * holds the lock. If a hashed slot is empty, and lock is
-     * available, a new Cell is created. Otherwise, if the slot
-     * exists, a CAS is tried.  Retries proceed by "double hashing",
-     * using a secondary hash (Marsaglia XorShift) to try to find a
-     * free slot.
+     * Per-thread hash codes are initialized to values that typically
+     * do not often conflict.  Contention and/or table collisions are
+     * indicated by failed CASes when performing an update operation
+     * (see method retryUpdate). Upon a collision, if the table size
+     * is less than the capacity, it is doubled in size unless some
+     * other thread holds the lock. If a hashed slot is empty, and
+     * lock is available, a new Cell is created. Otherwise, if the
+     * slot exists, a CAS is tried.  Retries proceed by "double
+     * hashing", using a secondary hash (Marsaglia XorShift) to try to
+     * find a free slot.
      *
      * The table size is capped because, when there are more threads
      * than CPUs, supposing that each thread were bound to a CPU,
@@ -107,36 +108,33 @@ abstract class Striped64 extends Number {
                 throw new Error(e);
             }
         }
-
     }
 
     /**
-     * Holder for the thread-local hash code. The code is initially
-     * random, but may be set to a different value upon collisions.
+     * Holder for the thread-local hash code determining which Cell to
+     * use. The code is initialized via the cellHashCodeGenerator, but
+     * may be moved upon collisions.
      */
-    static final class HashCode {
-        static final Random rng = new Random();
+    static final class CellHashCode {
         int code;
-        HashCode() {
-            int h = rng.nextInt(); // Avoid zero to allow xorShift rehash
-            code = (h == 0) ? 1 : h;
-        }
     }
 
     /**
-     * The corresponding ThreadLocal class
+     * Generates initial value for per-thread CellHashCodes
      */
-    static final class ThreadHashCode extends ThreadLocal<HashCode> {
-        public HashCode initialValue() { return new HashCode(); }
-    }
+    static final AtomicInteger cellHashCodeGenerator = new AtomicInteger();
 
     /**
-     * Static per-thread hash codes. Shared across all instances to
-     * reduce ThreadLocal pollution and because adjustments due to
-     * collisions in one table are likely to be appropriate for
-     * others.
+     * Increment for cellHashCodeGenerator. See class ThreadLocal
+     * for explanation.
      */
-    static final ThreadHashCode threadHashCode = new ThreadHashCode();
+    static final int SEED_INCREMENT = 0x61c88647;
+
+    /**
+     * Per-thread cell hash codes. Shared across all instances
+     */
+    static final ThreadLocal<CellHashCode> threadCellHashCode =
+        new ThreadLocal<CellHashCode>();
 
     /** Number of CPUS, to place bound on table size */
     static final int NCPU = Runtime.getRuntime().availableProcessors();
@@ -155,7 +153,7 @@ abstract class Striped64 extends Number {
     /**
      * Spinlock (locked via CAS) used when resizing and/or creating Cells.
      */
-    transient volatile int busy;
+    transient volatile int cellsBusy;
 
     /**
      * Package-private default constructor
@@ -167,26 +165,15 @@ abstract class Striped64 extends Number {
      * CASes the base field.
      */
     final boolean casBase(long cmp, long val) {
-        return UNSAFE.compareAndSwapLong(this, baseOffset, cmp, val);
+        return UNSAFE.compareAndSwapLong(this, BASE, cmp, val);
     }
 
     /**
-     * CASes the busy field from 0 to 1 to acquire lock.
+     * CASes the cellsBusy field from 0 to 1 to acquire lock.
      */
-    final boolean casBusy() {
-        return UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1);
+    final boolean casCellsBusy() {
+        return UNSAFE.compareAndSwapInt(this, CELLSBUSY, 0, 1);
     }
-
-    /**
-     * Computes the function of current and new value. Subclasses
-     * should open-code this update function for most uses, but the
-     * virtualized form is needed within retryUpdate.
-     *
-     * @param currentValue the current value (of either base or a cell)
-     * @param newValue the argument from a user update call
-     * @return result of the update function
-     */
-    abstract long fn(long currentValue, long newValue);
 
     /**
      * Handles cases of updates involving initialization, resizing,
@@ -197,18 +184,30 @@ abstract class Striped64 extends Number {
      *
      * @param x the value
      * @param hc the hash code holder
+     * @param fn the update function, or null for add (this convention
+     * avoids the need for an extra field or function in LongAdder).
      * @param wasUncontended false if CAS failed before call
      */
-    final void retryUpdate(long x, HashCode hc, boolean wasUncontended) {
-        int h = hc.code;
+    final void longAccumulate(long x, CellHashCode hc,
+                              LongBinaryOperator fn,
+                              boolean wasUncontended) {
+        int h;
+        if (hc == null) {
+            hc = new CellHashCode();
+            int s = cellHashCodeGenerator.addAndGet(SEED_INCREMENT);
+            h = hc.code = (s == 0) ? 1 : s;     // Avoid zero
+            threadCellHashCode.set(hc);
+        }
+        else
+            h = hc.code;
         boolean collide = false;                // True if last slot nonempty
         for (;;) {
             Cell[] as; Cell a; int n; long v;
             if ((as = cells) != null && (n = as.length) > 0) {
                 if ((a = as[(n - 1) & h]) == null) {
-                    if (busy == 0) {            // Try to attach new Cell
+                    if (cellsBusy == 0) {       // Try to attach new Cell
                         Cell r = new Cell(x);   // Optimistically create
-                        if (busy == 0 && casBusy()) {
+                        if (cellsBusy == 0 && casCellsBusy()) {
                             boolean created = false;
                             try {               // Recheck under lock
                                 Cell[] rs; int m, j;
@@ -219,7 +218,7 @@ abstract class Striped64 extends Number {
                                     created = true;
                                 }
                             } finally {
-                                busy = 0;
+                                cellsBusy = 0;
                             }
                             if (created)
                                 break;
@@ -230,13 +229,14 @@ abstract class Striped64 extends Number {
                 }
                 else if (!wasUncontended)       // CAS already known to fail
                     wasUncontended = true;      // Continue after rehash
-                else if (a.cas(v = a.value, fn(v, x)))
+                else if (a.cas(v = a.value, ((fn == null) ? v + x :
+                                             fn.applyAsLong(v, x))))
                     break;
                 else if (n >= NCPU || cells != as)
                     collide = false;            // At max size or stale
                 else if (!collide)
                     collide = true;
-                else if (busy == 0 && casBusy()) {
+                else if (cellsBusy == 0 && casCellsBusy()) {
                     try {
                         if (cells == as) {      // Expand table unless stale
                             Cell[] rs = new Cell[n << 1];
@@ -245,7 +245,7 @@ abstract class Striped64 extends Number {
                             cells = rs;
                         }
                     } finally {
-                        busy = 0;
+                        cellsBusy = 0;
                     }
                     collide = false;
                     continue;                   // Retry with expanded table
@@ -254,7 +254,7 @@ abstract class Striped64 extends Number {
                 h ^= h >>> 17;
                 h ^= h << 5;
             }
-            else if (busy == 0 && cells == as && casBusy()) {
+            else if (cellsBusy == 0 && cells == as && casCellsBusy()) {
                 boolean init = false;
                 try {                           // Initialize table
                     if (cells == as) {
@@ -264,46 +264,134 @@ abstract class Striped64 extends Number {
                         init = true;
                     }
                 } finally {
-                    busy = 0;
+                    cellsBusy = 0;
                 }
                 if (init)
                     break;
             }
-            else if (casBase(v = base, fn(v, x)))
+            else if (casBase(v = base, ((fn == null) ? v + x :
+                                        fn.applyAsLong(v, x))))
                 break;                          // Fall back on using base
         }
         hc.code = h;                            // Record index for next time
     }
 
-
     /**
-     * Sets base and all cells to the given value.
+     * Same as longAccumulate, but injecting long/double conversions
+     * in too many places to sensibly merge with long version given
+     * the low-overhead requirements of this calss. So must instead be
+     * maintained by copy/paste/adapt.
      */
-    final void internalReset(long initialValue) {
-        Cell[] as = cells;
-        base = initialValue;
-        if (as != null) {
-            int n = as.length;
-            for (int i = 0; i < n; ++i) {
-                Cell a = as[i];
-                if (a != null)
-                    a.value = initialValue;
-            }
+    final void doubleAccumulate(double x, CellHashCode hc,
+                                DoubleBinaryOperator fn,
+                                boolean wasUncontended) {
+        int h;
+        if (hc == null) {
+            hc = new CellHashCode();
+            int s = cellHashCodeGenerator.addAndGet(SEED_INCREMENT);
+            h = hc.code = (s == 0) ? 1 : s;     // Avoid zero
+            threadCellHashCode.set(hc);
         }
+        else
+            h = hc.code;
+        boolean collide = false;                // True if last slot nonempty
+        for (;;) {
+            Cell[] as; Cell a; int n; long v;
+            if ((as = cells) != null && (n = as.length) > 0) {
+                if ((a = as[(n - 1) & h]) == null) {
+                    if (cellsBusy == 0) {       // Try to attach new Cell
+                        Cell r = new Cell(Double.doubleToRawLongBits(x));
+                        if (cellsBusy == 0 && casCellsBusy()) {
+                            boolean created = false;
+                            try {               // Recheck under lock
+                                Cell[] rs; int m, j;
+                                if ((rs = cells) != null &&
+                                    (m = rs.length) > 0 &&
+                                    rs[j = (m - 1) & h] == null) {
+                                    rs[j] = r;
+                                    created = true;
+                                }
+                            } finally {
+                                cellsBusy = 0;
+                            }
+                            if (created)
+                                break;
+                            continue;           // Slot is now non-empty
+                        }
+                    }
+                    collide = false;
+                }
+                else if (!wasUncontended)       // CAS already known to fail
+                    wasUncontended = true;      // Continue after rehash
+                else if (a.cas(v = a.value,
+                               ((fn == null) ?
+                                Double.doubleToRawLongBits
+                                (Double.longBitsToDouble(v) + x) :
+                                Double.doubleToRawLongBits
+                                (fn.applyAsDouble
+                                 (Double.longBitsToDouble(v), x)))))
+                    break;
+                else if (n >= NCPU || cells != as)
+                    collide = false;            // At max size or stale
+                else if (!collide)
+                    collide = true;
+                else if (cellsBusy == 0 && casCellsBusy()) {
+                    try {
+                        if (cells == as) {      // Expand table unless stale
+                            Cell[] rs = new Cell[n << 1];
+                            for (int i = 0; i < n; ++i)
+                                rs[i] = as[i];
+                            cells = rs;
+                        }
+                    } finally {
+                        cellsBusy = 0;
+                    }
+                    collide = false;
+                    continue;                   // Retry with expanded table
+                }
+                h ^= h << 13;                   // Rehash
+                h ^= h >>> 17;
+                h ^= h << 5;
+            }
+            else if (cellsBusy == 0 && cells == as && casCellsBusy()) {
+                boolean init = false;
+                try {                           // Initialize table
+                    if (cells == as) {
+                        Cell[] rs = new Cell[2];
+                        rs[h & 1] = new Cell(Double.doubleToRawLongBits(x));
+                        cells = rs;
+                        init = true;
+                    }
+                } finally {
+                    cellsBusy = 0;
+                }
+                if (init)
+                    break;
+            }
+            else if (casBase(v = base,
+                             ((fn == null) ?
+                              Double.doubleToRawLongBits
+                              (Double.longBitsToDouble(v) + x) :
+                              Double.doubleToRawLongBits
+                              (fn.applyAsDouble
+                               (Double.longBitsToDouble(v), x)))))
+                break;                          // Fall back on using base
+        }
+        hc.code = h;                            // Record index for next time
     }
 
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;
-    private static final long baseOffset;
-    private static final long busyOffset;
+    private static final long BASE;
+    private static final long CELLSBUSY;
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
             Class<?> sk = Striped64.class;
-            baseOffset = UNSAFE.objectFieldOffset
+            BASE = UNSAFE.objectFieldOffset
                 (sk.getDeclaredField("base"));
-            busyOffset = UNSAFE.objectFieldOffset
-                (sk.getDeclaredField("busy"));
+            CELLSBUSY = UNSAFE.objectFieldOffset
+                (sk.getDeclaredField("cellsBusy"));
         } catch (Exception e) {
             throw new Error(e);
         }

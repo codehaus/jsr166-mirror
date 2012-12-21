@@ -5,6 +5,8 @@
  */
 
 package java.util.concurrent.atomic;
+import java.util.function.IntUnaryOperator;
+import java.util.function.IntBinaryOperator;
 import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -233,6 +235,90 @@ public abstract class AtomicIntegerFieldUpdater<T> {
             if (compareAndSet(obj, current, next))
                 return next;
         }
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param obj An object whose field to get and set
+     * @param updateFunction a side-effect-free function
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndUpdate(T obj, IntUnaryOperator updateFunction) {
+        int v;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, updateFunction.applyAsInt(v)));
+        return v;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param obj An object whose field to get and set
+     * @param updateFunction a side-effect-free function
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int updateAndGet(T obj, IntUnaryOperator updateFunction) {
+        int v, r;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, r = updateFunction.applyAsInt(v)));
+        return r;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param obj An object whose field to get and set
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int accumulateAndGet(T obj, int x, 
+                                      IntBinaryOperator accumulatorFunction) {
+        int v, r;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, r = accumulatorFunction.applyAsInt(v, x)));
+        return r;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param obj An object whose field to get and set
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndAccumulate(T obj, int x, 
+                                      IntBinaryOperator accumulatorFunction) {
+        int v;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, accumulatorFunction.applyAsInt(v, x)));
+        return v;
     }
 
     /**

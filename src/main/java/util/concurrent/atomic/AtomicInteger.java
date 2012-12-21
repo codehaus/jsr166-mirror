@@ -5,6 +5,8 @@
  */
 
 package java.util.concurrent.atomic;
+import java.util.function.IntUnaryOperator;
+import java.util.function.IntBinaryOperator;
 import sun.misc.Unsafe;
 
 /**
@@ -206,6 +208,86 @@ public class AtomicInteger extends Number implements java.io.Serializable {
             if (compareAndSet(current, next))
                 return next;
         }
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param updateFunction a side-effect-free function
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndUpdate(IntUnaryOperator updateFunction) {
+        int v;
+        do {
+            v = get();
+        } while (!compareAndSet(v, updateFunction.applyAsInt(v)));
+        return v;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param updateFunction a side-effect-free function
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int updateAndGet(IntUnaryOperator updateFunction) {
+        int v, r;
+        do {
+            v = get();
+        } while (!compareAndSet(v, r = updateFunction.applyAsInt(v)));
+        return r;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndAccumulate(int x, 
+                                      IntBinaryOperator accumulatorFunction) {
+        int v;
+        do {
+            v = get();
+        } while (!compareAndSet(v, accumulatorFunction.applyAsInt(v, x)));
+        return v;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int accumulateAndGet(int x, 
+                                      IntBinaryOperator accumulatorFunction) {
+        int v, r;
+        do {
+            v = get();
+        } while (!compareAndSet(v, r = accumulatorFunction.applyAsInt(v, x)));
+        return r;
     }
 
     /**

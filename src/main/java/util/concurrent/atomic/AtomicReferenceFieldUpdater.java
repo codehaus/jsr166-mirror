@@ -5,6 +5,8 @@
  */
 
 package java.util.concurrent.atomic;
+import java.util.function.UnaryOperator;
+import java.util.function.BinaryOperator;
 import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -153,6 +155,91 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
                 return current;
         }
     }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param obj An object whose field to get and set
+     * @param updateFunction a side-effect-free function
+     * @return the previous value
+     * @since 1.8
+     */
+    public final V getAndUpdate(T obj, UnaryOperator<V> updateFunction) {
+        V v;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, updateFunction.apply(v)));
+        return v;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function. The function must be
+     * side-effect-free.  It may be re-applied when attempted updates
+     * fail due to contention among threads.
+     *
+     * @param obj An object whose field to get and set
+     * @param updateFunction a side-effect-free function
+     * @return the updated value
+     * @since 1.8
+     */
+    public final V updateAndGet(T obj, UnaryOperator<V> updateFunction) {
+        V v, r;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, r = updateFunction.apply(v)));
+        return r;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param obj An object whose field to get and set
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the previous value
+     * @since 1.8
+     */
+    public final V getAndAccumulate(T obj, V x, 
+                                    BinaryOperator<V> accumulatorFunction) {
+        V v;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, accumulatorFunction.apply(v, x)));
+        return v;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param obj An object whose field to get and set
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final V accumulateAndGet(T obj, V x, 
+                                    BinaryOperator<V> accumulatorFunction) {
+        V v, r;
+        do {
+            v = get(obj);
+        } while (!compareAndSet(obj, v, r = accumulatorFunction.apply(v, x)));
+        return r;
+    }
+
 
     private static final class AtomicReferenceFieldUpdaterImpl<T,V>
         extends AtomicReferenceFieldUpdater<T,V> {

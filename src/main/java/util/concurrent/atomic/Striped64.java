@@ -278,8 +278,8 @@ abstract class Striped64 extends Number {
 
     /**
      * Same as longAccumulate, but injecting long/double conversions
-     * in too many places to sensibly merge with long version given
-     * the low-overhead requirements of this calss. So must instead be
+     * in too many places to sensibly merge with long version, given
+     * the low-overhead requirements of this class. So must instead be
      * maintained by copy/paste/adapt.
      */
     final void doubleAccumulate(double x, CellHashCode hc,

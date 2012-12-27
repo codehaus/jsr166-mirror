@@ -2367,10 +2367,6 @@ public class ConcurrentHashMap<K, V>
             return false;
         }
 
-        public int getNaturalSplits() {
-            return baseLimit > baseIndex ? 1 : 0;
-        }
-
         public long estimateSize() {
             return batch;
         }
@@ -2970,9 +2966,9 @@ public class ConcurrentHashMap<K, V>
         KeyIterator(ConcurrentHashMap<K, V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
-        public KeyIterator<K,V> split() {
-            if (nextKey != null)
-                throw new IllegalStateException();
+        public KeyIterator<K,V> trySplit() {
+            if (tab != null && baseIndex == baseLimit)
+                return null;
             return new KeyIterator<K,V>(map, this);
         }
         @SuppressWarnings("unchecked") public final K next() {
@@ -3001,9 +2997,9 @@ public class ConcurrentHashMap<K, V>
         ValueIterator(ConcurrentHashMap<K, V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
-        public ValueIterator<K,V> split() {
-            if (nextKey != null)
-                throw new IllegalStateException();
+        public ValueIterator<K,V> trySplit() {
+            if (tab != null && baseIndex == baseLimit)
+                return null;
             return new ValueIterator<K,V>(map, this);
         }
 
@@ -3034,9 +3030,9 @@ public class ConcurrentHashMap<K, V>
         EntryIterator(ConcurrentHashMap<K, V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
-        public EntryIterator<K,V> split() {
-            if (nextKey != null)
-                throw new IllegalStateException();
+        public EntryIterator<K,V> trySplit() {
+            if (tab != null && baseIndex == baseLimit)
+                return null;
             return new EntryIterator<K,V>(map, this);
         }
 

@@ -26,7 +26,7 @@ import java.util.concurrent.locks.LockSupport;
  * value and status), and may include dependent functions and actions
  * that trigger upon its completion.
  *
- * <p> Similar methods are available for function-based usages in
+ * <p>Similar methods are available for function-based usages in
  * which dependent stages typically propagate values, as well as
  * result-less action-based usages, that are normally associated with
  * {@code CompletableFuture<Void>} Futures.  Functions and actions
@@ -37,7 +37,7 @@ import java.util.concurrent.locks.LockSupport;
  * are no guarantees about the order of processing completions unless
  * constrained by method {@code then} and related methods.
  *
- * <p> When two or more threads attempt to {@link #complete} or {@link
+ * <p>When two or more threads attempt to {@link #complete} or {@link
  * #completeExceptionally} a CompletableFuture, only one of them will
  * succeed. When completion entails computation of a function or
  * action, it is executed <em>after</em> establishing precedence. If

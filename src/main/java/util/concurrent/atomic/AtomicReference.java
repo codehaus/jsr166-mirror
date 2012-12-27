@@ -166,7 +166,7 @@ public class AtomicReference<V> implements java.io.Serializable {
      * @return the previous value
      * @since 1.8
      */
-    public final V getAndAccumulate(V x, 
+    public final V getAndAccumulate(V x,
                                     BinaryOperator<V> accumulatorFunction) {
         V v;
         do {
@@ -188,7 +188,7 @@ public class AtomicReference<V> implements java.io.Serializable {
      * @return the updated value
      * @since 1.8
      */
-    public final V accumulateAndGet(V x, 
+    public final V accumulateAndGet(V x,
                                     BinaryOperator<V> accumulatorFunction) {
         V v, r;
         do {

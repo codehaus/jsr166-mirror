@@ -208,7 +208,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
      * @return the previous value
      * @since 1.8
      */
-    public final V getAndAccumulate(T obj, V x, 
+    public final V getAndAccumulate(T obj, V x,
                                     BinaryOperator<V> accumulatorFunction) {
         V v;
         do {
@@ -231,7 +231,7 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
      * @return the updated value
      * @since 1.8
      */
-    public final V accumulateAndGet(T obj, V x, 
+    public final V accumulateAndGet(T obj, V x,
                                     BinaryOperator<V> accumulatorFunction) {
         V v, r;
         do {

@@ -289,7 +289,7 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the updated value
      * @since 1.8
      */
-    public final int accumulateAndGet(T obj, int x, 
+    public final int accumulateAndGet(T obj, int x,
                                       IntBinaryOperator accumulatorFunction) {
         int v, r;
         do {
@@ -312,7 +312,7 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the previous value
      * @since 1.8
      */
-    public final int getAndAccumulate(T obj, int x, 
+    public final int getAndAccumulate(T obj, int x,
                                       IntBinaryOperator accumulatorFunction) {
         int v;
         do {

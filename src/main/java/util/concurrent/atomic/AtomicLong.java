@@ -273,7 +273,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the previous value
      * @since 1.8
      */
-    public final long getAndAccumulate(long x, 
+    public final long getAndAccumulate(long x,
                                        LongBinaryOperator accumulatorFunction) {
         long v;
         do {
@@ -295,7 +295,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the updated value
      * @since 1.8
      */
-    public final long accumulateAndGet(long x, 
+    public final long accumulateAndGet(long x,
                                        LongBinaryOperator accumulatorFunction) {
         long v, r;
         do {

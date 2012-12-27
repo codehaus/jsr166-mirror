@@ -47,8 +47,8 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
      * Creates a new instance using the given accumulator function
      * and identity element.
      */
-    public DoubleAccumulator(DoubleBinaryOperator accumulatorFunction, 
-                           double identity) {
+    public DoubleAccumulator(DoubleBinaryOperator accumulatorFunction,
+                             double identity) {
         this.function = accumulatorFunction;
         base = this.identity =  Double.doubleToRawLongBits(identity);
     }
@@ -68,7 +68,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
             if ((hc = threadCellHashCode.get()) == null ||
                 as == null || (m = as.length - 1) < 0 ||
                 (a = as[m & hc.code]) == null ||
-                !(uncontended = 
+                !(uncontended =
                   (r = Double.doubleToRawLongBits
                    (function.applyAsDouble
                     (Double.longBitsToDouble(v = a.value), x))) == v ||
@@ -198,5 +198,5 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
         cells = null;
         base = Double.doubleToRawLongBits(s.readDouble());
     }
-    
+
 }

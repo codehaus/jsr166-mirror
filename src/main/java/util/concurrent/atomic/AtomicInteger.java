@@ -259,7 +259,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      * @since 1.8
      */
-    public final int getAndAccumulate(int x, 
+    public final int getAndAccumulate(int x,
                                       IntBinaryOperator accumulatorFunction) {
         int v;
         do {
@@ -281,7 +281,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the updated value
      * @since 1.8
      */
-    public final int accumulateAndGet(int x, 
+    public final int accumulateAndGet(int x,
                                       IntBinaryOperator accumulatorFunction) {
         int v, r;
         do {

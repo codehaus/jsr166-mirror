@@ -292,7 +292,7 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the previous value
      * @since 1.8
      */
-    public final long getAndAccumulate(T obj, long x, 
+    public final long getAndAccumulate(T obj, long x,
                                        LongBinaryOperator accumulatorFunction) {
         long v;
         do {
@@ -315,7 +315,7 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the updated value
      * @since 1.8
      */
-    public final long accumulateAndGet(T obj, long x, 
+    public final long accumulateAndGet(T obj, long x,
                                        LongBinaryOperator accumulatorFunction) {
         long v, r;
         do {

@@ -5868,7 +5868,7 @@ public class ConcurrentHashMap<K, V>
                 K r = null;
                 while (advance() != null) {
                     K u = (K)nextKey;
-                    r = (r == null) ? u : u == null? r : reducer.apply(r, u);
+                    r = (r == null) ? u : u == null ? r : reducer.apply(r, u);
                 }
                 result = r;
                 CountedCompleter<?> c;
@@ -5909,7 +5909,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, reducer)).fork();
                 V r = null, v;
                 while ((v = advance()) != null)
-                    r = (r == null) ? v : v == null? r : reducer.apply(r, v);
+                    r = (r == null) ? v : v == null ? r : reducer.apply(r, v);
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {

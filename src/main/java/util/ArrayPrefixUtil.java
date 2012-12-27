@@ -158,7 +158,7 @@ class ArrayPrefixUtil {
                     for (int b;;) {
                         if (((b = t.getPendingCount()) & FINISHED) != 0)
                             break outer;                      // already done
-                        state = ((b & CUMULATE) != 0? FINISHED :
+                        state = ((b & CUMULATE) != 0 ? FINISHED :
                                  (l > org) ? SUMMED : (SUMMED|FINISHED));
                         if (t.compareAndSetPendingCount(b, b|state))
                             break;
@@ -307,7 +307,7 @@ class ArrayPrefixUtil {
                     for (int b;;) {
                         if (((b = t.getPendingCount()) & FINISHED) != 0)
                             break outer;                      // already done
-                        state = ((b & CUMULATE) != 0? FINISHED :
+                        state = ((b & CUMULATE) != 0 ? FINISHED :
                                  (l > org) ? SUMMED : (SUMMED|FINISHED));
                         if (t.compareAndSetPendingCount(b, b|state))
                             break;
@@ -456,7 +456,7 @@ class ArrayPrefixUtil {
                     for (int b;;) {
                         if (((b = t.getPendingCount()) & FINISHED) != 0)
                             break outer;                      // already done
-                        state = ((b & CUMULATE) != 0? FINISHED :
+                        state = ((b & CUMULATE) != 0 ? FINISHED :
                                  (l > org) ? SUMMED : (SUMMED|FINISHED));
                         if (t.compareAndSetPendingCount(b, b|state))
                             break;
@@ -605,7 +605,7 @@ class ArrayPrefixUtil {
                     for (int b;;) {
                         if (((b = t.getPendingCount()) & FINISHED) != 0)
                             break outer;                      // already done
-                        state = ((b & CUMULATE) != 0? FINISHED :
+                        state = ((b & CUMULATE) != 0 ? FINISHED :
                                  (l > org) ? SUMMED : (SUMMED|FINISHED));
                         if (t.compareAndSetPendingCount(b, b|state))
                             break;

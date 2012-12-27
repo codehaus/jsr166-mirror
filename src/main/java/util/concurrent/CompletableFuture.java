@@ -418,7 +418,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is is asynchronously
+     * Creates and returns a CompletableFuture that is asynchronously
      * completed using the {@link ForkJoinPool#commonPool()} with
      * the result of the given function of this and the other given
      * CompletableFuture's results if/when both complete.  If this or
@@ -437,7 +437,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is is
+     * Creates and returns a CompletableFuture that is
      * asynchronously completed using the given executor with the
      * result of the given function of this and the other given
      * CompletableFuture's results if/when both complete.  If this or

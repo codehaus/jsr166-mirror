@@ -5,7 +5,6 @@
  */
 
 package java.util.concurrent;
-import java.util.function.Block;
 import java.util.function.Supplier;
 import java.util.function.Function;
 import java.util.function.BiFunction;
@@ -659,37 +658,48 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed after
-     * performing the given action with the exception triggering this
-     * CompletableFuture's completion if/when it completes
-     * exceptionally.
+     * Creates and returns a CompletableFuture that is completed with
+     * the result of the given function of the exception triggering
+     * this CompletableFuture's completion if/when it completes
+     * exceptionally; Otherwise, if this CompletableFuture completes
+     * normally, then the returned CompletableFuture also completes
+     * normally with the same value.
      *
-     * @param action the action to perform before completing the
-     * returned CompletableFuture
+     * @param fn the function to use to compute the value of the
+     * returned CompletableFuture if this CompletableFuture completed
+     * exceptionally
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> exceptionally(Block<Throwable> action) {
-        if (action == null) throw new NullPointerException();
-        CompletableFuture<Void> dst = new CompletableFuture<Void>();
+    public CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn) {
+        if (fn == null) throw new NullPointerException();
+        CompletableFuture<T> dst = new CompletableFuture<T>();
         ExceptionAction<T> d = null;
-        Object r; Throwable ex;
+        Object r;
         if ((r = result) == null) {
             CompletionNode p =
-                new CompletionNode(d = new ExceptionAction<T>(this, action, dst));
+                new CompletionNode(d = new ExceptionAction<T>(this, fn, dst));
             while ((r = result) == null) {
                 if (UNSAFE.compareAndSwapObject(this, COMPLETIONS,
                                                 p.next = completions, p))
                     break;
             }
         }
-        if (r != null && (d == null || d.compareAndSet(0, 1)) &&
-            (r instanceof AltResult) && (ex = ((AltResult)r).ex) != null)  {
-            try {
-                action.accept(ex);
-                dst.complete(null);
-            } catch (Throwable rex) {
-                dst.completeExceptionally(rex);
+        if (r != null && (d == null || d.compareAndSet(0, 1))) {
+            T t; Throwable ex = null;
+            if (r instanceof AltResult) {
+                if ((ex = ((AltResult)r).ex) != null)  {
+                    try {
+                        dst.complete(fn.apply(ex));
+                    } catch (Throwable rex) {
+                        dst.completeExceptionally(rex);
+                    }
+                }
+                t = null;
             }
+            else
+                t = (T) r;
+            if (ex == null)
+                dst.complete(t);
         }
         if (r != null)
             postComplete();
@@ -734,14 +744,16 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Whether or not already completed, sets the value subsequently
-     * returned by method get() and related methods to the given
-     * value. This method is designed for use in error recovery
-     * actions, and is very unlikely to be useful otherwise.
+     * Forcibly sets or resets the value subsequently returned by
+     * method get() and related methods, whether or not already
+     * completed. This method is designed for use only in error
+     * recovery actions, and even in such situations may result in
+     * ongoing dependent completions using established versus
+     * overwritten values.
      *
      * @param value the completion value
      */
-    public void force(T value) {
+    public void obtrudeValue(T value) {
         result = (value == null) ? NIL : value;
         postComplete();
     }
@@ -1290,32 +1302,37 @@ public class CompletableFuture<T> implements Future<T> {
 
     static final class ExceptionAction<T> extends Completion {
         final CompletableFuture<? extends T> src;
-        final Block<? super Throwable> fn;
-        final CompletableFuture<Void> dst;
+        final Function<? super Throwable, ? extends T> fn;
+        final CompletableFuture<T> dst;
         ExceptionAction(CompletableFuture<? extends T> src,
-                        Block<? super Throwable> fn,
-                        CompletableFuture<Void> dst) {
+                        Function<? super Throwable, ? extends T> fn,
+                        CompletableFuture<T> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
         public void run() {
             CompletableFuture<? extends T> a;
-            Block<? super Throwable> fn;
-            CompletableFuture<Void> dst;
-            Object r; Throwable ex;
+            Function<? super Throwable, ? extends T> fn;
+            CompletableFuture<T> dst;
+            Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
                 (fn = this.fn) != null &&
                 (a = this.src) != null &&
                 (r = a.result) != null &&
                 compareAndSet(0, 1)) {
-                if ((r instanceof AltResult) &&
-                    (ex = ((AltResult)r).ex) != null)  {
-                    try {
-                        fn.accept(ex);
-                        dst.complete(null);
-                    } catch (Throwable rex) {
-                        dst.completeExceptionally(rex);
+                if (r instanceof AltResult) {
+                    if ((ex = ((AltResult)r).ex) != null)  {
+                        try {
+                            dst.complete(fn.apply(ex));
+                        } catch (Throwable rex) {
+                            dst.completeExceptionally(rex);
+                        }
+                        return;
                     }
+                    t = null;
                 }
+                else
+                    t = (T) r;
+                dst.complete(t);
             }
         }
     }

@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.CancellationException;
@@ -39,11 +40,10 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p>When two or more threads attempt to {@link #complete} or {@link
  * #completeExceptionally} a CompletableFuture, only one of them will
- * succeed. When completion entails computation of a function or
- * action, it is executed <em>after</em> establishing precedence. If
- * this function terminates abruptly with an exception, then method
- * {@code complete} acts as {@code completeExceptionally} with that
- * exception.
+ * succeed. Upon exceptional completion, or when a completion entails
+ * computation of a function or action, and it terminates abruptly
+ * with an exception, then further completions act as {@code
+ * completeExceptionally} with that exception.
  *
  * <p>CompletableFutures themselves do not execute asynchronously.
  * However, the {@code async} methods provide commonly useful ways to
@@ -205,8 +205,13 @@ public class CompletableFuture<T> implements Future<T> {
         if ((r = result) == null)
             return waitingGet();
         if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null)
-                rethrow(ex);
+            if ((ex = ((AltResult)r).ex) != null) {
+                if (ex instanceof Error)
+                    throw (Error)ex;
+                if (ex instanceof RuntimeException)
+                    throw (RuntimeException)ex;
+                throw new RuntimeException(ex);
+            }
             return null;
         }
         return (T)r;
@@ -224,8 +229,13 @@ public class CompletableFuture<T> implements Future<T> {
         if ((r = result) == null)
             return valueIfAbsent;
         if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null)
-                rethrow(ex);
+            if ((ex = ((AltResult)r).ex) != null) {
+                if (ex instanceof Error)
+                    throw (Error)ex;
+                if (ex instanceof RuntimeException)
+                    throw (RuntimeException)ex;
+                throw new RuntimeException(ex);
+            }
             return null;
         }
         return (T)r;
@@ -254,8 +264,11 @@ public class CompletableFuture<T> implements Future<T> {
         if ((r = result) == null)
             r = timedAwaitDone(nanos);
         if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null)
+            if ((ex = ((AltResult)r).ex) != null) {
+                if (ex instanceof ExecutionException) // avoid re-wrap
+                    throw (ExecutionException)ex;
                 throw new ExecutionException(ex);
+            }
             return null;
         }
         return (T)r;
@@ -771,14 +784,20 @@ public class CompletableFuture<T> implements Future<T> {
         int h = 0, spins = 0;
         for (Object r;;) {
             if ((r = result) != null) {
+                Throwable ex;
                 if (q != null)  // suppress unpark
                     q.thread = null;
                 postComplete(); // help release others
                 if (interrupted)
                     Thread.currentThread().interrupt();
                 if (r instanceof AltResult) {
-                    if (r != NIL)
-                        rethrow(((AltResult)r).ex);
+                    if ((ex = ((AltResult)r).ex) != null) {
+                        if (ex instanceof Error)
+                            throw (Error)ex;
+                        if (ex instanceof RuntimeException)
+                            throw (RuntimeException)ex;
+                        throw new RuntimeException(ex);
+                    }
                     return null;
                 }
                 return (T)r;
@@ -1595,31 +1614,6 @@ public class CompletableFuture<T> implements Future<T> {
                 other.postComplete();
         }
         return dst;
-    }
-
-    /* ------------- misc -------------- */
-
-    /**
-     * A version of "sneaky throw" to relay exceptions
-     */
-    static void rethrow(final Throwable ex) {
-        if (ex != null) {
-            if (ex instanceof Error)
-                throw (Error)ex;
-            if (ex instanceof RuntimeException)
-                throw (RuntimeException)ex;
-            throw uncheckedThrowable(ex, RuntimeException.class);
-        }
-    }
-
-    /**
-     * The sneaky part of sneaky throw, relying on generics
-     * limitations to evade compiler complaints about rethrowing
-     * unchecked exceptions
-     */
-    @SuppressWarnings("unchecked") static <T extends Throwable>
-        T uncheckedThrowable(final Throwable t, final Class<T> c) {
-        return (T)t; // rely on vacuous cast
     }
 
     // Unsafe mechanics

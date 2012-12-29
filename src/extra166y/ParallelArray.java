@@ -450,7 +450,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * to locate minimum and maximum elements.
      * @param comparator the comparator to use for
      * locating minimum and maximum elements
-     * @return the summary.
+     * @return the summary
      */
     public ParallelArray.SummaryStatistics<T> summary
         (Comparator<? super T> comparator) {
@@ -459,15 +459,15 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
 
     /**
      * Returns summary statistics, assuming that all elements are
-     * Comparables
-     * @return the summary.
+     * Comparables.
+     * @return the summary
      */
     public ParallelArray.SummaryStatistics<T> summary() {
         return super.summary();
     }
 
     /**
-     * Returns the minimum element, or null if empty
+     * Returns the minimum element, or null if empty.
      * @param comparator the comparator
      * @return minimum element, or null if empty
      */
@@ -477,16 +477,16 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
 
     /**
      * Returns the minimum element, or null if empty,
-     * assuming that all elements are Comparables
+     * assuming that all elements are Comparables.
      * @return minimum element, or null if empty
-     * @throws ClassCastException if any element is not Comparable.
+     * @throws ClassCastException if any element is not Comparable
      */
     public T min() {
         return super.min();
     }
 
     /**
-     * Returns the maximum element, or null if empty
+     * Returns the maximum element, or null if empty.
      * @param comparator the comparator
      * @return maximum element, or null if empty
      */
@@ -495,10 +495,10 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     }
 
     /**
-     * Returns the maximum element, or null if empty
-     * assuming that all elements are Comparables
+     * Returns the maximum element, or null if empty,
+     * assuming that all elements are Comparables.
      * @return maximum element, or null if empty
-     * @throws ClassCastException if any element is not Comparable.
+     * @throws ClassCastException if any element is not Comparable
      */
     public T max() {
         return super.max();
@@ -551,7 +551,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * Sorts the array, assuming all elements are Comparable. Unlike
      * Arrays.sort, this sort does not guarantee that elements
      * with equal keys maintain their relative position in the array.
-     * @throws ClassCastException if any element is not Comparable.
+     * @throws ClassCastException if any element is not Comparable
      * @return this (to simplify use in expressions)
      */
     public ParallelArray<T> sort() {
@@ -715,7 +715,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     /**
      * Returns an operation prefix that causes a method to operate
      * only on the elements of the array for which the given selector
-     * returns true
+     * returns true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -727,7 +727,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the given binary selector returns
-     * true
+     * true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -740,7 +740,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the given indexed selector returns
-     * true
+     * true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -789,7 +789,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <U,V,W> ParallelArrayWithMapping<T,V> withMapping
         (BinaryOp<? super T, ? super U, ? extends V> combiner,
@@ -804,7 +804,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <V> ParallelArrayWithMapping<T,V> withMapping
         (ObjectAndDoubleToObject<? super T, ? extends V> combiner,
@@ -819,7 +819,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <V> ParallelArrayWithMapping<T,V> withMapping
         (ObjectAndLongToObject<? super T, ? extends V> combiner,
@@ -834,7 +834,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <U,W> ParallelArrayWithDoubleMapping<T> withMapping
         (ObjectAndObjectToDouble<? super T, ? super U> combiner,
@@ -849,7 +849,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelArrayWithDoubleMapping<T> withMapping
         (ObjectAndDoubleToDouble<? super T> combiner,
@@ -864,7 +864,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelArrayWithDoubleMapping<T> withMapping
         (ObjectAndLongToDouble<? super T> combiner,
@@ -879,7 +879,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <U,W> ParallelArrayWithLongMapping<T> withMapping
         (ObjectAndObjectToLong<? super T, ? super U> combiner,
@@ -894,7 +894,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelArrayWithLongMapping<T> withMapping
         (ObjectAndDoubleToLong<? super T> combiner,
@@ -909,7 +909,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelArrayWithLongMapping<T> withMapping
         (ObjectAndLongToLong<? super T> combiner,
@@ -965,7 +965,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * support the remove operation. However, a full
      * <tt>ListIterator</tt> supporting add, remove, and set
      * operations is available via {@link #asList}.
-     * @return an iterator stepping through each element.
+     * @return an iterator stepping through each element
      */
     public Iterator<T> iterator() {
         return new ParallelArrayIterator<T>(array, fence);
@@ -1017,21 +1017,21 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     public int size() { return fence; }
 
     /**
-     * Returns the element of the array at the given index
+     * Returns the element of the array at the given index.
      * @param i the index
      * @return the element of the array at the given index
      */
     public T get(int i) { return array[i]; }
 
     /**
-     * Sets the element of the array at the given index to the given value
+     * Sets the element of the array at the given index to the given value.
      * @param i the index
      * @param x the value
      */
     public void set(int i, T x) { array[i] = x; }
 
     /**
-     * Returns the underlying array used for computations
+     * Returns the underlying array used for computations.
      * @return the array
      */
     public T[] getArray() { return array; }
@@ -1052,7 +1052,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * than the length of the underlying array, causes computations to
      * ignore elements past the given limit.
      * @param newLimit the new upper bound
-     * @throws IllegalArgumentException if newLimit less than zero.
+     * @throws IllegalArgumentException if newLimit less than zero
      */
     public final void setLimit(int newLimit) {
         if (newLimit < 0)

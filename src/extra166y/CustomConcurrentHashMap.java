@@ -1621,7 +1621,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * exists, else adds and returns the given element.
          *
          * @param e the element
-         * @return e, or an element equivalent to e.
+         * @return e, or an element equivalent to e
          */
         public K intern(K e) {
             K oldElement = cchm.doPut(e, e, true);

@@ -112,7 +112,7 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param supplier a function returning the value to be used
      * to complete the returned CompletableFuture.
-     * @return the CompletableFuture.
+     * @return the CompletableFuture
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
         if (supplier == null) throw new NullPointerException();
@@ -128,9 +128,9 @@ public class CompletableFuture<T> implements Future<T> {
      * given Supplier.
      *
      * @param supplier a function returning the value to be used
-     * to complete the returned CompletableFuture.
+     * to complete the returned CompletableFuture
      * @param executor the executor to use for asynchronous execution
-     * @return the CompletableFuture.
+     * @return the CompletableFuture
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier,
                                                        Executor executor) {
@@ -144,11 +144,11 @@ public class CompletableFuture<T> implements Future<T> {
     /**
      * Asynchronously executes in the {@link
      * ForkJoinPool#commonPool()} a task that runs the given action,
-     * and then completes the returned CompletableFuture
+     * and then completes the returned CompletableFuture.
      *
      * @param runnable the action to run before completing the
-     * returned CompletableFuture.
-     * @return the CompletableFuture.
+     * returned CompletableFuture
+     * @return the CompletableFuture
      */
     public static CompletableFuture<Void> runAsync(Runnable runnable) {
         if (runnable == null) throw new NullPointerException();
@@ -161,12 +161,12 @@ public class CompletableFuture<T> implements Future<T> {
     /**
      * Asynchronously executes using the given executor, a task that
      * runs the given action, and then completes the returned
-     * CompletableFuture
+     * CompletableFuture.
      *
      * @param runnable the action to run before completing the
-     * returned CompletableFuture.
+     * returned CompletableFuture
      * @param executor the executor to use for asynchronous execution
-     * @return the CompletableFuture.
+     * @return the CompletableFuture
      */
     public static CompletableFuture<Void> runAsync(Runnable runnable,
                                                 Executor executor) {

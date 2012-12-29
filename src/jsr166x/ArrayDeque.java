@@ -88,7 +88,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Allocates empty array to hold the given number of elements.
      *
-     * @param numElements  the number of elements to hold.
+     * @param numElements  the number of elements to hold
      */
     private void allocateElements(int numElements) {
         int initialCapacity = MIN_INITIAL_CAPACITY;
@@ -555,9 +555,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this collection contains no elements.<p>
+     * Returns <tt>true</tt> if this collection contains no elements.
      *
-     * @return <tt>true</tt> if this collection contains no elements.
+     * @return <tt>true</tt> if this collection contains no elements
      */
     public boolean isEmpty() {
         return head == tail;

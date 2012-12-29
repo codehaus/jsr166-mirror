@@ -444,7 +444,7 @@ public class LinkedBlockingDeque<E>
     /**
      * Returns the number of elements in this deque.
      *
-     * @return  the number of elements in this deque.
+     * @return  the number of elements in this deque
      */
     public int size() {
         lock.lock();
@@ -647,7 +647,7 @@ public class LinkedBlockingDeque<E>
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
      *
-     * @return an iterator over the elements in this deque in proper sequence.
+     * @return an iterator over the elements in this deque in proper sequence
      */
     public Iterator<E> iterator() {
         return new Itr();

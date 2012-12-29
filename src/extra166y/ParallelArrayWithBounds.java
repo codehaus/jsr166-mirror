@@ -102,7 +102,7 @@ public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter
      * guarantee that elements with equal keys maintain their relative
      * position in the array.
      * @return this (to simplify use in expressions)
-     * @throws ClassCastException if any element is not Comparable.
+     * @throws ClassCastException if any element is not Comparable
      */
     public abstract ParallelArrayWithBounds<T> sort();
 }

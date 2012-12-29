@@ -24,21 +24,21 @@ public interface ConcurrentNavigableMap<K,V> extends ConcurrentMap<K,V>, Navigab
      * is empty.)  The returned sorted map is backed by this map, so changes
      * in the returned sorted map are reflected in this map, and vice-versa.
      *
-     * @param fromKey low endpoint (inclusive) of the subMap.
-     * @param toKey high endpoint (exclusive) of the subMap.
+     * @param fromKey low endpoint (inclusive) of the subMap
+     * @param toKey high endpoint (exclusive) of the subMap
      *
      * @return a view of the portion of this map whose keys range from
-     * <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>, exclusive.
+     * <tt>fromKey</tt>, inclusive, to <tt>toKey</tt>, exclusive
      *
      * @throws ClassCastException if <tt>fromKey</tt> and
      * <tt>toKey</tt> cannot be compared to one another using this
      * map's comparator (or, if the map has no comparator, using
-     * natural ordering).
+     * natural ordering)
      * @throws IllegalArgumentException if <tt>fromKey</tt> is greater
-     * than <tt>toKey</tt>.
+     * than <tt>toKey</tt>
      * @throws NullPointerException if <tt>fromKey</tt> or
      * <tt>toKey</tt> is <tt>null</tt> and this map does not support
-     * <tt>null</tt> keys.
+     * <tt>null</tt> keys
      */
     public ConcurrentNavigableMap<K,V> subMap(K fromKey, K toKey);
 
@@ -47,15 +47,15 @@ public interface ConcurrentNavigableMap<K,V> extends ConcurrentMap<K,V>, Navigab
      * than <tt>toKey</tt>.  The returned sorted map is backed by this map, so
      * changes in the returned sorted map are reflected in this map, and
      * vice-versa.
-     * @param toKey high endpoint (exclusive) of the headMap.
+     * @param toKey high endpoint (exclusive) of the headMap
      * @return a view of the portion of this map whose keys are strictly
-     *                less than <tt>toKey</tt>.
+     *                less than <tt>toKey</tt>
      *
      * @throws ClassCastException if <tt>toKey</tt> is not compatible
      *         with this map's comparator (or, if the map has no comparator,
-     *         if <tt>toKey</tt> does not implement <tt>Comparable</tt>).
+     *         if <tt>toKey</tt> does not implement <tt>Comparable</tt>)
      * @throws NullPointerException if <tt>toKey</tt> is <tt>null</tt>
-     * and this map does not support <tt>null</tt> keys.
+     * and this map does not support <tt>null</tt> keys
      */
     public ConcurrentNavigableMap<K,V> headMap(K toKey);
 
@@ -64,14 +64,14 @@ public interface ConcurrentNavigableMap<K,V> extends ConcurrentMap<K,V>, Navigab
      * greater than or equal to <tt>fromKey</tt>.  The returned sorted
      * map is backed by this map, so changes in the returned sorted
      * map are reflected in this map, and vice-versa.
-     * @param fromKey low endpoint (inclusive) of the tailMap.
+     * @param fromKey low endpoint (inclusive) of the tailMap
      * @return a view of the portion of this map whose keys are greater
-     *                than or equal to <tt>fromKey</tt>.
+     *                than or equal to <tt>fromKey</tt>
      * @throws ClassCastException if <tt>fromKey</tt> is not compatible
      *         with this map's comparator (or, if the map has no comparator,
-     *         if <tt>fromKey</tt> does not implement <tt>Comparable</tt>).
+     *         if <tt>fromKey</tt> does not implement <tt>Comparable</tt>)
      * @throws NullPointerException if <tt>fromKey</tt> is <tt>null</tt>
-     * and this map does not support <tt>null</tt> keys.
+     * and this map does not support <tt>null</tt> keys
      */
     public ConcurrentNavigableMap<K,V> tailMap(K fromKey);
 }

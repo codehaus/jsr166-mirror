@@ -57,7 +57,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @return the greatest element less than the given element, or
      * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
+     *            currently in the set
      * @throws NullPointerException if o is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */
@@ -69,10 +69,10 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *
      * @param o the value to match
      * @return the greatest element less than or equal to given
-     * element, or <tt>null</tt> if there is no such element.
+     * element, or <tt>null</tt> if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     *            currently in the set
+     * @throws NullPointerException if o is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */
     public E floor(E o);
@@ -85,7 +85,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * @return the least element greater than the given element, or
      * <tt>null</tt> if there is no such element.
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
+     *            currently in the set
      * @throws NullPointerException if o is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */
@@ -94,14 +94,14 @@ public interface NavigableSet<E> extends SortedSet<E> {
     /**
      * Retrieves and removes the first (lowest) element.
      *
-     * @return the first element, or <tt>null</tt> if empty.
+     * @return the first element, or <tt>null</tt> if empty
      */
     public E pollFirst();
 
     /**
      * Retrieves and removes the last (highest) element.
      *
-     * @return the last element, or <tt>null</tt> if empty.
+     * @return the last element, or <tt>null</tt> if empty
      */
     public E pollLast();
 
@@ -120,17 +120,17 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * sorted set is empty.)  The returned sorted set is backed by this set,
      * so changes in the returned sorted set are reflected in this set, and
      * vice-versa.
-     * @param fromElement low endpoint (inclusive) of the subSet.
-     * @param toElement high endpoint (exclusive) of the subSet.
+     * @param fromElement low endpoint (inclusive) of the subSet
+     * @param toElement high endpoint (exclusive) of the subSet
      * @return a view of the portion of this set whose elements range from
      *         <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
-     *         exclusive.
+     *         exclusive
      * @throws ClassCastException if <tt>fromElement</tt> and
      *         <tt>toElement</tt> cannot be compared to one another using
      *         this set's comparator (or, if the set has no comparator,
-     *         using natural ordering).
+     *         using natural ordering)
      * @throws IllegalArgumentException if <tt>fromElement</tt> is
-     * greater than <tt>toElement</tt>.
+     * greater than <tt>toElement</tt>
      * @throws NullPointerException if <tt>fromElement</tt> or
      *         <tt>toElement</tt> is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
@@ -142,12 +142,12 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * less than <tt>toElement</tt>.  The returned sorted set is backed by
      * this set, so changes in the returned sorted set are reflected in this
      * set, and vice-versa.
-     * @param toElement high endpoint (exclusive) of the headSet.
+     * @param toElement high endpoint (exclusive) of the headSet
      * @return a view of the portion of this set whose elements are strictly
-     *         less than toElement.
+     *         less than toElement
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
-     *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
+     *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>)
      * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */
@@ -158,13 +158,13 @@ public interface NavigableSet<E> extends SortedSet<E> {
      * greater than or equal to <tt>fromElement</tt>.  The returned
      * sorted set is backed by this set, so changes in the returned
      * sorted set are reflected in this set, and vice-versa.
-     * @param fromElement low endpoint (inclusive) of the tailSet.
+     * @param fromElement low endpoint (inclusive) of the tailSet
      * @return a view of the portion of this set whose elements are
-     * greater than or equal to <tt>fromElement</tt>.
+     * greater than or equal to <tt>fromElement</tt>
      * @throws ClassCastException if <tt>fromElement</tt> is not
      * compatible with this set's comparator (or, if the set has no
      * comparator, if <tt>fromElement</tt> does not implement
-     * <tt>Comparable</tt>).
+     * <tt>Comparable</tt>)
      * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
      * and this set deas not permit <tt>null</tt> elements
      */

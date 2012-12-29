@@ -310,7 +310,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * to locate minimum and maximum elements.
      * @param comparator the comparator to use for
      * locating minimum and maximum elements
-     * @return the summary.
+     * @return the summary
      */
     public ParallelDoubleArray.SummaryStatistics summary
         (DoubleComparator comparator) {
@@ -318,15 +318,15 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns summary statistics, using natural comparator
-     * @return the summary.
+     * Returns summary statistics, using natural comparator.
+     * @return the summary
      */
     public ParallelDoubleArray.SummaryStatistics summary() {
         return super.summary();
     }
 
     /**
-     * Returns the minimum element, or Double.MAX_VALUE if empty
+     * Returns the minimum element, or Double.MAX_VALUE if empty.
      * @param comparator the comparator
      * @return minimum element, or Double.MAX_VALUE if empty
      */
@@ -335,7 +335,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns the minimum element, or Double.MAX_VALUE if empty,
+     * Returns the minimum element, or Double.MAX_VALUE if empty.
      * @return minimum element, or Double.MAX_VALUE if empty
      */
     public double min() {
@@ -343,7 +343,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns the maximum element, or -Double.MAX_VALUE if empty
+     * Returns the maximum element, or -Double.MAX_VALUE if empty.
      * @param comparator the comparator
      * @return maximum element, or -Double.MAX_VALUE if empty
      */
@@ -352,7 +352,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns the maximum element, or -Double.MAX_VALUE if empty
+     * Returns the maximum element, or -Double.MAX_VALUE if empty.
      * @return maximum element, or -Double.MAX_VALUE if empty
      */
     public double max() {
@@ -406,7 +406,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * Sorts the array, assuming all elements are Comparable. Unlike
      * Arrays.sort, this sort does not guarantee that elements
      * with equal keys maintain their relative position in the array.
-     * @throws ClassCastException if any element is not Comparable.
+     * @throws ClassCastException if any element is not Comparable
      * @return this (to simplify use in expressions)
      */
     public ParallelDoubleArray sort() {
@@ -515,7 +515,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns the sum of elements
+     * Returns the sum of elements.
      * @return the sum of elements
      */
     public double sum() {
@@ -523,7 +523,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Replaces each element with the running sum
+     * Replaces each element with the running sum.
      * @return this (to simplify use in expressions)
      */
     public ParallelDoubleArray cumulateSum() {
@@ -532,7 +532,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Replaces each element with its prefix sum
+     * Replaces each element with its prefix sum.
      * @return the total sum
      */
     public double precumulateSum() {
@@ -555,7 +555,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     /**
      * Returns an operation prefix that causes a method to operate
      * only on the elements of the array for which the given selector
-     * returns true
+     * returns true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -566,7 +566,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the given binary selector returns
-     * true
+     * true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -579,7 +579,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the given indexed selector returns
-     * true
+     * true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -626,7 +626,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <V,W,X> ParallelDoubleArrayWithMapping<W> withMapping
         (DoubleAndObjectToObject<? super V, ? extends W> combiner,
@@ -641,7 +641,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <V> ParallelDoubleArrayWithMapping<V> withMapping
         (DoubleAndDoubleToObject<? extends V> combiner,
@@ -656,7 +656,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <V> ParallelDoubleArrayWithMapping<V> withMapping
         (DoubleAndLongToObject<? extends V> combiner,
@@ -671,7 +671,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <V,W> ParallelDoubleArrayWithDoubleMapping withMapping
         (DoubleAndObjectToDouble<? super V> combiner,
@@ -686,7 +686,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelDoubleArrayWithDoubleMapping withMapping
         (BinaryDoubleOp combiner,
@@ -701,7 +701,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelDoubleArrayWithDoubleMapping withMapping
         (DoubleAndLongToDouble combiner,
@@ -716,7 +716,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public <V,W> ParallelDoubleArrayWithLongMapping withMapping
         (DoubleAndObjectToLong<? super V> combiner,
@@ -731,7 +731,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelDoubleArrayWithLongMapping withMapping
         (DoubleAndDoubleToLong combiner,
@@ -746,7 +746,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * @param other the other array
      * @return operation prefix
      * @throws IllegalArgumentException if other array is a
-     * filtered view (all filters must precede all mappings).
+     * filtered view (all filters must precede all mappings)
      */
     public ParallelDoubleArrayWithLongMapping withMapping
         (DoubleAndLongToLong combiner,
@@ -799,7 +799,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * support the remove operation. However, a full
      * <tt>ListIterator</tt> supporting add, remove, and set
      * operations is available via {@link #asList}.
-     * @return an iterator stepping through each element.
+     * @return an iterator stepping through each element
      */
     public Iterator<Double> iterator() {
         return new ParallelDoubleArrayIterator(array, fence);
@@ -886,7 +886,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * than the length of the underlying array, causes computations to
      * ignore elements past the given limit.
      * @param newLimit the new upper bound
-     * @throws IllegalArgumentException if newLimit less than zero.
+     * @throws IllegalArgumentException if newLimit less than zero
      */
     public final void setLimit(int newLimit) {
         if (newLimit < 0)

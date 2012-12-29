@@ -86,12 +86,12 @@ public class ConcurrentSkipListSet<E>
      * Constructs a new set containing the elements in the specified
      * collection, sorted according to the elements' <i>natural order</i>.
      *
-     * @param c The elements that will comprise the new set.
+     * @param c The elements that will comprise the new set
      *
      * @throws ClassCastException if the elements in the specified
-     * collection are not comparable, or are not mutually comparable.
+     * collection are not comparable, or are not mutually comparable
      * @throws NullPointerException if the specified collection is
-     * <tt>null</tt>.
+     * <tt>null</tt>
      */
     public ConcurrentSkipListSet(Collection<? extends E> c) {
         m = new ConcurrentSkipListMap<E,Object>();
@@ -102,9 +102,9 @@ public class ConcurrentSkipListSet<E>
      * Constructs a new set containing the same elements as the specified
      * sorted set, sorted according to the same ordering.
      *
-     * @param s sorted set whose elements will comprise the new set.
+     * @param s sorted set whose elements will comprise the new set
      * @throws NullPointerException if the specified sorted set is
-     * <tt>null</tt>.
+     * <tt>null</tt>
      */
     public ConcurrentSkipListSet(SortedSet<E> s) {
         m = new ConcurrentSkipListMap<E,Object>(s.comparator());
@@ -115,7 +115,7 @@ public class ConcurrentSkipListSet<E>
      * Returns a shallow copy of this set. (The elements themselves
      * are not cloned.)
      *
-     * @return a shallow copy of this set.
+     * @return a shallow copy of this set
      */
     public Object clone() {
         ConcurrentSkipListSet<E> clone = null;
@@ -146,7 +146,7 @@ public class ConcurrentSkipListSet<E>
      * will be inaccurate. Thus, this method is typically not very
      * useful in concurrent applications.
      *
-     * @return  the number of elements in this set.
+     * @return  the number of elements in this set
      */
     public int size() {
         return m.size();
@@ -154,7 +154,7 @@ public class ConcurrentSkipListSet<E>
 
     /**
      * Returns <tt>true</tt> if this set contains no elements.
-     * @return <tt>true</tt> if this set contains no elements.
+     * @return <tt>true</tt> if this set contains no elements
      */
     public boolean isEmpty() {
         return m.isEmpty();
@@ -163,12 +163,12 @@ public class ConcurrentSkipListSet<E>
     /**
      * Returns <tt>true</tt> if this set contains the specified element.
      *
-     * @param o the object to be checked for containment in this set.
-     * @return <tt>true</tt> if this set contains the specified element.
+     * @param o the object to be checked for containment in this set
+     * @return <tt>true</tt> if this set contains the specified element
      *
      * @throws ClassCastException if the specified object cannot be compared
-     *            with the elements currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     *            with the elements currently in the set
+     * @throws NullPointerException if o is <tt>null</tt>
      */
     public boolean contains(Object o) {
         return m.containsKey(o);
@@ -177,13 +177,13 @@ public class ConcurrentSkipListSet<E>
     /**
      * Adds the specified element to this set if it is not already present.
      *
-     * @param o element to be added to this set.
+     * @param o element to be added to this set
      * @return <tt>true</tt> if the set did not already contain the specified
-     *         element.
+     *         element
      *
      * @throws ClassCastException if the specified object cannot be compared
-     *            with the elements currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     *            with the elements currently in the set
+     * @throws NullPointerException if o is <tt>null</tt>
      */
     public boolean add(E o) {
         return m.putIfAbsent(o, Boolean.TRUE) == null;
@@ -192,12 +192,12 @@ public class ConcurrentSkipListSet<E>
     /**
      * Removes the specified element from this set if it is present.
      *
-     * @param o object to be removed from this set, if present.
-     * @return <tt>true</tt> if the set contained the specified element.
+     * @param o object to be removed from this set, if present
+     * @return <tt>true</tt> if the set contained the specified element
      *
      * @throws ClassCastException if the specified object cannot be compared
-     *            with the elements currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     *            with the elements currently in the set
+     * @throws NullPointerException if o is <tt>null</tt>
      */
     public boolean remove(Object o) {
         return m.removep(o);
@@ -214,7 +214,7 @@ public class ConcurrentSkipListSet<E>
      * Returns an iterator over the elements in this set.  The elements
      * are returned in ascending order.
      *
-     * @return an iterator over the elements in this set.
+     * @return an iterator over the elements in this set
      */
     public Iterator<E> iterator() {
         return m.keyIterator();
@@ -224,7 +224,7 @@ public class ConcurrentSkipListSet<E>
      * Returns an iterator over the elements in this set.  The elements
      * are returned in descending order.
      *
-     * @return an iterator over the elements in this set.
+     * @return an iterator over the elements in this set
      */
     public Iterator<E> descendingIterator() {
         return m.descendingKeyIterator();
@@ -241,8 +241,8 @@ public class ConcurrentSkipListSet<E>
      * equals method works properly across different implementations of the
      * set interface.
      *
-     * @param o Object to be compared for equality with this set.
-     * @return <tt>true</tt> if the specified Object is equal to this set.
+     * @param o Object to be compared for equality with this set
+     * @return <tt>true</tt> if the specified Object is equal to this set
      */
     public boolean equals(Object o) {
         // Override AbstractSet version to avoid calling size()
@@ -267,13 +267,13 @@ public class ConcurrentSkipListSet<E>
      * value is the <i>asymmetric set difference</i> of the two sets.
      *
      * @param  c collection that defines which elements will be removed from
-     *           this set.
-     * @return <tt>true</tt> if this set changed as a result of the call.
+     *           this set
+     * @return <tt>true</tt> if this set changed as a result of the call
      *
      * @throws ClassCastException if the types of one or more elements in this
      *            set are incompatible with the specified collection
      * @throws NullPointerException if the specified collection, or any
-     * of its elements are <tt>null</tt>.
+     * of its elements are <tt>null</tt>
      */
     public boolean removeAll(Collection<?> c) {
         // Override AbstractSet version to avoid unnecessary call to size()
@@ -292,9 +292,9 @@ public class ConcurrentSkipListSet<E>
      *
      * @param o the value to match
      * @return an element greater than or equal to given element, or
-     * <tt>null</tt> if there is no such element.
+     * <tt>null</tt> if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
+     *            currently in the set
      * @throws NullPointerException if o is <tt>null</tt>
      */
     public E ceiling(E o) {
@@ -307,10 +307,10 @@ public class ConcurrentSkipListSet<E>
      *
      * @param o the value to match
      * @return the greatest element less than the given element, or
-     * <tt>null</tt> if there is no such element.
+     * <tt>null</tt> if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     *            currently in the set
+     * @throws NullPointerException if o is <tt>null</tt>
      */
     public E lower(E o) {
         return m.lowerKey(o);
@@ -322,10 +322,10 @@ public class ConcurrentSkipListSet<E>
      *
      * @param o the value to match
      * @return the greatest element less than or equal to given
-     * element, or <tt>null</tt> if there is no such element.
+     * element, or <tt>null</tt> if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     *            currently in the set
+     * @throws NullPointerException if o is <tt>null</tt>
      */
     public E floor(E o) {
         return m.floorKey(o);
@@ -337,10 +337,10 @@ public class ConcurrentSkipListSet<E>
      *
      * @param o the value to match
      * @return the least element greater than the given element, or
-     * <tt>null</tt> if there is no such element.
+     * <tt>null</tt> if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
-     * @throws NullPointerException if o is <tt>null</tt>.
+     *            currently in the set
+     * @throws NullPointerException if o is <tt>null</tt>
      */
     public E higher(E o) {
         return m.higherKey(o);
@@ -349,7 +349,7 @@ public class ConcurrentSkipListSet<E>
     /**
      * Retrieves and removes the first (lowest) element.
      *
-     * @return the least element, or <tt>null</tt> if empty.
+     * @return the least element, or <tt>null</tt> if empty
      */
     public E pollFirst() {
         return m.pollFirstKey();
@@ -358,7 +358,7 @@ public class ConcurrentSkipListSet<E>
     /**
      * Retrieves and removes the last (highest) element.
      *
-     * @return the last element, or <tt>null</tt> if empty.
+     * @return the last element, or <tt>null</tt> if empty
      */
     public E pollLast() {
         return m.pollLastKey();
@@ -373,7 +373,7 @@ public class ConcurrentSkipListSet<E>
      * if this set uses its elements natural ordering.
      *
      * @return the comparator used to order this set, or <tt>null</tt>
-     * if this set uses its elements natural ordering.
+     * if this set uses its elements natural ordering
      */
     public Comparator<? super E> comparator() {
         return m.comparator();
@@ -382,8 +382,8 @@ public class ConcurrentSkipListSet<E>
     /**
      * Returns the first (lowest) element currently in this set.
      *
-     * @return the first (lowest) element currently in this set.
-     * @throws    NoSuchElementException sorted set is empty.
+     * @return the first (lowest) element currently in this set
+     * @throws    NoSuchElementException sorted set is empty
      */
     public E first() {
         return m.firstKey();
@@ -392,8 +392,8 @@ public class ConcurrentSkipListSet<E>
     /**
      * Returns the last (highest) element currently in this set.
      *
-     * @return the last (highest) element currently in this set.
-     * @throws    NoSuchElementException sorted set is empty.
+     * @return the last (highest) element currently in this set
+     * @throws    NoSuchElementException sorted set is empty
      */
     public E last() {
         return m.lastKey();
@@ -408,19 +408,19 @@ public class ConcurrentSkipListSet<E>
      * sorted set is empty.)  The returned sorted set is backed by this set,
      * so changes in the returned sorted set are reflected in this set, and
      * vice-versa.
-     * @param fromElement low endpoint (inclusive) of the subSet.
-     * @param toElement high endpoint (exclusive) of the subSet.
+     * @param fromElement low endpoint (inclusive) of the subSet
+     * @param toElement high endpoint (exclusive) of the subSet
      * @return a view of the portion of this set whose elements range from
      *         <tt>fromElement</tt>, inclusive, to <tt>toElement</tt>,
-     *         exclusive.
+     *         exclusive
      * @throws ClassCastException if <tt>fromElement</tt> and
      *         <tt>toElement</tt> cannot be compared to one another using
      *         this set's comparator (or, if the set has no comparator,
-     *         using natural ordering).
+     *         using natural ordering)
      * @throws IllegalArgumentException if <tt>fromElement</tt> is
-     * greater than <tt>toElement</tt>.
+     * greater than <tt>toElement</tt>
      * @throws NullPointerException if <tt>fromElement</tt> or
-     *         <tt>toElement</tt> is <tt>null</tt>.
+     *         <tt>toElement</tt> is <tt>null</tt>
      */
     public NavigableSet<E> subSet(E fromElement, E toElement) {
         return new ConcurrentSkipListSubSet<E>(m, fromElement, toElement);
@@ -431,13 +431,13 @@ public class ConcurrentSkipListSet<E>
      * less than <tt>toElement</tt>.  The returned sorted set is backed by
      * this set, so changes in the returned sorted set are reflected in this
      * set, and vice-versa.
-     * @param toElement high endpoint (exclusive) of the headSet.
+     * @param toElement high endpoint (exclusive) of the headSet
      * @return a view of the portion of this set whose elements are strictly
-     *         less than toElement.
+     *         less than toElement
      * @throws ClassCastException if <tt>toElement</tt> is not compatible
      *         with this set's comparator (or, if the set has no comparator,
-     *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>).
-     * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>.
+     *         if <tt>toElement</tt> does not implement <tt>Comparable</tt>)
+     * @throws NullPointerException if <tt>toElement</tt> is <tt>null</tt>
      */
     public NavigableSet<E> headSet(E toElement) {
         return new ConcurrentSkipListSubSet<E>(m, null, toElement);
@@ -449,14 +449,14 @@ public class ConcurrentSkipListSet<E>
      * greater than or equal to <tt>fromElement</tt>.  The returned
      * sorted set is backed by this set, so changes in the returned
      * sorted set are reflected in this set, and vice-versa.
-     * @param fromElement low endpoint (inclusive) of the tailSet.
+     * @param fromElement low endpoint (inclusive) of the tailSet
      * @return a view of the portion of this set whose elements are
-     * greater than or equal to <tt>fromElement</tt>.
+     * greater than or equal to <tt>fromElement</tt>
      * @throws ClassCastException if <tt>fromElement</tt> is not
      * compatible with this set's comparator (or, if the set has no
      * comparator, if <tt>fromElement</tt> does not implement
-     * <tt>Comparable</tt>).
-     * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>.
+     * <tt>Comparable</tt>)
+     * @throws NullPointerException if <tt>fromElement</tt> is <tt>null</tt>
      */
     public NavigableSet<E> tailSet(E fromElement) {
         return new ConcurrentSkipListSubSet<E>(m, fromElement, null);

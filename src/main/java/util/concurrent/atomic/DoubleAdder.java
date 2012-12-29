@@ -23,9 +23,6 @@ import java.io.ObjectOutputStream;
  * instances are expected to be mutated, and so are not useful as
  * collection keys.
  *
- * <p><em>jsr166e note: This class is targeted to be placed in
- * java.util.concurrent.atomic.</em>
- *
  * @since 1.8
  * @author Doug Lea
  */
@@ -33,22 +30,15 @@ public class DoubleAdder extends Striped64 implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
 
     /**
-     * Update function. Note that we must use "long" for underlying
-     * representations, because there is no compareAndSet for double,
-     * due to the fact that the bitwise equals used in any CAS
-     * implementation is not the same as double-precision equals.
-     * However, we use CAS only to detect and alleviate contention,
-     * for which bitwise equals works best anyway. In principle, the
-     * long/double conversions used here should be essentially free on
-     * most platforms since they just re-interpret bits.
-     *
-     * Similar conversions are used in other methods.
+     * Note that we must use "long" for underlying representations,
+     * because there is no compareAndSet for double, due to the fact
+     * that the bitwise equals used in any CAS implementation is not
+     * the same as double-precision equals.  However, we use CAS only
+     * to detect and alleviate contention, for which bitwise equals
+     * works best anyway. In principle, the long/double conversions
+     * used here should be essentially free on most platforms since
+     * they just re-interpret bits.
      */
-    final long fn(long v, long x) {
-        return Double.doubleToRawLongBits
-            (Double.longBitsToDouble(v) +
-             Double.longBitsToDouble(x));
-    }
 
     /**
      * Creates a new adder with initial sum of zero.
@@ -62,19 +52,19 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * @param x the value to add
      */
     public void add(double x) {
-        Cell[] as; long b, v; HashCode hc; Cell a; int n;
+        Cell[] as; long b, v; CellHashCode hc; Cell a; int m;
         if ((as = cells) != null ||
             !casBase(b = base,
                      Double.doubleToRawLongBits
                      (Double.longBitsToDouble(b) + x))) {
             boolean uncontended = true;
-            int h = (hc = threadHashCode.get()).code;
-            if (as == null || (n = as.length) < 1 ||
-                (a = as[(n - 1) & h]) == null ||
+            if ((hc = threadCellHashCode.get()) == null ||
+                as == null || (m = as.length - 1) < 0 ||
+                (a = as[m & hc.code]) == null ||
                 !(uncontended = a.cas(v = a.value,
                                       Double.doubleToRawLongBits
                                       (Double.longBitsToDouble(v) + x))))
-                retryUpdate(Double.doubleToRawLongBits(x), hc, uncontended);
+                doubleAccumulate(x, hc, null, uncontended);
         }
     }
 
@@ -91,13 +81,11 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * @return the sum
      */
     public double sum() {
-        Cell[] as = cells;
+        Cell[] as = cells; Cell a;
         double sum = Double.longBitsToDouble(base);
         if (as != null) {
-            int n = as.length;
-            for (int i = 0; i < n; ++i) {
-                Cell a = as[i];
-                if (a != null)
+            for (int i = 0; i < as.length; ++i) {
+                if ((a = as[i]) != null)
                     sum += Double.longBitsToDouble(a.value);
             }
         }
@@ -112,7 +100,14 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * known that no threads are concurrently updating.
      */
     public void reset() {
-        internalReset(0L);
+        Cell[] as = cells; Cell a;
+        base = 0L; // relies on fact that double 0 must have same rep as long
+        if (as != null) {
+            for (int i = 0; i < as.length; ++i) {
+                if ((a = as[i]) != null)
+                    a.value = 0L;
+            }
+        }
     }
 
     /**
@@ -126,14 +121,12 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * @return the sum
      */
     public double sumThenReset() {
-        Cell[] as = cells;
+        Cell[] as = cells; Cell a;
         double sum = Double.longBitsToDouble(base);
         base = 0L;
         if (as != null) {
-            int n = as.length;
-            for (int i = 0; i < n; ++i) {
-                Cell a = as[i];
-                if (a != null) {
+            for (int i = 0; i < as.length; ++i) {
+                if ((a = as[i]) != null) {
                     long v = a.value;
                     a.value = 0L;
                     sum += Double.longBitsToDouble(v);
@@ -193,7 +186,7 @@ public class DoubleAdder extends Striped64 implements Serializable {
     private void readObject(ObjectInputStream s)
         throws IOException, ClassNotFoundException {
         s.defaultReadObject();
-        busy = 0;
+        cellsBusy = 0;
         cells = null;
         base = Double.doubleToRawLongBits(s.readDouble());
     }

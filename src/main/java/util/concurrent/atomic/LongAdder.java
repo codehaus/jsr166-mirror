@@ -26,24 +26,23 @@ import java.io.ObjectOutputStream;
  * this class is significantly higher, at the expense of higher space
  * consumption.
  *
+ * <p>LongAdders can be used with a {@link
+ * java.util.concurrent.ConcurrentHashMap} to maintain a scalable
+ * frequency map (a form of histogram or multiset). For example, to
+ * add a count to a {@code ConcurrentHashMap<String,LongAdder> freqs},
+ * initializing if not already present, you can use {@code
+ * freqs.computeIfAbsent(k -> new LongAdder()).increment();}
+ *
  * <p>This class extends {@link Number}, but does <em>not</em> define
  * methods such as {@code hashCode} and {@code compareTo} because
  * instances are expected to be mutated, and so are not useful as
  * collection keys.
- *
- * <p><em>jsr166e note: This class is targeted to be placed in
- * java.util.concurrent.atomic.</em>
  *
  * @since 1.8
  * @author Doug Lea
  */
 public class LongAdder extends Striped64 implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
-
-    /**
-     * Version of plus for use in retryUpdate
-     */
-    final long fn(long v, long x) { return v + x; }
 
     /**
      * Creates a new adder with initial sum of zero.
@@ -57,14 +56,14 @@ public class LongAdder extends Striped64 implements Serializable {
      * @param x the value to add
      */
     public void add(long x) {
-        Cell[] as; long b, v; HashCode hc; Cell a; int n;
+        Cell[] as; long b, v; CellHashCode hc; Cell a; int m;
         if ((as = cells) != null || !casBase(b = base, b + x)) {
             boolean uncontended = true;
-            int h = (hc = threadHashCode.get()).code;
-            if (as == null || (n = as.length) < 1 ||
-                (a = as[(n - 1) & h]) == null ||
+            if ((hc = threadCellHashCode.get()) == null ||
+                as == null || (m = as.length - 1) < 0 ||
+                (a = as[m & hc.code]) == null ||
                 !(uncontended = a.cas(v = a.value, v + x)))
-                retryUpdate(x, hc, uncontended);
+                longAccumulate(x, hc, null, uncontended);
         }
     }
 
@@ -92,13 +91,11 @@ public class LongAdder extends Striped64 implements Serializable {
      * @return the sum
      */
     public long sum() {
+        Cell[] as = cells; Cell a;
         long sum = base;
-        Cell[] as = cells;
         if (as != null) {
-            int n = as.length;
-            for (int i = 0; i < n; ++i) {
-                Cell a = as[i];
-                if (a != null)
+            for (int i = 0; i < as.length; ++i) {
+                if ((a = as[i]) != null)
                     sum += a.value;
             }
         }
@@ -113,7 +110,14 @@ public class LongAdder extends Striped64 implements Serializable {
      * known that no threads are concurrently updating.
      */
     public void reset() {
-        internalReset(0L);
+        Cell[] as = cells; Cell a;
+        base = 0L;
+        if (as != null) {
+            for (int i = 0; i < as.length; ++i) {
+                if ((a = as[i]) != null)
+                    a.value = 0L;
+            }
+        }
     }
 
     /**
@@ -127,14 +131,12 @@ public class LongAdder extends Striped64 implements Serializable {
      * @return the sum
      */
     public long sumThenReset() {
+        Cell[] as = cells; Cell a;
         long sum = base;
-        Cell[] as = cells;
         base = 0L;
         if (as != null) {
-            int n = as.length;
-            for (int i = 0; i < n; ++i) {
-                Cell a = as[i];
-                if (a != null) {
+            for (int i = 0; i < as.length; ++i) {
+                if ((a = as[i]) != null) {
                     sum += a.value;
                     a.value = 0L;
                 }
@@ -193,7 +195,7 @@ public class LongAdder extends Striped64 implements Serializable {
     private void readObject(ObjectInputStream s)
         throws IOException, ClassNotFoundException {
         s.defaultReadObject();
-        busy = 0;
+        cellsBusy = 0;
         cells = null;
         base = s.readLong();
     }

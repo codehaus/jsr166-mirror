@@ -933,7 +933,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Removes and signals all waiting threads and runs all completions
+     * Removes and signals all waiting threads and runs all completions.
      */
     private void postComplete() {
         WaitNode q; Thread t;

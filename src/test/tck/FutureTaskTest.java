@@ -7,7 +7,6 @@
  */
 
 import junit.framework.*;
-import java.security.Permission;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;

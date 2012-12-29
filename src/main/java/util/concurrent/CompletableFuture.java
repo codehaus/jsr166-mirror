@@ -45,7 +45,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p>CompletableFutures themselves do not execute asynchronously.
  * However, the {@code async} methods provide commonly useful ways to
- * to commence asynchronous processing, using either a given {@link
+ * commence asynchronous processing, using either a given {@link
  * Executor} or by default the {@link ForkJoinPool#commonPool()}, of a
  * function or action that will result in the completion of a new
  * CompletableFuture.

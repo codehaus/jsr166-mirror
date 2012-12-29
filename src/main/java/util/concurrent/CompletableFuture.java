@@ -61,7 +61,7 @@ public class CompletableFuture<T> implements Future<T> {
      * used to box null as a result, as well as to hold exceptions.
      *
      * 2. Waiters are held in a Treiber stack similar to the one used
-     * in FutureTask
+     * in FutureTask.
      *
      * 3. Completions are also kept in a list/stack, and pulled off
      * and run when completion is triggered.

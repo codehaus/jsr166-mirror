@@ -2138,7 +2138,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Replace entry for key only if currently mapped to given value.
+     * Replaces entry for key only if currently mapped to given value.
      * Acts as
      * <pre>
      *  if ((map.containsKey(key) && map.get(key).equals(oldValue)) {
@@ -2175,7 +2175,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Replace entry for key only if currently mapped to some value.
+     * Replaces entry for key only if currently mapped to some value.
      * Acts as
      * <pre>
      *  if ((map.containsKey(key)) {

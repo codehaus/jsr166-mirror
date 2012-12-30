@@ -179,7 +179,7 @@ public class CompletableFuture<T> implements Future<T> {
 
     /**
      * Returns {@code true} if completed in any fashion: normally,
-     * exceptionally, or cancellation.
+     * exceptionally, or via cancellation.
      *
      * @return {@code true} if completed
      */

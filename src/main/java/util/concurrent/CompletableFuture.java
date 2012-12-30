@@ -169,7 +169,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the CompletableFuture
      */
     public static CompletableFuture<Void> runAsync(Runnable runnable,
-                                                Executor executor) {
+                                                   Executor executor) {
         if (executor == null || runnable == null)
             throw new NullPointerException();
         CompletableFuture<Void> f = new CompletableFuture<Void>();
@@ -356,7 +356,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<U> thenApplyAsync(Function<? super T,? extends U> fn,
-                                              Executor executor) {
+                                                   Executor executor) {
         if (executor == null) throw new NullPointerException();
         return thenFunction(fn, executor);
     }
@@ -456,7 +456,8 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> thenRunAsync(Runnable action, Executor executor) {
+    public CompletableFuture<Void> thenRunAsync(Runnable action,
+                                                Executor executor) {
         if (executor == null) throw new NullPointerException();
         return thenRunnable(action, executor);
     }
@@ -515,8 +516,8 @@ public class CompletableFuture<T> implements Future<T> {
      */
 
     public <U,V> CompletableFuture<V> thenApplyAsync(CompletableFuture<? extends U> other,
-                                                       BiFunction<? super T,? super U,? extends V> fn,
-                                                       Executor executor) {
+                                                     BiFunction<? super T,? super U,? extends V> fn,
+                                                     Executor executor) {
         if (executor == null) throw new NullPointerException();
         return andFunction(other, fn, executor);
     }

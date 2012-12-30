@@ -266,7 +266,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Try to CAS head to p. If successful, repoint old head to itself
+     * Tries to CAS head to p. If successful, repoint old head to itself
      * as sentinel for succ(), below.
      */
     final void updateHead(Node<E> h, Node<E> p) {

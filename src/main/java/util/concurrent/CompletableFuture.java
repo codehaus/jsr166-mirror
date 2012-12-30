@@ -527,7 +527,7 @@ public class CompletableFuture<T> implements Future<T> {
      * the results of this and the other given CompletableFuture if
      * both complete.  If this and/or the other CompletableFuture
      * complete exceptionally, then the returned CompletableFuture
-     * also does so, with a RuntimeException having the one of the
+     * also does so, with a RuntimeException having one of these
      * exceptions as its cause.
      *
      * @param other the other CompletableFuture
@@ -546,7 +546,7 @@ public class CompletableFuture<T> implements Future<T> {
      * the results of this and the other given CompletableFuture when
      * both complete.  If this and/or the other CompletableFuture
      * complete exceptionally, then the returned CompletableFuture
-     * also does so, with a RuntimeException having the one of the
+     * also does so, with a RuntimeException having one of these
      * exceptions as its cause.
      *
      * @param other the other CompletableFuture
@@ -565,7 +565,7 @@ public class CompletableFuture<T> implements Future<T> {
      * this and the other given CompletableFuture when both complete.
      * If this and/or the other CompletableFuture complete
      * exceptionally, then the returned CompletableFuture also does
-     * so, with a RuntimeException having the one of the exceptions as
+     * so, with a RuntimeException having one of these exceptions as
      * its cause.
      *
      * @param other the other CompletableFuture
@@ -586,7 +586,7 @@ public class CompletableFuture<T> implements Future<T> {
      * when this and the other given CompletableFuture both
      * complete.  If this and/or the other CompletableFuture complete
      * exceptionally, then the returned CompletableFuture also does
-     * so, with a RuntimeException having the one of the exceptions as
+     * so, with a RuntimeException having one of these exceptions as
      * its cause.
      *
      * @param other the other CompletableFuture
@@ -605,7 +605,7 @@ public class CompletableFuture<T> implements Future<T> {
      * when this and the other given CompletableFuture both
      * complete.  If this and/or the other CompletableFuture complete
      * exceptionally, then the returned CompletableFuture also does
-     * so, with a RuntimeException having the one of the exceptions as
+     * so, with a RuntimeException having one of these exceptions as
      * its cause.
      *
      * @param other the other CompletableFuture
@@ -624,7 +624,7 @@ public class CompletableFuture<T> implements Future<T> {
      * when this and the other given CompletableFuture both
      * complete.  If this and/or the other CompletableFuture complete
      * exceptionally, then the returned CompletableFuture also does
-     * so, with a RuntimeException having the one of the exceptions as
+     * so, with a RuntimeException having one of these exceptions as
      * its cause.
      *
      * @param other the other CompletableFuture

@@ -377,14 +377,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Attempt to CAS-increment the workerCount field of ctl.
+     * Attempts to CAS-increment the workerCount field of ctl.
      */
     private boolean compareAndIncrementWorkerCount(int expect) {
         return ctl.compareAndSet(expect, expect + 1);
     }
 
     /**
-     * Attempt to CAS-decrement the workerCount field of ctl.
+     * Attempts to CAS-decrement the workerCount field of ctl.
      */
     private boolean compareAndDecrementWorkerCount(int expect) {
         return ctl.compareAndSet(expect, expect - 1);

@@ -1196,7 +1196,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Version of remove with boolean return. Needed by view classes
+     * Version of remove with boolean return. Needed by view classes.
      */
     boolean removep(Object key) {
         return doRemove(key, null) != null;
@@ -3095,7 +3095,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns underlying map. Needed by ConcurrentSkipListSet
+         * Returns underlying map. Needed by ConcurrentSkipListSet.
          * @return the backing map
          */
         ConcurrentSkipListMap<K,V> getMap() {
@@ -3103,7 +3103,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns least key. Needed by ConcurrentSkipListSet
+         * Returns least key. Needed by ConcurrentSkipListSet.
          * @return least key or <tt>null</tt> if from start
          */
         K getLeast() {
@@ -3111,7 +3111,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns fence key. Needed by ConcurrentSkipListSet
+         * Returns fence key. Needed by ConcurrentSkipListSet.
          * @return fence key or <tt>null</tt> of to end
          */
         K getFence() {

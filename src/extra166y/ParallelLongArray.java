@@ -101,7 +101,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
 
     /**
      * Creates a new ParallelLongArray using the given executor and
-     * an array of the given size
+     * an array of the given size.
      * @param size the array size
      * @param executor the executor
      */
@@ -194,13 +194,13 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
     }
 
     /**
-     * Returns the executor used for computations
+     * Returns the executor used for computations.
      * @return the executor
      */
     public ForkJoinPool getExecutor() { return ex; }
 
     /**
-     * Applies the given procedure to elements
+     * Applies the given procedure to elements.
      * @param procedure the procedure
      */
     public void apply(LongProcedure procedure) {
@@ -208,7 +208,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
     }
 
     /**
-     * Returns reduction of elements
+     * Returns reduction of elements.
      * @param reducer the reducer
      * @param base the result for an empty array
      * @return reduction
@@ -218,7 +218,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
     }
 
     /**
-     * Returns a new ParallelLongArray holding all elements
+     * Returns a new ParallelLongArray holding all elements.
      * @return a new ParallelLongArray holding all elements
      */
     public ParallelLongArray all() {
@@ -249,7 +249,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
 
     /**
      * Replaces elements with the results of applying the given
-     * mapping to each index and current element value
+     * mapping to each index and current element value.
      * @param op the op
      * @return this (to simplify use in expressions)
      */
@@ -262,7 +262,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * Replaces elements with the results of applying the given
      * generator. For example, to fill the array with uniform random
      * values, use
-     * <tt>replaceWithGeneratedValue(Ops.longRandom())</tt>
+     * <tt>replaceWithGeneratedValue(Ops.longRandom())</tt>.
      * @param generator the generator
      * @return this (to simplify use in expressions)
      */
@@ -283,7 +283,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -297,7 +297,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -312,7 +312,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
 
     /**
      * Returns the index of some element equal to given target, or -1
-     * if not present
+     * if not present.
      * @param target the element to search for
      * @return the index or -1 if not present
      */

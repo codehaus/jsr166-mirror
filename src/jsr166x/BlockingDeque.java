@@ -187,7 +187,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
     /**
      * Adds the specified element as the last element of this deque,
      * waiting if necessary for space to become available.  This
-     * method is equivalent to putLast
+     * method is equivalent to putLast.
      * @param o the element to add
      * @throws InterruptedException if interrupted while waiting
      * @throws NullPointerException if the specified element is <tt>null</tt>

@@ -93,7 +93,7 @@ public abstract class ParallelLongArrayWithBounds extends ParallelLongArrayWithF
     public abstract long precumulate(LongReducer reducer, long base);
 
     /**
-     * Replaces each element with its prefix sum
+     * Replaces each element with its prefix sum.
      * @return the total sum
      */
     public abstract long precumulateSum();

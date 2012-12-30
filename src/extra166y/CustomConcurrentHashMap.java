@@ -320,7 +320,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
          * Returns the value established during the creation of this
          * node or, if since updated, the value set by the most
          * recent call to setValue, or throws an exception if
-         * value could not be computed
+         * value could not be computed.
          * @return the value
          * @throws RuntimeException or Error if computeValue failed
          */
@@ -544,7 +544,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Creates a new CustomConcurrentHashMap with the given parameters
+     * Creates a new CustomConcurrentHashMap with the given parameters.
      * @param keyStrength the strength for keys
      * @param keyEquivalence the Equivalence to use for keys
      * @param valueStrength the strength for values
@@ -573,7 +573,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Returns a new map using Integer keys and the given value
-     * parameters
+     * parameters.
      * @param valueStrength the strength for values
      * @param valueEquivalence the Equivalence to use for values
      * @param expectedSize an estimate of the number of elements
@@ -591,7 +591,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Returns a new map using the given key parameters and Integer values
+     * Returns a new map using the given key parameters and Integer values.
      * @param keyStrength the strength for keys
      * @param keyEquivalence the Equivalence to use for keys
      * @param expectedSize an estimate of the number of elements
@@ -609,7 +609,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Returns a new map using Integer keys and values
+     * Returns a new map using Integer keys and values.
      * @param expectedSize an estimate of the number of elements
      * that will be held in the map. If no estimate is known,
      * zero is an acceptable value.
@@ -623,7 +623,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Returns the segment for traversing table for key with given hash
+     * Returns the segment for traversing table for key with given hash.
      * @param hash the hash code for the key
      * @return the segment, or null if not yet initialized
      */
@@ -656,7 +656,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Returns node for key, or null if none
+     * Returns node for key, or null if none.
      */
     final Node findNode(Object key, int hash, Segment seg) {
         if (seg != null) {
@@ -1600,7 +1600,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         final CustomConcurrentHashMap<K,K> cchm;
 
         /**
-         * Creates a set with the given parameters
+         * Creates a set with the given parameters.
          * @param strength the strength of elements
          * @param equivalence the Equivalence to use
          * @param expectedSize an estimate of the number of elements

@@ -61,7 +61,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
 
     /**
      * Creates a new ParallelDoubleArray using the given executor and
-     * an array of the given size
+     * an array of the given size.
      * @param size the array size
      * @param executor the executor
      */
@@ -154,13 +154,13 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns the executor used for computations
+     * Returns the executor used for computations.
      * @return the executor
      */
     public ForkJoinPool getExecutor() { return ex; }
 
     /**
-     * Applies the given procedure to elements
+     * Applies the given procedure to elements.
      * @param procedure the procedure
      */
     public void apply(DoubleProcedure procedure) {
@@ -168,7 +168,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns reduction of elements
+     * Returns reduction of elements.
      * @param reducer the reducer
      * @param base the result for an empty array
      * @return reduction
@@ -178,7 +178,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     }
 
     /**
-     * Returns a new ParallelDoubleArray holding all elements
+     * Returns a new ParallelDoubleArray holding all elements.
      * @return a new ParallelDoubleArray holding all elements
      */
     public ParallelDoubleArray all() {
@@ -209,7 +209,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
 
     /**
      * Replaces elements with the results of applying the given
-     * mapping to each index and current element value
+     * mapping to each index and current element value.
      * @param op the op
      * @return this (to simplify use in expressions)
      */
@@ -222,7 +222,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
      * Replaces elements with the results of applying the given
      * generator. For example, to fill the array with uniform random
      * values, use
-     * <tt>replaceWithGeneratedValue(Ops.doubleRandom())</tt>
+     * <tt>replaceWithGeneratedValue(Ops.doubleRandom())</tt>.
      * @param generator the generator
      * @return this (to simplify use in expressions)
      */
@@ -243,7 +243,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -258,7 +258,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -273,7 +273,7 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
 
     /**
      * Returns the index of some element equal to given target, or -1
-     * if not present
+     * if not present.
      * @param target the element to search for
      * @return the index or -1 if not present
      */
@@ -852,27 +852,27 @@ public class ParallelDoubleArray extends AbstractParallelAnyArray.DUPap {
     public int size() { return fence; }
 
     /**
-     * Returns the underlying array used for computations
+     * Returns the underlying array used for computations.
      * @return the array
      */
     public double[] getArray() { return array; }
 
     /**
-     * Returns the element of the array at the given index
+     * Returns the element of the array at the given index.
      * @param i the index
      * @return the element of the array at the given index
      */
     public double get(int i) { return array[i]; }
 
     /**
-     * Sets the element of the array at the given index to the given value
+     * Sets the element of the array at the given index to the given value.
      * @param i the index
      * @param x the value
      */
     public void set(int i, double x) { array[i] = x; }
 
     /**
-     * Equivalent to <tt>asList().toString()</tt>
+     * Equivalent to <tt>asList().toString()</tt>.
      * @return a string representation
      */
     public String toString() {

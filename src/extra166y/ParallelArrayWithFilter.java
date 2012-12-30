@@ -38,7 +38,7 @@ public abstract class ParallelArrayWithFilter<T>
 
     /**
      * Replaces elements with the results of applying the given
-     * op to their indices
+     * op to their indices.
      * @param op the op
      * @return this (to simplify use in expressions)
      */
@@ -51,7 +51,7 @@ public abstract class ParallelArrayWithFilter<T>
 
     /**
      * Replaces elements with the results of applying the given
-     * mapping to each index and current element value
+     * mapping to each index and current element value.
      * @param op the op
      * @return this (to simplify use in expressions)
      */
@@ -63,8 +63,7 @@ public abstract class ParallelArrayWithFilter<T>
     }
 
     /**
-     * Replaces elements with results of applying the given
-     * generator.
+     * Replaces elements with results of applying the given generator.
      * @param generator the generator
      * @return this (to simplify use in expressions)
      */
@@ -88,7 +87,7 @@ public abstract class ParallelArrayWithFilter<T>
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -104,7 +103,7 @@ public abstract class ParallelArrayWithFilter<T>
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -153,7 +152,7 @@ public abstract class ParallelArrayWithFilter<T>
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the current selector (if
-     * present) and the given selector returns true
+     * present) and the given selector returns true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -163,7 +162,7 @@ public abstract class ParallelArrayWithFilter<T>
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the current selector (if
-     * present) and the given binary selector returns true
+     * present) and the given binary selector returns true.
      * @param selector the selector
      * @return operation prefix
      */
@@ -176,7 +175,7 @@ public abstract class ParallelArrayWithFilter<T>
     /**
      * Returns an operation prefix that causes a method to operate
      * only on elements for which the current selector (if
-     * present) and the given indexed selector returns true
+     * present) and the given indexed selector returns true.
      * @param selector the selector
      * @return operation prefix
      */

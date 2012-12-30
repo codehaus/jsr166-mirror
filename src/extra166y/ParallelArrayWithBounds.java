@@ -41,7 +41,7 @@ public abstract class ParallelArrayWithBounds<T> extends ParallelArrayWithFilter
 
     /**
      * Returns the index of some element equal to given target, or
-     * -1 if not present
+     * -1 if not present.
      * @param target the element to search for
      * @return the index or -1 if not present
      */

@@ -291,7 +291,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     public ForkJoinPool getExecutor() { return ex; }
 
     /**
-     * Applies the given procedure to elements
+     * Applies the given procedure to elements.
      * @param procedure the procedure
      */
     public void apply(Procedure<? super T> procedure) {
@@ -299,7 +299,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     }
 
     /**
-     * Returns reduction of elements
+     * Returns reduction of elements.
      * @param reducer the reducer
      * @param base the result for an empty array
      * @return reduction
@@ -309,7 +309,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     }
 
     /**
-     * Returns a new ParallelArray holding all elements
+     * Returns a new ParallelArray holding all elements.
      * @return a new ParallelArray holding all elements
      */
     public ParallelArray<T> all() {
@@ -318,7 +318,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
 
     /**
      * Returns a new ParallelArray with the given element type holding
-     * all elements
+     * all elements.
      * @param elementType the type of the elements
      * @return a new ParallelArray holding all elements
      */
@@ -352,7 +352,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
 
     /**
      * Replaces elements with the results of applying the given
-     * mapping to each index and current element value
+     * mapping to each index and current element value.
      * @param op the op
      * @return this (to simplify use in expressions)
      */
@@ -386,7 +386,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -400,7 +400,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>
+     * <tt>op(thisElement, otherElement)</tt>.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -413,7 +413,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
 
     /**
      * Returns the index of some element equal to given target,
-     * or -1 if not present
+     * or -1 if not present.
      * @param target the element to search for
      * @return the index or -1 if not present
      */

@@ -1674,7 +1674,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * park awaiting signal, else lingering to help scan and signal.
      *
      * * If a non-empty queue discovered or left as a hint,
-     * help wake up other workers before return
+     * help wake up other workers before return.
      *
      * @param w the worker (via its WorkQueue)
      * @return a task or null if none found

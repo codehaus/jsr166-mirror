@@ -1087,8 +1087,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static int poolNumberSequence;
 
     /**
-     * Return the next sequence number. We don't expect this to
-     * ever contend so use simple builtin sync.
+     * Returns the next sequence number. We don't expect this to
+     * ever contend, so use simple builtin sync.
      */
     private static final synchronized int nextPoolId() {
         return ++poolNumberSequence;

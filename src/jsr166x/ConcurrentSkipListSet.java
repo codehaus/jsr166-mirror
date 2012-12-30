@@ -15,9 +15,9 @@ import java.util.concurrent.*;
  * ascending order, sorted according to the <i>natural order</i> for
  * the element's class (see {@link Comparable}), or by the comparator
  * provided at creation time, depending on which constructor is
- * used.<p>
+ * used.
  *
- * This implementation provides expected average <i>log(n)</i> time
+ * <p>This implementation provides expected average <i>log(n)</i> time
  * cost for the <tt>contains</tt>, <tt>add</tt>, and <tt>remove</tt>
  * operations and their variants.  Insertion, removal, and access
  * operations safely execute concurrently by multiple

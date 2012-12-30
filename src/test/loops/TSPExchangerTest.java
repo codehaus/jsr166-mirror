@@ -406,7 +406,7 @@ public class TSPExchangerTest {
          * other.  It is hardwired because small variations of it
          * don't matter much.
          *
-         * @param g the first generation to run.
+         * @param g the first generation to run
          */
         int runUpdates() throws InterruptedException {
             int n = 1 + (rng.next() & ((subpopSize << 1) - 1));

@@ -54,7 +54,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Updates with the given value
+     * Updates with the given value.
      *
      * @param x the value
      */

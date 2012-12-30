@@ -24,7 +24,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Applies the given procedure
+     * Applies the given procedure.
      * @param procedure the procedure
      */
     public void apply(DoubleProcedure procedure) {
@@ -32,7 +32,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns reduction of mapped elements
+     * Returns reduction of mapped elements.
      * @param reducer the reducer
      * @param base the result for an empty array
      * @return reduction
@@ -45,7 +45,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns the minimum element, or Double.MAX_VALUE if empty
+     * Returns the minimum element, or Double.MAX_VALUE if empty.
      * @return minimum element, or Double.MAX_VALUE if empty
      */
     public double min() {
@@ -53,7 +53,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns the minimum element, or Double.MAX_VALUE if empty
+     * Returns the minimum element, or Double.MAX_VALUE if empty.
      * @param comparator the comparator
      * @return minimum element, or Double.MAX_VALUE if empty
      */
@@ -62,7 +62,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns the maximum element, or -Double.MAX_VALUE if empty
+     * Returns the maximum element, or -Double.MAX_VALUE if empty.
      * @return maximum element, or -Double.MAX_VALUE if empty
      */
     public double max() {
@@ -70,7 +70,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns the maximum element, or -Double.MAX_VALUE if empty
+     * Returns the maximum element, or -Double.MAX_VALUE if empty.
      * @param comparator the comparator
      * @return maximum element, or -Double.MAX_VALUE if empty
      */
@@ -79,7 +79,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns the sum of elements
+     * Returns the sum of elements.
      * @return the sum of elements
      */
     public double sum() {
@@ -87,10 +87,10 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns summary statistics
+     * Returns summary statistics.
      * @param comparator the comparator to use for
      * locating minimum and maximum elements
-     * @return the summary.
+     * @return the summary
      */
     public ParallelDoubleArray.SummaryStatistics summary
         (DoubleComparator comparator) {
@@ -101,15 +101,15 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     }
 
     /**
-     * Returns summary statistics, using natural comparator
-     * @return the summary.
+     * Returns summary statistics, using natural comparator.
+     * @return the summary
      */
     public ParallelDoubleArray.SummaryStatistics summary() {
         return summary(CommonOps.naturalDoubleComparator());
     }
 
     /**
-     * Returns a new ParallelDoubleArray holding mappings
+     * Returns a new ParallelDoubleArray holding mappings.
      * @return a new ParallelDoubleArray holding mappings
      */
     public ParallelDoubleArray all() {
@@ -306,7 +306,7 @@ public abstract class ParallelArrayWithDoubleMapping<T> extends AbstractParallel
     /**
      * Returns an Iterable view to sequentially step through mapped
      * elements also obeying bound and filter constraints, without
-     * performing computations to evaluate them in parallel
+     * performing computations to evaluate them in parallel.
      * @return the Iterable view
      */
     public Iterable<Double> sequentially() {

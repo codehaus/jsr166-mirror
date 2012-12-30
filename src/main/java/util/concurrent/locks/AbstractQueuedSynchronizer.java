@@ -171,12 +171,12 @@ import sun.misc.Unsafe;
  *
  *   // Our internal helper class
  *   private static class Sync extends AbstractQueuedSynchronizer {
- *     // Report whether in locked state
+ *     // Reports whether in locked state
  *     protected boolean isHeldExclusively() {
  *       return getState() == 1;
  *     }
  *
- *     // Acquire the lock if state is zero
+ *     // Acquires the lock if state is zero
  *     public boolean tryAcquire(int acquires) {
  *       assert acquires == 1; // Otherwise unused
  *       if (compareAndSetState(0, 1)) {
@@ -186,7 +186,7 @@ import sun.misc.Unsafe;
  *       return false;
  *     }
  *
- *     // Release the lock by setting state to zero
+ *     // Releases the lock by setting state to zero
  *     protected boolean tryRelease(int releases) {
  *       assert releases == 1; // Otherwise unused
  *       if (getState() == 0) throw new IllegalMonitorStateException();
@@ -195,10 +195,10 @@ import sun.misc.Unsafe;
  *       return true;
  *     }
  *
- *     // Provide a Condition
+ *     // Provides a Condition
  *     Condition newCondition() { return new ConditionObject(); }
  *
- *     // Deserialize properly
+ *     // Deserializes properly
  *     private void readObject(ObjectInputStream s)
  *         throws IOException, ClassNotFoundException {
  *       s.defaultReadObject();
@@ -634,7 +634,7 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * Release action for shared mode -- signal successor and ensure
+     * Release action for shared mode -- signals successor and ensures
      * propagation. (Note: For exclusive mode, release just amounts
      * to calling unparkSuccessor of head if it needs signal.)
      */

@@ -82,7 +82,7 @@ public abstract class AbstractParallelAnyArray {
     /**
      * Returns the index of some element matching bound and filter
      * constraints, or -1 if none.
-     * @return index of matching element, or -1 if none.
+     * @return index of matching element, or -1 if none
      */
     public int anyIndex() {
         if (!hasFilter())
@@ -95,7 +95,7 @@ public abstract class AbstractParallelAnyArray {
     }
 
     /**
-     * Returns true if there are no elements
+     * Returns true if there are no elements.
      * @return true if there are no elements
      */
     public boolean isEmpty() {

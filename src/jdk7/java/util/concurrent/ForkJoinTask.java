@@ -435,7 +435,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Records exception and possibly propagates
+     * Records exception and possibly propagates.
      *
      * @return status on exit
      */

@@ -111,7 +111,7 @@ public class CompletableFuture<T> implements Future<T> {
      * CompletableFuture with the result of the given Supplier.
      *
      * @param supplier a function returning the value to be used
-     * to complete the returned CompletableFuture.
+     * to complete the returned CompletableFuture
      * @return the CompletableFuture
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
@@ -278,7 +278,7 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param value the result value
      * @return true if this invocation caused this CompletableFuture
-     * to transition to a completed state, else false.
+     * to transition to a completed state, else false
      */
     public boolean complete(T value) {
         if (result == null &&
@@ -296,7 +296,7 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param ex the exception
      * @return true if this invocation caused this CompletableFuture
-     * to transition to a completed state, else false.
+     * to transition to a completed state, else false
      */
     public boolean completeExceptionally(Throwable ex) {
         if (ex == null) throw new NullPointerException();
@@ -476,7 +476,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U,V> CompletableFuture<V> thenApply(CompletableFuture<? extends U> other,
-                                                  BiFunction<? super T,? super U,? extends V> fn) {
+                                                BiFunction<? super T,? super U,? extends V> fn) {
         return andFunction(other, fn, null);
     }
 
@@ -495,7 +495,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U,V> CompletableFuture<V> thenApplyAsync(CompletableFuture<? extends U> other,
-                                                       BiFunction<? super T,? super U,? extends V> fn) {
+                                                     BiFunction<? super T,? super U,? extends V> fn) {
         return andFunction(other, fn, ForkJoinPool.commonPool());
     }
 

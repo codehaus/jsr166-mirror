@@ -187,7 +187,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Lock to prevent both puts and takes.
+     * Locks to prevent both puts and takes.
      */
     void fullyLock() {
         putLock.lock();
@@ -195,7 +195,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Unlock to allow both puts and takes.
+     * Unlocks to allow both puts and takes.
      */
     void fullyUnlock() {
         takeLock.unlock();

@@ -575,8 +575,8 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<Void> thenAcceptAsync(CompletableFuture<? extends U> other,
-                                                   BiBlock<? super T, ? super U> block,
-                                                   Executor executor) {
+                                                       BiBlock<? super T, ? super U> block,
+                                                       Executor executor) {
         if (executor == null) throw new NullPointerException();
         return andBlock(other, block, executor);
     }

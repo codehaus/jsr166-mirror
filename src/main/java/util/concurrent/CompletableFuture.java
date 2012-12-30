@@ -1935,38 +1935,37 @@ public class CompletableFuture<T> implements Future<T> {
                 if (ex != null || c == null) {
                     if (ex == null)
                         ex = new NullPointerException();
-                    dst.completeExceptionally(new RuntimeException(ex));
-                    return;
+                    else
+                        ex = new RuntimeException(ex);
                 }
-                ThenCopy<U> d = null;
-                Object s;
-                if ((s = c.result) == null) {
-                    CompletionNode p = new CompletionNode
-                        (d = new ThenCopy<U>(c, dst));
-                    while ((s = c.result) == null) {
-                        if (UNSAFE.compareAndSwapObject
-                            (c, COMPLETIONS, p.next = c.completions, p))
-                            break;
+                else {
+                    ThenCopy<U> d = null;
+                    Object s;
+                    if ((s = c.result) == null) {
+                        CompletionNode p = new CompletionNode
+                            (d = new ThenCopy<U>(c, dst));
+                        while ((s = c.result) == null) {
+                            if (UNSAFE.compareAndSwapObject
+                                (c, COMPLETIONS, p.next = c.completions, p))
+                                break;
+                        }
                     }
-                    if ((s = c.result) == null || !d.compareAndSet(0, 1))
-                        return;
-                }
-                U u;
-                if (s instanceof AltResult) {
-                    if ((ex = ((AltResult)s).ex) != null)
-                        dst.completeExceptionally(new RuntimeException(ex));
-                    u = null;
-                }
-                else
-                    u = (U) s;
-                if (ex == null) {
-                    try {
-                        dst.complete(u);
-                    } catch (Throwable rex) {
-                        dst.completeExceptionally(rex);
+                    if (s != null && (d == null || d.compareAndSet(0, 1))) {
+                        U u;
+                        if (s instanceof AltResult) {
+                            ex = ((AltResult)s).ex;  // no rewrap
+                            u = null;
+                        }
+                        else
+                            u = (U) s;
+                        if (ex == null)
+                            dst.complete(u);
                     }
                 }
-                c.postComplete();
+                if (ex != null)
+                    dst.completeExceptionally(ex);
+                if (c != null && c.result != null)
+                    c.postComplete();
             }
         }
     }

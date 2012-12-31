@@ -1303,21 +1303,22 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncRunnable extends Async {
-        final Runnable runnable;
+        final Runnable fn;
         final CompletableFuture<Void> dst;
-        AsyncRunnable(Runnable runnable, CompletableFuture<Void> dst) {
-            this.runnable = runnable; this.dst = dst;
+        AsyncRunnable(Runnable fn, CompletableFuture<Void> dst) {
+            this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            Runnable fn;
             CompletableFuture<Void> d;
-            if ((fn = this.runnable) == null || (d = this.dst) == null)
-                throw new NullPointerException();
-            try {
-                fn.run();
-                d.complete(null);
-            } catch (Throwable ex) {
-                d.completeExceptionally(ex);
+            if ((d = this.dst) != null) {
+                Throwable ex;
+                try {
+                    fn.run();
+                    ex = null;
+                } catch (Throwable rex) {
+                    ex = rex;
+                }
+                d.internalComplete(null, ex);
             }
             return true;
         }
@@ -1325,20 +1326,23 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncSupplier<U> extends Async {
-        final Supplier<U> supplier;
+        final Supplier<U> fn;
         final CompletableFuture<U> dst;
-        AsyncSupplier(Supplier<U> supplier, CompletableFuture<U> dst) {
-            this.supplier = supplier; this.dst = dst;
+        AsyncSupplier(Supplier<U> fn, CompletableFuture<U> dst) {
+            this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            Supplier<U> fn;
             CompletableFuture<U> d;
-            if ((fn = this.supplier) == null || (d = this.dst) == null)
-                throw new NullPointerException();
-            try {
-                d.complete(fn.get());
-            } catch (Throwable ex) {
-                d.completeExceptionally(ex);
+            if ((d = this.dst) != null) {
+                U u; Throwable ex;
+                try {
+                    u = fn.get();
+                    ex = null;
+                } catch (Throwable rex) {
+                    ex = rex;
+                    u = null;
+                }
+                d.internalComplete(u, ex);
             }
             return true;
         }
@@ -1354,14 +1358,16 @@ public class CompletableFuture<T> implements Future<T> {
             this.arg = arg; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            Function<? super T,? extends U> fn;
-            CompletableFuture<U> d;
-            if ((fn = this.fn) == null || (d = this.dst) == null)
-                throw new NullPointerException();
-            try {
-                d.complete(fn.apply(arg));
-            } catch (Throwable ex) {
-                d.completeExceptionally(ex);
+            CompletableFuture<U> d; U u; Throwable ex;
+            if ((d = this.dst) != null) {
+                try {
+                    u = fn.apply(arg);
+                    ex = null;
+                } catch (Throwable rex) {
+                    ex = rex;
+                    u = null;
+                }
+                d.internalComplete(u, ex);
             }
             return true;
         }
@@ -1379,14 +1385,16 @@ public class CompletableFuture<T> implements Future<T> {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            BiFunction<? super T,? super U,? extends V> fn;
-            CompletableFuture<V> d;
-            if ((fn = this.fn) == null || (d = this.dst) == null)
-                throw new NullPointerException();
-            try {
-                d.complete(fn.apply(arg1, arg2));
-            } catch (Throwable ex) {
-                d.completeExceptionally(ex);
+            CompletableFuture<V> d; V v; Throwable ex;
+            if ((d = this.dst) != null) {
+                try {
+                    v = fn.apply(arg1, arg2);
+                    ex = null;
+                } catch (Throwable rex) {
+                    ex = rex;
+                    v = null;
+                }
+                d.internalComplete(v, ex);
             }
             return true;
         }
@@ -1402,15 +1410,15 @@ public class CompletableFuture<T> implements Future<T> {
             this.arg = arg; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            Block<? super T> fn;
-            CompletableFuture<Void> d;
-            if ((fn = this.fn) == null || (d = this.dst) == null)
-                throw new NullPointerException();
-            try {
-                fn.accept(arg);
-                d.complete(null);
-            } catch (Throwable ex) {
-                d.completeExceptionally(ex);
+            CompletableFuture<Void> d; Throwable ex;
+            if ((d = this.dst) != null) {
+                try {
+                    fn.accept(arg);
+                    ex = null;
+                } catch (Throwable rex) {
+                    ex = rex;
+                }
+                d.internalComplete(null, ex);
             }
             return true;
         }
@@ -1428,15 +1436,15 @@ public class CompletableFuture<T> implements Future<T> {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            BiBlock<? super T,? super U> fn;
-            CompletableFuture<Void> d;
-            if ((fn = this.fn) == null || (d = this.dst) == null)
-                throw new NullPointerException();
-            try {
-                fn.accept(arg1, arg2);
-                d.complete(null);
-            } catch (Throwable ex) {
-                d.completeExceptionally(ex);
+            CompletableFuture<Void> d; Throwable ex;
+            if ((d = this.dst) != null) {
+                try {
+                    fn.accept(arg1, arg2);
+                    ex = null;
+                } catch (Throwable rex) {
+                    ex = rex;
+                }
+                d.internalComplete(null, ex);
             }
             return true;
         }

@@ -993,13 +993,15 @@ public class CompletableFuture<T> implements Future<T> {
             }
         }
         if (r != null && (d == null || d.compareAndSet(0, 1))) {
-            T t; Throwable ex = null;
+            T t; Throwable ex;
             if (r instanceof AltResult) {
                 ex = ((AltResult)r).ex;
                 t = null;
             }
-            else
+            else {
+                ex = null;
                 t = (T) r;
+            }
             if (ex == null) {
                 try {
                     dst = fn.apply(t);
@@ -1309,9 +1311,8 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            CompletableFuture<Void> d;
+            CompletableFuture<Void> d; Throwable ex;
             if ((d = this.dst) != null) {
-                Throwable ex;
                 try {
                     fn.run();
                     ex = null;
@@ -1332,9 +1333,8 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            CompletableFuture<U> d;
+            CompletableFuture<U> d; U u; Throwable ex;
             if ((d = this.dst) != null) {
-                U u; Throwable ex;
                 try {
                     u = fn.get();
                     ex = null;
@@ -2099,14 +2099,14 @@ public class CompletableFuture<T> implements Future<T> {
 
     @SuppressWarnings("unchecked") private <U> CompletableFuture<U> thenFunction
         (Function<? super T,? extends U> fn,
-         Executor executor) {
+         Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
         ThenFunction<T,U> d = null;
         Object r;
         if ((r = result) == null) {
             CompletionNode p = new CompletionNode
-                (d = new ThenFunction<T,U>(this, fn, dst, executor));
+                (d = new ThenFunction<T,U>(this, fn, dst, e));
             while ((r = result) == null) {
                 if (UNSAFE.compareAndSwapObject
                     (this, COMPLETIONS, p.next = completions, p))
@@ -2123,7 +2123,6 @@ public class CompletableFuture<T> implements Future<T> {
                 ex = null;
                 t = (T) r;
             }
-            Executor e = executor;
             U u = null;
             if (ex == null) {
                 try {
@@ -2144,14 +2143,14 @@ public class CompletableFuture<T> implements Future<T> {
 
     @SuppressWarnings("unchecked") private CompletableFuture<Void> thenBlock
         (Block<? super T> fn,
-         Executor executor) {
+         Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         ThenBlock<T> d = null;
         Object r;
         if ((r = result) == null) {
             CompletionNode p = new CompletionNode
-                (d = new ThenBlock<T>(this, fn, dst, executor));
+                (d = new ThenBlock<T>(this, fn, dst, e));
             while ((r = result) == null) {
                 if (UNSAFE.compareAndSwapObject
                     (this, COMPLETIONS, p.next = completions, p))
@@ -2168,7 +2167,6 @@ public class CompletableFuture<T> implements Future<T> {
                 ex = null;
                 t = (T) r;
             }
-            Executor e = executor;
             if (ex == null) {
                 try {
                     if (e != null)
@@ -2188,14 +2186,14 @@ public class CompletableFuture<T> implements Future<T> {
 
     @SuppressWarnings("unchecked") private CompletableFuture<Void> thenRunnable
         (Runnable action,
-         Executor executor) {
+         Executor e) {
         if (action == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         ThenRunnable<T> d = null;
         Object r;
         if ((r = result) == null) {
             CompletionNode p = new CompletionNode
-                (d = new ThenRunnable<T>(this, action, dst, executor));
+                (d = new ThenRunnable<T>(this, action, dst, e));
             while ((r = result) == null) {
                 if (UNSAFE.compareAndSwapObject
                     (this, COMPLETIONS, p.next = completions, p))
@@ -2208,7 +2206,6 @@ public class CompletableFuture<T> implements Future<T> {
                 ex = ((AltResult)r).ex;
             else
                 ex = null;
-            Executor e = executor;
             if (ex == null) {
                 try {
                     if (e != null)
@@ -2229,13 +2226,13 @@ public class CompletableFuture<T> implements Future<T> {
     @SuppressWarnings("unchecked") private <U,V> CompletableFuture<V> andFunction
         (CompletableFuture<? extends U> other,
          BiFunction<? super T,? super U,? extends V> fn,
-         Executor executor) {
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<V> dst = new CompletableFuture<V>();
         AndFunction<T,U,V> d = null;
         Object r, s = null;
         if ((r = result) == null || (s = other.result) == null) {
-            d = new AndFunction<T,U,V>(this, other, fn, dst, executor);
+            d = new AndFunction<T,U,V>(this, other, fn, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r == null && (r = result) == null) ||
                    (s == null && (s = other.result) == null)) {
@@ -2272,7 +2269,6 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else
                 u = (U) s;
-            Executor e = executor;
             V v = null;
             if (ex == null) {
                 try {
@@ -2295,13 +2291,13 @@ public class CompletableFuture<T> implements Future<T> {
     @SuppressWarnings("unchecked") private <U> CompletableFuture<Void> andBlock
         (CompletableFuture<? extends U> other,
          BiBlock<? super T,? super U> fn,
-         Executor executor) {
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         AndBlock<T,U> d = null;
         Object r, s = null;
         if ((r = result) == null || (s = other.result) == null) {
-            d = new AndBlock<T,U>(this, other, fn, dst, executor);
+            d = new AndBlock<T,U>(this, other, fn, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r == null && (r = result) == null) ||
                    (s == null && (s = other.result) == null)) {
@@ -2338,7 +2334,6 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else
                 u = (U) s;
-            Executor e = executor;
             if (ex == null) {
                 try {
                     if (e != null)
@@ -2360,13 +2355,13 @@ public class CompletableFuture<T> implements Future<T> {
     @SuppressWarnings("unchecked") private CompletableFuture<Void> andRunnable
         (CompletableFuture<?> other,
          Runnable action,
-         Executor executor) {
+         Executor e) {
         if (other == null || action == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         AndRunnable<T> d = null;
         Object r, s = null;
         if ((r = result) == null || (s = other.result) == null) {
-            d = new AndRunnable<T>(this, other, action, dst, executor);
+            d = new AndRunnable<T>(this, other, action, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r == null && (r = result) == null) ||
                    (s == null && (s = other.result) == null)) {
@@ -2393,7 +2388,6 @@ public class CompletableFuture<T> implements Future<T> {
                 ex = null;
             if (ex == null && (s instanceof AltResult))
                 ex = ((AltResult)s).ex;
-            Executor e = executor;
             if (ex == null) {
                 try {
                     if (e != null)
@@ -2415,13 +2409,13 @@ public class CompletableFuture<T> implements Future<T> {
     @SuppressWarnings("unchecked") private <U> CompletableFuture<U> orFunction
         (CompletableFuture<? extends T> other,
          Function<? super T, U> fn,
-         Executor executor) {
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
         OrFunction<T,U> d = null;
         Object r;
         if ((r = result) == null && (r = other.result) == null) {
-            d = new OrFunction<T,U>(this, other, fn, dst, executor);
+            d = new OrFunction<T,U>(this, other, fn, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r = result) == null && (r = other.result) == null) {
                 if (q != null) {
@@ -2444,7 +2438,6 @@ public class CompletableFuture<T> implements Future<T> {
                 ex = null;
                 t = (T) r;
             }
-            Executor e = executor;
             U u = null;
             if (ex == null) {
                 try {
@@ -2467,13 +2460,13 @@ public class CompletableFuture<T> implements Future<T> {
     @SuppressWarnings("unchecked") private CompletableFuture<Void> orBlock
         (CompletableFuture<? extends T> other,
          Block<? super T> fn,
-         Executor executor) {
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         OrBlock<T> d = null;
         Object r;
         if ((r = result) == null && (r = other.result) == null) {
-            d = new OrBlock<T>(this, other, fn, dst, executor);
+            d = new OrBlock<T>(this, other, fn, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r = result) == null && (r = other.result) == null) {
                 if (q != null) {
@@ -2496,7 +2489,6 @@ public class CompletableFuture<T> implements Future<T> {
                 ex = null;
                 t = (T) r;
             }
-            Executor e = executor;
             if (ex == null) {
                 try {
                     if (e != null)
@@ -2518,13 +2510,13 @@ public class CompletableFuture<T> implements Future<T> {
     @SuppressWarnings("unchecked") private CompletableFuture<Void> orRunnable
         (CompletableFuture<?> other,
          Runnable action,
-         Executor executor) {
+         Executor e) {
         if (other == null || action == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         OrRunnable<T> d = null;
         Object r;
         if ((r = result) == null && (r = other.result) == null) {
-            d = new OrRunnable<T>(this, other, action, dst, executor);
+            d = new OrRunnable<T>(this, other, action, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r = result) == null && (r = other.result) == null) {
                 if (q != null) {
@@ -2543,7 +2535,6 @@ public class CompletableFuture<T> implements Future<T> {
                 ex = ((AltResult)r).ex;
             else
                 ex = null;
-            Executor e = executor;
             if (ex == null) {
                 try {
                     if (e != null)

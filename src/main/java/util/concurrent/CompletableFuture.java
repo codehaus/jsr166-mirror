@@ -86,7 +86,7 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * 3. Completions are also kept in a list/stack, and pulled off
      * and run when completion is triggered. (We could in fact use the
-     * the same stack as for waiters, but would give up the potential
+     * same stack as for waiters, but would give up the potential
      * parallelism obtained because woken waiters help release/run
      * others (see method postComplete).  Because post-processing may
      * race with direct calls, completions extend AtomicInteger so

@@ -41,7 +41,7 @@ import java.util.concurrent.locks.LockSupport;
  * #completeExceptionally} a CompletableFuture, only one of them
  * succeeds.
  *
- * <p> Upon exceptional completion, or when a completion entails
+ * <p>Upon exceptional completion, or when a completion entails
  * computation of a function or action, and it terminates abruptly
  * with an (unchecked) exception or error, then further completions
  * act as {@code completeExceptionally} with a {@link

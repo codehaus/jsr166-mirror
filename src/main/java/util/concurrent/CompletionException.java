@@ -8,7 +8,7 @@ package java.util.concurrent;
 
 /**
  * Exception thrown when an error or other exception is encountered
- * in the course of completing a result or task. 
+ * in the course of completing a result or task.
  *
  * @since 1.8
  * @author Doug Lea

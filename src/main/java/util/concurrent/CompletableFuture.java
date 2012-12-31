@@ -188,7 +188,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * If triggered, help release and/or process completions
+     * If triggered, helps release and/or process completions.
      */
     final void helpPostComplete() {
         if (result != null)

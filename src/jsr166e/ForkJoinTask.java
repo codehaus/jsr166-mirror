@@ -606,7 +606,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                 throw (Error)ex;
             if (ex instanceof RuntimeException)
                 throw (RuntimeException)ex;
-            throw uncheckedThrowable(ex, RuntimeException.class);
+            ForkJoinTask.<RuntimeException>uncheckedThrow(ex);
         }
     }
 
@@ -616,8 +616,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * unchecked exceptions
      */
     @SuppressWarnings("unchecked") static <T extends Throwable>
-        T uncheckedThrowable(final Throwable t, final Class<T> c) {
-        return (T)t; // rely on vacuous cast
+        void uncheckedThrow(Throwable t) throws T {
+        if (t != null)
+            throw (T)t; // rely on vacuous cast
     }
 
     /**
@@ -652,7 +653,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)
             ((ForkJoinWorkerThread)t).workQueue.push(this);
         else
-            ForkJoinPool.commonPool.externalPush(this);
+            ForkJoinPool.common.externalPush(this);
         return this;
     }
 
@@ -1076,7 +1077,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             wt.pool.helpQuiescePool(wt.workQueue);
         }
         else
-            ForkJoinPool.externalHelpQuiescePool();
+            ForkJoinPool.quiesceCommonPool();
     }
 
     /**

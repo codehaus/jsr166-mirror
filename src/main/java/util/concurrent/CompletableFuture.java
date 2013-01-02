@@ -422,8 +422,8 @@ public class CompletableFuture<T> implements Future<T> {
      * #get()} and related methods to the given value.
      *
      * @param value the result value
-     * @return true if this invocation caused this CompletableFuture
-     * to transition to a completed state, else false
+     * @return {@code true} if this invocation caused this CompletableFuture
+     * to transition to a completed state, else {@code false}
      */
     public boolean complete(T value) {
         boolean triggered =
@@ -439,8 +439,8 @@ public class CompletableFuture<T> implements Future<T> {
      * and related methods to throw the given exception.
      *
      * @param ex the exception
-     * @return true if this invocation caused this CompletableFuture
-     * to transition to a completed state, else false
+     * @return {@code true} if this invocation caused this CompletableFuture
+     * to transition to a completed state, else {@code false}
      */
     public boolean completeExceptionally(Throwable ex) {
         if (ex == null) throw new NullPointerException();

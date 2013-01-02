@@ -393,7 +393,7 @@ public class CompletableFuture<T> implements Future<T> {
         }
         public final boolean exec() {
             CompletableFuture<Void> d; Throwable ex;
-            if ((d = this.dst) != null) {
+            if ((d = this.dst) != null && d.result == null) {
                 try {
                     fn.run();
                     ex = null;
@@ -415,7 +415,7 @@ public class CompletableFuture<T> implements Future<T> {
         }
         public final boolean exec() {
             CompletableFuture<U> d; U u; Throwable ex;
-            if ((d = this.dst) != null) {
+            if ((d = this.dst) != null && d.result == null) {
                 try {
                     u = fn.get();
                     ex = null;
@@ -440,7 +440,7 @@ public class CompletableFuture<T> implements Future<T> {
         }
         public final boolean exec() {
             CompletableFuture<U> d; U u; Throwable ex;
-            if ((d = this.dst) != null) {
+            if ((d = this.dst) != null && d.result == null) {
                 try {
                     u = fn.apply(arg);
                     ex = null;
@@ -467,7 +467,7 @@ public class CompletableFuture<T> implements Future<T> {
         }
         public final boolean exec() {
             CompletableFuture<V> d; V v; Throwable ex;
-            if ((d = this.dst) != null) {
+            if ((d = this.dst) != null && d.result == null) {
                 try {
                     v = fn.apply(arg1, arg2);
                     ex = null;
@@ -492,7 +492,7 @@ public class CompletableFuture<T> implements Future<T> {
         }
         public final boolean exec() {
             CompletableFuture<Void> d; Throwable ex;
-            if ((d = this.dst) != null) {
+            if ((d = this.dst) != null && d.result == null) {
                 try {
                     fn.accept(arg);
                     ex = null;
@@ -518,7 +518,7 @@ public class CompletableFuture<T> implements Future<T> {
         }
         public final boolean exec() {
             CompletableFuture<Void> d; Throwable ex;
-            if ((d = this.dst) != null) {
+            if ((d = this.dst) != null && d.result == null) {
                 try {
                     fn.accept(arg1, arg2);
                     ex = null;

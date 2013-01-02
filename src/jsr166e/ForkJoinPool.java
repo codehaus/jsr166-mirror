@@ -1932,7 +1932,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param task the task to join
      * @param mode if shared, exit upon completing any task
      * if all workers are active
-     *
      */
     private int helpComplete(ForkJoinTask<?> task, int mode) {
         WorkQueue[] ws; WorkQueue q; int m, n, s, u;

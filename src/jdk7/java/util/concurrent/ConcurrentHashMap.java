@@ -3732,7 +3732,6 @@ public class ConcurrentHashMap<K, V>
      * result on success, else null
      * @return a non-null result from applying the given search
      * function on each value, or null if none
-     *
      */
     public <U> U searchValuesSequentially
         (Fun<? super V, ? extends U> searchFunction) {
@@ -4339,7 +4338,6 @@ public class ConcurrentHashMap<K, V>
      * result on success, else null
      * @return a non-null result from applying the given search
      * function on each value, or null if none
-     *
      */
     public <U> U searchValuesInParallel
         (Fun<? super V, ? extends U> searchFunction) {

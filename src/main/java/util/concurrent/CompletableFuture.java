@@ -2634,12 +2634,28 @@ public class CompletableFuture<T> implements Future<T> {
      * completed. This method is designed for use only in error
      * recovery actions, and even in such situations may result in
      * ongoing dependent completions using established versus
-     * overwritten values.
+     * overwritten outcomes.
      *
      * @param value the completion value
      */
     public void obtrudeValue(T value) {
         result = (value == null) ? NIL : value;
+        postComplete();
+    }
+
+    /**
+     * Forcibly causes subsequent invocations of method get() and
+     * related methods to throw the given exception, whether or not
+     * already completed. This method is designed for use only in
+     * recovery actions, and even in such situations may result in
+     * ongoing dependent completions using established versus
+     * overwritten outcomes.
+     *
+     * @param ex the exception
+     */
+    public void obtrudeException(Throwable ex) {
+        if (ex == null) throw new NullPointerException();
+        result = new AltResult(ex);
         postComplete();
     }
 

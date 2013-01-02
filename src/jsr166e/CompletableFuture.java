@@ -4,16 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package java.util.concurrent;
-import java.util.function.Supplier;
-import java.util.function.Block;
-import java.util.function.BiBlock;
-import java.util.function.Function;
-import java.util.function.BiFunction;
+package jsr166e;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ExecutionException;
@@ -65,10 +58,27 @@ import java.util.concurrent.locks.LockSupport;
  * all generated asynchronous tasks are instances of the tagging
  * interface {@link AsynchronousCompletionTask}.
  *
+ * <p><em>jsr166e note: During transition, this class
+ * uses nested functional interfaces with different names but the
+ * same forms as those expected for JDK8.</em>
+ *
  * @author Doug Lea
  * @since 1.8
  */
 public class CompletableFuture<T> implements Future<T> {
+    // jsr166e nested interfaces
+
+    /** Interface describing a void action of one argument */
+    public interface Action<A> { void accept(A a); }
+    /** Interface describing a void action of two arguments */
+    public interface BiAction<A,B> { void accept(A a, B b); }
+    /** Interface describing a function of one argument */
+    public interface Fun<A,T> { T apply(A a); }
+    /** Interface describing a function of two arguments */
+    public interface BiFun<A,B,T> { T apply(A a, B b); }
+    /** Interface describing a function of no arguments */
+    public interface Generator<T> { T get(); }
+
 
     /*
      * Overview:
@@ -408,9 +418,9 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncSupply<U> extends Async {
-        final Supplier<U> fn;
+        final Generator<U> fn;
         final CompletableFuture<U> dst;
-        AsyncSupply(Supplier<U> fn, CompletableFuture<U> dst) {
+        AsyncSupply(Generator<U> fn, CompletableFuture<U> dst) {
             this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
@@ -431,10 +441,10 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncApply<T,U> extends Async {
-        final Function<? super T,? extends U> fn;
+        final Fun<? super T,? extends U> fn;
         final T arg;
         final CompletableFuture<U> dst;
-        AsyncApply(T arg, Function<? super T,? extends U> fn,
+        AsyncApply(T arg, Fun<? super T,? extends U> fn,
                       CompletableFuture<U> dst) {
             this.arg = arg; this.fn = fn; this.dst = dst;
         }
@@ -456,12 +466,12 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncBiApply<T,U,V> extends Async {
-        final BiFunction<? super T,? super U,? extends V> fn;
+        final BiFun<? super T,? super U,? extends V> fn;
         final T arg1;
         final U arg2;
         final CompletableFuture<V> dst;
         AsyncBiApply(T arg1, U arg2,
-                        BiFunction<? super T,? super U,? extends V> fn,
+                        BiFun<? super T,? super U,? extends V> fn,
                         CompletableFuture<V> dst) {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
@@ -483,10 +493,10 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncAccept<T> extends Async {
-        final Block<? super T> fn;
+        final Action<? super T> fn;
         final T arg;
         final CompletableFuture<Void> dst;
-        AsyncAccept(T arg, Block<? super T> fn,
+        AsyncAccept(T arg, Action<? super T> fn,
                    CompletableFuture<Void> dst) {
             this.arg = arg; this.fn = fn; this.dst = dst;
         }
@@ -507,12 +517,12 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncBiAccept<T,U> extends Async {
-        final BiBlock<? super T,? super U> fn;
+        final BiAction<? super T,? super U> fn;
         final T arg1;
         final U arg2;
         final CompletableFuture<Void> dst;
         AsyncBiAccept(T arg1, U arg2,
-                     BiBlock<? super T,? super U> fn,
+                     BiAction<? super T,? super U> fn,
                      CompletableFuture<Void> dst) {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
@@ -552,18 +562,18 @@ public class CompletableFuture<T> implements Future<T> {
 
     static final class ApplyCompletion<T,U> extends Completion {
         final CompletableFuture<? extends T> src;
-        final Function<? super T,? extends U> fn;
+        final Fun<? super T,? extends U> fn;
         final CompletableFuture<U> dst;
         final Executor executor;
         ApplyCompletion(CompletableFuture<? extends T> src,
-                        Function<? super T,? extends U> fn,
+                        Fun<? super T,? extends U> fn,
                         CompletableFuture<U> dst, Executor executor) {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
         public final void run() {
             final CompletableFuture<? extends T> a;
-            final Function<? super T,? extends U> fn;
+            final Fun<? super T,? extends U> fn;
             final CompletableFuture<U> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -601,18 +611,18 @@ public class CompletableFuture<T> implements Future<T> {
 
     static final class AcceptCompletion<T> extends Completion {
         final CompletableFuture<? extends T> src;
-        final Block<? super T> fn;
+        final Action<? super T> fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
         AcceptCompletion(CompletableFuture<? extends T> src,
-                         Block<? super T> fn,
+                         Action<? super T> fn,
                          CompletableFuture<Void> dst, Executor executor) {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
         public final void run() {
             final CompletableFuture<? extends T> a;
-            final Block<? super T> fn;
+            final Action<? super T> fn;
             final CompletableFuture<Void> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -694,12 +704,12 @@ public class CompletableFuture<T> implements Future<T> {
     static final class BiApplyCompletion<T,U,V> extends Completion {
         final CompletableFuture<? extends T> src;
         final CompletableFuture<? extends U> snd;
-        final BiFunction<? super T,? super U,? extends V> fn;
+        final BiFun<? super T,? super U,? extends V> fn;
         final CompletableFuture<V> dst;
         final Executor executor;
         BiApplyCompletion(CompletableFuture<? extends T> src,
                           CompletableFuture<? extends U> snd,
-                          BiFunction<? super T,? super U,? extends V> fn,
+                          BiFun<? super T,? super U,? extends V> fn,
                           CompletableFuture<V> dst, Executor executor) {
             this.src = src; this.snd = snd;
             this.fn = fn; this.dst = dst;
@@ -708,7 +718,7 @@ public class CompletableFuture<T> implements Future<T> {
         public final void run() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends U> b;
-            final BiFunction<? super T,? super U,? extends V> fn;
+            final BiFun<? super T,? super U,? extends V> fn;
             final CompletableFuture<V> dst;
             Object r, s; T t; U u; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -759,12 +769,12 @@ public class CompletableFuture<T> implements Future<T> {
     static final class BiAcceptCompletion<T,U> extends Completion {
         final CompletableFuture<? extends T> src;
         final CompletableFuture<? extends U> snd;
-        final BiBlock<? super T,? super U> fn;
+        final BiAction<? super T,? super U> fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
         BiAcceptCompletion(CompletableFuture<? extends T> src,
                            CompletableFuture<? extends U> snd,
-                           BiBlock<? super T,? super U> fn,
+                           BiAction<? super T,? super U> fn,
                            CompletableFuture<Void> dst, Executor executor) {
             this.src = src; this.snd = snd;
             this.fn = fn; this.dst = dst;
@@ -773,7 +783,7 @@ public class CompletableFuture<T> implements Future<T> {
         public final void run() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends U> b;
-            final BiBlock<? super T,? super U> fn;
+            final BiAction<? super T,? super U> fn;
             final CompletableFuture<Void> dst;
             Object r, s; T t; U u; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -874,12 +884,12 @@ public class CompletableFuture<T> implements Future<T> {
     static final class OrApplyCompletion<T,U> extends Completion {
         final CompletableFuture<? extends T> src;
         final CompletableFuture<? extends T> snd;
-        final Function<? super T,? extends U> fn;
+        final Fun<? super T,? extends U> fn;
         final CompletableFuture<U> dst;
         final Executor executor;
         OrApplyCompletion(CompletableFuture<? extends T> src,
                           CompletableFuture<? extends T> snd,
-                          Function<? super T,? extends U> fn,
+                          Fun<? super T,? extends U> fn,
                           CompletableFuture<U> dst, Executor executor) {
             this.src = src; this.snd = snd;
             this.fn = fn; this.dst = dst;
@@ -888,7 +898,7 @@ public class CompletableFuture<T> implements Future<T> {
         public final void run() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends T> b;
-            final Function<? super T,? extends U> fn;
+            final Fun<? super T,? extends U> fn;
             final CompletableFuture<U> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -927,12 +937,12 @@ public class CompletableFuture<T> implements Future<T> {
     static final class OrAcceptCompletion<T> extends Completion {
         final CompletableFuture<? extends T> src;
         final CompletableFuture<? extends T> snd;
-        final Block<? super T> fn;
+        final Action<? super T> fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
         OrAcceptCompletion(CompletableFuture<? extends T> src,
                            CompletableFuture<? extends T> snd,
-                           Block<? super T> fn,
+                           Action<? super T> fn,
                            CompletableFuture<Void> dst, Executor executor) {
             this.src = src; this.snd = snd;
             this.fn = fn; this.dst = dst;
@@ -941,7 +951,7 @@ public class CompletableFuture<T> implements Future<T> {
         public final void run() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends T> b;
-            final Block<? super T> fn;
+            final Action<? super T> fn;
             final CompletableFuture<Void> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -1025,16 +1035,16 @@ public class CompletableFuture<T> implements Future<T> {
 
     static final class ExceptionCompletion<T> extends Completion {
         final CompletableFuture<? extends T> src;
-        final Function<? super Throwable, ? extends T> fn;
+        final Fun<? super Throwable, ? extends T> fn;
         final CompletableFuture<T> dst;
         ExceptionCompletion(CompletableFuture<? extends T> src,
-                            Function<? super Throwable, ? extends T> fn,
+                            Fun<? super Throwable, ? extends T> fn,
                             CompletableFuture<T> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
         public final void run() {
             final CompletableFuture<? extends T> a;
-            final Function<? super Throwable, ? extends T> fn;
+            final Fun<? super Throwable, ? extends T> fn;
             final CompletableFuture<T> dst;
             Object r; T t = null; Throwable ex, dx = null;
             if ((dst = this.dst) != null &&
@@ -1091,16 +1101,16 @@ public class CompletableFuture<T> implements Future<T> {
 
     static final class HandleCompletion<T,U> extends Completion {
         final CompletableFuture<? extends T> src;
-        final BiFunction<? super T, Throwable, ? extends U> fn;
+        final BiFun<? super T, Throwable, ? extends U> fn;
         final CompletableFuture<U> dst;
         HandleCompletion(CompletableFuture<? extends T> src,
-                         BiFunction<? super T, Throwable, ? extends U> fn,
+                         BiFun<? super T, Throwable, ? extends U> fn,
                          final CompletableFuture<U> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
         public final void run() {
             final CompletableFuture<? extends T> a;
-            final BiFunction<? super T, Throwable, ? extends U> fn;
+            final BiFun<? super T, Throwable, ? extends U> fn;
             final CompletableFuture<U> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -1131,16 +1141,16 @@ public class CompletableFuture<T> implements Future<T> {
 
     static final class ComposeCompletion<T,U> extends Completion {
         final CompletableFuture<? extends T> src;
-        final Function<? super T, CompletableFuture<U>> fn;
+        final Fun<? super T, CompletableFuture<U>> fn;
         final CompletableFuture<U> dst;
         ComposeCompletion(CompletableFuture<? extends T> src,
-                          Function<? super T, CompletableFuture<U>> fn,
+                          Fun<? super T, CompletableFuture<U>> fn,
                           final CompletableFuture<U> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
         public final void run() {
             final CompletableFuture<? extends T> a;
-            final Function<? super T, CompletableFuture<U>> fn;
+            final Fun<? super T, CompletableFuture<U>> fn;
             final CompletableFuture<U> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -1221,7 +1231,7 @@ public class CompletableFuture<T> implements Future<T> {
      * to complete the returned CompletableFuture
      * @return the CompletableFuture
      */
-    public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
+    public static <U> CompletableFuture<U> supplyAsync(Generator<U> supplier) {
         if (supplier == null) throw new NullPointerException();
         CompletableFuture<U> f = new CompletableFuture<U>();
         ForkJoinPool.commonPool().
@@ -1239,7 +1249,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the CompletableFuture
      */
-    public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier,
+    public static <U> CompletableFuture<U> supplyAsync(Generator<U> supplier,
                                                        Executor executor) {
         if (executor == null || supplier == null)
             throw new NullPointerException();
@@ -1465,7 +1475,7 @@ public class CompletableFuture<T> implements Future<T> {
      * the returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> thenApply(Function<? super T,? extends U> fn) {
+    public <U> CompletableFuture<U> thenApply(Fun<? super T,? extends U> fn) {
         return doThenApply(fn, null);
     }
 
@@ -1481,7 +1491,7 @@ public class CompletableFuture<T> implements Future<T> {
      * the returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> thenApplyAsync(Function<? super T,? extends U> fn) {
+    public <U> CompletableFuture<U> thenApplyAsync(Fun<? super T,? extends U> fn) {
         return doThenApply(fn, ForkJoinPool.commonPool());
     }
 
@@ -1498,13 +1508,13 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> thenApplyAsync(Function<? super T,? extends U> fn,
+    public <U> CompletableFuture<U> thenApplyAsync(Fun<? super T,? extends U> fn,
                                                    Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenApply(fn, executor);
     }
 
-    private <U> CompletableFuture<U> doThenApply(Function<? super T,? extends U> fn,
+    private <U> CompletableFuture<U> doThenApply(Fun<? super T,? extends U> fn,
                                                  Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
@@ -1560,7 +1570,7 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> thenAccept(Block<? super T> block) {
+    public CompletableFuture<Void> thenAccept(Action<? super T> block) {
         return doThenAccept(block, null);
     }
 
@@ -1576,7 +1586,7 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> thenAcceptAsync(Block<? super T> block) {
+    public CompletableFuture<Void> thenAcceptAsync(Action<? super T> block) {
         return doThenAccept(block, ForkJoinPool.commonPool());
     }
 
@@ -1593,13 +1603,13 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> thenAcceptAsync(Block<? super T> block,
+    public CompletableFuture<Void> thenAcceptAsync(Action<? super T> block,
                                                    Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenAccept(block, executor);
     }
 
-    private CompletableFuture<Void> doThenAccept(Block<? super T> fn,
+    private CompletableFuture<Void> doThenAccept(Action<? super T> fn,
                                                  Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
@@ -1744,7 +1754,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U,V> CompletableFuture<V> thenCombine(CompletableFuture<? extends U> other,
-                                                  BiFunction<? super T,? super U,? extends V> fn) {
+                                                  BiFun<? super T,? super U,? extends V> fn) {
         return doThenBiApply(other, fn, null);
     }
 
@@ -1763,7 +1773,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U,V> CompletableFuture<V> thenCombineAsync(CompletableFuture<? extends U> other,
-                                                       BiFunction<? super T,? super U,? extends V> fn) {
+                                                       BiFun<? super T,? super U,? extends V> fn) {
         return doThenBiApply(other, fn, ForkJoinPool.commonPool());
     }
 
@@ -1784,14 +1794,14 @@ public class CompletableFuture<T> implements Future<T> {
      */
 
     public <U,V> CompletableFuture<V> thenCombineAsync(CompletableFuture<? extends U> other,
-                                                       BiFunction<? super T,? super U,? extends V> fn,
+                                                       BiFun<? super T,? super U,? extends V> fn,
                                                        Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenBiApply(other, fn, executor);
     }
 
     private <U,V> CompletableFuture<V> doThenBiApply(CompletableFuture<? extends U> other,
-                                                     BiFunction<? super T,? super U,? extends V> fn,
+                                                     BiFun<? super T,? super U,? extends V> fn,
                                                      Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<V> dst = new CompletableFuture<V>();
@@ -1871,7 +1881,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<Void> thenAcceptBoth(CompletableFuture<? extends U> other,
-                                                      BiBlock<? super T, ? super U> block) {
+                                                      BiAction<? super T, ? super U> block) {
         return doThenBiAccept(other, block, null);
     }
 
@@ -1890,7 +1900,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletableFuture<? extends U> other,
-                                                           BiBlock<? super T, ? super U> block) {
+                                                           BiAction<? super T, ? super U> block) {
         return doThenBiAccept(other, block, ForkJoinPool.commonPool());
     }
 
@@ -1910,14 +1920,14 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletableFuture<? extends U> other,
-                                                           BiBlock<? super T, ? super U> block,
+                                                           BiAction<? super T, ? super U> block,
                                                            Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenBiAccept(other, block, executor);
     }
 
     private <U> CompletableFuture<Void> doThenBiAccept(CompletableFuture<? extends U> other,
-                                                       BiBlock<? super T,? super U> fn,
+                                                       BiAction<? super T,? super U> fn,
                                                        Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
@@ -2110,7 +2120,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<U> applyToEither(CompletableFuture<? extends T> other,
-                                                  Function<? super T, U> fn) {
+                                                  Fun<? super T, U> fn) {
         return doOrApply(other, fn, null);
     }
 
@@ -2131,7 +2141,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<U> applyToEitherAsync(CompletableFuture<? extends T> other,
-                                                       Function<? super T, U> fn) {
+                                                       Fun<? super T, U> fn) {
         return doOrApply(other, fn, ForkJoinPool.commonPool());
     }
 
@@ -2153,14 +2163,14 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<U> applyToEitherAsync(CompletableFuture<? extends T> other,
-                                                       Function<? super T, U> fn,
+                                                       Fun<? super T, U> fn,
                                                        Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doOrApply(other, fn, executor);
     }
 
     private <U> CompletableFuture<U> doOrApply(CompletableFuture<? extends T> other,
-                                               Function<? super T, U> fn,
+                                               Fun<? super T, U> fn,
                                                Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
@@ -2226,7 +2236,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public CompletableFuture<Void> acceptEither(CompletableFuture<? extends T> other,
-                                                Block<? super T> block) {
+                                                Action<? super T> block) {
         return doOrAccept(other, block, null);
     }
 
@@ -2247,7 +2257,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public CompletableFuture<Void> acceptEitherAsync(CompletableFuture<? extends T> other,
-                                                     Block<? super T> block) {
+                                                     Action<? super T> block) {
         return doOrAccept(other, block, ForkJoinPool.commonPool());
     }
 
@@ -2269,14 +2279,14 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public CompletableFuture<Void> acceptEitherAsync(CompletableFuture<? extends T> other,
-                                                     Block<? super T> block,
+                                                     Action<? super T> block,
                                                      Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doOrAccept(other, block, executor);
     }
 
     private CompletableFuture<Void> doOrAccept(CompletableFuture<? extends T> other,
-                                               Block<? super T> fn,
+                                               Action<? super T> fn,
                                                Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
@@ -2444,7 +2454,7 @@ public class CompletableFuture<T> implements Future<T> {
      * return if completed by the given function, or an exception
      * occurs.
      */
-    public <U> CompletableFuture<U> thenCompose(Function<? super T,
+    public <U> CompletableFuture<U> thenCompose(Fun<? super T,
                                                 CompletableFuture<U>> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = null;
@@ -2504,7 +2514,7 @@ public class CompletableFuture<T> implements Future<T> {
      * exceptionally
      * @return the new CompletableFuture
      */
-    public CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn) {
+    public CompletableFuture<T> exceptionally(Fun<Throwable, ? extends T> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<T> dst = new CompletableFuture<T>();
         ExceptionCompletion<T> d = null;
@@ -2552,7 +2562,7 @@ public class CompletableFuture<T> implements Future<T> {
 
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> handle(BiFunction<? super T, Throwable, ? extends U> fn) {
+    public <U> CompletableFuture<U> handle(BiFun<? super T, Throwable, ? extends U> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
         HandleCompletion<T,U> d = null;
@@ -2650,7 +2660,7 @@ public class CompletableFuture<T> implements Future<T> {
     private static final long COMPLETIONS;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            UNSAFE = getUnsafe();
             Class<?> k = CompletableFuture.class;
             RESULT = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("result"));
@@ -2662,4 +2672,34 @@ public class CompletableFuture<T> implements Future<T> {
             throw new Error(e);
         }
     }
+
+
+    /**
+     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+     * Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a jdk.
+     *
+     * @return a sun.misc.Unsafe
+     */
+    private static sun.misc.Unsafe getUnsafe() {
+        try {
+            return sun.misc.Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            try {
+                return java.security.AccessController.doPrivileged
+                    (new java.security
+                     .PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                        public sun.misc.Unsafe run() throws Exception {
+                            java.lang.reflect.Field f = sun.misc
+                                .Unsafe.class.getDeclaredField("theUnsafe");
+                            f.setAccessible(true);
+                            return (sun.misc.Unsafe) f.get(null);
+                        }});
+            } catch (java.security.PrivilegedActionException e) {
+                throw new RuntimeException("Could not initialize intrinsics",
+                                           e.getCause());
+            }
+        }
+    }
+
 }

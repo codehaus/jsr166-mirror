@@ -286,6 +286,15 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
+     * Suppresses warnings and is slightly safer than a plain cast.
+     */
+    @SuppressWarnings("unchecked")
+    T castResult(Object r) {
+        assert ! (r == null || (r instanceof AltResult));
+        return (T)r;
+    }
+
+    /**
      * Waits if necessary for the computation to complete, and then
      * retrieves its result.
      *
@@ -296,7 +305,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @throws InterruptedException if the current thread was interrupted
      * while waiting
      */
-    @SuppressWarnings("unchecked") public T get() throws InterruptedException, ExecutionException {
+    public T get() throws InterruptedException, ExecutionException {
         Object r; Throwable ex, cause;
         if ((r = result) == null && (r = waitingGet(true)) == null)
             throw new InterruptedException();
@@ -311,7 +320,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             return null;
         }
-        return (T)r;
+        return castResult(r);
     }
 
     /**
@@ -328,7 +337,7 @@ public class CompletableFuture<T> implements Future<T> {
      * while waiting
      * @throws TimeoutException if the wait timed out
      */
-    @SuppressWarnings("unchecked") public T get(long timeout, TimeUnit unit)
+    public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
         Object r; Throwable ex, cause;
         long nanos = unit.toNanos(timeout);
@@ -347,7 +356,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             return null;
         }
-        return (T)r;
+        return castResult(r);
     }
 
     /**
@@ -364,7 +373,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @throws CompletionException if a completion computation threw
      * an exception
      */
-    @SuppressWarnings("unchecked") public T join() {
+    public T join() {
         Object r; Throwable ex;
         if ((r = result) == null)
             r = waitingGet(false);
@@ -378,7 +387,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             return null;
         }
-        return (T)r;
+        return castResult(r);
     }
 
     /**
@@ -391,7 +400,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @throws CompletionException if a completion computation threw
      * an exception
      */
-    @SuppressWarnings("unchecked") public T getNow(T valueIfAbsent) {
+    public T getNow(T valueIfAbsent) {
         Object r; Throwable ex;
         if ((r = result) == null)
             return valueIfAbsent;
@@ -405,7 +414,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             return null;
         }
-        return (T)r;
+        return castResult(r);
     }
 
     /**
@@ -976,7 +985,7 @@ public class CompletableFuture<T> implements Future<T> {
      * return if completed by the given function, or an exception
      * occurs.
      */
-    @SuppressWarnings("unchecked") public <U> CompletableFuture<U> thenCompose(Function<? super T,
+    public <U> CompletableFuture<U> thenCompose(Function<? super T,
                                                 CompletableFuture<U>> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = null;
@@ -1000,7 +1009,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             if (ex == null) {
                 try {
@@ -1035,7 +1044,7 @@ public class CompletableFuture<T> implements Future<T> {
      * exceptionally
      * @return the new CompletableFuture
      */
-    @SuppressWarnings("unchecked") public CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn) {
+    public CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<T> dst = new CompletableFuture<T>();
         ExceptionAction<T> d = null;
@@ -1061,7 +1070,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
             }
             else
-                t = (T) r;
+                t = castResult(r);
             dst.internalComplete(t, dx);
         }
         helpPostComplete();
@@ -1081,7 +1090,7 @@ public class CompletableFuture<T> implements Future<T> {
 
      * @return the new CompletableFuture
      */
-    @SuppressWarnings("unchecked") public <U> CompletableFuture<U> handle(BiFunction<? super T, Throwable, ? extends U> fn) {
+    public <U> CompletableFuture<U> handle(BiFunction<? super T, Throwable, ? extends U> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
         ThenHandle<T,U> d = null;
@@ -1103,7 +1112,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             U u = null; Throwable dx = null;
             try {
@@ -1468,7 +1477,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             CompletableFuture<? extends T> a;
             Function<? super T,? extends U> fn;
             CompletableFuture<U> dst;
@@ -1484,7 +1493,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 Executor e = executor;
                 U u = null;
@@ -1516,7 +1525,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             CompletableFuture<? extends T> a;
             Block<? super T> fn;
             CompletableFuture<Void> dst;
@@ -1532,7 +1541,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 Executor e = executor;
                 if (ex == null) {
@@ -1564,7 +1573,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             CompletableFuture<? extends T> a;
             Runnable fn;
             CompletableFuture<Void> dst;
@@ -1610,7 +1619,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             Object r, s; T t; U u; Throwable ex;
             CompletableFuture<? extends T> a;
             CompletableFuture<? extends U> b;
@@ -1629,7 +1638,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 if (ex != null)
                     u = null;
@@ -1638,7 +1647,7 @@ public class CompletableFuture<T> implements Future<T> {
                     u = null;
                 }
                 else
-                    u = (U) s;
+                    u = b.castResult(s);
                 Executor e = executor;
                 V v = null;
                 if (ex == null) {
@@ -1672,7 +1681,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             Object r, s; T t; U u; Throwable ex;
             CompletableFuture<? extends T> a;
             CompletableFuture<? extends U> b;
@@ -1691,7 +1700,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 if (ex != null)
                     u = null;
@@ -1700,7 +1709,7 @@ public class CompletableFuture<T> implements Future<T> {
                     u = null;
                 }
                 else
-                    u = (U) s;
+                    u = b.castResult(s);
                 Executor e = executor;
                 if (ex == null) {
                     try {
@@ -1733,7 +1742,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             Object r, s; Throwable ex;
             final CompletableFuture<? extends T> a;
             final CompletableFuture<?> b;
@@ -1784,7 +1793,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             Object r; T t; Throwable ex;
             CompletableFuture<? extends T> a;
             CompletableFuture<? extends T> b;
@@ -1801,7 +1810,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 Executor e = executor;
                 U u = null;
@@ -1836,7 +1845,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             Object r; T t; Throwable ex;
             CompletableFuture<? extends T> a;
             CompletableFuture<? extends T> b;
@@ -1853,7 +1862,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 Executor e = executor;
                 if (ex == null) {
@@ -1887,7 +1896,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             Object r; Throwable ex;
             CompletableFuture<? extends T> a;
             final CompletableFuture<?> b;
@@ -1929,7 +1938,7 @@ public class CompletableFuture<T> implements Future<T> {
                         CompletableFuture<T> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             CompletableFuture<? extends T> a;
             Function<? super Throwable, ? extends T> fn;
             CompletableFuture<T> dst;
@@ -1948,7 +1957,7 @@ public class CompletableFuture<T> implements Future<T> {
                     }
                 }
                 else
-                    t = (T) r;
+                    t = a.castResult(r);
                 dst.internalComplete(t, dx);
             }
         }
@@ -1962,7 +1971,7 @@ public class CompletableFuture<T> implements Future<T> {
                  CompletableFuture<T> dst) {
             this.src = src; this.dst = dst;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             CompletableFuture<? extends T> a;
             CompletableFuture<T> dst;
             Object r; Object t; Throwable ex;
@@ -1993,7 +2002,7 @@ public class CompletableFuture<T> implements Future<T> {
                    final CompletableFuture<U> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             CompletableFuture<? extends T> a;
             BiFunction<? super T, Throwable, ? extends U> fn;
             CompletableFuture<U> dst;
@@ -2009,7 +2018,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 U u = null; Throwable dx = null;
                 try {
@@ -2032,7 +2041,7 @@ public class CompletableFuture<T> implements Future<T> {
                     final CompletableFuture<U> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
-        @SuppressWarnings("unchecked") public final void run() {
+        public final void run() {
             CompletableFuture<? extends T> a;
             Function<? super T, CompletableFuture<U>> fn;
             CompletableFuture<U> dst;
@@ -2048,7 +2057,7 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = (T) r;
+                    t = a.castResult(r);
                 }
                 CompletableFuture<U> c = null;
                 U u = null;
@@ -2083,7 +2092,7 @@ public class CompletableFuture<T> implements Future<T> {
                             u = null;
                         }
                         else
-                            u = (U) s;
+                            u = c.castResult(s);
                     }
                 }
                 if (complete || ex != null)
@@ -2097,7 +2106,7 @@ public class CompletableFuture<T> implements Future<T> {
 
     /* ------------- then/and/or implementations -------------- */
 
-    @SuppressWarnings("unchecked") private <U> CompletableFuture<U> thenFunction
+    private <U> CompletableFuture<U> thenFunction
         (Function<? super T,? extends U> fn,
          Executor e) {
         if (fn == null) throw new NullPointerException();
@@ -2121,7 +2130,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             U u = null;
             if (ex == null) {
@@ -2141,7 +2150,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private CompletableFuture<Void> thenBlock
+    private CompletableFuture<Void> thenBlock
         (Block<? super T> fn,
          Executor e) {
         if (fn == null) throw new NullPointerException();
@@ -2165,7 +2174,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             if (ex == null) {
                 try {
@@ -2184,7 +2193,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private CompletableFuture<Void> thenRunnable
+    private CompletableFuture<Void> thenRunnable
         (Runnable action,
          Executor e) {
         if (action == null) throw new NullPointerException();
@@ -2223,7 +2232,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private <U,V> CompletableFuture<V> andFunction
+    private <U,V> CompletableFuture<V> andFunction
         (CompletableFuture<? extends U> other,
          BiFunction<? super T,? super U,? extends V> fn,
          Executor e) {
@@ -2259,7 +2268,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             if (ex != null)
                 u = null;
@@ -2268,7 +2277,7 @@ public class CompletableFuture<T> implements Future<T> {
                 u = null;
             }
             else
-                u = (U) s;
+                u = other.castResult(s);
             V v = null;
             if (ex == null) {
                 try {
@@ -2288,7 +2297,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private <U> CompletableFuture<Void> andBlock
+    private <U> CompletableFuture<Void> andBlock
         (CompletableFuture<? extends U> other,
          BiBlock<? super T,? super U> fn,
          Executor e) {
@@ -2324,7 +2333,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             if (ex != null)
                 u = null;
@@ -2333,7 +2342,7 @@ public class CompletableFuture<T> implements Future<T> {
                 u = null;
             }
             else
-                u = (U) s;
+                u = other.castResult(s);
             if (ex == null) {
                 try {
                     if (e != null)
@@ -2352,7 +2361,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private CompletableFuture<Void> andRunnable
+    private CompletableFuture<Void> andRunnable
         (CompletableFuture<?> other,
          Runnable action,
          Executor e) {
@@ -2406,7 +2415,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private <U> CompletableFuture<U> orFunction
+    private <U> CompletableFuture<U> orFunction
         (CompletableFuture<? extends T> other,
          Function<? super T, U> fn,
          Executor e) {
@@ -2436,7 +2445,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             U u = null;
             if (ex == null) {
@@ -2457,7 +2466,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private CompletableFuture<Void> orBlock
+    private CompletableFuture<Void> orBlock
         (CompletableFuture<? extends T> other,
          Block<? super T> fn,
          Executor e) {
@@ -2487,7 +2496,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             else {
                 ex = null;
-                t = (T) r;
+                t = castResult(r);
             }
             if (ex == null) {
                 try {
@@ -2507,7 +2516,7 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
-    @SuppressWarnings("unchecked") private CompletableFuture<Void> orRunnable
+    private CompletableFuture<Void> orRunnable
         (CompletableFuture<?> other,
          Runnable action,
          Executor e) {

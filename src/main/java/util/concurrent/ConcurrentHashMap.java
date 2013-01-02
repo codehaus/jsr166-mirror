@@ -3504,7 +3504,7 @@ public class ConcurrentHashMap<K, V>
      * for an element
      * @param basis the identity (initial default value) for the reduction
      * @param reducer a commutative associative combining function
-     * @return  the result of accumulating the given transformation
+     * @return the result of accumulating the given transformation
      * of all keys
      */
     @SuppressWarnings("unchecked") public double reduceKeysToDoubleSequentially
@@ -3631,7 +3631,7 @@ public class ConcurrentHashMap<K, V>
      * given reducer to combine values, or null if none.
      *
      * @param reducer a commutative associative combining function
-     * @return  the result of accumulating all values
+     * @return the result of accumulating all values
      */
     public V reduceValuesSequentially
         (BiFunction<? super V, ? super V, ? extends V> reducer) {
@@ -3880,7 +3880,7 @@ public class ConcurrentHashMap<K, V>
      * for an element
      * @param basis the identity (initial default value) for the reduction
      * @param reducer a commutative associative combining function
-     * @return  the result of accumulating the given transformation
+     * @return the result of accumulating the given transformation
      * of all entries
      */
     @SuppressWarnings("unchecked") public long reduceEntriesToLongSequentially
@@ -4132,7 +4132,7 @@ public class ConcurrentHashMap<K, V>
      * for an element
      * @param basis the identity (initial default value) for the reduction
      * @param reducer a commutative associative combining function
-     * @return  the result of accumulating the given transformation
+     * @return the result of accumulating the given transformation
      * of all keys
      */
     public double reduceKeysToDoubleInParallel
@@ -4232,7 +4232,7 @@ public class ConcurrentHashMap<K, V>
      * given reducer to combine values, or null if none.
      *
      * @param reducer a commutative associative combining function
-     * @return  the result of accumulating all values
+     * @return the result of accumulating all values
      */
     public V reduceValuesInParallel
         (BiFunction<? super V, ? super V, ? extends V> reducer) {
@@ -4424,7 +4424,7 @@ public class ConcurrentHashMap<K, V>
      * for an element
      * @param basis the identity (initial default value) for the reduction
      * @param reducer a commutative associative combining function
-     * @return  the result of accumulating the given transformation
+     * @return the result of accumulating the given transformation
      * of all entries
      */
     public long reduceEntriesToLongInParallel

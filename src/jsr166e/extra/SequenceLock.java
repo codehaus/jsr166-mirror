@@ -109,7 +109,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
     private static final long serialVersionUID = 7373984872572414699L;
 
     static final class Sync extends AbstractQueuedLongSynchronizer {
-        static final long serialVersionUID = 2540673546047039555L;
+        private static final long serialVersionUID = 2540673546047039555L;
 
         /**
          * The number of times to spin in lock() and awaitAvailability().

@@ -2555,8 +2555,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * ongoing processing are automatically terminated upon program
      * {@link System#exit}.  Any program that relies on asynchronous
      * task processing to complete before program termination should
-     * invoke {@link #quiesceCommonPool}, or the timeout-based {@code
-     * commonPool().}{@link #awaitQuiescence}, before exit.
+     * invoke {@code commonPool().}{@link #awaitQuiescence}, before
+     * exit.
      *
      * @return the common pool instance
      */
@@ -3171,7 +3171,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Waits and/or attempts to assist performing tasks indefinitely
      * until the {@link #commonPool()} {@link #isQuiescent}
      */
-    public static void quiesceCommonPool() {
+    static void quiesceCommonPool() {
         common.awaitQuiescence(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 

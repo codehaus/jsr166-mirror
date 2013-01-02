@@ -938,7 +938,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      *
-     * @return zero.
+     * @return zero
      */
     public int size() {
         return 0;
@@ -948,7 +948,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Always returns zero.
      * A <tt>SynchronousQueue</tt> has no internal capacity.
      *
-     * @return zero.
+     * @return zero
      */
     public int remainingCapacity() {
         return 0;

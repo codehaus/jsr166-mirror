@@ -1225,7 +1225,7 @@ public class ReentrantReadWriteLock
      * Queries the number of read locks held for this lock. This
      * method is designed for use in monitoring system state, not for
      * synchronization control.
-     * @return the number of read locks held.
+     * @return the number of read locks held
      */
     public int getReadLockCount() {
         return sync.getReadLockCount();

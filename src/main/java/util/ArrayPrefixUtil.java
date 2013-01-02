@@ -73,7 +73,6 @@ class ArrayPrefixUtil {
     static final int MIN_PARTITION = 16;
 
     static final class CumulateTask<T> extends CountedCompleter<Void> {
-        static final long serialVersionUID = 5293554502939613543L;
         final T[] array;
         final BinaryOperator<T> function;
         CumulateTask<T> left, right;
@@ -220,10 +219,10 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = 5293554502939613543L;
     }
 
     static final class LongCumulateTask extends CountedCompleter<Void> {
-        static final long serialVersionUID = -5074099945909284273L;
         final long[] array;
         final LongBinaryOperator function;
         LongCumulateTask left, right;
@@ -370,10 +369,10 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = -5074099945909284273L;
     }
 
     static final class DoubleCumulateTask extends CountedCompleter<Void> {
-        static final long serialVersionUID = -586947823794232033L;
         final double[] array;
         final DoubleBinaryOperator function;
         DoubleCumulateTask left, right;
@@ -520,10 +519,10 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = -586947823794232033L;
     }
 
     static final class IntCumulateTask extends CountedCompleter<Void> {
-        static final long serialVersionUID = 3731755594596840961L;
         final int[] array;
         final IntBinaryOperator function;
         IntCumulateTask left, right;
@@ -670,7 +669,7 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = 3731755594596840961L;
     }
-
 
 }

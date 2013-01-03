@@ -110,11 +110,11 @@ public class AtomicReference<V> implements java.io.Serializable {
      * @return the previous value
      */
     public final V getAndSet(V newValue) {
-        while (true) {
-            V x = get();
-            if (compareAndSet(x, newValue))
-                return x;
-        }
+        V prev;
+        do {
+            prev = get();
+        } while (!compareAndSet(prev, newValue));
+        return prev;
     }
 
     /**
@@ -128,11 +128,12 @@ public class AtomicReference<V> implements java.io.Serializable {
      * @since 1.8
      */
     public final V getAndUpdate(UnaryOperator<V> updateFunction) {
-        V v;
+        V prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, updateFunction.apply(v)));
-        return v;
+            prev = get();
+            next = updateFunction.apply(prev);
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -146,11 +147,12 @@ public class AtomicReference<V> implements java.io.Serializable {
      * @since 1.8
      */
     public final V updateAndGet(UnaryOperator<V> updateFunction) {
-        V v, r;
+        V prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, r = updateFunction.apply(v)));
-        return r;
+            prev = get();
+            next = updateFunction.apply(prev);
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -168,11 +170,12 @@ public class AtomicReference<V> implements java.io.Serializable {
      */
     public final V getAndAccumulate(V x,
                                     BinaryOperator<V> accumulatorFunction) {
-        V v;
+        V prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, accumulatorFunction.apply(v, x)));
-        return v;
+            prev = get();
+            next = accumulatorFunction.apply(prev, x);
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -190,11 +193,12 @@ public class AtomicReference<V> implements java.io.Serializable {
      */
     public final V accumulateAndGet(V x,
                                     BinaryOperator<V> accumulatorFunction) {
-        V v, r;
+        V prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, r = accumulatorFunction.apply(v, x)));
-        return r;
+            prev = get();
+            next = accumulatorFunction.apply(prev, x);
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**

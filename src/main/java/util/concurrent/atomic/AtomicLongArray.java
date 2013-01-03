@@ -116,11 +116,11 @@ public class AtomicLongArray implements java.io.Serializable {
      */
     public final long getAndSet(int i, long newValue) {
         long offset = checkedByteOffset(i);
-        while (true) {
-            long current = getRaw(offset);
-            if (compareAndSetRaw(offset, current, newValue))
-                return current;
-        }
+        long prev;
+        do {
+            prev = getRaw(offset);
+        } while (!compareAndSetRaw(offset, prev, newValue));
+        return prev;
     }
 
     /**
@@ -187,11 +187,12 @@ public class AtomicLongArray implements java.io.Serializable {
      */
     public final long getAndAdd(int i, long delta) {
         long offset = checkedByteOffset(i);
-        while (true) {
-            long current = getRaw(offset);
-            if (compareAndSetRaw(offset, current, current + delta))
-                return current;
-        }
+        long prev, next;
+        do {
+            prev = getRaw(offset);
+            next = prev + delta;
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
     }
 
     /**
@@ -223,12 +224,12 @@ public class AtomicLongArray implements java.io.Serializable {
      */
     public long addAndGet(int i, long delta) {
         long offset = checkedByteOffset(i);
-        while (true) {
-            long current = getRaw(offset);
-            long next = current + delta;
-            if (compareAndSetRaw(offset, current, next))
-                return next;
-        }
+        long prev, next;
+        do {
+            prev = getRaw(offset);
+            next = prev + delta;
+        } while (!compareAndSetRaw(offset, prev, next));
+        return next;
     }
 
     /**

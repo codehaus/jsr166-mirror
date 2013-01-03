@@ -117,11 +117,11 @@ public class AtomicBoolean implements java.io.Serializable {
      * @return the previous value
      */
     public final boolean getAndSet(boolean newValue) {
-        for (;;) {
-            boolean current = get();
-            if (compareAndSet(current, newValue))
-                return current;
-        }
+        boolean prev;
+        do {
+            prev = get();
+        } while (!compareAndSet(prev, newValue));
+        return prev;
     }
 
     /**

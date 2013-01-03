@@ -135,11 +135,11 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the previous value
      */
     public long getAndSet(T obj, long newValue) {
-        for (;;) {
-            long current = get(obj);
-            if (compareAndSet(obj, current, newValue))
-                return current;
-        }
+        long prev;
+        do {
+            prev = get(obj);
+        } while (!compareAndSet(obj, prev, newValue));
+        return prev;
     }
 
     /**
@@ -150,12 +150,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the previous value
      */
     public long getAndIncrement(T obj) {
-        for (;;) {
-            long current = get(obj);
-            long next = current + 1;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
+        long prev, next;
+        do {
+            prev = get(obj);
+            next = prev + 1;
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -166,12 +166,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the previous value
      */
     public long getAndDecrement(T obj) {
-        for (;;) {
-            long current = get(obj);
-            long next = current - 1;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
+        long prev, next;
+        do {
+            prev = get(obj);
+            next = prev - 1;
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -183,12 +183,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the previous value
      */
     public long getAndAdd(T obj, long delta) {
-        for (;;) {
-            long current = get(obj);
-            long next = current + delta;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
+        long prev, next;
+        do {
+            prev = get(obj);
+            next = prev + delta;
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -199,12 +199,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the updated value
      */
     public long incrementAndGet(T obj) {
-        for (;;) {
-            long current = get(obj);
-            long next = current + 1;
-            if (compareAndSet(obj, current, next))
-                return next;
-        }
+        long prev, next;
+        do {
+            prev = get(obj);
+            next = prev + 1;
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -215,12 +215,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the updated value
      */
     public long decrementAndGet(T obj) {
-        for (;;) {
-            long current = get(obj);
-            long next = current - 1;
-            if (compareAndSet(obj, current, next))
-                return next;
-        }
+        long prev, next;
+        do {
+            prev = get(obj);
+            next = prev - 1;
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -232,12 +232,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @return the updated value
      */
     public long addAndGet(T obj, long delta) {
-        for (;;) {
-            long current = get(obj);
-            long next = current + delta;
-            if (compareAndSet(obj, current, next))
-                return next;
-        }
+        long prev, next;
+        do {
+            prev = get(obj);
+            next = prev + delta;
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -252,11 +252,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @since 1.8
      */
     public final long getAndUpdate(T obj, LongUnaryOperator updateFunction) {
-        long v;
+        long prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, updateFunction.applyAsLong(v)));
-        return v;
+            prev = get(obj);
+            next = updateFunction.applyAsLong(prev);
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -271,11 +272,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @since 1.8
      */
     public final long updateAndGet(T obj, LongUnaryOperator updateFunction) {
-        long v, r;
+        long prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, r = updateFunction.applyAsLong(v)));
-        return r;
+            prev = get(obj);
+            next = updateFunction.applyAsLong(prev);
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -294,11 +296,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      */
     public final long getAndAccumulate(T obj, long x,
                                        LongBinaryOperator accumulatorFunction) {
-        long v;
+        long prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, accumulatorFunction.applyAsLong(v, x)));
-        return v;
+            prev = get(obj);
+            next = accumulatorFunction.applyAsLong(prev, x);
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -317,11 +320,12 @@ public abstract class AtomicLongFieldUpdater<T> {
      */
     public final long accumulateAndGet(T obj, long x,
                                        LongBinaryOperator accumulatorFunction) {
-        long v, r;
+        long prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, r = accumulatorFunction.applyAsLong(v, x)));
-        return r;
+            prev = get(obj);
+            next = accumulatorFunction.applyAsLong(prev, x);
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     private static class CASUpdater<T> extends AtomicLongFieldUpdater<T> {

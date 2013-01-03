@@ -149,11 +149,11 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
      * @return the previous value
      */
     public V getAndSet(T obj, V newValue) {
-        for (;;) {
-            V current = get(obj);
-            if (compareAndSet(obj, current, newValue))
-                return current;
-        }
+        V prev;
+        do {
+            prev = get(obj);
+        } while (!compareAndSet(obj, prev, newValue));
+        return prev;
     }
 
     /**
@@ -168,11 +168,12 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
      * @since 1.8
      */
     public final V getAndUpdate(T obj, UnaryOperator<V> updateFunction) {
-        V v;
+        V prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, updateFunction.apply(v)));
-        return v;
+            prev = get(obj);
+            next = updateFunction.apply(prev);
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -187,11 +188,12 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
      * @since 1.8
      */
     public final V updateAndGet(T obj, UnaryOperator<V> updateFunction) {
-        V v, r;
+        V prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, r = updateFunction.apply(v)));
-        return r;
+            prev = get(obj);
+            next = updateFunction.apply(prev);
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -210,11 +212,12 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
      */
     public final V getAndAccumulate(T obj, V x,
                                     BinaryOperator<V> accumulatorFunction) {
-        V v;
+        V prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, accumulatorFunction.apply(v, x)));
-        return v;
+            prev = get(obj);
+            next = accumulatorFunction.apply(prev, x);
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -233,11 +236,12 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
      */
     public final V accumulateAndGet(T obj, V x,
                                     BinaryOperator<V> accumulatorFunction) {
-        V v, r;
+        V prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, r = accumulatorFunction.apply(v, x)));
-        return r;
+            prev = get(obj);
+            next = accumulatorFunction.apply(prev, x);
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
 

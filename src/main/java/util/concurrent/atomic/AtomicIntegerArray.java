@@ -117,11 +117,11 @@ public class AtomicIntegerArray implements java.io.Serializable {
      */
     public final int getAndSet(int i, int newValue) {
         long offset = checkedByteOffset(i);
-        while (true) {
-            int current = getRaw(offset);
-            if (compareAndSetRaw(offset, current, newValue))
-                return current;
-        }
+        int prev;
+        do {
+            prev = getRaw(offset);
+        } while (!compareAndSetRaw(offset, prev, newValue));
+        return prev;
     }
 
     /**
@@ -188,11 +188,12 @@ public class AtomicIntegerArray implements java.io.Serializable {
      */
     public final int getAndAdd(int i, int delta) {
         long offset = checkedByteOffset(i);
-        while (true) {
-            int current = getRaw(offset);
-            if (compareAndSetRaw(offset, current, current + delta))
-                return current;
-        }
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = prev + delta;
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
     }
 
     /**
@@ -224,12 +225,12 @@ public class AtomicIntegerArray implements java.io.Serializable {
      */
     public final int addAndGet(int i, int delta) {
         long offset = checkedByteOffset(i);
-        while (true) {
-            int current = getRaw(offset);
-            int next = current + delta;
-            if (compareAndSetRaw(offset, current, next))
-                return next;
-        }
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = prev + delta;
+        } while (!compareAndSetRaw(offset, prev, next));
+        return next;
     }
 
     /**

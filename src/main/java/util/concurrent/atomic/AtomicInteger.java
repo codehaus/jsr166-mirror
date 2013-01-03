@@ -88,11 +88,11 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndSet(int newValue) {
-        for (;;) {
-            int current = get();
-            if (compareAndSet(current, newValue))
-                return current;
-        }
+        int prev;
+        do {
+            prev = get();
+        } while (!compareAndSet(prev, newValue));
+        return prev;
     }
 
     /**
@@ -130,12 +130,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndIncrement() {
-        for (;;) {
-            int current = get();
-            int next = current + 1;
-            if (compareAndSet(current, next))
-                return current;
-        }
+        int prev, next;
+        do {
+            prev = get();
+            next = prev + 1;
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -144,12 +144,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndDecrement() {
-        for (;;) {
-            int current = get();
-            int next = current - 1;
-            if (compareAndSet(current, next))
-                return current;
-        }
+        int prev, next;
+        do {
+            prev = get();
+            next = prev - 1;
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -159,12 +159,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndAdd(int delta) {
-        for (;;) {
-            int current = get();
-            int next = current + delta;
-            if (compareAndSet(current, next))
-                return current;
-        }
+        int prev, next;
+        do {
+            prev = get();
+            next = prev + delta;
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -173,12 +173,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final int incrementAndGet() {
-        for (;;) {
-            int current = get();
-            int next = current + 1;
-            if (compareAndSet(current, next))
-                return next;
-        }
+        int prev, next;
+        do {
+            prev = get();
+            next = prev + 1;
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -187,12 +187,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final int decrementAndGet() {
-        for (;;) {
-            int current = get();
-            int next = current - 1;
-            if (compareAndSet(current, next))
-                return next;
-        }
+        int prev, next;
+        do {
+            prev = get();
+            next = prev - 1;
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -202,12 +202,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final int addAndGet(int delta) {
-        for (;;) {
-            int current = get();
-            int next = current + delta;
-            if (compareAndSet(current, next))
-                return next;
-        }
+        int prev, next;
+        do {
+            prev = get();
+            next = prev + delta;
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -221,11 +221,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @since 1.8
      */
     public final int getAndUpdate(IntUnaryOperator updateFunction) {
-        int v;
+        int prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, updateFunction.applyAsInt(v)));
-        return v;
+            prev = get();
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -239,11 +240,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @since 1.8
      */
     public final int updateAndGet(IntUnaryOperator updateFunction) {
-        int v, r;
+        int prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, r = updateFunction.applyAsInt(v)));
-        return r;
+            prev = get();
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -261,11 +263,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      */
     public final int getAndAccumulate(int x,
                                       IntBinaryOperator accumulatorFunction) {
-        int v;
+        int prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, accumulatorFunction.applyAsInt(v, x)));
-        return v;
+            prev = get();
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -283,11 +286,12 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      */
     public final int accumulateAndGet(int x,
                                       IntBinaryOperator accumulatorFunction) {
-        int v, r;
+        int prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, r = accumulatorFunction.applyAsInt(v, x)));
-        return r;
+            prev = get();
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**

@@ -102,11 +102,11 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final long getAndSet(long newValue) {
-        while (true) {
-            long current = get();
-            if (compareAndSet(current, newValue))
-                return current;
-        }
+        long prev;
+        do {
+            prev = get();
+        } while (!compareAndSet(prev, newValue));
+        return prev;
     }
 
     /**
@@ -144,12 +144,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final long getAndIncrement() {
-        while (true) {
-            long current = get();
-            long next = current + 1;
-            if (compareAndSet(current, next))
-                return current;
-        }
+        long prev, next;
+        do {
+            prev = get();
+            next = prev + 1;
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -158,12 +158,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final long getAndDecrement() {
-        while (true) {
-            long current = get();
-            long next = current - 1;
-            if (compareAndSet(current, next))
-                return current;
-        }
+        long prev, next;
+        do {
+            prev = get();
+            next = prev - 1;
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -173,12 +173,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final long getAndAdd(long delta) {
-        while (true) {
-            long current = get();
-            long next = current + delta;
-            if (compareAndSet(current, next))
-                return current;
-        }
+        long prev, next;
+        do {
+            prev = get();
+            next = prev + delta;
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -187,12 +187,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final long incrementAndGet() {
-        for (;;) {
-            long current = get();
-            long next = current + 1;
-            if (compareAndSet(current, next))
-                return next;
-        }
+        long prev, next;
+        do {
+            prev = get();
+            next = prev + 1;
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -201,12 +201,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final long decrementAndGet() {
-        for (;;) {
-            long current = get();
-            long next = current - 1;
-            if (compareAndSet(current, next))
-                return next;
-        }
+        long prev, next;
+        do {
+            prev = get();
+            next = prev - 1;
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -216,12 +216,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final long addAndGet(long delta) {
-        for (;;) {
-            long current = get();
-            long next = current + delta;
-            if (compareAndSet(current, next))
-                return next;
-        }
+        long prev, next;
+        do {
+            prev = get();
+            next = prev + delta;
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -235,11 +235,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @since 1.8
      */
     public final long getAndUpdate(LongUnaryOperator updateFunction) {
-        long v;
+        long prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, updateFunction.applyAsLong(v)));
-        return v;
+            prev = get();
+            next = updateFunction.applyAsLong(prev);
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -253,11 +254,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @since 1.8
      */
     public final long updateAndGet(LongUnaryOperator updateFunction) {
-        long v, r;
+        long prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, r = updateFunction.applyAsLong(v)));
-        return r;
+            prev = get();
+            next = updateFunction.applyAsLong(prev);
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -275,11 +277,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      */
     public final long getAndAccumulate(long x,
                                        LongBinaryOperator accumulatorFunction) {
-        long v;
+        long prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, accumulatorFunction.applyAsLong(v, x)));
-        return v;
+            prev = get();
+            next = accumulatorFunction.applyAsLong(prev, x);
+        } while (!compareAndSet(prev, next));
+        return prev;
     }
 
     /**
@@ -297,11 +300,12 @@ public class AtomicLong extends Number implements java.io.Serializable {
      */
     public final long accumulateAndGet(long x,
                                        LongBinaryOperator accumulatorFunction) {
-        long v, r;
+        long prev, next;
         do {
-            v = get();
-        } while (!compareAndSet(v, r = accumulatorFunction.applyAsLong(v, x)));
-        return r;
+            prev = get();
+            next = accumulatorFunction.applyAsLong(prev, x);
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**

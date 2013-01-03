@@ -55,13 +55,12 @@
  * write your utility method as follows:
  *  <pre> {@code
  * long getAndTransform(AtomicLong var) {
- *   while (true) {
- *     long current = var.get();
- *     long next = transform(current);
- *     if (var.compareAndSet(current, next))
- *         return current;
- *         // return next; for transformAndGet
- *   }
+ *   long prev, next;
+ *   do {
+ *     prev = var.get();
+ *     next = transform(prev);
+ *   } while (!var.compareAndSet(prev, next));
+ *   return prev; // return next; for transformAndGet
  * }}</pre>
  *
  * <p>The memory effects for accesses and updates of atomics generally

@@ -41,7 +41,7 @@ public class TreeMapTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * copy constructor creates map equal to source map
      */
     public void testConstructFromSorted() {
         TreeMap map = map5();

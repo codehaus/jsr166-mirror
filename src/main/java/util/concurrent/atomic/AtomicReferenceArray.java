@@ -132,11 +132,11 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      */
     public final E getAndSet(int i, E newValue) {
         long offset = checkedByteOffset(i);
-        while (true) {
-            E current = getRaw(offset);
-            if (compareAndSetRaw(offset, current, newValue))
-                return current;
-        }
+        E prev;
+        do {
+            prev = getRaw(offset);
+        } while (!compareAndSetRaw(offset, prev, newValue));
+        return prev;
     }
 
     /**
@@ -168,7 +168,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param i the index
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return true if successful
      */
     public final boolean weakCompareAndSet(int i, E expect, E update) {
         return compareAndSet(i, expect, update);

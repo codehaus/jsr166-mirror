@@ -132,11 +132,11 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the previous value
      */
     public int getAndSet(T obj, int newValue) {
-        for (;;) {
-            int current = get(obj);
-            if (compareAndSet(obj, current, newValue))
-                return current;
-        }
+        int prev;
+        do {
+            prev = get(obj);
+        } while (!compareAndSet(obj, prev, newValue));
+        return prev;
     }
 
     /**
@@ -147,12 +147,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the previous value
      */
     public int getAndIncrement(T obj) {
-        for (;;) {
-            int current = get(obj);
-            int next = current + 1;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
+        int prev, next;
+        do {
+            prev = get(obj);
+            next = prev + 1;
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -163,12 +163,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the previous value
      */
     public int getAndDecrement(T obj) {
-        for (;;) {
-            int current = get(obj);
-            int next = current - 1;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
+        int prev, next;
+        do {
+            prev = get(obj);
+            next = prev - 1;
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -180,12 +180,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the previous value
      */
     public int getAndAdd(T obj, int delta) {
-        for (;;) {
-            int current = get(obj);
-            int next = current + delta;
-            if (compareAndSet(obj, current, next))
-                return current;
-        }
+        int prev, next;
+        do {
+            prev = get(obj);
+            next = prev + delta;
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -196,12 +196,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the updated value
      */
     public int incrementAndGet(T obj) {
-        for (;;) {
-            int current = get(obj);
-            int next = current + 1;
-            if (compareAndSet(obj, current, next))
-                return next;
-        }
+        int prev, next;
+        do {
+            prev = get(obj);
+            next = prev + 1;
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -212,12 +212,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the updated value
      */
     public int decrementAndGet(T obj) {
-        for (;;) {
-            int current = get(obj);
-            int next = current - 1;
-            if (compareAndSet(obj, current, next))
-                return next;
-        }
+        int prev, next;
+        do {
+            prev = get(obj);
+            next = prev - 1;
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -229,12 +229,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @return the updated value
      */
     public int addAndGet(T obj, int delta) {
-        for (;;) {
-            int current = get(obj);
-            int next = current + delta;
-            if (compareAndSet(obj, current, next))
-                return next;
-        }
+        int prev, next;
+        do {
+            prev = get(obj);
+            next = prev + delta;
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -249,11 +249,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @since 1.8
      */
     public final int getAndUpdate(T obj, IntUnaryOperator updateFunction) {
-        int v;
+        int prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, updateFunction.applyAsInt(v)));
-        return v;
+            prev = get(obj);
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
     }
 
     /**
@@ -268,34 +269,12 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * @since 1.8
      */
     public final int updateAndGet(T obj, IntUnaryOperator updateFunction) {
-        int v, r;
+        int prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, r = updateFunction.applyAsInt(v)));
-        return r;
-    }
-
-    /**
-     * Atomically updates the current value with the results of
-     * applying the given function to the current and given
-     * values. The function must be side-effect-free.  It may be
-     * re-applied when attempted updates fail due to contention among
-     * threads. The function is applied with the current value as
-     * its first argument, and the given update as the second argument.
-     *
-     * @param obj An object whose field to get and set
-     * @param x the update value
-     * @param accumulatorFunction a side-effect-free function of two arguments
-     * @return the updated value
-     * @since 1.8
-     */
-    public final int accumulateAndGet(T obj, int x,
-                                      IntBinaryOperator accumulatorFunction) {
-        int v, r;
-        do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, r = accumulatorFunction.applyAsInt(v, x)));
-        return r;
+            prev = get(obj);
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**
@@ -314,11 +293,36 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      */
     public final int getAndAccumulate(T obj, int x,
                                       IntBinaryOperator accumulatorFunction) {
-        int v;
+        int prev, next;
         do {
-            v = get(obj);
-        } while (!compareAndSet(obj, v, accumulatorFunction.applyAsInt(v, x)));
-        return v;
+            prev = get(obj);
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSet(obj, prev, next));
+        return prev;
+    }
+
+    /**
+     * Atomically updates the current value with the results of
+     * applying the given function to the current and given
+     * values. The function must be side-effect-free.  It may be
+     * re-applied when attempted updates fail due to contention among
+     * threads. The function is applied with the current value as
+     * its first argument, and the given update as the second argument.
+     *
+     * @param obj An object whose field to get and set
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int accumulateAndGet(T obj, int x,
+                                      IntBinaryOperator accumulatorFunction) {
+        int prev, next;
+        do {
+            prev = get(obj);
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSet(obj, prev, next));
+        return next;
     }
 
     /**

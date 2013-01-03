@@ -95,7 +95,7 @@ public class AtomicReference<V> implements java.io.Serializable {
      *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return true if successful
      */
     public final boolean weakCompareAndSet(V expect, V update) {
         return unsafe.compareAndSwapObject(this, valueOffset, expect, update);
@@ -117,7 +117,7 @@ public class AtomicReference<V> implements java.io.Serializable {
 
     /**
      * Returns the String representation of the current value.
-     * @return the String representation of the current value.
+     * @return the String representation of the current value
      */
     public String toString() {
         return String.valueOf(get());

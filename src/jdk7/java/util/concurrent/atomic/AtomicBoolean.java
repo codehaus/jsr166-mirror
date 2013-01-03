@@ -82,7 +82,7 @@ public class AtomicBoolean implements java.io.Serializable {
      *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return true if successful
      */
     public boolean weakCompareAndSet(boolean expect, boolean update) {
         int e = expect ? 1 : 0;
@@ -126,7 +126,7 @@ public class AtomicBoolean implements java.io.Serializable {
 
     /**
      * Returns the String representation of the current value.
-     * @return the String representation of the current value.
+     * @return the String representation of the current value
      */
     public String toString() {
         return Boolean.toString(get());

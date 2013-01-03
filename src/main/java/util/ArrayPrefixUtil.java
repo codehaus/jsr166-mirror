@@ -219,6 +219,7 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = 5293554502939613543L;
     }
 
     static final class LongCumulateTask extends CountedCompleter<Void> {
@@ -368,6 +369,7 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = -5074099945909284273L;
     }
 
     static final class DoubleCumulateTask extends CountedCompleter<Void> {
@@ -517,6 +519,7 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = -586947823794232033L;
     }
 
     static final class IntCumulateTask extends CountedCompleter<Void> {
@@ -666,7 +669,7 @@ class ArrayPrefixUtil {
                 }
             }
         }
+        private static final long serialVersionUID = 3731755594596840961L;
     }
-
 
 }

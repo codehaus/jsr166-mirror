@@ -168,7 +168,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param i the index
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful.
+     * @return true if successful
      */
     public final boolean weakCompareAndSet(int i, E expect, E update) {
         return compareAndSet(i, expect, update);

@@ -42,7 +42,7 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
     }
 
     /**
-     *
+     * copy constructor creates map equal to source map
      */
     public void testConstructFromSorted() {
         ConcurrentSkipListMap map = map5();

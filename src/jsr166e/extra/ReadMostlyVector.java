@@ -1247,7 +1247,7 @@ public class ReadMostlyVector<E>
 
     static final class ReadMostlyVectorSublist<E>
             implements List<E>, RandomAccess, java.io.Serializable {
-        static final long serialVersionUID = 3041673470172026059L;
+        private static final long serialVersionUID = 3041673470172026059L;
 
         final ReadMostlyVector<E> list;
         final int offset;

@@ -319,7 +319,7 @@ public interface ExecutorService extends Executor {
      * @param tasks the collection of tasks
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
-     * @return the result returned by one of the tasks.
+     * @return the result returned by one of the tasks
      * @throws InterruptedException if interrupted while waiting
      * @throws NullPointerException if tasks, or unit, or any element
      *         task subject to execution is <tt>null</tt>

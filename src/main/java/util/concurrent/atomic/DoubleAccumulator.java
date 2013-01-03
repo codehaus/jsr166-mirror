@@ -38,7 +38,7 @@ import java.util.function.DoubleBinaryOperator;
  * @author Doug Lea
  */
 public class DoubleAccumulator extends Striped64 implements Serializable {
-    private static final double serialVersionUID = 7249069246863182397L;
+    private static final long serialVersionUID = 7249069246863182397L;
 
     private final DoubleBinaryOperator function;
     private final long identity; // use long representation

@@ -277,7 +277,7 @@ public class CompletableFuture<T> implements Future<T> {
             else if (q.thread != null && result == null) {
                 try {
                     ForkJoinPool.managedBlock(q);
-                } catch(InterruptedException ex){
+                } catch (InterruptedException ex) {
                     q.interruptControl = -1;
                 }
             }
@@ -310,7 +310,7 @@ public class CompletableFuture<T> implements Future<T> {
                 if (nanos <= 0L)
                     throw new TimeoutException();
                 long d = System.nanoTime() + nanos;
-                q = new WaitNode(true, nanos, d == 0L? 1L : d); // avoid 0
+                q = new WaitNode(true, nanos, d == 0L ? 1L : d); // avoid 0
             }
             else if (!queued)
                 queued = UNSAFE.compareAndSwapObject(this, WAITERS,
@@ -328,7 +328,7 @@ public class CompletableFuture<T> implements Future<T> {
             else if (q.thread != null && result == null) {
                 try {
                     ForkJoinPool.managedBlock(q);
-                } catch(InterruptedException ex){
+                } catch (InterruptedException ex) {
                     q.interruptControl = -1;
                 }
             }

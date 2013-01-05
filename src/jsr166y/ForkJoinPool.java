@@ -2559,6 +2559,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * exit.
      *
      * @return the common pool instance
+     * @since 1.8
      */
     public static ForkJoinPool commonPool() {
         // assert common != null : "static init error";
@@ -2741,6 +2742,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Returns the targeted parallelism level of the common pool.
      *
      * @return the targeted parallelism level of the common pool
+     * @since 1.8
      */
     public static int getCommonPoolParallelism() {
         return commonParallelism;
@@ -3001,7 +3003,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Possibly initiates an orderly shutdown in which previously
      * submitted tasks are executed, but no new tasks will be
      * accepted. Invocation has no effect on execution state if this
-     * is the {@link #commonPool}, and no additional effect if
+     * is the {@link #commonPool()}, and no additional effect if
      * already shut down.  Tasks that are in the process of being
      * submitted concurrently during the course of this method may or
      * may not be rejected.
@@ -3019,7 +3021,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Possibly attempts to cancel and/or stop all tasks, and reject
      * all subsequently submitted tasks.  Invocation has no effect on
-     * execution state if this is the {@link #commonPool}, and no
+     * execution state if this is the {@link #commonPool()}, and no
      * additional effect if already shut down. Otherwise, tasks that
      * are in the process of being submitted or executed concurrently
      * during the course of this method may or may not be

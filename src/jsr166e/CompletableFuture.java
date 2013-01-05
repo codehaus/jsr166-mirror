@@ -83,9 +83,9 @@ public class CompletableFuture<T> implements Future<T> {
     /*
      * Overview:
      *
-     * 1. Non-nullness of field result (set via CAS) indicates
-     * done. An AltResult is used to box null as a result, as well as
-     * to hold exceptions.  Using a single field makes completion fast
+     * 1. Non-nullness of field result (set via CAS) indicates done.
+     * An AltResult is used to box null as a result, as well as to
+     * hold exceptions.  Using a single field makes completion fast
      * and simple to detect and trigger, at the expense of a lot of
      * encoding and decoding that infiltrates many methods. One minor
      * simplification relies on the (static) NIL (to box null results)

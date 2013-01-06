@@ -19,20 +19,23 @@ import java.util.function.LongBinaryOperator;
  * (or, equivalently, {@link #longValue}) returns the current value
  * across the variables maintaining updates.
  *
- * <p>The supplied accumulator function must be side-effect-free.  It
- * may be re-applied when attempted updates fail due to contention
- * among threads. The function is applied with the current value as
- * its first argument, and the given update as the second argument.
- * For example, to maintain a running maximum value, you could supply
- * {@code (x, y) -> (y > x) ? y : x} along with {@code
- * Long.MINIMUM_VALUE} as the identity.  (Class {@link LongAdder}
- * provides analogs of the functionality of this class for the common
- * special case of maintaining counts and sums.)
+ * <p>The supplied accumulator function should be side-effect-free,
+ * since it may be re-applied when attempted updates fail due to
+ * contention among threads. The function is applied with the current
+ * value as its first argument, and the given update as the second
+ * argument.  For example, to maintain a running maximum value, you
+ * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
+ * Long.MIN_VALUE} as the identity.
+ *
+ * <p>Class {@link LongAdder} provides analogs of the functionality of
+ * this class for the common special case of maintaining counts and
+ * sums.  The call {@code new LongAdder()} is equivalent to {@code new
+ * LongAccumulator((x, y) -> x + y, 0L}.
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
- * methods such as {@code hashCode} and {@code compareTo} because
- * instances are expected to be mutated, and so are not useful as
- * collection keys.
+ * methods such as {@code equals}, {@code hashCode} and {@code
+ * compareTo} because instances are expected to be mutated, and so are
+ * not useful as collection keys.
  *
  * @since 1.8
  * @author Doug Lea
@@ -95,11 +98,11 @@ public class LongAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Resets variables maintaining updates the given value.  This
-     * method may be a useful alternative to creating a new updater,
-     * but is only effective if there are no concurrent updates.
-     * Because this method is intrinsically racy, it should only be
-     * used when it is known that no threads are concurrently
+     * Resets variables maintaining updates to the identity value.
+     * This method may be a useful alternative to creating a new
+     * updater, but is only effective if there are no concurrent
+     * updates.  Because this method is intrinsically racy, it should
+     * only be used when it is known that no threads are concurrently
      * updating.
      */
     public void reset() {

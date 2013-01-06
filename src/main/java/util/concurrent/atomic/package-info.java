@@ -164,7 +164,7 @@
  *
  * <p>Atomic classes are not general purpose replacements for
  * {@code java.lang.Integer} and related classes.  They do <em>not</em>
- * define methods such as {@code hashCode} and
+ * define methods such as {@code equals}, {@code hashCode} and
  * {@code compareTo}.  (Because atomic variables are expected to be
  * mutated, they are poor choices for hash table keys.)  Additionally,
  * classes are provided only for those types that are commonly useful in

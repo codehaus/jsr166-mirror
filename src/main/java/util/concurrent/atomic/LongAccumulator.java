@@ -25,9 +25,9 @@ import java.util.function.LongBinaryOperator;
  * value as its first argument, and the given update as the second
  * argument.  For example, to maintain a running maximum value, you
  * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
- * Long.MINIMUM_VALUE} as the identity.  (Class {@link LongAdder}
- * provides analogs of the functionality of this class for the common
- * special case of maintaining counts and sums.)
+ * Long.MIN_VALUE} as the identity.  (Class {@link LongAdder} provides
+ * analogs of the functionality of this class for the common special
+ * case of maintaining counts and sums.)
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
  * methods such as {@code hashCode} and {@code compareTo} because

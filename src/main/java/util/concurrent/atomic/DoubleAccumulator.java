@@ -25,9 +25,9 @@ import java.util.function.DoubleBinaryOperator;
  * value as its first argument, and the given update as the second
  * argument.  For example, to maintain a running maximum value, you
  * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
- * Double.MINIMUM_VALUE} as the identity.  (Class {@link DoubleAdder}
- * provides analogs of the functionality of this class for the common
- * special case of maintaining sums.)
+ * Double.NEGATIVE_INFINITY} as the identity.  (Class {@link
+ * DoubleAdder} provides analogs of the functionality of this class
+ * for the common special case of maintaining sums.)
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
  * methods such as {@code hashCode} and {@code compareTo} because

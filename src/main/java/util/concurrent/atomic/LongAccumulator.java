@@ -33,9 +33,9 @@ import java.util.function.LongBinaryOperator;
  * LongAccumulator((x, y) -> x + y, 0L}.
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
- * methods such as {@code hashCode} and {@code compareTo} because
- * instances are expected to be mutated, and so are not useful as
- * collection keys.
+ * methods such as {@code equals}, {@code hashCode} and {@code
+ * compareTo} because instances are expected to be mutated, and so are
+ * not useful as collection keys.
  *
  * @since 1.8
  * @author Doug Lea

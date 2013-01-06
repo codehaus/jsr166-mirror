@@ -24,7 +24,7 @@ import java.util.function.LongBinaryOperator;
  * contention among threads. The function is applied with the current
  * value as its first argument, and the given update as the second
  * argument.  For example, to maintain a running maximum value, you
- * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
+ * could supply {@code Long::max} along with {@code
  * Long.MIN_VALUE} as the identity.
  *
  * <p>Class {@link LongAdder} provides analogs of the functionality of
@@ -153,14 +153,14 @@ public class LongAccumulator extends Striped64 implements Serializable {
     /**
      * Equivalent to {@link #get}.
      *
-     * @return the maximum
+     * @return the current value
      */
     public long longValue() {
         return get();
     }
 
     /**
-     * Returns the {@link #get} as an {@code int} after a narrowing
+     * Returns the current value as an {@code int} after a narrowing
      * primitive conversion.
      */
     public int intValue() {
@@ -168,7 +168,7 @@ public class LongAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the {@link #get} as a {@code float}
+     * Returns the current value as a {@code float}
      * after a widening primitive conversion.
      */
     public float floatValue() {
@@ -176,7 +176,7 @@ public class LongAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the {@link #get} as a {@code double} after a widening
+     * Returns the current value as a {@code double} after a widening
      * primitive conversion.
      */
     public double doubleValue() {

@@ -24,7 +24,7 @@ import java.util.function.DoubleBinaryOperator;
  * contention among threads. The function is applied with the current
  * value as its first argument, and the given update as the second
  * argument.  For example, to maintain a running maximum value, you
- * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
+ * could supply {@code Double::max} along with {@code
  * Double.NEGATIVE_INFINITY} as the identity.
  *
  * <p>Class {@link DoubleAdder} provides analogs of the functionality
@@ -148,24 +148,24 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the String representation of the {@link #sum}.
-     * @return the String representation of the {@link #sum}
+     * Returns the String representation of the current value
+     * @return the String representation of the current value
      */
     public String toString() {
         return Double.toString(get());
     }
 
     /**
-     * Equivalent to {@link #sum}.
+     * Equivalent to {@link #get}.
      *
-     * @return the sum
+     * @return the current value
      */
     public double doubleValue() {
         return get();
     }
 
     /**
-     * Returns the {@link #sum} as a {@code long} after a
+     * Returns the current value as a {@code long} after a
      * narrowing primitive conversion.
      */
     public long longValue() {
@@ -173,7 +173,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the {@link #sum} as an {@code int} after a
+     * Returns the current value as an {@code int} after a
      * narrowing primitive conversion.
      */
     public int intValue() {
@@ -181,7 +181,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the {@link #sum} as a {@code float}
+     * Returns the current value as a {@code float}
      * after a narrowing primitive conversion.
      */
     public float floatValue() {

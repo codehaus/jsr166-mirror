@@ -239,9 +239,9 @@ public abstract class AtomicIntegerFieldUpdater<T> {
 
     /**
      * Atomically updates the current value with the results of
-     * applying the given function. The function must be
-     * side-effect-free.  It may be re-applied when attempted updates
-     * fail due to contention among threads.
+     * applying the given function. The function should be
+     * side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.
      *
      * @param obj An object whose field to get and set
      * @param updateFunction a side-effect-free function
@@ -259,9 +259,9 @@ public abstract class AtomicIntegerFieldUpdater<T> {
 
     /**
      * Atomically updates the current value with the results of
-     * applying the given function. The function must be
-     * side-effect-free.  It may be re-applied when attempted updates
-     * fail due to contention among threads.
+     * applying the given function. The function should be
+     * side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.
      *
      * @param obj An object whose field to get and set
      * @param updateFunction a side-effect-free function
@@ -279,11 +279,11 @@ public abstract class AtomicIntegerFieldUpdater<T> {
 
     /**
      * Atomically updates the current value with the results of
-     * applying the given function to the current and given
-     * values. The function must be side-effect-free.  It may be
+     * applying the given function to the current and given values.
+     * The function should be side-effect-free, since it may be
      * re-applied when attempted updates fail due to contention among
-     * threads. The function is applied with the current value as
-     * its first argument, and the given update as the second argument.
+     * threads.  The function is applied with the current value as its
+     * first argument, and the given update as the second argument.
      *
      * @param obj An object whose field to get and set
      * @param x the update value
@@ -303,11 +303,11 @@ public abstract class AtomicIntegerFieldUpdater<T> {
 
     /**
      * Atomically updates the current value with the results of
-     * applying the given function to the current and given
-     * values. The function must be side-effect-free.  It may be
+     * applying the given function to the current and given values.
+     * The function should be side-effect-free, since it may be
      * re-applied when attempted updates fail due to contention among
-     * threads. The function is applied with the current value as
-     * its first argument, and the given update as the second argument.
+     * threads.  The function is applied with the current value as its
+     * first argument, and the given update as the second argument.
      *
      * @param obj An object whose field to get and set
      * @param x the update value

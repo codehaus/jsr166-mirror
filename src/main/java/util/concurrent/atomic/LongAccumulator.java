@@ -19,12 +19,12 @@ import java.util.function.LongBinaryOperator;
  * (or, equivalently, {@link #longValue}) returns the current value
  * across the variables maintaining updates.
  *
- * <p>The supplied accumulator function must be side-effect-free.  It
- * may be re-applied when attempted updates fail due to contention
- * among threads. The function is applied with the current value as
- * its first argument, and the given update as the second argument.
- * For example, to maintain a running maximum value, you could supply
- * {@code (x, y) -> (y > x) ? y : x} along with {@code
+ * <p>The supplied accumulator function should be side-effect-free,
+ * since it may be re-applied when attempted updates fail due to
+ * contention among threads. The function is applied with the current
+ * value as its first argument, and the given update as the second
+ * argument.  For example, to maintain a running maximum value, you
+ * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
  * Long.MINIMUM_VALUE} as the identity.  (Class {@link LongAdder}
  * provides analogs of the functionality of this class for the common
  * special case of maintaining counts and sums.)

@@ -162,23 +162,23 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the current value as a {@code long} after a
-     * narrowing primitive conversion.
+     * Returns the {@linkplain #get() current value} as a {@code long}
+     * after a narrowing primitive conversion.
      */
     public long longValue() {
         return (long)get();
     }
 
     /**
-     * Returns the current value as an {@code int} after a
-     * narrowing primitive conversion.
+     * Returns the {@linkplain #get() current value} as an {@code int}
+     * after a narrowing primitive conversion.
      */
     public int intValue() {
         return (int)get();
     }
 
     /**
-     * Returns the current value as a {@code float}
+     * Returns the {@linkplain #get() current value} as a {@code float}
      * after a narrowing primitive conversion.
      */
     public float floatValue() {

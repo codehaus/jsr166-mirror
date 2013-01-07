@@ -131,7 +131,7 @@ abstract class Striped64 extends Number {
     static final int SEED_INCREMENT = 0x61c88647;
 
     /**
-     * Per-thread cell hash codes. Shared across all instances
+     * Per-thread cell hash codes. Shared across all instances.
      */
     static final ThreadLocal<CellHashCode> threadCellHashCode =
         new ThreadLocal<CellHashCode>();

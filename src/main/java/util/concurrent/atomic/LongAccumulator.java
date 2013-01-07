@@ -5,10 +5,7 @@
  */
 
 package java.util.concurrent.atomic;
-import java.io.IOException;
 import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.function.LongBinaryOperator;
 
 /**
@@ -24,8 +21,8 @@ import java.util.function.LongBinaryOperator;
  * contention among threads. The function is applied with the current
  * value as its first argument, and the given update as the second
  * argument.  For example, to maintain a running maximum value, you
- * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
- * Long.MIN_VALUE} as the identity.
+ * could supply {@code Long::max} along with {@code Long.MIN_VALUE} as
+ * the identity.
  *
  * <p>Class {@link LongAdder} provides analogs of the functionality of
  * this class for the common special case of maintaining counts and
@@ -77,11 +74,11 @@ public class LongAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the current value.  The returned value is
-     * <em>NOT</em> an atomic snapshot: Invocation in the absence of
-     * concurrent updates returns an accurate result, but concurrent
-     * updates that occur while the value is being calculated might
-     * not be incorporated.
+     * Returns the current value.  The returned value is <em>NOT</em>
+     * an atomic snapshot: invocation in the absence of concurrent
+     * updates returns an accurate result, but concurrent updates that
+     * occur while the value is being calculated might not be
+     * incorporated.
      *
      * @return the current value
      */
@@ -153,22 +150,22 @@ public class LongAccumulator extends Striped64 implements Serializable {
     /**
      * Equivalent to {@link #get}.
      *
-     * @return the maximum
+     * @return the current value
      */
     public long longValue() {
         return get();
     }
 
     /**
-     * Returns the {@link #get} as an {@code int} after a narrowing
-     * primitive conversion.
+     * Returns the {@linkplain #get current value} as an {@code int}
+     * after a narrowing primitive conversion.
      */
     public int intValue() {
         return (int)get();
     }
 
     /**
-     * Returns the {@link #get} as a {@code float}
+     * Returns the {@linkplain #get current value} as a {@code float}
      * after a widening primitive conversion.
      */
     public float floatValue() {
@@ -176,8 +173,8 @@ public class LongAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the {@link #get} as a {@code double} after a widening
-     * primitive conversion.
+     * Returns the {@linkplain #get current value} as a {@code double}
+     * after a widening primitive conversion.
      */
     public double doubleValue() {
         return (double)get();
@@ -189,8 +186,8 @@ public class LongAccumulator extends Striped64 implements Serializable {
         s.writeLong(get());
     }
 
-    private void readObject(ObjectInputStream s)
-        throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         cellsBusy = 0;
         cells = null;

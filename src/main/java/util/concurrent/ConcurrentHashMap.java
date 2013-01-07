@@ -500,7 +500,7 @@ public class ConcurrentHashMap<K, V>
     static final int SEED_INCREMENT = 0x61c88647;
 
     /**
-     * Per-thread counter hash codes. Shared across all instances
+     * Per-thread counter hash codes. Shared across all instances.
      */
     static final ThreadLocal<CellHashCode> threadCellHashCode =
         new ThreadLocal<CellHashCode>();

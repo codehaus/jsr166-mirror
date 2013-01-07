@@ -5,10 +5,7 @@
  */
 
 package java.util.concurrent.atomic;
-import java.io.IOException;
 import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.function.DoubleBinaryOperator;
 
 /**
@@ -24,7 +21,7 @@ import java.util.function.DoubleBinaryOperator;
  * contention among threads. The function is applied with the current
  * value as its first argument, and the given update as the second
  * argument.  For example, to maintain a running maximum value, you
- * could supply {@code (x, y) -> (y > x) ? y : x} along with {@code
+ * could supply {@code Double::max} along with {@code
  * Double.NEGATIVE_INFINITY} as the identity.
  *
  * <p>Class {@link DoubleAdder} provides analogs of the functionality
@@ -81,11 +78,11 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the current value.  The returned value is
-     * <em>NOT</em> an atomic snapshot: Invocation in the absence of
-     * concurrent updates returns an accurate result, but concurrent
-     * updates that occur while the value is being calculated might
-     * not be incorporated.
+     * Returns the current value.  The returned value is <em>NOT</em>
+     * an atomic snapshot: invocation in the absence of concurrent
+     * updates returns an accurate result, but concurrent updates that
+     * occur while the value is being calculated might not be
+     * incorporated.
      *
      * @return the current value
      */
@@ -148,40 +145,40 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns the String representation of the {@link #sum}.
-     * @return the String representation of the {@link #sum}
+     * Returns the String representation of the current value.
+     * @return the String representation of the current value
      */
     public String toString() {
         return Double.toString(get());
     }
 
     /**
-     * Equivalent to {@link #sum}.
+     * Equivalent to {@link #get}.
      *
-     * @return the sum
+     * @return the current value
      */
     public double doubleValue() {
         return get();
     }
 
     /**
-     * Returns the {@link #sum} as a {@code long} after a
-     * narrowing primitive conversion.
+     * Returns the {@linkplain #get current value} as a {@code long}
+     * after a narrowing primitive conversion.
      */
     public long longValue() {
         return (long)get();
     }
 
     /**
-     * Returns the {@link #sum} as an {@code int} after a
-     * narrowing primitive conversion.
+     * Returns the {@linkplain #get current value} as an {@code int}
+     * after a narrowing primitive conversion.
      */
     public int intValue() {
         return (int)get();
     }
 
     /**
-     * Returns the {@link #sum} as a {@code float}
+     * Returns the {@linkplain #get current value} as a {@code float}
      * after a narrowing primitive conversion.
      */
     public float floatValue() {
@@ -194,8 +191,8 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
         s.writeDouble(get());
     }
 
-    private void readObject(ObjectInputStream s)
-        throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         cellsBusy = 0;
         cells = null;

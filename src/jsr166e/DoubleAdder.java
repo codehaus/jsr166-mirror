@@ -5,10 +5,7 @@
  */
 
 package jsr166e;
-import java.io.IOException;
 import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 /**
  * One or more variables that together maintain an initially zero
@@ -80,7 +77,7 @@ public class DoubleAdder extends Striped64 implements Serializable {
 
     /**
      * Returns the current sum.  The returned value is <em>NOT</em> an
-     * atomic snapshot: Invocation in the absence of concurrent
+     * atomic snapshot: invocation in the absence of concurrent
      * updates returns an accurate result, but concurrent updates that
      * occur while the sum is being calculated might not be
      * incorporated.  Also, because double-precision arithmetic is not
@@ -190,8 +187,8 @@ public class DoubleAdder extends Striped64 implements Serializable {
         s.writeDouble(sum());
     }
 
-    private void readObject(ObjectInputStream s)
-        throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         busy = 0;
         cells = null;

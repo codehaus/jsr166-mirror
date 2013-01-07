@@ -5,10 +5,7 @@
  */
 
 package java.util.concurrent.atomic;
-import java.io.IOException;
 import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.function.DoubleBinaryOperator;
 
 /**
@@ -194,8 +191,8 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
         s.writeDouble(get());
     }
 
-    private void readObject(ObjectInputStream s)
-        throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         cellsBusy = 0;
         cells = null;

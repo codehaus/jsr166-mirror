@@ -5,10 +5,7 @@
  */
 
 package jsr166e;
-import java.io.IOException;
 import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 /**
  * One or more variables that together maintain a running {@code long}
@@ -175,8 +172,8 @@ public class LongMaxUpdater extends Striped64 implements Serializable {
         s.writeLong(max());
     }
 
-    private void readObject(ObjectInputStream s)
-        throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         busy = 0;
         cells = null;

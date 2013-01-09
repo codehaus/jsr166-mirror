@@ -271,7 +271,8 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
             public void realRun() {
                 ThreadLocalRandom current = ThreadLocalRandom.current();
                 assertSame(current, ThreadLocalRandom.current());
-                assertNotSame(current, threadLocalRandom.get());
+                // test bug: the following is not guaranteed and not true in JDK8
+                //                assertNotSame(current, threadLocalRandom.get());
                 rand.set(current.nextLong());
                 threadLocalRandom.set(current);
             }};

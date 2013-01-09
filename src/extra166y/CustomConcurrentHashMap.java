@@ -3003,29 +3003,6 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     static final long segmentsBase;
     static final int segmentsShift;
 
-    private static Unsafe getUnsafe() throws Throwable {
-        try {
-            return Unsafe.getUnsafe();
-        } catch (SecurityException se) {
-            try {
-                return java.security.AccessController.doPrivileged
-                    (new java.security.PrivilegedExceptionAction<Unsafe>() {
-                        public Unsafe run() throws Exception {
-                            return getUnsafePrivileged();
-                        }});
-            } catch (java.security.PrivilegedActionException e) {
-                throw e.getCause();
-            }
-        }
-    }
-
-    private static Unsafe getUnsafePrivileged()
-        throws NoSuchFieldException, IllegalAccessException {
-        Field f = Unsafe.class.getDeclaredField("theUnsafe");
-        f.setAccessible(true);
-        return (Unsafe) f.get(null);
-    }
-
     static {
         try {
             UNSAFE = getUnsafe();
@@ -3057,5 +3034,33 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         UNSAFE.putOrderedObject(segs, segmentOffset, s);
     }
 
-
+    /**
+     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.
+     * Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a jdk.
+     *
+     * @return a sun.misc.Unsafe
+     */
+    private static sun.misc.Unsafe getUnsafe() {
+        try {
+            return sun.misc.Unsafe.getUnsafe();
+        } catch (SecurityException tryReflectionInstead) {}
+        try {
+            return java.security.AccessController.doPrivileged
+            (new java.security.PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                public sun.misc.Unsafe run() throws Exception {
+                    Class<sun.misc.Unsafe> k = sun.misc.Unsafe.class;
+                    for (java.lang.reflect.Field f : k.getDeclaredFields()) {
+                        f.setAccessible(true);
+                        Object x = f.get(null);
+                        if (k.isInstance(x))
+                            return k.cast(x);
+                    }
+                    throw new NoSuchFieldError("the Unsafe");
+                }});
+        } catch (java.security.PrivilegedActionException e) {
+            throw new RuntimeException("Could not initialize intrinsics",
+                                       e.getCause());
+        }
+    }
 }

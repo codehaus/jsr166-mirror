@@ -7,6 +7,7 @@
 package java.util.concurrent.atomic;
 import java.util.function.LongBinaryOperator;
 import java.util.function.DoubleBinaryOperator;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A package-local class holding common representation and mechanics
@@ -46,14 +47,17 @@ abstract class Striped64 extends Number {
      * retries, there is increased contention and reduced locality,
      * which is still better than alternatives.
      *
-     * Per-thread hash codes are initialized to values that typically
-     * do not often conflict.  Contention and/or table collisions are
-     * indicated by failed CASes when performing an update operation
-     * (see method retryUpdate). Upon a collision, if the table size
-     * is less than the capacity, it is doubled in size unless some
-     * other thread holds the lock. If a hashed slot is empty, and
-     * lock is available, a new Cell is created. Otherwise, if the
-     * slot exists, a CAS is tried.  Retries proceed by "double
+     * The Thread probe fields maintained via ThreadLocalRandom serve
+     * as per-thread hash codes. We let them remain uninitialized as
+     * zero (if they come in this way) until they contend at slot
+     * 0. They are then initialized to values that typically do not
+     * often conflict with others.  Contention and/or table collisions
+     * are indicated by failed CASes when performing an update
+     * operation (see method retryUpdate). Upon a collision, if the
+     * table size is less than the capacity, it is doubled in size
+     * unless some other thread holds the lock. If a hashed slot is
+     * empty, and lock is available, a new Cell is created. Otherwise,
+     * if the slot exists, a CAS is tried.  Retries proceed by "double
      * hashing", using a secondary hash (Marsaglia XorShift) to try to
      * find a free slot.
      *
@@ -110,32 +114,6 @@ abstract class Striped64 extends Number {
         }
     }
 
-    /**
-     * Holder for the thread-local hash code determining which Cell to
-     * use. The code is initialized via the cellHashCodeGenerator, but
-     * may be moved upon collisions.
-     */
-    static final class CellHashCode {
-        int code;
-    }
-
-    /**
-     * Generates initial value for per-thread CellHashCodes
-     */
-    static final AtomicInteger cellHashCodeGenerator = new AtomicInteger();
-
-    /**
-     * Increment for cellHashCodeGenerator. See class ThreadLocal
-     * for explanation.
-     */
-    static final int SEED_INCREMENT = 0x61c88647;
-
-    /**
-     * Per-thread cell hash codes. Shared across all instances.
-     */
-    static final ThreadLocal<CellHashCode> threadCellHashCode =
-        new ThreadLocal<CellHashCode>();
-
     /** Number of CPUS, to place bound on table size */
     static final int NCPU = Runtime.getRuntime().availableProcessors();
 
@@ -176,6 +154,27 @@ abstract class Striped64 extends Number {
     }
 
     /**
+     * Returns the probe value for the current thread.
+     * Duplicated from ThreadLocalRandom because of packaging restrictions.
+     */
+    static final int getProbe() {
+        return UNSAFE.getInt(Thread.currentThread(), PROBE);
+    }
+
+    /**
+     * Pseudo-randomly advances and records the given probe value for the
+     * given thread.
+     * Duplicated from ThreadLocalRandom because of packaging restrictions.
+     */
+    static final int advanceProbe(int probe) {
+        probe ^= probe << 13;   // xorshift
+        probe ^= probe >>> 17;
+        probe ^= probe << 5;
+        UNSAFE.putInt(Thread.currentThread(), PROBE, probe);
+        return probe;
+    }
+
+    /**
      * Handles cases of updates involving initialization, resizing,
      * creating new Cells, and/or contention. See above for
      * explanation. This method suffers the usual non-modularity
@@ -183,23 +182,18 @@ abstract class Striped64 extends Number {
      * reads.
      *
      * @param x the value
-     * @param hc the hash code holder
      * @param fn the update function, or null for add (this convention
      * avoids the need for an extra field or function in LongAdder).
      * @param wasUncontended false if CAS failed before call
      */
-    final void longAccumulate(long x, CellHashCode hc,
-                              LongBinaryOperator fn,
+    final void longAccumulate(long x, LongBinaryOperator fn,
                               boolean wasUncontended) {
         int h;
-        if (hc == null) {
-            hc = new CellHashCode();
-            int s = cellHashCodeGenerator.addAndGet(SEED_INCREMENT);
-            h = hc.code = (s == 0) ? 1 : s;     // Avoid zero
-            threadCellHashCode.set(hc);
+        if ((h = getProbe()) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            h = getProbe();
+            wasUncontended = true;
         }
-        else
-            h = hc.code;
         boolean collide = false;                // True if last slot nonempty
         for (;;) {
             Cell[] as; Cell a; int n; long v;
@@ -250,9 +244,7 @@ abstract class Striped64 extends Number {
                     collide = false;
                     continue;                   // Retry with expanded table
                 }
-                h ^= h << 13;                   // Rehash
-                h ^= h >>> 17;
-                h ^= h << 5;
+                h = advanceProbe(h);
             }
             else if (cellsBusy == 0 && cells == as && casCellsBusy()) {
                 boolean init = false;
@@ -273,7 +265,6 @@ abstract class Striped64 extends Number {
                                         fn.applyAsLong(v, x))))
                 break;                          // Fall back on using base
         }
-        hc.code = h;                            // Record index for next time
     }
 
     /**
@@ -282,18 +273,14 @@ abstract class Striped64 extends Number {
      * the low-overhead requirements of this class. So must instead be
      * maintained by copy/paste/adapt.
      */
-    final void doubleAccumulate(double x, CellHashCode hc,
-                                DoubleBinaryOperator fn,
+    final void doubleAccumulate(double x, DoubleBinaryOperator fn,
                                 boolean wasUncontended) {
         int h;
-        if (hc == null) {
-            hc = new CellHashCode();
-            int s = cellHashCodeGenerator.addAndGet(SEED_INCREMENT);
-            h = hc.code = (s == 0) ? 1 : s;     // Avoid zero
-            threadCellHashCode.set(hc);
+        if ((h = getProbe()) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            h = getProbe();
+            wasUncontended = true;
         }
-        else
-            h = hc.code;
         boolean collide = false;                // True if last slot nonempty
         for (;;) {
             Cell[] as; Cell a; int n; long v;
@@ -349,9 +336,7 @@ abstract class Striped64 extends Number {
                     collide = false;
                     continue;                   // Retry with expanded table
                 }
-                h ^= h << 13;                   // Rehash
-                h ^= h >>> 17;
-                h ^= h << 5;
+                h = advanceProbe(h);
             }
             else if (cellsBusy == 0 && cells == as && casCellsBusy()) {
                 boolean init = false;
@@ -377,13 +362,13 @@ abstract class Striped64 extends Number {
                                (Double.longBitsToDouble(v), x)))))
                 break;                          // Fall back on using base
         }
-        hc.code = h;                            // Record index for next time
     }
 
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;
     private static final long BASE;
     private static final long CELLSBUSY;
+    private static final long PROBE;
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
@@ -392,6 +377,9 @@ abstract class Striped64 extends Number {
                 (sk.getDeclaredField("base"));
             CELLSBUSY = UNSAFE.objectFieldOffset
                 (sk.getDeclaredField("cellsBusy"));
+            Class<?> tk = Thread.class;
+            PROBE = UNSAFE.objectFieldOffset
+                (tk.getDeclaredField("threadLocalRandomProbe"));
         } catch (Exception e) {
             throw new Error(e);
         }

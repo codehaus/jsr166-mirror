@@ -13,7 +13,10 @@ import java.io.Serializable;
  * contended across threads, the set of variables may grow dynamically
  * to reduce contention.  Method {@link #sum} (or, equivalently {@link
  * #doubleValue}) returns the current total combined across the
- * variables maintaining the sum.
+ * variables maintaining the sum. The order of accumulation within or
+ * across threads is not guaranteed. Thus, this class may not be
+ * applicable if numerical stability is required when combining values
+ * of substantially different orders of magnitude.
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
  * methods such as {@code equals}, {@code hashCode} and {@code
@@ -49,19 +52,18 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * @param x the value to add
      */
     public void add(double x) {
-        Cell[] as; long b, v; CellHashCode hc; Cell a; int m;
+        Cell[] as; long b, v; int m; Cell a;
         if ((as = cells) != null ||
             !casBase(b = base,
                      Double.doubleToRawLongBits
                      (Double.longBitsToDouble(b) + x))) {
             boolean uncontended = true;
-            if ((hc = threadCellHashCode.get()) == null ||
-                as == null || (m = as.length - 1) < 0 ||
-                (a = as[m & hc.code]) == null ||
+            if (as == null || (m = as.length - 1) < 0 ||
+                (a = as[getProbe() & m]) == null ||
                 !(uncontended = a.cas(v = a.value,
                                       Double.doubleToRawLongBits
                                       (Double.longBitsToDouble(v) + x))))
-                doubleAccumulate(x, hc, null, uncontended);
+                doubleAccumulate(x, null, uncontended);
         }
     }
 

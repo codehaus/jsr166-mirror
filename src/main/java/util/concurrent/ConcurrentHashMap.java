@@ -479,32 +479,6 @@ public class ConcurrentHashMap<K, V>
         Cell(long x) { value = x; }
     }
 
-    /**
-     * Holder for the thread-local hash code determining which
-     * Cell to use. The code is initialized via the
-     * cellHashCodeGenerator, but may be moved upon collisions.
-     */
-    static final class CellHashCode {
-        int code;
-    }
-
-    /**
-     * Generates initial value for per-thread CellHashCodes
-     */
-    static final AtomicInteger cellHashCodeGenerator = new AtomicInteger();
-
-    /**
-     * Increment for cellHashCodeGenerator. See class ThreadLocal
-     * for explanation.
-     */
-    static final int SEED_INCREMENT = 0x61c88647;
-
-    /**
-     * Per-thread counter hash codes. Shared across all instances.
-     */
-    static final ThreadLocal<CellHashCode> threadCellHashCode =
-        new ThreadLocal<CellHashCode>();
-
     /* ---------------- Fields -------------- */
 
     /**
@@ -1843,14 +1817,13 @@ public class ConcurrentHashMap<K, V>
         Cell[] as; long b, s;
         if ((as = counterCells) != null ||
             !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
-            CellHashCode hc; Cell a; long v; int m;
+            Cell a; long v; int m;
             boolean uncontended = true;
-            if ((hc = threadCellHashCode.get()) == null ||
-                as == null || (m = as.length - 1) < 0 ||
-                (a = as[m & hc.code]) == null ||
+            if (as == null || (m = as.length - 1) < 0 ||
+                (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
                 !(uncontended =
                   U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) {
-                fullAddCount(x, hc, uncontended);
+                fullAddCount(x, uncontended);
                 return;
             }
             if (check <= 1)
@@ -2073,17 +2046,13 @@ public class ConcurrentHashMap<K, V>
     }
 
     // See LongAdder version for explanation
-    private final void fullAddCount(long x, CellHashCode hc,
-                                    boolean wasUncontended) {
+    private final void fullAddCount(long x, boolean wasUncontended) {
         int h;
-        if (hc == null) {
-            hc = new CellHashCode();
-            int s = cellHashCodeGenerator.addAndGet(SEED_INCREMENT);
-            h = hc.code = (s == 0) ? 1 : s; // Avoid zero
-            threadCellHashCode.set(hc);
+        if ((h = ThreadLocalRandom.getProbe()) == 0) {
+            ThreadLocalRandom.localInit();      // force initialization
+            h = ThreadLocalRandom.getProbe();
+            wasUncontended = true;
         }
-        else
-            h = hc.code;
         boolean collide = false;                // True if last slot nonempty
         for (;;) {
             Cell[] as; Cell a; int n; long v;
@@ -2135,9 +2104,7 @@ public class ConcurrentHashMap<K, V>
                     collide = false;
                     continue;                   // Retry with expanded table
                 }
-                h ^= h << 13;                   // Rehash
-                h ^= h >>> 17;
-                h ^= h << 5;
+                h = ThreadLocalRandom.advanceProbe(h);
             }
             else if (cellsBusy == 0 && counterCells == as &&
                      U.compareAndSwapInt(this, CELLSBUSY, 0, 1)) {
@@ -2158,7 +2125,6 @@ public class ConcurrentHashMap<K, V>
             else if (U.compareAndSwapLong(this, BASECOUNT, v = baseCount, v + x))
                 break;                          // Fall back on using base
         }
-        hc.code = h;                            // Record index for next time
     }
 
     /* ----------------Table Traversal -------------- */
@@ -2359,8 +2325,8 @@ public class ConcurrentHashMap<K, V>
 
         // spliterator support
 
-        public long exactSizeIfKnown() {
-            return -1;
+        public boolean hasExactSize() {
+            return false;
         }
 
         public boolean hasExactSplits() {
@@ -2981,12 +2947,20 @@ public class ConcurrentHashMap<K, V>
 
         public final K nextElement() { return next(); }
 
-        public Iterator<K> iterator() { return this; }
+        public Iterator<K> asIterator() { return this; }
 
         public void forEach(Block<? super K> action) {
             if (action == null) throw new NullPointerException();
             while (advance() != null)
                 action.accept((K)nextKey);
+        }
+
+        public boolean tryAdvance(Block<? super K> block) {
+            if (block == null) throw new NullPointerException();
+            if (advance() == null)
+                return false;
+            block.accept((K)nextKey);
+            return true;
         }
     }
 
@@ -3013,7 +2987,7 @@ public class ConcurrentHashMap<K, V>
 
         public final V nextElement() { return next(); }
 
-        public Iterator<V> iterator() { return this; }
+        public Iterator<V> asIterator() { return this; }
 
         public void forEach(Block<? super V> action) {
             if (action == null) throw new NullPointerException();
@@ -3021,6 +2995,16 @@ public class ConcurrentHashMap<K, V>
             while ((v = advance()) != null)
                 action.accept(v);
         }
+
+        public boolean tryAdvance(Block<? super V> block) {
+            V v;
+            if (block == null) throw new NullPointerException();
+            if ((v = advance()) == null)
+                return false;
+            block.accept(v);
+            return true;
+        }
+    
     }
 
     @SuppressWarnings("serial") static final class EntryIterator<K,V>
@@ -3045,7 +3029,7 @@ public class ConcurrentHashMap<K, V>
             return new MapEntry<K,V>((K)k, v, map);
         }
 
-        public Iterator<Map.Entry<K,V>> iterator() { return this; }
+        public Iterator<Map.Entry<K,V>> asIterator() { return this; }
 
         public void forEach(Block<? super Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
@@ -3053,6 +3037,16 @@ public class ConcurrentHashMap<K, V>
             while ((v = advance()) != null)
                 action.accept(entryFor((K)nextKey, v));
         }
+
+        public boolean tryAdvance(Block<? super Map.Entry<K,V>> block) {
+            V v;
+            if (block == null) throw new NullPointerException();
+            if ((v = advance()) == null)
+                return false;
+            block.accept(entryFor((K)nextKey, v));
+            return true;
+        }
+
     }
 
     /**

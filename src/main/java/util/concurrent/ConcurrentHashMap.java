@@ -3004,7 +3004,7 @@ public class ConcurrentHashMap<K, V>
             block.accept(v);
             return true;
         }
-    
+
     }
 
     @SuppressWarnings("serial") static final class EntryIterator<K,V>

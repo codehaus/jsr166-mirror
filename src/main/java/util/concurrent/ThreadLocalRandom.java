@@ -293,7 +293,7 @@ public class ThreadLocalRandom extends Random {
      * main ThreadLocalRandom if we were to use it.
      *
      * Note: Because of package-protection issues, versions of some
-     * these methods also appear in some subpackage classes.
+     * of these methods also appear in some subpackage classes.
      */
 
     /**

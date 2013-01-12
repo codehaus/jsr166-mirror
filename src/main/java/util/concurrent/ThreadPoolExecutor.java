@@ -1070,12 +1070,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * the task.
      *
      * 4. Assuming beforeExecute completes normally, we run the task,
-     * gathering any of its thrown exceptions to send to
-     * afterExecute. We separately handle RuntimeException, Error
-     * (both of which the specs guarantee that we trap) and arbitrary
-     * Throwables.  Because we cannot rethrow Throwables within
-     * Runnable.run, we wrap them within Errors on the way out (to the
-     * thread's UncaughtExceptionHandler).  Any thrown exception also
+     * gathering any of its thrown exceptions to send to afterExecute.
+     * We separately handle RuntimeException, Error (both of which the
+     * specs guarantee that we trap) and arbitrary Throwables.
+     * Because we cannot rethrow Throwables within Runnable.run, we
+     * wrap them within Errors on the way out (to the thread's
+     * UncaughtExceptionHandler).  Any thrown exception also
      * conservatively causes thread to die.
      *
      * 5. After task.run completes, we call afterExecute, which may

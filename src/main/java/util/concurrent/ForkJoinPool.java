@@ -196,18 +196,18 @@ public class ForkJoinPool extends AbstractExecutorService {
      * for work-stealing (this would contaminate lifo/fifo
      * processing). Instead, we randomly associate submission queues
      * with submitting threads, using a form of hashing.  The
-     * ThreadLocal Submitter class contains a value initially used as
-     * a hash code for choosing existing queues, but may be randomly
-     * repositioned upon contention with other submitters.  In
-     * essence, submitters act like workers except that they are
-     * restricted to executing local tasks that they submitted (or in
-     * the case of CountedCompleters, others with the same root task).
-     * However, because most shared/external queue operations are more
-     * expensive than internal, and because, at steady state, external
-     * submitters will compete for CPU with workers, ForkJoinTask.join
-     * and related methods disable them from repeatedly helping to
-     * process tasks if all workers are active.  Insertion of tasks in
-     * shared mode requires a lock (mainly to protect in the case of
+     * ThreadLocalRandom probe value serves as a hash code for
+     * choosing existing queues, and may be randomly repositioned upon
+     * contention with other submitters.  In essence, submitters act
+     * like workers except that they are restricted to executing local
+     * tasks that they submitted (or in the case of CountedCompleters,
+     * others with the same root task).  However, because most
+     * shared/external queue operations are more expensive than
+     * internal, and because, at steady state, external submitters
+     * will compete for CPU with workers, ForkJoinTask.join and
+     * related methods disable them from repeatedly helping to process
+     * tasks if all workers are active.  Insertion of tasks in shared
+     * mode requires a lock (mainly to protect in the case of
      * resizing) but we use only a simple spinlock (using bits in
      * field qlock), because submitters encountering a busy queue move
      * on to try or create other queues -- they block only when
@@ -532,26 +532,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         public final ForkJoinWorkerThread newThread(ForkJoinPool pool) {
             return new ForkJoinWorkerThread(pool);
         }
-    }
-
-    /**
-     * Per-thread records for threads that submit to pools. Currently
-     * holds only pseudo-random seed / index that is used to choose
-     * submission queues in method externalPush. In the future, this may
-     * also incorporate a means to implement different task rejection
-     * and resubmission policies.
-     *
-     * Seeds for submitters and workers/workQueues work in basically
-     * the same way but are initialized and updated using slightly
-     * different mechanics. Both are initialized using the same
-     * approach as in class ThreadLocal, where successive values are
-     * unlikely to collide with previous values. Seeds are then
-     * randomly modified upon collisions using xorshifts, which
-     * requires a non-zero seed.
-     */
-    static final class Submitter {
-        int seed;
-        Submitter(int s) { seed = s; }
     }
 
     /**
@@ -1054,15 +1034,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         defaultForkJoinWorkerThreadFactory;
 
     /**
-     * Per-thread submission bookkeeping. Shared across all pools
-     * to reduce ThreadLocal pollution and because random motion
-     * to avoid contention in one pool is likely to hold for others.
-     * Lazily initialized on first submission (but null-checked
-     * in other contexts to avoid unnecessary initialization).
-     */
-    static final ThreadLocal<Submitter> submitters;
-
-    /**
      * Permission required for callers of methods that may start or
      * kill threads.
      */
@@ -1254,24 +1225,13 @@ public class ForkJoinPool extends AbstractExecutorService {
      * a more conservative alternative to a pure spinlock.
      */
     private int acquirePlock() {
-        int spins = PL_SPINS, r = 0, ps, nps;
+        int spins = PL_SPINS, ps, nps;
         for (;;) {
             if (((ps = plock) & PL_LOCK) == 0 &&
                 U.compareAndSwapInt(this, PLOCK, ps, nps = ps + PL_LOCK))
                 return nps;
-            else if (r == 0) { // randomize spins if possible
-                Thread t = Thread.currentThread(); WorkQueue w; Submitter z;
-                if ((t instanceof ForkJoinWorkerThread) &&
-                    (w = ((ForkJoinWorkerThread)t).workQueue) != null)
-                    r = w.seed;
-                else if ((z = submitters.get()) != null)
-                    r = z.seed;
-                else
-                    r = 1;
-            }
             else if (spins >= 0) {
-                r ^= r << 1; r ^= r >>> 3; r ^= r << 10; // xorshift
-                if (r >= 0)
+                if (ThreadLocalRandom.nextSecondarySeed() >= 0)
                     --spins;
             }
             else if (U.compareAndSwapInt(this, PLOCK, ps, ps | PL_SIGNAL)) {
@@ -1464,10 +1424,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param task the task. Caller must ensure non-null.
      */
     final void externalPush(ForkJoinTask<?> task) {
-        WorkQueue[] ws; WorkQueue q; Submitter z; int m; ForkJoinTask<?>[] a;
-        if ((z = submitters.get()) != null && plock > 0 &&
+        WorkQueue[] ws; WorkQueue q; int z, m; ForkJoinTask<?>[] a;
+        if ((z = ThreadLocalRandom.getProbe()) != 0 && plock > 0 &&
             (ws = workQueues) != null && (m = (ws.length - 1)) >= 0 &&
-            (q = ws[m & z.seed & SQMASK]) != null &&
+            (q = ws[m & z & SQMASK]) != null &&
             U.compareAndSwapInt(q, QLOCK, 0, 1)) { // lock
             int b = q.base, s = q.top, n, an;
             if ((a = q.array) != null && (an = a.length) > (n = s + 1 - b)) {
@@ -1502,21 +1462,15 @@ public class ForkJoinPool extends AbstractExecutorService {
      * reinitialize if workQueues exists, while still advancing plock.
      */
     private void fullExternalPush(ForkJoinTask<?> task) {
-        int r = 0; // random index seed
-        for (Submitter z = submitters.get();;) {
+        int r;
+        if ((r = ThreadLocalRandom.getProbe()) == 0) {
+            ThreadLocalRandom.localInit();
+            r = ThreadLocalRandom.getProbe();
+        }
+        for (;;) {
             WorkQueue[] ws; WorkQueue q; int ps, m, k;
-            if (z == null) {
-                if (U.compareAndSwapInt(this, INDEXSEED, r = indexSeed,
-                                        r += SEED_INCREMENT) && r != 0)
-                    submitters.set(z = new Submitter(r));
-            }
-            else if (r == 0) {                  // move to a different index
-                r = z.seed;
-                r ^= r << 13;                   // same xorshift as WorkQueues
-                r ^= r >>> 17;
-                z.seed = r ^ (r << 5);
-            }
-            else if ((ps = plock) < 0)
+            boolean move = false;
+            if ((ps = plock) < 0)
                 throw new RejectedExecutionException();
             else if (ps == 0 || (ws = workQueues) == null ||
                      (m = ws.length - 1) < 0) { // initialize workQueues
@@ -1556,7 +1510,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         return;
                     }
                 }
-                r = 0; // move on failure
+                move = true; // move on failure
             }
             else if (((ps = plock) & PL_LOCK) == 0) { // create new queue
                 q = new WorkQueue(this, null, SHARED_QUEUE, r);
@@ -1570,7 +1524,9 @@ public class ForkJoinPool extends AbstractExecutorService {
                     releasePlock(nps);
             }
             else
-                r = 0; // try elsewhere while lock held
+                move = true; // move if busy
+            if (move)
+                r = ThreadLocalRandom.advanceProbe(r);
         }
     }
 
@@ -2329,26 +2285,26 @@ public class ForkJoinPool extends AbstractExecutorService {
      * least one task.
      */
     static WorkQueue commonSubmitterQueue() {
-        ForkJoinPool p; WorkQueue[] ws; int m; Submitter z;
-        return ((z = submitters.get()) != null &&
+        ForkJoinPool p; WorkQueue[] ws; int m, z;
+        return ((z = ThreadLocalRandom.getProbe()) != 0 &&
                 (p = common) != null &&
                 (ws = p.workQueues) != null &&
                 (m = ws.length - 1) >= 0) ?
-            ws[m & z.seed & SQMASK] : null;
+            ws[m & z & SQMASK] : null;
     }
 
     /**
      * Tries to pop the given task from submitter's queue in common pool.
      */
     static boolean tryExternalUnpush(ForkJoinTask<?> t) {
-        ForkJoinPool p; WorkQueue[] ws; WorkQueue q; Submitter z;
-        ForkJoinTask<?>[] a;  int m, s;
+        ForkJoinPool p; WorkQueue[] ws; WorkQueue q;
+        ForkJoinTask<?>[] a;  int m, s, z;
         if (t != null &&
-            (z = submitters.get()) != null &&
+            (z = ThreadLocalRandom.getProbe()) != 0 &&
             (p = common) != null &&
             (ws = p.workQueues) != null &&
             (m = ws.length - 1) >= 0 &&
-            (q = ws[m & z.seed & SQMASK]) != null &&
+            (q = ws[m & z & SQMASK]) != null &&
             (s = q.top) != q.base &&
             (a = q.array) != null) {
             long j = (((a.length - 1) & (s - 1)) << ASHIFT) + ABASE;
@@ -2418,14 +2374,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     static void externalHelpJoin(ForkJoinTask<?> t) {
         // Some hard-to-avoid overlap with tryExternalUnpush
-        ForkJoinPool p; WorkQueue[] ws; WorkQueue q, w; Submitter z;
-        ForkJoinTask<?>[] a;  int m, s, n;
+        ForkJoinPool p; WorkQueue[] ws; WorkQueue q, w;
+        ForkJoinTask<?>[] a;  int m, s, n, z;
         if (t != null &&
-            (z = submitters.get()) != null &&
+            (z = ThreadLocalRandom.getProbe()) != 0 &&
             (p = common) != null &&
             (ws = p.workQueues) != null &&
             (m = ws.length - 1) >= 0 &&
-            (q = ws[m & z.seed & SQMASK]) != null &&
+            (q = ws[m & z & SQMASK]) != null &&
             (a = q.array) != null) {
             int am = a.length - 1;
             if ((s = q.top) != q.base) {
@@ -3358,7 +3314,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         if ((s & (s-1)) != 0)
             throw new Error("data type scale not a power of two");
 
-        submitters = new ThreadLocal<Submitter>();
         ForkJoinWorkerThreadFactory fac = defaultForkJoinWorkerThreadFactory =
             new DefaultForkJoinWorkerThreadFactory();
         modifyThreadPermission = new RuntimePermission("modifyThread");

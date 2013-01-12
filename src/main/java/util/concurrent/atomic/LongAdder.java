@@ -53,14 +53,13 @@ public class LongAdder extends Striped64 implements Serializable {
      * @param x the value to add
      */
     public void add(long x) {
-        Cell[] as; long b, v; CellHashCode hc; Cell a; int m;
+        Cell[] as; long b, v; int m; Cell a;
         if ((as = cells) != null || !casBase(b = base, b + x)) {
             boolean uncontended = true;
-            if ((hc = threadCellHashCode.get()) == null ||
-                as == null || (m = as.length - 1) < 0 ||
-                (a = as[m & hc.code]) == null ||
+            if (as == null || (m = as.length - 1) < 0 ||
+                (a = as[getProbe() & m]) == null ||
                 !(uncontended = a.cas(v = a.value, v + x)))
-                longAccumulate(x, hc, null, uncontended);
+                longAccumulate(x, null, uncontended);
         }
     }
 

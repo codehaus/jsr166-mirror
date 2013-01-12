@@ -22,7 +22,10 @@ import java.util.function.DoubleBinaryOperator;
  * value as its first argument, and the given update as the second
  * argument.  For example, to maintain a running maximum value, you
  * could supply {@code Double::max} along with {@code
- * Double.NEGATIVE_INFINITY} as the identity.
+ * Double.NEGATIVE_INFINITY} as the identity. The order of
+ * accumulation within or across threads is not guaranteed. Thus, this
+ * class may not be applicable if numerical stability is required when
+ * combining values of substantially different orders of magnitude.
  *
  * <p>Class {@link DoubleAdder} provides analogs of the functionality
  * of this class for the common special case of maintaining sums.  The
@@ -59,21 +62,20 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
      * @param x the value
      */
     public void accumulate(double x) {
-        Cell[] as; long b, v, r; CellHashCode hc; Cell a; int m;
+        Cell[] as; long b, v, r; int m; Cell a;
         if ((as = cells) != null ||
             (r = Double.doubleToRawLongBits
              (function.applyAsDouble
               (Double.longBitsToDouble(b = base), x))) != b  && !casBase(b, r)) {
             boolean uncontended = true;
-            if ((hc = threadCellHashCode.get()) == null ||
-                as == null || (m = as.length - 1) < 0 ||
-                (a = as[m & hc.code]) == null ||
+            if (as == null || (m = as.length - 1) < 0 ||
+                (a = as[getProbe() & m]) == null ||
                 !(uncontended =
                   (r = Double.doubleToRawLongBits
                    (function.applyAsDouble
                     (Double.longBitsToDouble(v = a.value), x))) == v ||
                   a.cas(v, r)))
-                doubleAccumulate(x, hc, function, uncontended);
+                doubleAccumulate(x, function, uncontended);
         }
     }
 

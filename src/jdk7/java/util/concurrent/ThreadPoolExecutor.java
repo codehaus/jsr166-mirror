@@ -1060,9 +1060,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * usually leads processWorkerExit to replace this thread.
      *
      * 2. Before running any task, the lock is acquired to prevent
-     * other pool interrupts while the task is executing, and
-     * clearInterruptsForTaskRun called to ensure that unless pool is
-     * stopping, this thread does not have its interrupt set.
+     * other pool interrupts while the task is executing, and then we
+     * ensure that unless pool is stopping, this thread does not have
+     * its interrupt set.
      *
      * 3. Each task run is preceded by a call to beforeExecute, which
      * might throw an exception, in which case we cause thread to die

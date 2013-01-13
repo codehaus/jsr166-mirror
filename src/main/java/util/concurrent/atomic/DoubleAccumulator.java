@@ -16,6 +16,11 @@ import java.util.function.DoubleBinaryOperator;
  * (or, equivalently, {@link #doubleValue}) returns the current value
  * across the variables maintaining updates.
  *
+ * <p>This class is usually preferable to alternatives when multiple
+ * threads update a common value that is used for purposes such as
+ * summary statistics that are frequently updated but less frequently
+ * read.
+ *
  * <p>The supplied accumulator function should be side-effect-free,
  * since it may be re-applied when attempted updates fail due to
  * contention among threads. The function is applied with the current
@@ -24,8 +29,9 @@ import java.util.function.DoubleBinaryOperator;
  * could supply {@code Double::max} along with {@code
  * Double.NEGATIVE_INFINITY} as the identity. The order of
  * accumulation within or across threads is not guaranteed. Thus, this
- * class may not be applicable if numerical stability is required when
- * combining values of substantially different orders of magnitude.
+ * class may not be applicable if numerical stability is required,
+ * especially when combining values of substantially different orders
+ * of magnitude.
  *
  * <p>Class {@link DoubleAdder} provides analogs of the functionality
  * of this class for the common special case of maintaining sums.  The

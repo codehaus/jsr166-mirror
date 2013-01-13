@@ -1060,9 +1060,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * usually leads processWorkerExit to replace this thread.
      *
      * 2. Before running any task, the lock is acquired to prevent
-     * other pool interrupts while the task is executing, and
-     * clearInterruptsForTaskRun called to ensure that unless pool is
-     * stopping, this thread does not have its interrupt set.
+     * other pool interrupts while the task is executing, and then we
+     * ensure that unless pool is stopping, this thread does not have
+     * its interrupt set.
      *
      * 3. Each task run is preceded by a call to beforeExecute, which
      * might throw an exception, in which case we cause thread to die
@@ -1070,12 +1070,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * the task.
      *
      * 4. Assuming beforeExecute completes normally, we run the task,
-     * gathering any of its thrown exceptions to send to
-     * afterExecute. We separately handle RuntimeException, Error
-     * (both of which the specs guarantee that we trap) and arbitrary
-     * Throwables.  Because we cannot rethrow Throwables within
-     * Runnable.run, we wrap them within Errors on the way out (to the
-     * thread's UncaughtExceptionHandler).  Any thrown exception also
+     * gathering any of its thrown exceptions to send to afterExecute.
+     * We separately handle RuntimeException, Error (both of which the
+     * specs guarantee that we trap) and arbitrary Throwables.
+     * Because we cannot rethrow Throwables within Runnable.run, we
+     * wrap them within Errors on the way out (to the thread's
+     * UncaughtExceptionHandler).  Any thrown exception also
      * conservatively causes thread to die.
      *
      * 5. After task.run completes, we call afterExecute, which may

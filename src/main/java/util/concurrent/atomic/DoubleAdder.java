@@ -15,8 +15,13 @@ import java.io.Serializable;
  * #doubleValue}) returns the current total combined across the
  * variables maintaining the sum. The order of accumulation within or
  * across threads is not guaranteed. Thus, this class may not be
- * applicable if numerical stability is required when combining values
- * of substantially different orders of magnitude.
+ * applicable if numerical stability is required, especially when
+ * combining values of substantially different orders of magnitude.
+ *
+ * <p>This class is usually preferable to alternatives when multiple
+ * threads update a common value that is used for purposes such as
+ * summary statistics that are frequently updated but less frequently
+ * read.
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
  * methods such as {@code equals}, {@code hashCode} and {@code

@@ -59,10 +59,9 @@ import java.util.Collection;
  * }}</pre>
  *
  * <p>In addition to implementing the {@link Lock} interface, this
- * class defines methods {@code isLocked} and
- * {@code getLockQueueLength}, as well as some associated
- * {@code protected} access methods that may be useful for
- * instrumentation and monitoring.
+ * class defines a number of {@code public} and {@code protected}
+ * methods for inspecting the state of the lock.  Some of these
+ * methods are only useful for instrumentation and monitoring.
  *
  * <p>Serialization of this class behaves in the same way as built-in
  * locks: a deserialized lock is in the unlocked state, regardless of
@@ -95,9 +94,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         abstract void lock();
 
         /**
-         * Performs non-fair tryLock.  tryAcquire is
-         * implemented in subclasses, but both need nonfair
-         * try for trylock method.
+         * Performs non-fair tryLock.  tryAcquire is implemented in
+         * subclasses, but both need nonfair try for trylock method.
          */
         final boolean nonfairTryAcquire(int acquires) {
             final Thread current = Thread.currentThread();

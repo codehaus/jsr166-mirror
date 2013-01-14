@@ -461,7 +461,11 @@ public class FutureTaskTest extends JSR166TestCase {
                     try {
                         pleaseCancel.countDown();
                         delay(LONG_DELAY_MS);
-                    } finally { throw new RuntimeException(); }
+                        shouldThrow();
+                    } catch (Throwable t) {
+                        assertTrue(t instanceof InterruptedException);
+                    }
+                    throw new RuntimeException();
                 }});
 
         Thread t = newStartedThread(task);

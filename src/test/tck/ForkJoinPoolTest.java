@@ -575,10 +575,8 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         ForkJoinPool p = new ForkJoinPool(1);
         try {
             p.submit(new Callable() {
-                public Object call() {
-                    int i = 5/0;
-                    return Boolean.TRUE;
-                }}).get();
+                public Object call() { throw new ArithmeticException(); }})
+                .get();
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof ArithmeticException);

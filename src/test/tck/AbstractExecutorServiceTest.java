@@ -213,7 +213,7 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
                                    new ArrayBlockingQueue<Runnable>(10));
 
         Callable c = new Callable() {
-            public Object call() { return 5/0; }};
+            public Object call() { throw new ArithmeticException(); }};
 
         try {
             p.submit(c).get();
@@ -257,9 +257,9 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
      */
     public void testInvokeAny3() throws Exception {
         ExecutorService e = new DirectExecutorService();
-        List<Callable<Integer>> l = new ArrayList<Callable<Integer>>();
-        l.add(new Callable<Integer>() {
-                  public Integer call() { return 5/0; }});
+        List<Callable<Long>> l = new ArrayList<Callable<Long>>();
+        l.add(new Callable<Long>() {
+            public Long call() { throw new ArithmeticException(); }});
         l.add(null);
         try {
             e.invokeAny(l);
@@ -435,9 +435,9 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
      */
     public void testTimedInvokeAny3() throws Exception {
         ExecutorService e = new DirectExecutorService();
-        List<Callable<Integer>> l = new ArrayList<Callable<Integer>>();
-        l.add(new Callable<Integer>() {
-                  public Integer call() { return 5/0; }});
+        List<Callable<Long>> l = new ArrayList<Callable<Long>>();
+        l.add(new Callable<Long>() {
+            public Long call() { throw new ArithmeticException(); }});
         l.add(null);
         try {
             e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);

@@ -42,7 +42,7 @@ abstract class Striped64 extends Number {
      *
      * A single spinlock ("cellsBusy") is used for initializing and
      * resizing the table, as well as populating slots with new Cells.
-     * There is no need for a blocking lock: When the lock is not
+     * There is no need for a blocking lock; when the lock is not
      * available, threads try other slots (or the base).  During these
      * retries, there is increased contention and reduced locality,
      * which is still better than alternatives.
@@ -53,13 +53,13 @@ abstract class Striped64 extends Number {
      * 0. They are then initialized to values that typically do not
      * often conflict with others.  Contention and/or table collisions
      * are indicated by failed CASes when performing an update
-     * operation (see method retryUpdate). Upon a collision, if the
-     * table size is less than the capacity, it is doubled in size
-     * unless some other thread holds the lock. If a hashed slot is
-     * empty, and lock is available, a new Cell is created. Otherwise,
-     * if the slot exists, a CAS is tried.  Retries proceed by "double
-     * hashing", using a secondary hash (Marsaglia XorShift) to try to
-     * find a free slot.
+     * operation. Upon a collision, if the table size is less than
+     * the capacity, it is doubled in size unless some other thread
+     * holds the lock. If a hashed slot is empty, and lock is
+     * available, a new Cell is created. Otherwise, if the slot
+     * exists, a CAS is tried.  Retries proceed by "double hashing",
+     * using a secondary hash (Marsaglia XorShift) to try to find a
+     * free slot.
      *
      * The table size is capped because, when there are more threads
      * than CPUs, supposing that each thread were bound to a CPU,

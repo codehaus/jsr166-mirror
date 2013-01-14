@@ -255,5 +255,5 @@ task clobber(description: 'Clean all the Gradle subproject directories since the
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.2'
+    gradleVersion = '1.3'
 }

@@ -77,7 +77,7 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * atomic snapshot; invocation in the absence of concurrent
      * updates returns an accurate result, but concurrent updates that
      * occur while the sum is being calculated might not be
-     * incorporated.  Also, because double-precision arithmetic is not
+     * incorporated.  Also, because floating-point arithmetic is not
      * strictly associative, the returned result need not be identical
      * to the value that would be obtained in a sequential series of
      * updates to a single variable.

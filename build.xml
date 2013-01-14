@@ -939,25 +939,27 @@
 
 
   <target name="jsr166ecompile"
-          depends="init, configure-compiler"
+          depends="configure-compiler"
           description="Compiles jsr166e sources">
 
     <mkdir dir="${build.jsr166e.dir}"/>
 
     <javac srcdir="${jsr166esrc.dir}"
-          destdir="${build.jsr166e.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
+           destdir="${build.jsr166e.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
            source="1.7"
-             fork="true">
+           classpath=""
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac7}"
+           fork="true">
 
       <include name="**/*.java"/>
       <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg value="${bootclasspath.args}"/>
-
-<!--       <compilerarg line="-Xlint -Xmaxwarns 1000"/> -->
+      <compilerarg value="-Xlint:all"/>
 
     </javac>
 

@@ -1,1 +1,1 @@
-include 'jsr166' , 'jsr166tck' , 'jsr166x' , 'jsr166y' , 'extra166y' , 'jsr166e'
+include 'jsr166' , 'jsr166-jdk7', 'jsr166tck' , 'jsr166x' , 'jsr166y' , 'extra166y' , 'jsr166e'

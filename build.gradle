@@ -24,7 +24,7 @@ allprojects {
   //  http://forums.gradle.org/gradle/topics/can_a_jar_be_prepend_to_the_bootclasspath
   //
   ext.bootClasspathCollection = files('../jsr166/build/libs/jsr166-' + version + '.jar', System.getenv().JAVA_HOME + '/jre/lib/rt.jar')
-  ext.bootClasspath = bootClasspathCollection.asPath
+  ext.bootClasspath = ext.bootClasspathCollection.asPath
   //
 }
 
@@ -107,8 +107,8 @@ subprojects {
 //  allow for the appropriate dependencies.
 
 project(':jsr166') {
-  sourceCompatibility = 6
-  targetCompatibility = 6
+  sourceCompatibility = 8
+  targetCompatibility = 8
   sourceSets { main { java { srcDir '../src/main' } } }
   // Without the -XDignore.symbol.file=true option there are compilation errors. When Gradle switched from
   // using the Ant task for handling compilation to handling it internally this broke. So we have to enforce
@@ -124,6 +124,29 @@ project(':jsr166') {
       instruction 'Extension-Name', 'jsr166'
       instruction 'Specification-Title', 'JSR166'
       instruction 'Implementation-Title', 'JSR166'
+    }
+  }
+  sourceArtifact { from sourceSets.main.allSource }
+}
+
+project(':jsr166-jdk7') {
+  sourceCompatibility = 7
+  targetCompatibility = 7
+  sourceSets { main { java { srcDir '../src/jdk7' } } }
+  // Without the -XDignore.symbol.file=true option there are compilation errors. When Gradle switched from
+  // using the Ant task for handling compilation to handling it internally this broke. So we have to enforce
+  // using the Ant task so as to get the parameter into place.
+  //
+  // cf. http://forums.gradle.org/gradle/topics/how_to_set_xdignore_symbol_file_true_on_some_compiles_in_multi_project_build
+  compileJava.options.useAnt = true
+  compileJava.options.compilerArgs = [ '-XDignore.symbol.file=true' ]
+  jar {
+    manifest {
+      name = 'jsr166-jdk7'
+      symbolicName = 'jsr166-jdk7'
+      instruction 'Extension-Name', 'jsr166-jdk7'
+      instruction 'Specification-Title', 'JSR166-jdk7'
+      instruction 'Implementation-Title', 'JSR166-jdk7'
     }
   }
   sourceArtifact { from sourceSets.main.allSource }
@@ -168,7 +191,7 @@ project(':jsr166x') {
   targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/jsr166x' } } }
   // Assume using Java 7 replaces this need.
-  //compileJava.dependsOn project(':jsr166').jar
+  //compileJava.dependsOn project(':jsr166-jdk7').jar
   //compileJava.options.bootClasspath = bootClasspath
   jar {
     manifest {
@@ -187,7 +210,7 @@ project(':jsr166y') {
   targetCompatibility = 6
   sourceSets { main { java { srcDir '../src/jsr166y' } } }
   // Assume using Java 7 replaces this need.
-  //compileJava.dependsOn project(':jsr166').jar
+  //compileJava.dependsOn project(':jsr166-jdk7').jar
   //compileJava.options.bootClasspath = bootClasspath
   jar {
     manifest {
@@ -209,7 +232,7 @@ project(':extra166y') {
     test { java { srcDir '../src/test/extra166y' } }
   }
   // Assume using Java 7 replaces this need.
-  //compileJava.dependsOn project(':jsr166').jar
+  //compileJava.dependsOn project(':jsr166-jdk7').jar
   //compileJava.options.bootClasspath = bootClasspath
   //compileTestJava.options.bootClasspath = bootClasspath
   //test.bootstrapClasspath = bootClasspathCollection

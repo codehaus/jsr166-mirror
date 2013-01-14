@@ -937,14 +937,13 @@
 
   <!-- jsr166e -->
 
-
   <target name="jsr166ecompile"
           depends="configure-compiler"
           description="Compiles jsr166e sources">
 
     <mkdir dir="${build.jsr166e.dir}"/>
 
-    <javac srcdir="${jsr166esrc.dir}"
+    <javac srcdir="${topsrc.dir}"
            destdir="${build.jsr166e.dir}"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
@@ -956,7 +955,7 @@
            executable="${javac7}"
            fork="true">
 
-      <include name="**/*.java"/>
+      <include name="jsr166e/**/*.java"/>
       <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>

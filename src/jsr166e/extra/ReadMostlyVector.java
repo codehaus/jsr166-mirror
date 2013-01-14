@@ -593,7 +593,7 @@ public class ReadMostlyVector<E>
         }
         if (oobe)
             throw new ArrayIndexOutOfBoundsException(index);
-        return (E)e;
+        return e;
     }
 
     public int hashCode() {

@@ -40,7 +40,7 @@ abstract class Striped64 extends Number {
      *
      * A single spinlock ("busy") is used for initializing and
      * resizing the table, as well as populating slots with new Cells.
-     * There is no need for a blocking lock: When the lock is not
+     * There is no need for a blocking lock; when the lock is not
      * available, threads try other slots (or the base).  During these
      * retries, there is increased contention and reduced locality,
      * which is still better than alternatives.

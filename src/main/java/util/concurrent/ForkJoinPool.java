@@ -1219,7 +1219,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /*
      * Acquires the plock lock to protect worker array and related
      * updates. This method is called only if an initial CAS on plock
-     * fails. This acts as a spinLock for normal cases, but falls back
+     * fails. This acts as a spinlock for normal cases, but falls back
      * to builtin monitor to block when (rarely) needed. This would be
      * a terrible idea for a highly contended lock, but works fine as
      * a more conservative alternative to a pure spinlock.

@@ -446,7 +446,7 @@ public class ConcurrentLinkedDeque<E>
      * Creates an array list and fills it with elements of this list.
      * Used by toArray.
      *
-     * @return the arrayList
+     * @return the array list
      */
     private ArrayList<E> toArrayList() {
         ArrayList<E> c = new ArrayList<E>();

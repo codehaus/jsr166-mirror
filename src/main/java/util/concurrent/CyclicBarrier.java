@@ -52,16 +52,20 @@ import java.util.concurrent.locks.ReentrantLock;
  *   public Solver(float[][] matrix) {
  *     data = matrix;
  *     N = matrix.length;
- *     barrier = new CyclicBarrier(N,
- *                                 new Runnable() {
- *                                   public void run() {
- *                                     mergeRows(...);
- *                                   }
- *                                 });
- *     for (int i = 0; i < N; ++i)
- *       new Thread(new Worker(i)).start();
+ *     Runnable barrierAction =
+ *       new Runnable() { public void run() { mergeRows(...); }};
+ *     barrier = new CyclicBarrier(N, barrierAction);
  *
- *     waitUntilDone();
+ *     List<Thread> threads = new ArrayList<Thread>(N);
+ *     for (int i = 0; i < N; i++) {
+ *       Thread thread = new Thread(new Worker(i));
+ *       threads.add(thread);
+ *       thread.start();
+ *     }
+ *
+ *     // wait until done
+ *     for (Thread thread : threads)
+ *       thread.join();
  *   }
  * }}</pre>
  *

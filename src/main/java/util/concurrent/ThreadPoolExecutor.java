@@ -96,7 +96,7 @@ import java.util.*;
  * of {@code Long.MAX_VALUE} {@link TimeUnit#NANOSECONDS} effectively
  * disables idle threads from ever terminating prior to shut down. By
  * default, the keep-alive policy applies only when there are more
- * than corePoolSizeThreads. But method {@link
+ * than corePoolSize threads. But method {@link
  * #allowCoreThreadTimeOut(boolean)} can be used to apply this
  * time-out policy to core threads as well, so long as the
  * keepAliveTime value is non-zero. </dd>

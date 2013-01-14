@@ -988,10 +988,15 @@
 
     <javadoc destdir="${build.jsr166ejavadocs.dir}"
              packagenames="jsr166e,jsr166e.extra"
-             link="${jdkapidocs.url}"
+             link="${jdkapi7docs.url}"
              source="1.7"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
-             additionalparam="-XDignore.symbol.file=true" />
+             sourcepath="${topsrc.dir}:${jdk7src.dir}:${jdksrc.dir}"
+             executable="${javadoc7}"
+             additionalparam="-XDignore.symbol.file=true" >
+      <fileset dir="${topsrc.dir}" defaultexcludes="yes">
+        <include name="jsr166e/**/*.java"/>
+      </fileset>
+    </javadoc>
 
   </target>
 

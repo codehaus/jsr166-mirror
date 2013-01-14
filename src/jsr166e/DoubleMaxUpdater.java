@@ -72,7 +72,7 @@ public class DoubleMaxUpdater extends Striped64 implements Serializable {
 
     /**
      * Returns the current maximum.  The returned value is
-     * <em>NOT</em> an atomic snapshot: invocation in the absence of
+     * <em>NOT</em> an atomic snapshot; invocation in the absence of
      * concurrent updates returns an accurate result, but concurrent
      * updates that occur while the value is being calculated might
      * not be incorporated.

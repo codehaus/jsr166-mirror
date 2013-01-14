@@ -58,21 +58,22 @@
 
   <!-- JDK binary locations -->
   <property name="jdks.home"  location="${user.home}/jdk"/>
-  <property name="jdk6.home"  location="${jdks.home}/jdk1.6.0"/>
-  <property name="jdk7.home"  location="${jdks.home}/jdk1.7.0"/>
-  <property name="jdk8.home"  location="${jdks.home}/jdk1.8.0"/>
-  <property name="javac6"     location="${jdk6.home}/bin/javac"/>
-  <property name="javac7"     location="${jdk7.home}/bin/javac"/>
-  <property name="javac8"     location="${jdk8.home}/bin/javac"/>
-  <property name="javadoc6"   location="${jdk6.home}/bin/javadoc"/>
-  <property name="javadoc7"   location="${jdk7.home}/bin/javadoc"/>
-  <property name="javadoc8"   location="${jdk8.home}/bin/javadoc"/>
-  <property name="bootdir6"   location="${jdk6.home}/jre/lib"/>
-  <property name="bootdir7"   location="${jdk7.home}/jre/lib"/>
-  <property name="bootdir8"   location="${jdk8.home}/jre/lib"/>
-  <property name="bootclasspath6"   value="${bootdir6}/resources.jar:${bootdir6}/rt.jar:${bootdir6}/jsse.jar:${bootdir6}/jce.jar:${bootdir6}/:${bootdir6}/charsets.jar"/>
-  <property name="bootclasspath7"   value="${bootdir7}/resources.jar:${bootdir7}/rt.jar:${bootdir7}/jsse.jar:${bootdir7}/jce.jar:${bootdir7}/:${bootdir7}/charsets.jar"/>
-  <property name="bootclasspath8"   value="${bootdir8}/resources.jar:${bootdir8}/rt.jar:${bootdir8}/jsse.jar:${bootdir8}/jce.jar:${bootdir8}/:${bootdir8}/charsets.jar"/>
+
+  <macrodef name="defjdklocations">
+    <attribute name="v"/>
+    <sequential>
+    <property name="jdk@{v}.home"  location="${jdks.home}/jdk@{v}"/>
+    <property name="javac@{v}"     location="${jdk@{v}.home}/bin/javac"/>
+    <property name="javadoc@{v}"   location="${jdk@{v}.home}/bin/javadoc"/>
+    <property name="bootdir@{v}"   location="${jdk@{v}.home}/jre/lib"/>
+    <property name="bootclasspath@{v}"   
+     value="${bootdir@{v}}/resources.jar:${bootdir@{v}}/rt.jar:${bootdir@{v}}/jsse.jar:${bootdir@{v}}/jce.jar:${bootdir@{v}}/:${bootdir@{v}}/charsets.jar"/>
+    </sequential>
+  </macrodef>
+
+  <defjdklocations v="6"/>
+  <defjdklocations v="7"/>
+  <defjdklocations v="8"/>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>

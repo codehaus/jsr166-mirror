@@ -88,13 +88,6 @@ import java.io.Serializable;
  * mapped values are (perhaps transiently) not used or all take the
  * same mapping value.
  *
- * <p>A ConcurrentHashMap can be used as scalable frequency map (a
- * form of histogram or multiset) by using {@link LongAdder} values
- * and initializing via {@link #computeIfAbsent}. For example, to add
- * a count to a {@code ConcurrentHashMap<String,LongAdder> freqs}, you
- * can use {@code freqs.computeIfAbsent(k -> new
- * LongAdder()).increment();}
- *
  * <p>This class and its views and iterators implement all of the
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
  * interfaces.

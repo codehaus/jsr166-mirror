@@ -38,6 +38,7 @@
   <property name="build.jdk7.dir"              location="${build.dir}/jdk7"/>
   <property name="build.jdk7.lib.dir"          location="${build.jdk7.dir}"/>
   <property name="build.jdk7.classes.dir"      location="${build.jdk7.dir}/classes"/>
+  <property name="build.jdk7.tck.classes.dir"  location="${build.jdk7.dir}/tck/classes"/>
   <property name="build.jdk7.docs.dir"         location="${build.jdk7.dir}/docs"/>
 
   <property name="build.jsr166x.dir"           location="${build.dir}/jsr166x"/>
@@ -63,10 +64,11 @@
     <attribute name="v"/>
     <sequential>
     <property name="jdk@{v}.home"  location="${jdks.home}/jdk@{v}"/>
+    <property name="java@{v}"      location="${jdk@{v}.home}/bin/java"/>
     <property name="javac@{v}"     location="${jdk@{v}.home}/bin/javac"/>
     <property name="javadoc@{v}"   location="${jdk@{v}.home}/bin/javadoc"/>
     <property name="bootdir@{v}"   location="${jdk@{v}.home}/jre/lib"/>
-    <property name="bootclasspath@{v}"   
+    <property name="bootclasspath@{v}"
      value="${bootdir@{v}}/resources.jar:${bootdir@{v}}/rt.jar:${bootdir@{v}}/jsse.jar:${bootdir@{v}}/jce.jar:${bootdir@{v}}/:${bootdir@{v}}/charsets.jar"/>
     </sequential>
   </macrodef>
@@ -74,6 +76,24 @@
   <defjdklocations v="6"/>
   <defjdklocations v="7"/>
   <defjdklocations v="8"/>
+
+  <macrodef name="run-tck-tests">
+    <attribute name="jvm"/>
+    <attribute name="tck.classes"/>
+    <attribute name="product.jar" default="${product.jar}"/>
+    <attribute name="jvmflags" default=""/>
+    <sequential>
+    <java classname="JSR166TestCase"
+          jvm="@{jvm}" fork="true">
+	<jvmarg value="-Xbootclasspath/p:@{product.jar}"/>
+	<jvmarg line="@{jvmflags}"/>
+	<classpath>
+	  <pathelement location="${junit.jar}"/>
+	  <pathelement location="@{tck.classes}"/>
+	</classpath>
+    </java>
+    </sequential>
+  </macrodef>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -523,7 +543,7 @@
            bootclasspath="${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
-           executable="${javac6}"
+           executable="${javac7}"
            fork="true">
 
       <include name="**/*.java"/>
@@ -533,22 +553,73 @@
 
     </javac>
 
-  </target>
-
-
-
-  <target name="jdk7jar"
-          depends="jdk7compile"
-          description="Builds library jar from compiled sources">
-
     <mkdir dir="${build.jdk7.lib.dir}"/>
 
     <jar destfile="${jdk7product.jar}" index="true">
       <fileset dir="${build.jdk7.classes.dir}"/>
     </jar>
 
+    <mkdir dir="${build.jdk7.tck.classes.dir}"/>
+
+    <javac srcdir="${tck.src.dir}"
+           destdir="${build.jdk7.tck.classes.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="1.6"
+           classpath="${junit.jar}"
+           bootclasspath="${jdk7product.jar}:${bootclasspath6}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac7}"
+           fork="true">
+
+      <include name="**/*.java"/>
+      <compilerarg line="${build.args}"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
+
+    </javac>
+
   </target>
 
+
+  <target name="run-jdk7-tck-tests"
+	  depends="jdk7compile"
+          description="Runs tck tests for jsr166-jdk7 directly">
+    <run-tck-tests
+      jvm="${java7}"
+      tck.classes="${build.jdk7.tck.classes.dir}"
+      product.jar="${jdk7product.jar}"/>
+  </target>
+
+
+  <target name="run-jdk7-tck-tests-via-junit-task"
+          depends="jdk7compile">
+
+    <junit printsummary="true"
+           showoutput="true"
+           errorProperty="junit.failed"
+           failureProperty="junit.failed"
+           includeantruntime="true"
+           jvm="${java7}"
+           fork="true">
+
+      <jvmarg value="-Xbootclasspath/p:${jdk7product.jar}"/>
+      <jvmarg value="-server"/>
+
+      <classpath>
+        <pathelement location="${junit.jar}"/>
+        <pathelement location="${build.jdk7.tck.classes.dir}"/>
+      </classpath>
+
+      <formatter type="brief"/>
+
+      <test name="JSR166TestCase" haltonfailure="no">
+      </test>
+
+    </junit>
+  </target>
 
 
   <target name="jdk7docs"
@@ -619,7 +690,7 @@
   </target>
 
   <target name="jdk7dist-jar"
-          depends="jdk7clean, jdk7jar">
+          depends="jdk7clean, jdk7compile">
 
     <copy file="${jdk7product.jar}" todir="${dist.dir}"/>
 

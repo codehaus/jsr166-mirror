@@ -252,6 +252,8 @@ public class StampedLock implements java.io.Serializable {
      * be subject to future improvements.
      */
 
+    private static final long serialVersionUID = -6001602636862214147L;
+
     /** Number of processors, for spin control */
     private static final int NCPU = Runtime.getRuntime().availableProcessors();
 

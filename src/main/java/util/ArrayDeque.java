@@ -974,7 +974,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         public void remove() { throw new UnsupportedOperationException(); }
 
         // Other spliterator methods
-        public long estimateSize() { 
+        public long estimateSize() {
             int n = fence - index;
             if (n < 0)
                 n += array.length;

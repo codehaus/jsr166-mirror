@@ -360,7 +360,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     }
 
     public Stream<E> stream() {
-        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED | 
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED |
             Streams.STREAM_IS_DISTINCT;
         Object[] a = al.getArray();
         int n = a.length;
@@ -368,7 +368,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
             (() -> new CopyOnWriteArrayList.COWSpliterator<E>(a, 0, n), flags);
     }
     public Stream<E> parallelStream() {
-        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED | 
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED |
             Streams.STREAM_IS_DISTINCT;
         Object[] a = al.getArray();
         int n = a.length;

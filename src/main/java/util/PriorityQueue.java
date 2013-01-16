@@ -60,7 +60,7 @@ import java.util.function.Block;
  * the priority queue in any particular order. If you need ordered
  * traversal, consider using {@code Arrays.sort(pq.toArray())}.
  *
- * <p> <strong>Note that this implementation is not synchronized.</strong>
+ * <p><strong>Note that this implementation is not synchronized.</strong>
  * Multiple threads should not access a {@code PriorityQueue}
  * instance concurrently if any of the threads modifies the queue.
  * Instead, use the thread-safe {@link
@@ -783,9 +783,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     // wrapping constructor in method avoids transient javac problems
-    final PriorityQueueSpliterator<E> spliterator(int origin, int fence, 
+    final PriorityQueueSpliterator<E> spliterator(int origin, int fence,
                                                   int expectedModCount) {
-        return new PriorityQueueSpliterator(this, origin, fence, 
+        return new PriorityQueueSpliterator(this, origin, fence,
                                             expectedModCount);
     }
 

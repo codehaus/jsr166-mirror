@@ -1364,7 +1364,7 @@ public class CopyOnWriteArrayList<E>
 
         public COWSpliterator<E> trySplit() {
             int lo = index, mid = (lo + fence) >>> 1;
-            return (lo >= mid)? null :
+            return (lo >= mid) ? null :
                 new COWSpliterator<E>(array, lo, index = mid);
         }
 

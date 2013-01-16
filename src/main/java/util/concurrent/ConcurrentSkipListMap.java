@@ -3497,7 +3497,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 (Comparable<? super K>)f : null;
             Node<K,V> e = current;
             current = null;
-            for(; e != null; e = e.next) {
+            for (; e != null; e = e.next) {
                 K k; Object v;
                 if ((k = e.key) != null &&
                     (cf != null ? (cf.compareTo(k) <= 0) :
@@ -3583,7 +3583,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 (Comparable<? super K>)f : null;
             Node<K,V> e = current;
             current = null;
-            for(; e != null; e = e.next) {
+            for (; e != null; e = e.next) {
                 K k; Object v;
                 if ((k = e.key) != null &&
                     (cf != null ? (cf.compareTo(k) <= 0) :
@@ -3650,7 +3650,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                         }
                         if (n != null && (sk = n.key) != null &&
                             (f == null ||
-                             (cmp != null?
+                             (cmp != null ?
                               (cmp.compare(f, sk) > 0) :
                               (((Comparable<? super K>)f).compareTo(sk) > 0)))) {
                             current = n;
@@ -3672,7 +3672,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 (Comparable<? super K>)f : null;
             Node<K,V> e = current;
             current = null;
-            for(; e != null; e = e.next) {
+            for (; e != null; e = e.next) {
                 K k; Object v;
                 if ((k = e.key) != null &&
                     (cf != null ?

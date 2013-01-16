@@ -924,7 +924,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         Object[] a = toArray();
         return new PBQSpliterator(a, 0, a.length);
     }
-    
+
     public Stream<E> stream() {
         int flags = Streams.STREAM_IS_SIZED;
         return Streams.stream
@@ -949,7 +949,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
 
         public PBQSpliterator<E> trySplit() {
             int lo = index, mid = (lo + fence) >>> 1;
-            return (lo >= mid)? null :
+            return (lo >= mid) ? null :
                 new PBQSpliterator<E>(array, lo, index = mid);
         }
 

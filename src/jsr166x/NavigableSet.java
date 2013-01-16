@@ -20,7 +20,7 @@ import java.util.*;
  * descending iterator. The performance of ascending traversals is
  * likely to be faster than descending traversals.  This interface
  * additionally defines methods {@code pollFirst} and
- * <t>pollLast</tt> that return and remove the lowest and highest key,
+ * {@code pollLast} that return and remove the lowest and highest key,
  * if one exists, else returning {@code null}.
  *
  * <p>The return values of navigation methods may be ambiguous in

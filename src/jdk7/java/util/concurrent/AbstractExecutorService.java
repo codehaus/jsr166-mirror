@@ -9,19 +9,19 @@ import java.util.*;
 
 /**
  * Provides default implementations of {@link ExecutorService}
- * execution methods. This class implements the <tt>submit</tt>,
- * <tt>invokeAny</tt> and <tt>invokeAll</tt> methods using a
- * {@link RunnableFuture} returned by <tt>newTaskFor</tt>, which defaults
+ * execution methods. This class implements the {@code submit},
+ * {@code invokeAny} and {@code invokeAll} methods using a
+ * {@link RunnableFuture} returned by {@code newTaskFor}, which defaults
  * to the {@link FutureTask} class provided in this package.  For example,
- * the implementation of <tt>submit(Runnable)</tt> creates an
- * associated <tt>RunnableFuture</tt> that is executed and
- * returned. Subclasses may override the <tt>newTaskFor</tt> methods
- * to return <tt>RunnableFuture</tt> implementations other than
- * <tt>FutureTask</tt>.
+ * the implementation of {@code submit(Runnable)} creates an
+ * associated {@code RunnableFuture} that is executed and
+ * returned. Subclasses may override the {@code newTaskFor} methods
+ * to return {@code RunnableFuture} implementations other than
+ * {@code FutureTask}.
  *
  * <p><b>Extension example</b>. Here is a sketch of a class
  * that customizes {@link ThreadPoolExecutor} to use
- * a <tt>CustomTask</tt> class instead of the default <tt>FutureTask</tt>:
+ * a {@code CustomTask} class instead of the default {@code FutureTask}:
  *  <pre> {@code
  * public class CustomThreadPoolExecutor extends ThreadPoolExecutor {
  *
@@ -42,13 +42,13 @@ import java.util.*;
 public abstract class AbstractExecutorService implements ExecutorService {
 
     /**
-     * Returns a <tt>RunnableFuture</tt> for the given runnable and default
+     * Returns a {@code RunnableFuture} for the given runnable and default
      * value.
      *
      * @param runnable the runnable task being wrapped
      * @param value the default value for the returned future
-     * @return a <tt>RunnableFuture</tt> which when run will run the
-     * underlying runnable and which, as a <tt>Future</tt>, will yield
+     * @return a {@code RunnableFuture} which when run will run the
+     * underlying runnable and which, as a {@code Future}, will yield
      * the given value as its result and provide for cancellation of
      * the underlying task.
      * @since 1.6
@@ -58,11 +58,11 @@ public abstract class AbstractExecutorService implements ExecutorService {
     }
 
     /**
-     * Returns a <tt>RunnableFuture</tt> for the given callable task.
+     * Returns a {@code RunnableFuture} for the given callable task.
      *
      * @param callable the callable task being wrapped
-     * @return a <tt>RunnableFuture</tt> which when run will call the
-     * underlying callable and which, as a <tt>Future</tt>, will yield
+     * @return a {@code RunnableFuture} which when run will call the
+     * underlying callable and which, as a {@code Future}, will yield
      * the callable's result as its result and provide for
      * cancellation of the underlying task.
      * @since 1.6

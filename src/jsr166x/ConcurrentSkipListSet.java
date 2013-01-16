@@ -32,7 +32,7 @@ import java.util.concurrent.*;
  * asynchronous nature of these sets, determining the current number
  * of elements requires a traversal of the elements. Additionally, the
  * bulk operations {@code addAll}, {@code removeAll},
- * <{@code retainAll}, and tt>containsAll</tt> are <em>not</em>
+ * {@code retainAll}, and {@code containsAll} are <em>not</em>
  * guaranteed to be performed atomically. For example, an iterator
  * operating concurrently with an {@code addAll} operation might view
  * only some of the added elements.

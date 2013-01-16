@@ -1414,7 +1414,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * given comparator
      *
      * @param comparator the comparator that will be used to order this map.
-     *        If <tt>null</tt>, the {@linkplain Comparable natural
+     *        If {@code null}, the {@linkplain Comparable natural
      *        ordering} of the keys will be used.
      *
      * @return the new set

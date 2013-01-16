@@ -15,17 +15,17 @@ import java.util.*;
  * operation must wait for a corresponding remove operation by another
  * thread, and vice versa.  A synchronous queue does not have any
  * internal capacity, not even a capacity of one.  You cannot
- * <tt>peek</tt> at a synchronous queue because an element is only
+ * {@code peek} at a synchronous queue because an element is only
  * present when you try to remove it; you cannot insert an element
  * (using any method) unless another thread is trying to remove it;
  * you cannot iterate as there is nothing to iterate.  The
  * <em>head</em> of the queue is the element that the first queued
  * inserting thread is trying to add to the queue; if there is no such
  * queued thread then no element is available for removal and
- * <tt>poll()</tt> will return <tt>null</tt>.  For purposes of other
- * <tt>Collection</tt> methods (for example <tt>contains</tt>), a
- * <tt>SynchronousQueue</tt> acts as an empty collection.  This queue
- * does not permit <tt>null</tt> elements.
+ * {@code poll()} will return {@code null}.  For purposes of other
+ * {@code Collection} methods (for example {@code contains}), a
+ * {@code SynchronousQueue} acts as an empty collection.  This queue
+ * does not permit {@code null} elements.
  *
  * <p>Synchronous queues are similar to rendezvous channels used in
  * CSP and Ada. They are well suited for handoff designs, in which an
@@ -36,7 +36,7 @@ import java.util.*;
  * <p>This class supports an optional fairness policy for ordering
  * waiting producer and consumer threads.  By default, this ordering
  * is not guaranteed. However, a queue constructed with fairness set
- * to <tt>true</tt> grants threads access in FIFO order.
+ * to {@code true} grants threads access in FIFO order.
  *
  * <p>This class and its iterator implement all of the
  * <em>optional</em> methods of the {@link Collection} and {@link
@@ -818,14 +818,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     private transient volatile Transferer<E> transferer;
 
     /**
-     * Creates a <tt>SynchronousQueue</tt> with nonfair access policy.
+     * Creates a {@code SynchronousQueue} with nonfair access policy.
      */
     public SynchronousQueue() {
         this(false);
     }
 
     /**
-     * Creates a <tt>SynchronousQueue</tt> with the specified fairness policy.
+     * Creates a {@code SynchronousQueue} with the specified fairness policy.
      *
      * @param fair if true, waiting threads contend in FIFO order for
      *        access; otherwise the order is unspecified.
@@ -853,7 +853,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Inserts the specified element into this queue, waiting if necessary
      * up to the specified wait time for another thread to receive it.
      *
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if the
+     * @return {@code true} if successful, or {@code false} if the
      *         specified waiting time elapses before a consumer appears.
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
@@ -873,8 +873,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * waiting to receive it.
      *
      * @param e the element to add
-     * @return <tt>true</tt> if the element was added to this queue, else
-     *         <tt>false</tt>
+     * @return {@code true} if the element was added to this queue, else
+     *         {@code false}
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
@@ -902,7 +902,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * if necessary up to the specified wait time, for another thread
      * to insert it.
      *
-     * @return the head of this queue, or <tt>null</tt> if the
+     * @return the head of this queue, or {@code null} if the
      *         specified waiting time elapses before an element is present.
      * @throws InterruptedException {@inheritDoc}
      */
@@ -917,7 +917,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * Retrieves and removes the head of this queue, if another thread
      * is currently making an element available.
      *
-     * @return the head of this queue, or <tt>null</tt> if no
+     * @return the head of this queue, or {@code null} if no
      *         element is available.
      */
     public E poll() {
@@ -925,10 +925,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Always returns <tt>true</tt>.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * Always returns {@code true}.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
-     * @return <tt>true</tt>
+     * @return {@code true}
      */
     public boolean isEmpty() {
         return true;
@@ -936,7 +936,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Always returns zero.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
      * @return zero
      */
@@ -946,7 +946,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Always returns zero.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
      * @return zero
      */
@@ -956,80 +956,80 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Does nothing.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * A {@code SynchronousQueue} has no internal capacity.
      */
     public void clear() {
     }
 
     /**
-     * Always returns <tt>false</tt>.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * Always returns {@code false}.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
      * @param o the element
-     * @return <tt>false</tt>
+     * @return {@code false}
      */
     public boolean contains(Object o) {
         return false;
     }
 
     /**
-     * Always returns <tt>false</tt>.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * Always returns {@code false}.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
      * @param o the element to remove
-     * @return <tt>false</tt>
+     * @return {@code false}
      */
     public boolean remove(Object o) {
         return false;
     }
 
     /**
-     * Returns <tt>false</tt> unless the given collection is empty.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * Returns {@code false} unless the given collection is empty.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
      * @param c the collection
-     * @return <tt>false</tt> unless given collection is empty
+     * @return {@code false} unless given collection is empty
      */
     public boolean containsAll(Collection<?> c) {
         return c.isEmpty();
     }
 
     /**
-     * Always returns <tt>false</tt>.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * Always returns {@code false}.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
      * @param c the collection
-     * @return <tt>false</tt>
+     * @return {@code false}
      */
     public boolean removeAll(Collection<?> c) {
         return false;
     }
 
     /**
-     * Always returns <tt>false</tt>.
-     * A <tt>SynchronousQueue</tt> has no internal capacity.
+     * Always returns {@code false}.
+     * A {@code SynchronousQueue} has no internal capacity.
      *
      * @param c the collection
-     * @return <tt>false</tt>
+     * @return {@code false}
      */
     public boolean retainAll(Collection<?> c) {
         return false;
     }
 
     /**
-     * Always returns <tt>null</tt>.
-     * A <tt>SynchronousQueue</tt> does not return elements
+     * Always returns {@code null}.
+     * A {@code SynchronousQueue} does not return elements
      * unless actively waited on.
      *
-     * @return <tt>null</tt>
+     * @return {@code null}
      */
     public E peek() {
         return null;
     }
 
     /**
-     * Returns an empty iterator in which <tt>hasNext</tt> always returns
-     * <tt>false</tt>.
+     * Returns an empty iterator in which {@code hasNext} always returns
+     * {@code false}.
      *
      * @return an empty iterator
      */
@@ -1057,7 +1057,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Sets the zeroeth element of the specified array to <tt>null</tt>
+     * Sets the zeroeth element of the specified array to {@code null}
      * (if the array has non-zero length) and returns it.
      *
      * @param a the array

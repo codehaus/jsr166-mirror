@@ -429,14 +429,14 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * precise control over the runtime type of the output array, and may,
      * under certain circumstances, be used to save allocation costs.
      *
-     * <p>Suppose <tt>x</tt> is a queue known to contain only strings.
+     * <p>Suppose {@code x} is a queue known to contain only strings.
      * The following code can be used to dump the queue into a newly
-     * allocated array of <tt>String</tt>:
+     * allocated array of {@code String}:
      *
      *  <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
      *
-     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
-     * <tt>toArray()</tt>.
+     * Note that {@code toArray(new Object[0])} is identical in function to
+     * {@code toArray()}.
      *
      * @param a the array into which the elements of the queue are to
      *          be stored, if it is big enough; otherwise, a new array of the

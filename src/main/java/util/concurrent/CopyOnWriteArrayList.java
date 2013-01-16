@@ -20,7 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A thread-safe variant of {@link java.util.ArrayList} in which all mutative
- * operations (<tt>add</tt>, <tt>set</tt>, and so on) are implemented by
+ * operations ({@code add}, {@code set}, and so on) are implemented by
  * making a fresh copy of the underlying array.
  *
  * <p>This is ordinarily too costly, but may be <em>more</em> efficient
@@ -31,14 +31,14 @@ import java.util.concurrent.locks.ReentrantLock;
  * reference to the state of the array at the point that the iterator
  * was created. This array never changes during the lifetime of the
  * iterator, so interference is impossible and the iterator is
- * guaranteed not to throw <tt>ConcurrentModificationException</tt>.
+ * guaranteed not to throw {@code ConcurrentModificationException}.
  * The iterator will not reflect additions, removals, or changes to
  * the list since the iterator was created.  Element-changing
- * operations on iterators themselves (<tt>remove</tt>, <tt>set</tt>, and
- * <tt>add</tt>) are not supported. These methods throw
- * <tt>UnsupportedOperationException</tt>.
+ * operations on iterators themselves ({@code remove}, {@code set}, and
+ * {@code add}) are not supported. These methods throw
+ * {@code UnsupportedOperationException}.
  *
- * <p>All elements are permitted, including <tt>null</tt>.
+ * <p>All elements are permitted, including {@code null}.
  *
  * <p>Memory consistency effects: As with other concurrent
  * collections, actions in a thread prior to placing an object into a
@@ -124,9 +124,9 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this list contains no elements.
+     * Returns {@code true} if this list contains no elements.
      *
-     * @return <tt>true</tt> if this list contains no elements
+     * @return {@code true} if this list contains no elements
      */
     public boolean isEmpty() {
         return size() == 0;
@@ -183,13 +183,13 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this list contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this list contains
-     * at least one element <tt>e</tt> such that
+     * Returns {@code true} if this list contains the specified element.
+     * More formally, returns {@code true} if and only if this list contains
+     * at least one element {@code e} such that
      * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
      *
      * @param o element whose presence in this list is to be tested
-     * @return <tt>true</tt> if this list contains the specified element
+     * @return {@code true} if this list contains the specified element
      */
     public boolean contains(Object o) {
         Object[] elements = getArray();
@@ -206,17 +206,17 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Returns the index of the first occurrence of the specified element in
-     * this list, searching forwards from <tt>index</tt>, or returns -1 if
+     * this list, searching forwards from {@code index}, or returns -1 if
      * the element is not found.
-     * More formally, returns the lowest index <tt>i</tt> such that
+     * More formally, returns the lowest index {@code i} such that
      * <tt>(i&nbsp;&gt;=&nbsp;index&nbsp;&amp;&amp;&nbsp;(e==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;e.equals(get(i))))</tt>,
      * or -1 if there is no such index.
      *
      * @param e element to search for
      * @param index index to start searching from
      * @return the index of the first occurrence of the element in
-     *         this list at position <tt>index</tt> or later in the list;
-     *         <tt>-1</tt> if the element is not found.
+     *         this list at position {@code index} or later in the list;
+     *         {@code -1} if the element is not found.
      * @throws IndexOutOfBoundsException if the specified index is negative
      */
     public int indexOf(E e, int index) {
@@ -234,16 +234,16 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Returns the index of the last occurrence of the specified element in
-     * this list, searching backwards from <tt>index</tt>, or returns -1 if
+     * this list, searching backwards from {@code index}, or returns -1 if
      * the element is not found.
-     * More formally, returns the highest index <tt>i</tt> such that
+     * More formally, returns the highest index {@code i} such that
      * <tt>(i&nbsp;&lt;=&nbsp;index&nbsp;&amp;&amp;&nbsp;(e==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;e.equals(get(i))))</tt>,
      * or -1 if there is no such index.
      *
      * @param e element to search for
      * @param index index to start searching backwards from
      * @return the index of the last occurrence of the element at position
-     *         less than or equal to <tt>index</tt> in this list;
+     *         less than or equal to {@code index} in this list;
      *         -1 if the element is not found.
      * @throws IndexOutOfBoundsException if the specified index is greater
      *         than or equal to the current size of this list
@@ -301,7 +301,7 @@ public class CopyOnWriteArrayList<E>
      * <p>If this list fits in the specified array with room to spare
      * (i.e., the array has more elements than this list), the element in
      * the array immediately following the end of the list is set to
-     * <tt>null</tt>.  (This is useful in determining the length of this
+     * {@code null}.  (This is useful in determining the length of this
      * list <i>only</i> if the caller knows that this list does not contain
      * any null elements.)
      *
@@ -310,14 +310,14 @@ public class CopyOnWriteArrayList<E>
      * precise control over the runtime type of the output array, and may,
      * under certain circumstances, be used to save allocation costs.
      *
-     * <p>Suppose <tt>x</tt> is a list known to contain only strings.
+     * <p>Suppose {@code x} is a list known to contain only strings.
      * The following code can be used to dump the list into a newly
-     * allocated array of <tt>String</tt>:
+     * allocated array of {@code String}:
      *
      *  <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
      *
-     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
-     * <tt>toArray()</tt>.
+     * Note that {@code toArray(new Object[0])} is identical in function to
+     * {@code toArray()}.
      *
      * @param a the array into which the elements of the list are to
      *          be stored, if it is big enough; otherwise, a new array of the
@@ -390,7 +390,7 @@ public class CopyOnWriteArrayList<E>
      * Appends the specified element to the end of this list.
      *
      * @param e element to be appended to this list
-     * @return <tt>true</tt> (as specified by {@link Collection#add})
+     * @return {@code true} (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
         final ReentrantLock lock = this.lock;
@@ -474,14 +474,14 @@ public class CopyOnWriteArrayList<E>
      * Removes the first occurrence of the specified element from this list,
      * if it is present.  If this list does not contain the element, it is
      * unchanged.  More formally, removes the element with the lowest index
-     * <tt>i</tt> such that
+     * {@code i} such that
      * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>
-     * (if such an element exists).  Returns <tt>true</tt> if this list
+     * (if such an element exists).  Returns {@code true} if this list
      * contained the specified element (or equivalently, if this list
      * changed as a result of the call).
      *
      * @param o element to be removed from this list, if present
-     * @return <tt>true</tt> if this list contained the specified element
+     * @return {@code true} if this list contained the specified element
      */
     public boolean remove(Object o) {
         final ReentrantLock lock = this.lock;
@@ -520,10 +520,10 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Removes from this list all of the elements whose index is between
-     * <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.
      * Shifts any succeeding elements to the left (reduces their index).
-     * This call shortens the list by <tt>(toIndex - fromIndex)</tt> elements.
-     * (If <tt>toIndex==fromIndex</tt>, this operation has no effect.)
+     * This call shortens the list by {@code (toIndex - fromIndex)} elements.
+     * (If {@code toIndex==fromIndex}, this operation has no effect.)
      *
      * @param fromIndex index of first element to be removed
      * @param toIndex index after last element to be removed
@@ -559,7 +559,7 @@ public class CopyOnWriteArrayList<E>
      * Appends the element, if not present.
      *
      * @param e element to be added to this list, if absent
-     * @return <tt>true</tt> if the element was added
+     * @return {@code true} if the element was added
      */
     public boolean addIfAbsent(E e) {
         final ReentrantLock lock = this.lock;
@@ -585,11 +585,11 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this list contains all of the elements of the
+     * Returns {@code true} if this list contains all of the elements of the
      * specified collection.
      *
      * @param c collection to be checked for containment in this list
-     * @return <tt>true</tt> if this list contains all of the elements of the
+     * @return {@code true} if this list contains all of the elements of the
      *         specified collection
      * @throws NullPointerException if the specified collection is null
      * @see #contains(Object)
@@ -610,7 +610,7 @@ public class CopyOnWriteArrayList<E>
      * in this class because of the need for an internal temporary array.
      *
      * @param c collection containing elements to be removed from this list
-     * @return <tt>true</tt> if this list changed as a result of the call
+     * @return {@code true} if this list changed as a result of the call
      * @throws ClassCastException if the class of an element of this list
      *         is incompatible with the specified collection
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
@@ -653,7 +653,7 @@ public class CopyOnWriteArrayList<E>
      * its elements that are not contained in the specified collection.
      *
      * @param c collection containing elements to be retained in this list
-     * @return <tt>true</tt> if this list changed as a result of the call
+     * @return {@code true} if this list changed as a result of the call
      * @throws ClassCastException if the class of an element of this list
      *         is incompatible with the specified collection
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
@@ -749,7 +749,7 @@ public class CopyOnWriteArrayList<E>
      * collection's iterator.
      *
      * @param c collection containing elements to be added to this list
-     * @return <tt>true</tt> if this list changed as a result of the call
+     * @return {@code true} if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      * @see #add(Object)
      */
@@ -782,7 +782,7 @@ public class CopyOnWriteArrayList<E>
      * @param index index at which to insert the first element
      *        from the specified collection
      * @param c collection containing elements to be added to this list
-     * @return <tt>true</tt> if this list changed as a result of the call
+     * @return {@code true} if this list changed as a result of the call
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null
      * @see #add(int,Object)
@@ -864,8 +864,8 @@ public class CopyOnWriteArrayList<E>
      * Returns a string representation of this list.  The string
      * representation consists of the string representations of the list's
      * elements in the order they are returned by its iterator, enclosed in
-     * square brackets (<tt>"[]"</tt>).  Adjacent elements are separated by
-     * the characters <tt>", "</tt> (comma and space).  Elements are
+     * square brackets ({@code "[]"}).  Adjacent elements are separated by
+     * the characters {@code ", "} (comma and space).  Elements are
      * converted to strings as by {@link String#valueOf(Object)}.
      *
      * @return a string representation of this list
@@ -931,7 +931,7 @@ public class CopyOnWriteArrayList<E>
      * <p>The returned iterator provides a snapshot of the state of the list
      * when the iterator was constructed. No synchronization is needed while
      * traversing the iterator. The iterator does <em>NOT</em> support the
-     * <tt>remove</tt> method.
+     * {@code remove} method.
      *
      * @return an iterator over the elements in this list in proper sequence
      */
@@ -945,7 +945,7 @@ public class CopyOnWriteArrayList<E>
      * <p>The returned iterator provides a snapshot of the state of the list
      * when the iterator was constructed. No synchronization is needed while
      * traversing the iterator. The iterator does <em>NOT</em> support the
-     * <tt>remove</tt>, <tt>set</tt> or <tt>add</tt> methods.
+     * {@code remove}, {@code set} or {@code add} methods.
      */
     public ListIterator<E> listIterator() {
         return new COWIterator<E>(getArray(), 0);
@@ -957,7 +957,7 @@ public class CopyOnWriteArrayList<E>
      * <p>The returned iterator provides a snapshot of the state of the list
      * when the iterator was constructed. No synchronization is needed while
      * traversing the iterator. The iterator does <em>NOT</em> support the
-     * <tt>remove</tt>, <tt>set</tt> or <tt>add</tt> methods.
+     * {@code remove}, {@code set} or {@code add} methods.
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
@@ -1013,7 +1013,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException always; <tt>remove</tt>
+         * @throws UnsupportedOperationException always; {@code remove}
          *         is not supported by this iterator.
          */
         public void remove() {
@@ -1022,7 +1022,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException always; <tt>set</tt>
+         * @throws UnsupportedOperationException always; {@code set}
          *         is not supported by this iterator.
          */
         public void set(E e) {
@@ -1031,7 +1031,7 @@ public class CopyOnWriteArrayList<E>
 
         /**
          * Not supported. Always throws UnsupportedOperationException.
-         * @throws UnsupportedOperationException always; <tt>add</tt>
+         * @throws UnsupportedOperationException always; {@code add}
          *         is not supported by this iterator.
          */
         public void add(E e) {
@@ -1041,7 +1041,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Returns a view of the portion of this list between
-     * <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.
      * The returned list is backed by this list, so changes in the
      * returned list are reflected in this list.
      *

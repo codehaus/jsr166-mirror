@@ -13,11 +13,11 @@ import sun.misc.Unsafe;
 
 /**
  * A version of {@link AbstractQueuedSynchronizer} in
- * which synchronization state is maintained as a <tt>long</tt>.
+ * which synchronization state is maintained as a {@code long}.
  * This class has exactly the same structure, properties, and methods
- * as <tt>AbstractQueuedSynchronizer</tt> with the exception
+ * as {@code AbstractQueuedSynchronizer} with the exception
  * that all state-related parameters and results are defined
- * as <tt>long</tt> rather than <tt>int</tt>. This class
+ * as {@code long} rather than {@code int}. This class
  * may be useful when creating synchronizers such as
  * multilevel locks and barriers that require
  * 64 bits of state.
@@ -42,7 +42,7 @@ public abstract class AbstractQueuedLongSynchronizer
     */
 
     /**
-     * Creates a new <tt>AbstractQueuedLongSynchronizer</tt> instance
+     * Creates a new {@code AbstractQueuedLongSynchronizer} instance
      * with initial synchronization state of zero.
      */
     protected AbstractQueuedLongSynchronizer() { }
@@ -283,7 +283,7 @@ public abstract class AbstractQueuedLongSynchronizer
 
     /**
      * Returns the current value of synchronization state.
-     * This operation has memory semantics of a <tt>volatile</tt> read.
+     * This operation has memory semantics of a {@code volatile} read.
      * @return current state value
      */
     protected final long getState() {
@@ -292,7 +292,7 @@ public abstract class AbstractQueuedLongSynchronizer
 
     /**
      * Sets the value of synchronization state.
-     * This operation has memory semantics of a <tt>volatile</tt> write.
+     * This operation has memory semantics of a {@code volatile} write.
      * @param newState the new state value
      */
     protected final void setState(long newState) {
@@ -302,7 +302,7 @@ public abstract class AbstractQueuedLongSynchronizer
     /**
      * Atomically sets synchronization state to the given updated
      * value if the current state value equals the expected value.
-     * This operation has memory semantics of a <tt>volatile</tt> read
+     * This operation has memory semantics of a {@code volatile} read
      * and write.
      *
      * @param expect the expected value
@@ -1487,7 +1487,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * uses this synchronizer as its lock.
      *
      * @param condition the condition
-     * @return <tt>true</tt> if owned
+     * @return {@code true} if owned
      * @throws NullPointerException if the condition is null
      */
     public final boolean owns(ConditionObject condition) {
@@ -1497,13 +1497,13 @@ public abstract class AbstractQueuedLongSynchronizer
     /**
      * Queries whether any threads are waiting on the given condition
      * associated with this synchronizer. Note that because timeouts
-     * and interrupts may occur at any time, a <tt>true</tt> return
-     * does not guarantee that a future <tt>signal</tt> will awaken
+     * and interrupts may occur at any time, a {@code true} return
+     * does not guarantee that a future {@code signal} will awaken
      * any threads.  This method is designed primarily for use in
      * monitoring of the system state.
      *
      * @param condition the condition
-     * @return <tt>true</tt> if there are any waiting threads
+     * @return {@code true} if there are any waiting threads
      * @throws IllegalMonitorStateException if exclusive synchronization
      *         is not held
      * @throws IllegalArgumentException if the given condition is
@@ -1570,7 +1570,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * and Condition users. Exported versions of this class will in
      * general need to be accompanied by documentation describing
      * condition semantics that rely on those of the associated
-     * <tt>AbstractQueuedLongSynchronizer</tt>.
+     * {@code AbstractQueuedLongSynchronizer}.
      *
      * <p>This class is Serializable, but all fields are transient,
      * so deserialized conditions have no waiters.
@@ -1585,7 +1585,7 @@ public abstract class AbstractQueuedLongSynchronizer
         private transient Node lastWaiter;
 
         /**
-         * Creates a new <tt>ConditionObject</tt> instance.
+         * Creates a new {@code ConditionObject} instance.
          */
         public ConditionObject() { }
 

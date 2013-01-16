@@ -88,11 +88,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndSet(int newValue) {
-        int prev;
-        do {
-            prev = get();
-        } while (!compareAndSet(prev, newValue));
-        return prev;
+        return unsafe.getAndSetInt(this, valueOffset, newValue);
     }
 
     /**
@@ -130,12 +126,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndIncrement() {
-        int prev, next;
-        do {
-            prev = get();
-            next = prev + 1;
-        } while (!compareAndSet(prev, next));
-        return prev;
+        return unsafe.getAndAddInt(this, valueOffset, 1);
     }
 
     /**
@@ -144,12 +135,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndDecrement() {
-        int prev, next;
-        do {
-            prev = get();
-            next = prev - 1;
-        } while (!compareAndSet(prev, next));
-        return prev;
+        return unsafe.getAndAddInt(this, valueOffset, -1);
     }
 
     /**
@@ -159,12 +145,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndAdd(int delta) {
-        int prev, next;
-        do {
-            prev = get();
-            next = prev + delta;
-        } while (!compareAndSet(prev, next));
-        return prev;
+        return unsafe.getAndAddInt(this, valueOffset, delta);
     }
 
     /**
@@ -173,12 +154,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final int incrementAndGet() {
-        int prev, next;
-        do {
-            prev = get();
-            next = prev + 1;
-        } while (!compareAndSet(prev, next));
-        return next;
+        return unsafe.getAndAddInt(this, valueOffset, 1) + 1;
     }
 
     /**
@@ -187,12 +163,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final int decrementAndGet() {
-        int prev, next;
-        do {
-            prev = get();
-            next = prev - 1;
-        } while (!compareAndSet(prev, next));
-        return next;
+        return unsafe.getAndAddInt(this, valueOffset, -1) - 1;
     }
 
     /**
@@ -202,12 +173,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return the updated value
      */
     public final int addAndGet(int delta) {
-        int prev, next;
-        do {
-            prev = get();
-            next = prev + delta;
-        } while (!compareAndSet(prev, next));
-        return next;
+        return unsafe.getAndAddInt(this, valueOffset, delta) + delta;
     }
 
     /**
@@ -312,6 +278,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     /**
      * Returns the value of this {@code AtomicInteger} as a {@code long}
      * after a widening primitive conversion.
+     * @jls 5.1.2 Widening Primitive Conversions
      */
     public long longValue() {
         return (long)get();
@@ -320,6 +287,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     /**
      * Returns the value of this {@code AtomicInteger} as a {@code float}
      * after a widening primitive conversion.
+     * @jls 5.1.2 Widening Primitive Conversions
      */
     public float floatValue() {
         return (float)get();
@@ -328,6 +296,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     /**
      * Returns the value of this {@code AtomicInteger} as a {@code double}
      * after a widening primitive conversion.
+     * @jls 5.1.2 Widening Primitive Conversions
      */
     public double doubleValue() {
         return (double)get();

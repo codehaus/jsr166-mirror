@@ -5,7 +5,8 @@
  */
 
 package java.util.concurrent.atomic;
-
+import java.util.function.UnaryOperator;
+import java.util.function.BinaryOperator;
 import java.util.Arrays;
 import java.lang.reflect.Array;
 import sun.misc.Unsafe;
@@ -130,13 +131,9 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
+    @SuppressWarnings("unchecked")
     public final E getAndSet(int i, E newValue) {
-        long offset = checkedByteOffset(i);
-        E prev;
-        do {
-            prev = getRaw(offset);
-        } while (!compareAndSetRaw(offset, prev, newValue));
-        return prev;
+        return (E)unsafe.getAndSetObject(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -172,6 +169,100 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      */
     public final boolean weakCompareAndSet(int i, E expect, E update) {
         return compareAndSet(i, expect, update);
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function. The function should be
+     * side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.
+     *
+     * @param i the index
+     * @param updateFunction a side-effect-free function
+     * @return the previous value
+     * @since 1.8
+     */
+    public final E getAndUpdate(int i, UnaryOperator<E> updateFunction) {
+        long offset = checkedByteOffset(i);
+        E prev, next;
+        do {
+            prev = getRaw(offset);
+            next = updateFunction.apply(prev);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function. The function should be
+     * side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.
+     *
+     * @param i the index
+     * @param updateFunction a side-effect-free function
+     * @return the updated value
+     * @since 1.8
+     */
+    public final E updateAndGet(int i, UnaryOperator<E> updateFunction) {
+        long offset = checkedByteOffset(i);
+        E prev, next;
+        do {
+            prev = getRaw(offset);
+            next = updateFunction.apply(prev);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return next;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function to the current and given values.
+     * The function should be side-effect-free, since it may be
+     * re-applied when attempted updates fail due to contention among
+     * threads.  The function is applied with the current value at index
+     * {@code i} as its first argument, and the given update as the second
+     * argument.
+     *
+     * @param i the index
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the previous value
+     * @since 1.8
+     */
+    public final E getAndAccumulate(int i, E x,
+                                    BinaryOperator<E> accumulatorFunction) {
+        long offset = checkedByteOffset(i);
+        E prev, next;
+        do {
+            prev = getRaw(offset);
+            next = accumulatorFunction.apply(prev, x);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function to the current and given values.
+     * The function should be side-effect-free, since it may be
+     * re-applied when attempted updates fail due to contention among
+     * threads.  The function is applied with the current value at index
+     * {@code i} as its first argument, and the given update as the second
+     * argument.
+     *
+     * @param i the index
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final E accumulateAndGet(int i, E x,
+                                    BinaryOperator<E> accumulatorFunction) {
+        long offset = checkedByteOffset(i);
+        E prev, next;
+        do {
+            prev = getRaw(offset);
+            next = accumulatorFunction.apply(prev, x);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return next;
     }
 
     /**

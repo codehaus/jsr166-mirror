@@ -244,7 +244,6 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
         return next;
     }
 
-
     private static final class AtomicReferenceFieldUpdaterImpl<T,V>
         extends AtomicReferenceFieldUpdater<T,V> {
         private static final Unsafe unsafe = Unsafe.getUnsafe();
@@ -381,6 +380,15 @@ public abstract class AtomicReferenceFieldUpdater<T, V> {
             if (obj == null || obj.getClass() != tclass || cclass != null)
                 targetCheck(obj);
             return (V)unsafe.getObjectVolatile(obj, offset);
+        }
+
+        @SuppressWarnings("unchecked")
+        public V getAndSet(T obj, V newValue) {
+            if (obj == null || obj.getClass() != tclass || cclass != null ||
+                (newValue != null && vclass != null &&
+                 vclass != newValue.getClass()))
+                updateCheck(obj, newValue);
+            return (V)unsafe.getAndSetObject(obj, offset, newValue);
         }
 
         private void ensureProtectedAccess(T obj) {

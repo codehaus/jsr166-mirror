@@ -1,10 +1,12 @@
-/*
+!/*
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 package java.util.concurrent.atomic;
+import java.util.function.IntUnaryOperator;
+import java.util.function.IntBinaryOperator;
 import sun.misc.Unsafe;
 
 /**
@@ -116,12 +118,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndSet(int i, int newValue) {
-        long offset = checkedByteOffset(i);
-        int prev;
-        do {
-            prev = getRaw(offset);
-        } while (!compareAndSetRaw(offset, prev, newValue));
-        return prev;
+        return unsafe.getAndSetInt(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -187,13 +184,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the previous value
      */
     public final int getAndAdd(int i, int delta) {
-        long offset = checkedByteOffset(i);
-        int prev, next;
-        do {
-            prev = getRaw(offset);
-            next = prev + delta;
-        } while (!compareAndSetRaw(offset, prev, next));
-        return prev;
+        return unsafe.getAndAddInt(array, checkedByteOffset(i), delta);
     }
 
     /**
@@ -203,7 +194,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the updated value
      */
     public final int incrementAndGet(int i) {
-        return addAndGet(i, 1);
+        return getAndAdd(i, 1) + 1;
     }
 
     /**
@@ -213,7 +204,7 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the updated value
      */
     public final int decrementAndGet(int i) {
-        return addAndGet(i, -1);
+        return getAndAdd(i, -1) - 1;
     }
 
     /**
@@ -224,11 +215,100 @@ public class AtomicIntegerArray implements java.io.Serializable {
      * @return the updated value
      */
     public final int addAndGet(int i, int delta) {
+        return getAndAdd(i, delta) + delta;
+    }
+
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function. The function should be
+     * side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.
+     *
+     * @param i the index
+     * @param updateFunction a side-effect-free function
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndUpdate(int i, IntUnaryOperator updateFunction) {
         long offset = checkedByteOffset(i);
         int prev, next;
         do {
             prev = getRaw(offset);
-            next = prev + delta;
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function. The function should be
+     * side-effect-free, since it may be re-applied when attempted
+     * updates fail due to contention among threads.
+     *
+     * @param i the index
+     * @param updateFunction a side-effect-free function
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int updateAndGet(int i, IntUnaryOperator updateFunction) {
+        long offset = checkedByteOffset(i);
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = updateFunction.applyAsInt(prev);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return next;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function to the current and given values.
+     * The function should be side-effect-free, since it may be
+     * re-applied when attempted updates fail due to contention among
+     * threads.  The function is applied with the current value at index
+     * {@code i} as its first argument, and the given update as the second
+     * argument.
+     *
+     * @param i the index
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the previous value
+     * @since 1.8
+     */
+    public final int getAndAccumulate(int i, int x,
+                                      IntBinaryOperator accumulatorFunction) {
+        long offset = checkedByteOffset(i);
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = accumulatorFunction.applyAsInt(prev, x);
+        } while (!compareAndSetRaw(offset, prev, next));
+        return prev;
+    }
+
+    /**
+     * Atomically updates the element at index {@code i} with the results
+     * of applying the given function to the current and given values.
+     * The function should be side-effect-free, since it may be
+     * re-applied when attempted updates fail due to contention among
+     * threads.  The function is applied with the current value at index
+     * {@code i} as its first argument, and the given update as the second
+     * argument.
+     *
+     * @param i the index
+     * @param x the update value
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @return the updated value
+     * @since 1.8
+     */
+    public final int accumulateAndGet(int i, int x,
+                                      IntBinaryOperator accumulatorFunction) {
+        long offset = checkedByteOffset(i);
+        int prev, next;
+        do {
+            prev = getRaw(offset);
+            next = accumulatorFunction.applyAsInt(prev, x);
         } while (!compareAndSetRaw(offset, prev, next));
         return next;
     }

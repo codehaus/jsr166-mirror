@@ -109,12 +109,9 @@ public class AtomicReference<V> implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
+    @SuppressWarnings("unchecked")
     public final V getAndSet(V newValue) {
-        V prev;
-        do {
-            prev = get();
-        } while (!compareAndSet(prev, newValue));
-        return prev;
+        return (V)unsafe.getAndSetObject(this, valueOffset, newValue);
     }
 
     /**

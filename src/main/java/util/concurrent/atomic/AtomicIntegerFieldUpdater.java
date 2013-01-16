@@ -422,6 +422,36 @@ public abstract class AtomicIntegerFieldUpdater<T> {
             return unsafe.getIntVolatile(obj, offset);
         }
 
+        public int getAndSet(T obj, int newValue) {
+            if (obj == null || obj.getClass() != tclass || cclass != null) fullCheck(obj);
+            return unsafe.getAndSetInt(obj, offset, newValue);
+        }
+
+        public int getAndIncrement(T obj) {
+            return getAndAdd(obj, 1);
+        }
+
+        public int getAndDecrement(T obj) {
+            return getAndAdd(obj, -1);
+        }
+
+        public int getAndAdd(T obj, int delta) {
+            if (obj == null || obj.getClass() != tclass || cclass != null) fullCheck(obj);
+            return unsafe.getAndAddInt(obj, offset, delta);
+        }
+
+        public int incrementAndGet(T obj) {
+            return getAndAdd(obj, 1) + 1;
+        }
+
+        public int decrementAndGet(T obj) {
+             return getAndAdd(obj, -1) - 1;
+        }
+
+        public int addAndGet(T obj, int delta) {
+            return getAndAdd(obj, delta) + delta;
+        }
+
         private void ensureProtectedAccess(T obj) {
             if (cclass.isInstance(obj)) {
                 return;

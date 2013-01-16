@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,9 @@
 package java.util;
 import java.io.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.IntStream;
+import java.util.stream.Streams;
+
 import sun.misc.Unsafe;
 
 /**
@@ -121,7 +124,7 @@ class Random implements java.io.Serializable {
         if (getClass() == Random.class)
             this.seed = new AtomicLong(initialScramble(seed));
         else {
-            // subclass might have overridden setSeed
+            // subclass might have overriden setSeed
             this.seed = new AtomicLong();
             setSeed(seed);
         }
@@ -510,6 +513,10 @@ class Random implements java.io.Serializable {
             haveNextNextGaussian = true;
             return v1 * multiplier;
         }
+    }
+
+    public IntStream ints() {
+        return Streams.generateInt(this::nextInt);
     }
 
     /**

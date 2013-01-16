@@ -43,17 +43,17 @@ import java.util.*;
  *  </tr>
  * </table>
  *
- * <p>Like any {@link BlockingQueue}, a <tt>BlockingDeque</tt> is
+ * <p>Like any {@link BlockingQueue}, a {@code BlockingDeque} is
  * thread safe and may (or may not) be capacity-constrained.  A
- * <tt>BlockingDeque</tt> implementation may be used directly as a
- * FIFO <tt>BlockingQueue</tt>. The blocking methods inherited from
- * the <tt>BlockingQueue</tt> interface are precisely equivalent to
- * <tt>BlockingDeque</tt> methods as indicated in the following table:<p>
+ * {@code BlockingDeque} implementation may be used directly as a
+ * FIFO {@code BlockingQueue}. The blocking methods inherited from
+ * the {@code BlockingQueue} interface are precisely equivalent to
+ * {@code BlockingDeque} methods as indicated in the following table:<p>
  *
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
  *  <tr>
- *    <td ALIGN=CENTER> <b><tt>BlockingQueue</tt> Method</b></td>
- *    <td ALIGN=CENTER> <b>Equivalent <tt>BlockingDeque</tt> Method</b></td>
+ *    <td ALIGN=CENTER> <b>{@code BlockingQueue} Method</b></td>
+ *    <td ALIGN=CENTER> <b>Equivalent {@code BlockingDeque} Method</b></td>
  *  </tr>
  *  <tr>
  *   <tr>
@@ -90,7 +90,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * waiting if necessary for space to become available.
      * @param o the element to add
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is {@code null}
      */
     void putFirst(E o) throws InterruptedException;
 
@@ -99,7 +99,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * waiting if necessary for space to become available.
      * @param o the element to add
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is {@code null}
      */
     void putLast(E o) throws InterruptedException;
 
@@ -125,13 +125,13 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * become available.
      * @param o the element to add
      * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if
+     * {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     * {@code timeout} parameter
+     * @return {@code true} if successful, or {@code false} if
      * the specified waiting time elapses before space is available
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is {@code null}
      */
     boolean offerFirst(E o, long timeout, TimeUnit unit)
         throws InterruptedException;
@@ -142,13 +142,13 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * become available.
      * @param o the element to add
      * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if
+     * {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     * {@code timeout} parameter
+     * @return {@code true} if successful, or {@code false} if
      * the specified waiting time elapses before space is available
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is {@code null}
      */
     boolean offerLast(E o, long timeout, TimeUnit unit)
         throws InterruptedException;
@@ -159,10 +159,10 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * if necessary up to the specified wait time if no elements are
      * present on this deque.
      * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
-     * @return the head of this deque, or <tt>null</tt> if the
+     * {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     * {@code timeout} parameter
+     * @return the head of this deque, or {@code null} if the
      * specified waiting time elapses before an element is present
      * @throws InterruptedException if interrupted while waiting
      */
@@ -174,10 +174,10 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * if necessary up to the specified wait time if no elements are
      * present on this deque.
      * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
-     * @return the head of this deque, or <tt>null</tt> if the
+     * {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     * {@code timeout} parameter
+     * @return the head of this deque, or {@code null} if the
      * specified waiting time elapses before an element is present
      * @throws InterruptedException if interrupted while waiting
      */
@@ -190,7 +190,7 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * method is equivalent to putLast.
      * @param o the element to add
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is {@code null}
      */
     void put(E o) throws InterruptedException;
 
@@ -198,15 +198,15 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * Inserts the specified element as the lest element of this
      * deque, if possible.  When using deques that may impose
      * insertion restrictions (for example capacity bounds), method
-     * <tt>offer</tt> is generally preferable to method {@link
+     * {@code offer} is generally preferable to method {@link
      * Collection#add}, which can fail to insert an element only by
      * throwing an exception.  This method is equivalent to
      * offerLast.
      *
      * @param o the element to add
-     * @return <tt>true</tt> if it was possible to add the element to
-     *         this deque, else <tt>false</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @return {@code true} if it was possible to add the element to
+     *         this deque, else {@code false}
+     * @throws NullPointerException if the specified element is {@code null}
      */
     boolean offer(E o, long timeout, TimeUnit unit)
         throws InterruptedException;
@@ -226,10 +226,10 @@ public interface BlockingDeque<E> extends Deque<E>, BlockingQueue<E> {
      * present on this deque.  This method is equivalent to
      * pollFirst.
      * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
-     * @return the head of this deque, or <tt>null</tt> if the
+     * {@code unit}
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     * {@code timeout} parameter
+     * @return the head of this deque, or {@code null} if the
      * specified waiting time elapses before an element is present
      * @throws InterruptedException if interrupted while waiting
      */

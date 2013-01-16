@@ -16,14 +16,14 @@ import java.io.*;
  * {@link Stack} when used as a stack, and faster than {@link LinkedList}
  * when used as a queue.
  *
- * <p>Most <tt>ArrayDeque</tt> operations run in amortized constant time.
+ * <p>Most {@code ArrayDeque} operations run in amortized constant time.
  * Exceptions include {@link #remove(Object) remove}, {@link
  * #removeFirstOccurrence removeFirstOccurrence}, {@link #removeLastOccurrence
  * removeLastOccurrence}, {@link #contains contains }, {@link #iterator
  * iterator.remove()}, and the bulk operations, all of which run in linear
  * time.
  *
- * <p>The iterators returned by this class's <tt>iterator</tt> method are
+ * <p>The iterators returned by this class's {@code iterator} method are
  * <i>fail-fast</i>: If the deque is modified at any time after the iterator
  * is created, in any way except through the iterator's own remove method, the
  * iterator will generally throw a {@link ConcurrentModificationException}.
@@ -34,7 +34,7 @@ import java.io.*;
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification.  Fail-fast iterators
- * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
+ * throw {@code ConcurrentModificationException} on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
  * exception for its correctness: <i>the fail-fast behavior of iterators
  * should be used only to detect bugs.</i>
@@ -188,7 +188,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Inserts the specified element to the front this deque.
      *
      * @param e the element to insert
-     * @throws NullPointerException if <tt>e</tt> is null
+     * @throws NullPointerException if {@code e} is null
      */
     public void addFirst(E e) {
         if (e == null)
@@ -204,7 +204,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * {@link #push}.
      *
      * @param e the element to insert
-     * @throws NullPointerException if <tt>e</tt> is null
+     * @throws NullPointerException if {@code e} is null
      */
     public void addLast(E e) {
         if (e == null)
@@ -216,9 +216,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves and removes the first element of this deque, or
-     * <tt>null</tt> if this deque is empty.
+     * {@code null} if this deque is empty.
      *
-     * @return the first element of this deque, or <tt>null</tt> if
+     * @return the first element of this deque, or {@code null} if
      *     this deque is empty
      */
     public E pollFirst() {
@@ -233,9 +233,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves and removes the last element of this deque, or
-     * <tt>null</tt> if this deque is empty.
+     * {@code null} if this deque is empty.
      *
-     * @return the last element of this deque, or <tt>null</tt> if
+     * @return the last element of this deque, or {@code null} if
      *     this deque is empty
      */
     public E pollLast() {
@@ -252,8 +252,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Inserts the specified element to the front this deque.
      *
      * @param e the element to insert
-     * @return <tt>true</tt> (as per the spec for {@link Deque#offerFirst})
-     * @throws NullPointerException if <tt>e</tt> is null
+     * @return {@code true} (as per the spec for {@link Deque#offerFirst})
+     * @throws NullPointerException if {@code e} is null
      */
     public boolean offerFirst(E e) {
         addFirst(e);
@@ -264,8 +264,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Inserts the specified element to the end this deque.
      *
      * @param e the element to insert
-     * @return <tt>true</tt> (as per the spec for {@link Deque#offerLast})
-     * @throws NullPointerException if <tt>e</tt> is null
+     * @return {@code true} (as per the spec for {@link Deque#offerLast})
+     * @throws NullPointerException if {@code e} is null
      */
     public boolean offerLast(E e) {
         addLast(e);
@@ -274,7 +274,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves and removes the first element of this deque.  This method
-     * differs from the <tt>pollFirst</tt> method in that it throws an
+     * differs from the {@code pollFirst} method in that it throws an
      * exception if this deque is empty.
      *
      * @return the first element of this deque
@@ -289,7 +289,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves and removes the last element of this deque.  This method
-     * differs from the <tt>pollLast</tt> method in that it throws an
+     * differs from the {@code pollLast} method in that it throws an
      * exception if this deque is empty.
      *
      * @return the last element of this deque
@@ -304,9 +304,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the first element of this deque,
-     * returning <tt>null</tt> if this deque is empty.
+     * returning {@code null} if this deque is empty.
      *
-     * @return the first element of this deque, or <tt>null</tt> if
+     * @return the first element of this deque, or {@code null} if
      *     this deque is empty
      */
     public E peekFirst() {
@@ -315,9 +315,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the last element of this deque,
-     * returning <tt>null</tt> if this deque is empty.
+     * returning {@code null} if this deque is empty.
      *
-     * @return the last element of this deque, or <tt>null</tt> if this deque
+     * @return the last element of this deque, or {@code null} if this deque
      *     is empty
      */
     public E peekLast() {
@@ -326,7 +326,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the first element of this
-     * deque.  This method differs from the <tt>peek</tt> method only
+     * deque.  This method differs from the {@code peek} method only
      * in that it throws an exception if this deque is empty.
      *
      * @return the first element of this deque
@@ -341,7 +341,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the last element of this
-     * deque.  This method differs from the <tt>peek</tt> method only
+     * deque.  This method differs from the {@code peek} method only
      * in that it throws an exception if this deque is empty.
      *
      * @return the last element of this deque
@@ -360,7 +360,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * does not contain the element, it is unchanged.
      *
      * @param e element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @return {@code true} if the deque contained the specified element
      */
     public boolean removeFirstOccurrence(Object e) {
         if (e == null)
@@ -384,7 +384,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * does not contain the element, it is unchanged.
      *
      * @param e element to be removed from this deque, if present
-     * @return <tt>true</tt> if the deque contained the specified element
+     * @return {@code true} if the deque contained the specified element
      */
     public boolean removeLastOccurrence(Object e) {
         if (e == null)
@@ -410,8 +410,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>This method is equivalent to {@link #offerLast}.
      *
      * @param e the element to insert
-     * @return <tt>true</tt> (as per the spec for {@link Queue#offer})
-     * @throws NullPointerException if <tt>e</tt> is null
+     * @return {@code true} (as per the spec for {@link Queue#offer})
+     * @throws NullPointerException if {@code e} is null
      */
     public boolean offer(E e) {
         return offerLast(e);
@@ -423,8 +423,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>This method is equivalent to {@link #addLast}.
      *
      * @param e the element to insert
-     * @return <tt>true</tt> (as per the spec for {@link Collection#add})
-     * @throws NullPointerException if <tt>e</tt> is null
+     * @return {@code true} (as per the spec for {@link Collection#add})
+     * @throws NullPointerException if {@code e} is null
      */
     public boolean add(E e) {
         addLast(e);
@@ -433,13 +433,13 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves and removes the head of the queue represented by
-     * this deque, or <tt>null</tt> if this deque is empty.  In other words,
-     * retrieves and removes the first element of this deque, or <tt>null</tt>
+     * this deque, or {@code null} if this deque is empty.  In other words,
+     * retrieves and removes the first element of this deque, or {@code null}
      * if this deque is empty.
      *
      * <p>This method is equivalent to {@link #pollFirst}.
      *
-     * @return the first element of this deque, or <tt>null</tt> if
+     * @return the first element of this deque, or {@code null} if
      *     this deque is empty
      */
     public E poll() {
@@ -448,7 +448,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves and removes the head of the queue represented by this deque.
-     * This method differs from the <tt>poll</tt> method in that it throws an
+     * This method differs from the {@code poll} method in that it throws an
      * exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #removeFirst}.
@@ -462,12 +462,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
-     * this deque, returning <tt>null</tt> if this deque is empty.
+     * this deque, returning {@code null} if this deque is empty.
      *
      * <p>This method is equivalent to {@link #peekFirst}
      *
      * @return the head of the queue represented by this deque, or
-     *     <tt>null</tt> if this deque is empty
+     *     {@code null} if this deque is empty
      */
     public E peek() {
         return peekFirst();
@@ -475,7 +475,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
-     * this deque.  This method differs from the <tt>peek</tt> method only in
+     * this deque.  This method differs from the {@code peek} method only in
      * that it throws an exception if this deque is empty.
      *
      * <p>This method is equivalent to {@link #getFirst}
@@ -496,7 +496,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * <p>This method is equivalent to {@link #addFirst}.
      *
      * @param e the element to push
-     * @throws NullPointerException if <tt>e</tt> is null
+     * @throws NullPointerException if {@code e} is null
      */
     public void push(E e) {
         addFirst(e);
@@ -555,9 +555,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this collection contains no elements.
+     * Returns {@code true} if this collection contains no elements.
      *
-     * @return <tt>true</tt> if this collection contains no elements
+     * @return {@code true} if this collection contains no elements
      */
     public boolean isEmpty() {
         return head == tail;
@@ -569,7 +569,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * order that elements would be dequeued (via successive calls to
      * {@link #remove} or popped (via successive calls to {@link #pop}).
      *
-     * @return an <tt>Iterator</tt> over the elements in this deque
+     * @return an {@code Iterator} over the elements in this deque
      */
     public Iterator<E> iterator() {
         return new DeqIterator();
@@ -621,13 +621,13 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Returns <tt>true</tt> if this deque contains the specified
-     * element.  More formally, returns <tt>true</tt> if and only if this
-     * deque contains at least one element <tt>e</tt> such that
-     * <tt>e.equals(o)</tt>.
+     * Returns {@code true} if this deque contains the specified
+     * element.  More formally, returns {@code true} if and only if this
+     * deque contains at least one element {@code e} such that
+     * {@code e.equals(o)}.
      *
      * @param o object to be checked for containment in this deque
-     * @return <tt>true</tt> if this deque contains the specified element
+     * @return {@code true} if this deque contains the specified element
      */
     public boolean contains(Object o) {
         if (o == null)
@@ -648,7 +648,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * This method is equivalent to {@link #removeFirstOccurrence}.
      *
      * @param e element to be removed from this deque, if present
-     * @return <tt>true</tt> if this deque contained the specified element
+     * @return {@code true} if this deque contained the specified element
      */
     public boolean remove(Object e) {
         return removeFirstOccurrence(e);
@@ -691,7 +691,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      *
      * <p>If the deque fits in the specified array with room to spare (i.e.,
      * the array has more elements than the deque), the element in the array
-     * immediately following the end of the collection is set to <tt>null</tt>.
+     * immediately following the end of the collection is set to {@code null}.
      *
      * @param a the array into which the elements of the deque are to
      *          be stored, if it is big enough; otherwise, a new array of the
@@ -739,7 +739,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Serializes this deque.
      *
-     * @serialData The current size (<tt>int</tt>) of the deque,
+     * @serialData The current size ({@code int}) of the deque,
      * followed by all of its elements (each an object reference) in
      * first-to-last order.
      */

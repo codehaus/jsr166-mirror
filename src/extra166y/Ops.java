@@ -12,9 +12,9 @@ import java.util.*;
  * within parallel methods on aggregates. This class provides type
  * names for all operation signatures accepting zero, one or two
  * arguments, and returning zero or one results, for parameterized
- * types, as well as specializations to <tt>int</tt>, <tt>long</tt>,
- * and <tt>double</tt>. In keeping with normal Java evaluation rules
- * that promote, for example <tt>short</tt> to <tt>int</tt>, operation
+ * types, as well as specializations to {@code int}, {@code long},
+ * and {@code double}. In keeping with normal Java evaluation rules
+ * that promote, for example {@code short} to {@code int}, operation
  * names for these smaller types are absent.
  *
  * <p><b>Preliminary release note: Some of the declarations in this
@@ -26,18 +26,18 @@ import java.util.*;
  * <ul>
  *
  * <li> The name of the single method declared in each interface is
- * simply <tt>op</tt> (short for "operate").
+ * simply {@code op} (short for "operate").
  *
- * <li> An <tt>Op</tt> (short for "operation") maps a single argument to
+ * <li> An {@code Op} (short for "operation") maps a single argument to
  * a result. Example: negating a value.
  *
  * <li> The names for scalar ops accepting and returning the same type
  * are prefaced by their type name.
  *
- * <li> A <tt>BinaryOp</tt> maps two arguments to a result. Example:
+ * <li> A {@code BinaryOp} maps two arguments to a result. Example:
  * dividing two numbers
  *
- * <li>A <tt>Reducer</tt> is an <em>associative</em> binary op
+ * <li>A {@code Reducer} is an <em>associative</em> binary op
  * accepting and returning values of the same type; where op(a, op(b,
  * c)) should have the same result as op(op(a, b), c).  Example:
  * adding two numbers.
@@ -48,17 +48,17 @@ import java.util.*;
  * <li> Mixed-type operators are named just by their argument type
  * names.
  *
- * <li> A <tt>Generator</tt> takes no arguments and returns a result.
+ * <li> A {@code Generator} takes no arguments and returns a result.
  * Examples: random number generators, builders
  *
- * <li> A <tt>Procedure</tt> accepts an argument but doesn't return a
- * result. Example: printing a value.  An <tt>Action</tt> is a
+ * <li> A {@code Procedure} accepts an argument but doesn't return a
+ * result. Example: printing a value.  An {@code Action} is a
  * Procedure that takes no arguments.
  *
- * <li>A <tt>Predicate</tt> accepts a value and returns a boolean indicator
+ * <li>A {@code Predicate} accepts a value and returns a boolean indicator
  * that the argument obeys some property. Example: testing if a number is even.
  *
- * <li>A <tt>BinaryPredicate</tt> accepts two values and returns a
+ * <li>A {@code BinaryPredicate} accepts two values and returns a
  * boolean indicator that the arguments obeys some relation. Example:
  * testing if two numbers are relatively prime.
  *
@@ -88,9 +88,9 @@ import java.util.*;
  * <td >
  * <th >a
  * <th >b
- * <th ><tt>int</tt>
- * <th ><tt>long</tt>
- * <th ><tt>double</tt>
+ * <th >{@code int}
+ * <th >{@code long}
+ * <th >{@code double}
  * <th >Object
  * <td >
  * <tr>
@@ -104,7 +104,7 @@ import java.util.*;
  * <td >
  * <tr>
  * <td >
- * <td ><tt>int</tt>
+ * <td >{@code int}
  * <td ><em>&lt;none&gt;</em>
  * <td ><a href="Ops.IntOp.html">Ops.IntOp</a>
  * <td ><a href="Ops.IntToLong.html">Ops.IntToLong</a>
@@ -114,7 +114,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>int</tt>
+ * <td >{@code int}
  * <td ><a href="Ops.BinaryIntOp.html">Ops.BinaryIntOp</a>
  * <td ><a href="Ops.IntAndIntToLong.html">Ops.IntAndIntToLong</a>
  * <td ><a href="Ops.IntAndIntToDouble.html">Ops.IntAndIntToDouble</a>
@@ -123,7 +123,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>long</tt>
+ * <td >{@code long}
  * <td ><a href="Ops.IntAndLongToInt.html">Ops.IntAndLongToInt</a>
  * <td ><a href="Ops.IntAndLongToLong.html">Ops.IntAndLongToLong</a>
  * <td ><a href="Ops.IntAndLongToDouble.html">Ops.IntAndLongToDouble</a>
@@ -132,7 +132,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>double</tt>
+ * <td >{@code double}
  * <td ><a href="Ops.IntAndDoubleToInt.html">Ops.IntAndDoubleToInt</a>
  * <td ><a href="Ops.IntAndDoubleToLong.html">Ops.IntAndDoubleToLong</a>
  * <td ><a href="Ops.IntAndDoubleToDouble.html">Ops.IntAndDoubleToDouble</a>
@@ -158,7 +158,7 @@ import java.util.*;
  * <td >
  * <tr>
  * <td >
- * <td ><tt>long</tt>
+ * <td >{@code long}
  * <td ><em>&lt;none&gt;</em>
  * <td ><a href="Ops.LongToInt.html">Ops.LongToInt</a>
  * <td ><a href="Ops.LongOp.html">Ops.LongOp</a>
@@ -168,7 +168,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>int</tt>
+ * <td >{@code int}
  * <td ><a href="Ops.LongAndIntToInt.html">Ops.LongAndIntToInt</a>
  * <td ><a href="Ops.LongAndIntToLong.html">Ops.LongAndIntToLong</a>
  * <td ><a href="Ops.LongAndIntToDouble.html">Ops.LongAndIntToDouble</a>
@@ -177,7 +177,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>long</tt>
+ * <td >{@code long}
  * <td ><a href="Ops.LongAndLongToInt.html">Ops.LongAndLongToInt</a>
  * <td ><a href="Ops.BinaryLongOp.html">Ops.BinaryLongOp</a>
  * <td ><a href="Ops.LongAndLongToDouble.html">Ops.LongAndLongToDouble</a>
@@ -186,7 +186,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>double</tt>
+ * <td >{@code double}
  * <td ><a href="Ops.LongAndDoubleToInt.html">Ops.LongAndDoubleToInt</a>
  * <td ><a href="Ops.LongAndDoubleToLong.html">Ops.LongAndDoubleToLong</a>
  * <td ><a href="Ops.LongAndDoubleToDouble.html">Ops.LongAndDoubleToDouble</a>
@@ -212,7 +212,7 @@ import java.util.*;
  * <td >
  * <tr>
  * <td >
- * <td ><tt>double</tt>
+ * <td >{@code double}
  * <td ><em>&lt;none&gt;</em>
  * <td ><a href="Ops.DoubleToInt.html">Ops.DoubleToInt</a>
  * <td ><a href="Ops.DoubleToLong.html">Ops.DoubleToLong</a>
@@ -222,7 +222,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>int</tt>
+ * <td >{@code int}
  * <td ><a href="Ops.DoubleAndIntToInt.html">Ops.DoubleAndIntToInt</a>
  * <td ><a href="Ops.DoubleAndIntToLong.html">Ops.DoubleAndIntToLong</a>
  * <td ><a href="Ops.DoubleAndIntToDouble.html">Ops.DoubleAndIntToDouble</a>
@@ -231,7 +231,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>long</tt>
+ * <td >{@code long}
  * <td ><a href="Ops.DoubleAndLongToInt.html">Ops.DoubleAndLongToInt</a>
  * <td ><a href="Ops.DoubleAndLongToLong.html">Ops.DoubleAndLongToLong</a>
  * <td ><a href="Ops.DoubleAndLongToDouble.html">Ops.DoubleAndLongToDouble</a>
@@ -240,7 +240,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>double</tt>
+ * <td >{@code double}
  * <td ><a href="Ops.DoubleAndDoubleToInt.html">Ops.DoubleAndDoubleToInt</a>
  * <td ><a href="Ops.DoubleAndDoubleToLong.html">Ops.DoubleAndDoubleToLong</a>
  * <td ><a href="Ops.BinaryDoubleOp.html">Ops.BinaryDoubleOp</a>
@@ -275,7 +275,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>int</tt>
+ * <td >{@code int}
  * <td ><a href="Ops.ObjectAndIntToInt.html">Ops.ObjectAndIntToInt</a>
  * <td ><a href="Ops.ObjectAndIntToLong.html">Ops.ObjectAndIntToLong</a>
  * <td ><a href="Ops.ObjectAndIntToDouble.html">Ops.ObjectAndIntToDouble</a>
@@ -284,7 +284,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>long</tt>
+ * <td >{@code long}
  * <td ><a href="Ops.ObjectAndLongToInt.html">Ops.ObjectAndLongToInt</a>
  * <td ><a href="Ops.ObjectAndLongToLong.html">Ops.ObjectAndLongToLong</a>
  * <td ><a href="Ops.ObjectAndLongToDouble.html">Ops.ObjectAndLongToDouble</a>
@@ -293,7 +293,7 @@ import java.util.*;
  * <tr>
  * <td >
  * <td >
- * <td ><tt>double</tt>
+ * <td >{@code double}
  * <td ><a href="Ops.ObjectAndDoubleToInt.html">Ops.ObjectAndDoubleToInt</a>
  * <td ><a href="Ops.ObjectAndDoubleToLong.html">Ops.ObjectAndDoubleToLong</a>
  * <td ><a href="Ops.ObjectAndDoubleToDouble.html">Ops.ObjectAndDoubleToDouble</a>
@@ -325,7 +325,7 @@ import java.util.*;
  * constructions. Additionally, they should not block waiting for
  * synchronization.
  *
- * <p>This class is normally best used via <tt>import static</tt>.
+ * <p>This class is normally best used via {@code import static}.
  */
 public class Ops {
     private Ops() {} // disable construction

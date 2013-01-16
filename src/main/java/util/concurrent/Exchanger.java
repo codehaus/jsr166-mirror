@@ -577,7 +577,7 @@ public class Exchanger<V> {
      *
      * @param x the object to exchange
      * @param timeout the maximum time to wait
-     * @param unit the time unit of the <tt>timeout</tt> argument
+     * @param unit the time unit of the {@code timeout} argument
      * @return the object provided by the other thread
      * @throws InterruptedException if the current thread was
      *         interrupted while waiting

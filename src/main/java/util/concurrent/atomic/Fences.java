@@ -7,7 +7,10 @@
 package java.util.concurrent.atomic;
 
 /**
- * A set of methods providing fine-grained control over happens-before
+ * <b>This file exists for documentation reference but is not part of
+ * any planned release.<b>.
+ *
+ * <p>A set of methods providing fine-grained control over happens-before
  * and synchronization order relations among reads and/or writes.  The
  * methods of this class are designed for use in uncommon situations
  * where declaring variables {@code volatile} or {@code final}, using

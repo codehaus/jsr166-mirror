@@ -102,6 +102,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @return the previous value
      */
     public final long getAndSet(long newValue) {
+        //        return unsafe.getAndSetLong(this, valueOffset, newValue);
         long prev;
         do {
             prev = get();

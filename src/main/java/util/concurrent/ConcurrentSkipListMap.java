@@ -1398,7 +1398,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-<<<<<<< ConcurrentSkipListMap.java
      * Creates a new {@link Set} backed by a ConcurrentSkipListMap
      * from the given type to {@code Boolean.TRUE}.
      *

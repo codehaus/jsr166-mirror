@@ -8,6 +8,15 @@
 
   User-specific settings are read from user.properties.
   See user.properties.sample for an explanation of some useful settings.
+
+  The repository contains all dependencies except for ant and the JDK
+  itself.  Because the JDK version matters and because different
+  targets require different JDKs, we assume that users have created a
+  hierarchy containing:
+  $HOME/jdk/jdk6
+  $HOME/jdk/jdk7
+  $HOME/jdk/jdk8
+  where each of the above is a JDK or a symlink to same.
 ------------------------------------------------------------------------------
   </description>
 

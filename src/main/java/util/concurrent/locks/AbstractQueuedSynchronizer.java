@@ -449,7 +449,7 @@ public abstract class AbstractQueuedSynchronizer
         Node nextWaiter;
 
         /**
-         * Returns true if node is waiting in shared mode
+         * Returns true if node is waiting in shared mode.
          */
         final boolean isShared() {
             return nextWaiter == SHARED;
@@ -755,7 +755,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * Checks and updates status for a node that failed to acquire.
      * Returns true if thread should block. This is the main signal
-     * control in all acquire loops.  Requires that pred == node.prev
+     * control in all acquire loops.  Requires that pred == node.prev.
      *
      * @param pred node's predecessor holding status
      * @param node the node

@@ -2466,7 +2466,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         private transient Collection<V> valuesView;
 
         /**
-         * Creates a new submap, initializing all fields
+         * Creates a new submap, initializing all fields.
          */
         SubMap(ConcurrentSkipListMap<K,V> map,
                K fromKey, boolean fromInclusive,
@@ -2515,7 +2515,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns true if node key is less than upper bound of range
+         * Returns true if node key is less than upper bound of range.
          */
         private boolean isBeforeEnd(ConcurrentSkipListMap.Node<K,V> n) {
             if (n == null)
@@ -2533,7 +2533,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Returns lowest node. This node might not be in range, so
-         * most usages need to check bounds
+         * most usages need to check bounds.
          */
         private ConcurrentSkipListMap.Node<K,V> loNode() {
             if (lo == null)
@@ -2546,7 +2546,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Returns highest node. This node might not be in range, so
-         * most usages need to check bounds
+         * most usages need to check bounds.
          */
         private ConcurrentSkipListMap.Node<K,V> hiNode() {
             if (hi == null)
@@ -2558,7 +2558,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns lowest absolute key (ignoring directonality)
+         * Returns lowest absolute key (ignoring directonality).
          */
         private K lowestKey() {
             ConcurrentSkipListMap.Node<K,V> n = loNode();
@@ -2569,7 +2569,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns highest absolute key (ignoring directonality)
+         * Returns highest absolute key (ignoring directonality).
          */
         private K highestKey() {
             ConcurrentSkipListMap.Node<K,V> n = hiNode();

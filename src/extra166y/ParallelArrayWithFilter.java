@@ -87,7 +87,7 @@ public abstract class ParallelArrayWithFilter<T>
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>.
+     * {@code op(thisElement, otherElement)}.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -103,7 +103,7 @@ public abstract class ParallelArrayWithFilter<T>
 
     /**
      * Replaces elements with results of applying
-     * <tt>op(thisElement, otherElement)</tt>.
+     * {@code op(thisElement, otherElement)}.
      * @param other the other array
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
@@ -119,7 +119,7 @@ public abstract class ParallelArrayWithFilter<T>
     /**
      * Returns a new ParallelArray containing only non-null unique
      * elements (that is, without any duplicates). This method
-     * uses each element's <tt>equals</tt> method to test for
+     * uses each element's {@code equals} method to test for
      * duplication.
      * @return the new ParallelArray
      */

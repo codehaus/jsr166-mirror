@@ -76,7 +76,7 @@ public class LinkedBlockingDeque<E>
     private final Condition notFull = lock.newCondition();
 
     /**
-     * Creates a <tt>LinkedBlockingDeque</tt> with a capacity of
+     * Creates a {@code LinkedBlockingDeque} with a capacity of
      * {@link Integer#MAX_VALUE}.
      */
     public LinkedBlockingDeque() {
@@ -84,10 +84,10 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Creates a <tt>LinkedBlockingDeque</tt> with the given (fixed)
+     * Creates a {@code LinkedBlockingDeque} with the given (fixed)
      * capacity.
      * @param capacity the capacity of this deque
-     * @throws IllegalArgumentException if <tt>capacity</tt> is less than 1
+     * @throws IllegalArgumentException if {@code capacity} is less than 1
      */
     public LinkedBlockingDeque(int capacity) {
         if (capacity <= 0) throw new IllegalArgumentException();
@@ -95,13 +95,13 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Creates a <tt>LinkedBlockingDeque</tt> with a capacity of
+     * Creates a {@code LinkedBlockingDeque} with a capacity of
      * {@link Integer#MAX_VALUE}, initially containing the elements of the
      * given collection,
      * added in traversal order of the collection's iterator.
      * @param c the collection of elements to initially contain
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * @throws NullPointerException if {@code c} or any element within it
+     * is {@code null}
      */
     public LinkedBlockingDeque(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
@@ -459,11 +459,11 @@ public class LinkedBlockingDeque<E>
      * Returns the number of elements that this deque can ideally (in
      * the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this deque
-     * less the current <tt>size</tt> of this deque.
+     * less the current {@code size} of this deque.
      * <p>Note that you <em>cannot</em> always tell if
-     * an attempt to <tt>add</tt> an element will succeed by
-     * inspecting <tt>remainingCapacity</tt> because it may be the
-     * case that a waiting consumer is ready to <tt>take</tt> an
+     * an attempt to {@code add} an element will succeed by
+     * inspecting {@code remainingCapacity} because it may be the
+     * case that a waiting consumer is ready to {@code take} an
      * element out of an otherwise full deque.
      */
     public int remainingCapacity() {
@@ -641,7 +641,7 @@ public class LinkedBlockingDeque<E>
 
     /**
      * Returns an iterator over the elements in this deque in proper sequence.
-     * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
+     * The returned {@code Iterator} is a "weakly consistent" iterator that
      * will never throw {@link java.util.ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
@@ -720,7 +720,7 @@ public class LinkedBlockingDeque<E>
      * Saves the state to a stream (that is, serializes it).
      *
      * @serialData The capacity (int), followed by elements (each an
-     * <tt>Object</tt>) in the proper order, followed by a null
+     * {@code Object}) in the proper order, followed by a null
      * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)

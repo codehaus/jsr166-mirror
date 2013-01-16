@@ -336,7 +336,7 @@ package java.util.concurrent;
  *     while (h - l >= 2) {
  *       int mid = (l + h) >>> 1;
  *       addToPendingCount(1);
- *       (forks = new MapReducer(this, array, mapper, reducer, mid, h, forks)).fork;
+ *       (forks = new MapReducer(this, array, mapper, reducer, mid, h, forks)).fork();
  *       h = mid;
  *     }
  *     if (h > l)
@@ -624,8 +624,8 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     /**
      * If this task does not have a completer, invokes {@link
      * ForkJoinTask#quietlyComplete} and returns {@code null}.  Or, if
-     * this task's pending count is non-zero, decrements its pending
-     * count and returns {@code null}.  Otherwise, returns the
+     * the completer's pending count is non-zero, decrements that
+     * pending count and returns {@code null}.  Otherwise, returns the
      * completer.  This method can be used as part of a completion
      * traversal loop for homogeneous task hierarchies:
      *

@@ -6,6 +6,9 @@
 
 package java.util.concurrent;
 import java.util.*;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
 
 /**
  * A scalable concurrent {@link NavigableSet} implementation based on
@@ -439,6 +442,32 @@ public class ConcurrentSkipListSet<E>
      */
     public NavigableSet<E> descendingSet() {
         return new ConcurrentSkipListSet<E>(m.descendingMap());
+    }
+
+    public Stream<E> stream() {
+        int flags = Streams.STREAM_IS_DISTINCT |
+            Streams.STREAM_IS_SORTED | Streams.STREAM_IS_ORDERED;
+        int sizedFlags = flags | Streams.STREAM_IS_SIZED;
+        if (m instanceof ConcurrentSkipListMap)
+            return Streams.stream
+                (() -> ((ConcurrentSkipListMap<E,?>)m).keySpliterator(),
+                 sizedFlags);
+        else
+            return Streams.stream
+                (Streams.spliteratorUnknownSize(iterator()), flags);
+    }
+
+    public Stream<E> parallelStream() {
+        int flags = Streams.STREAM_IS_DISTINCT |
+            Streams.STREAM_IS_SORTED | Streams.STREAM_IS_ORDERED;
+        int sizedFlags = flags | Streams.STREAM_IS_SIZED;
+        if (m instanceof ConcurrentSkipListMap)
+            return Streams.parallelStream
+                (() -> ((ConcurrentSkipListMap<E,?>)m).keySpliterator(),
+                 sizedFlags);
+        else
+            return Streams.parallelStream
+                (Streams.spliteratorUnknownSize(iterator()), flags);
     }
 
     // Support for resetting map in clone

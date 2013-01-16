@@ -5,7 +5,13 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
+import java.util.Collection;
+import java.util.Set;
+import java.util.AbstractSet;
+import java.util.Iterator;
+import java.util.stream.Stream;
+import java.util.Spliterator;
+import java.util.stream.Streams;
 
 /**
  * A {@link java.util.Set} that uses an internal {@link CopyOnWriteArrayList}
@@ -351,6 +357,23 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
             return false;
         }
         return k == len;
+    }
+
+    public Stream<E> stream() {
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED | 
+            Streams.STREAM_IS_DISTINCT;
+        Object[] a = al.getArray();
+        int n = a.length;
+        return Streams.stream
+            (() -> new CopyOnWriteArrayList.COWSpliterator<E>(a, 0, n), flags);
+    }
+    public Stream<E> parallelStream() {
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED | 
+            Streams.STREAM_IS_DISTINCT;
+        Object[] a = al.getArray();
+        int n = a.length;
+        return Streams.parallelStream
+            (() -> new CopyOnWriteArrayList.COWSpliterator<E>(a, 0, n), flags);
     }
 
     /**

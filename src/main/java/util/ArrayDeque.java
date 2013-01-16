@@ -1,9 +1,42 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * This file is available under and governed by the GNU General Public
+ * License version 2 only, as published by the Free Software Foundation.
+ * However, the following notice accompanied the original version of this
+ * file:
+ *
  * Written by Josh Bloch of Google Inc. and released to the public domain,
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/.
  */
 
 package java.util;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Block;
 
 /**
  * Resizable-array implementation of the {@link Deque} interface.  Array
@@ -14,19 +47,17 @@ package java.util;
  * {@link Stack} when used as a stack, and faster than {@link LinkedList}
  * when used as a queue.
  *
- * <p>Most {@code ArrayDeque} operations run in amortized constant time.
- * Exceptions include
- * {@link #remove(Object) remove},
- * {@link #removeFirstOccurrence removeFirstOccurrence},
- * {@link #removeLastOccurrence removeLastOccurrence},
- * {@link #contains contains},
- * {@link #iterator iterator.remove()},
- * and the bulk operations, all of which run in linear time.
+ * <p>Most <tt>ArrayDeque</tt> operations run in amortized constant time.
+ * Exceptions include {@link #remove(Object) remove}, {@link
+ * #removeFirstOccurrence removeFirstOccurrence}, {@link #removeLastOccurrence
+ * removeLastOccurrence}, {@link #contains contains}, {@link #iterator
+ * iterator.remove()}, and the bulk operations, all of which run in linear
+ * time.
  *
- * <p>The iterators returned by this class's {@link #iterator() iterator}
- * method are <em>fail-fast</em>: If the deque is modified at any time after
- * the iterator is created, in any way except through the iterator's own
- * {@code remove} method, the iterator will generally throw a {@link
+ * <p>The iterators returned by this class's <tt>iterator</tt> method are
+ * <i>fail-fast</i>: If the deque is modified at any time after the iterator
+ * is created, in any way except through the iterator's own <tt>remove</tt>
+ * method, the iterator will generally throw a {@link
  * ConcurrentModificationException}.  Thus, in the face of concurrent
  * modification, the iterator fails quickly and cleanly, rather than risking
  * arbitrary, non-deterministic behavior at an undetermined time in the
@@ -35,7 +66,7 @@ package java.util;
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification.  Fail-fast iterators
- * throw {@code ConcurrentModificationException} on a best-effort basis.
+ * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
  * exception for its correctness: <i>the fail-fast behavior of iterators
  * should be used only to detect bugs.</i>
@@ -65,20 +96,20 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * other.  We also guarantee that all array cells not holding
      * deque elements are always null.
      */
-    private transient Object[] elements;
+    transient Object[] elements; // non-private to simplify nested class access
 
     /**
      * The index of the element at the head of the deque (which is the
      * element that would be removed by remove() or pop()); or an
      * arbitrary number equal to tail if the deque is empty.
      */
-    private transient int head;
+    transient int head;
 
     /**
      * The index at which the next element would be added to the tail
      * of the deque (via addLast(E), add(E), or push(E)).
      */
-    private transient int tail;
+    transient int tail;
 
     /**
      * The minimum capacity that we'll use for a newly created deque.
@@ -843,4 +874,114 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         for (int i = 0; i < size; i++)
             elements[i] = s.readObject();
     }
+
+    public Stream<E> stream() {
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
+        return Streams.stream
+            (() -> new DeqSpliterator<E>(this, head, tail), flags);
+    }
+    public Stream<E> parallelStream() {
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
+        return Streams.parallelStream
+            (() -> new DeqSpliterator<E>(this, head, tail), flags);
+    }
+
+
+    static final class DeqSpliterator<E> implements Spliterator<E>, Iterator<E> {
+        private final ArrayDeque<E> deq;
+        private final Object[] array;
+        private final int fence;  // initially tail
+        private int index;        // current index, modified on traverse/split
+
+        /** Create new spliterator covering the given array and range */
+        DeqSpliterator(ArrayDeque<E> deq, int origin, int fence) {
+            this.deq = deq; this.array = deq.elements;
+            this.index = origin; this.fence = fence;
+        }
+
+        public DeqSpliterator<E> trySplit() {
+            int n = array.length;
+            int h = index, t = fence;
+            if (h != t && ((h + 1) & (n - 1)) != t) {
+                if (h > t)
+                    t += n;
+                int m = ((h + t) >>> 1) & (n - 1);
+                return new DeqSpliterator<E>(deq, h, index = m);
+            }
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        public void forEach(Block<? super E> block) {
+            if (block == null)
+                throw new NullPointerException();
+            Object[] a = array;
+            if (a != deq.elements)
+                throw new ConcurrentModificationException();
+            int m = a.length - 1, f = fence, i = index;
+            index = f;
+            while (i != f) {
+                Object e = a[i];
+                if (e == null)
+                    throw new ConcurrentModificationException();
+                block.accept((E)e);
+                i = (i + 1) & m;
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        public boolean tryAdvance(Block<? super E> block) {
+            if (block == null)
+                throw new NullPointerException();
+            Object[] a = array;
+            if (a != deq.elements)
+                throw new ConcurrentModificationException();
+            int m = a.length - 1, i = index;
+            if (i != fence) {
+                Object e = a[i];
+                if (e == null)
+                    throw new ConcurrentModificationException();
+                block.accept((E)e);
+                index = (i + 1) & m;
+                return true;
+            }
+            return false;
+        }
+
+        // Iterator support
+        public Iterator<E> iterator() {
+            return this;
+        }
+
+        public boolean hasNext() {
+            return index >= 0 && index != fence;
+        }
+
+        @SuppressWarnings("unchecked")
+            public E next() {
+            if (index < 0 || index == fence)
+                throw new NoSuchElementException();
+            Object[] a = array;
+            if (a != deq.elements)
+                throw new ConcurrentModificationException();
+            Object e = a[index];
+            if (e == null)
+                throw new ConcurrentModificationException();
+            index = (index + 1) & (a.length - 1);
+            return (E) e;
+        }
+
+        public void remove() { throw new UnsupportedOperationException(); }
+
+        // Other spliterator methods
+        public long estimateSize() { 
+            int n = fence - index;
+            if (n < 0)
+                n += array.length;
+            return (long)n;
+        }
+        public boolean hasExactSize() { return true; }
+        public boolean hasExactSplits() { return true; }
+    }
+
 }

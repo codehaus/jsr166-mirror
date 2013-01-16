@@ -8,7 +8,19 @@ package java.util.concurrent;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.*;
+import java.util.AbstractQueue;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.SortedSet;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Block;
 
 /**
  * An unbounded {@linkplain BlockingQueue blocking queue} that uses
@@ -904,6 +916,80 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             addAll(q);
         } finally {
             q = null;
+        }
+    }
+
+    // wrapping constructor in method avoids transient javac problems
+    final PBQSpliterator<E> spliterator() {
+        Object[] a = toArray();
+        return new PBQSpliterator(a, 0, a.length);
+    }
+    
+    public Stream<E> stream() {
+        int flags = Streams.STREAM_IS_SIZED;
+        return Streams.stream
+            (() -> spliterator(), flags);
+    }
+    public Stream<E> parallelStream() {
+        int flags = Streams.STREAM_IS_SIZED;
+        return Streams.parallelStream
+            (() -> spliterator(), flags);
+    }
+
+    /** Index-based split-by-two Spliterator */
+    static final class PBQSpliterator<E> implements Spliterator<E>, Iterator<E> {
+        private final Object[] array;
+        private int index;        // current index, modified on advance/split
+        private final int fence;  // one past last index
+
+        /** Create new spliterator covering the given array and range */
+        PBQSpliterator(Object[] array, int origin, int fence) {
+            this.array = array; this.index = origin; this.fence = fence;
+        }
+
+        public PBQSpliterator<E> trySplit() {
+            int lo = index, mid = (lo + fence) >>> 1;
+            return (lo >= mid)? null :
+                new PBQSpliterator<E>(array, lo, index = mid);
+        }
+
+        public void forEach(Block<? super E> block) {
+            Object[] a; int i, hi; // hoist accesses and checks from loop
+            if (block == null)
+                throw new NullPointerException();
+            if ((a = array).length >= (hi = fence) &&
+                (i = index) >= 0 && i < hi) {
+                index = hi;
+                do {
+                    @SuppressWarnings("unchecked") E e = (E) a[i];
+                    block.accept(e);
+                } while (++i < hi);
+            }
+        }
+
+        public boolean tryAdvance(Block<? super E> block) {
+            if (index >= 0 && index < fence) {
+                @SuppressWarnings("unchecked") E e = (E) array[index++];
+                block.accept(e);
+                return true;
+            }
+            return false;
+        }
+
+        public long estimateSize() { return (long)(fence - index); }
+        public boolean hasExactSize() { return true; }
+        public boolean hasExactSplits() { return true; }
+
+        // Iterator support
+        public Iterator<E> iterator() { return this; }
+        public void remove() { throw new UnsupportedOperationException(); }
+        public boolean hasNext() { return index >= 0 && index < fence; }
+
+        public E next() {
+            if (index < 0 || index >= fence)
+                throw new NoSuchElementException();
+            @SuppressWarnings("unchecked") E e = (E) array[index++];
+            return e;
         }
     }
 

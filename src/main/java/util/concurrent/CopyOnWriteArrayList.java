@@ -15,7 +15,19 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.AbstractList;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.RandomAccess;
+import java.util.NoSuchElementException;
+import java.util.ConcurrentModificationException;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Block;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -970,7 +982,22 @@ public class CopyOnWriteArrayList<E>
         return new COWIterator<E>(elements, index);
     }
 
-    private static class COWIterator<E> implements ListIterator<E> {
+    public Stream<E> stream() {
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
+        Object[] a = getArray();
+        int n = a.length;
+        return Streams.stream
+            (() -> new COWSpliterator<E>(a, 0, n), flags);
+    }
+    public Stream<E> parallelStream() {
+        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
+        Object[] a = getArray();
+        int n = a.length;
+        return Streams.parallelStream
+            (() -> new COWSpliterator<E>(a, 0, n), flags);
+    }
+
+    static final class COWIterator<E> implements ListIterator<E> {
         /** Snapshot of the array */
         private final Object[] snapshot;
         /** Index of element to be returned by subsequent call to next.  */
@@ -1241,6 +1268,32 @@ public class CopyOnWriteArrayList<E>
             }
         }
 
+        public Stream<E> stream() {
+            int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
+            int lo = offset;
+            int hi = offset + size;
+            Object[] a = expectedArray;
+            if (l.getArray() != a)
+                throw new ConcurrentModificationException();
+            if (lo < 0 || hi > a.length)
+                throw new IndexOutOfBoundsException();
+            return Streams.stream
+                (() -> new COWSpliterator<E>(a, lo, hi), flags);
+        }
+
+        public Stream<E> parallelStream() {
+            int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
+            int lo = offset;
+            int hi = offset + size;
+            Object[] a = expectedArray;
+            if (l.getArray() != a)
+                throw new ConcurrentModificationException();
+            if (lo < 0 || hi > a.length)
+                throw new IndexOutOfBoundsException();
+            return Streams.parallelStream
+                (() -> new COWSpliterator<E>(a, lo, hi), flags);
+        }
+
     }
 
 
@@ -1297,6 +1350,64 @@ public class CopyOnWriteArrayList<E>
             throw new UnsupportedOperationException();
         }
     }
+
+    /** Index-based split-by-two Spliterator */
+    static final class COWSpliterator<E> implements Spliterator<E>, Iterator<E> {
+        private final Object[] array;
+        private int index;        // current index, modified on advance/split
+        private final int fence;  // one past last index
+
+        /** Create new spliterator covering the given array and range */
+        COWSpliterator(Object[] array, int origin, int fence) {
+            this.array = array; this.index = origin; this.fence = fence;
+        }
+
+        public COWSpliterator<E> trySplit() {
+            int lo = index, mid = (lo + fence) >>> 1;
+            return (lo >= mid)? null :
+                new COWSpliterator<E>(array, lo, index = mid);
+        }
+
+        public void forEach(Block<? super E> block) {
+            Object[] a; int i, hi; // hoist accesses and checks from loop
+            if (block == null)
+                throw new NullPointerException();
+            if ((a = array).length >= (hi = fence) &&
+                (i = index) >= 0 && i < hi) {
+                index = hi;
+                do {
+                    @SuppressWarnings("unchecked") E e = (E) a[i];
+                    block.accept(e);
+                } while (++i < hi);
+            }
+        }
+
+        public boolean tryAdvance(Block<? super E> block) {
+            if (index >= 0 && index < fence) {
+                @SuppressWarnings("unchecked") E e = (E) array[index++];
+                block.accept(e);
+                return true;
+            }
+            return false;
+        }
+
+        public long estimateSize() { return (long)(fence - index); }
+        public boolean hasExactSize() { return true; }
+        public boolean hasExactSplits() { return true; }
+
+        // Iterator support
+        public Iterator<E> iterator() { return this; }
+        public void remove() { throw new UnsupportedOperationException(); }
+        public boolean hasNext() { return index >= 0 && index < fence; }
+
+        public E next() {
+            if (index < 0 || index >= fence)
+                throw new NoSuchElementException();
+            @SuppressWarnings("unchecked") E e = (E) array[index++];
+            return e;
+        }
+    }
+
 
     // Support for resetting lock while deserializing
     private void resetLock() {

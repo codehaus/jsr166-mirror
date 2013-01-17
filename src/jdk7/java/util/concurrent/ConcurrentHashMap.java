@@ -4793,6 +4793,7 @@ public class ConcurrentHashMap<K, V>
      */
     public static final class ValuesView<K,V> extends CHMView<K,V>
         implements Collection<V> {
+        private static final long serialVersionUID = 7249069246763182397L;
         ValuesView(ConcurrentHashMap<K, V> map)   { super(map); }
         public final boolean contains(Object o) { return map.containsValue(o); }
         public final boolean remove(Object o) {
@@ -4837,6 +4838,7 @@ public class ConcurrentHashMap<K, V>
      */
     public static final class EntrySetView<K,V> extends CHMView<K,V>
         implements Set<Map.Entry<K,V>> {
+        private static final long serialVersionUID = 7249069246763182397L;
         EntrySetView(ConcurrentHashMap<K, V> map) { super(map); }
         public final boolean contains(Object o) {
             Object k, v, r; Map.Entry<?,?> e;

@@ -91,20 +91,9 @@ import sun.misc.Unsafe;
 public class LockSupport {
     private LockSupport() {} // Cannot be instantiated.
 
-    // Hotspot implementation via intrinsics API
-    private static final Unsafe unsafe = Unsafe.getUnsafe();
-    private static final long parkBlockerOffset;
-
-    static {
-        try {
-            parkBlockerOffset = unsafe.objectFieldOffset
-                (java.lang.Thread.class.getDeclaredField("parkBlocker"));
-        } catch (Exception ex) { throw new Error(ex); }
-    }
-
     private static void setBlocker(Thread t, Object arg) {
         // Even though volatile, hotspot doesn't need a write barrier here.
-        unsafe.putObject(t, parkBlockerOffset, arg);
+        UNSAFE.putObject(t, parkBlockerOffset, arg);
     }
 
     /**
@@ -120,7 +109,7 @@ public class LockSupport {
      */
     public static void unpark(Thread thread) {
         if (thread != null)
-            unsafe.unpark(thread);
+            UNSAFE.unpark(thread);
     }
 
     /**
@@ -154,7 +143,7 @@ public class LockSupport {
     public static void park(Object blocker) {
         Thread t = Thread.currentThread();
         setBlocker(t, blocker);
-        unsafe.park(false, 0L);
+        UNSAFE.park(false, 0L);
         setBlocker(t, null);
     }
 
@@ -194,7 +183,7 @@ public class LockSupport {
         if (nanos > 0) {
             Thread t = Thread.currentThread();
             setBlocker(t, blocker);
-            unsafe.park(false, nanos);
+            UNSAFE.park(false, nanos);
             setBlocker(t, null);
         }
     }
@@ -235,7 +224,7 @@ public class LockSupport {
     public static void parkUntil(Object blocker, long deadline) {
         Thread t = Thread.currentThread();
         setBlocker(t, blocker);
-        unsafe.park(true, deadline);
+        UNSAFE.park(true, deadline);
         setBlocker(t, null);
     }
 
@@ -254,7 +243,7 @@ public class LockSupport {
     public static Object getBlocker(Thread t) {
         if (t == null)
             throw new NullPointerException();
-        return unsafe.getObjectVolatile(t, parkBlockerOffset);
+        return UNSAFE.getObjectVolatile(t, parkBlockerOffset);
     }
 
     /**
@@ -283,7 +272,7 @@ public class LockSupport {
      * for example, the interrupt status of the thread upon return.
      */
     public static void park() {
-        unsafe.park(false, 0L);
+        UNSAFE.park(false, 0L);
     }
 
     /**
@@ -317,7 +306,7 @@ public class LockSupport {
      */
     public static void parkNanos(long nanos) {
         if (nanos > 0)
-            unsafe.park(false, nanos);
+            UNSAFE.park(false, nanos);
     }
 
     /**
@@ -351,6 +340,46 @@ public class LockSupport {
      *        to wait until
      */
     public static void parkUntil(long deadline) {
-        unsafe.park(true, deadline);
+        UNSAFE.park(true, deadline);
     }
+
+    /**
+     * Returns the pseudo-randomly initialized or updated secondary seed.
+     * Copied from ThreadLocalRandom due to package access restrictions
+     */
+    static final int nextSecondarySeed() {
+        int r;
+        Thread t = Thread.currentThread();
+        if ((r = UNSAFE.getInt(t, SECONDARY)) != 0) {
+            r ^= r << 13;   // xorshift
+            r ^= r >>> 17;
+            r ^= r << 5;
+        }
+        else if ((r = (int)UNSAFE.getLong(t, SEED)) == 0)
+            r = 1; // avoid zero
+        UNSAFE.putInt(t, SECONDARY, r);
+        return r;
+    }
+
+    // Hotspot implementation via intrinsics API
+    private static final sun.misc.Unsafe UNSAFE;
+    private static final long parkBlockerOffset;
+    private static final long SEED;
+    private static final long PROBE;
+    private static final long SECONDARY;
+    static {
+        try {
+            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            Class<?> tk = Thread.class;
+            parkBlockerOffset = UNSAFE.objectFieldOffset
+                (tk.getDeclaredField("parkBlocker"));
+            SEED = UNSAFE.objectFieldOffset
+                (tk.getDeclaredField("threadLocalRandomSeed"));
+            PROBE = UNSAFE.objectFieldOffset
+                (tk.getDeclaredField("threadLocalRandomProbe"));
+            SECONDARY = UNSAFE.objectFieldOffset
+                (tk.getDeclaredField("threadLocalRandomSecondarySeed"));
+        } catch (Exception ex) { throw new Error(ex); }
+    }
+
 }

@@ -1692,8 +1692,10 @@ public class ConcurrentHashMap<K, V>
                             }
                         }
                         if (len != 0) {
-                            if (len > 1)
+                            if (len > 1) {
                                 addCount(delta, len);
+                                delta = 0L;
+                            }
                             break;
                         }
                     }

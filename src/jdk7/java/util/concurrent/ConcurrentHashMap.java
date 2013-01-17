@@ -2834,6 +2834,8 @@ public class ConcurrentHashMap<K, V>
      * @throws NullPointerException if the specified key is null
      */
     public boolean remove(Object key, Object value) {
+        if (key == null)
+            throw new NullPointerException();
         return value != null && internalReplace(key, null, value) != null;
     }
 
@@ -4572,7 +4574,8 @@ public class ConcurrentHashMap<K, V>
     /**
      * Base class for views.
      */
-    static abstract class CHMView<K, V> {
+    static abstract class CHMView<K, V> implements java.io.Serializable {
+        private static final long serialVersionUID = 7249069246763182397L;
         final ConcurrentHashMap<K, V> map;
         CHMView(ConcurrentHashMap<K, V> map)  { this.map = map; }
 

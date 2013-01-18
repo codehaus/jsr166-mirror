@@ -1793,7 +1793,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // Strong Keys
 
-    static abstract class StrongKeyNode implements Node {
+    abstract static class StrongKeyNode implements Node {
         final Object key;
         final int locator;
         StrongKeyNode(int locator, Object key) {
@@ -1805,7 +1805,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class StrongKeySelfValueNode
+    abstract static class StrongKeySelfValueNode
         extends StrongKeyNode {
         StrongKeySelfValueNode(int locator, Object key) {
             super(locator, key);
@@ -1852,7 +1852,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class StrongKeyStrongValueNode
+    abstract static class StrongKeyStrongValueNode
         extends StrongKeyNode {
         volatile Object value;
         StrongKeyStrongValueNode(int locator, Object key, Object value) {
@@ -1905,7 +1905,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // ...
 
-    static abstract class StrongKeyIntValueNode
+    abstract static class StrongKeyIntValueNode
         extends StrongKeyNode {
         volatile int value;
         StrongKeyIntValueNode(int locator, Object key, Object value) {
@@ -1960,7 +1960,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // ...
 
-    static abstract class StrongKeyWeakValueNode
+    abstract static class StrongKeyWeakValueNode
         extends StrongKeyNode {
         volatile EmbeddedWeakReference valueRef;
         final CustomConcurrentHashMap cchm;
@@ -2028,7 +2028,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class StrongKeySoftValueNode
+    abstract static class StrongKeySoftValueNode
         extends StrongKeyNode {
         volatile EmbeddedSoftReference valueRef;
         final CustomConcurrentHashMap cchm;
@@ -2097,7 +2097,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // Weak keys
 
-    static abstract class WeakKeyNode extends WeakReference
+    abstract static class WeakKeyNode extends WeakReference
         implements Node {
         final int locator;
         final CustomConcurrentHashMap cchm;
@@ -2113,7 +2113,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class WeakKeySelfValueNode
+    abstract static class WeakKeySelfValueNode
         extends WeakKeyNode {
         WeakKeySelfValueNode(int locator, Object key,
                              CustomConcurrentHashMap cchm) {
@@ -2163,7 +2163,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class WeakKeyStrongValueNode
+    abstract static class WeakKeyStrongValueNode
         extends WeakKeyNode {
         volatile Object value;
         WeakKeyStrongValueNode(int locator, Object key, Object value,
@@ -2216,7 +2216,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class WeakKeyIntValueNode
+    abstract static class WeakKeyIntValueNode
         extends WeakKeyNode {
         volatile int value;
         WeakKeyIntValueNode(int locator, Object key, Object value,
@@ -2271,7 +2271,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class WeakKeyWeakValueNode
+    abstract static class WeakKeyWeakValueNode
         extends WeakKeyNode {
         volatile EmbeddedWeakReference valueRef;
         WeakKeyWeakValueNode(int locator, Object key, Object value,
@@ -2334,7 +2334,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class WeakKeySoftValueNode
+    abstract static class WeakKeySoftValueNode
         extends WeakKeyNode {
         volatile EmbeddedSoftReference valueRef;
         WeakKeySoftValueNode(int locator, Object key, Object value,
@@ -2398,7 +2398,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     // Soft keys
 
-    static abstract class SoftKeyNode extends SoftReference
+    abstract static class SoftKeyNode extends SoftReference
         implements Node {
         final int locator;
         final CustomConcurrentHashMap cchm;
@@ -2414,7 +2414,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class SoftKeySelfValueNode
+    abstract static class SoftKeySelfValueNode
         extends SoftKeyNode {
         SoftKeySelfValueNode(int locator, Object key,
                              CustomConcurrentHashMap cchm) {
@@ -2464,7 +2464,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class SoftKeyStrongValueNode
+    abstract static class SoftKeyStrongValueNode
         extends SoftKeyNode {
         volatile Object value;
         SoftKeyStrongValueNode(int locator, Object key, Object value,
@@ -2517,7 +2517,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class SoftKeyIntValueNode
+    abstract static class SoftKeyIntValueNode
         extends SoftKeyNode {
         volatile int value;
         SoftKeyIntValueNode(int locator, Object key, Object value,
@@ -2572,7 +2572,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class SoftKeyWeakValueNode
+    abstract static class SoftKeyWeakValueNode
         extends SoftKeyNode {
         volatile EmbeddedWeakReference valueRef;
         SoftKeyWeakValueNode(int locator, Object key, Object value,
@@ -2635,7 +2635,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class SoftKeySoftValueNode
+    abstract static class SoftKeySoftValueNode
         extends SoftKeyNode {
         volatile EmbeddedSoftReference valueRef;
         SoftKeySoftValueNode(int locator, Object key, Object value,
@@ -2697,7 +2697,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class IntKeyNode implements Node {
+    abstract static class IntKeyNode implements Node {
         final int key;
         IntKeyNode(int locator, Object key) {
             this.key = ((Integer)key).intValue();
@@ -2707,7 +2707,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class IntKeySelfValueNode
+    abstract static class IntKeySelfValueNode
         extends IntKeyNode {
         IntKeySelfValueNode(int locator, Object key) {
             super(locator, key);
@@ -2754,7 +2754,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class IntKeyStrongValueNode
+    abstract static class IntKeyStrongValueNode
         extends IntKeyNode {
         volatile Object value;
         IntKeyStrongValueNode(int locator, Object key, Object value) {
@@ -2805,7 +2805,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class IntKeyIntValueNode
+    abstract static class IntKeyIntValueNode
         extends IntKeyNode {
         volatile int value;
         IntKeyIntValueNode(int locator, Object key, Object value) {
@@ -2858,7 +2858,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static abstract class IntKeyWeakValueNode
+    abstract static class IntKeyWeakValueNode
         extends IntKeyNode {
         volatile EmbeddedWeakReference valueRef;
         final CustomConcurrentHashMap cchm;
@@ -2926,7 +2926,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-    static abstract class IntKeySoftValueNode
+    abstract static class IntKeySoftValueNode
         extends IntKeyNode {
         volatile EmbeddedSoftReference valueRef;
         final CustomConcurrentHashMap cchm;

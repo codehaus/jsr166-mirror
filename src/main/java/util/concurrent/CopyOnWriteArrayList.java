@@ -72,10 +72,10 @@ public class CopyOnWriteArrayList<E>
     private static final long serialVersionUID = 8673264195747942595L;
 
     /** The lock protecting all mutators */
-    transient final ReentrantLock lock = new ReentrantLock();
+    final transient ReentrantLock lock = new ReentrantLock();
 
     /** The array, accessed only via getArray/setArray. */
-    private volatile transient Object[] array;
+    private transient volatile Object[] array;
 
     /**
      * Gets the array.  Non-private so as to also be accessible

@@ -4457,7 +4457,7 @@ public class ConcurrentHashMap<K, V>
     /**
      * Base class for views.
      */
-    static abstract class CHMView<K, V> implements java.io.Serializable {
+    abstract static class CHMView<K, V> implements java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
         final ConcurrentHashMap<K, V> map;
         CHMView(ConcurrentHashMap<K, V> map)  { this.map = map; }
@@ -4474,9 +4474,9 @@ public class ConcurrentHashMap<K, V>
         public final void clear()               { map.clear(); }
 
         // implementations below rely on concrete classes supplying these
-        abstract public Iterator<?> iterator();
-        abstract public boolean contains(Object o);
-        abstract public boolean remove(Object o);
+        public abstract Iterator<?> iterator();
+        public abstract boolean contains(Object o);
+        public abstract boolean remove(Object o);
 
         private static final String oomeMsg = "Required array size too large";
 

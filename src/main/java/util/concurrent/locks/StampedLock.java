@@ -362,6 +362,8 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Exclusively acquires the lock if it is available within the
      * given time and the current thread has not been interrupted.
+     * Behavior under timeout and interruption matches that specified
+     * for method {@link Lock#tryLock(long,TimeUnit)}.
      *
      * @return a stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available
@@ -389,6 +391,8 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Exclusively acquires the lock, blocking if necessary
      * until available or the current thread is interrupted.
+     * Behavior under interruption matches that specified
+     * for method {@link Lock#lockInterruptibly()}.
      *
      * @return a stamp that can be used to unlock or convert mode
      * @throws InterruptedException if the current thread is interrupted
@@ -452,6 +456,8 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Non-exclusively acquires the lock if it is available within the
      * given time and the current thread has not been interrupted.
+     * Behavior under timeout and interruption matches that specified
+     * for method {@link Lock#tryLock(long,TimeUnit)}.
      *
      * @return a stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available
@@ -488,6 +494,8 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Non-exclusively acquires the lock, blocking if necessary
      * until available or the current thread is interrupted.
+     * Behavior under interruption matches that specified
+     * for method {@link Lock#lockInterruptibly()}.
      *
      * @return a stamp that can be used to unlock or convert mode
      * @throws InterruptedException if the current thread is interrupted
@@ -805,7 +813,7 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Returns a plain {@link Lock} view of this StampedLock in which
      * the {@link Lock#lock} method is mapped to {@link #readLock},
-     * and similarly for other methods. The returned Lock does not not
+     * and similarly for other methods. The returned Lock does not
      * support a {@link Condition}; method {@link
      * Lock#newCondition()} throws {@code
      * UnsupportedOperationException}.
@@ -821,7 +829,7 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Returns a plain {@link Lock} view of this StampedLock in which
      * the {@link Lock#lock} method is mapped to {@link #writeLock},
-     * and similarly for other methods. The returned Lock does not not
+     * and similarly for other methods. The returned Lock does not
      * support a {@link Condition}; method {@link
      * Lock#newCondition()} throws {@code
      * UnsupportedOperationException}.
@@ -838,7 +846,7 @@ public class StampedLock implements java.io.Serializable {
      * Returns a {@link ReadWriteLock} view of this StampedLock in
      * which the {@link ReadWriteLock#readLock()} method is mapped to
      * {@link #asReadLock()}, and {@link ReadWriteLock#writeLock()} to
-     * {@link #aswriteLock()}.
+     * {@link #asWriteLock()}.
      *
      * @return the lock
      */
@@ -862,7 +870,7 @@ public class StampedLock implements java.io.Serializable {
         }
         // note that we give up ability to check mode so just use current state
         public void unlock() { unlockRead(state); }
-        public Condition newCondition() { 
+        public Condition newCondition() {
             throw new UnsupportedOperationException();
         }
     }
@@ -878,7 +886,7 @@ public class StampedLock implements java.io.Serializable {
             return tryWriteLock(time, unit) != 0L;
         }
         public void unlock() { unlockWrite(state); }
-        public Condition newCondition() { 
+        public Condition newCondition() {
             throw new UnsupportedOperationException();
         }
     }

@@ -805,9 +805,10 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Returns a plain {@link Lock} view of this StampedLock in which
      * the {@link Lock#lock} method is mapped to {@link #readLock},
-     * and similarly for other methods. The returned Lock does not
-     * support the {@link Lock#newCondition} method (always returning
-     * {@code null}.
+     * and similarly for other methods. The returned Lock does not not
+     * support a {@link Condition}; method {@link
+     * Lock#newCondition()} throws {@code
+     * UnsupportedOperationException}.
      *
      * @return the lock
      */
@@ -820,9 +821,10 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Returns a plain {@link Lock} view of this StampedLock in which
      * the {@link Lock#lock} method is mapped to {@link #writeLock},
-     * and similarly for other methods. The returned Lock does not
-     * support the {@link Lock#newCondition} method (always returning
-     * {@code null}.
+     * and similarly for other methods. The returned Lock does not not
+     * support a {@link Condition}; method {@link
+     * Lock#newCondition()} throws {@code
+     * UnsupportedOperationException}.
      *
      * @return the lock
      */
@@ -860,7 +862,9 @@ public class StampedLock implements java.io.Serializable {
         }
         // note that we give up ability to check mode so just use current state
         public void unlock() { unlockRead(state); }
-        public Condition newCondition() { return null; }
+        public Condition newCondition() { 
+            throw new UnsupportedOperationException();
+        }
     }
 
     final class WriteLockView implements Lock {
@@ -874,7 +878,9 @@ public class StampedLock implements java.io.Serializable {
             return tryWriteLock(time, unit) != 0L;
         }
         public void unlock() { unlockWrite(state); }
-        public Condition newCondition() { return null; }
+        public Condition newCondition() { 
+            throw new UnsupportedOperationException();
+        }
     }
 
     final class ReadWriteLockView implements ReadWriteLock {

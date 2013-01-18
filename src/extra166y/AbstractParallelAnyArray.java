@@ -403,7 +403,7 @@ public abstract class AbstractParallelAnyArray {
                             int otherOffset, BinaryLongOp combiner) {}
 
     // Base of object ref array classes
-    static abstract class OPap<T> extends AbstractParallelAnyArray {
+    abstract static class OPap<T> extends AbstractParallelAnyArray {
         T[] array;
         OPap(ForkJoinPool ex, int origin, int fence, T[] array) {
             super(ex, origin, fence);
@@ -433,7 +433,7 @@ public abstract class AbstractParallelAnyArray {
     }
 
     // Base of double array classes
-    static abstract class DPap extends AbstractParallelAnyArray {
+    abstract static class DPap extends AbstractParallelAnyArray {
         double[] array;
         DPap(ForkJoinPool ex, int origin, int fence, double[] array) {
             super(ex, origin, fence);
@@ -463,7 +463,7 @@ public abstract class AbstractParallelAnyArray {
     }
 
     // Base of long array classes
-    static abstract class LPap extends AbstractParallelAnyArray {
+    abstract static class LPap extends AbstractParallelAnyArray {
         long[] array;
         LPap(ForkJoinPool ex, int origin, int fence, long[] array) {
             super(ex, origin, fence);
@@ -2228,7 +2228,7 @@ public abstract class AbstractParallelAnyArray {
 
     // Object-mapped
 
-    static abstract class OOMPap<T,U> extends ParallelArrayWithMapping<T,U> {
+    abstract static class OOMPap<T,U> extends ParallelArrayWithMapping<T,U> {
         final Op<? super T, ? extends U> op;
         OOMPap(ForkJoinPool ex, int origin, int fence,
                T[] array,
@@ -2258,7 +2258,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class DOMPap<U> extends ParallelDoubleArrayWithMapping<U> {
+    abstract static class DOMPap<U> extends ParallelDoubleArrayWithMapping<U> {
         final DoubleToObject<? extends U> op;
         DOMPap(ForkJoinPool ex, int origin, int fence,
                double[] array, DoubleToObject<? extends U> op) {
@@ -2287,7 +2287,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class LOMPap<U> extends ParallelLongArrayWithMapping<U> {
+    abstract static class LOMPap<U> extends ParallelLongArrayWithMapping<U> {
         final LongToObject<? extends U> op;
         LOMPap(ForkJoinPool ex, int origin, int fence,
                long[] array, LongToObject<? extends U> op) {
@@ -3013,7 +3013,7 @@ public abstract class AbstractParallelAnyArray {
 
     // Object-combined
 
-    static abstract class OOCPap<T,U> extends ParallelArrayWithMapping<T,U> {
+    abstract static class OOCPap<T,U> extends ParallelArrayWithMapping<T,U> {
         final IntAndObjectToObject<? super T, ? extends U> op;
         OOCPap(ForkJoinPool ex, int origin, int fence,
                T[] array,
@@ -3045,7 +3045,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class DOCPap<U> extends ParallelDoubleArrayWithMapping<U> {
+    abstract static class DOCPap<U> extends ParallelDoubleArrayWithMapping<U> {
         final IntAndDoubleToObject<? extends U> op;
         DOCPap(ForkJoinPool ex, int origin, int fence,
                double[] array, IntAndDoubleToObject<? extends U> op) {
@@ -3076,7 +3076,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class LOCPap<U> extends ParallelLongArrayWithMapping<U> {
+    abstract static class LOCPap<U> extends ParallelLongArrayWithMapping<U> {
         final IntAndLongToObject<? extends U> op;
         LOCPap(ForkJoinPool ex, int origin, int fence,
                long[] array, IntAndLongToObject<? extends U> op) {
@@ -3784,7 +3784,7 @@ public abstract class AbstractParallelAnyArray {
 
     // Double-mapped
 
-    static abstract class ODMPap<T> extends ParallelArrayWithDoubleMapping<T> {
+    abstract static class ODMPap<T> extends ParallelArrayWithDoubleMapping<T> {
         final ObjectToDouble<? super T> op;
         ODMPap(ForkJoinPool ex, int origin, int fence,
                T[] array, ObjectToDouble<? super T> op) {
@@ -3814,7 +3814,7 @@ public abstract class AbstractParallelAnyArray {
 
     }
 
-    static abstract class DDMPap extends ParallelDoubleArrayWithDoubleMapping {
+    abstract static class DDMPap extends ParallelDoubleArrayWithDoubleMapping {
         final DoubleOp op;
         DDMPap
             (ForkJoinPool ex, int origin, int fence,
@@ -3844,7 +3844,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class LDMPap extends ParallelLongArrayWithDoubleMapping {
+    abstract static class LDMPap extends ParallelLongArrayWithDoubleMapping {
         final LongToDouble op;
         LDMPap(ForkJoinPool ex, int origin, int fence,
                long[] array, LongToDouble op) {
@@ -4530,7 +4530,7 @@ public abstract class AbstractParallelAnyArray {
     }
 
     // double-combined
-    static abstract class ODCPap<T> extends ParallelArrayWithDoubleMapping<T> {
+    abstract static class ODCPap<T> extends ParallelArrayWithDoubleMapping<T> {
         final IntAndObjectToDouble<? super T> op;
         ODCPap(ForkJoinPool ex, int origin, int fence,
                T[] array, IntAndObjectToDouble<? super T> op) {
@@ -4562,7 +4562,7 @@ public abstract class AbstractParallelAnyArray {
 
     }
 
-    static abstract class DDCPap extends ParallelDoubleArrayWithDoubleMapping {
+    abstract static class DDCPap extends ParallelDoubleArrayWithDoubleMapping {
         final IntAndDoubleToDouble op;
         DDCPap(ForkJoinPool ex, int origin, int fence,
                double[] array, IntAndDoubleToDouble op) {
@@ -4593,7 +4593,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class LDCPap extends ParallelLongArrayWithDoubleMapping {
+    abstract static class LDCPap extends ParallelLongArrayWithDoubleMapping {
         final IntAndLongToDouble op;
         LDCPap(ForkJoinPool ex, int origin, int fence,
                long[] array, IntAndLongToDouble op) {
@@ -5281,7 +5281,7 @@ public abstract class AbstractParallelAnyArray {
     }
 
     // long-combined
-    static abstract class OLMPap<T> extends ParallelArrayWithLongMapping<T> {
+    abstract static class OLMPap<T> extends ParallelArrayWithLongMapping<T> {
         final ObjectToLong<? super T> op;
         OLMPap(ForkJoinPool ex, int origin, int fence,
                T[] array, final ObjectToLong<? super T> op) {
@@ -5310,7 +5310,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class DLMPap extends ParallelDoubleArrayWithLongMapping {
+    abstract static class DLMPap extends ParallelDoubleArrayWithLongMapping {
         final DoubleToLong op;
         DLMPap(ForkJoinPool ex, int origin, int fence,
                double[] array, DoubleToLong op) {
@@ -5340,7 +5340,7 @@ public abstract class AbstractParallelAnyArray {
 
     }
 
-    static abstract class LLMPap extends ParallelLongArrayWithLongMapping {
+    abstract static class LLMPap extends ParallelLongArrayWithLongMapping {
         final LongOp op;
         LLMPap(ForkJoinPool ex, int origin, int fence,
                long[] array, LongOp op) {
@@ -6032,7 +6032,7 @@ public abstract class AbstractParallelAnyArray {
     }
 
     // long-combined
-    static abstract class OLCPap<T> extends ParallelArrayWithLongMapping<T> {
+    abstract static class OLCPap<T> extends ParallelArrayWithLongMapping<T> {
         final IntAndObjectToLong<? super T> op;
         OLCPap(ForkJoinPool ex, int origin, int fence,
                T[] array, IntAndObjectToLong<? super T> op) {
@@ -6063,7 +6063,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class DLCPap extends ParallelDoubleArrayWithLongMapping {
+    abstract static class DLCPap extends ParallelDoubleArrayWithLongMapping {
         final IntAndDoubleToLong op;
         DLCPap(ForkJoinPool ex, int origin, int fence,
                double[] array, IntAndDoubleToLong op) {
@@ -6094,7 +6094,7 @@ public abstract class AbstractParallelAnyArray {
         }
     }
 
-    static abstract class LLCPap extends ParallelLongArrayWithLongMapping {
+    abstract static class LLCPap extends ParallelLongArrayWithLongMapping {
         final IntAndLongToLong op;
         LLCPap(ForkJoinPool ex, int origin, int fence,
                long[] array, IntAndLongToLong op) {

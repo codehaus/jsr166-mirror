@@ -34,7 +34,7 @@ package java.util.concurrent;
  *     }
  *   }
  *   // implementation details follow:
- *   final static int THRESHOLD = 1000;
+ *   static final int THRESHOLD = 1000;
  *   void sortSequentially(int lo, int hi) {
  *     Arrays.sort(array, lo, hi);
  *   }

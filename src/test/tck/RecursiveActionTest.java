@@ -1215,7 +1215,7 @@ public class RecursiveActionTest extends JSR166TestCase {
             }
         }
         // implementation details follow:
-        final static int THRESHOLD = 100;
+        static final int THRESHOLD = 100;
         void sortSequentially(int lo, int hi) {
             Arrays.sort(array, lo, hi);
         }

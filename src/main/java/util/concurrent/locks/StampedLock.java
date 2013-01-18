@@ -236,13 +236,10 @@ public class StampedLock implements java.io.Serializable {
      *
      * As noted in Boehm's paper (above), sequence validation (mainly
      * method validate()) requires stricter ordering rules than apply
-     * to normal volatile reads (of "state").  In the absence of (but
-     * continual hope for) explicit JVM support of intrinsics with
-     * double-sided reordering prohibition, or corresponding fence
-     * intrinsics, we for now uncomfortably rely on the fact that the
-     * Unsafe.getXVolatile intrinsic must have this property
-     * (syntactic volatile reads do not) for internal purposes anyway,
-     * even though it is not documented.
+     * to normal volatile reads (of "state").  To force orderings of
+     * reads before a validation and the validation itself in those
+     * cases where this is not already forced, we use
+     * Unsafe.loadFence.
      *
      * The memory layout keeps lock state and queue pointers together
      * (normally on the same cache line). This usually works well for
@@ -526,8 +523,8 @@ public class StampedLock implements java.io.Serializable {
      * since issuance of the given stamp; else false
      */
     public boolean validate(long stamp) {
-        // See above about current use of getLongVolatile here
-        return (stamp & SBITS) == (U.getLongVolatile(this, STATE) & SBITS);
+        U.loadFence();
+        return (stamp & SBITS) == (state & SBITS);
     }
 
     /**
@@ -698,8 +695,10 @@ public class StampedLock implements java.io.Serializable {
      */
     public long tryConvertToOptimisticRead(long stamp) {
         long a = stamp & ABITS, m, s, next;
-        while (((s = U.getLongVolatile(this, STATE)) &
-                SBITS) == (stamp & SBITS)) {
+        for (;;) {
+            U.loadFence();
+            if (((s = state) & SBITS) != (stamp & SBITS))
+                break;
             if ((m = s & ABITS) == 0L) {
                 if (a != 0L)
                     break;
@@ -911,20 +910,6 @@ public class StampedLock implements java.io.Serializable {
     }
 
     /**
-     * RNG for local spins. The first call from await{Read,Write}
-     * produces a thread-local value. Unless zero, subsequent calls
-     * use an xorShift to further reduce memory traffic.
-     */
-    private static int nextRandom(int r) {
-        if (r == 0)
-            return ThreadLocalRandom.current().nextInt();
-        r ^= r << 1; // xorshift
-        r ^= r >>> 3;
-        r ^= r << 10;
-        return r;
-    }
-
-    /**
      * Possibly spins trying to obtain write lock, then enqueues and
      * blocks while not head of write queue or cannot acquire lock,
      * possibly spinning when at head; cancelling on timeout or
@@ -937,7 +922,7 @@ public class StampedLock implements java.io.Serializable {
      */
     private long awaitWrite(boolean interruptible, long deadline) {
         WNode node = null;
-        for (int r = 0, spins = -1;;) {
+        for (int r, spins = -1;;) {
             WNode p; long s, next;
             if (((s = state) & ABITS) == 0L) {
                 if (U.compareAndSwapLong(this, STATE, s, next = s + WBIT))
@@ -946,7 +931,7 @@ public class StampedLock implements java.io.Serializable {
             else if (spins < 0)
                 spins = whead == wtail ? SPINS : 0;
             else if (spins > 0) {
-                if ((r = nextRandom(r)) >= 0)
+                if ((r = LockSupport.nextSecondarySeed()) >= 0)
                     --spins;
             }
             else if ((p = wtail) == null) { // initialize queue
@@ -976,7 +961,7 @@ public class StampedLock implements java.io.Serializable {
                                 }
                                 break;
                             }
-                            if ((r = nextRandom(r)) >= 0 && --k <= 0)
+                            if ((r = LockSupport.nextSecondarySeed()) >= 0 && --k <= 0)
                                 break;
                         }
                         if (headSpins < MAX_HEAD_SPINS)
@@ -1062,7 +1047,7 @@ public class StampedLock implements java.io.Serializable {
         long seq = stamp & SBITS;
         RNode node = null;
         boolean queued = false;
-        for (int r = 0, headSpins = SPINS, spins = -1;;) {
+        for (int r, headSpins = SPINS, spins = -1;;) {
             long s, m, next; RNode p; WNode wh; Thread w;
             if ((m = (s = state) & ABITS) != WBIT &&
                 ((s & SBITS) != seq || (wh = whead) == null ||
@@ -1099,7 +1084,7 @@ public class StampedLock implements java.io.Serializable {
                     headSpins <<= 1;
             }
             else if (spins > 0) {
-                if ((r = nextRandom(r)) >= 0)
+                if ((r = LockSupport.nextSecondarySeed()) >= 0)
                     --spins;
             }
             else if (node == null)

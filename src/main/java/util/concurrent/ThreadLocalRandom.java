@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 
+import java.io.ObjectStreamField;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -103,9 +104,8 @@ public class ThreadLocalRandom extends Random {
         new ThreadLocal<Double>();
 
     /*
-     * Fields used only during singleton initialization
+     * Field used only during singleton initialization
      */
-    private long rnd;    // superclass random value
     boolean initialized; // true when constructor completes
 
     /** Constructor used only for static singleton */
@@ -293,7 +293,7 @@ public class ThreadLocalRandom extends Random {
      * main ThreadLocalRandom if we were to use it.
      *
      * Note: Because of package-protection issues, versions of some
-     * of these methods also appear in some subpackage classes.
+     * these methods also appear in some subpackage classes.
      */
 
     /**
@@ -334,7 +334,60 @@ public class ThreadLocalRandom extends Random {
         return r;
     }
 
+    // Serialization support, maintains original persistent form.
+
     private static final long serialVersionUID = -5851777807851030925L;
+
+    /**
+     * @serialField rnd long
+     * @serialField initialized boolean
+     * @serialField pad0 long
+     * @serialField pad1 long
+     * @serialField pad2 long
+     * @serialField pad3 long
+     * @serialField pad4 long
+     * @serialField pad5 long
+     * @serialField pad6 long
+     * @serialField pad7 long
+     */
+    private static final ObjectStreamField[] serialPersistentFields = {
+            new ObjectStreamField("rnd", long.class),
+            new ObjectStreamField("initialized", boolean.class),
+            new ObjectStreamField("pad0", long.class),
+            new ObjectStreamField("pad1", long.class),
+            new ObjectStreamField("pad2", long.class),
+            new ObjectStreamField("pad3", long.class),
+            new ObjectStreamField("pad4", long.class),
+            new ObjectStreamField("pad5", long.class),
+            new ObjectStreamField("pad6", long.class),
+            new ObjectStreamField("pad7", long.class) };
+
+    /**
+     * Saves the {@code ThreadLocalRandom} to a stream (that is, serializes it).
+     */
+    private void writeObject(java.io.ObjectOutputStream out)
+        throws java.io.IOException {
+
+        java.io.ObjectOutputStream.PutField fields = out.putFields();
+        fields.put("rnd", 0L);
+        fields.put("initialized", true);
+        fields.put("pad0", 0L);
+        fields.put("pad1", 0L);
+        fields.put("pad2", 0L);
+        fields.put("pad3", 0L);
+        fields.put("pad4", 0L);
+        fields.put("pad5", 0L);
+        fields.put("pad6", 0L);
+        fields.put("pad7", 0L);
+        out.writeFields();
+    }
+
+    /**
+     * Returns the {@link #current() current} thread's {@code ThreadLocalRandom}.
+     */
+    private Object readResolve() {
+        return current();
+    }
 
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;

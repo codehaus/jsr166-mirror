@@ -18,8 +18,8 @@ import java.util.function.DoubleBinaryOperator;
  * @author Doug Lea
  * @since 1.8
  */
-class ArrayPrefixUtil {
-    private ArrayPrefixUtil() {}; // non-instantiable
+class ArrayPrefixHelpers {
+    private ArrayPrefixHelpers() {}; // non-instantiable
 
     /*
      * Parallel prefix (aka cumulate, scan) task classes

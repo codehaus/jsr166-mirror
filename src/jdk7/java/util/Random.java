@@ -150,7 +150,7 @@ class Random implements java.io.Serializable {
      *
      * @param seed the initial seed
      */
-    synchronized public void setSeed(long seed) {
+    public synchronized void setSeed(long seed) {
         this.seed.set(initialScramble(seed));
         haveNextNextGaussian = false;
     }
@@ -493,7 +493,7 @@ class Random implements java.io.Serializable {
      *         standard deviation {@code 1.0} from this random number
      *         generator's sequence
      */
-    synchronized public double nextGaussian() {
+    public synchronized double nextGaussian() {
         // See Knuth, ACP, Section 3.4.1 Algorithm C.
         if (haveNextNextGaussian) {
             haveNextNextGaussian = false;
@@ -551,7 +551,7 @@ class Random implements java.io.Serializable {
     /**
      * Save the {@code Random} instance to a stream.
      */
-    synchronized private void writeObject(ObjectOutputStream s)
+    private synchronized void writeObject(ObjectOutputStream s)
         throws IOException {
 
         // set the values of the Serializable fields

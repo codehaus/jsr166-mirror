@@ -117,7 +117,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     }
 
     /** A constant to clarify calls to checking methods below. */
-    final static Thread[] NO_THREADS = new Thread[0];
+    static final Thread[] NO_THREADS = new Thread[0];
 
     /**
      * Spin-waits until sync.isQueued(t) becomes true.

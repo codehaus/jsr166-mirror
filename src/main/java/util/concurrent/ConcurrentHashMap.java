@@ -8,7 +8,7 @@ package java.util.concurrent;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.CountedCompleter;
 import java.util.function.*;
-import java.util.stream.Spliterator;
+import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
 
@@ -1692,8 +1692,10 @@ public class ConcurrentHashMap<K, V>
                             }
                         }
                         if (len != 0) {
-                            if (len > 1)
+                            if (len > 1) {
                                 addCount(delta, len);
+                                delta = 0L;
+                            }
                             break;
                         }
                     }
@@ -2727,6 +2729,8 @@ public class ConcurrentHashMap<K, V>
      * @throws NullPointerException if the specified key is null
      */
     public boolean remove(Object key, Object value) {
+        if (key == null)
+            throw new NullPointerException();
         return value != null && internalReplace(key, null, value) != null;
     }
 
@@ -2947,7 +2951,7 @@ public class ConcurrentHashMap<K, V>
 
         public final K nextElement() { return next(); }
 
-        public Iterator<K> asIterator() { return this; }
+        public Iterator<K> iterator() { return this; }
 
         public void forEach(Block<? super K> action) {
             if (action == null) throw new NullPointerException();
@@ -2987,7 +2991,7 @@ public class ConcurrentHashMap<K, V>
 
         public final V nextElement() { return next(); }
 
-        public Iterator<V> asIterator() { return this; }
+        public Iterator<V> iterator() { return this; }
 
         public void forEach(Block<? super V> action) {
             if (action == null) throw new NullPointerException();
@@ -3029,7 +3033,7 @@ public class ConcurrentHashMap<K, V>
             return new MapEntry<K,V>((K)k, v, map);
         }
 
-        public Iterator<Map.Entry<K,V>> asIterator() { return this; }
+        public Iterator<Map.Entry<K,V>> iterator() { return this; }
 
         public void forEach(Block<? super Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
@@ -4453,7 +4457,8 @@ public class ConcurrentHashMap<K, V>
     /**
      * Base class for views.
      */
-    static abstract class CHMView<K, V> {
+    abstract static class CHMView<K, V> implements java.io.Serializable {
+        private static final long serialVersionUID = 7249069246763182397L;
         final ConcurrentHashMap<K, V> map;
         CHMView(ConcurrentHashMap<K, V> map)  { this.map = map; }
 
@@ -4469,9 +4474,9 @@ public class ConcurrentHashMap<K, V>
         public final void clear()               { map.clear(); }
 
         // implementations below rely on concrete classes supplying these
-        abstract public Iterator<?> iterator();
-        abstract public boolean contains(Object o);
-        abstract public boolean remove(Object o);
+        public abstract Iterator<?> iterator();
+        public abstract boolean contains(Object o);
+        public abstract boolean remove(Object o);
 
         private static final String oomeMsg = "Required array size too large";
 

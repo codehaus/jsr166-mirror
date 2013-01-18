@@ -388,7 +388,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /** Base class can act as either FJ or plain Runnable */
-    static abstract class Async extends ForkJoinTask<Void>
+    abstract static class Async extends ForkJoinTask<Void>
         implements Runnable, AsynchronousCompletionTask {
         public final Void getRawResult() { return null; }
         public final void setRawResult(Void v) { }
@@ -557,7 +557,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     // Opportunistically subclass AtomicInteger to use compareAndSet to claim.
-    static abstract class Completion extends AtomicInteger implements Runnable {
+    abstract static class Completion extends AtomicInteger implements Runnable {
     }
 
     static final class ApplyCompletion<T,U> extends Completion {

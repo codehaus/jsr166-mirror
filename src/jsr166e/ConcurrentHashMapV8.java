@@ -4577,7 +4577,7 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * Base class for views.
      */
-    static abstract class CHMView<K, V> {
+    abstract static class CHMView<K, V> {
         final ConcurrentHashMapV8<K, V> map;
         CHMView(ConcurrentHashMapV8<K, V> map)  { this.map = map; }
 
@@ -4593,9 +4593,9 @@ public class ConcurrentHashMapV8<K, V>
         public final void clear()               { map.clear(); }
 
         // implementations below rely on concrete classes supplying these
-        abstract public Iterator<?> iterator();
-        abstract public boolean contains(Object o);
-        abstract public boolean remove(Object o);
+        public abstract Iterator<?> iterator();
+        public abstract boolean contains(Object o);
+        public abstract boolean remove(Object o);
 
         private static final String oomeMsg = "Required array size too large";
 

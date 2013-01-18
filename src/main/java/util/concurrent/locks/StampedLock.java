@@ -85,6 +85,13 @@ import java.util.concurrent.TimeUnit;
  * information about the state of the lock; a subsequent invocation
  * may succeed.
  *
+ * <p>Because it supports coordinated usage across multiple lock
+ * modes, this class does not directly implement the {@link Lock} or
+ * {@link ReadWriteLock} interfaces. However, a StampedLock may be
+ * viewed {@link #asReadLock()}, {@link #asWriteLock()}, or {@link
+ * #asReadWriteLock()} in applications requiring only the associated
+ * set of functionality.
+ *
  * <p><b>Sample Usage.</b> The following illustrates some usage idioms
  * in a class that maintains simple two-dimensional points. The sample
  * code illustrates some try/catch conventions even though they are
@@ -311,6 +318,11 @@ public class StampedLock implements java.io.Serializable {
     private transient volatile long state;
     /** extra reader count when state read count saturated */
     private transient int readerOverflow;
+
+    // views
+    ReadLockView readLockView;
+    WriteLockView writeLockView;
+    ReadWriteLockView readWriteLockView;
 
     /**
      * Creates a new lock, initially in unlocked state.
@@ -790,6 +802,86 @@ public class StampedLock implements java.io.Serializable {
         state = ORIGIN; // reset to unlocked state
     }
 
+    /**
+     * Returns a plain {@link Lock} view of this StampedLock in which
+     * the {@link Lock#lock} method is mapped to {@link #readLock},
+     * and similarly for other methods. The returned Lock does not
+     * support the {@link Lock#newCondition} method (always returning
+     * {@code null}.
+     *
+     * @return the lock
+     */
+    public Lock asReadLock() {
+        ReadLockView v;
+        return ((v = readLockView) != null ? v :
+                (readLockView = new ReadLockView()));
+    }
+
+    /**
+     * Returns a plain {@link Lock} view of this StampedLock in which
+     * the {@link Lock#lock} method is mapped to {@link #writeLock},
+     * and similarly for other methods. The returned Lock does not
+     * support the {@link Lock#newCondition} method (always returning
+     * {@code null}.
+     *
+     * @return the lock
+     */
+    public Lock asWriteLock() {
+        WriteLockView v;
+        return ((v = writeLockView) != null ? v :
+                (writeLockView = new WriteLockView()));
+    }
+
+    /**
+     * Returns a {@link ReadWriteLock} view of this StampedLock in
+     * which the {@link ReadWriteLock#readLock()} method is mapped to
+     * {@link #asReadLock()}, and {@link ReadWriteLock#writeLock()} to
+     * {@link #aswriteLock()}.
+     *
+     * @return the lock
+     */
+    public ReadWriteLock asReadWriteLock() {
+        ReadWriteLockView v;
+        return ((v = readWriteLockView) != null ? v :
+                (readWriteLockView = new ReadWriteLockView()));
+    }
+
+    // view classes
+
+    final class ReadLockView implements Lock {
+        public void lock() { readLock(); }
+        public void lockInterruptibly() throws InterruptedException {
+            readLockInterruptibly();
+        }
+        public boolean tryLock() { return tryReadLock() != 0L; }
+        public boolean tryLock(long time, TimeUnit unit)
+            throws InterruptedException {
+            return tryReadLock(time, unit) != 0L;
+        }
+        // note that we give up ability to check mode so just use current state
+        public void unlock() { unlockRead(state); }
+        public Condition newCondition() { return null; }
+    }
+
+    final class WriteLockView implements Lock {
+        public void lock() { writeLock(); }
+        public void lockInterruptibly() throws InterruptedException {
+            writeLockInterruptibly();
+        }
+        public boolean tryLock() { return tryWriteLock() != 0L; }
+        public boolean tryLock(long time, TimeUnit unit)
+            throws InterruptedException {
+            return tryWriteLock(time, unit) != 0L;
+        }
+        public void unlock() { unlockWrite(state); }
+        public Condition newCondition() { return null; }
+    }
+
+    final class ReadWriteLockView implements ReadWriteLock {
+        public Lock readLock() { return asReadLock(); }
+        public Lock writeLock() { return asWriteLock(); }
+    }
+
     // internals
 
     /**
@@ -922,7 +1014,7 @@ public class StampedLock implements java.io.Serializable {
      */
     private long awaitWrite(boolean interruptible, long deadline) {
         WNode node = null;
-        for (int r, spins = -1;;) {
+        for (int spins = -1;;) {
             WNode p; long s, next;
             if (((s = state) & ABITS) == 0L) {
                 if (U.compareAndSwapLong(this, STATE, s, next = s + WBIT))
@@ -931,7 +1023,7 @@ public class StampedLock implements java.io.Serializable {
             else if (spins < 0)
                 spins = whead == wtail ? SPINS : 0;
             else if (spins > 0) {
-                if ((r = LockSupport.nextSecondarySeed()) >= 0)
+                if (LockSupport.nextSecondarySeed() >= 0)
                     --spins;
             }
             else if ((p = wtail) == null) { // initialize queue
@@ -961,7 +1053,7 @@ public class StampedLock implements java.io.Serializable {
                                 }
                                 break;
                             }
-                            if ((r = LockSupport.nextSecondarySeed()) >= 0 && --k <= 0)
+                            if (LockSupport.nextSecondarySeed() >= 0 && --k <= 0)
                                 break;
                         }
                         if (headSpins < MAX_HEAD_SPINS)
@@ -1047,7 +1139,7 @@ public class StampedLock implements java.io.Serializable {
         long seq = stamp & SBITS;
         RNode node = null;
         boolean queued = false;
-        for (int r, headSpins = SPINS, spins = -1;;) {
+        for (int headSpins = SPINS, spins = -1;;) {
             long s, m, next; RNode p; WNode wh; Thread w;
             if ((m = (s = state) & ABITS) != WBIT &&
                 ((s & SBITS) != seq || (wh = whead) == null ||
@@ -1084,7 +1176,7 @@ public class StampedLock implements java.io.Serializable {
                     headSpins <<= 1;
             }
             else if (spins > 0) {
-                if ((r = LockSupport.nextSecondarySeed()) >= 0)
+                if (LockSupport.nextSecondarySeed() >= 0)
                     --spins;
             }
             else if (node == null)

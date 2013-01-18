@@ -320,9 +320,9 @@ public class StampedLock implements java.io.Serializable {
     private transient int readerOverflow;
 
     // views
-    ReadLockView readLockView;
-    WriteLockView writeLockView;
-    ReadWriteLockView readWriteLockView;
+    transient ReadLockView readLockView;
+    transient WriteLockView writeLockView;
+    transient ReadWriteLockView readWriteLockView;
 
     /**
      * Creates a new lock, initially in unlocked state.

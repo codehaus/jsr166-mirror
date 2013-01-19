@@ -315,7 +315,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * Compares the specified object with this set for equality.
      * Returns {@code true} if the specified object is the same object
      * as this object, or if it is also a {@link Set} and the elements
-     * returned by an {@linkplain List#iterator() iterator} over the
+     * returned by an {@linkplain Set#iterator() iterator} over the
      * specified set are the same as the elements returned by an
      * iterator over this set.  More formally, the two iterators are
      * considered to return the same elements if they return the same

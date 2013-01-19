@@ -182,7 +182,7 @@
 
   <target name="compile"
           depends="configure-compiler"
-          description="Compiles src/main sources to build folder">
+          description="Compiles src/main sources to build dir">
 
     <mkdir dir="${build.classes.dir}"/>
 
@@ -235,7 +235,7 @@
 
 
   <target name="docs"
-          description="Builds javadocs for src/main">
+          description="Builds javadocs for src/main to dist dir">
 
     <delete dir="${dist.javadocs.dir}"/>
     <mkdir dir="${dist.javadocs.dir}"/>
@@ -630,49 +630,7 @@
 
 
   <target name="4jdk7docs"
-          description="Builds javadocs with custom tags to build folder">
-
-    <delete dir="${build.4jdk7.docs.dir}"/>
-    <mkdir dir="${build.4jdk7.docs.dir}"/>
-
-    <javadoc destdir="${build.4jdk7.docs.dir}"
-             packagenames="none"
-             link="${jdkapi7docs.url}"
-             overview="${4jdk7src.dir}/intro.html"
-             sourcepath="${4jdk7src.dir}:${jdk7src.dir}"
-             classpath=""
-             executable="${javadoc7}">
-      <arg value="-XDignore.symbol.file=true"/>
-      <fileset dir="${4jdk7src.dir}" defaultexcludes="yes">
-        <include name="**/*.java"/>
-      </fileset>
-    </javadoc>
-
-  </target>
-
-
-  <target name="4jdk7dist"
-          depends="4jdk7dist-clean, 4jdk7dist-jar, 4jdk7dist-docs"
-          description="Puts all distributable products in single hierarchy"/>
-
-
-
-  <target name="4jdk7clean"
-          description="Removes all build products">
-
-    <delete dir="${build.4jdk7.dir}"/>
-
-  </target>
-
-
-
-  <target name="4jdk7dist-clean"
-          description="Removes all build and distribution products">
-
-  </target>
-
-  <target name="4jdk7dist-docs"
-          description="Builds javadocs without custom tags to dist folder">
+          description="Builds javadocs for src/jdk7 to dist dir">
 
     <delete dir="${dist.4jdk7.docs.dir}"/>
     <mkdir dir="${dist.4jdk7.docs.dir}"/>
@@ -689,6 +647,27 @@
         <include name="**/*.java"/>
       </fileset>
     </javadoc>
+
+  </target>
+
+
+  <target name="4jdk7dist"
+          depends="4jdk7dist-clean, 4jdk7dist-jar, 4jdk7docs"
+          description="Puts all distributable products in single hierarchy"/>
+
+
+
+  <target name="4jdk7clean"
+          description="Removes all build products">
+
+    <delete dir="${build.4jdk7.dir}"/>
+
+  </target>
+
+
+
+  <target name="4jdk7dist-clean"
+          description="Removes all build and distribution products">
 
   </target>
 
@@ -741,7 +720,7 @@
 
 
   <target name="jsr166xdocs"
-          description="Builds javadocs with custom tags to build folder">
+          description="Builds javadocs to dist dir">
 
     <delete dir="${build.jsr166xjavadocs.dir}"/>
     <mkdir dir="${build.jsr166xjavadocs.dir}"/>
@@ -780,7 +759,7 @@
 
 
   <target name="jsr166xdist-docs"
-          description="Builds javadocs without custom tags to dist folder">
+          description="Builds javadocs to dist dir">
 
     <delete dir="${dist.jsr166xjavadocs.dir}"/>
     <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
@@ -846,7 +825,7 @@
 
 
   <target name="jsr166ydocs"
-          description="Builds javadocs with custom tags to build folder">
+          description="Builds javadocs to dist dir">
 
     <delete dir="${build.jsr166yjavadocs.dir}"/>
     <mkdir dir="${build.jsr166yjavadocs.dir}"/>
@@ -883,7 +862,7 @@
   </target>
 
   <target name="jsr166ydist-docs"
-          description="Builds javadocs without custom tags to dist folder">
+          description="Builds javadocs to dist dir">
 
     <delete dir="${dist.jsr166yjavadocs.dir}"/>
     <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
@@ -951,7 +930,7 @@
 
 
   <target name="extra166ydocs"
-          description="Builds javadocs with custom tags to build folder">
+          description="Builds javadocs with custom tags to build dir">
 
     <delete dir="${build.extra166yjavadocs.dir}"/>
     <mkdir dir="${build.extra166yjavadocs.dir}"/>
@@ -988,7 +967,7 @@
   </target>
 
   <target name="extra166ydist-docs"
-          description="Builds javadocs without custom tags to dist folder">
+          description="Builds javadocs to dist dir">
 
     <delete dir="${dist.extra166yjavadocs.dir}"/>
     <mkdir dir="${dist.extra166yjavadocs.dir}"/>
@@ -1055,7 +1034,7 @@
 
 
   <target name="jsr166edocs"
-          description="Builds javadocs with custom tags to build folder">
+          description="Builds javadocs with custom tags to build dir">
 
     <delete dir="${build.jsr166ejavadocs.dir}"/>
     <mkdir dir="${build.jsr166ejavadocs.dir}"/>
@@ -1097,7 +1076,7 @@
   </target>
 
   <target name="jsr166edist-docs"
-          description="Builds javadocs without custom tags to dist folder">
+          description="Builds javadocs to dist dir">
 
     <delete dir="${dist.jsr166ejavadocs.dir}"/>
     <mkdir dir="${dist.jsr166ejavadocs.dir}"/>

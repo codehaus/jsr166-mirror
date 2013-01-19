@@ -229,7 +229,7 @@
 
 
   <target name="test"
-          depends="init, configure-tests, report-tests"
+          depends="configure-tests, report-tests"
           description="Runs all tests (requires JUnit 3.8.1 in ${ant.home}/lib)" />
 
 
@@ -263,7 +263,7 @@
 
 
   <target name="dist"
-          depends="init, dist-clean, dist-jar, docs"
+          depends="dist-clean, dist-jar, docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -310,14 +310,14 @@
   <!-- Internal targets -->
 
 
-  <target name="init">
+<!--   <target name="init"> -->
 
     <!-- Version is kept in a separate file -->
-    <loadfile property="version" srcFile="version.properties"/>
-    <echo>Building JSR-166 version ${version}</echo>
-    <echo>java.home is ${java.home}</echo>
+<!--     <loadfile property="version" srcFile="version.properties"/> -->
+<!--     <echo>Building JSR-166 version ${version}</echo> -->
+<!--     <echo>java.home is ${java.home}</echo> -->
 
-  </target>
+<!--   </target> -->
 
 
   <target name="dist-jar"
@@ -504,7 +504,7 @@
   <!-- Various demos and test programs -->
 
 
-  <target name="loops" depends="init, configure-compiler"
+  <target name="loops" depends="configure-compiler"
           description="Benchmark from Doug Lea's AQS paper">
 
     <mkdir dir="${build.loops.dir}"/>
@@ -682,7 +682,7 @@
 
 
   <target name="jsr166xcompile"
-          depends="init, configure-compiler"
+          depends="configure-compiler"
           description="Compiles jsr166x sources">
 
     <mkdir dir="${build.jsr166x.dir}"/>
@@ -784,30 +784,30 @@
 
 
   <target name="jsr166ycompile"
-          depends="init, configure-compiler"
+          depends="configure-compiler"
           description="Compiles jsr166y sources">
 
     <mkdir dir="${build.jsr166y.dir}"/>
 
-    <javac srcdir="${jsr166ysrc.dir}"
-          destdir="${build.jsr166y.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
+    <javac srcdir="${topsrc.dir}"
+           destdir="${build.jsr166y.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="1.6"
+           classpath=""
+           bootclasspath="${bootclasspath6}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac7}"
+           fork="true">
 
-      <include name="**/*.java"/>
+      <include name="jsr166y/**/*.java"/>
       <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg value="${bootclasspath.args}"/>
-
-<!--       <compilerarg line="-Xlint -Xmaxwarns 1000"/> -->
-
+      <compilerarg value="-Xlint:all"/>
     </javac>
-
   </target>
-
 
 
   <target name="jsr166yjar"
@@ -888,26 +888,28 @@
 
 
   <target name="extra166ycompile"
-          depends="init, configure-compiler, jsr166ycompile"
+          depends="configure-compiler, jsr166yjar"
           description="Compiles extra166y sources">
 
     <mkdir dir="${build.extra166y.dir}"/>
 
-    <javac srcdir="${extra166ysrc.dir}"
-          destdir="${build.extra166y.dir}"
-            debug="${build.debug}"
-            classpath="${jsr166yproduct.jar}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
+    <javac srcdir="${topsrc.dir}"
+           destdir="${build.extra166y.dir}"
+           debug="${build.debug}"
+           classpath=""
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="1.6"
+           bootclasspath="${jsr166yproduct.jar}:${bootclasspath6}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac7}"
+           fork="true">
 
-      <include name="**/*.java"/>
+      <include name="extra166y/**/*.java"/>
       <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg value="${bootclasspath.args}"/>
-
-<!--       <compilerarg line="-Xlint -Xmaxwarns 1000"/> -->
+      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial"/>
 
     </javac>
 

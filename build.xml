@@ -46,7 +46,6 @@
   <property name="build.testcases.dir"         location="${build.dir}/testcases"/>
   <property name="build.loops.dir"             location="${build.dir}/loops"/>
   <property name="build.lib.dir"               location="${build.dir}/lib"/>
-  <property name="build.javadocs.dir"          location="${build.dir}/javadocs"/>
   <property name="build.reports.dir"           location="${build.dir}/reports"/>
 
   <property name="build.4jdk7.dir"              location="${build.dir}/4jdk7"/>
@@ -57,19 +56,15 @@
 
   <property name="build.jsr166x.dir"           location="${build.dir}/jsr166x"/>
   <property name="build.jsr166xlib.dir"        location="${build.dir}/jsr166xlib"/>
-  <property name="build.jsr166xjavadocs.dir"   location="${build.dir}/jsr166xjavadocs"/>
 
   <property name="build.jsr166y.dir"           location="${build.dir}/jsr166y"/>
   <property name="build.jsr166ylib.dir"        location="${build.dir}/jsr166ylib"/>
-  <property name="build.jsr166yjavadocs.dir"   location="${build.dir}/jsr166yjavadocs"/>
 
   <property name="build.jsr166e.dir"           location="${build.dir}/jsr166e"/>
   <property name="build.jsr166elib.dir"        location="${build.dir}/jsr166elib"/>
-  <property name="build.jsr166ejavadocs.dir"   location="${build.dir}/jsr166ejavadocs"/>
 
   <property name="build.extra166y.dir"         location="${build.dir}/extra166y"/>
   <property name="build.extra166ylib.dir"      location="${build.dir}/extra166ylib"/>
-  <property name="build.extra166yjavadocs.dir" location="${build.dir}/extra166yjavadocs"/>
 
   <!-- JDK binary locations -->
   <property name="jdks.home"  location="${user.home}/jdk"/>
@@ -720,10 +715,10 @@
   <target name="jsr166xdocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${build.jsr166xjavadocs.dir}"/>
-    <mkdir dir="${build.jsr166xjavadocs.dir}"/>
+    <delete dir="${dist.jsr166xjavadocs.dir}"/>
+    <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
 
-    <javadoc destdir="${build.jsr166xjavadocs.dir}"
+    <javadoc destdir="${dist.jsr166xjavadocs.dir}"
              packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
              source="5"
@@ -736,7 +731,7 @@
 
 
   <target name="jsr166xdist"
-          depends="jsr166xdist-clean, jsr166xdist-jar, jsr166xdist-docs"
+          depends="jsr166xdist-clean, jsr166xdist-jar, jsr166xdocs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -756,23 +751,6 @@
 
   </target>
 
-
-
-  <target name="jsr166xdist-docs"
-          description="Builds javadocs to dist dir">
-
-    <delete dir="${dist.jsr166xjavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
-
-    <javadoc destdir="${dist.jsr166xjavadocs.dir}"
-             packagenames="jsr166x.*"
-             link="${jdkapidocs.url}"
-             source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdk6src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" />
-
-  </target>
 
   <target name="jsr166xdist-jar"
           depends="jsr166xclean, jsr166xjar">
@@ -828,10 +806,10 @@
   <target name="jsr166ydocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${build.jsr166yjavadocs.dir}"/>
-    <mkdir dir="${build.jsr166yjavadocs.dir}"/>
+    <delete dir="${dist.jsr166yjavadocs.dir}"/>
+    <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
 
-    <javadoc destdir="${build.jsr166yjavadocs.dir}"
+    <javadoc destdir="${dist.jsr166yjavadocs.dir}"
              packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
              source="6"
@@ -844,7 +822,7 @@
 
 
   <target name="jsr166ydist"
-          depends="jsr166ydist-clean, jsr166ydist-jar, jsr166ydist-docs"
+          depends="jsr166ydist-clean, jsr166ydist-jar, jsr166ydocs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -861,22 +839,6 @@
 
   <target name="jsr166ydist-clean"
           description="Removes all build and distribution products">
-
-  </target>
-
-  <target name="jsr166ydist-docs"
-          description="Builds javadocs to dist dir">
-
-    <delete dir="${dist.jsr166yjavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
-
-    <javadoc destdir="${dist.jsr166yjavadocs.dir}"
-             packagenames="jsr166y.*"
-             link="${jdkapidocs.url}"
-             source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdk6src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 
@@ -938,10 +900,10 @@
   <target name="extra166ydocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${build.extra166yjavadocs.dir}"/>
-    <mkdir dir="${build.extra166yjavadocs.dir}"/>
+    <delete dir="${dist.extra166yjavadocs.dir}"/>
+    <mkdir dir="${dist.extra166yjavadocs.dir}"/>
 
-    <javadoc destdir="${build.extra166yjavadocs.dir}"
+    <javadoc destdir="${dist.extra166yjavadocs.dir}"
              packagenames="extra166y.*"
              link="${jdkapidocs.url}"
              source="6"
@@ -954,7 +916,7 @@
 
 
   <target name="extra166ydist"
-          depends="extra166ydist-clean, extra166ydist-jar, extra166ydist-docs"
+          depends="extra166ydist-clean, extra166ydist-jar, extra166ydocs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -971,22 +933,6 @@
 
   <target name="extra166ydist-clean"
           description="Removes all build and distribution products">
-
-  </target>
-
-  <target name="extra166ydist-docs"
-          description="Builds javadocs to dist dir">
-
-    <delete dir="${dist.extra166yjavadocs.dir}"/>
-    <mkdir dir="${dist.extra166yjavadocs.dir}"/>
-
-    <javadoc destdir="${dist.extra166yjavadocs.dir}"
-             packagenames="extra166y.*"
-             link="${jdkapidocs.url}"
-             source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdk6src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 
@@ -1045,10 +991,10 @@
   <target name="jsr166edocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${build.jsr166ejavadocs.dir}"/>
-    <mkdir dir="${build.jsr166ejavadocs.dir}"/>
+    <delete dir="${dist.jsr166ejavadocs.dir}"/>
+    <mkdir dir="${dist.jsr166ejavadocs.dir}"/>
 
-    <javadoc destdir="${build.jsr166ejavadocs.dir}"
+    <javadoc destdir="${dist.jsr166ejavadocs.dir}"
              packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
              source="7"
@@ -1061,7 +1007,7 @@
 
 
   <target name="jsr166edist"
-          depends="jsr166edist-clean, jsr166edist-jar, jsr166edist-docs"
+          depends="jsr166edist-clean, jsr166edist-jar, jsr166edocs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -1075,25 +1021,8 @@
   </target>
 
 
-
   <target name="jsr166edist-clean"
           description="Removes all build and distribution products">
-
-  </target>
-
-  <target name="jsr166edist-docs"
-          description="Builds javadocs to dist dir">
-
-    <delete dir="${dist.jsr166ejavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166ejavadocs.dir}"/>
-
-    <javadoc destdir="${dist.jsr166ejavadocs.dir}"
-             packagenames="jsr166e.*"
-             link="${jdkapidocs.url}"
-             source="7"
-             sourcepath="${topsrc.dir}:${jdk7src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" />
 
   </target>
 

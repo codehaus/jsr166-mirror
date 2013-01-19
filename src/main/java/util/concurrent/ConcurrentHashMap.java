@@ -6709,7 +6709,6 @@ public class ConcurrentHashMap<K, V>
     private static final int ASHIFT;
 
     static {
-        int ss;
         try {
             U = sun.misc.Unsafe.getUnsafe();
             Class<?> k = ConcurrentHashMap.class;
@@ -6728,13 +6727,13 @@ public class ConcurrentHashMap<K, V>
                 (ck.getDeclaredField("value"));
             Class<?> sc = Node[].class;
             ABASE = U.arrayBaseOffset(sc);
-            ss = U.arrayIndexScale(sc);
-            ASHIFT = 31 - Integer.numberOfLeadingZeros(ss);
+            int scale = U.arrayIndexScale(sc);
+            if ((scale & (scale - 1)) != 0)
+                throw new Error("data type scale not a power of two");
+            ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
         } catch (Exception e) {
             throw new Error(e);
         }
-        if ((ss & (ss-1)) != 0)
-            throw new Error("data type scale not a power of two");
     }
 
 }

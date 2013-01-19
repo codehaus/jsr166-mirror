@@ -3007,15 +3007,15 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         try {
             UNSAFE = getUnsafe();
             tableBase = UNSAFE.arrayBaseOffset(Node[].class);
-            int s = UNSAFE.arrayIndexScale(Node[].class);
-            if ((s & (s-1)) != 0)
+            int scale = UNSAFE.arrayIndexScale(Node[].class);
+            if ((scale & (scale - 1)) != 0)
                 throw new Error("data type scale not a power of two");
-            tableShift = 31 - Integer.numberOfLeadingZeros(s);
+            tableShift = 31 - Integer.numberOfLeadingZeros(scale);
             segmentsBase = UNSAFE.arrayBaseOffset(Segment[].class);
-            s = UNSAFE.arrayIndexScale(Segment[].class);
-            if ((s & (s-1)) != 0)
+            scale = UNSAFE.arrayIndexScale(Segment[].class);
+            if ((scale & (scale - 1)) != 0)
                 throw new Error("data type scale not a power of two");
-            segmentsShift = 31 - Integer.numberOfLeadingZeros(s);
+            segmentsShift = 31 - Integer.numberOfLeadingZeros(scale);
         } catch (Throwable e) {
             throw new RuntimeException("Could not initialize intrinsics", e);
         }

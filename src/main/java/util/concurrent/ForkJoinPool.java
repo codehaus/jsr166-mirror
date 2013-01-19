@@ -1006,7 +1006,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         private static final int ABASE;
         private static final int ASHIFT;
         static {
-            int s;
             try {
                 U = sun.misc.Unsafe.getUnsafe();
                 Class<?> k = WorkQueue.class;
@@ -1014,13 +1013,13 @@ public class ForkJoinPool extends AbstractExecutorService {
                 QLOCK = U.objectFieldOffset
                     (k.getDeclaredField("qlock"));
                 ABASE = U.arrayBaseOffset(ak);
-                s = U.arrayIndexScale(ak);
+                int scale = U.arrayIndexScale(ak);
+                if ((scale & (scale - 1)) != 0)
+                    throw new Error("data type scale not a power of two");
+                ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
             } catch (Exception e) {
                 throw new Error(e);
             }
-            if ((s & (s-1)) != 0)
-                throw new Error("data type scale not a power of two");
-            ASHIFT = 31 - Integer.numberOfLeadingZeros(s);
         }
     }
 
@@ -3286,7 +3285,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final long QLOCK;
 
     static {
-        int s; // initialize field offsets for CAS etc
+        // initialize field offsets for CAS etc
         try {
             U = sun.misc.Unsafe.getUnsafe();
             Class<?> k = ForkJoinPool.class;
@@ -3306,13 +3305,13 @@ public class ForkJoinPool extends AbstractExecutorService {
                 (wk.getDeclaredField("qlock"));
             Class<?> ak = ForkJoinTask[].class;
             ABASE = U.arrayBaseOffset(ak);
-            s = U.arrayIndexScale(ak);
-            ASHIFT = 31 - Integer.numberOfLeadingZeros(s);
+            int scale = U.arrayIndexScale(ak);
+            if ((scale & (scale - 1)) != 0)
+                throw new Error("data type scale not a power of two");
+            ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
         } catch (Exception e) {
             throw new Error(e);
         }
-        if ((s & (s-1)) != 0)
-            throw new Error("data type scale not a power of two");
 
         ForkJoinWorkerThreadFactory fac = defaultForkJoinWorkerThreadFactory =
             new DefaultForkJoinWorkerThreadFactory();

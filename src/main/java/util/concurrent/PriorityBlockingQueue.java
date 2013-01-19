@@ -922,7 +922,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     // wrapping constructor in method avoids transient javac problems
     final PBQSpliterator<E> spliterator() {
         Object[] a = toArray();
-        return new PBQSpliterator(a, 0, a.length);
+        return new PBQSpliterator<E>(a, 0, a.length);
     }
 
     public Stream<E> stream() {

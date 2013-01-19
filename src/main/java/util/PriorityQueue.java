@@ -785,8 +785,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     // wrapping constructor in method avoids transient javac problems
     final PriorityQueueSpliterator<E> spliterator(int origin, int fence,
                                                   int expectedModCount) {
-        return new PriorityQueueSpliterator(this, origin, fence,
-                                            expectedModCount);
+        return new PriorityQueueSpliterator<E>(this, origin, fence,
+                                               expectedModCount);
     }
 
     public Stream<E> stream() {

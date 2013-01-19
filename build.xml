@@ -167,6 +167,11 @@
     <pathelement location="${build.loops.dir}"/>
   </path>
 
+  <!-- Support @jls tag, used in jdk8+ javadoc -->
+  <!-- TODO: How do we get &trade to work? -->
+  <!--   property name="javadoc.jls.cite" value="The Java&trade; Language Specification" -->
+  <property name="javadoc.jls.cite" value="The Java Language Specification"/>
+  <property name="javadoc.jls.option" value="jls:a:See &lt;cite&gt;${javadoc.jls.cite}&lt;/cite&gt;:"/>
 
   <!-- Main targets -->
 
@@ -175,21 +180,26 @@
           description="Builds all public jars and docs"/>
 
   <target name="compile"
-          depends="init, configure-compiler"
-          description="Compiles main sources to build folder">
+          depends="configure-compiler"
+          description="Compiles src/main sources to build folder">
 
     <mkdir dir="${build.classes.dir}"/>
 
     <javac srcdir="${src.dir}"
-          destdir="${build.classes.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
+           destdir="${build.classes.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           classpath=""
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac8}"
+           fork="true">
 
       <include name="**/*.java"/>
+      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all"/>
 
 <!--
       <exclude name="java/lang/**"/>
@@ -224,20 +234,24 @@
 
 
   <target name="docs"
-          description="Builds javadocs with custom tags to build folder">
+          description="Builds javadocs for src/main">
 
-    <delete dir="${build.javadocs.dir}"/>
-    <mkdir dir="${build.javadocs.dir}"/>
+    <delete dir="${dist.javadocs.dir}"/>
+    <mkdir dir="${dist.javadocs.dir}"/>
 
     <!-- the packagenames="none" hack below prevents scanning the -->
     <!-- sourcepath for packages -->
 
-    <javadoc destdir="${build.javadocs.dir}"
+    <javadoc destdir="${dist.javadocs.dir}"
              packagenames="none"
-             link="${jdkapidocs.url}"
+             link="${jdkapi8docs.url}"
              overview="${src.dir}/intro.html"
-             sourcepath="${src.dir}:${jdksrc.dir}"
-             additionalparam="-XDignore.symbol.file=true" >
+             sourcepath="${src.dir}:${jdk8src.dir}"
+             classpath=""
+             executable="${javadoc8}">
+      <arg value="-XDignore.symbol.file=true"/>
+      <arg value="-tag"/>
+      <arg value="${javadoc.jls.option}"/>
       <fileset dir="${src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
@@ -248,7 +262,7 @@
 
 
   <target name="dist"
-          depends="init, dist-clean, dist-jar, dist-docs"
+          depends="init, dist-clean, dist-jar, docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -287,30 +301,6 @@
           description="Removes all build and distribution products">
 
     <delete dir="${dist.dir}"/>
-
-  </target>
-
-
-
-  <target name="dist-docs"
-          description="Builds javadocs without custom tags to dist folder">
-
-    <delete dir="${dist.javadocs.dir}"/>
-    <mkdir dir="${dist.javadocs.dir}"/>
-
-    <!-- the packagenames="none" hack below prevents scanning the -->
-    <!-- sourcepath for packages -->
-
-    <javadoc destdir="${dist.javadocs.dir}"
-             packagenames="none"
-             link="${jdkapidocs.url}"
-             overview="${src.dir}/intro.html"
-             sourcepath="${src.dir}:${jdksrc.dir}"
-             additionalparam="-XDignore.symbol.file=true" >
-      <fileset dir="${src.dir}" defaultexcludes="yes">
-        <include name="**/*.java"/>
-      </fileset>
-    </javadoc>
 
   </target>
 

@@ -2190,7 +2190,7 @@ public class ConcurrentHashMap<K, V>
         extends CountedCompleter<R> {
         final ConcurrentHashMap<K, V> map;
         Node<V> next;        // the next entry to use
-        Object nextKey;      // cached key field of next
+        K nextKey;           // cached key field of next
         V nextVal;           // cached val field of next
         Node<V>[] tab;       // current table; updated if resized
         int index;           // index of bin to use next
@@ -2279,14 +2279,14 @@ public class ConcurrentHashMap<K, V>
                     }                           // visit upper slots if present
                     index = (i += baseSize) < n ? i : (baseIndex = b + 1);
                 }
-                nextKey = e.key;
+                nextKey = (K)e.key;
             } while ((ev = e.val) == null);    // skip deleted or special nodes
             next = e;
             return nextVal = ev;
         }
 
         public final void remove() {
-            Object k = nextKey;
+            K k = nextKey;
             if (k == null && (advance() == null || (k = nextKey) == null))
                 throw new IllegalStateException();
             map.internalReplace(k, null, null);
@@ -2881,7 +2881,7 @@ public class ConcurrentHashMap<K, V>
         V v;
         if ((v = it.advance()) != null) {
             for (;;) {
-                Object k = it.nextKey;
+                K k = it.nextKey;
                 sb.append(k == this ? "(this Map)" : k);
                 sb.append('=');
                 sb.append(v == this ? "(this Map)" : v);
@@ -2941,12 +2941,12 @@ public class ConcurrentHashMap<K, V>
                 return null;
             return new KeyIterator<K,V>(map, this);
         }
-        @SuppressWarnings("unchecked") public final K next() {
+        public final K next() {
             if (nextVal == null && advance() == null)
                 throw new NoSuchElementException();
-            Object k = nextKey;
+            K k = nextKey;
             nextVal = null;
-            return (K) k;
+            return k;
         }
 
         public final K nextElement() { return next(); }
@@ -2956,14 +2956,14 @@ public class ConcurrentHashMap<K, V>
         public void forEach(Block<? super K> action) {
             if (action == null) throw new NullPointerException();
             while (advance() != null)
-                action.accept((K)nextKey);
+                action.accept(nextKey);
         }
 
         public boolean tryAdvance(Block<? super K> block) {
             if (block == null) throw new NullPointerException();
             if (advance() == null)
                 return false;
-            block.accept((K)nextKey);
+            block.accept(nextKey);
             return true;
         }
     }
@@ -3024,13 +3024,13 @@ public class ConcurrentHashMap<K, V>
             return new EntryIterator<K,V>(map, this);
         }
 
-        @SuppressWarnings("unchecked") public final Map.Entry<K,V> next() {
+        public final Map.Entry<K,V> next() {
             V v;
             if ((v = nextVal) == null && (v = advance()) == null)
                 throw new NoSuchElementException();
-            Object k = nextKey;
+            K k = nextKey;
             nextVal = null;
-            return new MapEntry<K,V>((K)k, v, map);
+            return new MapEntry<K,V>(k, v, map);
         }
 
         public Iterator<Map.Entry<K,V>> iterator() { return this; }
@@ -3039,7 +3039,7 @@ public class ConcurrentHashMap<K, V>
             if (action == null) throw new NullPointerException();
             V v;
             while ((v = advance()) != null)
-                action.accept(entryFor((K)nextKey, v));
+                action.accept(entryFor(nextKey, v));
         }
 
         public boolean tryAdvance(Block<? super Map.Entry<K,V>> block) {
@@ -3047,7 +3047,7 @@ public class ConcurrentHashMap<K, V>
             if (block == null) throw new NullPointerException();
             if ((v = advance()) == null)
                 return false;
-            block.accept(entryFor((K)nextKey, v));
+            block.accept(entryFor(nextKey, v));
             return true;
         }
 
@@ -3237,13 +3237,13 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    @SuppressWarnings("unchecked") public void forEachSequentially
+    public void forEachSequentially
         (BiBlock<? super K, ? super V> action) {
         if (action == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v;
         while ((v = it.advance()) != null)
-            action.accept((K)it.nextKey, v);
+            action.accept(it.nextKey, v);
     }
 
     /**
@@ -3255,7 +3255,7 @@ public class ConcurrentHashMap<K, V>
      * which case the action is not applied).
      * @param action the action
      */
-    @SuppressWarnings("unchecked") public <U> void forEachSequentially
+    public <U> void forEachSequentially
         (BiFunction<? super K, ? super V, ? extends U> transformer,
          Block<? super U> action) {
         if (transformer == null || action == null)
@@ -3263,7 +3263,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v; U u;
         while ((v = it.advance()) != null) {
-            if ((u = transformer.apply((K)it.nextKey, v)) != null)
+            if ((u = transformer.apply(it.nextKey, v)) != null)
                 action.accept(u);
         }
     }
@@ -3277,13 +3277,13 @@ public class ConcurrentHashMap<K, V>
      * @return a non-null result from applying the given search
      * function on each (key, value), or null if none
      */
-    @SuppressWarnings("unchecked") public <U> U searchSequentially
+    public <U> U searchSequentially
         (BiFunction<? super K, ? super V, ? extends U> searchFunction) {
         if (searchFunction == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v; U u;
         while ((v = it.advance()) != null) {
-            if ((u = searchFunction.apply((K)it.nextKey, v)) != null)
+            if ((u = searchFunction.apply(it.nextKey, v)) != null)
                 return u;
         }
         return null;
@@ -3301,7 +3301,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
      */
-    @SuppressWarnings("unchecked") public <U> U reduceSequentially
+    public <U> U reduceSequentially
         (BiFunction<? super K, ? super V, ? extends U> transformer,
          BiFunction<? super U, ? super U, ? extends U> reducer) {
         if (transformer == null || reducer == null)
@@ -3309,7 +3309,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         U r = null, u; V v;
         while ((v = it.advance()) != null) {
-            if ((u = transformer.apply((K)it.nextKey, v)) != null)
+            if ((u = transformer.apply(it.nextKey, v)) != null)
                 r = (r == null) ? u : reducer.apply(r, u);
         }
         return r;
@@ -3327,7 +3327,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
      */
-    @SuppressWarnings("unchecked") public double reduceToDoubleSequentially
+    public double reduceToDoubleSequentially
         (DoubleBiFunction<? super K, ? super V> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
@@ -3336,7 +3336,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         double r = basis; V v;
         while ((v = it.advance()) != null)
-            r = reducer.applyAsDouble(r, transformer.applyAsDouble((K)it.nextKey, v));
+            r = reducer.applyAsDouble(r, transformer.applyAsDouble(it.nextKey, v));
         return r;
     }
 
@@ -3352,7 +3352,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
      */
-    @SuppressWarnings("unchecked") public long reduceToLongSequentially
+    public long reduceToLongSequentially
         (LongBiFunction<? super K, ? super V> transformer,
          long basis,
          LongBinaryOperator reducer) {
@@ -3361,7 +3361,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         long r = basis; V v;
         while ((v = it.advance()) != null)
-            r = reducer.applyAsLong(r, transformer.applyAsLong((K)it.nextKey, v));
+            r = reducer.applyAsLong(r, transformer.applyAsLong(it.nextKey, v));
         return r;
     }
 
@@ -3377,7 +3377,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
      */
-    @SuppressWarnings("unchecked") public int reduceToIntSequentially
+    public int reduceToIntSequentially
         (IntBiFunction<? super K, ? super V> transformer,
          int basis,
          IntBinaryOperator reducer) {
@@ -3386,7 +3386,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         int r = basis; V v;
         while ((v = it.advance()) != null)
-            r = reducer.applyAsInt(r, transformer.applyAsInt((K)it.nextKey, v));
+            r = reducer.applyAsInt(r, transformer.applyAsInt(it.nextKey, v));
         return r;
     }
 
@@ -3395,12 +3395,12 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    @SuppressWarnings("unchecked") public void forEachKeySequentially
+    public void forEachKeySequentially
         (Block<? super K> action) {
         if (action == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         while (it.advance() != null)
-            action.accept((K)it.nextKey);
+            action.accept(it.nextKey);
     }
 
     /**
@@ -3412,7 +3412,7 @@ public class ConcurrentHashMap<K, V>
      * which case the action is not applied).
      * @param action the action
      */
-    @SuppressWarnings("unchecked") public <U> void forEachKeySequentially
+    public <U> void forEachKeySequentially
         (Function<? super K, ? extends U> transformer,
          Block<? super U> action) {
         if (transformer == null || action == null)
@@ -3420,7 +3420,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         U u;
         while (it.advance() != null) {
-            if ((u = transformer.apply((K)it.nextKey)) != null)
+            if ((u = transformer.apply(it.nextKey)) != null)
                 action.accept(u);
         }
         ForkJoinTasks.forEachKey
@@ -3436,12 +3436,12 @@ public class ConcurrentHashMap<K, V>
      * @return a non-null result from applying the given search
      * function on each key, or null if none
      */
-    @SuppressWarnings("unchecked") public <U> U searchKeysSequentially
+    public <U> U searchKeysSequentially
         (Function<? super K, ? extends U> searchFunction) {
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         U u;
         while (it.advance() != null) {
-            if ((u = searchFunction.apply((K)it.nextKey)) != null)
+            if ((u = searchFunction.apply(it.nextKey)) != null)
                 return u;
         }
         return null;
@@ -3455,13 +3455,13 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating all keys using the given
      * reducer to combine values, or null if none
      */
-    @SuppressWarnings("unchecked") public K reduceKeysSequentially
+    public K reduceKeysSequentially
         (BiFunction<? super K, ? super K, ? extends K> reducer) {
         if (reducer == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         K r = null;
         while (it.advance() != null) {
-            K u = (K)it.nextKey;
+            K u = it.nextKey;
             r = (r == null) ? u : reducer.apply(r, u);
         }
         return r;
@@ -3479,7 +3479,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all keys
      */
-    @SuppressWarnings("unchecked") public <U> U reduceKeysSequentially
+    public <U> U reduceKeysSequentially
         (Function<? super K, ? extends U> transformer,
          BiFunction<? super U, ? super U, ? extends U> reducer) {
         if (transformer == null || reducer == null)
@@ -3487,7 +3487,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         U r = null, u;
         while (it.advance() != null) {
-            if ((u = transformer.apply((K)it.nextKey)) != null)
+            if ((u = transformer.apply(it.nextKey)) != null)
                 r = (r == null) ? u : reducer.apply(r, u);
         }
         return r;
@@ -3505,7 +3505,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all keys
      */
-    @SuppressWarnings("unchecked") public double reduceKeysToDoubleSequentially
+    public double reduceKeysToDoubleSequentially
         (DoubleFunction<? super K> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
@@ -3514,7 +3514,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         double r = basis;
         while (it.advance() != null)
-            r = reducer.applyAsDouble(r, transformer.applyAsDouble((K)it.nextKey));
+            r = reducer.applyAsDouble(r, transformer.applyAsDouble(it.nextKey));
         return r;
     }
 
@@ -3530,7 +3530,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all keys
      */
-    @SuppressWarnings("unchecked") public long reduceKeysToLongSequentially
+    public long reduceKeysToLongSequentially
         (LongFunction<? super K> transformer,
          long basis,
          LongBinaryOperator reducer) {
@@ -3539,7 +3539,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         long r = basis;
         while (it.advance() != null)
-            r = reducer.applyAsLong(r, transformer.applyAsLong((K)it.nextKey));
+            r = reducer.applyAsLong(r, transformer.applyAsLong(it.nextKey));
         return r;
     }
 
@@ -3555,7 +3555,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all keys
      */
-    @SuppressWarnings("unchecked") public int reduceKeysToIntSequentially
+    public int reduceKeysToIntSequentially
         (IntFunction<? super K> transformer,
          int basis,
          IntBinaryOperator reducer) {
@@ -3564,7 +3564,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         int r = basis;
         while (it.advance() != null)
-            r = reducer.applyAsInt(r, transformer.applyAsInt((K)it.nextKey));
+            r = reducer.applyAsInt(r, transformer.applyAsInt(it.nextKey));
         return r;
     }
 
@@ -3746,13 +3746,13 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    @SuppressWarnings("unchecked") public void forEachEntrySequentially
+    public void forEachEntrySequentially
         (Block<? super Map.Entry<K,V>> action) {
         if (action == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v;
         while ((v = it.advance()) != null)
-            action.accept(entryFor((K)it.nextKey, v));
+            action.accept(entryFor(it.nextKey, v));
     }
 
     /**
@@ -3764,7 +3764,7 @@ public class ConcurrentHashMap<K, V>
      * which case the action is not applied).
      * @param action the action
      */
-    @SuppressWarnings("unchecked") public <U> void forEachEntrySequentially
+    public <U> void forEachEntrySequentially
         (Function<Map.Entry<K,V>, ? extends U> transformer,
          Block<? super U> action) {
         if (transformer == null || action == null)
@@ -3772,7 +3772,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v; U u;
         while ((v = it.advance()) != null) {
-            if ((u = transformer.apply(entryFor((K)it.nextKey, v))) != null)
+            if ((u = transformer.apply(entryFor(it.nextKey, v))) != null)
                 action.accept(u);
         }
     }
@@ -3786,13 +3786,13 @@ public class ConcurrentHashMap<K, V>
      * @return a non-null result from applying the given search
      * function on each entry, or null if none
      */
-    @SuppressWarnings("unchecked") public <U> U searchEntriesSequentially
+    public <U> U searchEntriesSequentially
         (Function<Map.Entry<K,V>, ? extends U> searchFunction) {
         if (searchFunction == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v; U u;
         while ((v = it.advance()) != null) {
-            if ((u = searchFunction.apply(entryFor((K)it.nextKey, v))) != null)
+            if ((u = searchFunction.apply(entryFor(it.nextKey, v))) != null)
                 return u;
         }
         return null;
@@ -3805,13 +3805,13 @@ public class ConcurrentHashMap<K, V>
      * @param reducer a commutative associative combining function
      * @return the result of accumulating all entries
      */
-    @SuppressWarnings("unchecked") public Map.Entry<K,V> reduceEntriesSequentially
+    public Map.Entry<K,V> reduceEntriesSequentially
         (BiFunction<Map.Entry<K,V>, Map.Entry<K,V>, ? extends Map.Entry<K,V>> reducer) {
         if (reducer == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         Map.Entry<K,V> r = null; V v;
         while ((v = it.advance()) != null) {
-            Map.Entry<K,V> u = entryFor((K)it.nextKey, v);
+            Map.Entry<K,V> u = entryFor(it.nextKey, v);
             r = (r == null) ? u : reducer.apply(r, u);
         }
         return r;
@@ -3829,7 +3829,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all entries
      */
-    @SuppressWarnings("unchecked") public <U> U reduceEntriesSequentially
+    public <U> U reduceEntriesSequentially
         (Function<Map.Entry<K,V>, ? extends U> transformer,
          BiFunction<? super U, ? super U, ? extends U> reducer) {
         if (transformer == null || reducer == null)
@@ -3837,7 +3837,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         U r = null, u; V v;
         while ((v = it.advance()) != null) {
-            if ((u = transformer.apply(entryFor((K)it.nextKey, v))) != null)
+            if ((u = transformer.apply(entryFor(it.nextKey, v))) != null)
                 r = (r == null) ? u : reducer.apply(r, u);
         }
         return r;
@@ -3855,7 +3855,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all entries
      */
-    @SuppressWarnings("unchecked") public double reduceEntriesToDoubleSequentially
+    public double reduceEntriesToDoubleSequentially
         (DoubleFunction<Map.Entry<K,V>> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
@@ -3864,7 +3864,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         double r = basis; V v;
         while ((v = it.advance()) != null)
-            r = reducer.applyAsDouble(r, transformer.applyAsDouble(entryFor((K)it.nextKey, v)));
+            r = reducer.applyAsDouble(r, transformer.applyAsDouble(entryFor(it.nextKey, v)));
         return r;
     }
 
@@ -3880,7 +3880,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all entries
      */
-    @SuppressWarnings("unchecked") public long reduceEntriesToLongSequentially
+    public long reduceEntriesToLongSequentially
         (LongFunction<Map.Entry<K,V>> transformer,
          long basis,
          LongBinaryOperator reducer) {
@@ -3889,7 +3889,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         long r = basis; V v;
         while ((v = it.advance()) != null)
-            r = reducer.applyAsLong(r, transformer.applyAsLong(entryFor((K)it.nextKey, v)));
+            r = reducer.applyAsLong(r, transformer.applyAsLong(entryFor(it.nextKey, v)));
         return r;
     }
 
@@ -3905,7 +3905,7 @@ public class ConcurrentHashMap<K, V>
      * @return the result of accumulating the given transformation
      * of all entries
      */
-    @SuppressWarnings("unchecked") public int reduceEntriesToIntSequentially
+    public int reduceEntriesToIntSequentially
         (IntFunction<Map.Entry<K,V>> transformer,
          int basis,
          IntBinaryOperator reducer) {
@@ -3914,7 +3914,7 @@ public class ConcurrentHashMap<K, V>
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         int r = basis; V v;
         while ((v = it.advance()) != null)
-            r = reducer.applyAsInt(r, transformer.applyAsInt(entryFor((K)it.nextKey, v)));
+            r = reducer.applyAsInt(r, transformer.applyAsInt(entryFor(it.nextKey, v)));
         return r;
     }
 
@@ -5484,13 +5484,13 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Block<? super K> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachKeyTask<K,V>(map, this, b, action).fork();
                 while (advance() != null)
-                    action.accept((K)nextKey);
+                    action.accept(nextKey);
                 propagateCompletion();
             }
         }
@@ -5505,7 +5505,7 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Block<? super V> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
@@ -5527,14 +5527,14 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Block<? super Entry<K,V>> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachEntryTask<K,V>(map, this, b, action).fork();
                 V v;
                 while ((v = advance()) != null)
-                    action.accept(entryFor((K)nextKey, v));
+                    action.accept(entryFor(nextKey, v));
                 propagateCompletion();
             }
         }
@@ -5549,14 +5549,14 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final BiBlock<? super K, ? super V> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachMappingTask<K,V>(map, this, b, action).fork();
                 V v;
                 while ((v = advance()) != null)
-                    action.accept((K)nextKey, v);
+                    action.accept(nextKey, v);
                 propagateCompletion();
             }
         }
@@ -5572,7 +5572,7 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Function<? super K, ? extends U> transformer;
             final Block<? super U> action;
             if ((transformer = this.transformer) != null &&
@@ -5582,7 +5582,7 @@ public class ConcurrentHashMap<K, V>
                         (map, this, b, transformer, action).fork();
                 U u;
                 while (advance() != null) {
-                    if ((u = transformer.apply((K)nextKey)) != null)
+                    if ((u = transformer.apply(nextKey)) != null)
                         action.accept(u);
                 }
                 propagateCompletion();
@@ -5600,7 +5600,7 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Function<? super V, ? extends U> transformer;
             final Block<? super U> action;
             if ((transformer = this.transformer) != null &&
@@ -5628,7 +5628,7 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Function<Map.Entry<K,V>, ? extends U> transformer;
             final Block<? super U> action;
             if ((transformer = this.transformer) != null &&
@@ -5638,7 +5638,7 @@ public class ConcurrentHashMap<K, V>
                         (map, this, b, transformer, action).fork();
                 V v; U u;
                 while ((v = advance()) != null) {
-                    if ((u = transformer.apply(entryFor((K)nextKey,
+                    if ((u = transformer.apply(entryFor(nextKey,
                                                         v))) != null)
                         action.accept(u);
                 }
@@ -5658,7 +5658,7 @@ public class ConcurrentHashMap<K, V>
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final BiFunction<? super K, ? super V, ? extends U> transformer;
             final Block<? super U> action;
             if ((transformer = this.transformer) != null &&
@@ -5668,7 +5668,7 @@ public class ConcurrentHashMap<K, V>
                         (map, this, b, transformer, action).fork();
                 V v; U u;
                 while ((v = advance()) != null) {
-                    if ((u = transformer.apply((K)nextKey, v)) != null)
+                    if ((u = transformer.apply(nextKey, v)) != null)
                         action.accept(u);
                 }
                 propagateCompletion();
@@ -5688,7 +5688,7 @@ public class ConcurrentHashMap<K, V>
             this.searchFunction = searchFunction; this.result = result;
         }
         public final U getRawResult() { return result.get(); }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Function<? super K, ? extends U> searchFunction;
             final AtomicReference<U> result;
             if ((searchFunction = this.searchFunction) != null &&
@@ -5707,7 +5707,7 @@ public class ConcurrentHashMap<K, V>
                         propagateCompletion();
                         break;
                     }
-                    if ((u = searchFunction.apply((K)nextKey)) != null) {
+                    if ((u = searchFunction.apply(nextKey)) != null) {
                         if (result.compareAndSet(null, u))
                             quietlyCompleteRoot();
                         break;
@@ -5729,7 +5729,7 @@ public class ConcurrentHashMap<K, V>
             this.searchFunction = searchFunction; this.result = result;
         }
         public final U getRawResult() { return result.get(); }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Function<? super V, ? extends U> searchFunction;
             final AtomicReference<U> result;
             if ((searchFunction = this.searchFunction) != null &&
@@ -5770,7 +5770,7 @@ public class ConcurrentHashMap<K, V>
             this.searchFunction = searchFunction; this.result = result;
         }
         public final U getRawResult() { return result.get(); }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final Function<Entry<K,V>, ? extends U> searchFunction;
             final AtomicReference<U> result;
             if ((searchFunction = this.searchFunction) != null &&
@@ -5789,7 +5789,7 @@ public class ConcurrentHashMap<K, V>
                         propagateCompletion();
                         break;
                     }
-                    if ((u = searchFunction.apply(entryFor((K)nextKey,
+                    if ((u = searchFunction.apply(entryFor(nextKey,
                                                            v))) != null) {
                         if (result.compareAndSet(null, u))
                             quietlyCompleteRoot();
@@ -5812,7 +5812,7 @@ public class ConcurrentHashMap<K, V>
             this.searchFunction = searchFunction; this.result = result;
         }
         public final U getRawResult() { return result.get(); }
-        @SuppressWarnings("unchecked") public final void compute() {
+        public final void compute() {
             final BiFunction<? super K, ? super V, ? extends U> searchFunction;
             final AtomicReference<U> result;
             if ((searchFunction = this.searchFunction) != null &&
@@ -5831,7 +5831,7 @@ public class ConcurrentHashMap<K, V>
                         propagateCompletion();
                         break;
                     }
-                    if ((u = searchFunction.apply((K)nextKey, v)) != null) {
+                    if ((u = searchFunction.apply(nextKey, v)) != null) {
                         if (result.compareAndSet(null, u))
                             quietlyCompleteRoot();
                         break;
@@ -5862,7 +5862,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, reducer)).fork();
                 K r = null;
                 while (advance() != null) {
-                    K u = (K)nextKey;
+                    K u = nextKey;
                     r = (r == null) ? u : u == null ? r : reducer.apply(r, u);
                 }
                 result = r;
@@ -5945,7 +5945,7 @@ public class ConcurrentHashMap<K, V>
                 Map.Entry<K,V> r = null;
                 V v;
                 while ((v = advance()) != null) {
-                    Map.Entry<K,V> u = entryFor((K)nextKey, v);
+                    Map.Entry<K,V> u = entryFor(nextKey, v);
                     r = (r == null) ? u : reducer.apply(r, u);
                 }
                 result = r;
@@ -5992,7 +5992,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, transformer, reducer)).fork();
                 U r = null, u;
                 while (advance() != null) {
-                    if ((u = transformer.apply((K)nextKey)) != null)
+                    if ((u = transformer.apply(nextKey)) != null)
                         r = (r == null) ? u : reducer.apply(r, u);
                 }
                 result = r;
@@ -6088,7 +6088,7 @@ public class ConcurrentHashMap<K, V>
                 U r = null, u;
                 V v;
                 while ((v = advance()) != null) {
-                    if ((u = transformer.apply(entryFor((K)nextKey,
+                    if ((u = transformer.apply(entryFor(nextKey,
                                                         v))) != null)
                         r = (r == null) ? u : reducer.apply(r, u);
                 }
@@ -6137,7 +6137,7 @@ public class ConcurrentHashMap<K, V>
                 U r = null, u;
                 V v;
                 while ((v = advance()) != null) {
-                    if ((u = transformer.apply((K)nextKey, v)) != null)
+                    if ((u = transformer.apply(nextKey, v)) != null)
                         r = (r == null) ? u : reducer.apply(r, u);
                 }
                 result = r;
@@ -6186,7 +6186,7 @@ public class ConcurrentHashMap<K, V>
                     (rights = new MapReduceKeysToDoubleTask<K,V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 while (advance() != null)
-                    r = reducer.applyAsDouble(r, transformer.applyAsDouble((K)nextKey));
+                    r = reducer.applyAsDouble(r, transformer.applyAsDouble(nextKey));
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
@@ -6276,7 +6276,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 V v;
                 while ((v = advance()) != null)
-                    r = reducer.applyAsDouble(r, transformer.applyAsDouble(entryFor((K)nextKey,
+                    r = reducer.applyAsDouble(r, transformer.applyAsDouble(entryFor(nextKey,
                                                                     v)));
                 result = r;
                 CountedCompleter<?> c;
@@ -6322,7 +6322,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 V v;
                 while ((v = advance()) != null)
-                    r = reducer.applyAsDouble(r, transformer.applyAsDouble((K)nextKey, v));
+                    r = reducer.applyAsDouble(r, transformer.applyAsDouble(nextKey, v));
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
@@ -6366,7 +6366,7 @@ public class ConcurrentHashMap<K, V>
                     (rights = new MapReduceKeysToLongTask<K,V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 while (advance() != null)
-                    r = reducer.applyAsLong(r, transformer.applyAsLong((K)nextKey));
+                    r = reducer.applyAsLong(r, transformer.applyAsLong(nextKey));
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
@@ -6456,7 +6456,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 V v;
                 while ((v = advance()) != null)
-                    r = reducer.applyAsLong(r, transformer.applyAsLong(entryFor((K)nextKey, v)));
+                    r = reducer.applyAsLong(r, transformer.applyAsLong(entryFor(nextKey, v)));
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
@@ -6501,7 +6501,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 V v;
                 while ((v = advance()) != null)
-                    r = reducer.applyAsLong(r, transformer.applyAsLong((K)nextKey, v));
+                    r = reducer.applyAsLong(r, transformer.applyAsLong(nextKey, v));
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
@@ -6545,7 +6545,7 @@ public class ConcurrentHashMap<K, V>
                     (rights = new MapReduceKeysToIntTask<K,V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 while (advance() != null)
-                    r = reducer.applyAsInt(r, transformer.applyAsInt((K)nextKey));
+                    r = reducer.applyAsInt(r, transformer.applyAsInt(nextKey));
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
@@ -6635,7 +6635,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 V v;
                 while ((v = advance()) != null)
-                    r = reducer.applyAsInt(r, transformer.applyAsInt(entryFor((K)nextKey,
+                    r = reducer.applyAsInt(r, transformer.applyAsInt(entryFor(nextKey,
                                                                     v)));
                 result = r;
                 CountedCompleter<?> c;
@@ -6681,7 +6681,7 @@ public class ConcurrentHashMap<K, V>
                      (map, this, b, rights, transformer, r, reducer)).fork();
                 V v;
                 while ((v = advance()) != null)
-                    r = reducer.applyAsInt(r, transformer.applyAsInt((K)nextKey, v));
+                    r = reducer.applyAsInt(r, transformer.applyAsInt(nextKey, v));
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {

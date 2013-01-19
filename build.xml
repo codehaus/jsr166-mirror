@@ -16,7 +16,12 @@
   $HOME/jdk/jdk6
   $HOME/jdk/jdk7
   $HOME/jdk/jdk8
-  where each of the above is a JDK or a symlink to same.
+  where each of the above is a JDK or a symlink to same, and
+  $HOME/jdk/src/jdk6
+  $HOME/jdk/src/jdk7
+  $HOME/jdk/src/jdk8
+  where each of the above is a complete JDK source tree
+  (e.g. mercurial forest) or a symlink to same.
 ------------------------------------------------------------------------------
   </description>
 
@@ -44,11 +49,11 @@
   <property name="build.javadocs.dir"          location="${build.dir}/javadocs"/>
   <property name="build.reports.dir"           location="${build.dir}/reports"/>
 
-  <property name="build.jdk7.dir"              location="${build.dir}/jdk7"/>
-  <property name="build.jdk7.lib.dir"          location="${build.jdk7.dir}"/>
-  <property name="build.jdk7.classes.dir"      location="${build.jdk7.dir}/classes"/>
-  <property name="build.jdk7.tck.classes.dir"  location="${build.jdk7.dir}/tck/classes"/>
-  <property name="build.jdk7.docs.dir"         location="${build.jdk7.dir}/docs"/>
+  <property name="build.4jdk7.dir"              location="${build.dir}/4jdk7"/>
+  <property name="build.4jdk7.lib.dir"          location="${build.4jdk7.dir}"/>
+  <property name="build.4jdk7.classes.dir"      location="${build.4jdk7.dir}/classes"/>
+  <property name="build.4jdk7.tck.classes.dir"  location="${build.4jdk7.dir}/tck/classes"/>
+  <property name="build.4jdk7.docs.dir"         location="${build.4jdk7.dir}/docs"/>
 
   <property name="build.jsr166x.dir"           location="${build.dir}/jsr166x"/>
   <property name="build.jsr166xlib.dir"        location="${build.dir}/jsr166xlib"/>
@@ -72,11 +77,12 @@
   <macrodef name="defjdklocations">
     <attribute name="v"/>
     <sequential>
-    <property name="jdk@{v}.home"  location="${jdks.home}/jdk@{v}"/>
-    <property name="java@{v}"      location="${jdk@{v}.home}/bin/java"/>
-    <property name="javac@{v}"     location="${jdk@{v}.home}/bin/javac"/>
-    <property name="javadoc@{v}"   location="${jdk@{v}.home}/bin/javadoc"/>
-    <property name="bootdir@{v}"   location="${jdk@{v}.home}/jre/lib"/>
+    <property name="jdk@{v}.home"   location="${jdks.home}/jdk@{v}"/>
+    <property name="java@{v}"       location="${jdk@{v}.home}/bin/java"/>
+    <property name="javac@{v}"      location="${jdk@{v}.home}/bin/javac"/>
+    <property name="javadoc@{v}"    location="${jdk@{v}.home}/bin/javadoc"/>
+    <property name="bootdir@{v}"    location="${jdk@{v}.home}/jre/lib"/>
+    <property name="jdk@{v}src.dir" location="${jdks.home}/src/jdk@{v}/jdk/src/share/classes"/>
     <property name="bootclasspath@{v}"
      value="${bootdir@{v}}/resources.jar:${bootdir@{v}}/rt.jar:${bootdir@{v}}/jsse.jar:${bootdir@{v}}/jce.jar:${bootdir@{v}}/:${bootdir@{v}}/charsets.jar"/>
     </sequential>
@@ -113,7 +119,7 @@
   <property name="lib.dir"              location="${basedir}/lib"/>
   <property name="dist.dir"             location="${basedir}/dist"/>
   <property name="topsrc.dir"           location="${basedir}/src"/>
-  <property name="jdk7src.dir"          location="${topsrc.dir}/jdk7"/>
+  <property name="4jdk7src.dir"         location="${topsrc.dir}/jdk7"/>
   <property name="jsr166xsrc.dir"       location="${topsrc.dir}/jsr166x"/>
   <property name="jsr166ysrc.dir"       location="${topsrc.dir}/jsr166y"/>
   <property name="jsr166esrc.dir"       location="${topsrc.dir}/jsr166e"/>
@@ -122,7 +128,7 @@
 
   <!-- Distribution locations -->
   <property name="dist.javadocs.dir"           location="${dist.dir}/docs"/>
-  <property name="dist.jdk7.docs.dir"          location="${dist.dir}/jsr166-jdk7docs"/>
+  <property name="dist.4jdk7.docs.dir"         location="${dist.dir}/jsr166-4jdk7docs"/>
   <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
   <property name="dist.jsr166yjavadocs.dir"    location="${dist.dir}/jsr166ydocs"/>
   <property name="dist.jsr166ejavadocs.dir"    location="${dist.dir}/jsr166edocs"/>
@@ -130,7 +136,7 @@
 
   <!-- Jar locations -->
   <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
-  <property name="jdk7product.jar"      location="${build.jdk7.lib.dir}/jsr166-jdk7.jar"/>
+  <property name="4jdk7product.jar"     location="${build.4jdk7.lib.dir}/jsr166-4jdk7.jar"/>
   <property name="jsr166xproduct.jar"   location="${build.jsr166xlib.dir}/jsr166x.jar"/>
   <property name="jsr166yproduct.jar"   location="${build.jsr166ylib.dir}/jsr166y.jar"/>
   <property name="jsr166eproduct.jar"   location="${build.jsr166elib.dir}/jsr166e.jar"/>
@@ -533,17 +539,17 @@
   </target>
 
 
-  <!-- jdk7 -->
+  <!-- jsr166 4jdk7 -->
 
 
-  <target name="jdk7compile"
+  <target name="4jdk7compile"
           depends="configure-compiler"
-          description="Compiles src/jdk7 sources">
+          description="Compiles src/jdk7 sources, targeting jdk7">
 
-    <mkdir dir="${build.jdk7.classes.dir}"/>
+    <mkdir dir="${build.4jdk7.classes.dir}"/>
 
-    <javac srcdir="${jdk7src.dir}"
-           destdir="${build.jdk7.classes.dir}"
+    <javac srcdir="${4jdk7src.dir}"
+           destdir="${build.4jdk7.classes.dir}"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
@@ -562,22 +568,22 @@
 
     </javac>
 
-    <mkdir dir="${build.jdk7.lib.dir}"/>
+    <mkdir dir="${build.4jdk7.lib.dir}"/>
 
-    <jar destfile="${jdk7product.jar}" index="true">
-      <fileset dir="${build.jdk7.classes.dir}"/>
+    <jar destfile="${4jdk7product.jar}" index="true">
+      <fileset dir="${build.4jdk7.classes.dir}"/>
     </jar>
 
-    <mkdir dir="${build.jdk7.tck.classes.dir}"/>
+    <mkdir dir="${build.4jdk7.tck.classes.dir}"/>
 
     <javac srcdir="${tck.src.dir}"
-           destdir="${build.jdk7.tck.classes.dir}"
+           destdir="${build.4jdk7.tck.classes.dir}"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
            source="1.6"
            classpath="${junit.jar}"
-           bootclasspath="${jdk7product.jar}:${bootclasspath6}"
+           bootclasspath="${4jdk7product.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac7}"
@@ -593,18 +599,19 @@
   </target>
 
 
-  <target name="run-jdk7-tck-tests"
-	  depends="jdk7compile"
-          description="Runs tck tests for jsr166-jdk7 directly">
+  <target name="4jdk7-test-tck"
+	  depends="4jdk7compile"
+          description="Runs tck tests for jsr166-4jdk7 directly">
     <run-tck-tests
       jvm="${java7}"
-      tck.classes="${build.jdk7.tck.classes.dir}"
-      product.jar="${jdk7product.jar}"/>
+      tck.classes="${build.4jdk7.tck.classes.dir}"
+      product.jar="${4jdk7product.jar}"/>
   </target>
 
 
-  <target name="run-jdk7-tck-tests-via-junit-task"
-          depends="jdk7compile">
+  <target name="4jdk7-test-tck-junit"
+          depends="4jdk7compile"
+          description="Runs tck tests for jsr166-4jdk7 via junit task (experimental)">
 
     <junit printsummary="true"
            showoutput="true"
@@ -614,12 +621,12 @@
            jvm="${java7}"
            fork="true">
 
-      <jvmarg value="-Xbootclasspath/p:${jdk7product.jar}"/>
+      <jvmarg value="-Xbootclasspath/p:${4jdk7product.jar}"/>
       <jvmarg value="-server"/>
 
       <classpath>
         <pathelement location="${junit.jar}"/>
-        <pathelement location="${build.jdk7.tck.classes.dir}"/>
+        <pathelement location="${build.4jdk7.tck.classes.dir}"/>
       </classpath>
 
       <formatter type="brief"/>
@@ -631,23 +638,21 @@
   </target>
 
 
-  <target name="jdk7docs"
+  <target name="4jdk7docs"
           description="Builds javadocs with custom tags to build folder">
 
-    <delete dir="${build.jdk7.docs.dir}"/>
-    <mkdir dir="${build.jdk7.docs.dir}"/>
+    <delete dir="${build.4jdk7.docs.dir}"/>
+    <mkdir dir="${build.4jdk7.docs.dir}"/>
 
-    <javadoc destdir="${build.jdk7.docs.dir}"
+    <javadoc destdir="${build.4jdk7.docs.dir}"
              packagenames="none"
              link="${jdkapi7docs.url}"
-             overview="${jdk7src.dir}/intro.html"
-             sourcepath="${jdk7src.dir}"
-             bootclasspath="${bootclasspath6}"
+             overview="${4jdk7src.dir}/intro.html"
+             sourcepath="${4jdk7src.dir}:${jdk7src.dir}"
              classpath=""
-             source="1.6"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" >
-      <fileset dir="${jdk7src.dir}" defaultexcludes="yes">
+             executable="${javadoc7}">
+      <arg value="-XDignore.symbol.file=true"/>
+      <fileset dir="${4jdk7src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
     </javadoc>
@@ -655,53 +660,51 @@
   </target>
 
 
-  <target name="jdk7dist"
-          depends="jdk7dist-clean, jdk7dist-jar, jdk7dist-docs"
+  <target name="4jdk7dist"
+          depends="4jdk7dist-clean, 4jdk7dist-jar, 4jdk7dist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
 
-  <target name="jdk7clean"
+  <target name="4jdk7clean"
           description="Removes all build products">
 
-    <delete dir="${build.jdk7.dir}"/>
+    <delete dir="${build.4jdk7.dir}"/>
 
   </target>
 
 
 
-  <target name="jdk7dist-clean"
+  <target name="4jdk7dist-clean"
           description="Removes all build and distribution products">
 
   </target>
 
-  <target name="jdk7dist-docs"
+  <target name="4jdk7dist-docs"
           description="Builds javadocs without custom tags to dist folder">
 
-    <delete dir="${dist.jdk7.docs.dir}"/>
-    <mkdir dir="${dist.jdk7.docs.dir}"/>
+    <delete dir="${dist.4jdk7.docs.dir}"/>
+    <mkdir dir="${dist.4jdk7.docs.dir}"/>
 
-    <javadoc destdir="${dist.jdk7.docs.dir}"
+    <javadoc destdir="${dist.4jdk7.docs.dir}"
              packagenames="none"
              link="${jdkapi7docs.url}"
-             overview="${jdk7src.dir}/intro.html"
-             sourcepath="${jdk7src.dir}"
+             overview="${4jdk7src.dir}/intro.html"
+             sourcepath="${4jdk7src.dir}:${jdk7src.dir}"
              classpath=""
-             executable="${javadoc7}"
-             bootclasspath="${bootclasspath6}"
-             source="1.6">
+             executable="${javadoc7}">
       <arg value="-XDignore.symbol.file=true"/>
-      <fileset dir="${jdk7src.dir}" defaultexcludes="yes">
+      <fileset dir="${4jdk7src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
     </javadoc>
 
   </target>
 
-  <target name="jdk7dist-jar"
-          depends="jdk7clean, jdk7compile">
+  <target name="4jdk7dist-jar"
+          depends="4jdk7clean, 4jdk7compile">
 
-    <copy file="${jdk7product.jar}" todir="${dist.dir}"/>
+    <copy file="${4jdk7product.jar}" todir="${dist.dir}"/>
 
   </target>
 
@@ -1070,7 +1073,7 @@
              packagenames="jsr166e,jsr166e.extra"
              link="${jdkapi7docs.url}"
              source="1.7"
-             sourcepath="${topsrc.dir}:${jdk7src.dir}:${jdksrc.dir}"
+             sourcepath="${topsrc.dir}:${jdk7src.dir}"
              executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" >
       <fileset dir="${topsrc.dir}" defaultexcludes="yes">

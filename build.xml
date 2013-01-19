@@ -154,6 +154,8 @@
   <property name="jdkapi8docs.url"      value="http://download.java.net/jdk8/docs/api/"/>
   <!-- The below does not yet exist as of 2012-11 -->
   <!-- <property name="jdkapi8docs.url" value="http://docs.oracle.com/javase/8/docs/api/"/> -->
+
+  <!-- Default jdk api doc location (latest stable release seems best) -->
   <property name="jdkapidocs.url"       value="${jdkapi7docs.url}"/>
 
   <!-- Test classpath -->
@@ -177,7 +179,7 @@
   <!-- Main targets -->
 
   <target name="dists"
-          depends="dist, jsr166xdist, jsr166ydist,jsr166edist,  extra166ydist"
+          depends="dist, 4jdk7dist, jsr166edist, jsr166ydist, extra166ydist, jsr166xdist"
           description="Builds all public jars and docs"/>
 
   <target name="compile"
@@ -534,7 +536,7 @@
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
-           source="1.6"
+           source="6"
            classpath=""
            bootclasspath="${bootclasspath6}"
            includeAntRuntime="false"
@@ -562,7 +564,7 @@
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
-           source="1.6"
+           source="6"
            classpath="${junit.jar}"
            bootclasspath="${4jdk7product.jar}:${bootclasspath6}"
            includeAntRuntime="false"
@@ -683,7 +685,7 @@
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
            classpath=""
-           source="1.5"
+           source="5"
            bootclasspath="${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
@@ -722,10 +724,12 @@
     <mkdir dir="${build.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166xjavadocs.dir}"
-             packagenames="jsr166x"
+             packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
-             source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             source="5"
+             bootclasspath="${bootclasspath6}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" />
 
   </target>
@@ -761,10 +765,11 @@
     <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166xjavadocs.dir}"
-             packagenames="jsr166x"
+             packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" />
 
   </target>
@@ -790,7 +795,7 @@
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
-           source="1.6"
+           source="6"
            classpath=""
            bootclasspath="${bootclasspath6}"
            includeAntRuntime="false"
@@ -827,10 +832,12 @@
     <mkdir dir="${build.jsr166yjavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166yjavadocs.dir}"
-             packagenames="jsr166y"
+             packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
-             source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             source="6"
+             bootclasspath="${bootclasspath6}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" />
 
   </target>
@@ -864,10 +871,11 @@
     <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
-             packagenames="jsr166y"
+             packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" />
 
   </target>
@@ -895,7 +903,7 @@
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
            classpath=""
-           source="1.6"
+           source="6"
            bootclasspath="${jsr166y.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
@@ -928,16 +936,18 @@
 
 
   <target name="extra166ydocs"
-          description="Builds javadocs with custom tags to build dir">
+          description="Builds javadocs to build dir">
 
     <delete dir="${build.extra166yjavadocs.dir}"/>
     <mkdir dir="${build.extra166yjavadocs.dir}"/>
 
     <javadoc destdir="${build.extra166yjavadocs.dir}"
-             packagenames="extra166y"
+             packagenames="extra166y.*"
              link="${jdkapidocs.url}"
-             source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             source="6"
+             bootclasspath="${bootclasspath6}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" />
 
   </target>
@@ -971,10 +981,11 @@
     <mkdir dir="${dist.extra166yjavadocs.dir}"/>
 
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
-             packagenames="extra166y"
+             packagenames="extra166y.*"
              link="${jdkapidocs.url}"
              source="${build.sourcelevel}"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" />
 
   </target>
@@ -999,7 +1010,7 @@
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
-           source="1.7"
+           source="7"
            classpath=""
            includeAntRuntime="false"
            includeJavaRuntime="false"
@@ -1032,21 +1043,18 @@
 
 
   <target name="jsr166edocs"
-          description="Builds javadocs with custom tags to build dir">
+          description="Builds javadocs to build dir">
 
     <delete dir="${build.jsr166ejavadocs.dir}"/>
     <mkdir dir="${build.jsr166ejavadocs.dir}"/>
 
     <javadoc destdir="${build.jsr166ejavadocs.dir}"
-             packagenames="jsr166e,jsr166e.extra"
-             link="${jdkapi7docs.url}"
-             source="1.7"
+             packagenames="jsr166e.*"
+             link="${jdkapidocs.url}"
+             source="7"
              sourcepath="${topsrc.dir}:${jdk7src.dir}"
              executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" >
-      <fileset dir="${topsrc.dir}" defaultexcludes="yes">
-        <include name="jsr166e/**/*.java"/>
-      </fileset>
     </javadoc>
 
   </target>
@@ -1080,10 +1088,11 @@
     <mkdir dir="${dist.jsr166ejavadocs.dir}"/>
 
     <javadoc destdir="${dist.jsr166ejavadocs.dir}"
-             packagenames="jsr166e,jsr166e.extra"
+             packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
-             source="1.7"
-             sourcepath="${topsrc.dir}:${jdksrc.dir}"
+             source="7"
+             sourcepath="${topsrc.dir}:${jdk7src.dir}"
+             executable="${javadoc7}"
              additionalparam="-XDignore.symbol.file=true" />
 
   </target>

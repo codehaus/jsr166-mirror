@@ -673,21 +673,27 @@
 
   <target name="jsr166xcompile"
           depends="configure-compiler"
-          description="Compiles jsr166x sources">
+          description="Compiles jsr166x sources to build dir">
 
     <mkdir dir="${build.jsr166x.dir}"/>
 
-    <javac srcdir="${jsr166xsrc.dir}"
-          destdir="${build.jsr166x.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
+    <javac srcdir="${topsrc.dir}"
+           destdir="${build.jsr166x.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           classpath=""
+           source="1.5"
+           bootclasspath="${bootclasspath6}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac7}"
+           fork="true">
 
-      <include name="**/*.java"/>
+      <include name="jsr166x/**/*.java"/>
       <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all,-unchecked,-rawtypes"/>
 
     </javac>
 
@@ -886,9 +892,9 @@
     <javac srcdir="${topsrc.dir}"
            destdir="${build.extra166y.dir}"
            debug="${build.debug}"
-           classpath=""
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
+           classpath=""
            source="1.6"
            bootclasspath="${jsr166yproduct.jar}:${bootclasspath6}"
            includeAntRuntime="false"

@@ -127,21 +127,21 @@
   <property name="jdksrc.dir"           location="/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"/>
 
   <!-- Distribution locations -->
-  <property name="dist.javadocs.dir"           location="${dist.dir}/docs"/>
-  <property name="dist.4jdk7.docs.dir"         location="${dist.dir}/jsr166-4jdk7docs"/>
-  <property name="dist.jsr166xjavadocs.dir"    location="${dist.dir}/jsr166xdocs"/>
-  <property name="dist.jsr166yjavadocs.dir"    location="${dist.dir}/jsr166ydocs"/>
-  <property name="dist.jsr166ejavadocs.dir"    location="${dist.dir}/jsr166edocs"/>
-  <property name="dist.extra166yjavadocs.dir"  location="${dist.dir}/extra166ydocs"/>
+  <property name="dist.javadocs.dir"          location="${dist.dir}/docs"/>
+  <property name="dist.4jdk7.docs.dir"        location="${dist.dir}/jsr166-4jdk7docs"/>
+  <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166xdocs"/>
+  <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166ydocs"/>
+  <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166edocs"/>
+  <property name="dist.extra166yjavadocs.dir" location="${dist.dir}/extra166ydocs"/>
 
   <!-- Jar locations -->
-  <property name="product.jar"          location="${build.lib.dir}/jsr166.jar"/>
-  <property name="4jdk7product.jar"     location="${build.4jdk7.lib.dir}/jsr166-4jdk7.jar"/>
-  <property name="jsr166xproduct.jar"   location="${build.jsr166xlib.dir}/jsr166x.jar"/>
-  <property name="jsr166yproduct.jar"   location="${build.jsr166ylib.dir}/jsr166y.jar"/>
-  <property name="jsr166eproduct.jar"   location="${build.jsr166elib.dir}/jsr166e.jar"/>
-  <property name="extra166yproduct.jar" location="${build.extra166ylib.dir}/extra166y.jar"/>
-  <property name="junit.jar"            location="${lib.dir}/junit.jar"/>
+  <property name="product.jar"      location="${build.lib.dir}/jsr166.jar"/>
+  <property name="4jdk7product.jar" location="${build.4jdk7.lib.dir}/jsr166-4jdk7.jar"/>
+  <property name="jsr166x.jar"      location="${build.jsr166xlib.dir}/jsr166x.jar"/>
+  <property name="jsr166y.jar"      location="${build.jsr166ylib.dir}/jsr166y.jar"/>
+  <property name="jsr166e.jar"      location="${build.jsr166elib.dir}/jsr166e.jar"/>
+  <property name="extra166y.jar"    location="${build.extra166ylib.dir}/extra166y.jar"/>
+  <property name="junit.jar"        location="${lib.dir}/junit.jar"/>
 
   <!-- Bootclasspath argument -->
   <property name="bootclasspath.args"   value="-Xbootclasspath/p:${product.jar}"/>
@@ -707,7 +707,7 @@
 
     <mkdir dir="${build.jsr166xlib.dir}"/>
 
-    <jar destfile="${jsr166xproduct.jar}">
+    <jar destfile="${jsr166x.jar}">
       <fileset dir="${build.jsr166x.dir}"/>
     </jar>
 
@@ -772,7 +772,7 @@
   <target name="jsr166xdist-jar"
           depends="jsr166xclean, jsr166xjar">
 
-    <copy file="${jsr166xproduct.jar}" todir="${dist.dir}"/>
+    <copy file="${jsr166x.jar}" todir="${dist.dir}"/>
 
   </target>
 
@@ -812,7 +812,7 @@
 
     <mkdir dir="${build.jsr166ylib.dir}"/>
 
-    <jar destfile="${jsr166yproduct.jar}" index="true">
+    <jar destfile="${jsr166y.jar}" index="true">
       <fileset dir="${build.jsr166y.dir}"/>
     </jar>
 
@@ -875,7 +875,7 @@
   <target name="jsr166ydist-jar"
           depends="jsr166yclean, jsr166yjar">
 
-    <copy file="${jsr166yproduct.jar}" todir="${dist.dir}"/>
+    <copy file="${jsr166y.jar}" todir="${dist.dir}"/>
 
   </target>
 
@@ -896,7 +896,7 @@
            deprecation="${build.deprecation}"
            classpath=""
            source="1.6"
-           bootclasspath="${jsr166yproduct.jar}:${bootclasspath6}"
+           bootclasspath="${jsr166y.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac7}"
@@ -919,7 +919,7 @@
 
     <mkdir dir="${build.extra166ylib.dir}"/>
 
-    <jar destfile="${extra166yproduct.jar}" index="true">
+    <jar destfile="${extra166y.jar}" index="true">
       <fileset dir="${build.extra166y.dir}"/>
     </jar>
 
@@ -982,7 +982,7 @@
   <target name="extra166ydist-jar"
           depends="extra166yclean, extra166yjar">
 
-    <copy file="${extra166yproduct.jar}" todir="${dist.dir}"/>
+    <copy file="${extra166y.jar}" todir="${dist.dir}"/>
 
   </target>
 
@@ -1023,7 +1023,7 @@
 
     <mkdir dir="${build.jsr166elib.dir}"/>
 
-    <jar destfile="${jsr166eproduct.jar}" index="true">
+    <jar destfile="${jsr166e.jar}" index="true">
       <fileset dir="${build.jsr166e.dir}"/>
     </jar>
 
@@ -1091,7 +1091,7 @@
   <target name="jsr166edist-jar"
           depends="jsr166eclean, jsr166ejar">
 
-    <copy file="${jsr166eproduct.jar}" todir="${dist.dir}"/>
+    <copy file="${jsr166e.jar}" todir="${dist.dir}"/>
 
   </target>
 

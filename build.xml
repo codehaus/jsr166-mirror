@@ -310,16 +310,6 @@
   <!-- Internal targets -->
 
 
-<!--   <target name="init"> -->
-
-    <!-- Version is kept in a separate file -->
-<!--     <loadfile property="version" srcFile="version.properties"/> -->
-<!--     <echo>Building JSR-166 version ${version}</echo> -->
-<!--     <echo>java.home is ${java.home}</echo> -->
-
-<!--   </target> -->
-
-
   <target name="dist-jar"
           depends="clean, jar">
 

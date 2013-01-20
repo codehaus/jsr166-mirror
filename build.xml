@@ -111,7 +111,10 @@
       <compilerarg line="${build.args}"/>
     </javac>
 
-    <java classname="JSR166TestCase" jvm="${java@{target}}" fork="true">
+    <java classname="JSR166TestCase"
+          failonerror="true"
+          jvm="${java@{target}}"
+          fork="true">
 	<jvmarg value="-Xbootclasspath/p:@{product.jar}"/>
 	<jvmarg line="@{jvmflags}"/>
 	<classpath>

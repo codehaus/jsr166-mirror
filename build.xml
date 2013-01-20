@@ -148,6 +148,11 @@
   <!-- Default jdk api doc location (latest stable release seems best) -->
   <property name="jdkapidocs.url"       value="${jdkapi7docs.url}"/>
 
+  <!-- Define the "jtreg" task -->
+  <!-- See the docs in "jtreg -onlineHelp" -->
+  <taskdef name="jtreg" classname="com.sun.javatest.regtest.Main$$Ant"
+           classpath="${lib.dir}/jtreg.jar" />
+
   <!-- Test classpath -->
   <path id="test.classpath">
     <pathelement location="${build.testcases.dir}"/>
@@ -610,6 +615,33 @@
     </junit>
   </target>
 
+  <target name="4jdk7-test-jtreg"
+	  depends="4jdk7compile"
+          description="Runs jtreg tests for jsr166-4jdk7 using the jtreg ant task">
+    <delete dir="${build.4jdk7.dir}/JTwork"   quiet="true"/>
+    <delete dir="${build.4jdk7.dir}/JTreport" quiet="true"/>
+    <mkdir dir="${build.4jdk7.dir}/JTwork/scratch"/>
+    <mkdir dir="${build.4jdk7.dir}/JTreport"/>
+    <jtreg dir="${jtreg.src.dir}"
+           jdk="${jdk7.home}"
+           workDir="${build.4jdk7.dir}/JTwork"
+           reportDir="${build.4jdk7.dir}/JTreport">
+
+      <arg value="-Xbootclasspath/p:${4jdk7product.jar}"/>
+      <arg value="-agentvm"/>
+      <arg value="-v:nopass,fail"/>
+      <arg value="-vmoptions:-esa -ea"/>
+      <arg value="-automatic"/>
+      <arg value="-k:!ignore"/>
+    </jtreg>
+  </target>
+
+
+  <target name="4jdk7-test"
+	  depends="4jdk7-test-tck, 4jdk7-test-jtreg"
+          description="Runs tck and jtreg tests for jsr166-4jdk7">
+  </target>
+
 
   <target name="4jdk7docs"
           description="Builds javadocs for src/jdk7 to dist dir">
@@ -718,7 +750,7 @@
              bootclasspath="${bootclasspath6}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" />
+             additionalparam="-XDignore.symbol.file=true"/>
 
   </target>
 
@@ -806,7 +838,7 @@
              bootclasspath="${bootclasspath6}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" />
+             additionalparam="-XDignore.symbol.file=true"/>
 
   </target>
 
@@ -897,7 +929,7 @@
              bootclasspath="${bootclasspath6}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" />
+             additionalparam="-XDignore.symbol.file=true"/>
 
   </target>
 

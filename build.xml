@@ -45,26 +45,17 @@
   <property name="build.classes.dir"           location="${build.dir}/classes"/>
   <property name="build.testcases.dir"         location="${build.dir}/testcases"/>
   <property name="build.loops.dir"             location="${build.dir}/loops"/>
-  <property name="build.lib.dir"               location="${build.dir}/lib"/>
   <property name="build.reports.dir"           location="${build.dir}/reports"/>
 
-  <property name="build.4jdk7.dir"              location="${build.dir}/4jdk7"/>
-  <property name="build.4jdk7.lib.dir"          location="${build.4jdk7.dir}"/>
-  <property name="build.4jdk7.classes.dir"      location="${build.4jdk7.dir}/classes"/>
-  <property name="build.4jdk7.tck.classes.dir"  location="${build.4jdk7.dir}/tck/classes"/>
-  <property name="build.4jdk7.docs.dir"         location="${build.4jdk7.dir}/docs"/>
+  <property name="build.4jdk7.dir"             location="${build.dir}/jsr166-4jdk7"/>
+  <property name="build.4jdk7.classes.dir"     location="${build.4jdk7.dir}/classes"/>
+  <property name="build.4jdk7.tck.classes.dir" location="${build.4jdk7.dir}/tck/classes"/>
+  <property name="build.4jdk7.docs.dir"        location="${build.4jdk7.dir}/docs"/>
 
   <property name="build.jsr166x.dir"           location="${build.dir}/jsr166x"/>
-  <property name="build.jsr166xlib.dir"        location="${build.dir}/jsr166xlib"/>
-
   <property name="build.jsr166y.dir"           location="${build.dir}/jsr166y"/>
-  <property name="build.jsr166ylib.dir"        location="${build.dir}/jsr166ylib"/>
-
   <property name="build.jsr166e.dir"           location="${build.dir}/jsr166e"/>
-  <property name="build.jsr166elib.dir"        location="${build.dir}/jsr166elib"/>
-
   <property name="build.extra166y.dir"         location="${build.dir}/extra166y"/>
-  <property name="build.extra166ylib.dir"      location="${build.dir}/extra166ylib"/>
 
   <!-- JDK binary locations -->
   <property name="jdks.home"  location="${user.home}/jdk"/>
@@ -122,20 +113,20 @@
   <property name="jdksrc.dir"           location="/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"/>
 
   <!-- Distribution locations -->
-  <property name="dist.javadocs.dir"          location="${dist.dir}/docs"/>
-  <property name="dist.4jdk7.docs.dir"        location="${dist.dir}/jsr166-4jdk7docs"/>
-  <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166xdocs"/>
-  <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166ydocs"/>
-  <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166edocs"/>
-  <property name="dist.extra166yjavadocs.dir" location="${dist.dir}/extra166ydocs"/>
+  <property name="dist.javadocs.dir"          location="${dist.dir}/jsr166.docs"/>
+  <property name="dist.4jdk7.docs.dir"        location="${dist.dir}/jsr166-4jdk7.docs"/>
+  <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166x.docs"/>
+  <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166y.docs"/>
+  <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166e.docs"/>
+  <property name="dist.extra166yjavadocs.dir" location="${dist.dir}/extra166y.docs"/>
 
   <!-- Jar locations -->
-  <property name="product.jar"      location="${build.lib.dir}/jsr166.jar"/>
-  <property name="4jdk7product.jar" location="${build.4jdk7.lib.dir}/jsr166-4jdk7.jar"/>
-  <property name="jsr166x.jar"      location="${build.jsr166xlib.dir}/jsr166x.jar"/>
-  <property name="jsr166y.jar"      location="${build.jsr166ylib.dir}/jsr166y.jar"/>
-  <property name="jsr166e.jar"      location="${build.jsr166elib.dir}/jsr166e.jar"/>
-  <property name="extra166y.jar"    location="${build.extra166ylib.dir}/extra166y.jar"/>
+  <property name="product.jar"      location="${build.dir}/jsr166.jar"/>
+  <property name="4jdk7product.jar" location="${build.4jdk7.dir}/jsr166-4jdk7.jar"/>
+  <property name="jsr166x.jar"      location="${build.jsr166x.dir}/jsr166x.jar"/>
+  <property name="jsr166y.jar"      location="${build.jsr166y.dir}/jsr166y.jar"/>
+  <property name="jsr166e.jar"      location="${build.jsr166e.dir}/jsr166e.jar"/>
+  <property name="extra166y.jar"    location="${build.extra166y.dir}/extra166y.jar"/>
   <property name="junit.jar"        location="${lib.dir}/junit.jar"/>
 
   <!-- Bootclasspath argument -->
@@ -215,8 +206,6 @@
           depends="compile"
           description="Builds library jar from compiled sources">
 
-    <mkdir dir="${build.lib.dir}"/>
-
     <jar destfile="${product.jar}">
       <fileset dir="${build.classes.dir}"/>
     </jar>
@@ -288,8 +277,6 @@
           description="Removes all build products">
 
     <delete dir="${build.dir}"/>
-    <delete dir="${build.classes.dir}"/>
-    <delete dir="${build.lib.dir}"/>
 
   </target>
 
@@ -546,8 +533,6 @@
 
     </javac>
 
-    <mkdir dir="${build.4jdk7.lib.dir}"/>
-
     <jar destfile="${4jdk7product.jar}" index="true">
       <fileset dir="${build.4jdk7.classes.dir}"/>
     </jar>
@@ -645,7 +630,7 @@
 
 
   <target name="4jdk7clean"
-          description="Removes all build products">
+          description="Removes all 4jdk7 build products">
 
     <delete dir="${build.4jdk7.dir}"/>
 
@@ -665,8 +650,8 @@
 
   </target>
 
-  <!-- jsr166x -->
 
+  <!-- jsr166x -->
 
   <target name="jsr166xcompile"
           depends="configure-compiler"
@@ -702,8 +687,6 @@
           depends="jsr166xcompile"
           description="Builds library jar from compiled sources">
 
-    <mkdir dir="${build.jsr166xlib.dir}"/>
-
     <jar destfile="${jsr166x.jar}">
       <fileset dir="${build.jsr166x.dir}"/>
     </jar>
@@ -737,10 +720,9 @@
 
 
   <target name="jsr166xclean"
-          description="Removes all build products">
+          description="Removes all jsr166x build products">
 
     <delete dir="${build.jsr166x.dir}"/>
-    <delete dir="${build.jsr166xlib.dir}"/>
 
   </target>
 
@@ -793,8 +775,6 @@
           depends="jsr166ycompile"
           description="Builds library jar from compiled sources">
 
-    <mkdir dir="${build.jsr166ylib.dir}"/>
-
     <jar destfile="${jsr166y.jar}" index="true">
       <fileset dir="${build.jsr166y.dir}"/>
     </jar>
@@ -828,10 +808,9 @@
 
 
   <target name="jsr166yclean"
-          description="Removes all build products">
+          description="Removes all jsr166y build products">
 
     <delete dir="${build.jsr166y.dir}"/>
-    <delete dir="${build.jsr166ylib.dir}"/>
 
   </target>
 
@@ -887,8 +866,6 @@
           depends="extra166ycompile"
           description="Builds library jar from compiled sources">
 
-    <mkdir dir="${build.extra166ylib.dir}"/>
-
     <jar destfile="${extra166y.jar}" index="true">
       <fileset dir="${build.extra166y.dir}"/>
     </jar>
@@ -922,10 +899,9 @@
 
 
   <target name="extra166yclean"
-          description="Removes all build products">
+          description="Removes all extra166y build products">
 
     <delete dir="${build.extra166y.dir}"/>
-    <delete dir="${build.extra166ylib.dir}"/>
 
   </target>
 
@@ -978,8 +954,6 @@
           depends="jsr166ecompile"
           description="Builds library jar from compiled sources">
 
-    <mkdir dir="${build.jsr166elib.dir}"/>
-
     <jar destfile="${jsr166e.jar}" index="true">
       <fileset dir="${build.jsr166e.dir}"/>
     </jar>
@@ -1013,10 +987,9 @@
 
 
   <target name="jsr166eclean"
-          description="Removes all build products">
+          description="Removes all jsr166e build products">
 
     <delete dir="${build.jsr166e.dir}"/>
-    <delete dir="${build.jsr166elib.dir}"/>
 
   </target>
 

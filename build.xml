@@ -35,7 +35,7 @@
 
 
   <!-- Compilation options -->
-  <property name="build.sourcelevel"    value="1.6"/>
+  <property name="build.sourcelevel"    value="6"/>
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
@@ -56,6 +56,11 @@
   <property name="build.jsr166y.dir"           location="${build.dir}/jsr166y"/>
   <property name="build.jsr166e.dir"           location="${build.dir}/jsr166e"/>
   <property name="build.extra166y.dir"         location="${build.dir}/extra166y"/>
+
+  <property name="build.jsr166x.classes.dir"    location="${build.jsr166x.dir}/classes"/>
+  <property name="build.jsr166y.classes.dir"    location="${build.jsr166y.dir}/classes"/>
+  <property name="build.jsr166e.classes.dir"    location="${build.jsr166e.dir}/classes"/>
+  <property name="build.extra166y.classes.dir"  location="${build.extra166y.dir}/classes"/>
 
   <!-- JDK binary locations -->
   <property name="jdks.home"  location="${user.home}/jdk"/>
@@ -662,10 +667,10 @@
           depends="configure-compiler"
           description="Compiles jsr166x sources to build dir">
 
-    <mkdir dir="${build.jsr166x.dir}"/>
+    <mkdir dir="${build.jsr166x.classes.dir}"/>
 
     <javac srcdir="${topsrc.dir}"
-           destdir="${build.jsr166x.dir}"
+           destdir="${build.jsr166x.classes.dir}"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
@@ -693,7 +698,7 @@
           description="Builds library jar from compiled sources">
 
     <jar destfile="${jsr166x.jar}">
-      <fileset dir="${build.jsr166x.dir}"/>
+      <fileset dir="${build.jsr166x.classes.dir}"/>
     </jar>
 
   </target>
@@ -753,10 +758,10 @@
           depends="configure-compiler"
           description="Compiles jsr166y sources">
 
-    <mkdir dir="${build.jsr166y.dir}"/>
+    <mkdir dir="${build.jsr166y.classes.dir}"/>
 
     <javac srcdir="${topsrc.dir}"
-           destdir="${build.jsr166y.dir}"
+           destdir="${build.jsr166y.classes.dir}"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
@@ -781,7 +786,7 @@
           description="Builds library jar from compiled sources">
 
     <jar destfile="${jsr166y.jar}" index="true">
-      <fileset dir="${build.jsr166y.dir}"/>
+      <fileset dir="${build.jsr166y.classes.dir}"/>
     </jar>
 
   </target>
@@ -841,10 +846,10 @@
           depends="configure-compiler, jsr166yjar"
           description="Compiles extra166y sources">
 
-    <mkdir dir="${build.extra166y.dir}"/>
+    <mkdir dir="${build.extra166y.classes.dir}"/>
 
     <javac srcdir="${topsrc.dir}"
-           destdir="${build.extra166y.dir}"
+           destdir="${build.extra166y.classes.dir}"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
@@ -872,7 +877,7 @@
           description="Builds library jar from compiled sources">
 
     <jar destfile="${extra166y.jar}" index="true">
-      <fileset dir="${build.extra166y.dir}"/>
+      <fileset dir="${build.extra166y.classes.dir}"/>
     </jar>
 
   </target>
@@ -930,10 +935,10 @@
           depends="configure-compiler"
           description="Compiles jsr166e sources">
 
-    <mkdir dir="${build.jsr166e.dir}"/>
+    <mkdir dir="${build.jsr166e.classes.dir}"/>
 
     <javac srcdir="${topsrc.dir}"
-           destdir="${build.jsr166e.dir}"
+           destdir="${build.jsr166e.classes.dir}"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
@@ -960,7 +965,7 @@
           description="Builds library jar from compiled sources">
 
     <jar destfile="${jsr166e.jar}" index="true">
-      <fileset dir="${build.jsr166e.dir}"/>
+      <fileset dir="${build.jsr166e.classes.dir}"/>
     </jar>
 
   </target>

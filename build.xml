@@ -84,20 +84,42 @@
   <defjdklocations v="8"/>
 
   <macrodef name="run-tck-tests">
-    <attribute name="jvm"/>
-    <attribute name="tck.classes"/>
+    <attribute name="target"/>
+    <attribute name="workdir"/>
     <attribute name="product.jar" default="${product.jar}"/>
     <attribute name="jvmflags" default=""/>
     <sequential>
-    <java classname="JSR166TestCase"
-          jvm="@{jvm}" fork="true">
+
+    <mkdir dir="@{workdir}/tck-classes"/>
+
+    <javac srcdir="${tck.src.dir}"
+           destdir="@{workdir}/tck-classes"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="6"
+           classpath="${junit.jar}"
+           bootclasspath="@{product.jar}:${bootclasspath6}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac@{target}}"
+           fork="true">
+
+      <include name="**/*.java"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
+      <compilerarg line="${build.args}"/>
+    </javac>
+
+    <java classname="JSR166TestCase" jvm="${java@{target}}" fork="true">
 	<jvmarg value="-Xbootclasspath/p:@{product.jar}"/>
 	<jvmarg line="@{jvmflags}"/>
 	<classpath>
 	  <pathelement location="${junit.jar}"/>
-	  <pathelement location="@{tck.classes}"/>
+	  <pathelement location="@{workdir}/tck-classes"/>
 	</classpath>
     </java>
+
     </sequential>
   </macrodef>
 
@@ -548,41 +570,26 @@
 
     </javac>
 
-    <jar destfile="${4jdk7product.jar}" index="true">
+  </target>
+
+  <target name="4jdk7-jar"
+          depends="4jdk7compile"
+          description="Builds library jar from compiled sources">
+
+    <jar destfile="${4jdk7product.jar}">
       <fileset dir="${build.4jdk7.classes.dir}"/>
     </jar>
-
-    <mkdir dir="${build.4jdk7.tck.classes.dir}"/>
-
-    <javac srcdir="${tck.src.dir}"
-           destdir="${build.4jdk7.tck.classes.dir}"
-           debug="${build.debug}"
-           debuglevel="${build.debuglevel}"
-           deprecation="${build.deprecation}"
-           source="6"
-           classpath="${junit.jar}"
-           bootclasspath="${4jdk7product.jar}:${bootclasspath6}"
-           includeAntRuntime="false"
-           includeJavaRuntime="false"
-           executable="${javac7}"
-           fork="true">
-
-      <include name="**/*.java"/>
-      <compilerarg line="${build.args}"/>
-      <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
-
-    </javac>
 
   </target>
 
 
   <target name="4jdk7-test-tck"
-	  depends="4jdk7compile"
+	  depends="4jdk7-jar"
           description="Runs tck tests for jsr166-4jdk7 directly">
+
     <run-tck-tests
-      jvm="${java7}"
-      tck.classes="${build.4jdk7.tck.classes.dir}"
+      target="7"
+      workdir="${build.4jdk7.dir}"
       product.jar="${4jdk7product.jar}"/>
   </target>
 

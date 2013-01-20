@@ -110,7 +110,6 @@
   <property name="jsr166ysrc.dir"       location="${topsrc.dir}/jsr166y"/>
   <property name="jsr166esrc.dir"       location="${topsrc.dir}/jsr166e"/>
   <property name="extra166ysrc.dir"     location="${topsrc.dir}/extra166y"/>
-  <property name="jdksrc.dir"           location="/home/dl/1.6.0/j2se/martin/j2se/src/share/classes"/>
 
   <!-- Distribution locations -->
   <property name="dist.javadocs.dir"          location="${dist.dir}/jsr166.docs"/>

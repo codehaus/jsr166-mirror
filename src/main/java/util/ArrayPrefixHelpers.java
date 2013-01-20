@@ -187,7 +187,9 @@ class ArrayPrefixHelpers {
                         sum = t.in;
                     t.out = sum;
                     for (CumulateTask<T> par;;) {             // propagate
-                        if ((par = (CumulateTask<T>)t.getCompleter()) == null) {
+                        @SuppressWarnings("unchecked") CumulateTask<T> partmp
+                            = (CumulateTask<T>)t.getCompleter();
+                        if ((par = partmp) == null) {
                             if ((state & FINISHED) != 0)      // enable join
                                 t.quietlyComplete();
                             break outer;

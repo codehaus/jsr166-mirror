@@ -307,34 +307,45 @@
     <mkdir dir="${build.testcases.dir}"/>
 
     <javac srcdir="${tck.src.dir}"
-          destdir="${build.testcases.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
+           destdir="${build.testcases.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="6"
+           classpath="${junit.jar}"
+           bootclasspath="${product.jar}:${bootclasspath6}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac8}"
+           fork="true">
 
-      <compilerarg value="${bootclasspath.args}"/>
+      <include name="**/*.java"/>
       <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
 
       <classpath refid="test.classpath"/>
 
     </javac>
 
     <javac srcdir="${test.src.dir}"
-          destdir="${build.testcases.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
+           destdir="${build.testcases.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="6"
+           classpath="${junit.jar}"
+           bootclasspath="${product.jar}:${bootclasspath6}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac8}"
+           fork="true">
 
-      <include name="jsr166/test/**"/>
+      <include name="jsr166/test/**/*.java"/>
 
-      <compilerarg value="${bootclasspath.args}"/>
       <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
 
       <classpath refid="test.classpath"/>
 
@@ -374,9 +385,10 @@
           errorProperty="junit.failed"
         failureProperty="junit.failed"
                     dir="${build.reports.dir}"
+                    jvm="${java8}"
                    fork="true">
 
-      <jvmarg value="${bootclasspath.args}"/>
+      <jvmarg value="-Xbootclasspath/p:${product.jar}"/>
       <jvmarg value="-server"/>
       <jvmarg value="-showversion"/>
 

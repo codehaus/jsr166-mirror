@@ -49,7 +49,7 @@
 
   <property name="build.4jdk7.dir"             location="${build.dir}/jsr166-4jdk7"/>
   <property name="build.4jdk7.classes.dir"     location="${build.4jdk7.dir}/classes"/>
-  <property name="build.4jdk7.tck.classes.dir" location="${build.4jdk7.dir}/tck/classes"/>
+  <property name="build.4jdk7.tck.classes.dir" location="${build.4jdk7.dir}/tck-classes"/>
   <property name="build.4jdk7.docs.dir"        location="${build.4jdk7.dir}/docs"/>
 
   <property name="build.jsr166x.dir"           location="${build.dir}/jsr166x"/>

@@ -286,7 +286,7 @@ public class ScheduledThreadPoolExecutor
      * is shut down, rejects the task. Otherwise adds task to queue
      * and starts a thread, if necessary, to run it.  (We cannot
      * prestart the thread to run the task because the task (probably)
-     * shouldn't be run yet,) If the pool is shut down while the task
+     * shouldn't be run yet.)  If the pool is shut down while the task
      * is being added, cancel and remove it if required by state and
      * run-after-shutdown parameters.
      *

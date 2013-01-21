@@ -999,7 +999,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * 4. This worker timed out waiting for a task, and timed-out
      *    workers are subject to termination (that is,
      *    {@code allowCoreThreadTimeOut || workerCount > corePoolSize})
-     *    both before and after the timed wait.
+     *    both before and after the timed wait, and if the queue is
+     *    non-empty, this worker is not the last thread in the pool.
      *
      * @return task, or null if the worker must exit, in which case
      *         workerCount is decremented
@@ -1007,7 +1008,6 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private Runnable getTask() {
         boolean timedOut = false; // Did the last poll() time out?
 
-        retry:
         for (;;) {
             int c = ctl.get();
             int rs = runStateOf(c);
@@ -1018,20 +1018,16 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 return null;
             }
 
-            boolean timed;      // Are workers subject to culling?
+            int wc = workerCountOf(c);
 
-            for (;;) {
-                int wc = workerCountOf(c);
-                timed = allowCoreThreadTimeOut || wc > corePoolSize;
+            // Are workers subject to culling?
+            boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
 
-                if (wc <= maximumPoolSize && ! (timedOut && timed))
-                    break;
+            if ((wc > maximumPoolSize || (timed && timedOut))
+                && (wc > 1 || workQueue.isEmpty())) {
                 if (compareAndDecrementWorkerCount(c))
                     return null;
-                c = ctl.get();  // Re-read ctl
-                if (runStateOf(c) != rs)
-                    continue retry;
-                // else CAS failed due to workerCount change; retry inner loop
+                continue;
             }
 
             try {

@@ -145,7 +145,9 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Runs all JSR166 unit tests using junit.textui.TestRunner
+     * Runs all JSR166 unit tests using junit.textui.TestRunner.
+     * Optional command line arg provides the number of iterations to
+     * repeat running the tests.
      */
     public static void main(String[] args) {
         if (useSecurityManager) {

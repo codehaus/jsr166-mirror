@@ -161,14 +161,13 @@
            deprecation="${build.deprecation}"
            source="6"
            classpath="${junit.jar}"
+           bootclasspath="@{product.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac@{target}}"
            fork="true">
 
-      <include name="**/*.java"/>
-      <bootclasspath path="@{product.jar}"/>
-      <bootclasspath path="${bootclasspath6}"/>
+      <include name="JSR166TestCase.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
       <compilerarg line="${build.args}"/>
@@ -262,16 +261,15 @@
              packagenames="none"
              link="${jdkapi8docs.url}"
              overview="${src.dir}/intro.html"
+             sourcepath="${src.dir}:${jdk8src.dir}"
              classpath=""
              executable="${javadoc8}">
-      <sourcepath path="${src.dir}"/>
-      <sourcepath path="${jdk8src.dir}"/>
-      <arg value="-XDignore.symbol.file=true"/>
-      <arg value="-tag"/>
-      <arg value="${javadoc.jls.option}"/>
       <fileset dir="${src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
+      <arg value="-XDignore.symbol.file=true"/>
+      <arg value="-tag"/>
+      <arg value="${javadoc.jls.option}"/>
     </javadoc>
   </target>
 
@@ -338,14 +336,13 @@
            deprecation="${build.deprecation}"
            source="6"
            classpath="${junit.jar}"
+           bootclasspath="@{product.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac8}"
            fork="true">
 
       <include name="**/*.java"/>
-      <bootclasspath path="@{product.jar}"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
       <compilerarg line="${build.args}"/>
@@ -359,14 +356,13 @@
            deprecation="${build.deprecation}"
            source="6"
            classpath=""
+           bootclasspath="@{product.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac8}"
            fork="true">
 
       <include name="jsr166/test/**/*.java"/>
-      <bootclasspath path="${product.jar}"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
       <compilerarg line="${build.args}"/>
@@ -550,13 +546,13 @@
            deprecation="${build.deprecation}"
            source="6"
            classpath=""
+           bootclasspath="${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac7}"
            fork="true">
 
       <include name="**/*.java"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
       <compilerarg line="${build.args}"/>
@@ -653,14 +649,13 @@
              packagenames="none"
              link="${jdkapi7docs.url}"
              overview="${4jdk7src.dir}/intro.html"
+             sourcepath="${4jdk7src.dir}:${jdk7src.dir}"
              classpath=""
              executable="${javadoc7}">
-      <sourcepath path="${4jdk7src.dir}"/>
-      <sourcepath path="${jdk7src.dir}"/>
-      <arg value="-XDignore.symbol.file=true"/>
       <fileset dir="${4jdk7src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
+      <arg value="-XDignore.symbol.file=true"/>
     </javadoc>
   </target>
 
@@ -705,6 +700,7 @@
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
            classpath=""
+           bootclasspath="${bootclasspath6}"
            source="5"
            includeAntRuntime="false"
            includeJavaRuntime="false"
@@ -712,7 +708,6 @@
            fork="true">
 
       <include name="jsr166x/**/*.java"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes"/>
       <compilerarg line="${build.args}"/>
@@ -741,11 +736,10 @@
     <javadoc destdir="${dist.jsr166xjavadocs.dir}"
              packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             bootclasspath="${bootclasspath6}"
              source="5"
              executable="${javadoc7}">
-      <sourcepath path="${topsrc.dir}"/>
-      <sourcepath path="${jdk6src.dir}"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>
@@ -794,13 +788,13 @@
            deprecation="${build.deprecation}"
            source="6"
            classpath=""
+           bootclasspath="${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac7}"
            fork="true">
 
       <include name="jsr166y/**/*.java"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
       <compilerarg line="${build.args}"/>
@@ -829,11 +823,10 @@
     <javadoc destdir="${dist.jsr166yjavadocs.dir}"
              packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             bootclasspath="${bootclasspath6}"
              source="6"
              executable="${javadoc7}">
-      <sourcepath path="${topsrc.dir}"/>
-      <sourcepath path="${jdk6src.dir}"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>
@@ -880,6 +873,7 @@
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
+           bootclasspath="@{jsr166y.jar}:${bootclasspath6}"
            classpath=""
            source="6"
            includeAntRuntime="false"
@@ -888,8 +882,6 @@
            fork="true">
 
       <include name="extra166y/**/*.java"/>
-      <bootclasspath path="${jsr166y.jar}"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial"/>
       <compilerarg line="${build.args}"/>
@@ -918,11 +910,10 @@
     <javadoc destdir="${dist.extra166yjavadocs.dir}"
              packagenames="extra166y.*"
              link="${jdkapidocs.url}"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             bootclasspath="${bootclasspath6}"
              source="6"
              executable="${javadoc7}">
-      <sourcepath path="${topsrc.dir}"/>
-      <sourcepath path="${jdk6src.dir}"/>
-      <bootclasspath path="${bootclasspath6}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>
@@ -1003,10 +994,9 @@
     <javadoc destdir="${dist.jsr166ejavadocs.dir}"
              packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
+             sourcepath="${topsrc.dir}:${jdk7src.dir}"
              source="7"
              executable="${javadoc7}">
-      <sourcepath path="${topsrc.dir}"/>
-      <sourcepath path="${jdk7src.dir}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>

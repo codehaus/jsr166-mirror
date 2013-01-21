@@ -146,22 +146,24 @@
   </path>
 
   <macrodef name="run-tck-tests">
+    <attribute name="tck.src.dir" default="${tck.src.dir}"/>
+    <attribute name="source" default="6"/>
     <attribute name="target"/>
     <attribute name="workdir"/>
-    <attribute name="product.jar" default="${product.jar}"/>
+    <attribute name="classes"/>
     <attribute name="jvmflags" default=""/>
     <sequential>
 
     <mkdir dir="@{workdir}/tck-classes"/>
 
-    <javac srcdir="${tck.src.dir}"
+    <javac srcdir="@{tck.src.dir}"
            destdir="@{workdir}/tck-classes"
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
-           source="6"
+           source="@{source}"
            classpath="${junit.jar}"
-           bootclasspath="@{product.jar}:${bootclasspath6}"
+           bootclasspath="@{classes}:${bootclasspath@{source}}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac@{target}}"
@@ -178,7 +180,7 @@
           failonerror="true"
           jvm="${java@{target}}"
           fork="true">
-	<jvmarg value="-Xbootclasspath/p:@{product.jar}"/>
+	<jvmarg value="-Xbootclasspath/p:@{classes}"/>
 	<jvmarg line="@{jvmflags}"/>
 	<classpath>
 	  <pathelement location="${junit.jar}"/>
@@ -576,7 +578,7 @@
     <run-tck-tests
       target="7"
       workdir="${build.4jdk7.dir}"
-      product.jar="${4jdk7product.jar}"/>
+      classes="${4jdk7product.jar}"/>
   </target>
 
 
@@ -997,6 +999,19 @@
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>
+  </target>
+
+
+  <target name="jsr166e-test-tck"
+	  depends="jsr166e-jar"
+          description="Runs tck tests for jsr166e">
+
+    <run-tck-tests
+      tck.src.dir="${test.src.dir}/tck-jsr166e"
+      source="7"
+      target="8"
+      workdir="${build.jsr166e.dir}"
+      classes="${jsr166e.jar}"/>
   </target>
 
 

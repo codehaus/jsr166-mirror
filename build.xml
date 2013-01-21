@@ -195,10 +195,7 @@
   </path>
 
   <!-- Support @jls tag, used in jdk8+ javadoc -->
-  <!-- TODO: How do we get &trade to work? -->
-  <!-- TODO: Why isn't @jls a "standard" tag? -->
-  <!--   property name="javadoc.jls.cite" value="The Java&trade; Language Specification" -->
-  <property name="javadoc.jls.cite" value="The Java Language Specification"/>
+  <property name="javadoc.jls.cite" value="The Java&amp;trade; Language Specification"/>
   <property name="javadoc.jls.option" value="jls:a:See &lt;cite&gt;${javadoc.jls.cite}&lt;/cite&gt;:"/>
 
   <!-- Main targets -->

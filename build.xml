@@ -167,7 +167,7 @@
            executable="${javac@{target}}"
            fork="true">
 
-      <include name="JSR166TestCase.java"/>
+      <include name="*.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
       <compilerarg line="${build.args}"/>

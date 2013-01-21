@@ -3253,43 +3253,43 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public Map.Entry<K,V> ceilingEntry(K key) {
             return (SnapshotEntry<K,V>)
-                m.getNear(key, m.GT|m.EQ, least, fence, false);
+                m.getNear(key, GT|EQ, least, fence, false);
         }
 
         public K ceilingKey(K key) {
             return (K)
-                m.getNear(key, m.GT|m.EQ, least, fence, true);
+                m.getNear(key, GT|EQ, least, fence, true);
         }
 
         public Map.Entry<K,V> lowerEntry(K key) {
             return (SnapshotEntry<K,V>)
-                m.getNear(key, m.LT, least, fence, false);
+                m.getNear(key, LT, least, fence, false);
         }
 
         public K lowerKey(K key) {
             return (K)
-                m.getNear(key, m.LT, least, fence, true);
+                m.getNear(key, LT, least, fence, true);
         }
 
         public Map.Entry<K,V> floorEntry(K key) {
             return (SnapshotEntry<K,V>)
-                m.getNear(key, m.LT|m.EQ, least, fence, false);
+                m.getNear(key, LT|EQ, least, fence, false);
         }
 
         public K floorKey(K key) {
             return (K)
-                m.getNear(key, m.LT|m.EQ, least, fence, true);
+                m.getNear(key, LT|EQ, least, fence, true);
         }
 
 
         public Map.Entry<K,V> higherEntry(K key) {
             return (SnapshotEntry<K,V>)
-                m.getNear(key, m.GT, least, fence, false);
+                m.getNear(key, GT, least, fence, false);
         }
 
         public K higherKey(K key) {
             return (K)
-                m.getNear(key, m.GT, least, fence, true);
+                m.getNear(key, GT, least, fence, true);
         }
 
         public Map.Entry<K,V> firstEntry() {

@@ -448,6 +448,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T[] a) {
+        final int size = this.size;
         if (a.length < size)
             // Make a new array of a's runtime type, but my contents:
             return (T[]) Arrays.copyOf(queue, size, a.getClass());

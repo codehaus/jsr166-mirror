@@ -451,7 +451,9 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      *         this queue
      * @throws NullPointerException if the specified array is null
      */
+    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
+        final int size = this.size;
         if (a.length < size)
             // Make a new array of a's runtime type, but my contents:
             return (T[]) Arrays.copyOf(queue, size, a.getClass());
@@ -785,8 +787,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     // wrapping constructor in method avoids transient javac problems
     final PriorityQueueSpliterator<E> spliterator(int origin, int fence,
                                                   int expectedModCount) {
-        return new PriorityQueueSpliterator(this, origin, fence,
-                                            expectedModCount);
+        return new PriorityQueueSpliterator<E>(this, origin, fence,
+                                               expectedModCount);
     }
 
     public Stream<E> stream() {

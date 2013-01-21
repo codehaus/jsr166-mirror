@@ -512,6 +512,16 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * A debugging tool to print all stack traces, as jstack does.
+     */
+    void printAllStackTraces() {
+        System.err.println(
+            Arrays.toString(
+                java.lang.management.ManagementFactory.getThreadMXBean()
+                .dumpAllThreads(true, true)));
+    }
+
+    /**
      * Checks that thread does not terminate within the default
      * millisecond delay of {@code timeoutMillis()}.
      */

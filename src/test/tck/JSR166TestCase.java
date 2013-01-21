@@ -11,6 +11,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -514,11 +516,11 @@ public class JSR166TestCase extends TestCase {
     /**
      * A debugging tool to print all stack traces, as jstack does.
      */
-    void printAllStackTraces() {
-        System.err.println(
-            Arrays.toString(
-                java.lang.management.ManagementFactory.getThreadMXBean()
-                .dumpAllThreads(true, true)));
+    static void printAllStackTraces() {
+        for (ThreadInfo info :
+                 ManagementFactory.getThreadMXBean()
+                 .dumpAllThreads(true, true))
+            System.err.print(info);
     }
 
     /**

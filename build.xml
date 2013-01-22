@@ -106,12 +106,12 @@
   <property name="extra166ysrc.dir"     location="${topsrc.dir}/extra166y"/>
 
   <!-- Distribution locations -->
-  <property name="dist.javadocs.dir"          location="${dist.dir}/jsr166.docs"/>
-  <property name="dist.4jdk7.docs.dir"        location="${dist.dir}/jsr166-4jdk7.docs"/>
-  <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166x.docs"/>
-  <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166y.docs"/>
-  <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166e.docs"/>
-  <property name="dist.extra166yjavadocs.dir" location="${dist.dir}/extra166y.docs"/>
+  <property name="dist.javadocs.dir"          location="${dist.dir}/jsr166docs"/>
+  <property name="dist.4jdk7.docs.dir"        location="${dist.dir}/jsr166-4jdk7docs"/>
+  <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166xdocs"/>
+  <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166ydocs"/>
+  <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166edocs"/>
+  <property name="dist.extra166yjavadocs.dir" location="${dist.dir}/extra166ydocs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"      location="${build.dir}/jsr166.jar"/>

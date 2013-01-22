@@ -2647,8 +2647,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         try {
             for (Callable<T> t : tasks) {
                 ForkJoinTask<T> f = new ForkJoinTask.AdaptedCallable<T>(t);
-                externalPush(f);
                 futures.add(f);
+                externalPush(f);
             }
             for (int i = 0, size = futures.size(); i < size; i++)
                 ((ForkJoinTask<?>)futures.get(i)).quietlyJoin();

@@ -1352,7 +1352,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /** Index-based split-by-two Spliterator */
-    static final class COWSpliterator<E> implements Spliterator<E>, Iterator<E> {
+    static final class COWSpliterator<E> implements Spliterator<E> {
         private final Object[] array;
         private int index;        // current index, modified on advance/split
         private final int fence;  // one past last index
@@ -1394,18 +1394,6 @@ public class CopyOnWriteArrayList<E>
         public long estimateSize() { return (long)(fence - index); }
         public boolean hasExactSize() { return true; }
         public boolean hasExactSplits() { return true; }
-
-        // Iterator support
-        public Iterator<E> iterator() { return this; }
-        public void remove() { throw new UnsupportedOperationException(); }
-        public boolean hasNext() { return index >= 0 && index < fence; }
-
-        public E next() {
-            if (index < 0 || index >= fence)
-                throw new NoSuchElementException();
-            @SuppressWarnings("unchecked") E e = (E) array[index++];
-            return e;
-        }
     }
 
 

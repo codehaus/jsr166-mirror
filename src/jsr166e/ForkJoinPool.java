@@ -2685,27 +2685,23 @@ public class ForkJoinPool extends AbstractExecutorService {
         // In previous versions of this class, this method constructed
         // a task to run ForkJoinTask.invokeAll, but now external
         // invocation of multiple tasks is at least as efficient.
-        List<ForkJoinTask<T>> fs = new ArrayList<ForkJoinTask<T>>(tasks.size());
-        // Workaround needed because method wasn't declared with
-        // wildcards in return type but should have been.
-        @SuppressWarnings({"unchecked", "rawtypes"})
-            List<Future<T>> futures = (List<Future<T>>) (List) fs;
+        ArrayList<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
 
         boolean done = false;
         try {
             for (Callable<T> t : tasks) {
                 ForkJoinTask<T> f = new ForkJoinTask.AdaptedCallable<T>(t);
                 externalPush(f);
-                fs.add(f);
+                futures.add(f);
             }
-            for (ForkJoinTask<T> f : fs)
-                f.quietlyJoin();
+            for (int i = 0, size = futures.size(); i < size; i++)
+                ((ForkJoinTask<?>)futures.get(i)).quietlyJoin();
             done = true;
             return futures;
         } finally {
             if (!done)
-                for (ForkJoinTask<T> f : fs)
-                    f.cancel(false);
+                for (int i = 0, size = futures.size(); i < size; i++)
+                    futures.get(i).cancel(false);
         }
     }
 

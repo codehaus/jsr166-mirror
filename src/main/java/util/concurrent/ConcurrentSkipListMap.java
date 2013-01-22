@@ -2567,7 +2567,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     static final <E> List<E> toList(Collection<E> c) {
         // Using size() here would be a pessimization.
-        List<E> list = new ArrayList<E>();
+        ArrayList<E> list = new ArrayList<E>();
         for (E e : c)
             list.add(e);
         return list;

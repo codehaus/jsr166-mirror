@@ -115,7 +115,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         int ntasks = tasks.size();
         if (ntasks == 0)
             throw new IllegalArgumentException();
-        List<Future<T>> futures = new ArrayList<Future<T>>(ntasks);
+        ArrayList<Future<T>> futures = new ArrayList<Future<T>>(ntasks);
         ExecutorCompletionService<T> ecs =
             new ExecutorCompletionService<T>(this);
 
@@ -173,8 +173,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             throw ee;
 
         } finally {
-            for (Future<T> f : futures)
-                f.cancel(true);
+            for (int i = 0, size = futures.size(); i < size; i++)
+                futures.get(i).cancel(true);
         }
     }
 
@@ -198,7 +198,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         throws InterruptedException {
         if (tasks == null)
             throw new NullPointerException();
-        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
+        ArrayList<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
         boolean done = false;
         try {
             for (Callable<T> t : tasks) {
@@ -206,7 +206,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
                 futures.add(f);
                 execute(f);
             }
-            for (Future<T> f : futures) {
+            for (int i = 0, size = futures.size(); i < size; i++) {
+                Future<T> f = futures.get(i);
                 if (!f.isDone()) {
                     try {
                         f.get();
@@ -219,8 +220,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!done)
-                for (Future<T> f : futures)
-                    f.cancel(true);
+                for (int i = 0, size = futures.size(); i < size; i++)
+                    futures.get(i).cancel(true);
         }
     }
 
@@ -230,25 +231,26 @@ public abstract class AbstractExecutorService implements ExecutorService {
         if (tasks == null)
             throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
-        List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
+        ArrayList<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
         boolean done = false;
         try {
             for (Callable<T> t : tasks)
                 futures.add(newTaskFor(t));
 
             final long deadline = System.nanoTime() + nanos;
+            final int size = futures.size();
 
             // Interleave time checks and calls to execute in case
             // executor doesn't have any/much parallelism.
-            Iterator<Future<T>> it = futures.iterator();
-            while (it.hasNext()) {
-                execute((Runnable)(it.next()));
+            for (int i = 0; i < size; i++) {
+                execute((Runnable)futures.get(i));
                 nanos = deadline - System.nanoTime();
                 if (nanos <= 0L)
                     return futures;
             }
 
-            for (Future<T> f : futures) {
+            for (int i = 0; i < size; i++) {
+                Future<T> f = futures.get(i);
                 if (!f.isDone()) {
                     if (nanos <= 0L)
                         return futures;
@@ -266,8 +268,8 @@ public abstract class AbstractExecutorService implements ExecutorService {
             return futures;
         } finally {
             if (!done)
-                for (Future<T> f : futures)
-                    f.cancel(true);
+                for (int i = 0, size = futures.size(); i < size; i++)
+                    futures.get(i).cancel(true);
         }
     }
 

@@ -927,7 +927,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Adds given index nodes from given level down to 1.
      * @param idx the topmost index node being inserted
      * @param h the value of head to use to insert. This must be
-     * snapshotted by callers to provide correct insertion level
+     * snapshotted by callers to provide correct insertion level.
      * @param indexLevel the level of the index
      */
     @SuppressWarnings("unchecked")
@@ -948,9 +948,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 if (r != null) {
                     Node<K,V> n = r.node;
                     // compare before deletion check avoids needing recheck
-                    int c = (cmp == null?
-                             ((Comparable<? super K>)key).compareTo(n.key) :
-                             cmp.compare(key, n.key));
+                    int c = (cmp == null) ?
+                        ((Comparable<? super K>)key).compareTo(n.key) :
+                        cmp.compare(key, n.key);
                     if (n.value == null) {
                         if (!q.unlink(r))
                             break;
@@ -2174,7 +2174,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             throw new NullPointerException();
         Comparator<? super K> cmp = comparator;
         for (;;) {
-            Node<K,V> n = (cmp == null)? findNode((Comparable<? super K>)key) :
+            Node<K,V> n = (cmp == null) ?
+                findNode((Comparable<? super K>)key) :
                 findNodeCmp(cmp, key);
             if (n == null)
                 return false;
@@ -2202,7 +2203,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             throw new NullPointerException();
         Comparator<? super K> cmp = comparator;
         for (;;) {
-            Node<K,V> n = (cmp == null)? findNode((Comparable<? super K>)key) :
+            Node<K,V> n = (cmp == null) ?
+                findNode((Comparable<? super K>)key) :
                 findNodeCmp(cmp, key);
             if (n == null)
                 return null;

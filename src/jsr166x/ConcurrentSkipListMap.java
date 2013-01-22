@@ -1042,7 +1042,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Adds given index nodes from given level down to 1.
      * @param idx the topmost index node being inserted
      * @param h the value of head to use to insert. This must be
-     * snapshotted by callers to provide correct insertion level
+     * snapshotted by callers to provide correct insertion level.
      * @param indexLevel the level of the index
      */
     private void addIndex(Index<K,V> idx, HeadIndex<K,V> h, int indexLevel) {

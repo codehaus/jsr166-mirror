@@ -328,8 +328,11 @@ public class ThreadLocalRandom extends Random {
             r ^= r >>> 17;
             r ^= r << 5;
         }
-        else if ((r = (int)UNSAFE.getLong(t, SEED)) == 0)
-            r = 1; // avoid zero
+        else {
+            localInit();
+            if ((r = (int)UNSAFE.getLong(t, SEED)) == 0)
+                r = 1; // avoid zero
+        }
         UNSAFE.putInt(t, SECONDARY, r);
         return r;
     }

@@ -705,7 +705,7 @@ public class MapCheck {
 
     static void shuffle(Object[] keys) {
         int size = keys.length;
-        for (int i= size; i>1; i--) {
+        for (int i = size; i > 1; i--) {
             int r = rng.nextInt(i);
             Object t = keys[i-1];
             keys[i-1] = keys[r];
@@ -715,7 +715,7 @@ public class MapCheck {
 
     static void shuffle(ArrayList keys) {
         int size = keys.size();
-        for (int i= size; i>1; i--) {
+        for (int i = size; i > 1; i--) {
             int r = rng.nextInt(i);
             Object t = keys.get(i-1);
             keys.set(i-1, keys.get(r));

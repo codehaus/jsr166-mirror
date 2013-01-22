@@ -383,7 +383,7 @@ public class MapMicroBenchmark {
 
     // plain array shuffle
     static void shuffle(Object[] a, int size) {
-        for (int i= size; i>1; i--) {
+        for (int i = size; i > 1; i--) {
             Object t = a[i-1];
             int r = rng.nextInt(i);
             a[i-1] = a[r];

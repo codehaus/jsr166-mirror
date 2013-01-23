@@ -862,7 +862,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Pugh's "Skip List Cookbook", sec 3.4).
      */
     private int randomLevel() {
-        int x = ThreadLocalRandom.nextSecondarySeed();
+        //        int x = ThreadLocalRandom.nextSecondarySeed();
+        int x = ThreadLocalRandom.current().nextInt();
         int level = 0;
         if ((x & 0x80000001) == 0) { // test highest and lowest bits
             do { ++level; }

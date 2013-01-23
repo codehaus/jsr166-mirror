@@ -582,7 +582,7 @@
   </target>
 
 
-  <target name="4jdk7-jar"
+  <target name="4jdk7jar"
           depends="4jdk7compile"
           description="Builds library jar from compiled sources">
 
@@ -594,7 +594,7 @@
 
 
   <target name="4jdk7-test-tck"
-	  depends="4jdk7-jar"
+	  depends="4jdk7jar"
           description="Runs tck tests for jsr166-4jdk7 directly">
 
     <run-tck-tests
@@ -700,7 +700,7 @@
   </target>
 
   <target name="4jdk7dist-jar"
-          depends="4jdk7clean, 4jdk7-jar">
+          depends="4jdk7clean, 4jdk7jar">
     <copy file="${4jdk7product.jar}" todir="${dist.dir}"/>
   </target>
 
@@ -741,7 +741,7 @@
   </target>
 
 
-  <target name="jsr166x-jar"
+  <target name="jsr166xjar"
           depends="jsr166xcompile"
           description="Builds library jar from compiled sources">
 
@@ -791,7 +791,7 @@
 
 
   <target name="jsr166xdist-jar"
-          depends="jsr166xclean, jsr166x-jar">
+          depends="jsr166xclean, jsr166xjar">
     <copy file="${jsr166x.jar}" todir="${dist.dir}"/>
   </target>
 
@@ -831,7 +831,7 @@
   </target>
 
 
-  <target name="jsr166y-jar"
+  <target name="jsr166yjar"
           depends="jsr166ycompile"
           description="Builds library jar from compiled sources">
 
@@ -880,7 +880,7 @@
   </target>
 
   <target name="jsr166ydist-jar"
-          depends="jsr166yclean, jsr166y-jar">
+          depends="jsr166yclean, jsr166yjar">
     <copy file="${jsr166y.jar}" todir="${dist.dir}"/>
   </target>
 
@@ -894,7 +894,7 @@
 
 
   <target name="extra166ycompile"
-          depends="configure-compiler, jsr166y-jar"
+          depends="configure-compiler, jsr166yjar"
           description="Compiles extra166y sources">
 
     <mkdir dir="${build.extra166y.classes.dir}"/>
@@ -921,7 +921,7 @@
   </target>
 
 
-  <target name="extra166y-jar"
+  <target name="extra166yjar"
           depends="extra166ycompile"
           description="Builds library jar from compiled sources">
 
@@ -970,7 +970,7 @@
   </target>
 
   <target name="extra166ydist-jar"
-          depends="extra166yclean, extra166y-jar">
+          depends="extra166yclean, extra166yjar">
     <copy file="${extra166y.jar}" todir="${dist.dir}"/>
   </target>
 
@@ -1008,7 +1008,7 @@
   </target>
 
 
-  <target name="jsr166e-jar"
+  <target name="jsr166ejar"
           depends="jsr166ecompile"
           description="Builds library jar from compiled sources">
 
@@ -1038,7 +1038,7 @@
 
 
   <target name="jsr166e-test-tck"
-	  depends="jsr166e-jar"
+	  depends="jsr166ejar"
           description="Runs tck tests for jsr166e">
 
     <run-tck-tests
@@ -1067,7 +1067,7 @@
   </target>
 
   <target name="jsr166edist-jar"
-          depends="jsr166eclean, jsr166e-jar">
+          depends="jsr166eclean, jsr166ejar">
     <copy file="${jsr166e.jar}" todir="${dist.dir}"/>
   </target>
 

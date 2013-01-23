@@ -86,6 +86,18 @@
     </sequential>
   </macrodef>
 
+  <macrodef name="mirror-dir">
+    <attribute name="src"/>
+    <attribute name="dst"/>
+    <sequential>
+    <delete dir="@{dst}"/>
+    <mkdir dir="@{dst}"/>
+    <copy todir="@{dst}" preservelastmodified="true">
+      <fileset dir="@{src}"/>
+    </copy>
+    </sequential>
+  </macrodef>
+
   <defjdklocations v="6"/>
   <defjdklocations v="7"/>
   <defjdklocations v="8"/>
@@ -105,9 +117,16 @@
   <property name="jsr166esrc.dir"       location="${topsrc.dir}/jsr166e"/>
   <property name="extra166ysrc.dir"     location="${topsrc.dir}/extra166y"/>
 
-  <!-- Distribution locations -->
-  <property name="dist.javadocs.dir"          location="${dist.dir}/jsr166docs"/>
-  <property name="dist.4jdk7.docs.dir"        location="${dist.dir}/jsr166-4jdk7docs"/>
+  <!-- Javadoc locations -->
+  <property name="javadocs.dir"          location="${build.dir}/javadocs"/>
+  <property name="4jdk7javadocs.dir"     location="${build.4jdk7.dir}/javadocs"/>
+  <property name="jsr166xjavadocs.dir"   location="${build.jsr166x.dir}/javadocs"/>
+  <property name="jsr166yjavadocs.dir"   location="${build.jsr166y.dir}/javadocs"/>
+  <property name="jsr166ejavadocs.dir"   location="${build.jsr166e.dir}/javadocs"/>
+  <property name="extra166yjavadocs.dir" location="${build.extra166y.dir}/javadocs"/>
+
+  <property name="dist.javadocs.dir"          location="${dist.dir}/docs"/>
+  <property name="dist.4jdk7javadocs.dir"     location="${dist.dir}/jsr166-4jdk7docs"/>
   <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166xdocs"/>
   <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166ydocs"/>
   <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166edocs"/>
@@ -250,13 +269,13 @@
   <target name="docs"
           description="Builds javadocs for src/main to dist dir">
 
-    <delete dir="${dist.javadocs.dir}"/>
-    <mkdir dir="${dist.javadocs.dir}"/>
+    <delete dir="${javadocs.dir}"/>
+    <mkdir dir="${javadocs.dir}"/>
 
     <!-- the packagenames="none" hack below prevents scanning the -->
     <!-- sourcepath for packages -->
 
-    <javadoc destdir="${dist.javadocs.dir}"
+    <javadoc destdir="${javadocs.dir}"
              packagenames="none"
              link="${jdkapi8docs.url}"
              overview="${src.dir}/intro.html"
@@ -274,7 +293,7 @@
 
 
   <target name="dist"
-          depends="dist-clean, dist-jar, docs"
+          depends="dist-clean, dist-jar, dist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -317,9 +336,12 @@
 
   <target name="dist-jar"
           depends="clean, jar">
-
     <copy file="${product.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="dist-docs"
+          depends="clean, docs">
+    <mirror-dir src="${javadocs.dir}" dst="${dist.javadocs.dir}"/>
   </target>
 
 
@@ -641,10 +663,10 @@
   <target name="4jdk7docs"
           description="Builds javadocs for src/jdk7 to dist dir">
 
-    <delete dir="${dist.4jdk7.docs.dir}"/>
-    <mkdir dir="${dist.4jdk7.docs.dir}"/>
+    <delete dir="${4jdk7javadocs.dir}"/>
+    <mkdir dir="${4jdk7javadocs.dir}"/>
 
-    <javadoc destdir="${dist.4jdk7.docs.dir}"
+    <javadoc destdir="${4jdk7javadocs.dir}"
              packagenames="none"
              link="${jdkapi7docs.url}"
              overview="${4jdk7src.dir}/intro.html"
@@ -660,7 +682,7 @@
 
 
   <target name="4jdk7dist"
-          depends="4jdk7dist-clean, 4jdk7dist-jar, 4jdk7docs"
+          depends="4jdk7dist-jar, 4jdk7dist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -679,9 +701,13 @@
 
   <target name="4jdk7dist-jar"
           depends="4jdk7clean, 4jdk7-jar">
-
     <copy file="${4jdk7product.jar}" todir="${dist.dir}"/>
+  </target>
 
+
+  <target name="4jdk7dist-docs"
+          depends="4jdk7clean, 4jdk7docs">
+    <mirror-dir src="${4jdk7javadocs.dir}" dst="${dist.4jdk7javadocs.dir}"/>
   </target>
 
 
@@ -729,10 +755,10 @@
   <target name="jsr166xdocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${dist.jsr166xjavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
+    <delete dir="${jsr166xjavadocs.dir}"/>
+    <mkdir dir="${jsr166xjavadocs.dir}"/>
 
-    <javadoc destdir="${dist.jsr166xjavadocs.dir}"
+    <javadoc destdir="${jsr166xjavadocs.dir}"
              packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
@@ -746,7 +772,7 @@
 
 
   <target name="jsr166xdist"
-          depends="jsr166xdist-clean, jsr166xdist-jar, jsr166xdocs"
+          depends="jsr166xdist-jar, jsr166xdist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -766,9 +792,12 @@
 
   <target name="jsr166xdist-jar"
           depends="jsr166xclean, jsr166x-jar">
-
     <copy file="${jsr166x.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="jsr166xdist-docs"
+          depends="jsr166xclean, jsr166xdocs">
+    <mirror-dir src="${jsr166xjavadocs.dir}" dst="${dist.jsr166xjavadocs.dir}"/>
   </target>
 
   <!-- jsr166y -->
@@ -816,10 +845,10 @@
   <target name="jsr166ydocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${dist.jsr166yjavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
+    <delete dir="${jsr166yjavadocs.dir}"/>
+    <mkdir dir="${jsr166yjavadocs.dir}"/>
 
-    <javadoc destdir="${dist.jsr166yjavadocs.dir}"
+    <javadoc destdir="${jsr166yjavadocs.dir}"
              packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
@@ -833,7 +862,7 @@
 
 
   <target name="jsr166ydist"
-          depends="jsr166ydist-clean, jsr166ydist-jar, jsr166ydocs"
+          depends="jsr166ydist-jar, jsr166ydist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -852,9 +881,12 @@
 
   <target name="jsr166ydist-jar"
           depends="jsr166yclean, jsr166y-jar">
-
     <copy file="${jsr166y.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="jsr166ydist-docs"
+          depends="jsr166yclean, jsr166ydocs">
+    <mirror-dir src="${jsr166yjavadocs.dir}" dst="${dist.jsr166yjavadocs.dir}"/>
   </target>
 
 
@@ -903,10 +935,10 @@
   <target name="extra166ydocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${dist.extra166yjavadocs.dir}"/>
-    <mkdir dir="${dist.extra166yjavadocs.dir}"/>
+    <delete dir="${extra166yjavadocs.dir}"/>
+    <mkdir dir="${extra166yjavadocs.dir}"/>
 
-    <javadoc destdir="${dist.extra166yjavadocs.dir}"
+    <javadoc destdir="${extra166yjavadocs.dir}"
              packagenames="extra166y.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
@@ -920,7 +952,7 @@
 
 
   <target name="extra166ydist"
-          depends="extra166ydist-clean, extra166ydist-jar, extra166ydocs"
+          depends="extra166ydist-jar, extra166ydist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -939,9 +971,12 @@
 
   <target name="extra166ydist-jar"
           depends="extra166yclean, extra166y-jar">
-
     <copy file="${extra166y.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="extra166ydist-docs"
+          depends="extra166yclean, extra166ydocs">
+    <mirror-dir src="${extra166yjavadocs.dir}" dst="${dist.extra166yjavadocs.dir}"/>
   </target>
 
   <!-- jsr166e -->
@@ -987,10 +1022,10 @@
   <target name="jsr166edocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${dist.jsr166ejavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166ejavadocs.dir}"/>
+    <delete dir="${jsr166ejavadocs.dir}"/>
+    <mkdir dir="${jsr166ejavadocs.dir}"/>
 
-    <javadoc destdir="${dist.jsr166ejavadocs.dir}"
+    <javadoc destdir="${jsr166ejavadocs.dir}"
              packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk7src.dir}"
@@ -1016,15 +1051,13 @@
 
 
   <target name="jsr166edist"
-          depends="jsr166edist-clean, jsr166edist-jar, jsr166edocs"
+          depends="jsr166edist-jar, jsr166edist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
   <target name="jsr166eclean"
           description="Removes all jsr166e build products">
-
     <delete dir="${build.jsr166e.dir}"/>
-
   </target>
 
 
@@ -1035,9 +1068,12 @@
 
   <target name="jsr166edist-jar"
           depends="jsr166eclean, jsr166e-jar">
-
     <copy file="${jsr166e.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="jsr166edist-docs"
+          depends="jsr166eclean, jsr166edocs">
+    <mirror-dir src="${jsr166ejavadocs.dir}" dst="${dist.jsr166ejavadocs.dir}"/>
   </target>
 
 </project>

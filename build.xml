@@ -118,19 +118,19 @@
   <property name="extra166ysrc.dir"     location="${topsrc.dir}/extra166y"/>
 
   <!-- Javadoc locations -->
-  <property name="javadocs.dir"          location="${build.dir}/javadocs"/>
-  <property name="4jdk7javadocs.dir"     location="${build.4jdk7.dir}/javadocs"/>
-  <property name="jsr166xjavadocs.dir"   location="${build.jsr166x.dir}/javadocs"/>
-  <property name="jsr166yjavadocs.dir"   location="${build.jsr166y.dir}/javadocs"/>
-  <property name="jsr166ejavadocs.dir"   location="${build.jsr166e.dir}/javadocs"/>
-  <property name="extra166yjavadocs.dir" location="${build.extra166y.dir}/javadocs"/>
+  <property name="docs.dir"          location="${build.dir}/docs"/>
+  <property name="4jdk7docs.dir"     location="${build.4jdk7.dir}/docs"/>
+  <property name="jsr166xdocs.dir"   location="${build.jsr166x.dir}/docs"/>
+  <property name="jsr166ydocs.dir"   location="${build.jsr166y.dir}/docs"/>
+  <property name="jsr166edocs.dir"   location="${build.jsr166e.dir}/docs"/>
+  <property name="extra166ydocs.dir" location="${build.extra166y.dir}/docs"/>
 
-  <property name="dist.javadocs.dir"          location="${dist.dir}/docs"/>
-  <property name="dist.4jdk7javadocs.dir"     location="${dist.dir}/jsr166-4jdk7docs"/>
-  <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166xdocs"/>
-  <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166ydocs"/>
-  <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166edocs"/>
-  <property name="dist.extra166yjavadocs.dir" location="${dist.dir}/extra166ydocs"/>
+  <property name="dist.docs.dir"          location="${dist.dir}/docs"/>
+  <property name="dist.4jdk7docs.dir"     location="${dist.dir}/jsr166-4jdk7docs"/>
+  <property name="dist.jsr166xdocs.dir"   location="${dist.dir}/jsr166xdocs"/>
+  <property name="dist.jsr166ydocs.dir"   location="${dist.dir}/jsr166ydocs"/>
+  <property name="dist.jsr166edocs.dir"   location="${dist.dir}/jsr166edocs"/>
+  <property name="dist.extra166ydocs.dir" location="${dist.dir}/extra166ydocs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"      location="${build.dir}/jsr166.jar"/>
@@ -269,13 +269,13 @@
   <target name="docs"
           description="Builds javadocs for src/main to dist dir">
 
-    <delete dir="${javadocs.dir}"/>
-    <mkdir dir="${javadocs.dir}"/>
+    <delete dir="${docs.dir}"/>
+    <mkdir dir="${docs.dir}"/>
 
     <!-- the packagenames="none" hack below prevents scanning the -->
     <!-- sourcepath for packages -->
 
-    <javadoc destdir="${javadocs.dir}"
+    <javadoc destdir="${docs.dir}"
              packagenames="none"
              link="${jdkapi8docs.url}"
              overview="${src.dir}/intro.html"
@@ -341,7 +341,7 @@
 
   <target name="dist-docs"
           depends="clean, docs">
-    <mirror-dir src="${javadocs.dir}" dst="${dist.javadocs.dir}"/>
+    <mirror-dir src="${docs.dir}" dst="${dist.docs.dir}"/>
   </target>
 
 
@@ -663,10 +663,10 @@
   <target name="4jdk7docs"
           description="Builds javadocs for src/jdk7 to dist dir">
 
-    <delete dir="${4jdk7javadocs.dir}"/>
-    <mkdir dir="${4jdk7javadocs.dir}"/>
+    <delete dir="${4jdk7docs.dir}"/>
+    <mkdir dir="${4jdk7docs.dir}"/>
 
-    <javadoc destdir="${4jdk7javadocs.dir}"
+    <javadoc destdir="${4jdk7docs.dir}"
              packagenames="none"
              link="${jdkapi7docs.url}"
              overview="${4jdk7src.dir}/intro.html"
@@ -707,7 +707,7 @@
 
   <target name="4jdk7dist-docs"
           depends="4jdk7clean, 4jdk7docs">
-    <mirror-dir src="${4jdk7javadocs.dir}" dst="${dist.4jdk7javadocs.dir}"/>
+    <mirror-dir src="${4jdk7docs.dir}" dst="${dist.4jdk7docs.dir}"/>
   </target>
 
 
@@ -755,10 +755,10 @@
   <target name="jsr166xdocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${jsr166xjavadocs.dir}"/>
-    <mkdir dir="${jsr166xjavadocs.dir}"/>
+    <delete dir="${jsr166xdocs.dir}"/>
+    <mkdir dir="${jsr166xdocs.dir}"/>
 
-    <javadoc destdir="${jsr166xjavadocs.dir}"
+    <javadoc destdir="${jsr166xdocs.dir}"
              packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
@@ -797,7 +797,7 @@
 
   <target name="jsr166xdist-docs"
           depends="jsr166xclean, jsr166xdocs">
-    <mirror-dir src="${jsr166xjavadocs.dir}" dst="${dist.jsr166xjavadocs.dir}"/>
+    <mirror-dir src="${jsr166xdocs.dir}" dst="${dist.jsr166xdocs.dir}"/>
   </target>
 
   <!-- jsr166y -->
@@ -845,10 +845,10 @@
   <target name="jsr166ydocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${jsr166yjavadocs.dir}"/>
-    <mkdir dir="${jsr166yjavadocs.dir}"/>
+    <delete dir="${jsr166ydocs.dir}"/>
+    <mkdir dir="${jsr166ydocs.dir}"/>
 
-    <javadoc destdir="${jsr166yjavadocs.dir}"
+    <javadoc destdir="${jsr166ydocs.dir}"
              packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
@@ -886,7 +886,7 @@
 
   <target name="jsr166ydist-docs"
           depends="jsr166yclean, jsr166ydocs">
-    <mirror-dir src="${jsr166yjavadocs.dir}" dst="${dist.jsr166yjavadocs.dir}"/>
+    <mirror-dir src="${jsr166ydocs.dir}" dst="${dist.jsr166ydocs.dir}"/>
   </target>
 
 
@@ -935,10 +935,10 @@
   <target name="extra166ydocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${extra166yjavadocs.dir}"/>
-    <mkdir dir="${extra166yjavadocs.dir}"/>
+    <delete dir="${extra166ydocs.dir}"/>
+    <mkdir dir="${extra166ydocs.dir}"/>
 
-    <javadoc destdir="${extra166yjavadocs.dir}"
+    <javadoc destdir="${extra166ydocs.dir}"
              packagenames="extra166y.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
@@ -976,7 +976,7 @@
 
   <target name="extra166ydist-docs"
           depends="extra166yclean, extra166ydocs">
-    <mirror-dir src="${extra166yjavadocs.dir}" dst="${dist.extra166yjavadocs.dir}"/>
+    <mirror-dir src="${extra166ydocs.dir}" dst="${dist.extra166ydocs.dir}"/>
   </target>
 
   <!-- jsr166e -->
@@ -1022,10 +1022,10 @@
   <target name="jsr166edocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${jsr166ejavadocs.dir}"/>
-    <mkdir dir="${jsr166ejavadocs.dir}"/>
+    <delete dir="${jsr166edocs.dir}"/>
+    <mkdir dir="${jsr166edocs.dir}"/>
 
-    <javadoc destdir="${jsr166ejavadocs.dir}"
+    <javadoc destdir="${jsr166edocs.dir}"
              packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
              sourcepath="${topsrc.dir}:${jdk7src.dir}"
@@ -1073,7 +1073,7 @@
 
   <target name="jsr166edist-docs"
           depends="jsr166eclean, jsr166edocs">
-    <mirror-dir src="${jsr166ejavadocs.dir}" dst="${dist.jsr166ejavadocs.dir}"/>
+    <mirror-dir src="${jsr166edocs.dir}" dst="${dist.jsr166edocs.dir}"/>
   </target>
 
 </project>

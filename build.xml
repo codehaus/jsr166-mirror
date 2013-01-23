@@ -57,10 +57,10 @@
   <property name="build.jsr166e.dir"           location="${build.dir}/jsr166e"/>
   <property name="build.extra166y.dir"         location="${build.dir}/extra166y"/>
 
-  <property name="build.jsr166x.classes.dir"    location="${build.jsr166x.dir}/classes"/>
-  <property name="build.jsr166y.classes.dir"    location="${build.jsr166y.dir}/classes"/>
-  <property name="build.jsr166e.classes.dir"    location="${build.jsr166e.dir}/classes"/>
-  <property name="build.extra166y.classes.dir"  location="${build.extra166y.dir}/classes"/>
+  <property name="build.jsr166x.classes.dir"   location="${build.jsr166x.dir}/classes"/>
+  <property name="build.jsr166y.classes.dir"   location="${build.jsr166y.dir}/classes"/>
+  <property name="build.jsr166e.classes.dir"   location="${build.jsr166e.dir}/classes"/>
+  <property name="build.extra166y.classes.dir" location="${build.extra166y.dir}/classes"/>
 
   <!-- JDK locations -->
   <property name="jdks.home"  location="${user.home}/jdk"/>

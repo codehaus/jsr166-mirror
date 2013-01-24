@@ -1031,12 +1031,11 @@ public class StampedLock implements java.io.Serializable {
                     return cancelWaiter(node, null, false);
                 node.thread = Thread.currentThread();
                 if (node.prev == p && p.status == WAITING && // recheck
-                    (p != whead || (state & ABITS) != 0L)) {
+                    (p != whead || (state & ABITS) != 0L))
                     U.park(false, time);
-                    if (interruptible && Thread.interrupted())
-                        return cancelWaiter(node, null, true);
-                }
                 node.thread = null;
+                if (interruptible && Thread.interrupted())
+                    return cancelWaiter(node, null, true);
             }
         }
     }
@@ -1099,6 +1098,8 @@ public class StampedLock implements java.io.Serializable {
                                            node.cowait = p.cowait, node)) {
                     node.thread = Thread.currentThread();
                     for (long time;;) {
+                        if (interruptible && Thread.interrupted())
+                            return cancelWaiter(node, p, true);
                         if (deadline == 0L)
                             time = 0L;
                         else if ((time = deadline - System.nanoTime()) <= 0L)
@@ -1113,8 +1114,6 @@ public class StampedLock implements java.io.Serializable {
                         if (node.thread == null) // must recheck
                             break;
                         U.park(false, time);
-                        if (interruptible && Thread.interrupted())
-                            return cancelWaiter(node, p, true);
                     }
                     group = p;
                 }
@@ -1172,12 +1171,11 @@ public class StampedLock implements java.io.Serializable {
                     return cancelWaiter(node, null, false);
                 node.thread = Thread.currentThread();
                 if (node.prev == p && p.status == WAITING &&
-                    (p != whead || (state & ABITS) != WBIT)) {
+                    (p != whead || (state & ABITS) != WBIT))
                     U.park(false, time);
-                    if (interruptible && Thread.interrupted())
-                        return cancelWaiter(node, null, true);
-                }
                 node.thread = null;
+                if (interruptible && Thread.interrupted())
+                    return cancelWaiter(node, null, true);
             }
         }
     }

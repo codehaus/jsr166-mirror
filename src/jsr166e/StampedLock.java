@@ -1033,12 +1033,11 @@ public class StampedLock implements java.io.Serializable {
                     return cancelWaiter(node, null, false);
                 node.thread = Thread.currentThread();
                 if (node.prev == p && p.status == WAITING && // recheck
-                    (p != whead || (state & ABITS) != 0L)) {
+                    (p != whead || (state & ABITS) != 0L))
                     U.park(false, time);
-                    if (interruptible && Thread.interrupted())
-                        return cancelWaiter(node, null, true);
-                }
                 node.thread = null;
+                if (interruptible && Thread.interrupted())
+                    return cancelWaiter(node, null, true);
             }
         }
     }
@@ -1101,6 +1100,8 @@ public class StampedLock implements java.io.Serializable {
                                            node.cowait = p.cowait, node)) {
                     node.thread = Thread.currentThread();
                     for (long time;;) {
+                        if (interruptible && Thread.interrupted())
+                            return cancelWaiter(node, p, true);
                         if (deadline == 0L)
                             time = 0L;
                         else if ((time = deadline - System.nanoTime()) <= 0L)
@@ -1115,8 +1116,6 @@ public class StampedLock implements java.io.Serializable {
                         if (node.thread == null) // must recheck
                             break;
                         U.park(false, time);
-                        if (interruptible && Thread.interrupted())
-                            return cancelWaiter(node, p, true);
                     }
                     group = p;
                 }
@@ -1174,98 +1173,12 @@ public class StampedLock implements java.io.Serializable {
                     return cancelWaiter(node, null, false);
                 node.thread = Thread.currentThread();
                 if (node.prev == p && p.status == WAITING &&
-                    (p != whead || (state & ABITS) != WBIT)) {
+                    (p != whead || (state & ABITS) != WBIT))
                     U.park(false, time);
-                    if (interruptible && Thread.interrupted())
-                        return cancelWaiter(node, null, true);
-                }
                 node.thread = null;
+                if (interruptible && Thread.interrupted())
+                    return cancelWaiter(node, null, true);
             }
-        }
-    }
-
-    /**
-     * If node non-null, forces cancel status and unsplices from queue
-     * if possible. This is a variant of cancellation methods in
-     * AbstractQueuedSynchronizer (see its detailed explanation in AQS
-     * internal documentation) that more conservatively wakes up other
-     * threads that may have had their links changed, so as to preserve
-     * liveness in the main signalling methods.
-     */
-    private long cancelWaiter(WNode node, WNode group, boolean interrupted) {
-        if (node != null) {
-            node.thread = null;
-            node.status = CANCELLED;
-            if (group != null) {
-                for (WNode p = group, q; p != null; p = q) {
-                    if ((q = p.cowait) != null && q.status == CANCELLED) {
-                        U.compareAndSwapObject(p, WCOWAIT, q, q.cowait);
-                        break;
-                    }
-                }
-            }
-            else {
-                for (WNode pred = node.prev; pred != null; ) {
-                    WNode succ, pp; Thread w;
-                    while ((succ = node.next) == null ||
-                           succ.status == CANCELLED) {
-                        WNode q = null;
-                        for (WNode t = wtail; t != null && t != node; t = t.prev)
-                            if (t.status != CANCELLED)
-                                q = t;
-                        if (succ == q ||
-                            U.compareAndSwapObject(node, WNEXT,
-                                                   succ, succ = q)) {
-                            if (succ == null && node == wtail)
-                                U.compareAndSwapObject(this, WTAIL, node, pred);
-                            break;
-                        }
-                    }
-                    if (pred.next == node)
-                        U.compareAndSwapObject(pred, WNEXT, node, succ);
-                    if (succ != null && (w = succ.thread) != null)
-                        U.unpark(w);
-                    if (pred.status != CANCELLED || (pp = pred.prev) == null)
-                        break;
-                    node.prev = pp; // repeat for new pred
-                    U.compareAndSwapObject(pp, WNEXT, pred, succ);
-                    pred = pp;
-                }
-            }
-        }
-        release(whead);
-        return (interrupted || Thread.interrupted()) ? INTERRUPTED : 0L;
-    }
-
-    // Unsafe mechanics
-    private static final sun.misc.Unsafe U;
-    private static final long STATE;
-    private static final long WHEAD;
-    private static final long WTAIL;
-    private static final long WNEXT;
-    private static final long WSTATUS;
-    private static final long WCOWAIT;
-
-    static {
-        try {
-            U = getUnsafe();
-            Class<?> k = StampedLock.class;
-            Class<?> wk = WNode.class;
-            STATE = U.objectFieldOffset
-                (k.getDeclaredField("state"));
-            WHEAD = U.objectFieldOffset
-                (k.getDeclaredField("whead"));
-            WTAIL = U.objectFieldOffset
-                (k.getDeclaredField("wtail"));
-            WSTATUS = U.objectFieldOffset
-                (wk.getDeclaredField("status"));
-            WNEXT = U.objectFieldOffset
-                (wk.getDeclaredField("next"));
-            WCOWAIT = U.objectFieldOffset
-                (wk.getDeclaredField("cowait"));
-
-        } catch (Exception e) {
-            throw new Error(e);
         }
     }
 

@@ -232,7 +232,7 @@ public class StampedLock implements java.io.Serializable {
      *
      * Nearly all of these mechanics are carried out in methods
      * acquireWrite and acquireRead, that, as typical of such code,
-     * sprawl out because actions and retries rely on consitent sets
+     * sprawl out because actions and retries rely on consistent sets
      * of locally cached reads.
      *
      * As noted in Boehm's paper (above), sequence validation (mainly
@@ -329,7 +329,7 @@ public class StampedLock implements java.io.Serializable {
      * @return a stamp that can be used to unlock or convert mode
      */
     public long writeLock() {
-        long s, next;  // bypass acquireWrite in fully onlocked case only
+        long s, next;  // bypass acquireWrite in fully unlocked case only
         return ((((s = state) & ABITS) == 0L &&
                  U.compareAndSwapLong(this, STATE, s, next = s + WBIT)) ?
                 next : acquireWrite(false, 0L));
@@ -401,7 +401,7 @@ public class StampedLock implements java.io.Serializable {
      * @return a stamp that can be used to unlock or convert mode
      */
     public long readLock() {
-        long s, next;  // bypass acquireRead on fully onlocked case only
+        long s, next;  // bypass acquireRead on fully unlocked case only
         return ((((s = state) & ABITS) == 0L &&
                  U.compareAndSwapLong(this, STATE, s, next = s + RUNIT)) ?
                 next : acquireRead(false, 0L));

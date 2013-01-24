@@ -239,7 +239,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *
      * Indexing uses skip list parameters that maintain good search
      * performance while using sparser-than-usual indices: The
-     * hardwired parameters k=1, p=0.5 (see method randomLevel) mean
+     * hardwired parameters k=1, p=0.5 (see method addIndex) mean
      * that about one-quarter of the nodes have indices. Of those that
      * do, half have one level, a quarter have two, and so on (see
      * Pugh's Skip List Cookbook, sec 3.4).  The expected total space
@@ -276,6 +276,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * finishes out the base-level search. Even with this factoring,
      * there is a fair amount of near-duplication of code to handle
      * variants.
+     *
+     * To produce random values without interference across threads,
+     * we use within-JDK thread local random support (via the
+     * "secondary seed", to avoid interference with user-level
+     * ThreadLocalRandom.)
      *
      * A previous version of this class wrapped non-comparable keys
      * with their comparators to emulate Comparables when using
@@ -316,12 +321,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
 
     private static final long serialVersionUID = -8627078645895051609L;
-
-    /**
-     * Generates the initial random seed for the cheaper per-instance
-     * random number generators used in randomLevel.
-     */
-    private static final Random seedGenerator = new Random();
 
     /**
      * Special value used to identify base-level header
@@ -848,150 +847,105 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 Node<K,V> z = new Node<K,V>(kkey, value, n);
                 if (!b.casNext(n, z))
                     break;         // restart if lost race to append to b
-                int level = randomLevel();
-                if (level > 0)
-                    insertIndex(z, level);
+                addIndex(kkey, z);
                 return null;
             }
         }
     }
 
     /**
-     * Returns a random level for inserting a new node.
-     * Hardwired to k=1, p=0.5, max 31 (see above and
-     * Pugh's "Skip List Cookbook", sec 3.4).
+     * Adds zero or more index nodes for the given key and node.
+     * Shared by plain and Cmp versions of put
      */
-    private int randomLevel() {
-        //        int x = ThreadLocalRandom.nextSecondarySeed();
-        int x = ThreadLocalRandom.current().nextInt();
-        int level = 0;
-        if ((x & 0x80000001) == 0) { // test highest and lowest bits
-            do { ++level; }
-            while (((x >>>= 1) & 1) != 0);
-        }
-        return level;
-    }
-
-    /**
-     * Creates and adds index nodes for the given node.
-     * @param z the node
-     * @param level the level of the index
-     */
-    private void insertIndex(Node<K,V> z, int level) {
-        HeadIndex<K,V> h = head;
-        int max = h.level;
-
-        if (level <= max) {
+    private void addIndex(K key, Node<K,V> z) {
+        if (key == null || z == null) // don't postpone errors
+            throw new NullPointerException();
+        int rnd; // generate a random level
+        Thread thread = Thread.currentThread();
+        if ((rnd = UNSAFE.getInt(thread, SECONDARY)) == 0)  // initialize
+            rnd = ThreadLocalRandom.current().nextInt();
+        rnd ^= rnd << 13;   // xorshift
+        rnd ^= rnd >>> 17;
+        rnd ^= rnd << 5;
+        UNSAFE.putInt(thread, SECONDARY, rnd);
+        if ((rnd & 0x80000001) == 0) { // test highest and lowest bits
+            int level = 1, max;
+            while (((rnd >>>= 1) & 1) != 0)
+                ++level;
             Index<K,V> idx = null;
-            for (int i = 1; i <= level; ++i)
-                idx = new Index<K,V>(z, idx, null);
-            addIndex(idx, h, level);
-
-        } else { // Add a new level
-            /*
-             * To reduce interference by other threads checking for
-             * empty levels in tryReduceLevel, new levels are added
-             * with initialized right pointers. Which in turn requires
-             * keeping levels in an array to access them while
-             * creating new head index nodes from the opposite
-             * direction.
-             */
-            level = max + 1;
-            Index<K,V>[] idxs = (Index<K,V>[])new Index<?,?>[level+1];
-            Index<K,V> idx = null;
-            for (int i = 1; i <= level; ++i)
-                idxs[i] = idx = new Index<K,V>(z, idx, null);
-
-            HeadIndex<K,V> oldh;
-            int k;
-            for (;;) {
-                oldh = head;
-                int oldLevel = oldh.level;
-                if (level <= oldLevel) { // lost race to add level
-                    k = level;
-                    break;
-                }
-                HeadIndex<K,V> newh = oldh;
-                Node<K,V> oldbase = oldh.node;
-                for (int j = oldLevel+1; j <= level; ++j)
-                    newh = new HeadIndex<K,V>(oldbase, newh, idxs[j], j);
-                if (casHead(oldh, newh)) {
-                    k = oldLevel;
-                    break;
+            HeadIndex<K,V> h = head;
+            if (level <= (max = h.level)) {
+                for (int i = 1; i <= level; ++i)
+                    idx = new Index<K,V>(z, idx, null);
+            }
+            else { // try to grow by one level
+                level = max + 1; // hold in array and later pick the one to use
+                Index<K,V>[] idxs = (Index<K,V>[])new Index<?,?>[level+1];
+                for (int i = 1; i <= level; ++i)
+                    idxs[i] = idx = new Index<K,V>(z, idx, null);
+                for (;;) {
+                    h = head;
+                    int oldLevel = h.level;
+                    if (level <= oldLevel) // lost race to add level
+                        break;
+                    HeadIndex<K,V> newh = h;
+                    Node<K,V> oldbase = h.node;
+                    for (int j = oldLevel+1; j <= level; ++j)
+                        newh = new HeadIndex<K,V>(oldbase, newh, idxs[j], j);
+                    if (casHead(h, newh)) {
+                        h = newh;
+                        idx = idxs[level = oldLevel];
+                        break;
+                    }
                 }
             }
-            addIndex(idxs[k], oldh, k);
-        }
-    }
-
-    /**
-     * Adds given index nodes from given level down to 1.
-     * @param idx the topmost index node being inserted
-     * @param h the value of head to use to insert. This must be
-     * snapshotted by callers to provide correct insertion level.
-     * @param indexLevel the level of the index
-     */
-    @SuppressWarnings("unchecked")
-    private void addIndex(Index<K,V> idx, HeadIndex<K,V> h, int indexLevel) {
-        // Track next level to insert in case of retries
-        int insertionLevel = indexLevel;
-        K key = idx.node.key;
-        if (key == null) throw new NullPointerException();
-        Comparator<? super K> cmp = comparator;
-        // Similar to findPredecessor, but adding index nodes along
-        // path to key.
-        for (;;) {
-            int j = h.level;
-            Index<K,V> q = h;
-            Index<K,V> r = q.right;
-            Index<K,V> t = idx;
-            for (;;) {
-                if (r != null) {
-                    Node<K,V> n = r.node;
-                    // compare before deletion check avoids needing recheck
-                    int c = (cmp == null) ?
-                        ((Comparable<? super K>)key).compareTo(n.key) :
-                        cmp.compare(key, n.key);
-                    if (n.value == null) {
-                        if (!q.unlink(r))
-                            break;
-                        r = q.right;
-                        continue;
-                    }
-                    if (c > 0) {
-                        q = r;
-                        r = r.right;
-                        continue;
-                    }
-                }
-
-                if (j == insertionLevel) {
-                    // Don't insert index if node already deleted
-                    if (t.indexesDeletedNode()) {
-                        if (cmp == null)
-                            findNode((Comparable<? super K>)key); // cleans up
-                        else
-                            findNodeCmp(cmp, key);
+            Comparator<? super K> cmp = comparator;
+            for (int insertionLevel = level;;) { // find insertion points; splice
+                int j = h.level;
+                Index<K,V> q = h;
+                Index<K,V> r = q.right;
+                Index<K,V> t = idx;
+                for (;;) {
+                    if (q == null || t == null)
                         return;
+                    if (r != null) {
+                        Node<K,V> n = r.node;
+                        // compare before deletion check avoids needing recheck
+                        int c = (cmp == null) ?
+                            ((Comparable<? super K>)key).compareTo(n.key) :
+                            cmp.compare(key, n.key);
+                        if (n.value == null) {
+                            if (!q.unlink(r))
+                                break;
+                            r = q.right;
+                            continue;
+                        }
+                        if (c > 0) {
+                            q = r;
+                            r = r.right;
+                            continue;
+                        }
                     }
-                    if (!q.link(r, t))
-                        break; // restart
-                    if (--insertionLevel == 0) {
-                        // need final deletion check before return
-                        if (t.indexesDeletedNode()) {
-                            if (cmp == null)
+
+                    if (j == insertionLevel) {
+                        if (!q.link(r, t))
+                            break; // restart
+                        if (t.node.value == null) {
+                            if (cmp == null) // node deleted; clean up
                                 findNode((Comparable<? super K>)key);
                             else
                                 findNodeCmp(cmp, key);
+                            return;
                         }
-                        return;
+                        if (--insertionLevel == 0)
+                            return;
                     }
-                }
 
-                if (--j >= insertionLevel && j < indexLevel)
-                    t = t.down;
-                q = q.down;
-                r = q.right;
+                    if (--j >= insertionLevel && j < level)
+                        t = t.down;
+                    q = q.down;
+                    r = q.right;
+                }
             }
         }
     }
@@ -1474,9 +1428,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 Node<K,V> z = new Node<K,V>(key, value, n);
                 if (!b.casNext(n, z))
                     break;         // restart if lost race to append to b
-                int level = randomLevel();
-                if (level > 0)
-                    insertIndex(z, level);
+                addIndex(key, z);
                 return null;
             }
         }
@@ -1713,8 +1665,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             map.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<? extends K, ? extends V> e = it.next();
-            int j = randomLevel();
-            if (j > h.level) j = h.level + 1;
+            int rnd = ThreadLocalRandom.current().nextInt();
+            int j = 0;
+            if ((rnd & 0x80000001) == 0) {
+                do {
+                    ++j;
+                } while (((rnd >>>= 1) & 1) != 0);
+                if (j > h.level) j = h.level + 1;
+            }
             K k = e.getKey();
             V v = e.getValue();
             if (k == null || v == null)
@@ -1805,8 +1763,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 throw new NullPointerException();
             K key = (K) k;
             V val = (V) v;
-            int j = randomLevel();
-            if (j > h.level) j = h.level + 1;
+            int rnd = ThreadLocalRandom.current().nextInt();
+            int j = 0;
+            if ((rnd & 0x80000001) == 0) {
+                do {
+                    ++j;
+                } while (((rnd >>>= 1) & 1) != 0);
+                if (j > h.level) j = h.level + 1;
+            }
             Node<K,V> z = new Node<K,V>(key, val, null);
             basepred.next = z;
             basepred = z;
@@ -3616,6 +3580,27 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         Node<K,V> current; // current traversal node; initialize at origin
         int est;           // pseudo-size estimate
 
+        CSLMSpliterator(ConcurrentSkipListMap<K,V> m) {
+            HeadIndex<K,V> h; Node<K,V> p; int d, n; Index<K,V> hd;
+            this.comparator = m.comparator;
+            this.fence = null;
+            for (;;) { // ensure h and n correspond to origin p
+                Node<K,V> b = (h = m.head).node;
+                if ((p = b.next) == null) {
+                    n = 0;
+                    break;
+                }
+                if (p.value != null) {
+                    n = (d = h.level << 1) >= 31 ? Integer.MAX_VALUE : 1 << d;
+                    break;
+                }
+                p.helpDelete(b, p.next);
+            }
+            this.est = n;
+            this.current = p;
+            this.row = (h.right == null && (hd = h.down) != null) ? hd : h;
+        }
+
         CSLMSpliterator(Comparator<? super K> comparator, Index<K,V> row,
                         Node<K,V> origin, K fence, int est) {
             this.comparator = comparator; this.row = row;
@@ -3634,64 +3619,28 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public final long estimateSize() { return (long)est; }
-        public final boolean hasExactSize() { return est == 0; }
+        public final boolean hasExactSize() {
+            return est == 0 && current == null; // true only if empty
+        }
         public final boolean hasExactSplits() { return false; }
     }
 
     // factory methods
     final KeySpliterator<K,V> keySpliterator() {
-        HeadIndex<K,V> h; Node<K,V> p; int d, n;
-        for (;;) { // ensure h and n correspond to origin p
-            Node<K,V> b = (h = head).node;
-            if ((p = b.next) == null) {
-                n = 0;
-                break;
-            }
-            if (p.value != null) {
-                n = (d = h.level << 1) >= 31 ? Integer.MAX_VALUE : 1 << d;
-                break;
-            }
-            p.helpDelete(b, p.next);
-        }
-        return new KeySpliterator<K,V>(comparator, h, p, null, n);
+        return new KeySpliterator<K,V>(this);
     }
 
     final ValueSpliterator<K,V> valueSpliterator() {
-        HeadIndex<K,V> h; Node<K,V> p; int d, n;
-        for (;;) { // same as key version
-            Node<K,V> b = (h = head).node;
-            if ((p = b.next) == null) {
-                n = 0;
-                break;
-            }
-            if (p.value != null) {
-                n = (d = h.level << 1) >= 31 ? Integer.MAX_VALUE : 1 << d;
-                break;
-            }
-            p.helpDelete(b, p.next);
-        }
-        return new ValueSpliterator<K,V>(comparator, h, p, null, n);
+        return new ValueSpliterator<K,V>(this);
     }
 
     final EntrySpliterator<K,V> entrySpliterator() {
-        HeadIndex<K,V> h; Node<K,V> p; int d, n;
-        for (;;) { // same as key version
-            Node<K,V> b = (h = head).node;
-            if ((p = b.next) == null) {
-                n = 0;
-                break;
-            }
-            if (p.value != null) {
-                n = (d = h.level << 1) >= 31 ? Integer.MAX_VALUE : 1 << d;
-                break;
-            }
-            p.helpDelete(b, p.next);
-        }
-        return new EntrySpliterator<K,V>(comparator, head, p, null, n);
+        return new EntrySpliterator<K,V>(this);
     }
 
     static final class KeySpliterator<K,V> extends CSLMSpliterator<K,V>
         implements Spliterator<K> {
+        KeySpliterator(ConcurrentSkipListMap<K,V> m) { super(m); }
         KeySpliterator(Comparator<? super K> comparator, Index<K,V> row,
                        Node<K,V> origin, K fence, int est) {
             super(comparator, row, origin, fence, est);
@@ -3768,6 +3717,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     static final class ValueSpliterator<K,V> extends CSLMSpliterator<K,V>
         implements Spliterator<V> {
+        ValueSpliterator(ConcurrentSkipListMap<K,V> m) { super(m); }
         ValueSpliterator(Comparator<? super K> comparator, Index<K,V> row,
                        Node<K,V> origin, K fence, int est) {
             super(comparator, row, origin, fence, est);
@@ -3845,6 +3795,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     static final class EntrySpliterator<K,V> extends CSLMSpliterator<K,V>
         implements Spliterator<Map.Entry<K,V>> {
+        EntrySpliterator(ConcurrentSkipListMap<K,V> m) { super(m); }
         EntrySpliterator(Comparator<? super K> comparator, Index<K,V> row,
                          Node<K,V> origin, K fence, int est) {
             super(comparator, row, origin, fence, est);
@@ -3926,12 +3877,17 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     // Unsafe mechanics
     private static final sun.misc.Unsafe UNSAFE;
     private static final long headOffset;
+    private static final long SECONDARY;
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
             Class<?> k = ConcurrentSkipListMap.class;
             headOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("head"));
+            Class<?> tk = Thread.class;
+            SECONDARY = UNSAFE.objectFieldOffset
+                (tk.getDeclaredField("threadLocalRandomSecondarySeed"));
+
         } catch (Exception e) {
             throw new Error(e);
         }

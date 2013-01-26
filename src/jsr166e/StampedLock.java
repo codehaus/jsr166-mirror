@@ -253,6 +253,7 @@ public class StampedLock implements java.io.Serializable {
      * motivation to further spread out contended locations, but might
      * be subject to future improvements.
      */
+
     private static final long serialVersionUID = -6001602636862214147L;
 
     /** Number of processors, for spin control */
@@ -443,11 +444,17 @@ public class StampedLock implements java.io.Serializable {
      */
     public long tryReadLock(long time, TimeUnit unit)
         throws InterruptedException {
-        long next, deadline;
+        long s, m, next, deadline;
         long nanos = unit.toNanos(time);
         if (!Thread.interrupted()) {
-            if ((next = tryReadLock()) != 0L)
-                return next;
+            if ((m = (s = state) & ABITS) != WBIT) {
+                if (m < RFULL) {
+                    if (U.compareAndSwapLong(this, STATE, s, next = s + RUNIT))
+                        return next;
+                }
+                else if ((next = tryIncReaderOverflow(s)) != 0L)
+                    return next;
+            }
             if (nanos <= 0L)
                 return 0L;
             if ((deadline = System.nanoTime() + nanos) == 0L)
@@ -1033,14 +1040,14 @@ public class StampedLock implements java.io.Serializable {
                 if (deadline == 0L)
                     time = 0L;
                 else if ((time = deadline - System.nanoTime()) <= 0L)
-                    return cancelWaiter(node, null, false);
+                    return cancelWaiter(node, node, false);
                 node.thread = Thread.currentThread();
                 if (node.prev == p && p.status == WAITING && // recheck
                     (p != whead || (state & ABITS) != 0L))
                     U.park(false, time);
                 node.thread = null;
                 if (interruptible && Thread.interrupted())
-                    return cancelWaiter(node, null, true);
+                    return cancelWaiter(node, node, true);
             }
         }
     }
@@ -1173,59 +1180,64 @@ public class StampedLock implements java.io.Serializable {
                 if (deadline == 0L)
                     time = 0L;
                 else if ((time = deadline - System.nanoTime()) <= 0L)
-                    return cancelWaiter(node, null, false);
+                    return cancelWaiter(node, node, false);
                 node.thread = Thread.currentThread();
                 if (node.prev == p && p.status == WAITING &&
                     (p != whead || (state & ABITS) != WBIT))
                     U.park(false, time);
                 node.thread = null;
                 if (interruptible && Thread.interrupted())
-                    return cancelWaiter(node, null, true);
+                    return cancelWaiter(node, node, true);
             }
         }
     }
 
     /**
      * If node non-null, forces cancel status and unsplices it from
-     * queue if possible and wakes up any cowaiters. This is a variant
-     * of cancellation methods in AbstractQueuedSynchronizer (see its
-     * detailed explanation in AQS internal documentation) that more
-     * conservatively wakes up other threads that may have had their
-     * links changed, so as to preserve liveness in the main
-     * signalling methods.
+     * queue if possible and wakes up any cowaiters (of the node, or
+     * group, as applicable), and in any case helps release current
+     * first waiter if lock is free. (Calling with null arguments
+     * serves as a conditional form of release, which is not currently
+     * needed but may be needed under possible future cancellation
+     * policies). This is a variant of cancellation methods in
+     * AbstractQueuedSynchronizer (see its detailed explanation in AQS
+     * internal documentation).
      *
      * @param node if nonnull, the waiter
-     * @param group, if nonnull, the group current thread is cowaiting with
+     * @param group, either node or the group node is cowaiting with
      * @param interrupted if already interrupted
      * @return INTERRUPTED if interrupted or Thread.interrupted, else zero
      */
     private long cancelWaiter(WNode node, WNode group, boolean interrupted) {
-        if (node != null) {
-            node.thread = null;
+        if (node != null && group != null) {
+            Thread w;
             node.status = CANCELLED;
-            Thread w; // wake up co-waiters; unsplice cancelled ones
-            for (WNode q, p = (group != null) ? group : node; p != null; ) {
-                if ((q = p.cowait) == null)
-                    break;
-                if ((w = q.thread) != null) {
-                    q.thread = null;
-                    U.unpark(w);
-                }
+            node.thread = null;
+            // unsplice cancelled nodes from group
+            for (WNode p = group, q; (q = p.cowait) != null;) {
                 if (q.status == CANCELLED)
-                    U.compareAndSwapObject(p, WCOWAIT, q, q.cowait);
+                    U.compareAndSwapObject(p, WNEXT, q, q.next);
                 else
                     p = q;
             }
-            if (group == null)  {        // unsplice both prev and next links
-                for (WNode pred = node.prev; pred != null; ) {
-                    WNode succ, pp;      // first unsplice next
+            if (group == node) {
+                WNode r; // detach and wake up uncancelled co-waiters
+                while ((r = node.cowait) != null) {
+                    if (U.compareAndSwapObject(node, WCOWAIT, r, r.cowait) &&
+                        (w = r.thread) != null) {
+                        r.thread = null;
+                        U.unpark(w);
+                    }
+                }
+                for (WNode pred = node.prev; pred != null; ) { // unsplice
+                    WNode succ, pp;        // find valid successor
                     while ((succ = node.next) == null ||
                            succ.status == CANCELLED) {
-                        WNode q = null;  // find successor the slow way
+                        WNode q = null;    // find successor the slow way
                         for (WNode t = wtail; t != null && t != node; t = t.prev)
                             if (t.status != CANCELLED)
-                                q = t;   // don't link if succ cancelled
-                        if (succ == q || // ensure accurate successor
+                                q = t;     // don't link if succ cancelled
+                        if (succ == q ||   // ensure accurate successor
                             U.compareAndSwapObject(node, WNEXT,
                                                    succ, succ = q)) {
                             if (succ == null && node == wtail)
@@ -1237,17 +1249,32 @@ public class StampedLock implements java.io.Serializable {
                         U.compareAndSwapObject(pred, WNEXT, node, succ);
                     if (succ != null && (w = succ.thread) != null) {
                         succ.thread = null;
-                        U.unpark(w);      // conservatively wake up new succ
+                        U.unpark(w);       // wake up succ to observe new pred
                     }
                     if (pred.status != CANCELLED || (pp = pred.prev) == null)
                         break;
-                    node.prev = pp; // repeat in case new pred wrong/cancelled
+                    node.prev = pp;        // repeat if new pred wrong/cancelled
                     U.compareAndSwapObject(pp, WNEXT, pred, succ);
                     pred = pp;
                 }
             }
         }
-        release(whead);
+        WNode h; // Possibly release first waiter
+        while ((h = whead) != null) {
+            long s; WNode q; // similar to release() but check eligibility
+            if ((q = h.next) == null || q.status == CANCELLED) {
+                for (WNode t = wtail; t != null && t != h; t = t.prev)
+                    if (t.status <= 0)
+                        q = t;
+            }
+            if (h == whead) {
+                if (q != null && h.status == 0 &&
+                    ((s = state) & ABITS) != WBIT && // waiter is eligible
+                    (s == 0L || q.mode == RMODE))
+                    release(h);
+                break;
+            }
+        }
         return (interrupted || Thread.interrupted()) ? INTERRUPTED : 0L;
     }
 

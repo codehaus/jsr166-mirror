@@ -40,19 +40,20 @@ import java.util.concurrent.locks.LockSupport;
  *  <li><b>Optimistic Reading.</b> Method {@link #tryOptimisticRead}
  *   returns a non-zero stamp only if the lock is not currently held
  *   in write mode. Method {@link #validate} returns true if the lock
- *   has not since been acquired in write mode. This mode can be
- *   thought of as an extremely weak version of a read-lock, that can
- *   be broken by a writer at any time.  The use of optimistic mode
- *   for short read-only code segments often reduces contention and
- *   improves throughput.  However, its use is inherently fragile.
- *   Optimistic read sections should only read fields and hold them in
- *   local variables for later use after validation. Fields read while
- *   in optimistic mode may be wildly inconsistent, so usage applies
- *   only when you are familiar enough with data representations to
- *   check consistency and/or repeatedly invoke method {@code
- *   validate()}.  For example, such steps are typically required when
- *   first reading an object or array reference, and then accessing
- *   one of its fields, elements or methods. </li>
+ *   has not been acquired in write mode since obtaining a given
+ *   stamp.  This mode can be thought of as an extremely weak version
+ *   of a read-lock, that can be broken by a writer at any time.  The
+ *   use of optimistic mode for short read-only code segments often
+ *   reduces contention and improves throughput.  However, its use is
+ *   inherently fragile.  Optimistic read sections should only read
+ *   fields and hold them in local variables for later use after
+ *   validation. Fields read while in optimistic mode may be wildly
+ *   inconsistent, so usage applies only when you are familiar enough
+ *   with data representations to check consistency and/or repeatedly
+ *   invoke method {@code validate()}.  For example, such steps are
+ *   typically required when first reading an object or array
+ *   reference, and then accessing one of its fields, elements or
+ *   methods. </li>
  *
  * </ul>
  *
@@ -490,7 +491,9 @@ public class StampedLock implements java.io.Serializable {
      * Returns true if the lock has not been exclusively acquired
      * since issuance of the given stamp. Always returns false if the
      * stamp is zero. Always returns true if the stamp represents a
-     * currently held lock.
+     * currently held lock. Invoking this method with a value not
+     * obtained from {@link #tryOptimisticRead} or a locking method
+     * for this lock has no defined effect or result.
      *
      * @return true if the lock has not been exclusively acquired
      * since issuance of the given stamp; else false
@@ -1179,6 +1182,104 @@ public class StampedLock implements java.io.Serializable {
                 if (interruptible && Thread.interrupted())
                     return cancelWaiter(node, null, true);
             }
+        }
+    }
+
+    /**
+     * If node non-null, forces cancel status and unsplices it from
+     * queue if possible and wakes up any cowaiters. This is a variant
+     * of cancellation methods in AbstractQueuedSynchronizer (see its
+     * detailed explanation in AQS internal documentation) that more
+     * conservatively wakes up other threads that may have had their
+     * links changed, so as to preserve liveness in the main
+     * signalling methods.
+     *
+     * @param node if nonnull, the waiter
+     * @param group, if nonnull, the group current thread is cowaiting with
+     * @param interrupted if already interrupted
+     * @return INTERRUPTED if interrupted or Thread.interrupted, else zero
+     */
+    private long cancelWaiter(WNode node, WNode group, boolean interrupted) {
+        if (node != null) {
+            node.thread = null;
+            node.status = CANCELLED;
+            Thread w; // wake up co-waiters; unsplice cancelled ones
+            for (WNode q, p = (group != null) ? group : node; p != null; ) {
+                if ((q = p.cowait) == null)
+                    break;
+                if ((w = q.thread) != null) {
+                    q.thread = null;
+                    U.unpark(w);
+                }
+                if (q.status == CANCELLED)
+                    U.compareAndSwapObject(p, WCOWAIT, q, q.cowait);
+                else
+                    p = q;
+            }
+            if (group == null)  {        // unsplice both prev and next links
+                for (WNode pred = node.prev; pred != null; ) {
+                    WNode succ, pp;      // first unsplice next
+                    while ((succ = node.next) == null ||
+                           succ.status == CANCELLED) {
+                        WNode q = null;  // find successor the slow way
+                        for (WNode t = wtail; t != null && t != node; t = t.prev)
+                            if (t.status != CANCELLED)
+                                q = t;   // don't link if succ cancelled
+                        if (succ == q || // ensure accurate successor
+                            U.compareAndSwapObject(node, WNEXT,
+                                                   succ, succ = q)) {
+                            if (succ == null && node == wtail)
+                                U.compareAndSwapObject(this, WTAIL, node, pred);
+                            break;
+                        }
+                    }
+                    if (pred.next == node) // unsplice pred link
+                        U.compareAndSwapObject(pred, WNEXT, node, succ);
+                    if (succ != null && (w = succ.thread) != null) {
+                        succ.thread = null;
+                        U.unpark(w);      // conservatively wake up new succ
+                    }
+                    if (pred.status != CANCELLED || (pp = pred.prev) == null)
+                        break;
+                    node.prev = pp; // repeat in case new pred wrong/cancelled
+                    U.compareAndSwapObject(pp, WNEXT, pred, succ);
+                    pred = pp;
+                }
+            }
+        }
+        release(whead);
+        return (interrupted || Thread.interrupted()) ? INTERRUPTED : 0L;
+    }
+
+    // Unsafe mechanics
+    private static final sun.misc.Unsafe U;
+    private static final long STATE;
+    private static final long WHEAD;
+    private static final long WTAIL;
+    private static final long WNEXT;
+    private static final long WSTATUS;
+    private static final long WCOWAIT;
+
+    static {
+        try {
+            U = getUnsafe();
+            Class<?> k = StampedLock.class;
+            Class<?> wk = WNode.class;
+            STATE = U.objectFieldOffset
+                (k.getDeclaredField("state"));
+            WHEAD = U.objectFieldOffset
+                (k.getDeclaredField("whead"));
+            WTAIL = U.objectFieldOffset
+                (k.getDeclaredField("wtail"));
+            WSTATUS = U.objectFieldOffset
+                (wk.getDeclaredField("status"));
+            WNEXT = U.objectFieldOffset
+                (wk.getDeclaredField("next"));
+            WCOWAIT = U.objectFieldOffset
+                (wk.getDeclaredField("cowait"));
+
+        } catch (Exception e) {
+            throw new Error(e);
         }
     }
 

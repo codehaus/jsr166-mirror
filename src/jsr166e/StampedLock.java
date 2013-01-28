@@ -896,10 +896,11 @@ public class StampedLock implements java.io.Serializable {
      * access bits value to RBITS, indicating hold of spinlock,
      * then updating, then releasing.
      *
-     * @param s, assumed that (s & ABITS) >= RFULL
+     * @param s a reader overflow stamp: (s & ABITS) >= RFULL
      * @return new stamp on success, else zero
      */
     private long tryIncReaderOverflow(long s) {
+        // assert (s & ABITS) >= RFULL
         if ((s & ABITS) == RFULL) {
             if (U.compareAndSwapLong(this, STATE, s, s | RBITS)) {
                 ++readerOverflow;
@@ -916,10 +917,11 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Tries to decrement readerOverflow.
      *
-     * @param s, assumed that (s & ABITS) >= RFULL
+     * @param s a reader overflow stamp: (s & ABITS) >= RFULL
      * @return new stamp on success, else zero
      */
     private long tryDecReaderOverflow(long s) {
+        // assert (s & ABITS) >= RFULL
         if ((s & ABITS) == RFULL) {
             if (U.compareAndSwapLong(this, STATE, s, s | RBITS)) {
                 int r; long next;
@@ -1204,7 +1206,7 @@ public class StampedLock implements java.io.Serializable {
      * internal documentation).
      *
      * @param node if nonnull, the waiter
-     * @param group, either node or the group node is cowaiting with
+     * @param group either node or the group node is cowaiting with
      * @param interrupted if already interrupted
      * @return INTERRUPTED if interrupted or Thread.interrupted, else zero
      */

@@ -688,7 +688,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * shared-queue version is embedded in method externalPush.)
          *
          * @param task the task. Caller must ensure non-null.
-         * @throw RejectedExecutionException if array cannot be resized
+         * @throws RejectedExecutionException if array cannot be resized
          */
         final void push(ForkJoinTask<?> task) {
             ForkJoinTask<?>[] a; ForkJoinPool p;

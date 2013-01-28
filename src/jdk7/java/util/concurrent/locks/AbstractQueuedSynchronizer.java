@@ -1660,8 +1660,7 @@ public abstract class AbstractQueuedSynchronizer
      * Transfers node, if necessary, to sync queue after a cancelled wait.
      * Returns true if thread was cancelled before being signalled.
      *
-     * @param current the waiting thread
-     * @param node its node
+     * @param node the node
      * @return true if cancelled before the node was signalled
      */
     final boolean transferAfterCancelledWait(Node node) {

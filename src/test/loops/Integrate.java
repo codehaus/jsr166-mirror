@@ -24,14 +24,15 @@ public final class Integrate {
     static int forkPolicy = DYNAMIC;
     static String forkArg = "dynamic";
 
-    // the function to integrate
+    /** the function to integrate */
     static double computeFunction(double x) {
         return (x * x + 1.0) * x;
     }
 
     static final double start = 0.0;
     static final double end = 1536.0;
-    /*
+
+    /**
      * The number of recursive calls for
      * integrate from start to end.
      * (Empirically determined)

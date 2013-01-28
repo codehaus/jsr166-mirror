@@ -103,10 +103,11 @@ public class ThreadLocalRandom extends Random {
     private static final ThreadLocal<Double> nextLocalGaussian =
         new ThreadLocal<Double>();
 
-    /*
-     * Field used only during singleton initialization
+    /**
+     * Field used only during singleton initialization.
+     * True when constructor completes.
      */
-    boolean initialized; // true when constructor completes
+    boolean initialized;
 
     /** Constructor used only for static singleton */
     private ThreadLocalRandom() {

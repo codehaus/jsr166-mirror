@@ -3373,7 +3373,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each (key, value).
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      * @param action the action
      */
@@ -3417,7 +3417,7 @@ public class ConcurrentHashMapV8<K, V>
      * combine values, or null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
@@ -3530,7 +3530,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each key.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      * @param action the action
      */
@@ -3595,7 +3595,7 @@ public class ConcurrentHashMapV8<K, V>
      * null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
@@ -3708,7 +3708,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each value.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      */
     public <U> void forEachValueSequentially
@@ -3768,7 +3768,7 @@ public class ConcurrentHashMapV8<K, V>
      * null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
@@ -3882,7 +3882,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each entry.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      * @param action the action
      */
@@ -3945,7 +3945,7 @@ public class ConcurrentHashMapV8<K, V>
      * or null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
@@ -4057,7 +4057,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each (key, value).
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      * @param action the action
      */
@@ -4092,7 +4092,7 @@ public class ConcurrentHashMapV8<K, V>
      * combine values, or null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
@@ -4180,7 +4180,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each key.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      * @param action the action
      */
@@ -4229,7 +4229,7 @@ public class ConcurrentHashMapV8<K, V>
      * null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
@@ -4317,7 +4317,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each value.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      */
     public <U> void forEachValueInParallel
@@ -4364,7 +4364,7 @@ public class ConcurrentHashMapV8<K, V>
      * null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
@@ -4452,7 +4452,7 @@ public class ConcurrentHashMapV8<K, V>
      * of each entry.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case the action is not applied).
      * @param action the action
      */
@@ -4500,7 +4500,7 @@ public class ConcurrentHashMapV8<K, V>
      * or null if none.
      *
      * @param transformer a function returning the transformation
-     * for an element, or null of there is no transformation (in
+     * for an element, or null if there is no transformation (in
      * which case it is not combined).
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation

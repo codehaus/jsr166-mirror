@@ -1435,9 +1435,9 @@ public abstract class AbstractQueuedLongSynchronizer
     }
 
     /**
-     * Transfers node, if necessary, to sync queue after a cancelled
-     * wait. Returns true if thread was cancelled before being
-     * signalled.
+     * Transfers node, if necessary, to sync queue after a cancelled wait.
+     * Returns true if thread was cancelled before being signalled.
+     *
      * @param current the waiting thread
      * @param node its node
      * @return true if cancelled before the node was signalled

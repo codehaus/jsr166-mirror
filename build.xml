@@ -41,6 +41,7 @@
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
+  <property name="build.javadoc.access" value="protected"/>
 
   <!-- Build locations -->
   <property name="build.dir"                   location="build"/>
@@ -281,6 +282,7 @@
              packagenames="none"
              link="${jdkapi8docs.url}"
              overview="${src.dir}/intro.html"
+             access="${build.javadoc.access}"
              sourcepath="${src.dir}:${jdk8src.dir}"
              classpath=""
              executable="${javadoc8}">
@@ -672,6 +674,7 @@
              packagenames="none"
              link="${jdkapi7docs.url}"
              overview="${4jdk7src.dir}/intro.html"
+             access="${build.javadoc.access}"
              sourcepath="${4jdk7src.dir}:${jdk7src.dir}"
              classpath=""
              executable="${javadoc7}">
@@ -763,6 +766,7 @@
     <javadoc destdir="${jsr166xdocs.dir}"
              packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              bootclasspath="${bootclasspath6}"
              source="5"
@@ -853,6 +857,7 @@
     <javadoc destdir="${jsr166ydocs.dir}"
              packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              bootclasspath="${bootclasspath6}"
              source="6"
@@ -943,6 +948,7 @@
     <javadoc destdir="${extra166ydocs.dir}"
              packagenames="extra166y.*"
              link="${jdkapidocs.url}"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              bootclasspath="${bootclasspath6}"
              source="6"
@@ -1030,6 +1036,7 @@
     <javadoc destdir="${jsr166edocs.dir}"
              packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk7src.dir}"
              source="7"
              executable="${javadoc7}">
@@ -1077,5 +1084,15 @@
           depends="jsr166eclean, jsr166edocs">
     <mirror-dir src="${jsr166edocs.dir}" dst="${dist.jsr166edocs.dir}"/>
   </target>
+
+
+<!-- Find buglets that can be detected by static build tools -->
+
+  <target name="lint">
+    <antcall target="dists">
+      <param name="build.javadoc.access" value="private"/>
+    </antcall>
+  </target>
+
 
 </project>

@@ -1977,7 +1977,7 @@ public class ConcurrentHashMapV8<K, V>
         }
     }
 
-    /*
+    /**
      * Moves and/or copies the nodes in each bin to new table. See
      * above for explanation.
      */

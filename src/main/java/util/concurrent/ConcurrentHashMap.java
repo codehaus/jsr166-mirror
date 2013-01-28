@@ -1883,7 +1883,7 @@ public class ConcurrentHashMap<K, V>
         }
     }
 
-    /*
+    /**
      * Moves and/or copies the nodes in each bin to new table. See
      * above for explanation.
      */

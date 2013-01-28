@@ -1244,7 +1244,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     volatile Object pad10, pad11, pad12, pad13, pad14, pad15, pad16, pad17;
     volatile Object pad18, pad19, pad1a, pad1b;
 
-    /*
+    /**
      * Acquires the plock lock to protect worker array and related
      * updates. This method is called only if an initial CAS on plock
      * fails. This acts as a spinlock for normal cases, but falls back

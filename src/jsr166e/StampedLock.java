@@ -939,7 +939,7 @@ public class StampedLock implements java.io.Serializable {
         return 0L;
     }
 
-    /*
+    /**
      * Wakes up the successor of h (normally whead). This is normally
      * just h.next, but may require traversal from wtail if next
      * pointers are lagging. This may fail to wake up an acquiring

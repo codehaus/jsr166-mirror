@@ -6,7 +6,6 @@
 
 package java.util.concurrent.locks;
 
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.Condition;
@@ -748,6 +747,19 @@ public class StampedLock implements java.io.Serializable {
         return false;
     }
 
+    // status monitoring methods
+
+    /**
+     * Returns combined state-held and overflow read count for given
+     * state s.
+     */
+    private int getReadLockCount(long s) {
+        long readers;
+        if ((readers = s & RBITS) >= RFULL)
+            readers = RFULL + readerOverflow;
+        return (int) readers;
+    }
+
     /**
      * Returns true if the lock is currently held exclusively.
      *
@@ -766,11 +778,34 @@ public class StampedLock implements java.io.Serializable {
         return (state & RBITS) != 0L;
     }
 
-    private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        state = ORIGIN; // reset to unlocked state
+    /**
+     * Queries the number of read locks held for this lock. This
+     * method is designed for use in monitoring system state, not for
+     * synchronization control.
+     * @return the number of read locks held
+     */
+    public int getReadLockCount() {
+        return getReadLockCount(state);
     }
+
+    /**
+     * Returns a string identifying this lock, as well as its lock
+     * state.  The state, in brackets, includes the String {@code
+     * "Unlocked"} or the String {@code "Write-locked"} or the String
+     * {@code "Read-locks:"} followed by the current number of
+     * read-locks held.
+     *
+     * @return a string identifying this lock, as well as its lock state
+     */
+    public String toString() {
+        long s = state;
+        return super.toString() +
+            ((s & ABITS) == 0L ? "[Unlocked]" :
+             (s & WBIT) != 0L ? "[Write-locked]" :
+             "[Read-locks:" + getReadLockCount(s) + "]");
+    }
+
+    // views
 
     /**
      * Returns a plain {@link Lock} view of this StampedLock in which
@@ -886,25 +921,10 @@ public class StampedLock implements java.io.Serializable {
         }
     }
 
-    /**
-     * Returns a string identifying this lock, as well as its lock
-     * state.  The state, in brackets, includes the String {@code
-     * "Unlocked"} or the String {@code "Write-locked"} or the String
-     * {@code "Read-locks:"} followed by the current number of
-     * read-locks held.
-     *
-     * @return a string identifying this lock, as well as its lock state
-     */
-    public String toString() {
-        long readers;
-        long s = state;
-        if ((readers = s & RBITS) >= RFULL)
-            readers = RFULL + readerOverflow;
-        return super.toString() + ((s & WBIT) != 0L ?
-                                   "[Write-locked]" :
-                                   readers == 0 ?
-                                   "[Unlocked]" :
-                                   "[Read-locks:" + readers + "]");
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        state = ORIGIN; // reset to unlocked state
     }
 
     // internals
@@ -918,7 +938,7 @@ public class StampedLock implements java.io.Serializable {
      * @return new stamp on success, else zero
      */
     private long tryIncReaderOverflow(long s) {
-        // assert (s & ABITS) >= RFULL
+        // assert (s & ABITS) >= RFULL;
         if ((s & ABITS) == RFULL) {
             if (U.compareAndSwapLong(this, STATE, s, s | RBITS)) {
                 ++readerOverflow;
@@ -926,7 +946,7 @@ public class StampedLock implements java.io.Serializable {
                 return s;
             }
         }
-        else if ((ThreadLocalRandom.current().nextInt() &
+        else if ((LockSupport.nextSecondarySeed() &
                   OVERFLOW_YIELD_RATE) == 0)
             Thread.yield();
         return 0L;
@@ -939,7 +959,7 @@ public class StampedLock implements java.io.Serializable {
      * @return new stamp on success, else zero
      */
     private long tryDecReaderOverflow(long s) {
-        // assert (s & ABITS) >= RFULL
+        // assert (s & ABITS) >= RFULL;
         if ((s & ABITS) == RFULL) {
             if (U.compareAndSwapLong(this, STATE, s, s | RBITS)) {
                 int r; long next;
@@ -953,7 +973,7 @@ public class StampedLock implements java.io.Serializable {
                  return next;
             }
         }
-        else if ((ThreadLocalRandom.current().nextInt() &
+        else if ((LockSupport.nextSecondarySeed() &
                   OVERFLOW_YIELD_RATE) == 0)
             Thread.yield();
         return 0L;
@@ -1007,7 +1027,7 @@ public class StampedLock implements java.io.Serializable {
                     return ns;
             }
             else if (spins > 0) {
-                if (ThreadLocalRandom.current().nextInt() >= 0)
+                if (LockSupport.nextSecondarySeed() >= 0)
                     --spins;
             }
             else if ((p = wtail) == null) { // initialize queue
@@ -1040,7 +1060,7 @@ public class StampedLock implements java.io.Serializable {
                             return ns;
                         }
                     }
-                    else if (ThreadLocalRandom.current().nextInt() >= 0 &&
+                    else if (LockSupport.nextSecondarySeed() >= 0 &&
                              --k <= 0)
                         break;
                 }
@@ -1112,7 +1132,7 @@ public class StampedLock implements java.io.Serializable {
                     break;
             }
             if (spins > 0) {
-                if (ThreadLocalRandom.current().nextInt() >= 0)
+                if (LockSupport.nextSecondarySeed() >= 0)
                     --spins;
             }
             else if ((p = wtail) == null) {
@@ -1186,7 +1206,7 @@ public class StampedLock implements java.io.Serializable {
                             return ns;
                         }
                     }
-                    else if (ThreadLocalRandom.current().nextInt() >= 0 &&
+                    else if (LockSupport.nextSecondarySeed() >= 0 &&
                              --k <= 0)
                         break;
                 }

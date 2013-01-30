@@ -10,7 +10,7 @@ final isSnapshot = true
 
 allprojects {
   group = 'org.codehaus.jsr166-mirror'
-  final versionRoot = (new File('version.properties')).text.trim()
+  final versionRoot = '1.7.0.1'
   version = versionRoot + (isSnapshot ? '-SNAPSHOT': '')
   ext.bundleVersion = versionRoot + (isSnapshot ? '.SNAPSHOT': '')
   ext.projectWebsite = 'http://jsr166.codehaus.org'

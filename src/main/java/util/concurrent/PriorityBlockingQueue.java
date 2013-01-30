@@ -325,7 +325,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param k the position to fill
      * @param x the item to insert
      * @param array the heap array
-     * @param n heap size
      */
     private static <T> void siftUpComparable(int k, T x, Object[] array) {
         Comparable<? super T> key = (Comparable<? super T>) x;
@@ -937,7 +936,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /** Index-based split-by-two Spliterator */
-    static final class PBQSpliterator<E> implements Spliterator<E>, Iterator<E> {
+    static final class PBQSpliterator<E> implements Spliterator<E> {
         private final Object[] array;
         private int index;        // current index, modified on advance/split
         private final int fence;  // one past last index
@@ -979,18 +978,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         public long estimateSize() { return (long)(fence - index); }
         public boolean hasExactSize() { return true; }
         public boolean hasExactSplits() { return true; }
-
-        // Iterator support
-        public Iterator<E> iterator() { return this; }
-        public void remove() { throw new UnsupportedOperationException(); }
-        public boolean hasNext() { return index >= 0 && index < fence; }
-
-        public E next() {
-            if (index < 0 || index >= fence)
-                throw new NoSuchElementException();
-            @SuppressWarnings("unchecked") E e = (E) array[index++];
-            return e;
-        }
     }
 
     // Unsafe mechanics

@@ -1,35 +1,7 @@
 /*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
-/*
- * This file is available under and governed by the GNU General Public
- * License version 2 only, as published by the Free Software Foundation.
- * However, the following notice accompanied the original version of this
- * file:
- *
- * Written by Josh Bloch of Google Inc. and released to the public domain,
- * as explained at http://creativecommons.org/publicdomain/zero/1.0/.
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 package java.util;
@@ -887,20 +859,18 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
 
-    static final class DeqSpliterator<E> implements Spliterator<E>, Iterator<E> {
+    static final class DeqSpliterator<E> implements Spliterator<E> {
         private final ArrayDeque<E> deq;
-        private final Object[] array;
         private final int fence;  // initially tail
         private int index;        // current index, modified on traverse/split
 
         /** Create new spliterator covering the given array and range */
         DeqSpliterator(ArrayDeque<E> deq, int origin, int fence) {
-            this.deq = deq; this.array = deq.elements;
-            this.index = origin; this.fence = fence;
+            this.deq = deq; this.index = origin; this.fence = fence;
         }
 
         public DeqSpliterator<E> trySplit() {
-            int n = array.length;
+            int n = deq.elements.length;
             int h = index, t = fence;
             if (h != t && ((h + 1) & (n - 1)) != t) {
                 if (h > t)
@@ -911,73 +881,42 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             return null;
         }
 
-        @SuppressWarnings("unchecked")
         public void forEach(Block<? super E> block) {
             if (block == null)
                 throw new NullPointerException();
-            Object[] a = array;
-            if (a != deq.elements)
-                throw new ConcurrentModificationException();
+            Object[] a = deq.elements;
             int m = a.length - 1, f = fence, i = index;
             index = f;
             while (i != f) {
-                Object e = a[i];
+                @SuppressWarnings("unchecked") E e = (E)a[i];
+                i = (i + 1) & m;
                 if (e == null)
                     throw new ConcurrentModificationException();
-                block.accept((E)e);
-                i = (i + 1) & m;
+                block.accept(e);
             }
         }
 
-        @SuppressWarnings("unchecked")
         public boolean tryAdvance(Block<? super E> block) {
             if (block == null)
                 throw new NullPointerException();
-            Object[] a = array;
-            if (a != deq.elements)
-                throw new ConcurrentModificationException();
+            Object[] a = deq.elements;
             int m = a.length - 1, i = index;
             if (i != fence) {
-                Object e = a[i];
+                @SuppressWarnings("unchecked") E e = (E)a[i];
+                index = (i + 1) & m;
                 if (e == null)
                     throw new ConcurrentModificationException();
-                block.accept((E)e);
-                index = (i + 1) & m;
+                block.accept(e);
                 return true;
             }
             return false;
         }
 
-        // Iterator support
-        public Iterator<E> iterator() {
-            return this;
-        }
-
-        public boolean hasNext() {
-            return index >= 0 && index != fence;
-        }
-
-        @SuppressWarnings("unchecked")
-            public E next() {
-            if (index < 0 || index == fence)
-                throw new NoSuchElementException();
-            Object[] a = array;
-            if (a != deq.elements)
-                throw new ConcurrentModificationException();
-            Object e = a[index];
-            if (e == null)
-                throw new ConcurrentModificationException();
-            index = (index + 1) & (a.length - 1);
-            return (E) e;
-        }
-
-        public void remove() { throw new UnsupportedOperationException(); }
-
         // Other spliterator methods
         public long estimateSize() {
             int n = fence - index;
             if (n < 0)
-                n += array.length;
+                n += deq.elements.length;
             return (long)n;
         }
         public boolean hasExactSize() { return true; }

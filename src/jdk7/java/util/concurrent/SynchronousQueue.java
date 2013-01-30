@@ -570,7 +570,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         /**
          * Reference to a cancelled node that might not yet have been
          * unlinked from queue because it was the last inserted node
-         * when it cancelled.
+         * when it was cancelled.
          */
         transient volatile QNode cleanMe;
 

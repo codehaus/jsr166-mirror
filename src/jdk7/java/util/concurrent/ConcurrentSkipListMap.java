@@ -409,7 +409,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * because callers will have already read value field and need
          * to use that read (not another done here) and so directly
          * test if value points to node.
-         * @param n a possibly null reference to a node
+         *
          * @return true if this node is a marker node
          */
         boolean isMarker() {
@@ -935,7 +935,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Adds given index nodes from given level down to 1.
      * @param idx the topmost index node being inserted
      * @param h the value of head to use to insert. This must be
-     * snapshotted by callers to provide correct insertion level
+     * snapshotted by callers to provide correct insertion level.
      * @param indexLevel the level of the index
      */
     private void addIndex(Index<K,V> idx, HeadIndex<K,V> h, int indexLevel) {
@@ -2267,7 +2267,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     static final <E> List<E> toList(Collection<E> c) {
         // Using size() here would be a pessimization.
-        List<E> list = new ArrayList<E>();
+        ArrayList<E> list = new ArrayList<E>();
         for (E e : c)
             list.add(e);
         return list;

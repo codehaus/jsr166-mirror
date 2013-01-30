@@ -462,7 +462,7 @@ package java.util.concurrent.atomic;
 public class Fences {
     private Fences() {} // Non-instantiable
 
-    /*
+    /**
      * The methods of this class are intended to be intrinisified by a
      * JVM. However, we provide correct but inefficient Java-level
      * code that simply reads and writes a static volatile

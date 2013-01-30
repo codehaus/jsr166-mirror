@@ -803,8 +803,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     /** Index-based split-by-two Spliterator */
-    static final class PriorityQueueSpliterator<E>
-        implements Spliterator<E>, Iterator<E> {
+    static final class PriorityQueueSpliterator<E> implements Spliterator<E> {
         private final PriorityQueue<E> pq;
         private int index;           // current index, modified on advance/split
         private final int fence;     // one past last index
@@ -821,7 +820,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             int lo = index, mid = (lo + fence) >>> 1;
             return (lo >= mid) ? null :
                 new PriorityQueueSpliterator<E>(pq, lo, index = mid,
-                                            expectedModCount);
+                                                expectedModCount);
         }
 
         public void forEach(Block<? super E> block) {
@@ -842,11 +841,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 
         public boolean tryAdvance(Block<? super E> block) {
             if (index >= 0 && index < fence) {
-                if (pq.modCount != expectedModCount)
-                    throw new ConcurrentModificationException();
                 @SuppressWarnings("unchecked") E e =
                     (E)pq.queue[index++];
                 block.accept(e);
+                if (pq.modCount != expectedModCount)
+                    throw new ConcurrentModificationException();
                 return true;
             }
             return false;
@@ -855,20 +854,5 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         public long estimateSize() { return (long)(fence - index); }
         public boolean hasExactSize() { return true; }
         public boolean hasExactSplits() { return true; }
-
-        // Iterator support
-        public Iterator<E> iterator() { return this; }
-        public void remove() { throw new UnsupportedOperationException(); }
-        public boolean hasNext() { return index >= 0 && index < fence; }
-
-        public E next() {
-            if (index < 0 || index >= fence)
-                throw new NoSuchElementException();
-            if (pq.modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            @SuppressWarnings("unchecked") E e =
-                (E) pq.queue[index++];
-            return e;
-        }
     }
 }

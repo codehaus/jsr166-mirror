@@ -25,8 +25,10 @@
 ------------------------------------------------------------------------------
   </description>
 
-  <target name="usage" description="Advises user to run with -projecthelp">
-    <echo>Run "ant -projecthelp" for full usage information.</echo>
+  <target name="usage" description="Display main targets by running 'ant -projecthelp'">
+    <java classname="org.apache.tools.ant.Main">
+      <arg value="-projecthelp" />
+    </java>
   </target>
 
 
@@ -39,6 +41,7 @@
   <property name="build.debug"          value="true"/>
   <property name="build.debuglevel"     value="source,lines,vars"/>
   <property name="build.deprecation"    value="false"/>
+  <property name="build.javadoc.access" value="protected"/>
 
   <!-- Build locations -->
   <property name="build.dir"                   location="build"/>
@@ -57,12 +60,12 @@
   <property name="build.jsr166e.dir"           location="${build.dir}/jsr166e"/>
   <property name="build.extra166y.dir"         location="${build.dir}/extra166y"/>
 
-  <property name="build.jsr166x.classes.dir"    location="${build.jsr166x.dir}/classes"/>
-  <property name="build.jsr166y.classes.dir"    location="${build.jsr166y.dir}/classes"/>
-  <property name="build.jsr166e.classes.dir"    location="${build.jsr166e.dir}/classes"/>
-  <property name="build.extra166y.classes.dir"  location="${build.extra166y.dir}/classes"/>
+  <property name="build.jsr166x.classes.dir"   location="${build.jsr166x.dir}/classes"/>
+  <property name="build.jsr166y.classes.dir"   location="${build.jsr166y.dir}/classes"/>
+  <property name="build.jsr166e.classes.dir"   location="${build.jsr166e.dir}/classes"/>
+  <property name="build.extra166y.classes.dir" location="${build.extra166y.dir}/classes"/>
 
-  <!-- JDK binary locations -->
+  <!-- JDK locations -->
   <property name="jdks.home"  location="${user.home}/jdk"/>
 
   <macrodef name="defjdklocations">
@@ -72,59 +75,35 @@
     <property name="java@{v}"       location="${jdk@{v}.home}/bin/java"/>
     <property name="javac@{v}"      location="${jdk@{v}.home}/bin/javac"/>
     <property name="javadoc@{v}"    location="${jdk@{v}.home}/bin/javadoc"/>
-    <property name="bootdir@{v}"    location="${jdk@{v}.home}/jre/lib"/>
     <property name="jdk@{v}src.dir" location="${jdks.home}/src/jdk@{v}/jdk/src/share/classes"/>
-    <property name="bootclasspath@{v}"
-     value="${bootdir@{v}}/resources.jar:${bootdir@{v}}/rt.jar:${bootdir@{v}}/jsse.jar:${bootdir@{v}}/jce.jar:${bootdir@{v}}/:${bootdir@{v}}/charsets.jar"/>
+    <local name="boot.jar.dir"/>
+    <property name="boot.jar.dir"   location="${jdk@{v}.home}/jre/lib"/>
+    <path id="bootclasspath@{v}">
+      <pathelement path="${boot.jar.dir}/resources.jar"/>
+      <pathelement path="${boot.jar.dir}/rt.jar"/>
+      <pathelement path="${boot.jar.dir}/jsse.jar"/>
+      <pathelement path="${boot.jar.dir}/jce.jar"/>
+      <pathelement path="${boot.jar.dir}/charsets.jar"/>
+    </path>
+    <property name="bootclasspath@{v}" value="${toString:bootclasspath@{v}}"/>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="mirror-dir">
+    <attribute name="src"/>
+    <attribute name="dst"/>
+    <sequential>
+    <delete dir="@{dst}"/>
+    <mkdir dir="@{dst}"/>
+    <copy todir="@{dst}" preservelastmodified="true">
+      <fileset dir="@{src}"/>
+    </copy>
     </sequential>
   </macrodef>
 
   <defjdklocations v="6"/>
   <defjdklocations v="7"/>
   <defjdklocations v="8"/>
-
-  <macrodef name="run-tck-tests">
-    <attribute name="target"/>
-    <attribute name="workdir"/>
-    <attribute name="product.jar" default="${product.jar}"/>
-    <attribute name="jvmflags" default=""/>
-    <sequential>
-
-    <mkdir dir="@{workdir}/tck-classes"/>
-
-    <javac srcdir="${tck.src.dir}"
-           destdir="@{workdir}/tck-classes"
-           debug="${build.debug}"
-           debuglevel="${build.debuglevel}"
-           deprecation="${build.deprecation}"
-           source="6"
-           classpath="${junit.jar}"
-           bootclasspath="@{product.jar}:${bootclasspath6}"
-           includeAntRuntime="false"
-           includeJavaRuntime="false"
-           executable="${javac@{target}}"
-           fork="true">
-
-      <include name="**/*.java"/>
-      <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
-      <compilerarg line="${build.args}"/>
-    </javac>
-
-    <java classname="JSR166TestCase"
-          failonerror="true"
-          jvm="${java@{target}}"
-          fork="true">
-	<jvmarg value="-Xbootclasspath/p:@{product.jar}"/>
-	<jvmarg line="@{jvmflags}"/>
-	<classpath>
-	  <pathelement location="${junit.jar}"/>
-	  <pathelement location="@{workdir}/tck-classes"/>
-	</classpath>
-    </java>
-
-    </sequential>
-  </macrodef>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -141,13 +120,20 @@
   <property name="jsr166esrc.dir"       location="${topsrc.dir}/jsr166e"/>
   <property name="extra166ysrc.dir"     location="${topsrc.dir}/extra166y"/>
 
-  <!-- Distribution locations -->
-  <property name="dist.javadocs.dir"          location="${dist.dir}/jsr166.docs"/>
-  <property name="dist.4jdk7.docs.dir"        location="${dist.dir}/jsr166-4jdk7.docs"/>
-  <property name="dist.jsr166xjavadocs.dir"   location="${dist.dir}/jsr166x.docs"/>
-  <property name="dist.jsr166yjavadocs.dir"   location="${dist.dir}/jsr166y.docs"/>
-  <property name="dist.jsr166ejavadocs.dir"   location="${dist.dir}/jsr166e.docs"/>
-  <property name="dist.extra166yjavadocs.dir" location="${dist.dir}/extra166y.docs"/>
+  <!-- Javadoc locations -->
+  <property name="docs.dir"          location="${build.dir}/docs"/>
+  <property name="4jdk7docs.dir"     location="${build.4jdk7.dir}/docs"/>
+  <property name="jsr166xdocs.dir"   location="${build.jsr166x.dir}/docs"/>
+  <property name="jsr166ydocs.dir"   location="${build.jsr166y.dir}/docs"/>
+  <property name="jsr166edocs.dir"   location="${build.jsr166e.dir}/docs"/>
+  <property name="extra166ydocs.dir" location="${build.extra166y.dir}/docs"/>
+
+  <property name="dist.docs.dir"          location="${dist.dir}/docs"/>
+  <property name="dist.4jdk7docs.dir"     location="${dist.dir}/jsr166-4jdk7docs"/>
+  <property name="dist.jsr166xdocs.dir"   location="${dist.dir}/jsr166xdocs"/>
+  <property name="dist.jsr166ydocs.dir"   location="${dist.dir}/jsr166ydocs"/>
+  <property name="dist.jsr166edocs.dir"   location="${dist.dir}/jsr166edocs"/>
+  <property name="dist.extra166ydocs.dir" location="${dist.dir}/extra166ydocs"/>
 
   <!-- Jar locations -->
   <property name="product.jar"      location="${build.dir}/jsr166.jar"/>
@@ -158,16 +144,13 @@
   <property name="extra166y.jar"    location="${build.extra166y.dir}/extra166y.jar"/>
   <property name="junit.jar"        location="${lib.dir}/junit.jar"/>
 
-  <!-- Bootclasspath argument -->
-  <property name="bootclasspath.args"   value="-Xbootclasspath/p:${product.jar}"/>
-
   <!-- Canonical location of jdk API docs, to use with javadoc link attribute -->
   <property name="jdkapi5docs.url"      value="http://docs.oracle.com/javase/1.5.0/docs/api/"/>
   <property name="jdkapi6docs.url"      value="http://docs.oracle.com/javase/6/docs/api/"/>
   <property name="jdkapi7docs.url"      value="http://docs.oracle.com/javase/7/docs/api/"/>
 
   <property name="jdkapi8docs.url"      value="http://download.java.net/jdk8/docs/api/"/>
-  <!-- The below does not yet exist as of 2012-11 -->
+  <!-- The below does not yet exist as of 2013-01 -->
   <!-- <property name="jdkapi8docs.url" value="http://docs.oracle.com/javase/8/docs/api/"/> -->
 
   <!-- Default jdk api doc location (latest stable release seems best) -->
@@ -184,16 +167,59 @@
     <pathelement location="${junit.jar}"/>
   </path>
 
+  <macrodef name="run-tck-tests">
+    <attribute name="tck.src.dir" default="${tck.src.dir}"/>
+    <attribute name="source" default="6"/>
+    <attribute name="target"/>
+    <attribute name="workdir"/>
+    <attribute name="classes"/>
+    <attribute name="jvmflags" default=""/>
+    <sequential>
+
+    <mkdir dir="@{workdir}/tck-classes"/>
+
+    <javac srcdir="@{tck.src.dir}"
+           destdir="@{workdir}/tck-classes"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="@{source}"
+           classpath="${junit.jar}"
+           bootclasspath="@{classes}:${bootclasspath@{source}}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac@{target}}"
+           fork="true">
+
+      <include name="*.java"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
+      <compilerarg line="${build.args}"/>
+
+    </javac>
+
+    <java classname="JSR166TestCase"
+          failonerror="true"
+          jvm="${java@{target}}"
+          fork="true">
+	<jvmarg value="-Xbootclasspath/p:@{classes}"/>
+	<jvmarg line="@{jvmflags}"/>
+	<classpath>
+	  <pathelement location="${junit.jar}"/>
+	  <pathelement location="@{workdir}/tck-classes"/>
+	</classpath>
+    </java>
+
+    </sequential>
+  </macrodef>
+
   <!-- ALoops classpath -->
   <path id="loops.classpath">
     <pathelement location="${build.loops.dir}"/>
   </path>
 
   <!-- Support @jls tag, used in jdk8+ javadoc -->
-  <!-- TODO: How do we get &trade to work? -->
-  <!-- TODO: Why isn't @jls a "standard" tag? -->
-  <!--   property name="javadoc.jls.cite" value="The Java&trade; Language Specification" -->
-  <property name="javadoc.jls.cite" value="The Java Language Specification"/>
+  <property name="javadoc.jls.cite" value="The Java&amp;trade; Language Specification"/>
   <property name="javadoc.jls.option" value="jls:a:See &lt;cite&gt;${javadoc.jls.cite}&lt;/cite&gt;:"/>
 
   <!-- Main targets -->
@@ -220,20 +246,12 @@
            fork="true">
 
       <include name="**/*.java"/>
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
-
-<!--
-      <exclude name="java/lang/**"/>
       <compilerarg line="${build.args}"/>
-      <compilerarg line="-Xlint -Xmaxwarns 1000"/>
--->
 
     </javac>
-
   </target>
-
 
 
   <target name="jar"
@@ -243,9 +261,7 @@
     <jar destfile="${product.jar}">
       <fileset dir="${build.classes.dir}"/>
     </jar>
-
   </target>
-
 
 
   <target name="test"
@@ -253,37 +269,35 @@
           description="Runs all tests (requires JUnit 3.8.1 in ${ant.home}/lib)" />
 
 
-
   <target name="docs"
           description="Builds javadocs for src/main to dist dir">
 
-    <delete dir="${dist.javadocs.dir}"/>
-    <mkdir dir="${dist.javadocs.dir}"/>
+    <delete dir="${docs.dir}"/>
+    <mkdir dir="${docs.dir}"/>
 
     <!-- the packagenames="none" hack below prevents scanning the -->
     <!-- sourcepath for packages -->
 
-    <javadoc destdir="${dist.javadocs.dir}"
+    <javadoc destdir="${docs.dir}"
              packagenames="none"
              link="${jdkapi8docs.url}"
              overview="${src.dir}/intro.html"
+             access="${build.javadoc.access}"
              sourcepath="${src.dir}:${jdk8src.dir}"
              classpath=""
              executable="${javadoc8}">
-      <arg value="-XDignore.symbol.file=true"/>
-      <arg value="-tag"/>
-      <arg value="${javadoc.jls.option}"/>
       <fileset dir="${src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
+      <arg value="-XDignore.symbol.file=true"/>
+      <arg value="-tag"/>
+      <arg value="${javadoc.jls.option}"/>
     </javadoc>
-
   </target>
 
 
-
   <target name="dist"
-          depends="dist-clean, dist-jar, docs"
+          depends="dist-clean, dist-jar, dist-docs"
           description="Puts all distributable products in single hierarchy"/>
 
 
@@ -302,9 +316,7 @@
       <exclude name="**/SyntaxTest.java"/>
       <exclude name="**/SuperfluousAbstract.java"/>
     </jar>
-
   </target>
-
 
 
   <target name="clean"
@@ -315,7 +327,6 @@
   </target>
 
 
-
   <target name="dist-clean"
           description="Removes all build and distribution products">
 
@@ -324,15 +335,17 @@
   </target>
 
 
-
   <!-- Internal targets -->
 
 
   <target name="dist-jar"
           depends="clean, jar">
-
     <copy file="${product.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="dist-docs"
+          depends="clean, docs">
+    <mirror-dir src="${docs.dir}" dst="${dist.docs.dir}"/>
   </target>
 
 
@@ -348,16 +361,16 @@
            deprecation="${build.deprecation}"
            source="6"
            classpath="${junit.jar}"
-           bootclasspath="${product.jar}:${bootclasspath6}"
+           bootclasspath="@{product.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac8}"
            fork="true">
 
       <include name="**/*.java"/>
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
 
@@ -368,17 +381,16 @@
            deprecation="${build.deprecation}"
            source="6"
            classpath=""
-           bootclasspath="${product.jar}:${bootclasspath6}"
+           bootclasspath="@{product.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac8}"
            fork="true">
 
       <include name="jsr166/test/**/*.java"/>
-
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
 
@@ -391,9 +403,9 @@
            source="${build.sourcelevel}"
              fork="true">
 
-      <compilerarg value="${bootclasspath.args}"/>
-      <compilerarg line="${build.args}"/>
+      <compilerarg value="-Xbootclasspath/p:${product.jar}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
 -->
@@ -546,7 +558,6 @@
 
   <!-- jsr166 4jdk7 -->
 
-
   <target name="4jdk7compile"
           depends="configure-compiler"
           description="Compiles src/jdk7 sources, targeting jdk7">
@@ -567,15 +578,15 @@
            fork="true">
 
       <include name="**/*.java"/>
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
-
   </target>
 
-  <target name="4jdk7-jar"
+
+  <target name="4jdk7jar"
           depends="4jdk7compile"
           description="Builds library jar from compiled sources">
 
@@ -587,13 +598,13 @@
 
 
   <target name="4jdk7-test-tck"
-	  depends="4jdk7-jar"
+	  depends="4jdk7jar"
           description="Runs tck tests for jsr166-4jdk7 directly">
 
     <run-tck-tests
       target="7"
       workdir="${build.4jdk7.dir}"
-      product.jar="${4jdk7product.jar}"/>
+      classes="${4jdk7product.jar}"/>
   </target>
 
 
@@ -656,29 +667,28 @@
   <target name="4jdk7docs"
           description="Builds javadocs for src/jdk7 to dist dir">
 
-    <delete dir="${dist.4jdk7.docs.dir}"/>
-    <mkdir dir="${dist.4jdk7.docs.dir}"/>
+    <delete dir="${4jdk7docs.dir}"/>
+    <mkdir dir="${4jdk7docs.dir}"/>
 
-    <javadoc destdir="${dist.4jdk7.docs.dir}"
+    <javadoc destdir="${4jdk7docs.dir}"
              packagenames="none"
              link="${jdkapi7docs.url}"
              overview="${4jdk7src.dir}/intro.html"
+             access="${build.javadoc.access}"
              sourcepath="${4jdk7src.dir}:${jdk7src.dir}"
              classpath=""
              executable="${javadoc7}">
-      <arg value="-XDignore.symbol.file=true"/>
       <fileset dir="${4jdk7src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
+      <arg value="-XDignore.symbol.file=true"/>
     </javadoc>
-
   </target>
 
 
   <target name="4jdk7dist"
-          depends="4jdk7dist-clean, 4jdk7dist-jar, 4jdk7docs"
+          depends="4jdk7dist-jar, 4jdk7dist-docs"
           description="Puts all distributable products in single hierarchy"/>
-
 
 
   <target name="4jdk7clean"
@@ -689,17 +699,20 @@
   </target>
 
 
-
   <target name="4jdk7dist-clean"
           description="Removes all build and distribution products">
 
   </target>
 
   <target name="4jdk7dist-jar"
-          depends="4jdk7clean, 4jdk7compile">
-
+          depends="4jdk7clean, 4jdk7jar">
     <copy file="${4jdk7product.jar}" todir="${dist.dir}"/>
+  </target>
 
+
+  <target name="4jdk7dist-docs"
+          depends="4jdk7clean, 4jdk7docs">
+    <mirror-dir src="${4jdk7docs.dir}" dst="${dist.4jdk7docs.dir}"/>
   </target>
 
 
@@ -717,22 +730,20 @@
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
            classpath=""
-           source="5"
            bootclasspath="${bootclasspath6}"
+           source="5"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac7}"
            fork="true">
 
       <include name="jsr166x/**/*.java"/>
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
-
   </target>
-
 
 
   <target name="jsr166xjar"
@@ -746,29 +757,29 @@
   </target>
 
 
-
   <target name="jsr166xdocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${dist.jsr166xjavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166xjavadocs.dir}"/>
+    <delete dir="${jsr166xdocs.dir}"/>
+    <mkdir dir="${jsr166xdocs.dir}"/>
 
-    <javadoc destdir="${dist.jsr166xjavadocs.dir}"
+    <javadoc destdir="${jsr166xdocs.dir}"
              packagenames="jsr166x.*"
              link="${jdkapidocs.url}"
-             source="5"
-             bootclasspath="${bootclasspath6}"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true"/>
+             bootclasspath="${bootclasspath6}"
+             source="5"
+             executable="${javadoc7}">
+      <arg value="-XDignore.symbol.file=true"/>
 
+    </javadoc>
   </target>
 
 
   <target name="jsr166xdist"
-          depends="jsr166xdist-clean, jsr166xdist-jar, jsr166xdocs"
+          depends="jsr166xdist-jar, jsr166xdist-docs"
           description="Puts all distributable products in single hierarchy"/>
-
 
 
   <target name="jsr166xclean"
@@ -779,7 +790,6 @@
   </target>
 
 
-
   <target name="jsr166xdist-clean"
           description="Removes all build and distribution products">
 
@@ -788,9 +798,12 @@
 
   <target name="jsr166xdist-jar"
           depends="jsr166xclean, jsr166xjar">
-
     <copy file="${jsr166x.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="jsr166xdist-docs"
+          depends="jsr166xclean, jsr166xdocs">
+    <mirror-dir src="${jsr166xdocs.dir}" dst="${dist.jsr166xdocs.dir}"/>
   </target>
 
   <!-- jsr166y -->
@@ -816,9 +829,10 @@
            fork="true">
 
       <include name="jsr166y/**/*.java"/>
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg line="${build.args}"/>
+
     </javac>
   </target>
 
@@ -834,29 +848,29 @@
   </target>
 
 
-
   <target name="jsr166ydocs"
           description="Builds javadocs to dist dir">
 
-    <delete dir="${dist.jsr166yjavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166yjavadocs.dir}"/>
+    <delete dir="${jsr166ydocs.dir}"/>
+    <mkdir dir="${jsr166ydocs.dir}"/>
 
-    <javadoc destdir="${dist.jsr166yjavadocs.dir}"
+    <javadoc destdir="${jsr166ydocs.dir}"
              packagenames="jsr166y.*"
              link="${jdkapidocs.url}"
-             source="6"
-             bootclasspath="${bootclasspath6}"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true"/>
+             bootclasspath="${bootclasspath6}"
+             source="6"
+             executable="${javadoc7}">
+      <arg value="-XDignore.symbol.file=true"/>
 
+    </javadoc>
   </target>
 
 
   <target name="jsr166ydist"
-          depends="jsr166ydist-clean, jsr166ydist-jar, jsr166ydocs"
+          depends="jsr166ydist-jar, jsr166ydist-docs"
           description="Puts all distributable products in single hierarchy"/>
-
 
 
   <target name="jsr166yclean"
@@ -867,7 +881,6 @@
   </target>
 
 
-
   <target name="jsr166ydist-clean"
           description="Removes all build and distribution products">
 
@@ -875,9 +888,12 @@
 
   <target name="jsr166ydist-jar"
           depends="jsr166yclean, jsr166yjar">
-
     <copy file="${jsr166y.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="jsr166ydist-docs"
+          depends="jsr166yclean, jsr166ydocs">
+    <mirror-dir src="${jsr166ydocs.dir}" dst="${dist.jsr166ydocs.dir}"/>
   </target>
 
 
@@ -895,23 +911,21 @@
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
+           bootclasspath="@{jsr166y.jar}:${bootclasspath6}"
            classpath=""
            source="6"
-           bootclasspath="${jsr166y.jar}:${bootclasspath6}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac7}"
            fork="true">
 
       <include name="extra166y/**/*.java"/>
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
-
   </target>
-
 
 
   <target name="extra166yjar"
@@ -925,29 +939,29 @@
   </target>
 
 
-
   <target name="extra166ydocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${dist.extra166yjavadocs.dir}"/>
-    <mkdir dir="${dist.extra166yjavadocs.dir}"/>
+    <delete dir="${extra166ydocs.dir}"/>
+    <mkdir dir="${extra166ydocs.dir}"/>
 
-    <javadoc destdir="${dist.extra166yjavadocs.dir}"
+    <javadoc destdir="${extra166ydocs.dir}"
              packagenames="extra166y.*"
              link="${jdkapidocs.url}"
-             source="6"
-             bootclasspath="${bootclasspath6}"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true"/>
+             bootclasspath="${bootclasspath6}"
+             source="6"
+             executable="${javadoc7}">
+      <arg value="-XDignore.symbol.file=true"/>
 
+    </javadoc>
   </target>
 
 
   <target name="extra166ydist"
-          depends="extra166ydist-clean, extra166ydist-jar, extra166ydocs"
+          depends="extra166ydist-jar, extra166ydist-docs"
           description="Puts all distributable products in single hierarchy"/>
-
 
 
   <target name="extra166yclean"
@@ -958,7 +972,6 @@
   </target>
 
 
-
   <target name="extra166ydist-clean"
           description="Removes all build and distribution products">
 
@@ -966,9 +979,12 @@
 
   <target name="extra166ydist-jar"
           depends="extra166yclean, extra166yjar">
-
     <copy file="${extra166y.jar}" todir="${dist.dir}"/>
+  </target>
 
+  <target name="extra166ydist-docs"
+          depends="extra166yclean, extra166ydocs">
+    <mirror-dir src="${extra166ydocs.dir}" dst="${dist.extra166ydocs.dir}"/>
   </target>
 
   <!-- jsr166e -->
@@ -992,14 +1008,12 @@
            fork="true">
 
       <include name="jsr166e/**/*.java"/>
-      <compilerarg line="${build.args}"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg line="${build.args}"/>
 
     </javac>
-
   </target>
-
 
 
   <target name="jsr166ejar"
@@ -1013,36 +1027,46 @@
   </target>
 
 
-
   <target name="jsr166edocs"
           description="Builds javadocs to build dir">
 
-    <delete dir="${dist.jsr166ejavadocs.dir}"/>
-    <mkdir dir="${dist.jsr166ejavadocs.dir}"/>
+    <delete dir="${jsr166edocs.dir}"/>
+    <mkdir dir="${jsr166edocs.dir}"/>
 
-    <javadoc destdir="${dist.jsr166ejavadocs.dir}"
+    <javadoc destdir="${jsr166edocs.dir}"
              packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
-             source="7"
+             access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk7src.dir}"
-             executable="${javadoc7}"
-             additionalparam="-XDignore.symbol.file=true" >
-    </javadoc>
+             source="7"
+             executable="${javadoc7}">
+      <arg value="-XDignore.symbol.file=true"/>
 
+    </javadoc>
+  </target>
+
+
+  <target name="jsr166e-test-tck"
+	  depends="jsr166ejar"
+          description="Runs tck tests for jsr166e">
+
+    <run-tck-tests
+      tck.src.dir="${test.src.dir}/tck-jsr166e"
+      source="7"
+      target="8"
+      workdir="${build.jsr166e.dir}"
+      classes="${jsr166e.jar}"/>
   </target>
 
 
   <target name="jsr166edist"
-          depends="jsr166edist-clean, jsr166edist-jar, jsr166edocs"
+          depends="jsr166edist-jar, jsr166edist-docs"
           description="Puts all distributable products in single hierarchy"/>
-
 
 
   <target name="jsr166eclean"
           description="Removes all jsr166e build products">
-
     <delete dir="${build.jsr166e.dir}"/>
-
   </target>
 
 
@@ -1053,9 +1077,22 @@
 
   <target name="jsr166edist-jar"
           depends="jsr166eclean, jsr166ejar">
-
     <copy file="${jsr166e.jar}" todir="${dist.dir}"/>
-
   </target>
+
+  <target name="jsr166edist-docs"
+          depends="jsr166eclean, jsr166edocs">
+    <mirror-dir src="${jsr166edocs.dir}" dst="${dist.jsr166edocs.dir}"/>
+  </target>
+
+
+<!-- Find buglets that can be detected by static build tools -->
+
+  <target name="lint">
+    <antcall target="dists">
+      <param name="build.javadoc.access" value="private"/>
+    </antcall>
+  </target>
+
 
 </project>

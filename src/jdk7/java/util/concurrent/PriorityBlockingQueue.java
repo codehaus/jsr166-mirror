@@ -313,7 +313,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * @param k the position to fill
      * @param x the item to insert
      * @param array the heap array
-     * @param n heap size
      */
     private static <T> void siftUpComparable(int k, T x, Object[] array) {
         Comparable<? super T> key = (Comparable<? super T>) x;

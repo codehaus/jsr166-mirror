@@ -753,6 +753,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
          * item to hand out so that if hasNext() reports true, we will
          * still have it to return even if lost race with a take etc.
          */
+
         private Node<E> current;
         private Node<E> lastRet;
         private E currentElement;

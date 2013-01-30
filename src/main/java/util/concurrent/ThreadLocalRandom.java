@@ -103,10 +103,11 @@ public class ThreadLocalRandom extends Random {
     private static final ThreadLocal<Double> nextLocalGaussian =
         new ThreadLocal<Double>();
 
-    /*
-     * Field used only during singleton initialization
+    /**
+     * Field used only during singleton initialization.
+     * True when constructor completes.
      */
-    boolean initialized; // true when constructor completes
+    boolean initialized;
 
     /** Constructor used only for static singleton */
     private ThreadLocalRandom() {
@@ -328,8 +329,11 @@ public class ThreadLocalRandom extends Random {
             r ^= r >>> 17;
             r ^= r << 5;
         }
-        else if ((r = (int)UNSAFE.getLong(t, SEED)) == 0)
-            r = 1; // avoid zero
+        else {
+            localInit();
+            if ((r = (int)UNSAFE.getLong(t, SEED)) == 0)
+                r = 1; // avoid zero
+        }
         UNSAFE.putInt(t, SECONDARY, r);
         return r;
     }

@@ -11,6 +11,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -145,7 +147,9 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Runs all JSR166 unit tests using junit.textui.TestRunner
+     * Runs all JSR166 unit tests using junit.textui.TestRunner.
+     * Optional command line arg provides the number of iterations to
+     * repeat running the tests.
      */
     public static void main(String[] args) {
         if (useSecurityManager) {
@@ -507,6 +511,16 @@ public class JSR166TestCase extends TestCase {
         } catch (InterruptedException ie) {
             fail("Unexpected InterruptedException");
         }
+    }
+
+    /**
+     * A debugging tool to print all stack traces, as jstack does.
+     */
+    static void printAllStackTraces() {
+        for (ThreadInfo info :
+                 ManagementFactory.getThreadMXBean()
+                 .dumpAllThreads(true, true))
+            System.err.print(info);
     }
 
     /**

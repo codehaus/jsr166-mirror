@@ -708,7 +708,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * shared-queue version is embedded in method externalPush.)
          *
          * @param task the task. Caller must ensure non-null.
-         * @throw RejectedExecutionException if array cannot be resized
+         * @throws RejectedExecutionException if array cannot be resized
          */
         final void push(ForkJoinTask<?> task) {
             ForkJoinTask<?>[] a; ForkJoinPool p;
@@ -1244,7 +1244,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     volatile Object pad10, pad11, pad12, pad13, pad14, pad15, pad16, pad17;
     volatile Object pad18, pad19, pad1a, pad1b;
 
-    /*
+    /**
      * Acquires the plock lock to protect worker array and related
      * updates. This method is called only if an initial CAS on plock
      * fails. This acts as a spinlock for normal cases, but falls back
@@ -2685,27 +2685,23 @@ public class ForkJoinPool extends AbstractExecutorService {
         // In previous versions of this class, this method constructed
         // a task to run ForkJoinTask.invokeAll, but now external
         // invocation of multiple tasks is at least as efficient.
-        List<ForkJoinTask<T>> fs = new ArrayList<ForkJoinTask<T>>(tasks.size());
-        // Workaround needed because method wasn't declared with
-        // wildcards in return type but should have been.
-        @SuppressWarnings({"unchecked", "rawtypes"})
-            List<Future<T>> futures = (List<Future<T>>) (List) fs;
+        ArrayList<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
 
         boolean done = false;
         try {
             for (Callable<T> t : tasks) {
                 ForkJoinTask<T> f = new ForkJoinTask.AdaptedCallable<T>(t);
+                futures.add(f);
                 externalPush(f);
-                fs.add(f);
             }
-            for (ForkJoinTask<T> f : fs)
-                f.quietlyJoin();
+            for (int i = 0, size = futures.size(); i < size; i++)
+                ((ForkJoinTask<?>)futures.get(i)).quietlyJoin();
             done = true;
             return futures;
         } finally {
             if (!done)
-                for (ForkJoinTask<T> f : fs)
-                    f.cancel(false);
+                for (int i = 0, size = futures.size(); i < size; i++)
+                    futures.get(i).cancel(false);
         }
     }
 

@@ -11,7 +11,8 @@ import junit.framework.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.StampedLock;
 import java.util.concurrent.CountDownLatch;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.*;
@@ -26,7 +27,9 @@ public class StampedLockTest extends JSR166TestCase {
 
     // XXXX Just a skeleton implementation for now.
     public void testTODO() { fail("StampedLockTest needs help"); }
-    
+
+    public void testConstructor() { new StampedLock(); }
+
 //     /**
 //      * A runnable calling lockInterruptibly
 //      */

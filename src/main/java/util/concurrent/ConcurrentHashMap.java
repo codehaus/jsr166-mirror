@@ -2953,13 +2953,13 @@ public class ConcurrentHashMap<K, V>
 
         public Iterator<K> iterator() { return this; }
 
-        public void forEach(Block<? super K> action) {
+        public void forEach(Consumer<? super K> action) {
             if (action == null) throw new NullPointerException();
             while (advance() != null)
                 action.accept(nextKey);
         }
 
-        public boolean tryAdvance(Block<? super K> block) {
+        public boolean tryAdvance(Consumer<? super K> block) {
             if (block == null) throw new NullPointerException();
             if (advance() == null)
                 return false;
@@ -2993,14 +2993,14 @@ public class ConcurrentHashMap<K, V>
 
         public Iterator<V> iterator() { return this; }
 
-        public void forEach(Block<? super V> action) {
+        public void forEach(Consumer<? super V> action) {
             if (action == null) throw new NullPointerException();
             V v;
             while ((v = advance()) != null)
                 action.accept(v);
         }
 
-        public boolean tryAdvance(Block<? super V> block) {
+        public boolean tryAdvance(Consumer<? super V> block) {
             V v;
             if (block == null) throw new NullPointerException();
             if ((v = advance()) == null)
@@ -3035,14 +3035,14 @@ public class ConcurrentHashMap<K, V>
 
         public Iterator<Map.Entry<K,V>> iterator() { return this; }
 
-        public void forEach(Block<? super Map.Entry<K,V>> action) {
+        public void forEach(Consumer<? super Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
             V v;
             while ((v = advance()) != null)
                 action.accept(entryFor(nextKey, v));
         }
 
-        public boolean tryAdvance(Block<? super Map.Entry<K,V>> block) {
+        public boolean tryAdvance(Consumer<? super Map.Entry<K,V>> block) {
             V v;
             if (block == null) throw new NullPointerException();
             if ((v = advance()) == null)
@@ -3238,7 +3238,7 @@ public class ConcurrentHashMap<K, V>
      * @param action the action
      */
     public void forEachSequentially
-        (BiBlock<? super K, ? super V> action) {
+        (BiConsumer<? super K, ? super V> action) {
         if (action == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v;
@@ -3257,7 +3257,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachSequentially
         (BiFunction<? super K, ? super V, ? extends U> transformer,
-         Block<? super U> action) {
+         Consumer<? super U> action) {
         if (transformer == null || action == null)
             throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
@@ -3328,7 +3328,7 @@ public class ConcurrentHashMap<K, V>
      * of all (key, value) pairs
      */
     public double reduceToDoubleSequentially
-        (DoubleBiFunction<? super K, ? super V> transformer,
+        (ToDoubleBiFunction<? super K, ? super V> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3353,7 +3353,7 @@ public class ConcurrentHashMap<K, V>
      * of all (key, value) pairs
      */
     public long reduceToLongSequentially
-        (LongBiFunction<? super K, ? super V> transformer,
+        (ToLongBiFunction<? super K, ? super V> transformer,
          long basis,
          LongBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3378,7 +3378,7 @@ public class ConcurrentHashMap<K, V>
      * of all (key, value) pairs
      */
     public int reduceToIntSequentially
-        (IntBiFunction<? super K, ? super V> transformer,
+        (ToIntBiFunction<? super K, ? super V> transformer,
          int basis,
          IntBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3396,7 +3396,7 @@ public class ConcurrentHashMap<K, V>
      * @param action the action
      */
     public void forEachKeySequentially
-        (Block<? super K> action) {
+        (Consumer<? super K> action) {
         if (action == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         while (it.advance() != null)
@@ -3414,7 +3414,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachKeySequentially
         (Function<? super K, ? extends U> transformer,
-         Block<? super U> action) {
+         Consumer<? super U> action) {
         if (transformer == null || action == null)
             throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
@@ -3506,7 +3506,7 @@ public class ConcurrentHashMap<K, V>
      * of all keys
      */
     public double reduceKeysToDoubleSequentially
-        (DoubleFunction<? super K> transformer,
+        (ToDoubleFunction<? super K> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3531,7 +3531,7 @@ public class ConcurrentHashMap<K, V>
      * of all keys
      */
     public long reduceKeysToLongSequentially
-        (LongFunction<? super K> transformer,
+        (ToLongFunction<? super K> transformer,
          long basis,
          LongBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3556,7 +3556,7 @@ public class ConcurrentHashMap<K, V>
      * of all keys
      */
     public int reduceKeysToIntSequentially
-        (IntFunction<? super K> transformer,
+        (ToIntFunction<? super K> transformer,
          int basis,
          IntBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3573,7 +3573,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    public void forEachValueSequentially(Block<? super V> action) {
+    public void forEachValueSequentially(Consumer<? super V> action) {
         if (action == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v;
@@ -3591,7 +3591,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachValueSequentially
         (Function<? super V, ? extends U> transformer,
-         Block<? super U> action) {
+         Consumer<? super U> action) {
         if (transformer == null || action == null)
             throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
@@ -3679,7 +3679,7 @@ public class ConcurrentHashMap<K, V>
      * of all values
      */
     public double reduceValuesToDoubleSequentially
-        (DoubleFunction<? super V> transformer,
+        (ToDoubleFunction<? super V> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3704,7 +3704,7 @@ public class ConcurrentHashMap<K, V>
      * of all values
      */
     public long reduceValuesToLongSequentially
-        (LongFunction<? super V> transformer,
+        (ToLongFunction<? super V> transformer,
          long basis,
          LongBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3729,7 +3729,7 @@ public class ConcurrentHashMap<K, V>
      * of all values
      */
     public int reduceValuesToIntSequentially
-        (IntFunction<? super V> transformer,
+        (ToIntFunction<? super V> transformer,
          int basis,
          IntBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3747,7 +3747,7 @@ public class ConcurrentHashMap<K, V>
      * @param action the action
      */
     public void forEachEntrySequentially
-        (Block<? super Map.Entry<K,V>> action) {
+        (Consumer<? super Map.Entry<K,V>> action) {
         if (action == null) throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v;
@@ -3766,7 +3766,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachEntrySequentially
         (Function<Map.Entry<K,V>, ? extends U> transformer,
-         Block<? super U> action) {
+         Consumer<? super U> action) {
         if (transformer == null || action == null)
             throw new NullPointerException();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
@@ -3856,7 +3856,7 @@ public class ConcurrentHashMap<K, V>
      * of all entries
      */
     public double reduceEntriesToDoubleSequentially
-        (DoubleFunction<Map.Entry<K,V>> transformer,
+        (ToDoubleFunction<Map.Entry<K,V>> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3881,7 +3881,7 @@ public class ConcurrentHashMap<K, V>
      * of all entries
      */
     public long reduceEntriesToLongSequentially
-        (LongFunction<Map.Entry<K,V>> transformer,
+        (ToLongFunction<Map.Entry<K,V>> transformer,
          long basis,
          LongBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3906,7 +3906,7 @@ public class ConcurrentHashMap<K, V>
      * of all entries
      */
     public int reduceEntriesToIntSequentially
-        (IntFunction<Map.Entry<K,V>> transformer,
+        (ToIntFunction<Map.Entry<K,V>> transformer,
          int basis,
          IntBinaryOperator reducer) {
         if (transformer == null || reducer == null)
@@ -3925,7 +3925,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    public void forEachInParallel(BiBlock<? super K,? super V> action) {
+    public void forEachInParallel(BiConsumer<? super K,? super V> action) {
         ForkJoinTasks.forEach
             (this, action).invoke();
     }
@@ -3941,7 +3941,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachInParallel
         (BiFunction<? super K, ? super V, ? extends U> transformer,
-                            Block<? super U> action) {
+                            Consumer<? super U> action) {
         ForkJoinTasks.forEach
             (this, transformer, action).invoke();
     }
@@ -3996,7 +3996,7 @@ public class ConcurrentHashMap<K, V>
      * of all (key, value) pairs
      */
     public double reduceToDoubleInParallel
-        (DoubleBiFunction<? super K, ? super V> transformer,
+        (ToDoubleBiFunction<? super K, ? super V> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         return ForkJoinTasks.reduceToDouble
@@ -4016,7 +4016,7 @@ public class ConcurrentHashMap<K, V>
      * of all (key, value) pairs
      */
     public long reduceToLongInParallel
-        (LongBiFunction<? super K, ? super V> transformer,
+        (ToLongBiFunction<? super K, ? super V> transformer,
          long basis,
          LongBinaryOperator reducer) {
         return ForkJoinTasks.reduceToLong
@@ -4036,7 +4036,7 @@ public class ConcurrentHashMap<K, V>
      * of all (key, value) pairs
      */
     public int reduceToIntInParallel
-        (IntBiFunction<? super K, ? super V> transformer,
+        (ToIntBiFunction<? super K, ? super V> transformer,
          int basis,
          IntBinaryOperator reducer) {
         return ForkJoinTasks.reduceToInt
@@ -4048,7 +4048,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    public void forEachKeyInParallel(Block<? super K> action) {
+    public void forEachKeyInParallel(Consumer<? super K> action) {
         ForkJoinTasks.forEachKey
             (this, action).invoke();
     }
@@ -4064,7 +4064,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachKeyInParallel
         (Function<? super K, ? extends U> transformer,
-         Block<? super U> action) {
+         Consumer<? super U> action) {
         ForkJoinTasks.forEachKey
             (this, transformer, action).invoke();
     }
@@ -4133,7 +4133,7 @@ public class ConcurrentHashMap<K, V>
      * of all keys
      */
     public double reduceKeysToDoubleInParallel
-        (DoubleFunction<? super K> transformer,
+        (ToDoubleFunction<? super K> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         return ForkJoinTasks.reduceKeysToDouble
@@ -4153,7 +4153,7 @@ public class ConcurrentHashMap<K, V>
      * of all keys
      */
     public long reduceKeysToLongInParallel
-        (LongFunction<? super K> transformer,
+        (ToLongFunction<? super K> transformer,
          long basis,
          LongBinaryOperator reducer) {
         return ForkJoinTasks.reduceKeysToLong
@@ -4173,7 +4173,7 @@ public class ConcurrentHashMap<K, V>
      * of all keys
      */
     public int reduceKeysToIntInParallel
-        (IntFunction<? super K> transformer,
+        (ToIntFunction<? super K> transformer,
          int basis,
          IntBinaryOperator reducer) {
         return ForkJoinTasks.reduceKeysToInt
@@ -4185,7 +4185,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    public void forEachValueInParallel(Block<? super V> action) {
+    public void forEachValueInParallel(Consumer<? super V> action) {
         ForkJoinTasks.forEachValue
             (this, action).invoke();
     }
@@ -4200,7 +4200,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachValueInParallel
         (Function<? super V, ? extends U> transformer,
-         Block<? super U> action) {
+         Consumer<? super U> action) {
         ForkJoinTasks.forEachValue
             (this, transformer, action).invoke();
     }
@@ -4268,7 +4268,7 @@ public class ConcurrentHashMap<K, V>
      * of all values
      */
     public double reduceValuesToDoubleInParallel
-        (DoubleFunction<? super V> transformer,
+        (ToDoubleFunction<? super V> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         return ForkJoinTasks.reduceValuesToDouble
@@ -4288,7 +4288,7 @@ public class ConcurrentHashMap<K, V>
      * of all values
      */
     public long reduceValuesToLongInParallel
-        (LongFunction<? super V> transformer,
+        (ToLongFunction<? super V> transformer,
          long basis,
          LongBinaryOperator reducer) {
         return ForkJoinTasks.reduceValuesToLong
@@ -4308,7 +4308,7 @@ public class ConcurrentHashMap<K, V>
      * of all values
      */
     public int reduceValuesToIntInParallel
-        (IntFunction<? super V> transformer,
+        (ToIntFunction<? super V> transformer,
          int basis,
          IntBinaryOperator reducer) {
         return ForkJoinTasks.reduceValuesToInt
@@ -4320,7 +4320,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param action the action
      */
-    public void forEachEntryInParallel(Block<? super Map.Entry<K,V>> action) {
+    public void forEachEntryInParallel(Consumer<? super Map.Entry<K,V>> action) {
         ForkJoinTasks.forEachEntry
             (this, action).invoke();
     }
@@ -4336,7 +4336,7 @@ public class ConcurrentHashMap<K, V>
      */
     public <U> void forEachEntryInParallel
         (Function<Map.Entry<K,V>, ? extends U> transformer,
-         Block<? super U> action) {
+         Consumer<? super U> action) {
         ForkJoinTasks.forEachEntry
             (this, transformer, action).invoke();
     }
@@ -4404,7 +4404,7 @@ public class ConcurrentHashMap<K, V>
      * of all entries
      */
     public double reduceEntriesToDoubleInParallel
-        (DoubleFunction<Map.Entry<K,V>> transformer,
+        (ToDoubleFunction<Map.Entry<K,V>> transformer,
          double basis,
          DoubleBinaryOperator reducer) {
         return ForkJoinTasks.reduceEntriesToDouble
@@ -4424,7 +4424,7 @@ public class ConcurrentHashMap<K, V>
      * of all entries
      */
     public long reduceEntriesToLongInParallel
-        (LongFunction<Map.Entry<K,V>> transformer,
+        (ToLongFunction<Map.Entry<K,V>> transformer,
          long basis,
          LongBinaryOperator reducer) {
         return ForkJoinTasks.reduceEntriesToLong
@@ -4444,7 +4444,7 @@ public class ConcurrentHashMap<K, V>
      * of all entries
      */
     public int reduceEntriesToIntInParallel
-        (IntFunction<Map.Entry<K,V>> transformer,
+        (ToIntFunction<Map.Entry<K,V>> transformer,
          int basis,
          IntBinaryOperator reducer) {
         return ForkJoinTasks.reduceEntriesToInt
@@ -4824,7 +4824,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Void> forEach
             (ConcurrentHashMap<K,V> map,
-             BiBlock<? super K, ? super V> action) {
+             BiConsumer<? super K, ? super V> action) {
             if (action == null) throw new NullPointerException();
             return new ForEachMappingTask<K,V>(map, null, -1, action);
         }
@@ -4843,7 +4843,7 @@ public class ConcurrentHashMap<K, V>
         public static <K,V,U> ForkJoinTask<Void> forEach
             (ConcurrentHashMap<K,V> map,
              BiFunction<? super K, ? super V, ? extends U> transformer,
-             Block<? super U> action) {
+             Consumer<? super U> action) {
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedMappingTask<K,V,U>
@@ -4908,7 +4908,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Double> reduceToDouble
             (ConcurrentHashMap<K,V> map,
-             DoubleBiFunction<? super K, ? super V> transformer,
+             ToDoubleBiFunction<? super K, ? super V> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -4932,7 +4932,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Long> reduceToLong
             (ConcurrentHashMap<K,V> map,
-             LongBiFunction<? super K, ? super V> transformer,
+             ToLongBiFunction<? super K, ? super V> transformer,
              long basis,
              LongBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -4955,7 +4955,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Integer> reduceToInt
             (ConcurrentHashMap<K,V> map,
-             IntBiFunction<? super K, ? super V> transformer,
+             ToIntBiFunction<? super K, ? super V> transformer,
              int basis,
              IntBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -4974,7 +4974,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Void> forEachKey
             (ConcurrentHashMap<K,V> map,
-             Block<? super K> action) {
+             Consumer<? super K> action) {
             if (action == null) throw new NullPointerException();
             return new ForEachKeyTask<K,V>(map, null, -1, action);
         }
@@ -4993,7 +4993,7 @@ public class ConcurrentHashMap<K, V>
         public static <K,V,U> ForkJoinTask<Void> forEachKey
             (ConcurrentHashMap<K,V> map,
              Function<? super K, ? extends U> transformer,
-             Block<? super U> action) {
+             Consumer<? super U> action) {
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedKeyTask<K,V,U>
@@ -5075,7 +5075,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Double> reduceKeysToDouble
             (ConcurrentHashMap<K,V> map,
-             DoubleFunction<? super K> transformer,
+             ToDoubleFunction<? super K> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5099,7 +5099,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Long> reduceKeysToLong
             (ConcurrentHashMap<K,V> map,
-             LongFunction<? super K> transformer,
+             ToLongFunction<? super K> transformer,
              long basis,
              LongBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5123,7 +5123,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Integer> reduceKeysToInt
             (ConcurrentHashMap<K,V> map,
-             IntFunction<? super K> transformer,
+             ToIntFunction<? super K> transformer,
              int basis,
              IntBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5141,7 +5141,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Void> forEachValue
             (ConcurrentHashMap<K,V> map,
-             Block<? super V> action) {
+             Consumer<? super V> action) {
             if (action == null) throw new NullPointerException();
             return new ForEachValueTask<K,V>(map, null, -1, action);
         }
@@ -5159,7 +5159,7 @@ public class ConcurrentHashMap<K, V>
         public static <K,V,U> ForkJoinTask<Void> forEachValue
             (ConcurrentHashMap<K,V> map,
              Function<? super V, ? extends U> transformer,
-             Block<? super U> action) {
+             Consumer<? super U> action) {
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedValueTask<K,V,U>
@@ -5241,7 +5241,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Double> reduceValuesToDouble
             (ConcurrentHashMap<K,V> map,
-             DoubleFunction<? super V> transformer,
+             ToDoubleFunction<? super V> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5265,7 +5265,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Long> reduceValuesToLong
             (ConcurrentHashMap<K,V> map,
-             LongFunction<? super V> transformer,
+             ToLongFunction<? super V> transformer,
              long basis,
              LongBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5289,7 +5289,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Integer> reduceValuesToInt
             (ConcurrentHashMap<K,V> map,
-             IntFunction<? super V> transformer,
+             ToIntFunction<? super V> transformer,
              int basis,
              IntBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5307,7 +5307,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Void> forEachEntry
             (ConcurrentHashMap<K,V> map,
-             Block<? super Map.Entry<K,V>> action) {
+             Consumer<? super Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
             return new ForEachEntryTask<K,V>(map, null, -1, action);
         }
@@ -5325,7 +5325,7 @@ public class ConcurrentHashMap<K, V>
         public static <K,V,U> ForkJoinTask<Void> forEachEntry
             (ConcurrentHashMap<K,V> map,
              Function<Map.Entry<K,V>, ? extends U> transformer,
-             Block<? super U> action) {
+             Consumer<? super U> action) {
             if (transformer == null || action == null)
                 throw new NullPointerException();
             return new ForEachTransformedEntryTask<K,V,U>
@@ -5407,7 +5407,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Double> reduceEntriesToDouble
             (ConcurrentHashMap<K,V> map,
-             DoubleFunction<Map.Entry<K,V>> transformer,
+             ToDoubleFunction<Map.Entry<K,V>> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5431,7 +5431,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Long> reduceEntriesToLong
             (ConcurrentHashMap<K,V> map,
-             LongFunction<Map.Entry<K,V>> transformer,
+             ToLongFunction<Map.Entry<K,V>> transformer,
              long basis,
              LongBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5455,7 +5455,7 @@ public class ConcurrentHashMap<K, V>
          */
         public static <K,V> ForkJoinTask<Integer> reduceEntriesToInt
             (ConcurrentHashMap<K,V> map,
-             IntFunction<Map.Entry<K,V>> transformer,
+             ToIntFunction<Map.Entry<K,V>> transformer,
              int basis,
              IntBinaryOperator reducer) {
             if (transformer == null || reducer == null)
@@ -5477,15 +5477,15 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class ForEachKeyTask<K,V>
         extends Traverser<K,V,Void> {
-        final Block<? super K> action;
+        final Consumer<? super K> action;
         ForEachKeyTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
-             Block<? super K> action) {
+             Consumer<? super K> action) {
             super(m, p, b);
             this.action = action;
         }
         public final void compute() {
-            final Block<? super K> action;
+            final Consumer<? super K> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachKeyTask<K,V>(map, this, b, action).fork();
@@ -5498,15 +5498,15 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class ForEachValueTask<K,V>
         extends Traverser<K,V,Void> {
-        final Block<? super V> action;
+        final Consumer<? super V> action;
         ForEachValueTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
-             Block<? super V> action) {
+             Consumer<? super V> action) {
             super(m, p, b);
             this.action = action;
         }
         public final void compute() {
-            final Block<? super V> action;
+            final Consumer<? super V> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachValueTask<K,V>(map, this, b, action).fork();
@@ -5520,15 +5520,15 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class ForEachEntryTask<K,V>
         extends Traverser<K,V,Void> {
-        final Block<? super Entry<K,V>> action;
+        final Consumer<? super Entry<K,V>> action;
         ForEachEntryTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
-             Block<? super Entry<K,V>> action) {
+             Consumer<? super Entry<K,V>> action) {
             super(m, p, b);
             this.action = action;
         }
         public final void compute() {
-            final Block<? super Entry<K,V>> action;
+            final Consumer<? super Entry<K,V>> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachEntryTask<K,V>(map, this, b, action).fork();
@@ -5542,15 +5542,15 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class ForEachMappingTask<K,V>
         extends Traverser<K,V,Void> {
-        final BiBlock<? super K, ? super V> action;
+        final BiConsumer<? super K, ? super V> action;
         ForEachMappingTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
-             BiBlock<? super K,? super V> action) {
+             BiConsumer<? super K,? super V> action) {
             super(m, p, b);
             this.action = action;
         }
         public final void compute() {
-            final BiBlock<? super K, ? super V> action;
+            final BiConsumer<? super K, ? super V> action;
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachMappingTask<K,V>(map, this, b, action).fork();
@@ -5565,16 +5565,16 @@ public class ConcurrentHashMap<K, V>
     @SuppressWarnings("serial") static final class ForEachTransformedKeyTask<K,V,U>
         extends Traverser<K,V,Void> {
         final Function<? super K, ? extends U> transformer;
-        final Block<? super U> action;
+        final Consumer<? super U> action;
         ForEachTransformedKeyTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
-             Function<? super K, ? extends U> transformer, Block<? super U> action) {
+             Function<? super K, ? extends U> transformer, Consumer<? super U> action) {
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
         public final void compute() {
             final Function<? super K, ? extends U> transformer;
-            final Block<? super U> action;
+            final Consumer<? super U> action;
             if ((transformer = this.transformer) != null &&
                 (action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
@@ -5593,16 +5593,16 @@ public class ConcurrentHashMap<K, V>
     @SuppressWarnings("serial") static final class ForEachTransformedValueTask<K,V,U>
         extends Traverser<K,V,Void> {
         final Function<? super V, ? extends U> transformer;
-        final Block<? super U> action;
+        final Consumer<? super U> action;
         ForEachTransformedValueTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
-             Function<? super V, ? extends U> transformer, Block<? super U> action) {
+             Function<? super V, ? extends U> transformer, Consumer<? super U> action) {
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
         public final void compute() {
             final Function<? super V, ? extends U> transformer;
-            final Block<? super U> action;
+            final Consumer<? super U> action;
             if ((transformer = this.transformer) != null &&
                 (action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
@@ -5621,16 +5621,16 @@ public class ConcurrentHashMap<K, V>
     @SuppressWarnings("serial") static final class ForEachTransformedEntryTask<K,V,U>
         extends Traverser<K,V,Void> {
         final Function<Map.Entry<K,V>, ? extends U> transformer;
-        final Block<? super U> action;
+        final Consumer<? super U> action;
         ForEachTransformedEntryTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
-             Function<Map.Entry<K,V>, ? extends U> transformer, Block<? super U> action) {
+             Function<Map.Entry<K,V>, ? extends U> transformer, Consumer<? super U> action) {
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
         public final void compute() {
             final Function<Map.Entry<K,V>, ? extends U> transformer;
-            final Block<? super U> action;
+            final Consumer<? super U> action;
             if ((transformer = this.transformer) != null &&
                 (action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
@@ -5650,17 +5650,17 @@ public class ConcurrentHashMap<K, V>
     @SuppressWarnings("serial") static final class ForEachTransformedMappingTask<K,V,U>
         extends Traverser<K,V,Void> {
         final BiFunction<? super K, ? super V, ? extends U> transformer;
-        final Block<? super U> action;
+        final Consumer<? super U> action;
         ForEachTransformedMappingTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              BiFunction<? super K, ? super V, ? extends U> transformer,
-             Block<? super U> action) {
+             Consumer<? super U> action) {
             super(m, p, b);
             this.transformer = transformer; this.action = action;
         }
         public final void compute() {
             final BiFunction<? super K, ? super V, ? extends U> transformer;
-            final Block<? super U> action;
+            final Consumer<? super U> action;
             if ((transformer = this.transformer) != null &&
                 (action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
@@ -6160,7 +6160,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceKeysToDoubleTask<K,V>
         extends Traverser<K,V,Double> {
-        final DoubleFunction<? super K> transformer;
+        final ToDoubleFunction<? super K> transformer;
         final DoubleBinaryOperator reducer;
         final double basis;
         double result;
@@ -6168,7 +6168,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceKeysToDoubleTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceKeysToDoubleTask<K,V> nextRight,
-             DoubleFunction<? super K> transformer,
+             ToDoubleFunction<? super K> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6177,7 +6177,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Double getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final DoubleFunction<? super K> transformer;
+            final ToDoubleFunction<? super K> transformer;
             final DoubleBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6204,7 +6204,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceValuesToDoubleTask<K,V>
         extends Traverser<K,V,Double> {
-        final DoubleFunction<? super V> transformer;
+        final ToDoubleFunction<? super V> transformer;
         final DoubleBinaryOperator reducer;
         final double basis;
         double result;
@@ -6212,7 +6212,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceValuesToDoubleTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceValuesToDoubleTask<K,V> nextRight,
-             DoubleFunction<? super V> transformer,
+             ToDoubleFunction<? super V> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6221,7 +6221,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Double getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final DoubleFunction<? super V> transformer;
+            final ToDoubleFunction<? super V> transformer;
             final DoubleBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6249,7 +6249,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceEntriesToDoubleTask<K,V>
         extends Traverser<K,V,Double> {
-        final DoubleFunction<Map.Entry<K,V>> transformer;
+        final ToDoubleFunction<Map.Entry<K,V>> transformer;
         final DoubleBinaryOperator reducer;
         final double basis;
         double result;
@@ -6257,7 +6257,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceEntriesToDoubleTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceEntriesToDoubleTask<K,V> nextRight,
-             DoubleFunction<Map.Entry<K,V>> transformer,
+             ToDoubleFunction<Map.Entry<K,V>> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6266,7 +6266,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Double getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final DoubleFunction<Map.Entry<K,V>> transformer;
+            final ToDoubleFunction<Map.Entry<K,V>> transformer;
             final DoubleBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6295,7 +6295,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceMappingsToDoubleTask<K,V>
         extends Traverser<K,V,Double> {
-        final DoubleBiFunction<? super K, ? super V> transformer;
+        final ToDoubleBiFunction<? super K, ? super V> transformer;
         final DoubleBinaryOperator reducer;
         final double basis;
         double result;
@@ -6303,7 +6303,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceMappingsToDoubleTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceMappingsToDoubleTask<K,V> nextRight,
-             DoubleBiFunction<? super K, ? super V> transformer,
+             ToDoubleBiFunction<? super K, ? super V> transformer,
              double basis,
              DoubleBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6312,7 +6312,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Double getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final DoubleBiFunction<? super K, ? super V> transformer;
+            final ToDoubleBiFunction<? super K, ? super V> transformer;
             final DoubleBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6340,7 +6340,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceKeysToLongTask<K,V>
         extends Traverser<K,V,Long> {
-        final LongFunction<? super K> transformer;
+        final ToLongFunction<? super K> transformer;
         final LongBinaryOperator reducer;
         final long basis;
         long result;
@@ -6348,7 +6348,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceKeysToLongTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceKeysToLongTask<K,V> nextRight,
-             LongFunction<? super K> transformer,
+             ToLongFunction<? super K> transformer,
              long basis,
              LongBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6357,7 +6357,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Long getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final LongFunction<? super K> transformer;
+            final ToLongFunction<? super K> transformer;
             final LongBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6384,7 +6384,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceValuesToLongTask<K,V>
         extends Traverser<K,V,Long> {
-        final LongFunction<? super V> transformer;
+        final ToLongFunction<? super V> transformer;
         final LongBinaryOperator reducer;
         final long basis;
         long result;
@@ -6392,7 +6392,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceValuesToLongTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceValuesToLongTask<K,V> nextRight,
-             LongFunction<? super V> transformer,
+             ToLongFunction<? super V> transformer,
              long basis,
              LongBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6401,7 +6401,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Long getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final LongFunction<? super V> transformer;
+            final ToLongFunction<? super V> transformer;
             final LongBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6429,7 +6429,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceEntriesToLongTask<K,V>
         extends Traverser<K,V,Long> {
-        final LongFunction<Map.Entry<K,V>> transformer;
+        final ToLongFunction<Map.Entry<K,V>> transformer;
         final LongBinaryOperator reducer;
         final long basis;
         long result;
@@ -6437,7 +6437,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceEntriesToLongTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceEntriesToLongTask<K,V> nextRight,
-             LongFunction<Map.Entry<K,V>> transformer,
+             ToLongFunction<Map.Entry<K,V>> transformer,
              long basis,
              LongBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6446,7 +6446,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Long getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final LongFunction<Map.Entry<K,V>> transformer;
+            final ToLongFunction<Map.Entry<K,V>> transformer;
             final LongBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6474,7 +6474,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceMappingsToLongTask<K,V>
         extends Traverser<K,V,Long> {
-        final LongBiFunction<? super K, ? super V> transformer;
+        final ToLongBiFunction<? super K, ? super V> transformer;
         final LongBinaryOperator reducer;
         final long basis;
         long result;
@@ -6482,7 +6482,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceMappingsToLongTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceMappingsToLongTask<K,V> nextRight,
-             LongBiFunction<? super K, ? super V> transformer,
+             ToLongBiFunction<? super K, ? super V> transformer,
              long basis,
              LongBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6491,7 +6491,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Long getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final LongBiFunction<? super K, ? super V> transformer;
+            final ToLongBiFunction<? super K, ? super V> transformer;
             final LongBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6519,7 +6519,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceKeysToIntTask<K,V>
         extends Traverser<K,V,Integer> {
-        final IntFunction<? super K> transformer;
+        final ToIntFunction<? super K> transformer;
         final IntBinaryOperator reducer;
         final int basis;
         int result;
@@ -6527,7 +6527,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceKeysToIntTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceKeysToIntTask<K,V> nextRight,
-             IntFunction<? super K> transformer,
+             ToIntFunction<? super K> transformer,
              int basis,
              IntBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6536,7 +6536,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Integer getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final IntFunction<? super K> transformer;
+            final ToIntFunction<? super K> transformer;
             final IntBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6563,7 +6563,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceValuesToIntTask<K,V>
         extends Traverser<K,V,Integer> {
-        final IntFunction<? super V> transformer;
+        final ToIntFunction<? super V> transformer;
         final IntBinaryOperator reducer;
         final int basis;
         int result;
@@ -6571,7 +6571,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceValuesToIntTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceValuesToIntTask<K,V> nextRight,
-             IntFunction<? super V> transformer,
+             ToIntFunction<? super V> transformer,
              int basis,
              IntBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6580,7 +6580,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Integer getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final IntFunction<? super V> transformer;
+            final ToIntFunction<? super V> transformer;
             final IntBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6608,7 +6608,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceEntriesToIntTask<K,V>
         extends Traverser<K,V,Integer> {
-        final IntFunction<Map.Entry<K,V>> transformer;
+        final ToIntFunction<Map.Entry<K,V>> transformer;
         final IntBinaryOperator reducer;
         final int basis;
         int result;
@@ -6616,7 +6616,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceEntriesToIntTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceEntriesToIntTask<K,V> nextRight,
-             IntFunction<Map.Entry<K,V>> transformer,
+             ToIntFunction<Map.Entry<K,V>> transformer,
              int basis,
              IntBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6625,7 +6625,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Integer getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final IntFunction<Map.Entry<K,V>> transformer;
+            final ToIntFunction<Map.Entry<K,V>> transformer;
             final IntBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {
@@ -6654,7 +6654,7 @@ public class ConcurrentHashMap<K, V>
 
     @SuppressWarnings("serial") static final class MapReduceMappingsToIntTask<K,V>
         extends Traverser<K,V,Integer> {
-        final IntBiFunction<? super K, ? super V> transformer;
+        final ToIntBiFunction<? super K, ? super V> transformer;
         final IntBinaryOperator reducer;
         final int basis;
         int result;
@@ -6662,7 +6662,7 @@ public class ConcurrentHashMap<K, V>
         MapReduceMappingsToIntTask
             (ConcurrentHashMap<K,V> m, Traverser<K,V,?> p, int b,
              MapReduceMappingsToIntTask<K,V> nextRight,
-             IntBiFunction<? super K, ? super V> transformer,
+             ToIntBiFunction<? super K, ? super V> transformer,
              int basis,
              IntBinaryOperator reducer) {
             super(m, p, b); this.nextRight = nextRight;
@@ -6671,7 +6671,7 @@ public class ConcurrentHashMap<K, V>
         }
         public final Integer getRawResult() { return result; }
         @SuppressWarnings("unchecked") public final void compute() {
-            final IntBiFunction<? super K, ? super V> transformer;
+            final ToIntBiFunction<? super K, ? super V> transformer;
             final IntBinaryOperator reducer;
             if ((transformer = this.transformer) != null &&
                 (reducer = this.reducer) != null) {

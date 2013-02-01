@@ -8,7 +8,7 @@ package java.util;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
-import java.util.function.Block;
+import java.util.function.Consumer;
 
 /**
  * Resizable-array implementation of the {@link Deque} interface.  Array
@@ -881,7 +881,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             return null;
         }
 
-        public void forEach(Block<? super E> block) {
+        public void forEach(Consumer<? super E> block) {
             if (block == null)
                 throw new NullPointerException();
             Object[] a = deq.elements;
@@ -896,7 +896,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             }
         }
 
-        public boolean tryAdvance(Block<? super E> block) {
+        public boolean tryAdvance(Consumer<? super E> block) {
             if (block == null)
                 throw new NullPointerException();
             Object[] a = deq.elements;

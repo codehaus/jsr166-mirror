@@ -6,8 +6,8 @@
 
 package java.util.concurrent;
 import java.util.function.Supplier;
-import java.util.function.Block;
-import java.util.function.BiBlock;
+import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.BiFunction;
 import java.util.concurrent.Future;
@@ -26,7 +26,7 @@ import java.util.concurrent.locks.LockSupport;
  * A {@link Future} that may be explicitly completed (setting its
  * value and status), and may include dependent functions and actions
  * that trigger upon its completion.  Methods are available for adding
- * those based on Functions, Blocks, and Runnables, depending on
+ * those based on Functions, Consumers, and Runnables, depending on
  * whether they require arguments and/or produce results, as well as
  * those triggered after either or both the current and another
  * CompletableFuture complete.  Functions and actions supplied for
@@ -483,10 +483,10 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncAccept<T> extends Async {
-        final Block<? super T> fn;
+        final Consumer<? super T> fn;
         final T arg;
         final CompletableFuture<Void> dst;
-        AsyncAccept(T arg, Block<? super T> fn,
+        AsyncAccept(T arg, Consumer<? super T> fn,
                    CompletableFuture<Void> dst) {
             this.arg = arg; this.fn = fn; this.dst = dst;
         }
@@ -507,12 +507,12 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncBiAccept<T,U> extends Async {
-        final BiBlock<? super T,? super U> fn;
+        final BiConsumer<? super T,? super U> fn;
         final T arg1;
         final U arg2;
         final CompletableFuture<Void> dst;
         AsyncBiAccept(T arg1, U arg2,
-                     BiBlock<? super T,? super U> fn,
+                     BiConsumer<? super T,? super U> fn,
                      CompletableFuture<Void> dst) {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
@@ -601,18 +601,18 @@ public class CompletableFuture<T> implements Future<T> {
 
     static final class AcceptCompletion<T> extends Completion {
         final CompletableFuture<? extends T> src;
-        final Block<? super T> fn;
+        final Consumer<? super T> fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
         AcceptCompletion(CompletableFuture<? extends T> src,
-                         Block<? super T> fn,
+                         Consumer<? super T> fn,
                          CompletableFuture<Void> dst, Executor executor) {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
         public final void run() {
             final CompletableFuture<? extends T> a;
-            final Block<? super T> fn;
+            final Consumer<? super T> fn;
             final CompletableFuture<Void> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -759,12 +759,12 @@ public class CompletableFuture<T> implements Future<T> {
     static final class BiAcceptCompletion<T,U> extends Completion {
         final CompletableFuture<? extends T> src;
         final CompletableFuture<? extends U> snd;
-        final BiBlock<? super T,? super U> fn;
+        final BiConsumer<? super T,? super U> fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
         BiAcceptCompletion(CompletableFuture<? extends T> src,
                            CompletableFuture<? extends U> snd,
-                           BiBlock<? super T,? super U> fn,
+                           BiConsumer<? super T,? super U> fn,
                            CompletableFuture<Void> dst, Executor executor) {
             this.src = src; this.snd = snd;
             this.fn = fn; this.dst = dst;
@@ -773,7 +773,7 @@ public class CompletableFuture<T> implements Future<T> {
         public final void run() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends U> b;
-            final BiBlock<? super T,? super U> fn;
+            final BiConsumer<? super T,? super U> fn;
             final CompletableFuture<Void> dst;
             Object r, s; T t; U u; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -927,12 +927,12 @@ public class CompletableFuture<T> implements Future<T> {
     static final class OrAcceptCompletion<T> extends Completion {
         final CompletableFuture<? extends T> src;
         final CompletableFuture<? extends T> snd;
-        final Block<? super T> fn;
+        final Consumer<? super T> fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
         OrAcceptCompletion(CompletableFuture<? extends T> src,
                            CompletableFuture<? extends T> snd,
-                           Block<? super T> fn,
+                           Consumer<? super T> fn,
                            CompletableFuture<Void> dst, Executor executor) {
             this.src = src; this.snd = snd;
             this.fn = fn; this.dst = dst;
@@ -941,7 +941,7 @@ public class CompletableFuture<T> implements Future<T> {
         public final void run() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends T> b;
-            final Block<? super T> fn;
+            final Consumer<? super T> fn;
             final CompletableFuture<Void> dst;
             Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
@@ -1560,7 +1560,7 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> thenAccept(Block<? super T> block) {
+    public CompletableFuture<Void> thenAccept(Consumer<? super T> block) {
         return doThenAccept(block, null);
     }
 
@@ -1576,7 +1576,7 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> thenAcceptAsync(Block<? super T> block) {
+    public CompletableFuture<Void> thenAcceptAsync(Consumer<? super T> block) {
         return doThenAccept(block, ForkJoinPool.commonPool());
     }
 
@@ -1593,13 +1593,13 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> thenAcceptAsync(Block<? super T> block,
+    public CompletableFuture<Void> thenAcceptAsync(Consumer<? super T> block,
                                                    Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenAccept(block, executor);
     }
 
-    private CompletableFuture<Void> doThenAccept(Block<? super T> fn,
+    private CompletableFuture<Void> doThenAccept(Consumer<? super T> fn,
                                                  Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
@@ -1871,7 +1871,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<Void> thenAcceptBoth(CompletableFuture<? extends U> other,
-                                                      BiBlock<? super T, ? super U> block) {
+                                                      BiConsumer<? super T, ? super U> block) {
         return doThenBiAccept(other, block, null);
     }
 
@@ -1890,7 +1890,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletableFuture<? extends U> other,
-                                                           BiBlock<? super T, ? super U> block) {
+                                                           BiConsumer<? super T, ? super U> block) {
         return doThenBiAccept(other, block, ForkJoinPool.commonPool());
     }
 
@@ -1910,14 +1910,14 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletableFuture<? extends U> other,
-                                                           BiBlock<? super T, ? super U> block,
+                                                           BiConsumer<? super T, ? super U> block,
                                                            Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenBiAccept(other, block, executor);
     }
 
     private <U> CompletableFuture<Void> doThenBiAccept(CompletableFuture<? extends U> other,
-                                                       BiBlock<? super T,? super U> fn,
+                                                       BiConsumer<? super T,? super U> fn,
                                                        Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
@@ -2226,7 +2226,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public CompletableFuture<Void> acceptEither(CompletableFuture<? extends T> other,
-                                                Block<? super T> block) {
+                                                Consumer<? super T> block) {
         return doOrAccept(other, block, null);
     }
 
@@ -2247,7 +2247,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public CompletableFuture<Void> acceptEitherAsync(CompletableFuture<? extends T> other,
-                                                     Block<? super T> block) {
+                                                     Consumer<? super T> block) {
         return doOrAccept(other, block, ForkJoinPool.commonPool());
     }
 
@@ -2269,14 +2269,14 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
     public CompletableFuture<Void> acceptEitherAsync(CompletableFuture<? extends T> other,
-                                                     Block<? super T> block,
+                                                     Consumer<? super T> block,
                                                      Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doOrAccept(other, block, executor);
     }
 
     private CompletableFuture<Void> doOrAccept(CompletableFuture<? extends T> other,
-                                               Block<? super T> fn,
+                                               Consumer<? super T> fn,
                                                Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();

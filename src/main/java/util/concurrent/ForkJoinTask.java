@@ -1364,6 +1364,24 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
+     * Adaptor for Runnables in which failure forces worker exception
+     */
+    static final class RunnableExecuteAction extends ForkJoinTask<Void> {
+        final Runnable runnable;
+        RunnableExecuteAction(Runnable runnable) {
+            if (runnable == null) throw new NullPointerException();
+            this.runnable = runnable;
+        }
+        public final Void getRawResult() { return null; }
+        public final void setRawResult(Void v) { }
+        public final boolean exec() { runnable.run(); return true; }
+        void internalPropagateException(Throwable ex) {
+            rethrow(ex); // rethrow outside exec() catches.
+        }
+        private static final long serialVersionUID = 5232453952276885070L;
+    }
+
+    /**
      * Adaptor for Callables
      */
     static final class AdaptedCallable<T> extends ForkJoinTask<T>

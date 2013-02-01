@@ -20,7 +20,7 @@ import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
-import java.util.function.Block;
+import java.util.function.Consumer;
 
 /**
  * An unbounded {@linkplain BlockingQueue blocking queue} that uses
@@ -952,7 +952,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
                 new PBQSpliterator<E>(array, lo, index = mid);
         }
 
-        public void forEach(Block<? super E> block) {
+        public void forEach(Consumer<? super E> block) {
             Object[] a; int i, hi; // hoist accesses and checks from loop
             if (block == null)
                 throw new NullPointerException();
@@ -966,7 +966,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             }
         }
 
-        public boolean tryAdvance(Block<? super E> block) {
+        public boolean tryAdvance(Consumer<? super E> block) {
             if (index >= 0 && index < fence) {
                 @SuppressWarnings("unchecked") E e = (E) array[index++];
                 block.accept(e);

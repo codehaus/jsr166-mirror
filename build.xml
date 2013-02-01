@@ -22,6 +22,7 @@
   $HOME/jdk/src/jdk8
   where each of the above is a complete JDK source tree
   (e.g. mercurial forest) or a symlink to same.
+As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 ------------------------------------------------------------------------------
   </description>
 
@@ -412,6 +413,15 @@
 
   </target>
 
+  <target name="test-tck"
+	  depends="jar"
+          description="Runs tck tests for main directly">
+
+    <run-tck-tests
+      target="8"
+      workdir="${build.dir}"
+      classes="${product.jar}"/>
+  </target>
 
   <target name="run-tests"
           depends="compile-tests">

@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.stream.Stream;
 import java.util.Spliterator;
 import java.util.stream.Streams;
-import java.util.function.Block;
+import java.util.function.Consumer;
 
 
 /**
@@ -3676,7 +3676,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return null;
         }
 
-        public void forEach(Block<? super K> block) {
+        public void forEach(Consumer<? super K> block) {
             if (block == null) throw new NullPointerException();
             K f = fence;
             Comparator<? super K> cmp = comparator;
@@ -3695,7 +3695,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        public boolean tryAdvance(Block<? super K> block) {
+        public boolean tryAdvance(Consumer<? super K> block) {
             if (block == null) throw new NullPointerException();
             Node<K,V> e;
             for (e = current; e != null; e = e.next) {
@@ -3753,7 +3753,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return null;
         }
 
-        public void forEach(Block<? super V> block) {
+        public void forEach(Consumer<? super V> block) {
             if (block == null) throw new NullPointerException();
             K f = fence;
             Comparator<? super K> cmp = comparator;
@@ -3772,7 +3772,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        public boolean tryAdvance(Block<? super V> block) {
+        public boolean tryAdvance(Consumer<? super V> block) {
             if (block == null) throw new NullPointerException();
             boolean advanced = false;
             Node<K,V> e;
@@ -3832,7 +3832,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return null;
         }
 
-        public void forEach(Block<? super Map.Entry<K,V>> block) {
+        public void forEach(Consumer<? super Map.Entry<K,V>> block) {
             if (block == null) throw new NullPointerException();
             K f = fence;
             Comparator<? super K> cmp = comparator;
@@ -3853,7 +3853,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        public boolean tryAdvance(Block<? super Map.Entry<K,V>> block) {
+        public boolean tryAdvance(Consumer<? super Map.Entry<K,V>> block) {
             if (block == null) throw new NullPointerException();
             Node<K,V> e;
             for (e = current; e != null; e = e.next) {

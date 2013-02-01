@@ -27,7 +27,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
-import java.util.function.Block;
+import java.util.function.Consumer;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -1368,7 +1368,7 @@ public class CopyOnWriteArrayList<E>
                 new COWSpliterator<E>(array, lo, index = mid);
         }
 
-        public void forEach(Block<? super E> block) {
+        public void forEach(Consumer<? super E> block) {
             Object[] a; int i, hi; // hoist accesses and checks from loop
             if (block == null)
                 throw new NullPointerException();
@@ -1382,7 +1382,7 @@ public class CopyOnWriteArrayList<E>
             }
         }
 
-        public boolean tryAdvance(Block<? super E> block) {
+        public boolean tryAdvance(Consumer<? super E> block) {
             if (index >= 0 && index < fence) {
                 @SuppressWarnings("unchecked") E e = (E) array[index++];
                 block.accept(e);

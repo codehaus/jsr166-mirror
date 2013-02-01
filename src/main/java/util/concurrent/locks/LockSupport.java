@@ -345,7 +345,7 @@ public class LockSupport {
 
     /**
      * Returns the pseudo-randomly initialized or updated secondary seed.
-     * Copied from ThreadLocalRandom due to package access restrictions
+     * Copied from ThreadLocalRandom due to package access restrictions.
      */
     static final int nextSecondarySeed() {
         int r;

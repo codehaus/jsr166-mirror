@@ -27,7 +27,7 @@ package java.util;
 import java.util.stream.Stream;
 import java.util.Spliterator;
 import java.util.stream.Streams;
-import java.util.function.Block;
+import java.util.function.Consumer;
 
 /**
  * An unbounded priority {@linkplain Queue queue} based on a priority heap.
@@ -64,7 +64,7 @@ import java.util.function.Block;
  * Multiple threads should not access a {@code PriorityQueue}
  * instance concurrently if any of the threads modifies the queue.
  * Instead, use the thread-safe {@link
- * java.util.concurrent.PriorityBlockingQueue} class.
+ * java.util.concurrent.PriorityConsumeringQueue} class.
  *
  * <p>Implementation note: this implementation provides
  * O(log(n)) time for the enqueing and dequeing methods
@@ -823,7 +823,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                                                 expectedModCount);
         }
 
-        public void forEach(Block<? super E> block) {
+        public void forEach(Consumer<? super E> block) {
             Object[] a; int i, hi; // hoist accesses and checks from loop
             if (block == null)
                 throw new NullPointerException();
@@ -839,7 +839,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             }
         }
 
-        public boolean tryAdvance(Block<? super E> block) {
+        public boolean tryAdvance(Consumer<? super E> block) {
             if (index >= 0 && index < fence) {
                 @SuppressWarnings("unchecked") E e =
                     (E)pq.queue[index++];

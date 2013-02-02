@@ -13,6 +13,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -181,11 +182,37 @@ public class JSR166TestCase extends TestCase {
         return suite;
     }
 
+    static void addTestReflectively(TestSuite suite, String testClassName) {
+        try {
+            Class klazz = Class.forName(testClassName);
+            Method m = klazz.getDeclaredMethod("suite", new Class<?>[0]);
+            suite.addTest(newTestSuite((Test)m.invoke(null)));
+        } catch (Exception e) {
+            throw new Error(e);
+        }
+    }
+
+    public static final double JAVA_CLASS_VERSION;
+    static {
+        try {
+            JAVA_CLASS_VERSION = java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedAction<Double>() {
+                public Double run() {
+                    return Double.valueOf(System.getProperty("java.class.version"));}});
+        } catch (Throwable t) {
+            throw new Error(t);
+        }
+    }
+
+    public static boolean isAtLeastJdk6() { return JAVA_CLASS_VERSION >= 50.0; }
+    public static boolean isAtLeastJdk7() { return JAVA_CLASS_VERSION >= 51.0; }
+    public static boolean isAtLeastJdk8() { return JAVA_CLASS_VERSION >= 52.0; }
+
     /**
      * Collects all JSR166 unit tests as one suite.
      */
     public static Test suite() {
-        return newTestSuite(
+        TestSuite suite = newTestSuite(
             ForkJoinPoolTest.suite(),
             ForkJoinTaskTest.suite(),
             RecursiveActionTest.suite(),
@@ -250,6 +277,10 @@ public class JSR166TestCase extends TestCase {
             TreeSetTest.suite(),
             TreeSubMapTest.suite(),
             TreeSubSetTest.suite());
+        if (isAtLeastJdk8()) {
+            addTestReflectively(suite, "StampedLockTest");
+        }
+        return suite;
     }
 
 

@@ -118,37 +118,20 @@ import java.util.concurrent.locks.LockSupport;
  *     }
  *   }
  *
- *   double distanceFromOriginV1() { // A read-only method
- *     long stamp;
- *     if ((stamp = sl.tryOptimisticRead()) != 0L) { // optimistic
- *       double currentX = x;
- *       double currentY = y;
- *       if (sl.validate(stamp))
- *         return Math.sqrt(currentX * currentX + currentY * currentY);
- *     }
- *     stamp = sl.readLock(); // fall back to read lock
- *     try {
- *       double currentX = x;
- *       double currentY = y;
- *         return Math.sqrt(currentX * currentX + currentY * currentY);
- *     } finally {
- *       sl.unlockRead(stamp);
- *     }
- *   }
- *
- *   double distanceFromOriginV2() { // combines code paths
- *     double currentX = 0.0, currentY = 0.0;
- *     for (long stamp = sl.tryOptimisticRead(); ; stamp = sl.readLock()) {
- *       try {
- *         currentX = x;
- *         currentY = y;
- *       } finally {
- *         if (sl.tryConvertToOptimisticRead(stamp) != 0L) // unlock or validate
- *           break;
- *       }
+ *   double distanceFromOrigin() { // A read-only method
+ *     long stamp = sl.tryOptimisticRead();
+ *     double currentX = x, currentY = y;
+ *     if (!sl.validate(stamp)) {
+ *        stamp = sl.readLock();
+ *        try {
+ *          currentX = x;
+ *          currentY = y;
+ *        } finally {
+ *           sl.unlockRead(stamp);
+ *        }
  *     }
  *     return Math.sqrt(currentX * currentX + currentY * currentY);
- *   }
+ *   } 
  *
  *   void moveIfAtOrigin(double newX, double newY) { // upgrade
  *     // Could instead start with optimistic, not read mode

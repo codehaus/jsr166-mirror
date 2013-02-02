@@ -2972,7 +2972,7 @@ public class CompletableFuture<T> implements Future<T> {
         Object r = result;
         Throwable ex = (r != null && (r instanceof AltResult) ?
                         ((AltResult)r).ex : null);
-        return id + (ex != null? "[Completed exceptionally]" :
+        return id + (ex != null ? "[Completed exceptionally]" :
                      (r != null ? "[Completed normally]" :
                       (count == 0 ? "[Not completed]" :
                        ("[Not completed, " + count + " dependents]"))));

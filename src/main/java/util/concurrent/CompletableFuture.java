@@ -25,36 +25,40 @@ import java.util.concurrent.locks.LockSupport;
 /**
  * A {@link Future} that may be explicitly completed (setting its
  * value and status), and may include dependent functions and actions
- * that trigger upon its completion.  Methods are available for adding
- * those based on Functions, Consumers, and Runnables, depending on
- * whether they require arguments and/or produce results, as well as
- * those triggered after either or both the current and another
- * CompletableFuture complete.  Functions and actions supplied for
- * dependent completions (mainly using methods with prefix {@code
- * then}) may be performed by the thread that completes the current
- * CompletableFuture, or by any other caller of these methods.  There
- * are no guarantees about the order of processing completions unless
- * constrained by these methods.
+ * that trigger upon its completion.
  *
  * <p>When two or more threads attempt to {@link #complete} or {@link
  * #completeExceptionally} a CompletableFuture, only one of them
  * succeeds.
  *
+ * <p>Methods are available for adding dependents based on Functions,
+ * Consumers, and Runnables. The appropriate form to use depends on
+ * whether actions require arguments and/or produce results. Actions
+ * may also be triggered after either or both the current and another
+ * CompletableFuture complete.  Multiple CompletableFutures may also
+ * be grouped as one using {@link #anyOf} and {@link #allOf}.
+ *
+ * <p>Actions supplied for dependent completions (mainly using methods
+ * with prefix {@code then}) may be performed by the thread that
+ * completes the current CompletableFuture, or by any other caller of
+ * these methods.  There are no guarantees about the order of
+ * processing completions unless constrained by these methods.
+ *
  * <p>Upon exceptional completion, or when a completion entails
- * computation of a function or action, and it terminates abruptly
- * with an (unchecked) exception or error, then further completions
- * act as {@code completeExceptionally} with a {@link
- * CompletionException} holding that exception as its cause.  If a
- * CompletableFuture completes exceptionally, and is not followed by a
- * {@link #exceptionally} or {@link #handle} completion, then all of
- * its dependents (and their dependents) also complete exceptionally
- * with CompletionExceptions holding the ultimate cause.  In case of a
- * CompletionException, methods {@link #get()} and {@link #get(long,
- * TimeUnit)} throw an {@link ExecutionException} with the same cause
- * as would be held in the corresponding CompletionException. However,
- * in these cases, methods {@link #join()} and {@link #getNow} throw
- * the CompletionException, which simplifies usage especially within
- * other completion functions.
+ * computation, and it terminates abruptly with an (unchecked)
+ * exception or error, then further completions act as {@code
+ * completeExceptionally} with a {@link CompletionException} holding
+ * that exception as its cause.  If a CompletableFuture completes
+ * exceptionally, and is not followed by a {@link #exceptionally} or
+ * {@link #handle} completion, then all of its dependents (and their
+ * dependents) also complete exceptionally with CompletionExceptions
+ * holding the ultimate cause.  In case of a CompletionException,
+ * methods {@link #get()} and {@link #get(long, TimeUnit)} throw an
+ * {@link ExecutionException} with the same cause as would be held in
+ * the corresponding CompletionException. However, in these cases,
+ * methods {@link #join()} and {@link #getNow} throw the
+ * CompletionException, which simplifies usage especially within other
+ * completion functions.
  *
  * <p>CompletableFutures themselves do not execute asynchronously.
  * However, the {@code async} methods provide commonly useful ways to
@@ -101,8 +105,9 @@ public class CompletableFuture<T> implements Future<T> {
      * compareAndSet(0, 1).  The Completion.run methods are all
      * written a boringly similar uniform way (that sometimes includes
      * unnecessary-looking checks, kept to maintain uniformity). There
-     * are enough dimensions upon which they differ that factoring to
-     * use common code isn't worthwhile.
+     * are enough dimensions upon which they differ that attempts to
+     * factor commonalities while maintaining efficiency require more
+     * lines of code than they would save.
      *
      * 4. The exported then/and/or methods do support a bit of
      * factoring (see doThenApply etc). They must cope with the
@@ -179,11 +184,14 @@ public class CompletableFuture<T> implements Future<T> {
 
     /* ------------- waiting for completions -------------- */
 
+    /** Number of processors, for spin control */
+    static final int NCPU = Runtime.getRuntime().availableProcessors();
+
     /**
      * Heuristic spin value for waitingGet() before blocking on
      * multiprocessors
      */
-    static final int WAITING_GET_SPINS = 256;
+    static final int SPINS = (NCPU > 1) ? 1 << 8 : 0;
 
     /**
      * Linked nodes to record waiting threads in a Treiber stack.  See
@@ -238,7 +246,7 @@ public class CompletableFuture<T> implements Future<T> {
     private Object waitingGet(boolean interruptible) {
         WaitNode q = null;
         boolean queued = false;
-        int h = 0, spins = 0;
+        int spins = SPINS;
         for (Object r;;) {
             if ((r = result) != null) {
                 if (q != null) { // suppress unpark
@@ -254,15 +262,11 @@ public class CompletableFuture<T> implements Future<T> {
                 postComplete(); // help release others
                 return r;
             }
-            else if (h == 0) {
-                h = ThreadLocalRandom.current().nextInt();
-                if (Runtime.getRuntime().availableProcessors() > 1)
-                    spins = WAITING_GET_SPINS;
-            }
             else if (spins > 0) {
-                h ^= h << 1;  // xorshift
-                h ^= h >>> 3;
-                if ((h ^= h << 10) >= 0)
+                int rnd = ThreadLocalRandom.nextSecondarySeed();
+                if (rnd == 0)
+                    rnd = ThreadLocalRandom.current().nextInt();
+                if (rnd >= 0)
                     --spins;
             }
             else if (q == null)
@@ -435,7 +439,7 @@ public class CompletableFuture<T> implements Future<T> {
         final T arg;
         final CompletableFuture<U> dst;
         AsyncApply(T arg, Function<? super T,? extends U> fn,
-                      CompletableFuture<U> dst) {
+                   CompletableFuture<U> dst) {
             this.arg = arg; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
@@ -461,8 +465,8 @@ public class CompletableFuture<T> implements Future<T> {
         final U arg2;
         final CompletableFuture<V> dst;
         AsyncBiApply(T arg1, U arg2,
-                        BiFunction<? super T,? super U,? extends V> fn,
-                        CompletableFuture<V> dst) {
+                     BiFunction<? super T,? super U,? extends V> fn,
+                     CompletableFuture<V> dst) {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
@@ -487,7 +491,7 @@ public class CompletableFuture<T> implements Future<T> {
         final T arg;
         final CompletableFuture<Void> dst;
         AsyncAccept(T arg, Consumer<? super T> fn,
-                   CompletableFuture<Void> dst) {
+                    CompletableFuture<Void> dst) {
             this.arg = arg; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
@@ -512,8 +516,8 @@ public class CompletableFuture<T> implements Future<T> {
         final U arg2;
         final CompletableFuture<Void> dst;
         AsyncBiAccept(T arg1, U arg2,
-                     BiConsumer<? super T,? super U> fn,
-                     CompletableFuture<Void> dst) {
+                      BiConsumer<? super T,? super U> fn,
+                      CompletableFuture<Void> dst) {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
@@ -871,6 +875,38 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
+    static final class AndCompletion extends Completion {
+        final CompletableFuture<?> src;
+        final CompletableFuture<?> snd;
+        final CompletableFuture<Void> dst;
+        AndCompletion(CompletableFuture<?> src,
+                      CompletableFuture<?> snd,
+                      CompletableFuture<Void> dst) {
+            this.src = src; this.snd = snd; this.dst = dst;
+        }
+        public final void run() {
+            final CompletableFuture<?> a;
+            final CompletableFuture<?> b;
+            final CompletableFuture<Void> dst;
+            Object r, s; Throwable ex;
+            if ((dst = this.dst) != null &&
+                (a = this.src) != null &&
+                (r = a.result) != null &&
+                (b = this.snd) != null &&
+                (s = b.result) != null &&
+                compareAndSet(0, 1)) {
+                if (r instanceof AltResult)
+                    ex = ((AltResult)r).ex;
+                else
+                    ex = null;
+                if (ex == null && (s instanceof AltResult))
+                    ex = ((AltResult)s).ex;
+                dst.internalComplete(null, ex);
+            }
+        }
+        private static final long serialVersionUID = 5232453952276885070L;
+    }
+
     static final class OrApplyCompletion<T,U> extends Completion {
         final CompletableFuture<? extends T> src;
         final CompletableFuture<? extends T> snd;
@@ -1023,6 +1059,38 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
+    static final class OrCompletion extends Completion {
+        final CompletableFuture<?> src;
+        final CompletableFuture<?> snd;
+        final CompletableFuture<?> dst;
+        OrCompletion(CompletableFuture<?> src,
+                     CompletableFuture<?> snd,
+                     CompletableFuture<?> dst) {
+            this.src = src; this.snd = snd; this.dst = dst;
+        }
+        public final void run() {
+            final CompletableFuture<?> a;
+            final CompletableFuture<?> b;
+            final CompletableFuture<?> dst;
+            Object r, t; Throwable ex;
+            if ((dst = this.dst) != null &&
+                (((a = this.src) != null && (r = a.result) != null) ||
+                 ((b = this.snd) != null && (r = b.result) != null)) &&
+                compareAndSet(0, 1)) {
+                if (r instanceof AltResult) {
+                    ex = ((AltResult)r).ex;
+                    t = null;
+                }
+                else {
+                    ex = null;
+                    t = r;
+                }
+                dst.internalComplete(t, ex);
+            }
+        }
+        private static final long serialVersionUID = 5232453952276885070L;
+    }
+
     static final class ExceptionCompletion<T> extends Completion {
         final CompletableFuture<? extends T> src;
         final Function<? super Throwable, ? extends T> fn;
@@ -1060,16 +1128,16 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
-    static final class ThenCopy<T> extends Completion {
-        final CompletableFuture<? extends T> src;
-        final CompletableFuture<T> dst;
-        ThenCopy(CompletableFuture<? extends T> src,
-                 CompletableFuture<T> dst) {
+    static final class ThenCopy extends Completion {
+        final CompletableFuture<?> src;
+        final CompletableFuture<?> dst;
+        ThenCopy(CompletableFuture<?> src,
+                 CompletableFuture<?> dst) {
             this.src = src; this.dst = dst;
         }
         public final void run() {
-            final CompletableFuture<? extends T> a;
-            final CompletableFuture<T> dst;
+            final CompletableFuture<?> a;
+            final CompletableFuture<?> dst;
             Object r; Object t; Throwable ex;
             if ((dst = this.dst) != null &&
                 (a = this.src) != null &&
@@ -1172,11 +1240,11 @@ public class CompletableFuture<T> implements Future<T> {
                         ex = new NullPointerException();
                 }
                 else {
-                    ThenCopy<U> d = null;
+                    ThenCopy d = null;
                     Object s;
                     if ((s = c.result) == null) {
                         CompletionNode p = new CompletionNode
-                            (d = new ThenCopy<U>(c, dst));
+                            (d = new ThenCopy(c, dst));
                         while ((s = c.result) == null) {
                             if (UNSAFE.compareAndSwapObject
                                 (c, COMPLETIONS, p.next = c.completions, p))
@@ -2591,6 +2659,220 @@ public class CompletableFuture<T> implements Future<T> {
         return dst;
     }
 
+
+    /* ------------- Arbitrary-arity constructions -------------- */
+
+    /*
+     * The basic plan of attack is to recursively form binary
+     * completion trees of elements. This can be overkill for small
+     * sets, but scales nicely. The And/All vs Or/Any forms use the
+     * same idea, but details differ.
+     */
+
+    /**
+     * Returns a new CompletableFuture that is completed when all of
+     * the given CompletableFutures complete.  If any of the component
+     * CompletableFuture complete exceptionally, then so does the
+     * returned CompletableFuture. Otherwise, the results, if any, of
+     * the component CompletableFutures are not reflected in the
+     * returned CompletableFuture, but may be obtained by inspecting
+     * them individually. If the number of components is zero, returns
+     * a completed CompletableFuture.
+     *
+     * <p>Among the applications of this method is to await completion
+     * of a set of independent CompletableFutures before continuing a
+     * program, as in: {@code CompletableFuture.allOf(c1, c2,
+     * c3).join();}.
+     *
+     * @param cfs the CompletableFutures
+     * @return a CompletableFuture that is complete when all of the
+     * given CompletableFutures complete
+     * @throws NullPointerException if the array or any of its elements are
+     * {@code null}
+     */
+    public static CompletableFuture<Void> allOf(CompletableFuture<?>... cfs) {
+        int len = cfs.length; // Directly handle empty and singleton cases
+        if (len > 1)
+            return allTree(cfs, 0, len - 1);
+        else {
+            CompletableFuture<Void> dst = new CompletableFuture<Void>();
+            CompletableFuture<?> f;
+            if (len == 0)
+                dst.result = NIL;
+            else if ((f = cfs[0]) == null)
+                throw new NullPointerException();
+            else {
+                ThenCopy d = null;
+                CompletionNode p = null;
+                Object r;
+                while ((r = f.result) == null) {
+                    if (d == null)
+                        d = new ThenCopy(f, dst);
+                    else if (p == null)
+                        p = new CompletionNode(d);
+                    else if (UNSAFE.compareAndSwapObject
+                             (f, COMPLETIONS, p.next = f.completions, p))
+                        break;
+                }
+                if (r != null && (d == null || d.compareAndSet(0, 1)))
+                    dst.internalComplete(null, (r instanceof AltResult) ?
+                                         ((AltResult)r).ex : null);
+                f.helpPostComplete();
+            }
+            return dst;
+        }
+    }
+
+    /**
+     * Recursively constructs an And'ed tree of CompletableFutures.
+     * Called only when array known to have at least two elements.
+     */
+    private static CompletableFuture<Void> allTree(CompletableFuture<?>[] cfs,
+                                                   int lo, int hi) {
+        CompletableFuture<?> fst, snd;
+        int mid = (lo + hi) >>> 1;
+        if ((fst = (lo == mid   ? cfs[lo] : allTree(cfs, lo,    mid))) == null ||
+            (snd = (hi == mid+1 ? cfs[hi] : allTree(cfs, mid+1, hi))) == null)
+            throw new NullPointerException();
+        CompletableFuture<Void> dst = new CompletableFuture<Void>();
+        AndCompletion d = null;
+        CompletionNode p = null, q = null;
+        Object r = null, s = null;
+        while ((r = fst.result) == null || (s = snd.result) == null) {
+            if (d == null)
+                d = new AndCompletion(fst, snd, dst);
+            else if (p == null)
+                p = new CompletionNode(d);
+            else if (q == null) {
+                if (UNSAFE.compareAndSwapObject
+                    (fst, COMPLETIONS, p.next = fst.completions, p))
+                    q = new CompletionNode(d);
+            }
+            else if (UNSAFE.compareAndSwapObject
+                     (snd, COMPLETIONS, q.next = snd.completions, q))
+                break;
+        }
+        if ((r != null || (r = fst.result) != null) &&
+            (s != null || (s = snd.result) != null) &&
+            (d == null || d.compareAndSet(0, 1))) {
+            Throwable ex;
+            if (r instanceof AltResult)
+                ex = ((AltResult)r).ex;
+            else
+                ex = null;
+            if (ex == null && (s instanceof AltResult))
+                ex = ((AltResult)s).ex;
+            dst.internalComplete(null, ex);
+        }
+        fst.helpPostComplete();
+        snd.helpPostComplete();
+        return dst;
+    }
+
+    /**
+     * Returns a new CompletableFuture that is completed when any of
+     * the component CompletableFutures complete; with the same result if
+     * it completed normally, otherwise exceptionally. If the number
+     * of components is zero, returns a completed CompletableFuture.
+     *
+     * @param cfs the CompletableFutures
+     * @return a CompletableFuture that is complete when any of the
+     * given CompletableFutures complete
+     * @throws NullPointerException if the array or any of its elements are
+     * {@code null}
+     */
+    public static CompletableFuture<?> anyOf(CompletableFuture<?>... cfs) {
+        int len = cfs.length; // Same idea as allOf
+        if (len > 1)
+            return anyTree(cfs, 0, len - 1);
+        else {
+            CompletableFuture<?> dst = new CompletableFuture<Object>();
+            CompletableFuture<?> f;
+            if (len == 0)
+                dst.result = NIL;
+            else if ((f = cfs[0]) == null)
+                throw new NullPointerException();
+            else {
+                ThenCopy d = null;
+                CompletionNode p = null;
+                Object r;
+                while ((r = f.result) == null) {
+                    if (d == null)
+                        d = new ThenCopy(f, dst);
+                    else if (p == null)
+                        p = new CompletionNode(d);
+                    else if (UNSAFE.compareAndSwapObject
+                             (f, COMPLETIONS, p.next = f.completions, p))
+                        break;
+                }
+                if (r != null && (d == null || d.compareAndSet(0, 1))) {
+                    Throwable ex; Object t;
+                    if (r instanceof AltResult) {
+                        ex = ((AltResult)r).ex;
+                        t = null;
+                    }
+                    else {
+                        ex = null;
+                        t = r;
+                    }
+                    dst.internalComplete(t, ex);
+                }
+                f.helpPostComplete();
+            }
+            return dst;
+        }
+    }
+
+    /**
+     * Recursively constructs an Or'ed tree of CompletableFutures
+     */
+    private static CompletableFuture<?> anyTree(CompletableFuture<?>[] cfs,
+                                                int lo, int hi) {
+        CompletableFuture<?> fst, snd;
+        int mid = (lo + hi) >>> 1;
+        if ((fst = (lo == mid   ? cfs[lo] : anyTree(cfs, lo,    mid))) == null ||
+            (snd = (hi == mid+1 ? cfs[hi] : anyTree(cfs, mid+1, hi))) == null)
+            throw new NullPointerException();
+        CompletableFuture<?> dst = new CompletableFuture<Object>();
+        OrCompletion d = null;
+        CompletionNode p = null, q = null;
+        Object r;
+        while ((r = fst.result) == null && (r = snd.result) == null) {
+            if (d == null)
+                d = new OrCompletion(fst, snd, dst);
+            else if (p == null)
+                p = new CompletionNode(d);
+            else if (q == null) {
+                if (UNSAFE.compareAndSwapObject
+                    (fst, COMPLETIONS, p.next = fst.completions, p))
+                    q = new CompletionNode(d);
+            }
+            else if (UNSAFE.compareAndSwapObject
+                     (snd, COMPLETIONS, q.next = snd.completions, q))
+                break;
+        }
+        if ((r != null || (r = fst.result) != null ||
+             (r = snd.result) != null) &&
+            (d == null || d.compareAndSet(0, 1))) {
+            Throwable ex; Object t;
+            if (r instanceof AltResult) {
+                ex = ((AltResult)r).ex;
+                t = null;
+            }
+            else {
+                ex = null;
+                t = r;
+            }
+            dst.internalComplete(t, ex);
+        }
+        fst.helpPostComplete();
+        snd.helpPostComplete();
+        return dst;
+    }
+
+
+    /* ------------- Control and status methods -------------- */
+
     /**
      * Attempts to complete this CompletableFuture with
      * a {@link CancellationException}.
@@ -2657,6 +2939,43 @@ public class CompletableFuture<T> implements Future<T> {
         if (ex == null) throw new NullPointerException();
         result = new AltResult(ex);
         postComplete();
+    }
+
+    /**
+     * Returns the estimated number of CompletableFutures whose
+     * completions are awaiting completion of this CompletableFuture.
+     * This method is designed for use in monitoring system state, not
+     * for synchronization control.
+     *
+     * @return the number of dependent CompletableFutures
+     */
+    public int getNumberOfDependents() {
+        int count = 0;
+        for (CompletionNode p = completions; p != null; p = p.next)
+            ++count;
+        return count;
+    }
+
+    /**
+     * Returns a string identifying this CompletableFuture, as well as
+     * its completion state.  The state, in brackets, includes the
+     * String {@code "Completed Normally"} or the String {@code
+     * "Completed Exceptionally"}, or the String {@code "Not
+     * completed"} followed by the number of CompletableFutures
+     * dependent upon its completion, if any.
+     *
+     * @return a string identifying this CompletableFuture, as well as its state
+     */
+    public String toString() {
+        String id = super.toString();
+        int count = getNumberOfDependents();
+        Object r = result;
+        Throwable ex = (r != null && (r instanceof AltResult) ?
+                        ((AltResult)r).ex : null);
+        return id + (ex != null? "[Completed exceptionally]" :
+                     (r != null ? "[Completed normally]" :
+                      (count == 0 ? "[Not completed]" :
+                       ("[Not completed, " + count + " dependents]"))));
     }
 
     // Unsafe mechanics

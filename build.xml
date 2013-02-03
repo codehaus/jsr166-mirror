@@ -620,6 +620,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       workdir="${build.4jdk7.dir}"
       classes="${4jdk7product.jar}">
       <javac-elements>
+        <!-- JDK8+ test classes -->
         <exclude name="StampedLockTest.java"/>
       </javac-elements>
     </run-tck-tests>

@@ -249,6 +249,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
            fork="true">
 
       <include name="**/*.java"/>
+      <compilerarg value="-Xprefer:source"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
       <compilerarg line="${build.args}"/>
@@ -590,6 +591,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
            fork="true">
 
       <include name="**/*.java"/>
+      <compilerarg value="-Xprefer:source"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
       <compilerarg line="${build.args}"/>
@@ -618,6 +620,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       workdir="${build.4jdk7.dir}"
       classes="${4jdk7product.jar}">
       <javac-elements>
+        <!-- JDK8+ test classes -->
         <exclude name="StampedLockTest.java"/>
       </javac-elements>
     </run-tck-tests>

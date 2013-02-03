@@ -182,13 +182,17 @@ public class JSR166TestCase extends TestCase {
         return suite;
     }
 
-    static void addTestReflectively(TestSuite suite, String testClassName) {
-        try {
-            Class klazz = Class.forName(testClassName);
-            Method m = klazz.getDeclaredMethod("suite", new Class<?>[0]);
-            suite.addTest(newTestSuite((Test)m.invoke(null)));
-        } catch (Exception e) {
-            throw new Error(e);
+    public static void addNamedTestClasses(TestSuite suite,
+                                           String... testClassNames) {
+        for (String testClassName : testClassNames) {
+            try {
+                Class<?> testClass = Class.forName(testClassName);
+                Method m = testClass.getDeclaredMethod("suite",
+                                                       new Class<?>[0]);
+                suite.addTest(newTestSuite((Test)m.invoke(null)));
+            } catch (Exception e) {
+                throw new Error("Missing test class", e);
+            }
         }
     }
 
@@ -204,14 +208,15 @@ public class JSR166TestCase extends TestCase {
         }
     }
 
-    public static boolean isAtLeastJdk6() { return JAVA_CLASS_VERSION >= 50.0; }
-    public static boolean isAtLeastJdk7() { return JAVA_CLASS_VERSION >= 51.0; }
-    public static boolean isAtLeastJdk8() { return JAVA_CLASS_VERSION >= 52.0; }
+    public static boolean atLeastJava6() { return JAVA_CLASS_VERSION >= 50.0; }
+    public static boolean atLeastJava7() { return JAVA_CLASS_VERSION >= 51.0; }
+    public static boolean atLeastJava8() { return JAVA_CLASS_VERSION >= 52.0; }
 
     /**
      * Collects all JSR166 unit tests as one suite.
      */
     public static Test suite() {
+        // Java7+ test classes
         TestSuite suite = newTestSuite(
             ForkJoinPoolTest.suite(),
             ForkJoinTaskTest.suite(),
@@ -277,9 +282,15 @@ public class JSR166TestCase extends TestCase {
             TreeSetTest.suite(),
             TreeSubMapTest.suite(),
             TreeSubSetTest.suite());
-        if (isAtLeastJdk8()) {
-            addTestReflectively(suite, "StampedLockTest");
+
+        // Java8+ test classes
+        if (atLeastJava8()) {
+            String[] java8TestClassNames = {
+                "StampedLockTest",
+            };
+            addNamedTestClasses(suite, java8TestClassNames);
         }
+
         return suite;
     }
 

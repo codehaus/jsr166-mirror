@@ -131,7 +131,7 @@ import java.util.concurrent.locks.LockSupport;
  *        }
  *     }
  *     return Math.sqrt(currentX * currentX + currentY * currentY);
- *   } 
+ *   }
  *
  *   void moveIfAtOrigin(double newX, double newY) { // upgrade
  *     // Could instead start with optimistic, not read mode

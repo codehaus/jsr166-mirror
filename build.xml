@@ -216,6 +216,34 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
     </sequential>
   </macrodef>
 
+  <macrodef name="run-jtreg-tests">
+    <attribute name="jtreg.src.dir" default="${jtreg.src.dir}"/>
+    <attribute name="source" default="7"/>
+    <attribute name="target"/>
+    <attribute name="workdir"/>
+    <attribute name="classes"/>
+    <attribute name="jtregflags" default=""/>
+    <sequential>
+    <delete dir="@{workdir}/JTwork"   quiet="true"/>
+    <delete dir="@{workdir}/JTreport" quiet="true"/>
+    <mkdir dir="@{workdir}/JTwork/scratch"/>
+    <mkdir dir="@{workdir}/JTreport"/>
+    <jtreg dir="@{jtreg.src.dir}"
+           jdk="${jdk@{target}.home}"
+           workDir="@{workdir}/JTwork"
+           reportDir="@{workdir}/JTreport">
+
+      <arg value="-Xbootclasspath/p:@{classes}"/>
+      <arg value="-agentvm"/>
+      <arg value="-v:nopass,fail"/>
+      <arg value="-vmoptions:-esa -ea"/>
+      <arg value="-automatic"/>
+      <arg value="-k:!ignore"/>
+      <arg line="@{jtregflags}"/>
+    </jtreg>
+    </sequential>
+  </macrodef>
+
   <!-- ALoops classpath -->
   <path id="loops.classpath">
     <pathelement location="${build.loops.dir}"/>
@@ -424,6 +452,20 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       target="8"
       workdir="${build.dir}"
       classes="${product.jar}"/>
+  </target>
+
+  <target name="test-jtreg"
+	  depends="jar"
+          description="Runs jtreg tests for main using the jtreg ant task">
+    <run-jtreg-tests
+       target="8"
+       workdir="${build.dir}"
+       classes="${product.jar}"/>
+  </target>
+
+  <target name="test-ng"
+          depends="test-tck, test-jtreg"
+          description="Runs tck and jtreg tests for main">
   </target>
 
   <target name="run-tests"
@@ -656,24 +698,12 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
   <target name="4jdk7-test-jtreg"
-	  depends="4jdk7compile"
+	  depends="4jdk7jar"
           description="Runs jtreg tests for jsr166-4jdk7 using the jtreg ant task">
-    <delete dir="${build.4jdk7.dir}/JTwork"   quiet="true"/>
-    <delete dir="${build.4jdk7.dir}/JTreport" quiet="true"/>
-    <mkdir dir="${build.4jdk7.dir}/JTwork/scratch"/>
-    <mkdir dir="${build.4jdk7.dir}/JTreport"/>
-    <jtreg dir="${jtreg.src.dir}"
-           jdk="${jdk7.home}"
-           workDir="${build.4jdk7.dir}/JTwork"
-           reportDir="${build.4jdk7.dir}/JTreport">
-
-      <arg value="-Xbootclasspath/p:${4jdk7product.jar}"/>
-      <arg value="-agentvm"/>
-      <arg value="-v:nopass,fail"/>
-      <arg value="-vmoptions:-esa -ea"/>
-      <arg value="-automatic"/>
-      <arg value="-k:!ignore"/>
-    </jtreg>
+    <run-jtreg-tests
+       target="7"
+       workdir="${build.4jdk7.dir}"
+       classes="${4jdk7product.jar}"/>
   </target>
 
 

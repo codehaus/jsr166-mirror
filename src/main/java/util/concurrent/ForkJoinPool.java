@@ -1347,7 +1347,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * array, and adjusts counts. If pool is shutting down, tries to
      * complete termination.
      *
-     * @param wt the worker thread or null if construction failed
+     * @param wt the worker thread, or null if construction failed
      * @param ex the exception causing failure, or null if none
      */
     final void deregisterWorker(ForkJoinWorkerThread wt, Throwable ex) {

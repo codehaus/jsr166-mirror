@@ -275,7 +275,7 @@ public class ConcurrentLinkedDeque<E>
          * successor.  May also return null if this node is deleted,
          * so doesn't have a distinct predecessor.
          *
-         * @return predecessor or null if not found
+         * @return predecessor, or null if not found
          */
         Node<E> predecessor() {
             Node<E> n = this;

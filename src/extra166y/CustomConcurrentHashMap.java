@@ -698,7 +698,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * if no such mapping exists.
      *
      * @param  key   possible key
-     * @return the value associated with the key or {@code null} if
+     * @return the value associated with the key, or {@code null} if
      * there is no mapping
      * @throws NullPointerException if the specified key is null
      */

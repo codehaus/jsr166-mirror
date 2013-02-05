@@ -3166,7 +3166,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Waits and/or attempts to assist performing tasks indefinitely
-     * until the {@link #commonPool()} {@link #isQuiescent}
+     * until the {@link #commonPool()} {@link #isQuiescent}.
      */
     static void quiesceCommonPool() {
         common.awaitQuiescence(Long.MAX_VALUE, TimeUnit.NANOSECONDS);

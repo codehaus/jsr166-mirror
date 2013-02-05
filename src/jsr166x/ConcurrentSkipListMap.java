@@ -507,7 +507,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         volatile Index<K,V> right;
 
         /**
-         * Creates index node with given values
+         * Creates index node with given values.
          */
         Index(Node<K,V> node, Index<K,V> down, Index<K,V> right) {
             this.node = node;

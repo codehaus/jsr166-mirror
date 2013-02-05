@@ -113,7 +113,7 @@ public class LinkedBlockingDeque<E>
     // Basic linking and unlinking operations, called only while holding lock
 
     /**
-     * Link e as first element, or return false if full
+     * Links e as first element, or returns false if full.
      */
     private boolean linkFirst(E e) {
         if (count >= capacity)
@@ -131,7 +131,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * Link e as last element, or return false if full
+     * Links e as last element, or returns false if full.
      */
     private boolean linkLast(E e) {
         if (count >= capacity)

@@ -909,7 +909,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
     public void set(int i, long x) { array[i] = x; }
 
     /**
-     * Equivalent to {@code asList().toString()}
+     * Equivalent to {@code asList().toString()}.
      * @return a string representation
      */
     public String toString() {

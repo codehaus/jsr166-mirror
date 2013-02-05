@@ -2461,7 +2461,7 @@ class PAS {
      *
      * This class maintains only the basic control logic.  Subclasses
      * maintain the "in" and "out" fields, and *Ops classes perform
-     * computations
+     * computations.
      */
     abstract static class FJScan extends ForkJoinTask<Void> {
         static final short CUMULATE = (short)1;

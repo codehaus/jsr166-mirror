@@ -1037,7 +1037,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
     public T[] getArray() { return array; }
 
     /**
-     * Equivalent to {@code asList().toString()}
+     * Equivalent to {@code asList().toString()}.
      * @return a string representation
      */
     public String toString() {

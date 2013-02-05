@@ -351,7 +351,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * Each Segment holds a count and table corresponding to a segment
      * of the table. This class contains only those methods for
      * directly assigning these fields, which must only be called
-     * while holding locks
+     * while holding locks.
      */
     static final class Segment extends ReentrantLock {
         volatile Node[] table;
@@ -386,7 +386,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
 
         /**
-         * See the similar code in ConcurrentHashMap for explanation
+         * See the similar code in ConcurrentHashMap for explanation.
          */
         final Node[] resizeTable(CustomConcurrentHashMap cchm) {
             Node[] oldTable = table;

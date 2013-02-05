@@ -2583,10 +2583,10 @@ public class CompletableFuture<T> implements Future<T> {
 
     /**
      * Returns a CompletableFuture (or an equivalent one) produced
-     * asynchronously using the the given executor by the given
-     * function of the result of this CompletableFuture when
-     * completed.  If this CompletableFuture completes exceptionally,
-     * then the returned CompletableFuture also does so, with a
+     * asynchronously using the given executor by the given function
+     * of the result of this CompletableFuture when completed.
+     * If this CompletableFuture completes exceptionally, then the
+     * returned CompletableFuture also does so, with a
      * CompletionException holding this exception as its cause.
      *
      * @param fn the function returning a new CompletableFuture.

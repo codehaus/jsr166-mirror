@@ -3112,7 +3112,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Returns fence key. Needed by ConcurrentSkipListSet.
-         * @return fence key, or {@code null} of to end
+         * @return fence key, or {@code null} if to end
          */
         K getFence() {
             return fence;

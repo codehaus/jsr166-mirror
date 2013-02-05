@@ -22,8 +22,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * This <em>barrier action</em> is useful
  * for updating shared-state before any of the parties continue.
  *
- * <p><b>Sample usage:</b> Here is an example of
- *  using a barrier in a parallel decomposition design:
+ * <p><b>Sample usage:</b> Here is an example of using a barrier in a
+ * parallel decomposition design:
  *
  *  <pre> {@code
  * class Solver {

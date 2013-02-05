@@ -32,8 +32,8 @@ class LoopHelpers {
     }
 
     /**
-     *  Computes a linear congruential random number a random number
-     *  of times.
+     * Computes a linear congruential random number a random number
+     * of times.
      */
     public static int compute2(int x) {
         int loops = (x >>> 4) & 7;

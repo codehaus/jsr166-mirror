@@ -536,6 +536,49 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
+    static final class AsyncCompose<T,U> extends Async {
+        final Function<? super T, CompletableFuture<U>> fn;
+        final T arg;
+        final CompletableFuture<U> dst;
+        AsyncCompose(T arg,
+                     Function<? super T, CompletableFuture<U>> fn,
+                     CompletableFuture<U> dst) {
+            this.arg = arg; this.fn = fn; this.dst = dst;
+        }
+        public final boolean exec() {
+            CompletableFuture<U> d, fr; U u; Throwable ex;
+            if ((d = this.dst) != null && d.result == null) {
+                try {
+                    fr = fn.apply(arg);
+                    ex = null;
+                } catch (Throwable rex) {
+                    ex = rex;
+                    fr = null;
+                }
+                if (ex != null)
+                    u = null;
+                else if (fr == null) {
+                    ex = new NullPointerException();
+                    u = null;
+                }
+                else {
+                    Object r = fr.result;
+                    if (r instanceof AltResult) {
+                        ex = ((AltResult)r).ex;
+                        u = null;
+                    }
+                    else {
+                        @SuppressWarnings("unchecked") U ur = (U) r;
+                        u = ur;
+                    }
+                }
+                d.internalComplete(u, ex);
+            }
+            return true;
+        }
+        private static final long serialVersionUID = 5232453952276885070L;
+    }
+
     /* ------------- Completions -------------- */
 
     /**
@@ -1201,16 +1244,18 @@ public class CompletableFuture<T> implements Future<T> {
         final CompletableFuture<? extends T> src;
         final Function<? super T, CompletableFuture<U>> fn;
         final CompletableFuture<U> dst;
+        final Executor executor;
         ComposeCompletion(CompletableFuture<? extends T> src,
                           Function<? super T, CompletableFuture<U>> fn,
-                          final CompletableFuture<U> dst) {
+                          final CompletableFuture<U> dst, Executor executor) {
             this.src = src; this.fn = fn; this.dst = dst;
+            this.executor = executor;
         }
         public final void run() {
             final CompletableFuture<? extends T> a;
             final Function<? super T, CompletableFuture<U>> fn;
             final CompletableFuture<U> dst;
-            Object r; T t; Throwable ex;
+            Object r; T t; Throwable ex; Executor e;
             if ((dst = this.dst) != null &&
                 (fn = this.fn) != null &&
                 (a = this.src) != null &&
@@ -1229,17 +1274,18 @@ public class CompletableFuture<T> implements Future<T> {
                 U u = null;
                 boolean complete = false;
                 if (ex == null) {
-                    try {
-                        c = fn.apply(t);
-                    } catch (Throwable rex) {
-                        ex = rex;
+                    if ((e = executor) != null)
+                        e.execute(new AsyncCompose<T,U>(t, fn, dst));
+                    else {
+                        try {
+                            if ((c = fn.apply(t)) == null)
+                                ex = new NullPointerException();
+                        } catch (Throwable rex) {
+                            ex = rex;
+                        }
                     }
                 }
-                if (ex != null || c == null) {
-                    if (ex == null)
-                        ex = new NullPointerException();
-                }
-                else {
+                if (c != null) {
                     ThenCopy d = null;
                     Object s;
                     if ((s = c.result) == null) {
@@ -2514,6 +2560,51 @@ public class CompletableFuture<T> implements Future<T> {
      */
     public <U> CompletableFuture<U> thenCompose(Function<? super T,
                                                 CompletableFuture<U>> fn) {
+        return doCompose(fn, null);
+    }
+
+    /**
+     * Returns a CompletableFuture (or an equivalent one) produced
+     * asynchronously using the {@link ForkJoinPool#commonPool()} by
+     * the given function of the result of this CompletableFuture when
+     * completed.  If this CompletableFuture completes exceptionally,
+     * then the returned CompletableFuture also does so, with a
+     * CompletionException holding this exception as its cause.
+     *
+     * @param fn the function returning a new CompletableFuture.
+     * @return the CompletableFuture, that {@code isDone()} upon
+     * return if completed by the given function, or an exception
+     * occurs.
+     */
+    public <U> CompletableFuture<U> thenComposeAsync(Function<? super T,
+                                                     CompletableFuture<U>> fn) {
+        return doCompose(fn, ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Returns a CompletableFuture (or an equivalent one) produced
+     * asynchronously using the the given executor by the given
+     * function of the result of this CompletableFuture when
+     * completed.  If this CompletableFuture completes exceptionally,
+     * then the returned CompletableFuture also does so, with a
+     * CompletionException holding this exception as its cause.
+     *
+     * @param fn the function returning a new CompletableFuture.
+     * @param executor the executor to use for asynchronous execution
+     * @return the CompletableFuture, that {@code isDone()} upon
+     * return if completed by the given function, or an exception
+     * occurs.
+     */
+    public <U> CompletableFuture<U> thenComposeAsync(Function<? super T,
+                                                     CompletableFuture<U>> fn,
+                                                     Executor executor) {
+        if (executor == null) throw new NullPointerException();
+        return doCompose(fn, executor);
+    }
+
+    private <U> CompletableFuture<U> doCompose(Function<? super T,
+                                               CompletableFuture<U>> fn,
+                                               Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = null;
         ComposeCompletion<T,U> d = null;
@@ -2521,7 +2612,7 @@ public class CompletableFuture<T> implements Future<T> {
         if ((r = result) == null) {
             dst = new CompletableFuture<U>();
             CompletionNode p = new CompletionNode
-                (d = new ComposeCompletion<T,U>(this, fn, dst));
+                (d = new ComposeCompletion<T,U>(this, fn, dst, e));
             while ((r = result) == null) {
                 if (UNSAFE.compareAndSwapObject
                     (this, COMPLETIONS, p.next = completions, p))
@@ -2540,18 +2631,25 @@ public class CompletableFuture<T> implements Future<T> {
                 t = tr;
             }
             if (ex == null) {
-                try {
-                    dst = fn.apply(t);
-                } catch (Throwable rex) {
-                    ex = rex;
+                if (e != null) {
+                    if (dst == null)
+                        dst = new CompletableFuture<U>();
+                    e.execute(new AsyncCompose<T,U>(t, fn, dst));
+                }
+                else {
+                    try {
+                        dst = fn.apply(t);
+                    } catch (Throwable rex) {
+                        ex = rex;
+                    }
+                    if (dst == null) {
+                        dst = new CompletableFuture<U>();
+                        if (ex == null)
+                            ex = new NullPointerException();
+                    }
                 }
             }
-            if (dst == null) {
-                dst = new CompletableFuture<U>();
-                if (ex == null)
-                    ex = new NullPointerException();
-            }
-            if (ex != null)
+            if (e == null && ex != null)
                 dst.internalComplete(null, ex);
         }
         helpPostComplete();
@@ -2874,8 +2972,11 @@ public class CompletableFuture<T> implements Future<T> {
     /* ------------- Control and status methods -------------- */
 
     /**
-     * Attempts to complete this CompletableFuture with
-     * a {@link CancellationException}.
+     * If not already completed, completes this CompletableFuture with
+     * a {@link CancellationException}. Dependent CompletableFutures
+     * that have not already completed will also complete
+     * exceptionally, with a {@link CompletionException} caused by
+     * this {@code CancellationException}.
      *
      * @param mayInterruptIfRunning this value has no effect in this
      * implementation because interrupts are not used to control

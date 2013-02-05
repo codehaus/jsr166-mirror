@@ -469,7 +469,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Removes exception node and clears status
+     * Removes exception node and clears status.
      */
     private void clearExceptionalCompletion() {
         int h = System.identityHashCode(this);

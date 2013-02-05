@@ -275,7 +275,7 @@ public abstract class AbstractParallelAnyArray {
     /**
      * Shared support for select/map all -- probe filter, map, and
      * type to start selection driver, or do parallel mapping, or
-     * just copy,
+     * just copy.
      */
     final Object[] allObjects(Class elementType) {
         if (hasFilter()) {

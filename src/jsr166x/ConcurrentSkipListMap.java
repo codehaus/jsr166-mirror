@@ -468,7 +468,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Returns value if this node contains a valid key-value pair,
          * else null.
          * @return this node's value if it isn't a marker or header or
-         * is deleted, else null.
+         * is deleted, else null
          */
         V getValidValue() {
             Object v = value;
@@ -1601,9 +1601,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Constructs a new map containing the same mappings as the given
      * {@code SortedMap}, sorted according to the same ordering.
      * @param m the sorted map whose mappings are to be placed in this
-     * map, and whose comparator is to be used to sort this map.
+     * map, and whose comparator is to be used to sort this map
      * @throws NullPointerException if the specified sorted map is
-     * {@code null}.
+     * {@code null}
      */
     public ConcurrentSkipListMap(SortedMap<K, ? extends V> m) {
         this.comparator = m.comparator();
@@ -2212,7 +2212,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * if this map uses its keys' natural order.
      *
      * @return the comparator associated with this map, or
-     * {@code null} if it uses its keys' natural sort method.
+     * {@code null} if it uses its keys' natural sort method
      */
     public Comparator<? super K> comparator() {
         return comparator;

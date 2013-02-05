@@ -2784,8 +2784,7 @@ public class ConcurrentHashMap<K, V>
      * course only appropriate if it is acceptable to use the same
      * value for all additions from this view.
      *
-     * @param mappedValue the mapped value to use for any
-     * additions.
+     * @param mappedValue the mapped value to use for any additions
      * @return the set view
      * @throws NullPointerException if the mappedValue is null
      */
@@ -3252,7 +3251,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      * @param action the action
      */
     public <U> void forEachSequentially
@@ -3296,7 +3295,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
@@ -3409,7 +3408,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      * @param action the action
      */
     public <U> void forEachKeySequentially
@@ -3474,7 +3473,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all keys
@@ -3587,7 +3586,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      */
     public <U> void forEachValueSequentially
         (Function<? super V, ? extends U> transformer,
@@ -3647,7 +3646,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all values
@@ -3761,7 +3760,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      * @param action the action
      */
     public <U> void forEachEntrySequentially
@@ -3824,7 +3823,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all entries
@@ -3936,7 +3935,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      * @param action the action
      */
     public <U> void forEachInParallel
@@ -3971,7 +3970,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
@@ -4059,7 +4058,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      * @param action the action
      */
     public <U> void forEachKeyInParallel
@@ -4108,7 +4107,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all keys
@@ -4196,7 +4195,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      */
     public <U> void forEachValueInParallel
         (Function<? super V, ? extends U> transformer,
@@ -4243,7 +4242,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all values
@@ -4331,7 +4330,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case the action is not applied).
+     * which case the action is not applied)
      * @param action the action
      */
     public <U> void forEachEntryInParallel
@@ -4379,7 +4378,7 @@ public class ConcurrentHashMap<K, V>
      *
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
-     * which case it is not combined).
+     * which case it is not combined)
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all entries
@@ -4612,7 +4611,7 @@ public class ConcurrentHashMap<K, V>
          * or {@code null} if additions are not supported.
          *
          * @return the default mapped value for additions, or {@code null}
-         * if not supported.
+         * if not supported
          */
         public V getMappedValue() { return value; }
 
@@ -4879,7 +4878,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null if there is no transformation (in
-         * which case it is not combined).
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the task
          */
@@ -5046,7 +5045,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null if there is no transformation (in
-         * which case it is not combined).
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the task
          */
@@ -5212,7 +5211,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null if there is no transformation (in
-         * which case it is not combined).
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the task
          */
@@ -5378,7 +5377,7 @@ public class ConcurrentHashMap<K, V>
          * @param map the map
          * @param transformer a function returning the transformation
          * for an element, or null if there is no transformation (in
-         * which case it is not combined).
+         * which case it is not combined)
          * @param reducer a commutative associative combining function
          * @return the task
          */

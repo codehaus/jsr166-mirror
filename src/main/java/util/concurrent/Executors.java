@@ -247,7 +247,7 @@ public class Executors {
      * Creates a thread pool that can schedule commands to run after a
      * given delay, or to execute periodically.
      * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
+     * even if they are idle
      * @return a newly created scheduled thread pool
      * @throws IllegalArgumentException if {@code corePoolSize < 0}
      */
@@ -259,9 +259,9 @@ public class Executors {
      * Creates a thread pool that can schedule commands to run after a
      * given delay, or to execute periodically.
      * @param corePoolSize the number of threads to keep in the pool,
-     * even if they are idle.
+     * even if they are idle
      * @param threadFactory the factory to use when the executor
-     * creates a new thread.
+     * creates a new thread
      * @return a newly created scheduled thread pool
      * @throws IllegalArgumentException if {@code corePoolSize < 0}
      * @throws NullPointerException if threadFactory is null
@@ -353,7 +353,7 @@ public class Executors {
      * @return a thread factory
      * @throws AccessControlException if the current access control
      * context does not have permission to both get and set context
-     * class loader.
+     * class loader
      */
     public static ThreadFactory privilegedThreadFactory() {
         return new PrivilegedThreadFactory();
@@ -452,7 +452,7 @@ public class Executors {
      * @throws NullPointerException if callable null
      * @throws AccessControlException if the current access control
      * context does not have permission to both set and get context
-     * class loader.
+     * class loader
      */
     public static <T> Callable<T> privilegedCallableUsingCurrentClassLoader(Callable<T> callable) {
         if (callable == null)

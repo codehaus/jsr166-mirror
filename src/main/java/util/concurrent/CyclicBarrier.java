@@ -326,7 +326,7 @@ public class CyclicBarrier {
      *         interrupted or timed out while the current thread was
      *         waiting, or the barrier was reset, or the barrier was
      *         broken when {@code await} was called, or the barrier
-     *         action (if present) failed due to an exception.
+     *         action (if present) failed due to an exception
      */
     public int await() throws InterruptedException, BrokenBarrierException {
         try {

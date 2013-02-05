@@ -39,10 +39,10 @@ public abstract class AtomicLongFieldUpdater<T> {
      * generic types match.
      *
      * @param tclass the class of the objects holding the field
-     * @param fieldName the name of the field to be updated.
+     * @param fieldName the name of the field to be updated
      * @return the updater
      * @throws IllegalArgumentException if the field is not a
-     * volatile long type.
+     * volatile long type
      * @throws RuntimeException with a nested reflection-based
      * exception if the class does not hold field or is the wrong type,
      * or the field is inaccessible to the caller according to Java language
@@ -73,7 +73,7 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @param update the new value
      * @return true if successful
      * @throws ClassCastException if {@code obj} is not an instance
-     * of the class possessing the field established in the constructor.
+     * of the class possessing the field established in the constructor
      */
     public abstract boolean compareAndSet(T obj, long expect, long update);
 
@@ -93,7 +93,7 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @param update the new value
      * @return true if successful
      * @throws ClassCastException if {@code obj} is not an instance
-     * of the class possessing the field established in the constructor.
+     * of the class possessing the field established in the constructor
      */
     public abstract boolean weakCompareAndSet(T obj, long expect, long update);
 

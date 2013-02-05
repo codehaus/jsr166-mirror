@@ -625,7 +625,7 @@ public class ScheduledThreadPoolExecutor
      * {@code false} when already shutdown.
      * This value is by default {@code false}.
      *
-     * @param value if {@code true}, continue after shutdown, else don't.
+     * @param value if {@code true}, continue after shutdown, else don't
      * @see #getContinueExistingPeriodicTasksAfterShutdownPolicy
      */
     public void setContinueExistingPeriodicTasksAfterShutdownPolicy(boolean value) {
@@ -657,7 +657,7 @@ public class ScheduledThreadPoolExecutor
      * {@code false} when already shutdown.
      * This value is by default {@code true}.
      *
-     * @param value if {@code true}, execute after shutdown, else don't.
+     * @param value if {@code true}, execute after shutdown, else don't
      * @see #getExecuteExistingDelayedTasksAfterShutdownPolicy
      */
     public void setExecuteExistingDelayedTasksAfterShutdownPolicy(boolean value) {

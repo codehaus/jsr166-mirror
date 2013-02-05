@@ -1037,7 +1037,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * thread is queued, possibly repeatedly blocking and unblocking,
      * invoking {@link #tryAcquireShared} until success or the thread
      * is interrupted.
-     * @param arg the acquire argument
+     * @param arg the acquire argument.
      * This value is conveyed to {@link #tryAcquireShared} but is
      * otherwise uninterpreted and can represent anything
      * you like.
@@ -1412,7 +1412,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * Returns true if successful.
      * @param node the node
      * @return true if successfully transferred (else the node was
-     * cancelled before signal).
+     * cancelled before signal)
      */
     final boolean transferForSignal(Node node) {
         /*

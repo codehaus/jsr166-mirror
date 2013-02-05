@@ -302,7 +302,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
      * @throws ArrayIndexOutOfBoundsException if other array has
-     * fewer elements than this array.
+     * fewer elements than this array
      */
     public ParallelLongArray replaceWithMapping(BinaryLongOp combiner,
                                                 long[] other) {

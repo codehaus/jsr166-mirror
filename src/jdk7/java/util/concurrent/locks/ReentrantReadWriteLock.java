@@ -1097,7 +1097,7 @@ public class ReentrantReadWriteLock
          * IllegalMonitorStateException} is thrown.
          *
          * @throws IllegalMonitorStateException if the current thread does not
-         * hold this lock.
+         * hold this lock
          */
         public void unlock() {
             sync.release(1);

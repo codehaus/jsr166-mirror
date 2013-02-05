@@ -224,7 +224,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * A function computing a mapping from the given key to a value,
-     *  or {@code null} if there is no mapping.
+     * or {@code null} if there is no mapping.
      */
     public static interface MappingFunction<K, V> {
         /**
@@ -245,7 +245,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
     /**
      * A function computing a new mapping from the given key and its
      * current value to a new value, or {@code null} if there is
-     * no mapping
+     * no mapping.
      */
     public static interface RemappingFunction<K, V> {
         /**
@@ -699,7 +699,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      *
      * @param  key   possible key
      * @return the value associated with the key or {@code null} if
-     * there is no mapping.
+     * there is no mapping
      * @throws NullPointerException if the specified key is null
      */
     public V get(Object key) {
@@ -1090,11 +1090,11 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @param mappingFunction the function to compute a value
      * @return the current (existing or computed) value associated with
      *         the specified key, or {@code null} if the computation
-     *         returned {@code null}.
+     *         returned {@code null}
      * @throws NullPointerException if the specified key or mappingFunction
-     *         is null,
+     *         is null
      * @throws RuntimeException or Error if the mappingFunction does so,
-     *         in which case the mapping is left unestablished.
+     *         in which case the mapping is left unestablished
      */
     public V computeIfAbsent(K key, MappingFunction<? super K, ? extends V> mappingFunction) {
         if (key == null || mappingFunction == null)
@@ -1165,7 +1165,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * @return the updated value or
      *         {@code null} if the computation returned {@code null}
      * @throws NullPointerException if the specified key or remappingFunction
-     *         is null,
+     *         is null
      * @throws RuntimeException or Error if the remappingFunction does so,
      *         in which case the mapping is left in its previous state
      */
@@ -1720,7 +1720,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * to {@link java.lang.ref.Reference} constructors to arrange
      * removal of reclaimed nodes from maps via a background thread.
      * @return the reference queue associated with the background
-     * cleanup thread.
+     * cleanup thread
      */
     static ReferenceQueue<Object> getReclamationQueue() {
         ReferenceQueue<Object> q = refQueue;

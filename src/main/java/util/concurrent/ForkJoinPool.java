@@ -887,7 +887,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * or any other cancelled task. Returns (true) on any CAS
          * or consistency check failure so caller can retry.
          *
-         * @return false if no progress can be made, else true;
+         * @return false if no progress can be made, else true
          */
         final boolean tryRemoveAndExec(ForkJoinTask<?> task) {
             boolean stat = true, removed = false, empty = true;

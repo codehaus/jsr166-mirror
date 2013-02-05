@@ -2449,10 +2449,10 @@ public class CompletableFuture<T> implements Future<T> {
      * then the returned CompletableFuture also does so, with a
      * CompletionException holding this exception as its cause.
      *
-     * @param fn the function returning a new CompletableFuture.
+     * @param fn the function returning a new CompletableFuture
      * @return the CompletableFuture, that {@code isDone()} upon
      * return if completed by the given function, or an exception
-     * occurs.
+     * occurs
      */
     public <U> CompletableFuture<U> thenCompose(Fun<? super T,
                                                 CompletableFuture<U>> fn) {

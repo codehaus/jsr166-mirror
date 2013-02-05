@@ -431,7 +431,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * (and/or links to other results) to combine.
      *
      * @param caller the task invoking this method (which may
-     * be this task itself).
+     * be this task itself)
      */
     public void onCompletion(CountedCompleter<?> caller) {
     }
@@ -449,9 +449,9 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      *
      * @param ex the exception
      * @param caller the task invoking this method (which may
-     * be this task itself).
+     * be this task itself)
      * @return true if this exception should be propagated to this
-     * task's completer, if one exists.
+     * task's completer, if one exists
      */
     public boolean onExceptionalCompletion(Throwable ex, CountedCompleter<?> caller) {
         return true;

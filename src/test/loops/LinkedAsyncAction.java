@@ -157,7 +157,7 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
      * default version of this method does nothing and returns
      * {@code true}.
      * @return true if this task's exception should be propagated to
-     * this task's parent.
+     * this task's parent
      */
     protected boolean onException() {
         return true;

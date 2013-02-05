@@ -2008,7 +2008,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          *
          * @param r the runnable task requested to be executed
          * @param e the executor attempting to execute this task
-         * @throws RejectedExecutionException always.
+         * @throws RejectedExecutionException always
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             throw new RejectedExecutionException("Task " + r.toString() +

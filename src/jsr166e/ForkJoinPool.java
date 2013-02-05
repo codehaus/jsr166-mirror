@@ -2466,7 +2466,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         java.lang.RuntimePermission}{@code ("modifyThread")}
      */
     public ForkJoinPool() {
-        this(Runtime.getRuntime().availableProcessors(),
+        this(Math.min(MAX_CAP, Runtime.getRuntime().availableProcessors()),
              defaultForkJoinWorkerThreadFactory, null, false);
     }
 

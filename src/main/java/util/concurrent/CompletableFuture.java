@@ -2982,15 +2982,13 @@ public class CompletableFuture<T> implements Future<T> {
      */
     public boolean cancel(boolean mayInterruptIfRunning) {
         Object r;
-        while ((r = result) == null) {
-            r = new AltResult(new CancellationException());
-            if (UNSAFE.compareAndSwapObject(this, RESULT, null, r)) {
-                postComplete();
-                return true;
-            }
-        }
-        return ((r instanceof AltResult) &&
-                (((AltResult)r).ex instanceof CancellationException));
+        boolean cancelled = (result == null) &&
+            UNSAFE.compareAndSwapObject
+            (this, RESULT, null, new AltResult(new CancellationException()));
+        postComplete();
+        return cancelled ||
+            (((r = result) instanceof AltResult) &&
+             (((AltResult)r).ex instanceof CancellationException));
     }
 
     /**

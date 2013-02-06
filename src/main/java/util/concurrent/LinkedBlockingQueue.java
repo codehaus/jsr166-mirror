@@ -333,7 +333,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * necessary up to the specified wait time for space to become available.
      *
      * @return {@code true} if successful, or {@code false} if
-     *         the specified waiting time elapses before space is available.
+     *         the specified waiting time elapses before space is available
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */

@@ -474,7 +474,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Returns value if this node contains a valid key-value pair,
          * else null.
          * @return this node's value if it isn't a marker or header or
-         * is deleted, else null.
+         * is deleted, else null
          */
         V getValidValue() {
             Object v = value;
@@ -1979,8 +1979,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * course only appropriate if it is acceptable to use the same
      * value for all additions from this view.
      *
-     * @param mappedValue the mapped value to use for any
-     * additions.
+     * @param mappedValue the mapped value to use for any additions
      * @return the set view
      * @throws NullPointerException if the mappedValue is null
      */
@@ -3449,7 +3448,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * or {@code null} if additions are not supported.
          *
          * @return the default mapped value for additions, or {@code null}
-         * if not supported.
+         * if not supported
          */
         public V getMappedValue() { return value; }
 

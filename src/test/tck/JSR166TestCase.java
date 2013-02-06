@@ -287,6 +287,7 @@ public class JSR166TestCase extends TestCase {
         if (atLeastJava8()) {
             String[] java8TestClassNames = {
                 "StampedLockTest",
+                "ForkJoinPool8Test",
             };
             addNamedTestClasses(suite, java8TestClassNames);
         }

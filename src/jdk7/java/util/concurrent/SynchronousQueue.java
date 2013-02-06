@@ -854,7 +854,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * up to the specified wait time for another thread to receive it.
      *
      * @return {@code true} if successful, or {@code false} if the
-     *         specified waiting time elapses before a consumer appears.
+     *         specified waiting time elapses before a consumer appears
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
@@ -903,7 +903,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * to insert it.
      *
      * @return the head of this queue, or {@code null} if the
-     *         specified waiting time elapses before an element is present.
+     *         specified waiting time elapses before an element is present
      * @throws InterruptedException {@inheritDoc}
      */
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
@@ -918,7 +918,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * is currently making an element available.
      *
      * @return the head of this queue, or {@code null} if no
-     *         element is available.
+     *         element is available
      */
     public E poll() {
         return transferer.transfer(null, true, 0);

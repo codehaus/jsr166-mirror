@@ -302,7 +302,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * @param combiner the combiner
      * @return this (to simplify use in expressions)
      * @throws ArrayIndexOutOfBoundsException if other array has
-     * fewer elements than this array.
+     * fewer elements than this array
      */
     public ParallelLongArray replaceWithMapping(BinaryLongOp combiner,
                                                 long[] other) {
@@ -403,7 +403,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * the given reducer. For example, if the contents are the numbers
      * {@code 1, 2, 3}, and the reducer operation adds numbers, then
      * after invocation of this method, the contents would be {@code 1,
-     * 3, 6} (that is, {@code 1, 1+2, 1+2+3});
+     * 3, 6} (that is, {@code 1, 1+2, 1+2+3}).
      * @param reducer the reducer
      * @param base the result for an empty array
      * @return this (to simplify use in expressions)
@@ -420,7 +420,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * 2, 3}, and the reducer operation adds numbers, then after
      * invocation of this method, the contents would be {@code 0, 1,
      * 3} (that is, {@code 0, 0+1, 0+1+2}, and the return value
-     * would be 6 (that is, {@code  1+2+3});
+     * would be 6 (that is, {@code  1+2+3}).
      * @param reducer the reducer
      * @param base the result for an empty array
      * @return the total reduction
@@ -909,7 +909,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
     public void set(int i, long x) { array[i] = x; }
 
     /**
-     * Equivalent to {@code asList().toString()}
+     * Equivalent to {@code asList().toString()}.
      * @return a string representation
      */
     public String toString() {

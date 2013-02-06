@@ -484,7 +484,7 @@ public class ConcurrentSkipListSet<E>
         /**
          * Creates a new submap.
          * @param fromElement inclusive least value, or {@code null} if from start
-         * @param toElement exclusive upper bound or {@code null} if to end
+         * @param toElement exclusive upper bound, or {@code null} if to end
          * @throws IllegalArgumentException if fromElement and toElement
          * non-null and fromElement greater than toElement
          */

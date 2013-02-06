@@ -464,7 +464,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Retrieves, but does not remove, the head of the queue represented by
      * this deque, returning {@code null} if this deque is empty.
      *
-     * <p>This method is equivalent to {@link #peekFirst}
+     * <p>This method is equivalent to {@link #peekFirst}.
      *
      * @return the head of the queue represented by this deque, or
      *     {@code null} if this deque is empty
@@ -478,7 +478,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * this deque.  This method differs from the {@code peek} method only in
      * that it throws an exception if this deque is empty.
      *
-     * <p>This method is equivalent to {@link #getFirst}
+     * <p>This method is equivalent to {@link #getFirst}.
      *
      * @return the head of the queue represented by this deque
      * @throws NoSuchElementException if this deque is empty

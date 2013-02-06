@@ -243,11 +243,11 @@ public interface ExecutorService extends Executor {
      * collection is modified while this operation is in progress.
      *
      * @param tasks the collection of tasks
-     * @return A list of Futures representing the tasks, in the same
+     * @return a list of Futures representing the tasks, in the same
      *         sequential order as produced by the iterator for the
-     *         given task list, each of which has completed.
+     *         given task list, each of which has completed
      * @throws InterruptedException if interrupted while waiting, in
-     *         which case unfinished tasks are cancelled.
+     *         which case unfinished tasks are cancelled
      * @throws NullPointerException if tasks or any of its elements are {@code null}
      * @throws RejectedExecutionException if any task cannot be
      *         scheduled for execution

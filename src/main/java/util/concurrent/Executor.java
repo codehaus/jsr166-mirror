@@ -105,7 +105,7 @@ public interface Executor {
      *
      * @param command the runnable task
      * @throws RejectedExecutionException if this task cannot be
-     * accepted for execution.
+     * accepted for execution
      * @throws NullPointerException if command is null
      */
     void execute(Runnable command);

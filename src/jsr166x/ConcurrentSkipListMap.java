@@ -468,7 +468,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Returns value if this node contains a valid key-value pair,
          * else null.
          * @return this node's value if it isn't a marker or header or
-         * is deleted, else null.
+         * is deleted, else null
          */
         V getValidValue() {
             Object v = value;
@@ -507,7 +507,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         volatile Index<K,V> right;
 
         /**
-         * Creates index node with given values
+         * Creates index node with given values.
          */
         Index(Node<K,V> node, Index<K,V> down, Index<K,V> right) {
             this.node = node;
@@ -766,7 +766,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Returns node holding key or null if no such, clearing out any
+     * Returns node holding key, or null if no such, clearing out any
      * deleted nodes seen along the way.  Repeatedly traverses at
      * base-level looking for key starting at predecessor returned
      * from findPredecessor, processing base-level deletions as
@@ -1601,9 +1601,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Constructs a new map containing the same mappings as the given
      * {@code SortedMap}, sorted according to the same ordering.
      * @param m the sorted map whose mappings are to be placed in this
-     * map, and whose comparator is to be used to sort this map.
+     * map, and whose comparator is to be used to sort this map
      * @throws NullPointerException if the specified sorted map is
-     * {@code null}.
+     * {@code null}
      */
     public ConcurrentSkipListMap(SortedMap<K, ? extends V> m) {
         this.comparator = m.comparator();
@@ -2212,7 +2212,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * if this map uses its keys' natural order.
      *
      * @return the comparator associated with this map, or
-     * {@code null} if it uses its keys' natural sort method.
+     * {@code null} if it uses its keys' natural sort method
      */
     public Comparator<? super K> comparator() {
         return comparator;
@@ -3049,7 +3049,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         /**
          * Creates a new submap.
          * @param least inclusive least value, or {@code null} if from start
-         * @param fence exclusive upper bound or {@code null} if to end
+         * @param fence exclusive upper bound, or {@code null} if to end
          * @throws IllegalArgumentException if least and fence non-null
          *  and least greater than fence
          */
@@ -3104,7 +3104,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Returns least key. Needed by ConcurrentSkipListSet.
-         * @return least key or {@code null} if from start
+         * @return least key, or {@code null} if from start
          */
         K getLeast() {
             return least;
@@ -3112,7 +3112,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Returns fence key. Needed by ConcurrentSkipListSet.
-         * @return fence key or {@code null} of to end
+         * @return fence key, or {@code null} if to end
          */
         K getFence() {
             return fence;

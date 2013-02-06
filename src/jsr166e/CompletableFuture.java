@@ -1319,19 +1319,18 @@ public class CompletableFuture<T> implements Future<T> {
         Object r; Throwable ex, cause;
         if ((r = result) == null && (r = waitingGet(true)) == null)
             throw new InterruptedException();
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if ((ex instanceof CompletionException) &&
-                    (cause = ex.getCause()) != null)
-                    ex = cause;
-                throw new ExecutionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if ((ex instanceof CompletionException) &&
+            (cause = ex.getCause()) != null)
+            ex = cause;
+        throw new ExecutionException(ex);
     }
 
     /**
@@ -1356,19 +1355,18 @@ public class CompletableFuture<T> implements Future<T> {
             throw new InterruptedException();
         if ((r = result) == null)
             r = timedAwaitDone(nanos);
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if ((ex instanceof CompletionException) &&
-                    (cause = ex.getCause()) != null)
-                    ex = cause;
-                throw new ExecutionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if ((ex instanceof CompletionException) &&
+            (cause = ex.getCause()) != null)
+            ex = cause;
+        throw new ExecutionException(ex);
     }
 
     /**
@@ -1389,18 +1387,17 @@ public class CompletableFuture<T> implements Future<T> {
         Object r; Throwable ex;
         if ((r = result) == null)
             r = waitingGet(false);
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if (ex instanceof CompletionException)
-                    throw (CompletionException)ex;
-                throw new CompletionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if (ex instanceof CompletionException)
+            throw (CompletionException)ex;
+        throw new CompletionException(ex);
     }
 
     /**
@@ -1417,18 +1414,17 @@ public class CompletableFuture<T> implements Future<T> {
         Object r; Throwable ex;
         if ((r = result) == null)
             return valueIfAbsent;
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if (ex instanceof CompletionException)
-                    throw (CompletionException)ex;
-                throw new CompletionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if (ex instanceof CompletionException)
+            throw (CompletionException)ex;
+        throw new CompletionException(ex);
     }
 
     /**
@@ -2449,10 +2445,10 @@ public class CompletableFuture<T> implements Future<T> {
      * then the returned CompletableFuture also does so, with a
      * CompletionException holding this exception as its cause.
      *
-     * @param fn the function returning a new CompletableFuture.
+     * @param fn the function returning a new CompletableFuture
      * @return the CompletableFuture, that {@code isDone()} upon
      * return if completed by the given function, or an exception
-     * occurs.
+     * occurs
      */
     public <U> CompletableFuture<U> thenCompose(Fun<? super T,
                                                 CompletableFuture<U>> fn) {
@@ -2633,17 +2629,16 @@ public class CompletableFuture<T> implements Future<T> {
      */
     public boolean isCancelled() {
         Object r;
-        return ((r = result) != null &&
-                (r instanceof AltResult) &&
-                (((AltResult)r).ex instanceof CancellationException));
+        return ((r = result) instanceof AltResult) &&
+            (((AltResult)r).ex instanceof CancellationException);
     }
 
     /**
      * Forcibly sets or resets the value subsequently returned by
-     * method get() and related methods, whether or not already
-     * completed. This method is designed for use only in error
-     * recovery actions, and even in such situations may result in
-     * ongoing dependent completions using established versus
+     * method {@link #get()} and related methods, whether or not
+     * already completed. This method is designed for use only in
+     * error recovery actions, and even in such situations may result
+     * in ongoing dependent completions using established versus
      * overwritten outcomes.
      *
      * @param value the completion value
@@ -2654,9 +2649,9 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Forcibly causes subsequent invocations of method get() and
-     * related methods to throw the given exception, whether or not
-     * already completed. This method is designed for use only in
+     * Forcibly causes subsequent invocations of method {@link #get()}
+     * and related methods to throw the given exception, whether or
+     * not already completed. This method is designed for use only in
      * recovery actions, and even in such situations may result in
      * ongoing dependent completions using established versus
      * overwritten outcomes.

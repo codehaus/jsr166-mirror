@@ -887,7 +887,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          * or any other cancelled task. Returns (true) on any CAS
          * or consistency check failure so caller can retry.
          *
-         * @return false if no progress can be made, else true;
+         * @return false if no progress can be made, else true
          */
         final boolean tryRemoveAndExec(ForkJoinTask<?> task) {
             boolean stat = true, removed = false, empty = true;
@@ -932,7 +932,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
         /**
          * Polls for and executes the given task or any other task in
-         * its CountedCompleter computation
+         * its CountedCompleter computation.
          */
         final boolean pollAndExecCC(ForkJoinTask<?> root) {
             ForkJoinTask<?>[] a; int b; Object o;
@@ -1347,7 +1347,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * array, and adjusts counts. If pool is shutting down, tries to
      * complete termination.
      *
-     * @param wt the worker thread or null if construction failed
+     * @param wt the worker thread, or null if construction failed
      * @param ex the exception causing failure, or null if none
      */
     final void deregisterWorker(ForkJoinWorkerThread wt, Throwable ex) {
@@ -2422,7 +2422,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         java.lang.RuntimePermission}{@code ("modifyThread")}
      */
     public ForkJoinPool() {
-        this(Runtime.getRuntime().availableProcessors(),
+        this(Math.min(MAX_CAP, Runtime.getRuntime().availableProcessors()),
              defaultForkJoinWorkerThreadFactory, null, false);
     }
 

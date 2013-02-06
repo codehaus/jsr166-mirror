@@ -70,7 +70,7 @@ public interface CompletionService<V> {
 
     /**
      * Retrieves and removes the Future representing the next
-     * completed task or {@code null} if none are present.
+     * completed task, or {@code null} if none are present.
      *
      * @return the Future representing the next completed task, or
      *         {@code null} if none are present

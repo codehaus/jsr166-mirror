@@ -41,9 +41,9 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *
      * @param o the value to match
      * @return an element greater than or equal to given element, or
-     * {@code null} if there is no such element.
+     * {@code null} if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
-     *            currently in the set.
+     *            currently in the set
      * @throws NullPointerException if o is {@code null}
      * and this set deas not permit {@code null} elements
      */
@@ -55,7 +55,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *
      * @param o the value to match
      * @return the greatest element less than the given element, or
-     * {@code null} if there is no such element.
+     * {@code null} if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set
      * @throws NullPointerException if o is {@code null}
@@ -83,7 +83,7 @@ public interface NavigableSet<E> extends SortedSet<E> {
      *
      * @param o the value to match
      * @return the least element greater than the given element, or
-     * {@code null} if there is no such element.
+     * {@code null} if there is no such element
      * @throws ClassCastException if o cannot be compared with the elements
      *            currently in the set
      * @throws NullPointerException if o is {@code null}

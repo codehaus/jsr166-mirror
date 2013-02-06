@@ -197,7 +197,7 @@ public interface Lock {
      *
      * @throws InterruptedException if the current thread is
      *         interrupted while acquiring the lock (and interruption
-     *         of lock acquisition is supported).
+     *         of lock acquisition is supported)
      */
     void lockInterruptibly() throws InterruptedException;
 

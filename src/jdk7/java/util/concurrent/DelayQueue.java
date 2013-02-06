@@ -263,7 +263,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * if one exists.
      *
      * @return the head of this queue, or {@code null} if this
-     *         queue is empty.
+     *         queue is empty
      */
     public E peek() {
         final ReentrantLock lock = this.lock;

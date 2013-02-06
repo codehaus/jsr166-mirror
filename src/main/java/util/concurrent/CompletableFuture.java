@@ -2922,7 +2922,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Recursively constructs an Or'ed tree of CompletableFutures
+     * Recursively constructs an Or'ed tree of CompletableFutures.
      */
     private static CompletableFuture<?> anyTree(CompletableFuture<?>[] cfs,
                                                 int lo, int hi) {

@@ -30,11 +30,13 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     public void testToString() {
         CompletableFuture<String> f;
-        assertTrue(new CompletableFuture<String>().toString()
-                   .contains("[Not completed]"));
+
         f = new CompletableFuture<String>();
+        assertTrue(f.toString().contains("[Not completed]"));
+
         f.complete("foo");
         assertTrue(f.toString().contains("[Completed normally]"));
+
         f = new CompletableFuture<String>();
         f.completeExceptionally(new IndexOutOfBoundsException());
         assertTrue(f.toString().contains("[Completed exceptionally]"));

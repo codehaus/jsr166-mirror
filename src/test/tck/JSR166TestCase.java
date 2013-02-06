@@ -384,8 +384,31 @@ public class JSR166TestCase extends TestCase {
 
         if (Thread.interrupted())
             throw new AssertionFailedError("interrupt status set in main thread");
+
+        checkForkJoinPoolThreadLeaks();
     }
 
+    /**
+     * Find missing try { ... } finally { joinPool(e); }
+     */
+    void checkForkJoinPoolThreadLeaks() throws InterruptedException {
+        Thread[] survivors = new Thread[5];
+        int count = Thread.enumerate(survivors);
+        for (int i = 0; i < count; i++) {
+            Thread thread = survivors[i];
+            String name = thread.getName();
+            if (name.startsWith("ForkJoinPool-")) {
+                // give thread some time to terminate
+                thread.join(LONG_DELAY_MS);
+                if (!thread.isAlive()) continue;
+                thread.stop();
+                throw new AssertionFailedError
+                    (String.format("Found leaked ForkJoinPool thread test=%s thread=%s%n",
+                                   toString(), name));
+            }
+        }
+    }
+        
     /**
      * Just like fail(reason), but additionally recording (using
      * threadRecordFailure) any AssertionFailedError thrown, so that

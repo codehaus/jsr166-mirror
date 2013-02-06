@@ -1319,19 +1319,18 @@ public class CompletableFuture<T> implements Future<T> {
         Object r; Throwable ex, cause;
         if ((r = result) == null && (r = waitingGet(true)) == null)
             throw new InterruptedException();
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if ((ex instanceof CompletionException) &&
-                    (cause = ex.getCause()) != null)
-                    ex = cause;
-                throw new ExecutionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if ((ex instanceof CompletionException) &&
+            (cause = ex.getCause()) != null)
+            ex = cause;
+        throw new ExecutionException(ex);
     }
 
     /**
@@ -1356,19 +1355,18 @@ public class CompletableFuture<T> implements Future<T> {
             throw new InterruptedException();
         if ((r = result) == null)
             r = timedAwaitDone(nanos);
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if ((ex instanceof CompletionException) &&
-                    (cause = ex.getCause()) != null)
-                    ex = cause;
-                throw new ExecutionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if ((ex instanceof CompletionException) &&
+            (cause = ex.getCause()) != null)
+            ex = cause;
+        throw new ExecutionException(ex);
     }
 
     /**
@@ -1389,18 +1387,17 @@ public class CompletableFuture<T> implements Future<T> {
         Object r; Throwable ex;
         if ((r = result) == null)
             r = waitingGet(false);
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if (ex instanceof CompletionException)
-                    throw (CompletionException)ex;
-                throw new CompletionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if (ex instanceof CompletionException)
+            throw (CompletionException)ex;
+        throw new CompletionException(ex);
     }
 
     /**
@@ -1417,18 +1414,17 @@ public class CompletableFuture<T> implements Future<T> {
         Object r; Throwable ex;
         if ((r = result) == null)
             return valueIfAbsent;
-        if (r instanceof AltResult) {
-            if ((ex = ((AltResult)r).ex) != null) {
-                if (ex instanceof CancellationException)
-                    throw (CancellationException)ex;
-                if (ex instanceof CompletionException)
-                    throw (CompletionException)ex;
-                throw new CompletionException(ex);
-            }
-            return null;
+        if (!(r instanceof AltResult)) {
+            @SuppressWarnings("unchecked") T tr = (T) r;
+            return tr;
         }
-        @SuppressWarnings("unchecked") T tr = (T) r;
-        return tr;
+        if ((ex = ((AltResult)r).ex) == null)
+            return null;
+        if (ex instanceof CancellationException)
+            throw (CancellationException)ex;
+        if (ex instanceof CompletionException)
+            throw (CompletionException)ex;
+        throw new CompletionException(ex);
     }
 
     /**

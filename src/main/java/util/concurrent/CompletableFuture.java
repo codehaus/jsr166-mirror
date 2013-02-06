@@ -3059,7 +3059,7 @@ public class CompletableFuture<T> implements Future<T> {
 
     /**
      * Returns a string identifying this CompletableFuture, as well as
-     * its completion state.  The state, in brackets, includes the
+     * its completion state.  The state, in brackets, contains the
      * String {@code "Completed Normally"} or the String {@code
      * "Completed Exceptionally"}, or the String {@code "Not
      * completed"} followed by the number of CompletableFutures
@@ -3068,15 +3068,16 @@ public class CompletableFuture<T> implements Future<T> {
      * @return a string identifying this CompletableFuture, as well as its state
      */
     public String toString() {
-        String id = super.toString();
-        int count = getNumberOfDependents();
         Object r = result;
-        Throwable ex = (r != null && (r instanceof AltResult) ?
-                        ((AltResult)r).ex : null);
-        return id + (ex != null ? "[Completed exceptionally]" :
-                     (r != null ? "[Completed normally]" :
-                      (count == 0 ? "[Not completed]" :
-                       ("[Not completed, " + count + " dependents]"))));
+        int count;
+        return super.toString() +
+            ((r == null) ?
+             (((count = getNumberOfDependents()) == 0) ?
+              "[Not completed]" :
+              "[Not completed, " + count + " dependents]") :
+             (((r instanceof AltResult) && ((AltResult)r).ex != null) ?
+              "[Completed exceptionally]" :
+              "[Completed normally]"));
     }
 
     // Unsafe mechanics

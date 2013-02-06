@@ -3006,9 +3006,8 @@ public class CompletableFuture<T> implements Future<T> {
      */
     public boolean isCancelled() {
         Object r;
-        return ((r = result) != null &&
-                (r instanceof AltResult) &&
-                (((AltResult)r).ex instanceof CancellationException));
+        return ((r = result) instanceof AltResult) &&
+            (((AltResult)r).ex instanceof CancellationException);
     }
 
     /**

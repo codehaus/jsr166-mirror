@@ -663,8 +663,9 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       classes="${4jdk7product.jar}">
       <javac-elements>
         <!-- JDK8+ test classes -->
+        <exclude name="*8Test.java"/>
+        <exclude name="CompletableFutureTest.java"/>
         <exclude name="StampedLockTest.java"/>
-        <exclude name="ForkJoinPool8Test.java"/>
       </javac-elements>
     </run-tck-tests>
   </target>

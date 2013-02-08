@@ -455,35 +455,39 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      * A submitted privileged action runs to completion
      */
     public void testSubmitPrivilegedAction() throws Exception {
+        final Callable callable = Executors.callable(new PrivilegedAction() {
+                public Object run() { return TEST_STRING; }});
         Runnable r = new CheckedRunnable() {
-            public void realRun() throws Exception {
-                ExecutorService e = new ForkJoinPool(1);
-                Future future = e.submit(Executors.callable(new PrivilegedAction() {
-                    public Object run() {
-                        return TEST_STRING;
-                    }}));
-
+        public void realRun() throws Exception {
+            ExecutorService e = new ForkJoinPool(1);
+            try {
+                Future future = e.submit(callable);
                 assertSame(TEST_STRING, future.get());
-            }};
+            } finally {
+                joinPool(e);
+            }
+        }};
 
-        runWithPermissions(r,
-                           new RuntimePermission("modifyThread"));
+        runWithPermissions(r, new RuntimePermission("modifyThread"));
     }
 
     /**
      * A submitted privileged exception action runs to completion
      */
     public void testSubmitPrivilegedExceptionAction() throws Exception {
+        final Callable callable =
+            Executors.callable(new PrivilegedExceptionAction() {
+                public Object run() { return TEST_STRING; }});
         Runnable r = new CheckedRunnable() {
-            public void realRun() throws Exception {
-                ExecutorService e = new ForkJoinPool(1);
-                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
-                    public Object run() {
-                        return TEST_STRING;
-                    }}));
-
+        public void realRun() throws Exception {
+            ExecutorService e = new ForkJoinPool(1);
+            try {
+                Future future = e.submit(callable);
                 assertSame(TEST_STRING, future.get());
-            }};
+            } finally {
+                joinPool(e);
+            }
+        }};
 
         runWithPermissions(r, new RuntimePermission("modifyThread"));
     }
@@ -492,20 +496,24 @@ public class ForkJoinPoolTest extends JSR166TestCase {
      * A submitted failed privileged exception action reports exception
      */
     public void testSubmitFailedPrivilegedExceptionAction() throws Exception {
+        final Callable callable =
+            Executors.callable(new PrivilegedExceptionAction() {
+                public Object run() { throw new IndexOutOfBoundsException(); }});
         Runnable r = new CheckedRunnable() {
-            public void realRun() throws Exception {
-                ExecutorService e = new ForkJoinPool(1);
-                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
-                    public Object run() throws Exception {
-                        throw new IndexOutOfBoundsException();
-                    }}));
-
+        public void realRun() throws Exception {
+            ExecutorService e = new ForkJoinPool(1);
+            try {
+                Future future = e.submit(callable);
                 try {
                     future.get();
                     shouldThrow();
                 } catch (ExecutionException success) {
                     assertTrue(success.getCause() instanceof IndexOutOfBoundsException);
-                }}};
+                }
+            } finally {
+                joinPool(e);
+            }
+        }};
 
         runWithPermissions(r, new RuntimePermission("modifyThread"));
     }

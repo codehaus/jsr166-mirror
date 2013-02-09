@@ -9,13 +9,13 @@ package java.util;
 /**
  * A {@link SortedMap} extended with navigation methods returning the
  * closest matches for given search targets. Methods
- * {@code lowerEntry}, {@code floorEntry}, {@code ceilingEntry},
- * and {@code higherEntry} return {@code Map.Entry} objects
+ * {@link #lowerEntry}, {@link #floorEntry}, {@link #ceilingEntry},
+ * and {@link #higherEntry} return {@code Map.Entry} objects
  * associated with keys respectively less than, less than or equal,
  * greater than or equal, and greater than a given key, returning
  * {@code null} if there is no such key.  Similarly, methods
- * {@code lowerKey}, {@code floorKey}, {@code ceilingKey}, and
- * {@code higherKey} return only the associated keys. All of these
+ * {@link #lowerKey}, {@link #floorKey}, {@link #ceilingKey}, and
+ * {@link #higherKey} return only the associated keys. All of these
  * methods are designed for locating, not traversing entries.
  *
  * <p>A {@code NavigableMap} may be accessed and traversed in either

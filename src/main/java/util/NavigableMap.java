@@ -30,9 +30,9 @@ package java.util;
  * Submaps of any {@code NavigableMap} must implement the {@code
  * NavigableMap} interface.
  *
- * <p>This interface additionally defines methods {@code firstEntry},
- * {@code pollFirstEntry}, {@code lastEntry}, and
- * {@code pollLastEntry} that return and/or remove the least and
+ * <p>This interface additionally defines methods {@link #firstEntry},
+ * {@link #pollFirstEntry}, {@link #lastEntry}, and
+ * {@link #pollLastEntry} that return and/or remove the least and
  * greatest mappings, if any exist, else returning {@code null}.
  *
  * <p>Implementations of entry-returning methods are expected to

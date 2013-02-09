@@ -28,6 +28,11 @@ public class CompletableFutureTest extends JSR166TestCase {
         return new TestSuite(CompletableFutureTest.class);
     }
 
+    // XXXX Just a skeleton implementation for now.
+    public void testTODO() {
+        fail("Please add some real tests!");
+    }
+
     public void testToString() {
         CompletableFuture<String> f;
 

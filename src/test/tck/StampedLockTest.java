@@ -26,7 +26,9 @@ public class StampedLockTest extends JSR166TestCase {
     }
 
     // XXXX Just a skeleton implementation for now.
-    public void testTODO() { fail("StampedLockTest needs help"); }
+    public void testTODO() {
+        fail("Please add some real tests!");
+    }
 
     public void testConstructor() { new StampedLock(); }
 

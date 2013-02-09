@@ -8,8 +8,8 @@ package java.util;
 
 /**
  * A {@link SortedSet} extended with navigation methods reporting
- * closest matches for given search targets. Methods {@code lower},
- * {@code floor}, {@code ceiling}, and {@code higher} return elements
+ * closest matches for given search targets. Methods {@link #lower},
+ * {@link #floor}, {@link #ceiling}, and {@link #higher} return elements
  * respectively less than, less than or equal, greater than or equal,
  * and greater than a given element, returning {@code null} if there
  * is no such element.  A {@code NavigableSet} may be accessed and
@@ -18,7 +18,7 @@ package java.util;
  * all relational and directional methods inverted. The performance of
  * ascending operations and views is likely to be faster than that of
  * descending ones.  This interface additionally defines methods
- * {@code pollFirst} and {@code pollLast} that return and remove the
+ * {@link #pollFirst} and {@link #pollLast} that return and remove the
  * lowest and highest element, if one exists, else returning {@code
  * null}.  Methods {@code subSet}, {@code headSet},
  * and {@code tailSet} differ from the like-named {@code

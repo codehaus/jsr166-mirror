@@ -2472,35 +2472,43 @@ public class ForkJoinPool extends AbstractExecutorService {
                         ForkJoinWorkerThreadFactory factory,
                         Thread.UncaughtExceptionHandler handler,
                         boolean asyncMode) {
+        this(checkParallelism(parallelism),
+             checkFactory(factory),
+             handler,
+             asyncMode,
+             "ForkJoinPool-" + nextPoolId() + "-worker-");
         checkPermission();
-        if (factory == null)
-            throw new NullPointerException();
+    }
+
+    private static int checkParallelism(int parallelism) {
         if (parallelism <= 0 || parallelism > MAX_CAP)
             throw new IllegalArgumentException();
+        return parallelism;
+    }
+
+    private static ForkJoinWorkerThreadFactory checkFactory
+        (ForkJoinWorkerThreadFactory factory) {
+        if (factory == null)
+            throw new NullPointerException();
+        return factory;
+    }
+
+    /**
+     * Creates a {@code ForkJoinPool} with the given parameters, without
+     * any security checks or parameter validation.  Invoked directly by
+     * makeCommonPool.
+     */
+    private ForkJoinPool(int parallelism,
+                         ForkJoinWorkerThreadFactory factory,
+                         Thread.UncaughtExceptionHandler handler,
+                         boolean asyncMode,
+                         String workerNamePrefix) {
+        this.workerNamePrefix = workerNamePrefix;
         this.factory = factory;
         this.ueh = handler;
         this.config = parallelism | (asyncMode ? (FIFO_QUEUE << 16) : 0);
         long np = (long)(-parallelism); // offset ctl counts
         this.ctl = ((np << AC_SHIFT) & AC_MASK) | ((np << TC_SHIFT) & TC_MASK);
-        int pn = nextPoolId();
-        StringBuilder sb = new StringBuilder("ForkJoinPool-");
-        sb.append(Integer.toString(pn));
-        sb.append("-worker-");
-        this.workerNamePrefix = sb.toString();
-    }
-
-    /**
-     * Constructor for common pool, suitable only for static initialization.
-     * Basically the same as above, but uses smallest possible initial footprint.
-     */
-    ForkJoinPool(int parallelism, long ctl,
-                 ForkJoinWorkerThreadFactory factory,
-                 Thread.UncaughtExceptionHandler handler) {
-        this.config = parallelism;
-        this.ctl = ctl;
-        this.factory = factory;
-        this.ueh = handler;
-        this.workerNamePrefix = "ForkJoinPool.commonPool-worker-";
     }
 
     /**
@@ -2574,7 +2582,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (task instanceof ForkJoinTask<?>) // avoid re-wrap
             job = (ForkJoinTask<?>) task;
         else
-            job = new ForkJoinTask.AdaptedRunnableAction(task);
+            job = new ForkJoinTask.RunnableExecuteAction(task);
         externalPush(job);
     }
 
@@ -3309,45 +3317,50 @@ public class ForkJoinPool extends AbstractExecutorService {
             throw new Error(e);
         }
 
-        ForkJoinWorkerThreadFactory fac = defaultForkJoinWorkerThreadFactory =
+        defaultForkJoinWorkerThreadFactory =
             new DefaultForkJoinWorkerThreadFactory();
         modifyThreadPermission = new RuntimePermission("modifyThread");
 
-        /*
-         * Establish common pool parameters.  For extra caution,
-         * computations to set up common pool state are here; the
-         * constructor just assigns these values to fields.
-         */
+        common = java.security.AccessController.doPrivileged
+            (new java.security.PrivilegedAction<ForkJoinPool>() {
+                public ForkJoinPool run() { return makeCommonPool(); }});
+        commonParallelism = common.config; // cannot be async
+    }
 
-        int par = 0;
+    /**
+     * Creates and returns the common pool, respecting user settings
+     * specified via system properties.
+     */
+    private static ForkJoinPool makeCommonPool() {
+        int parallelism = 0;
+        ForkJoinWorkerThreadFactory factory
+            = defaultForkJoinWorkerThreadFactory;
         Thread.UncaughtExceptionHandler handler = null;
-        try {  // TBD: limit or report ignored exceptions?
+        try {  // ignore exceptions in accesing/parsing properties
             String pp = System.getProperty
                 ("java.util.concurrent.ForkJoinPool.common.parallelism");
-            String hp = System.getProperty
-                ("java.util.concurrent.ForkJoinPool.common.exceptionHandler");
             String fp = System.getProperty
                 ("java.util.concurrent.ForkJoinPool.common.threadFactory");
+            String hp = System.getProperty
+                ("java.util.concurrent.ForkJoinPool.common.exceptionHandler");
+            if (pp != null)
+                parallelism = Integer.parseInt(pp);
             if (fp != null)
-                fac = ((ForkJoinWorkerThreadFactory)ClassLoader.
-                       getSystemClassLoader().loadClass(fp).newInstance());
+                factory = ((ForkJoinWorkerThreadFactory)ClassLoader.
+                           getSystemClassLoader().loadClass(fp).newInstance());
             if (hp != null)
                 handler = ((Thread.UncaughtExceptionHandler)ClassLoader.
                            getSystemClassLoader().loadClass(hp).newInstance());
-            if (pp != null)
-                par = Integer.parseInt(pp);
         } catch (Exception ignore) {
         }
 
-        if (par <= 0)
-            par = Runtime.getRuntime().availableProcessors();
-        if (par > MAX_CAP)
-            par = MAX_CAP;
-        commonParallelism = par;
-        long np = (long)(-par); // precompute initial ctl value
-        long ct = ((np << AC_SHIFT) & AC_MASK) | ((np << TC_SHIFT) & TC_MASK);
+        if (parallelism <= 0)
+            parallelism = Runtime.getRuntime().availableProcessors();
+        if (parallelism > MAX_CAP)
+            parallelism = MAX_CAP;
 
-        common = new ForkJoinPool(par, ct, fac, handler);
+        return new ForkJoinPool(parallelism, factory, handler, false,
+                                "ForkJoinPool.commonPool-worker-");
     }
 
 }

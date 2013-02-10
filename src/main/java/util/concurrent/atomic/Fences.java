@@ -330,7 +330,7 @@ package java.util.concurrent.atomic;
  *   </ul>
  *   <p>
  *   <dt><b>[Matching]</b>
- *   <dd> Given:
+ *   <dd>Given:
  *
  *   <ul>
  *
@@ -370,7 +370,7 @@ package java.util.concurrent.atomic;
  *   </ul>
  *   <p>
  *   <dt><b>[Initial Reads]</b>
- *   <dd> Given:
+ *   <dd>Given:
  *
  *   <ul>
  *
@@ -404,7 +404,7 @@ package java.util.concurrent.atomic;
  *   </ul>
  *  <p>
  *  <dt><b>[orderAccesses]</b>
- *  <dd> Given:
+ *  <dd>Given:
  *
  *   <ul>
  *     <li><em>p</em>, a reference to an object
@@ -424,7 +424,7 @@ package java.util.concurrent.atomic;
  *   </ul>
  *   <p>
  *   <dt><b>[Reachability]</b>
- *   <dd> Given:
+ *   <dd>Given:
  *
  *   <ul>
  *

@@ -61,7 +61,7 @@ import java.util.*;
  *
  * <dt>On-demand construction</dt>
  *
- * <dd> By default, even core threads are initially created and
+ * <dd>By default, even core threads are initially created and
  * started only when new tasks arrive, but this can be overridden
  * dynamically using method {@link #prestartCoreThread} or {@link
  * #prestartAllCoreThreads}.  You probably want to prestart threads if
@@ -168,7 +168,7 @@ import java.util.*;
  *
  * <dt>Rejected tasks</dt>
  *
- * <dd> New tasks submitted in method {@link #execute} will be
+ * <dd>New tasks submitted in method {@link #execute} will be
  * <em>rejected</em> when the Executor has been shut down, and also
  * when the Executor uses finite bounds for both maximum threads and
  * work queue capacity, and is saturated.  In either case, the {@code
@@ -219,7 +219,7 @@ import java.util.*;
  *
  * <dt>Queue maintenance</dt>
  *
- * <dd> Method {@link #getQueue} allows access to the work queue for
+ * <dd>Method {@link #getQueue} allows access to the work queue for
  * purposes of monitoring and debugging.  Use of this method for any
  * other purpose is strongly discouraged.  Two supplied methods,
  * {@link #remove} and {@link #purge} are available to assist in
@@ -228,7 +228,7 @@ import java.util.*;
  *
  * <dt>Finalization</dt>
  *
- * <dd> A pool that is no longer referenced in a program <em>AND</em>
+ * <dd>A pool that is no longer referenced in a program <em>AND</em>
  * has no remaining threads will be {@code shutdown} automatically. If
  * you would like to ensure that unreferenced pools are reclaimed even
  * if users forget to call {@link #shutdown}, then you must arrange

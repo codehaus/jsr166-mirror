@@ -1408,7 +1408,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Waits if necessary for the computation to complete, and then
+     * Waits if necessary for this future to complete, and then
      * returns its result.
      *
      * @return the result value
@@ -1436,8 +1436,8 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Waits if necessary for at most the given time for completion,
-     * and then returns its result, if available.
+     * Waits if necessary for at most the given time for this future
+     * to complete, and then returns its result, if available.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument

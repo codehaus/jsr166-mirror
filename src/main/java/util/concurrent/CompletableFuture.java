@@ -2785,7 +2785,7 @@ public class CompletableFuture<T> implements Future<T> {
     /**
      * Returns a new CompletableFuture that is completed when all of
      * the given CompletableFutures complete.  If any of the component
-     * CompletableFuture complete exceptionally, then so does the
+     * CompletableFutures complete exceptionally, then so does the
      * returned CompletableFuture. Otherwise, the results, if any, of
      * the component CompletableFutures are not reflected in the
      * returned CompletableFuture, but may be obtained by inspecting

@@ -27,16 +27,19 @@ import java.util.concurrent.locks.LockSupport;
  * value and status), and may include dependent functions and actions
  * that trigger upon its completion.
  *
- * <p>When two or more threads attempt to {@link #complete}, {@link
- * #completeExceptionally}, or {@link #cancel} a CompletableFuture,
- * only one of them succeeds.
+ * <p>When two or more threads attempt to
+ * {@link #complete complete},
+ * {@link #completeExceptionally}, or
+ * {@link #cancel cancel}
+ * a CompletableFuture, only one of them succeeds.
  *
  * <p>Methods are available for adding dependents based on Functions,
  * Consumers, and Runnables. The appropriate form to use depends on
  * whether actions require arguments and/or produce results. Actions
  * may also be triggered after either or both the current and another
  * CompletableFuture complete.  Multiple CompletableFutures may also
- * be grouped as one using {@link #anyOf} and {@link #allOf}.
+ * be grouped as one using {@link #anyOf(CompletableFuture...)} and
+ * {@link #allOf(CompletableFuture...)}.
  *
  * <p>Actions supplied for dependent completions (mainly using methods
  * with prefix {@code then}) may be performed by the thread that

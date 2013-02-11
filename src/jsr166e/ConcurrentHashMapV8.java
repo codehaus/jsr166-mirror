@@ -4784,7 +4784,7 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * A view of a ConcurrentHashMapV8 as a {@link Collection} of
      * values, in which additions are disabled. This class cannot be
-     * directly instantiated. See {@link #values},
+     * directly instantiated. See {@link #values()}.
      *
      * <p>The view's {@code iterator} is a "weakly consistent" iterator
      * that will never throw {@link ConcurrentModificationException},

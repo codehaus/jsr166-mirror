@@ -519,6 +519,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          *
          * @param pool the pool this thread works in
          * @throws NullPointerException if the pool is null
+         * @return the new worker thread
          */
         public ForkJoinWorkerThread newThread(ForkJoinPool pool);
     }
@@ -3205,6 +3206,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
         /**
          * Returns {@code true} if blocking is unnecessary.
+         * @return {@code true} if blocking is unnecessary
          */
         boolean isReleasable();
     }

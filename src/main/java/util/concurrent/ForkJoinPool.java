@@ -98,12 +98,13 @@ import java.util.concurrent.TimeUnit;
  * </table>
  *
  * <p>The common pool is by default constructed with default
- * parameters, but these may be controlled by setting three {@link
- * System#getProperty system properties} with prefix {@code
- * java.util.concurrent.ForkJoinPool.common}: {@code parallelism} --
- * an integer greater than zero, {@code threadFactory} -- the class
- * name of a {@link ForkJoinWorkerThreadFactory}, and {@code
- * exceptionHandler} -- the class name of a {@link
+ * parameters, but these may be controlled by setting three
+ * {@linkplain System#getProperty system properties} with prefix
+ * {@code java.util.concurrent.ForkJoinPool.common}:
+ * {@code parallelism} -- an integer greater than zero,
+ * {@code threadFactory} -- the class name of a
+ * {@link ForkJoinWorkerThreadFactory}, and
+ * {@code exceptionHandler} -- the class name of a {@link
  * java.lang.Thread.UncaughtExceptionHandler
  * Thread.UncaughtExceptionHandler}. Upon any error in establishing
  * these settings, default parameters are used.

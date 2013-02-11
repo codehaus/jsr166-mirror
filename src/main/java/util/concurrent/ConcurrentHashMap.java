@@ -149,8 +149,8 @@ import java.io.Serializable;
  * <li> Reductions to scalar doubles, longs, and ints, using a
  * given basis value.</li>
  *
- * </li>
  * </ul>
+ * </li>
  * </ul>
  *
  * <p>The concurrency properties of bulk operations follow

@@ -29,7 +29,7 @@ import static java.lang.Double.longBitsToDouble;
  *   long xBits = Double.doubleToRawLongBits(x);
  *   long yBits = Double.doubleToRawLongBits(y);
  *   return xBits == yBits;
- * }}</pre>
+ * }}</pre></a>
  *
  * @see jsr166e.DoubleAdder
  * @see jsr166e.DoubleMaxUpdater

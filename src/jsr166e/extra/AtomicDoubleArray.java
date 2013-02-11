@@ -24,7 +24,7 @@ import static java.lang.Double.longBitsToDouble;
  *   long xBits = Double.doubleToRawLongBits(x);
  *   long yBits = Double.doubleToRawLongBits(y);
  *   return xBits == yBits;
- * }}</pre>
+ * }}</pre></a>
  *
  * @author Doug Lea
  * @author Martin Buchholz

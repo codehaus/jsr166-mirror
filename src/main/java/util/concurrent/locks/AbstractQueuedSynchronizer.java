@@ -128,7 +128,7 @@ import sun.misc.Unsafe;
  * In particular, most fair synchronizers can define {@code tryAcquire}
  * to return {@code false} if {@link #hasQueuedPredecessors} (a method
  * specifically designed to be used by fair synchronizers) returns
- * {@code true}.  Other variations are possible.
+ * {@code true}.  Other variations are possible.</a>
  *
  * <p>Throughput and scalability are generally highest for the
  * default barging (also known as <em>greedy</em>,

@@ -4770,11 +4770,7 @@ public class ConcurrentHashMap<K, V>
         }
 
         public final boolean add(Entry<K,V> e) {
-            K key = e.getKey();
-            V value = e.getValue();
-            if (key == null || value == null)
-                throw new NullPointerException();
-            return map.internalPut(key, value, false) == null;
+            return map.internalPut(e.getKey(), e.getValue(), false) == null;
         }
         public final boolean addAll(Collection<? extends Entry<K,V>> c) {
             boolean added = false;

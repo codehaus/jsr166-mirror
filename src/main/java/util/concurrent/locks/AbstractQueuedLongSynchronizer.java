@@ -1937,7 +1937,7 @@ public abstract class AbstractQueuedLongSynchronizer
 
         /**
          * Queries whether any threads are waiting on this condition.
-         * Implements {@link AbstractQueuedLongSynchronizer#hasWaiters}.
+         * Implements {@link AbstractQueuedLongSynchronizer#hasWaiters(ConditionObject)}.
          *
          * @return {@code true} if there are any waiting threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}

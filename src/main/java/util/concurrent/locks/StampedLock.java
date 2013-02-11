@@ -481,6 +481,7 @@ public class StampedLock implements java.io.Serializable {
      * obtained from {@link #tryOptimisticRead} or a locking method
      * for this lock has no defined effect or result.
      *
+     * @param stamp a stamp
      * @return true if the lock has not been exclusively acquired
      * since issuance of the given stamp; else false
      */

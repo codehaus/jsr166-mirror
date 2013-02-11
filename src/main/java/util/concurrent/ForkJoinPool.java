@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -100,14 +101,14 @@ import java.util.concurrent.TimeUnit;
  * <p>The common pool is by default constructed with default
  * parameters, but these may be controlled by setting three
  * {@linkplain System#getProperty system properties} with prefix
- * {@code java.util.concurrent.ForkJoinPool.common}:
+ * {@code "java.util.concurrent.ForkJoinPool.common."}:
  * {@code parallelism} -- an integer greater than zero,
  * {@code threadFactory} -- the class name of a
  * {@link ForkJoinWorkerThreadFactory}, and
- * {@code exceptionHandler} -- the class name of a {@link
- * java.lang.Thread.UncaughtExceptionHandler
- * Thread.UncaughtExceptionHandler}. Upon any error in establishing
- * these settings, default parameters are used.
+ * {@code exceptionHandler} --
+ * the class name of a {@link UncaughtExceptionHandler}.
+ * Upon any error in establishing these settings, default parameters
+ * are used.
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
@@ -1211,7 +1212,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     final int config;                          // mode and parallelism level
     WorkQueue[] workQueues;                    // main registry
     final ForkJoinWorkerThreadFactory factory;
-    final Thread.UncaughtExceptionHandler ueh; // per-worker UEH
+    final UncaughtExceptionHandler ueh;        // per-worker UEH
     final String workerNamePrefix;             // to create worker name string
 
     volatile Object pad10, pad11, pad12, pad13, pad14, pad15, pad16, pad17;
@@ -1305,7 +1306,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @return the worker's queue
      */
     final WorkQueue registerWorker(ForkJoinWorkerThread wt) {
-        Thread.UncaughtExceptionHandler handler; WorkQueue[] ws; int s, ps;
+        UncaughtExceptionHandler handler; WorkQueue[] ws; int s, ps;
         wt.setDaemon(true);
         if ((handler = ueh) != null)
             wt.setUncaughtExceptionHandler(handler);
@@ -2472,7 +2473,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public ForkJoinPool(int parallelism,
                         ForkJoinWorkerThreadFactory factory,
-                        Thread.UncaughtExceptionHandler handler,
+                        UncaughtExceptionHandler handler,
                         boolean asyncMode) {
         this(checkParallelism(parallelism),
              checkFactory(factory),
@@ -2502,7 +2503,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private ForkJoinPool(int parallelism,
                          ForkJoinWorkerThreadFactory factory,
-                         Thread.UncaughtExceptionHandler handler,
+                         UncaughtExceptionHandler handler,
                          boolean asyncMode,
                          String workerNamePrefix) {
         this.workerNamePrefix = workerNamePrefix;
@@ -2686,7 +2687,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @return the handler, or {@code null} if none
      */
-    public Thread.UncaughtExceptionHandler getUncaughtExceptionHandler() {
+    public UncaughtExceptionHandler getUncaughtExceptionHandler() {
         return ueh;
     }
 
@@ -3338,7 +3339,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         int parallelism = 0;
         ForkJoinWorkerThreadFactory factory
             = defaultForkJoinWorkerThreadFactory;
-        Thread.UncaughtExceptionHandler handler = null;
+        UncaughtExceptionHandler handler = null;
         try {  // ignore exceptions in accesing/parsing properties
             String pp = System.getProperty
                 ("java.util.concurrent.ForkJoinPool.common.parallelism");
@@ -3352,7 +3353,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 factory = ((ForkJoinWorkerThreadFactory)ClassLoader.
                            getSystemClassLoader().loadClass(fp).newInstance());
             if (hp != null)
-                handler = ((Thread.UncaughtExceptionHandler)ClassLoader.
+                handler = ((UncaughtExceptionHandler)ClassLoader.
                            getSystemClassLoader().loadClass(hp).newInstance());
         } catch (Exception ignore) {
         }

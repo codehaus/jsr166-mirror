@@ -3587,6 +3587,7 @@ public class ConcurrentHashMap<K, V>
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
+     * @param action the action
      */
     public <U> void forEachValueSequentially
         (Function<? super V, ? extends U> transformer,
@@ -4196,6 +4197,7 @@ public class ConcurrentHashMap<K, V>
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
+     * @param action the action
      */
     public <U> void forEachValueInParallel
         (Function<? super V, ? extends U> transformer,
@@ -4946,6 +4948,7 @@ public class ConcurrentHashMap<K, V>
          * using the given reducer to combine values, and the given
          * basis as an identity value.
          *
+         * @param map the map
          * @param transformer a function returning the transformation
          * for an element
          * @param basis the identity (initial default value) for the reduction

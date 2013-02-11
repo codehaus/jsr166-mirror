@@ -81,17 +81,17 @@ import java.util.concurrent.TimeUnit;
  *    <td ALIGN=CENTER> <b>Call from within fork/join computations</b></td>
  *  </tr>
  *  <tr>
- *    <td> <b>Arrange async execution</td>
+ *    <td> <b>Arrange async execution</b></td>
  *    <td> {@link #execute(ForkJoinTask)}</td>
  *    <td> {@link ForkJoinTask#fork}</td>
  *  </tr>
  *  <tr>
- *    <td> <b>Await and obtain result</td>
+ *    <td> <b>Await and obtain result</b></td>
  *    <td> {@link #invoke(ForkJoinTask)}</td>
  *    <td> {@link ForkJoinTask#invoke}</td>
  *  </tr>
  *  <tr>
- *    <td> <b>Arrange exec and obtain Future</td>
+ *    <td> <b>Arrange exec and obtain Future</b></td>
  *    <td> {@link #submit(ForkJoinTask)}</td>
  *    <td> {@link ForkJoinTask#fork} (ForkJoinTasks <em>are</em> Futures)</td>
  *  </tr>

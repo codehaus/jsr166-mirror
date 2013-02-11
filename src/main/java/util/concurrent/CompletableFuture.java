@@ -29,7 +29,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p>When two or more threads attempt to
  * {@link #complete complete},
- * {@link #completeExceptionally}, or
+ * {@link #completeExceptionally completeExceptionally}, or
  * {@link #cancel cancel}
  * a CompletableFuture, only one of them succeeds.
  *

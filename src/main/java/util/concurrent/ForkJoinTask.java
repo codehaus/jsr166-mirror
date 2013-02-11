@@ -829,7 +829,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * <p>This method is designed to be invoked by <em>other</em>
      * tasks. To terminate the current task, you can just return or
      * throw an unchecked exception from its computation method, or
-     * invoke {@link #completeExceptionally}.
+     * invoke {@link #completeExceptionally(Throwable)}.
      *
      * @param mayInterruptIfRunning this value has no effect in the
      * default implementation because interrupts are not used to

@@ -492,7 +492,7 @@ public interface Deque<E> extends Queue<E> {
      * Returns {@code true} if this deque contained the specified element
      * (or equivalently, if this deque changed as a result of the call).
      *
-     * <p>This method is equivalent to {@link #removeFirstOccurrence}.
+     * <p>This method is equivalent to {@link #removeFirstOccurrence(Object)}.
      *
      * @param o element to be removed from this deque, if present
      * @return {@code true} if an element was removed as a result of this call

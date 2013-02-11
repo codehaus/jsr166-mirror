@@ -4834,7 +4834,7 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * A view of a ConcurrentHashMapV8 as a {@link Set} of (key, value)
      * entries.  This class cannot be directly instantiated. See
-     * {@link #entrySet}.
+     * {@link #entrySet()}.
      */
     public static final class EntrySetView<K,V> extends CHMView<K,V>
         implements Set<Map.Entry<K,V>> {

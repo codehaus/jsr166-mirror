@@ -4756,8 +4756,6 @@ public class ConcurrentHashMapV8<K, V>
             V v;
             if ((v = value) == null)
                 throw new UnsupportedOperationException();
-            if (e == null)
-                throw new NullPointerException();
             return map.internalPut(e, v, true) == null;
         }
         public boolean addAll(Collection<? extends K> c) {
@@ -4766,8 +4764,6 @@ public class ConcurrentHashMapV8<K, V>
             if ((v = value) == null)
                 throw new UnsupportedOperationException();
             for (K e : c) {
-                if (e == null)
-                    throw new NullPointerException();
                 if (map.internalPut(e, v, true) == null)
                     added = true;
             }

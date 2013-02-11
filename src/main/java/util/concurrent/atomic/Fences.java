@@ -8,7 +8,7 @@ package java.util.concurrent.atomic;
 
 /**
  * <b>This file exists for documentation reference but is not part of
- * any planned release.<b>.
+ * any planned release.</b>
  *
  * <p>A set of methods providing fine-grained control over happens-before
  * and synchronization order relations among reads and/or writes.  The

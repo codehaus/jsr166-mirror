@@ -16,9 +16,9 @@ package java.util.concurrent;
  * {@code scheduleWithFixedDelay} methods create and execute tasks
  * that run periodically until cancelled.
  *
- * <p>Commands submitted using the {@link Executor#execute} and
- * {@link ExecutorService} {@code submit} methods are scheduled with
- * a requested delay of zero. Zero and negative delays (but not
+ * <p>Commands submitted using the {@link Executor#execute(Runnable)}
+ * and {@link ExecutorService} {@code submit} methods are scheduled
+ * with a requested delay of zero. Zero and negative delays (but not
  * periods) are also allowed in {@code schedule} methods, and are
  * treated as requests for immediate execution.
  *

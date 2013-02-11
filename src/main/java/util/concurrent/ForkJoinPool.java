@@ -3148,9 +3148,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      * not necessary. Method {@code block} blocks the current thread
      * if necessary (perhaps internally invoking {@code isReleasable}
      * before actually blocking). These actions are performed by any
-     * thread invoking {@link ForkJoinPool#managedBlock}.  The
-     * unusual methods in this API accommodate synchronizers that may,
-     * but don't usually, block for long periods. Similarly, they
+     * thread invoking {@link ForkJoinPool#managedBlock(ManagedBlocker)}.
+     * The unusual methods in this API accommodate synchronizers that
+     * may, but don't usually, block for long periods. Similarly, they
      * allow more efficient internal handling of cases in which
      * additional workers may be, but usually are not, needed to
      * ensure sufficient parallelism.  Toward this end,

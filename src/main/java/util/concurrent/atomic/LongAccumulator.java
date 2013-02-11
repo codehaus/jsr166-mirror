@@ -57,6 +57,8 @@ public class LongAccumulator extends Striped64 implements Serializable {
     /**
      * Creates a new instance using the given accumulator function
      * and identity element.
+     * @param accumulatorFunction a side-effect-free function of two arguments
+     * @param identity identity element for the accumulator function
      */
     public LongAccumulator(LongBinaryOperator accumulatorFunction,
                            long identity) {

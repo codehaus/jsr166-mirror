@@ -344,12 +344,12 @@ public class Executors {
      * java.lang.InheritableThreadLocal} values. If necessary,
      * particular values of thread locals can be set or reset before
      * any task runs in {@link ThreadPoolExecutor} subclasses using
-     * {@link ThreadPoolExecutor#beforeExecute}. Also, if it is
-     * necessary to initialize worker threads to have the same
-     * InheritableThreadLocal settings as some other designated
-     * thread, you can create a custom ThreadFactory in which that
-     * thread waits for and services requests to create others that
-     * will inherit its values.
+     * {@link ThreadPoolExecutor#beforeExecute(Thread, Runnable)}.
+     * Also, if it is necessary to initialize worker threads to have
+     * the same InheritableThreadLocal settings as some other
+     * designated thread, you can create a custom ThreadFactory in
+     * which that thread waits for and services requests to create
+     * others that will inherit its values.
      *
      * @return a thread factory
      * @throws AccessControlException if the current access control

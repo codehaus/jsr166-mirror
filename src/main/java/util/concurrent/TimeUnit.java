@@ -168,60 +168,60 @@ public enum TimeUnit {
     }
 
     /**
-     * Equivalent to {@code NANOSECONDS.convert(duration, this)}.
+     * Equivalent to
+     * {@link #convert(long, TimeUnit) NANOSECONDS.convert(duration, this)}.
      * @param duration the duration
      * @return the converted duration,
      * or {@code Long.MIN_VALUE} if conversion would negatively
      * overflow, or {@code Long.MAX_VALUE} if it would positively overflow.
-     * @see #convert
      */
     public long toNanos(long duration) {
         throw new AbstractMethodError();
     }
 
     /**
-     * Equivalent to {@code MICROSECONDS.convert(duration, this)}.
+     * Equivalent to
+     * {@link #convert(long, TimeUnit) MICROSECONDS.convert(duration, this)}.
      * @param duration the duration
      * @return the converted duration,
      * or {@code Long.MIN_VALUE} if conversion would negatively
      * overflow, or {@code Long.MAX_VALUE} if it would positively overflow.
-     * @see #convert
      */
     public long toMicros(long duration) {
         throw new AbstractMethodError();
     }
 
     /**
-     * Equivalent to {@code MILLISECONDS.convert(duration, this)}.
+     * Equivalent to
+     * {@link #convert(long, TimeUnit) MILLISECONDS.convert(duration, this)}.
      * @param duration the duration
      * @return the converted duration,
      * or {@code Long.MIN_VALUE} if conversion would negatively
      * overflow, or {@code Long.MAX_VALUE} if it would positively overflow.
-     * @see #convert
      */
     public long toMillis(long duration) {
         throw new AbstractMethodError();
     }
 
     /**
-     * Equivalent to {@code SECONDS.convert(duration, this)}.
+     * Equivalent to
+     * {@link #convert(long, TimeUnit) SECONDS.convert(duration, this)}.
      * @param duration the duration
      * @return the converted duration,
      * or {@code Long.MIN_VALUE} if conversion would negatively
      * overflow, or {@code Long.MAX_VALUE} if it would positively overflow.
-     * @see #convert
      */
     public long toSeconds(long duration) {
         throw new AbstractMethodError();
     }
 
     /**
-     * Equivalent to {@code MINUTES.convert(duration, this)}.
+     * Equivalent to
+     * {@link #convert(long, TimeUnit) MINUTES.convert(duration, this)}.
      * @param duration the duration
      * @return the converted duration,
      * or {@code Long.MIN_VALUE} if conversion would negatively
      * overflow, or {@code Long.MAX_VALUE} if it would positively overflow.
-     * @see #convert
      * @since 1.6
      */
     public long toMinutes(long duration) {
@@ -229,12 +229,12 @@ public enum TimeUnit {
     }
 
     /**
-     * Equivalent to {@code HOURS.convert(duration, this)}.
+     * Equivalent to
+     * {@link #convert(long, TimeUnit) HOURS.convert(duration, this)}.
      * @param duration the duration
      * @return the converted duration,
      * or {@code Long.MIN_VALUE} if conversion would negatively
      * overflow, or {@code Long.MAX_VALUE} if it would positively overflow.
-     * @see #convert
      * @since 1.6
      */
     public long toHours(long duration) {
@@ -242,10 +242,10 @@ public enum TimeUnit {
     }
 
     /**
-     * Equivalent to {@code DAYS.convert(duration, this)}.
+     * Equivalent to
+     * {@link #convert(long, TimeUnit) DAYS.convert(duration, this)}.
      * @param duration the duration
      * @return the converted duration
-     * @see #convert
      * @since 1.6
      */
     public long toDays(long duration) {

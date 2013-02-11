@@ -5137,6 +5137,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param map the map
          * @param action the action
+         * @return the task
          */
         public static <K,V> ForkJoinTask<Void> forEachValue
             (ConcurrentHashMap<K,V> map,
@@ -5154,6 +5155,7 @@ public class ConcurrentHashMap<K, V>
          * for an element, or null if there is no transformation (in
          * which case the action is not applied)
          * @param action the action
+         * @return the task
          */
         public static <K,V,U> ForkJoinTask<Void> forEachValue
             (ConcurrentHashMap<K,V> map,
@@ -5303,6 +5305,7 @@ public class ConcurrentHashMap<K, V>
          *
          * @param map the map
          * @param action the action
+         * @return the task
          */
         public static <K,V> ForkJoinTask<Void> forEachEntry
             (ConcurrentHashMap<K,V> map,
@@ -5320,6 +5323,7 @@ public class ConcurrentHashMap<K, V>
          * for an element, or null if there is no transformation (in
          * which case the action is not applied)
          * @param action the action
+         * @return the task
          */
         public static <K,V,U> ForkJoinTask<Void> forEachEntry
             (ConcurrentHashMap<K,V> map,

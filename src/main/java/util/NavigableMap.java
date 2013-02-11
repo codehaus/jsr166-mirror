@@ -9,13 +9,13 @@ package java.util;
 /**
  * A {@link SortedMap} extended with navigation methods returning the
  * closest matches for given search targets. Methods
- * {@code lowerEntry}, {@code floorEntry}, {@code ceilingEntry},
- * and {@code higherEntry} return {@code Map.Entry} objects
+ * {@link #lowerEntry}, {@link #floorEntry}, {@link #ceilingEntry},
+ * and {@link #higherEntry} return {@code Map.Entry} objects
  * associated with keys respectively less than, less than or equal,
  * greater than or equal, and greater than a given key, returning
  * {@code null} if there is no such key.  Similarly, methods
- * {@code lowerKey}, {@code floorKey}, {@code ceilingKey}, and
- * {@code higherKey} return only the associated keys. All of these
+ * {@link #lowerKey}, {@link #floorKey}, {@link #ceilingKey}, and
+ * {@link #higherKey} return only the associated keys. All of these
  * methods are designed for locating, not traversing entries.
  *
  * <p>A {@code NavigableMap} may be accessed and traversed in either
@@ -30,9 +30,9 @@ package java.util;
  * Submaps of any {@code NavigableMap} must implement the {@code
  * NavigableMap} interface.
  *
- * <p>This interface additionally defines methods {@code firstEntry},
- * {@code pollFirstEntry}, {@code lastEntry}, and
- * {@code pollLastEntry} that return and/or remove the least and
+ * <p>This interface additionally defines methods {@link #firstEntry},
+ * {@link #pollFirstEntry}, {@link #lastEntry}, and
+ * {@link #pollLastEntry} that return and/or remove the least and
  * greatest mappings, if any exist, else returning {@code null}.
  *
  * <p>Implementations of entry-returning methods are expected to

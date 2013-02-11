@@ -27,16 +27,19 @@ import java.util.concurrent.locks.LockSupport;
  * value and status), and may include dependent functions and actions
  * that trigger upon its completion.
  *
- * <p>When two or more threads attempt to {@link #complete} or {@link
- * #completeExceptionally} a CompletableFuture, only one of them
- * succeeds.
+ * <p>When two or more threads attempt to
+ * {@link #complete complete},
+ * {@link #completeExceptionally}, or
+ * {@link #cancel cancel}
+ * a CompletableFuture, only one of them succeeds.
  *
  * <p>Methods are available for adding dependents based on Functions,
  * Consumers, and Runnables. The appropriate form to use depends on
  * whether actions require arguments and/or produce results. Actions
  * may also be triggered after either or both the current and another
  * CompletableFuture complete.  Multiple CompletableFutures may also
- * be grouped as one using {@link #anyOf} and {@link #allOf}.
+ * be grouped as one using {@link #anyOf(CompletableFuture...)} and
+ * {@link #allOf(CompletableFuture...)}.
  *
  * <p>Actions supplied for dependent completions (mainly using methods
  * with prefix {@code then}) may be performed by the thread that
@@ -44,21 +47,20 @@ import java.util.concurrent.locks.LockSupport;
  * these methods.  There are no guarantees about the order of
  * processing completions unless constrained by these methods.
  *
- * <p>Upon exceptional completion, or when a completion entails
- * computation, and it terminates abruptly with an (unchecked)
- * exception or error, then further completions act as {@code
- * completeExceptionally} with a {@link CompletionException} holding
- * that exception as its cause.  If a CompletableFuture completes
- * exceptionally, and is not followed by a {@link #exceptionally} or
- * {@link #handle} completion, then all of its dependents (and their
- * dependents) also complete exceptionally with CompletionExceptions
- * holding the ultimate cause.  In case of a CompletionException,
- * methods {@link #get()} and {@link #get(long, TimeUnit)} throw an
- * {@link ExecutionException} with the same cause as would be held in
- * the corresponding CompletionException. However, in these cases,
- * methods {@link #join()} and {@link #getNow} throw the
- * CompletionException, which simplifies usage especially within other
- * completion functions.
+ * <p>Upon exceptional completion (including cancellation), or when a
+ * completion entails computation, and it terminates abruptly with an
+ * (unchecked) exception or error, then further completions act as
+ * {@code completeExceptionally} with a {@link CompletionException}
+ * holding that exception as its cause.  If a CompletableFuture
+ * completes exceptionally, and is not followed by a {@link
+ * #exceptionally} or {@link #handle} completion, then all of its
+ * dependents (and their dependents) also complete exceptionally with
+ * CompletionExceptions holding the ultimate cause.  In case of a
+ * CompletionException, methods {@link #get()} and {@link #get(long,
+ * TimeUnit)} throw an {@link ExecutionException} with the same cause
+ * as would be held in the corresponding CompletionException. However,
+ * in these cases, methods {@link #join()} and {@link #getNow} throw
+ * the CompletionException, which simplifies usage.
  *
  * <p>CompletableFutures themselves do not execute asynchronously.
  * However, the {@code async} methods provide commonly useful ways to
@@ -1409,13 +1411,12 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Waits if necessary for the computation to complete, and then
-     * retrieves its result.
+     * Waits if necessary for this future to complete, and then
+     * returns its result.
      *
-     * @return the computed result
-     * @throws CancellationException if the computation was cancelled
-     * @throws ExecutionException if the computation threw an
-     * exception
+     * @return the result value
+     * @throws CancellationException if this future was cancelled
+     * @throws ExecutionException if this future completed exceptionally
      * @throws InterruptedException if the current thread was interrupted
      * while waiting
      */
@@ -1438,15 +1439,14 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Waits if necessary for at most the given time for completion,
-     * and then retrieves its result, if available.
+     * Waits if necessary for at most the given time for this future
+     * to complete, and then returns its result, if available.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
-     * @return the computed result
-     * @throws CancellationException if the computation was cancelled
-     * @throws ExecutionException if the computation threw an
-     * exception
+     * @return the result value
+     * @throws CancellationException if this future was cancelled
+     * @throws ExecutionException if this future completed exceptionally
      * @throws InterruptedException if the current thread was interrupted
      * while waiting
      * @throws TimeoutException if the wait timed out
@@ -1591,7 +1591,8 @@ public class CompletableFuture<T> implements Future<T> {
      * the returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> thenApplyAsync(Function<? super T,? extends U> fn) {
+    public <U> CompletableFuture<U> thenApplyAsync
+        (Function<? super T,? extends U> fn) {
         return doThenApply(fn, ForkJoinPool.commonPool());
     }
 
@@ -1608,14 +1609,16 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> thenApplyAsync(Function<? super T,? extends U> fn,
-                                                   Executor executor) {
+    public <U> CompletableFuture<U> thenApplyAsync
+        (Function<? super T,? extends U> fn,
+         Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenApply(fn, executor);
     }
 
-    private <U> CompletableFuture<U> doThenApply(Function<? super T,? extends U> fn,
-                                                 Executor e) {
+    private <U> CompletableFuture<U> doThenApply
+        (Function<? super T,? extends U> fn,
+         Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
         ApplyCompletion<T,U> d = null;
@@ -1853,8 +1856,9 @@ public class CompletableFuture<T> implements Future<T> {
      * the returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U,V> CompletableFuture<V> thenCombine(CompletableFuture<? extends U> other,
-                                                  BiFunction<? super T,? super U,? extends V> fn) {
+    public <U,V> CompletableFuture<V> thenCombine
+        (CompletableFuture<? extends U> other,
+         BiFunction<? super T,? super U,? extends V> fn) {
         return doThenBiApply(other, fn, null);
     }
 
@@ -1872,8 +1876,9 @@ public class CompletableFuture<T> implements Future<T> {
      * the returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U,V> CompletableFuture<V> thenCombineAsync(CompletableFuture<? extends U> other,
-                                                       BiFunction<? super T,? super U,? extends V> fn) {
+    public <U,V> CompletableFuture<V> thenCombineAsync
+        (CompletableFuture<? extends U> other,
+         BiFunction<? super T,? super U,? extends V> fn) {
         return doThenBiApply(other, fn, ForkJoinPool.commonPool());
     }
 
@@ -1893,16 +1898,18 @@ public class CompletableFuture<T> implements Future<T> {
      * @return the new CompletableFuture
      */
 
-    public <U,V> CompletableFuture<V> thenCombineAsync(CompletableFuture<? extends U> other,
-                                                       BiFunction<? super T,? super U,? extends V> fn,
-                                                       Executor executor) {
+    public <U,V> CompletableFuture<V> thenCombineAsync
+        (CompletableFuture<? extends U> other,
+         BiFunction<? super T,? super U,? extends V> fn,
+         Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenBiApply(other, fn, executor);
     }
 
-    private <U,V> CompletableFuture<V> doThenBiApply(CompletableFuture<? extends U> other,
-                                                     BiFunction<? super T,? super U,? extends V> fn,
-                                                     Executor e) {
+    private <U,V> CompletableFuture<V> doThenBiApply
+        (CompletableFuture<? extends U> other,
+         BiFunction<? super T,? super U,? extends V> fn,
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<V> dst = new CompletableFuture<V>();
         BiApplyCompletion<T,U,V> d = null;
@@ -1980,8 +1987,9 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<Void> thenAcceptBoth(CompletableFuture<? extends U> other,
-                                                      BiConsumer<? super T, ? super U> block) {
+    public <U> CompletableFuture<Void> thenAcceptBoth
+        (CompletableFuture<? extends U> other,
+         BiConsumer<? super T, ? super U> block) {
         return doThenBiAccept(other, block, null);
     }
 
@@ -1999,8 +2007,9 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletableFuture<? extends U> other,
-                                                           BiConsumer<? super T, ? super U> block) {
+    public <U> CompletableFuture<Void> thenAcceptBothAsync
+        (CompletableFuture<? extends U> other,
+         BiConsumer<? super T, ? super U> block) {
         return doThenBiAccept(other, block, ForkJoinPool.commonPool());
     }
 
@@ -2018,16 +2027,18 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletableFuture<? extends U> other,
-                                                           BiConsumer<? super T, ? super U> block,
-                                                           Executor executor) {
+    public <U> CompletableFuture<Void> thenAcceptBothAsync
+        (CompletableFuture<? extends U> other,
+         BiConsumer<? super T, ? super U> block,
+         Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doThenBiAccept(other, block, executor);
     }
 
-    private <U> CompletableFuture<Void> doThenBiAccept(CompletableFuture<? extends U> other,
-                                                       BiConsumer<? super T,? super U> fn,
-                                                       Executor e) {
+    private <U> CompletableFuture<Void> doThenBiAccept
+        (CompletableFuture<? extends U> other,
+         BiConsumer<? super T,? super U> fn,
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         BiAcceptCompletion<T,U> d = null;
@@ -2215,8 +2226,9 @@ public class CompletableFuture<T> implements Future<T> {
      * the returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> applyToEither(CompletableFuture<? extends T> other,
-                                                  Function<? super T, U> fn) {
+    public <U> CompletableFuture<U> applyToEither
+        (CompletableFuture<? extends T> other,
+         Function<? super T, U> fn) {
         return doOrApply(other, fn, null);
     }
 
@@ -2236,8 +2248,9 @@ public class CompletableFuture<T> implements Future<T> {
      * the returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> applyToEitherAsync(CompletableFuture<? extends T> other,
-                                                       Function<? super T, U> fn) {
+    public <U> CompletableFuture<U> applyToEitherAsync
+        (CompletableFuture<? extends T> other,
+         Function<? super T, U> fn) {
         return doOrApply(other, fn, ForkJoinPool.commonPool());
     }
 
@@ -2258,16 +2271,18 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> applyToEitherAsync(CompletableFuture<? extends T> other,
-                                                       Function<? super T, U> fn,
-                                                       Executor executor) {
+    public <U> CompletableFuture<U> applyToEitherAsync
+        (CompletableFuture<? extends T> other,
+         Function<? super T, U> fn,
+         Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doOrApply(other, fn, executor);
     }
 
-    private <U> CompletableFuture<U> doOrApply(CompletableFuture<? extends T> other,
-                                               Function<? super T, U> fn,
-                                               Executor e) {
+    private <U> CompletableFuture<U> doOrApply
+        (CompletableFuture<? extends T> other,
+         Function<? super T, U> fn,
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
         OrApplyCompletion<T,U> d = null;
@@ -2331,8 +2346,9 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> acceptEither(CompletableFuture<? extends T> other,
-                                                Consumer<? super T> block) {
+    public CompletableFuture<Void> acceptEither
+        (CompletableFuture<? extends T> other,
+         Consumer<? super T> block) {
         return doOrAccept(other, block, null);
     }
 
@@ -2352,8 +2368,9 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> acceptEitherAsync(CompletableFuture<? extends T> other,
-                                                     Consumer<? super T> block) {
+    public CompletableFuture<Void> acceptEitherAsync
+        (CompletableFuture<? extends T> other,
+         Consumer<? super T> block) {
         return doOrAccept(other, block, ForkJoinPool.commonPool());
     }
 
@@ -2374,16 +2391,18 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> acceptEitherAsync(CompletableFuture<? extends T> other,
-                                                     Consumer<? super T> block,
-                                                     Executor executor) {
+    public CompletableFuture<Void> acceptEitherAsync
+        (CompletableFuture<? extends T> other,
+         Consumer<? super T> block,
+         Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doOrAccept(other, block, executor);
     }
 
-    private CompletableFuture<Void> doOrAccept(CompletableFuture<? extends T> other,
-                                               Consumer<? super T> fn,
-                                               Executor e) {
+    private CompletableFuture<Void> doOrAccept
+        (CompletableFuture<? extends T> other,
+         Consumer<? super T> fn,
+         Executor e) {
         if (other == null || fn == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
         OrAcceptCompletion<T> d = null;
@@ -2465,8 +2484,9 @@ public class CompletableFuture<T> implements Future<T> {
      * returned CompletableFuture
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> runAfterEitherAsync(CompletableFuture<?> other,
-                                                       Runnable action) {
+    public CompletableFuture<Void> runAfterEitherAsync
+        (CompletableFuture<?> other,
+         Runnable action) {
         return doOrRun(other, action, ForkJoinPool.commonPool());
     }
 
@@ -2486,9 +2506,10 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-    public CompletableFuture<Void> runAfterEitherAsync(CompletableFuture<?> other,
-                                                       Runnable action,
-                                                       Executor executor) {
+    public CompletableFuture<Void> runAfterEitherAsync
+        (CompletableFuture<?> other,
+         Runnable action,
+         Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doOrRun(other, action, executor);
     }
@@ -2550,8 +2571,8 @@ public class CompletableFuture<T> implements Future<T> {
      * return if completed by the given function, or an exception
      * occurs
      */
-    public <U> CompletableFuture<U> thenCompose(Function<? super T,
-                                                CompletableFuture<U>> fn) {
+    public <U> CompletableFuture<U> thenCompose
+        (Function<? super T, CompletableFuture<U>> fn) {
         return doCompose(fn, null);
     }
 
@@ -2568,8 +2589,8 @@ public class CompletableFuture<T> implements Future<T> {
      * return if completed by the given function, or an exception
      * occurs
      */
-    public <U> CompletableFuture<U> thenComposeAsync(Function<? super T,
-                                                     CompletableFuture<U>> fn) {
+    public <U> CompletableFuture<U> thenComposeAsync
+        (Function<? super T, CompletableFuture<U>> fn) {
         return doCompose(fn, ForkJoinPool.commonPool());
     }
 
@@ -2587,16 +2608,16 @@ public class CompletableFuture<T> implements Future<T> {
      * return if completed by the given function, or an exception
      * occurs
      */
-    public <U> CompletableFuture<U> thenComposeAsync(Function<? super T,
-                                                     CompletableFuture<U>> fn,
-                                                     Executor executor) {
+    public <U> CompletableFuture<U> thenComposeAsync
+        (Function<? super T, CompletableFuture<U>> fn,
+         Executor executor) {
         if (executor == null) throw new NullPointerException();
         return doCompose(fn, executor);
     }
 
-    private <U> CompletableFuture<U> doCompose(Function<? super T,
-                                               CompletableFuture<U>> fn,
-                                               Executor e) {
+    private <U> CompletableFuture<U> doCompose
+        (Function<? super T, CompletableFuture<U>> fn,
+         Executor e) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = null;
         ComposeCompletion<T,U> d = null;
@@ -2662,7 +2683,8 @@ public class CompletableFuture<T> implements Future<T> {
      * exceptionally
      * @return the new CompletableFuture
      */
-    public CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn) {
+    public CompletableFuture<T> exceptionally
+        (Function<Throwable, ? extends T> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<T> dst = new CompletableFuture<T>();
         ExceptionCompletion<T> d = null;
@@ -2710,7 +2732,8 @@ public class CompletableFuture<T> implements Future<T> {
 
      * @return the new CompletableFuture
      */
-    public <U> CompletableFuture<U> handle(BiFunction<? super T, Throwable, ? extends U> fn) {
+    public <U> CompletableFuture<U> handle
+        (BiFunction<? super T, Throwable, ? extends U> fn) {
         if (fn == null) throw new NullPointerException();
         CompletableFuture<U> dst = new CompletableFuture<U>();
         HandleCompletion<T,U> d = null;
@@ -2762,12 +2785,12 @@ public class CompletableFuture<T> implements Future<T> {
     /**
      * Returns a new CompletableFuture that is completed when all of
      * the given CompletableFutures complete.  If any of the component
-     * CompletableFuture complete exceptionally, then so does the
+     * CompletableFutures complete exceptionally, then so does the
      * returned CompletableFuture. Otherwise, the results, if any, of
      * the component CompletableFutures are not reflected in the
      * returned CompletableFuture, but may be obtained by inspecting
      * them individually. If the number of components is zero, returns
-     * a completed CompletableFuture.
+     * a CompletableFuture completed with the value {@code null}.
      *
      * <p>Among the applications of this method is to await completion
      * of a set of independent CompletableFutures before continuing a
@@ -2863,7 +2886,7 @@ public class CompletableFuture<T> implements Future<T> {
      * Returns a new CompletableFuture that is completed when any of
      * the component CompletableFutures complete; with the same result if
      * it completed normally, otherwise exceptionally. If the number
-     * of components is zero, returns a completed CompletableFuture.
+     * of components is zero, returns an incomplete CompletableFuture.
      *
      * @param cfs the CompletableFutures
      * @return a CompletableFuture that is complete when any of the
@@ -2879,7 +2902,7 @@ public class CompletableFuture<T> implements Future<T> {
             CompletableFuture<?> dst = new CompletableFuture<Object>();
             CompletableFuture<?> f;
             if (len == 0)
-                dst.result = NIL;
+                ; // skip
             else if ((f = cfs[0]) == null)
                 throw new NullPointerException();
             else {
@@ -2977,14 +3000,11 @@ public class CompletableFuture<T> implements Future<T> {
      * @return {@code true} if this task is now cancelled
      */
     public boolean cancel(boolean mayInterruptIfRunning) {
-        Object r;
         boolean cancelled = (result == null) &&
             UNSAFE.compareAndSwapObject
             (this, RESULT, null, new AltResult(new CancellationException()));
         postComplete();
-        return cancelled ||
-            (((r = result) instanceof AltResult) &&
-             (((AltResult)r).ex instanceof CancellationException));
+        return cancelled || isCancelled();
     }
 
     /**

@@ -23,6 +23,7 @@ import java.util.*;
  *
  * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Summary of BlockingDeque methods</caption>
  *  <tr>
  *    <td ALIGN=CENTER COLSPAN = 5> <b>First Element (Head)</b></td>
  *  </tr>
@@ -98,6 +99,7 @@ import java.util.*;
  *
  * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Comparison of BlockingQueue and BlockingDeque methods</caption>
  *  <tr>
  *    <td ALIGN=CENTER> <b>{@code BlockingQueue} Method</b></td>
  *    <td ALIGN=CENTER> <b>Equivalent {@code BlockingDeque} Method</b></td>

@@ -76,6 +76,7 @@ import java.util.concurrent.TimeUnit;
  * there is little difference among choice of methods.
  *
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Summary of task execution methods</caption>
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER> <b>Call from non-fork/join clients</b></td>

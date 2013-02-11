@@ -29,6 +29,7 @@ package java.util;
  *
  * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Summary of Deque methods</caption>
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER COLSPAN = 2> <b>First Element (Head)</b></td>
@@ -72,6 +73,7 @@ package java.util;
  *
  * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Comparison of Queue and Deque methods</caption>
  *  <tr>
  *    <td ALIGN=CENTER> <b>{@code Queue} Method</b></td>
  *    <td ALIGN=CENTER> <b>Equivalent {@code Deque} Method</b></td>
@@ -110,6 +112,7 @@ package java.util;
  *
  * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Comparison of Stack and Deque methods</caption>
  *  <tr>
  *    <td ALIGN=CENTER> <b>Stack Method</b></td>
  *    <td ALIGN=CENTER> <b>Equivalent {@code Deque} Method</b></td>

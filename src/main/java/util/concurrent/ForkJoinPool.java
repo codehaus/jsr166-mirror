@@ -103,13 +103,15 @@ import java.util.concurrent.TimeUnit;
  * parameters, but these may be controlled by setting three
  * {@linkplain System#getProperty system properties} with prefix
  * {@code "java.util.concurrent.ForkJoinPool.common."}:
- * {@code parallelism} -- an integer greater than zero,
+ * {@code parallelism} -- a non-negative integer,
  * {@code threadFactory} -- the class name of a
  * {@link ForkJoinWorkerThreadFactory}, and
  * {@code exceptionHandler} --
  * the class name of a {@link UncaughtExceptionHandler}.
  * Upon any error in establishing these settings, default parameters
- * are used.
+ * are used. It is possible to disable or limit the use of threads in
+ * the common pool by setting the parallelism property to zero, and/or
+ * using a factory that may return {@code null}.
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
@@ -1051,7 +1053,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     static final ForkJoinPool common;
 
     /**
-     * Common pool parallelism. Must equal common.parallelism.
+     * Common pool parallelism. To allow simpler use and management
+     * when common pool threads are disabled, we allow the underlying
+     * common.config field to be zero, but in that case still report
+     * parallelism as 1 to reflect resulting caller-runs mechanics.
      */
     static final int commonParallelism;
 
@@ -2359,9 +2364,10 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if (task != null)
                     task.doExec();
                 if (root.status < 0 ||
-                    (u = (int)(ctl >>> 32)) >= 0 || (u >> UAC_SHIFT) >= 0)
+                    (config != 0 &&
+                     ((u = (int)(ctl >>> 32)) >= 0 || (u >> UAC_SHIFT) >= 0)))
                     break;
-                if (task == null) {
+               if (task == null) {
                     helpSignal(root, q.poolIndex);
                     if (root.status >= 0)
                         helpComplete(root, SHARED_QUEUE);
@@ -2698,7 +2704,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @return the targeted parallelism level of this pool
      */
     public int getParallelism() {
-        return config & SMASK;
+        int par = (config & SMASK);
+        return (par > 0) ? par : 1;
     }
 
     /**
@@ -3329,7 +3336,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         common = java.security.AccessController.doPrivileged
             (new java.security.PrivilegedAction<ForkJoinPool>() {
                 public ForkJoinPool run() { return makeCommonPool(); }});
-        commonParallelism = common.config; // cannot be async
+        int par = common.config; // report 1 even if threads disabled
+        commonParallelism = par > 0 ? par : 1;
     }
 
     /**
@@ -3337,7 +3345,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * specified via system properties.
      */
     private static ForkJoinPool makeCommonPool() {
-        int parallelism = 0;
+        int parallelism = -1;
         ForkJoinWorkerThreadFactory factory
             = defaultForkJoinWorkerThreadFactory;
         UncaughtExceptionHandler handler = null;
@@ -3359,11 +3367,10 @@ public class ForkJoinPool extends AbstractExecutorService {
         } catch (Exception ignore) {
         }
 
-        if (parallelism <= 0)
+        if (parallelism < 0)
             parallelism = Runtime.getRuntime().availableProcessors();
         if (parallelism > MAX_CAP)
             parallelism = MAX_CAP;
-
         return new ForkJoinPool(parallelism, factory, handler, false,
                                 "ForkJoinPool.commonPool-worker-");
     }

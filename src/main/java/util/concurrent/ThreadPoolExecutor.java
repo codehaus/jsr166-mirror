@@ -471,7 +471,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * We go further and preserve pool invariants even in the face of
      * errors such as OutOfMemoryError, that might be thrown while
      * trying to create threads.  Such errors are rather common due to
-     * the need to allocate a native stack in Thread#start, and users
+     * the need to allocate a native stack in Thread.start, and users
      * will want to perform clean pool shutdown to clean up.  There
      * will likely be enough memory available for the cleanup code to
      * complete without encountering yet another OutOfMemoryError.

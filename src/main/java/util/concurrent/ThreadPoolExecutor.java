@@ -846,7 +846,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * factory fails to create a thread when asked.  If the thread
      * creation fails, either due to the thread factory returning
      * null, or due to an exception (typically OutOfMemoryError in
-     * Thread#start), we roll back cleanly.
+     * Thread.start()), we roll back cleanly.
      *
      * @param firstTask the task the new thread should run first (or
      * null if none). Workers are created with an initial first task

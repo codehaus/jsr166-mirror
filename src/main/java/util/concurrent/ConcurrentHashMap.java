@@ -4462,7 +4462,7 @@ public class ConcurrentHashMap<K,V>
     /**
      * Base class for views.
      */
-    abstract static class CHMCollectionView<K, V, E>
+    abstract static class CHMCollectionView<K,V,E>
             implements Collection<E>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
         final ConcurrentHashMap<K,V> map;
@@ -4612,8 +4612,8 @@ public class ConcurrentHashMap<K,V>
 
     }
 
-    abstract static class CHMSetView<K, V, E>
-            extends CHMCollectionView<K, V, E>
+    abstract static class CHMSetView<K,V,E>
+            extends CHMCollectionView<K,V,E>
             implements Set<E>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
         CHMSetView(ConcurrentHashMap<K,V> map) { super(map); }

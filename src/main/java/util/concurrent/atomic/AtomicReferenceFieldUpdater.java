@@ -50,7 +50,7 @@ import java.security.PrivilegedActionException;
  * @param <T> The type of the object holding the updatable field
  * @param <V> The type of the field
  */
-public abstract class AtomicReferenceFieldUpdater<T, V> {
+public abstract class AtomicReferenceFieldUpdater<T,V> {
 
     /**
      * Creates and returns an updater for objects with the given field.

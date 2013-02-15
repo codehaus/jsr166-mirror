@@ -2433,8 +2433,8 @@ public class ConcurrentHashMap<K, V>
      * @return the new set
      */
     public static <K> KeySetView<K,Boolean> newKeySet() {
-        return new KeySetView<K,Boolean>(new ConcurrentHashMap<K,Boolean>(),
-                                      Boolean.TRUE);
+        return new KeySetView<K,Boolean>
+            (new ConcurrentHashMap<K,Boolean>(), Boolean.TRUE);
     }
 
     /**
@@ -2798,6 +2798,8 @@ public class ConcurrentHashMap<K, V>
      * Returns a {@link Collection} view of the values contained in this map.
      * The collection is backed by the map, so changes to the map are
      * reflected in the collection, and vice-versa.
+     *
+     * @return the collection view
      */
     public ValuesView<K,V> values() {
         ValuesView<K,V> vs = values;
@@ -2819,6 +2821,8 @@ public class ConcurrentHashMap<K, V>
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
+     *
+     * @return the set view
      */
     public Set<Map.Entry<K,V>> entrySet() {
         EntrySetView<K,V> es = entrySet;
@@ -4458,10 +4462,11 @@ public class ConcurrentHashMap<K, V>
     /**
      * Base class for views.
      */
-    abstract static class CHMView<K, V> implements java.io.Serializable {
+    abstract static class CHMCollectionView<K, V, E>
+            implements Collection<E>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
         final ConcurrentHashMap<K, V> map;
-        CHMView(ConcurrentHashMap<K, V> map)  { this.map = map; }
+        CHMCollectionView(ConcurrentHashMap<K, V> map)  { this.map = map; }
 
         /**
          * Returns the map backing this view.
@@ -4470,12 +4475,25 @@ public class ConcurrentHashMap<K, V>
          */
         public ConcurrentHashMap<K,V> getMap() { return map; }
 
-        public final int size()                 { return map.size(); }
-        public final boolean isEmpty()          { return map.isEmpty(); }
-        public final void clear()               { map.clear(); }
+        /**
+         * Removes all of the elements from this view, by removing all
+         * the mappings from the map backing this view.
+         */
+        public final void clear()      { map.clear(); }
+        public final int size()        { return map.size(); }
+        public final boolean isEmpty() { return map.isEmpty(); }
 
         // implementations below rely on concrete classes supplying these
-        public abstract Iterator<?> iterator();
+        // abstract methods
+        /**
+         * Returns a "weakly consistent" iterator that will never
+         * throw {@link ConcurrentModificationException}, and
+         * guarantees to traverse elements as they existed upon
+         * construction of the iterator, and may (but is not
+         * guaranteed to) reflect any modifications subsequent to
+         * construction.
+         */
+        public abstract Iterator<E> iterator();
         public abstract boolean contains(Object o);
         public abstract boolean remove(Object o);
 
@@ -4483,13 +4501,12 @@ public class ConcurrentHashMap<K, V>
 
         public final Object[] toArray() {
             long sz = map.mappingCount();
-            if (sz > (long)(MAX_ARRAY_SIZE))
+            if (sz > MAX_ARRAY_SIZE)
                 throw new OutOfMemoryError(oomeMsg);
             int n = (int)sz;
             Object[] r = new Object[n];
             int i = 0;
-            Iterator<?> it = iterator();
-            while (it.hasNext()) {
+            for (E e : this) {
                 if (i == n) {
                     if (n >= MAX_ARRAY_SIZE)
                         throw new OutOfMemoryError(oomeMsg);
@@ -4499,14 +4516,15 @@ public class ConcurrentHashMap<K, V>
                         n += (n >>> 1) + 1;
                     r = Arrays.copyOf(r, n);
                 }
-                r[i++] = it.next();
+                r[i++] = e;
             }
             return (i == n) ? r : Arrays.copyOf(r, i);
         }
 
-        @SuppressWarnings("unchecked") public final <T> T[] toArray(T[] a) {
+        @SuppressWarnings("unchecked")
+        public final <T> T[] toArray(T[] a) {
             long sz = map.mappingCount();
-            if (sz > (long)(MAX_ARRAY_SIZE))
+            if (sz > MAX_ARRAY_SIZE)
                 throw new OutOfMemoryError(oomeMsg);
             int m = (int)sz;
             T[] r = (a.length >= m) ? a :
@@ -4514,8 +4532,7 @@ public class ConcurrentHashMap<K, V>
                 .newInstance(a.getClass().getComponentType(), m);
             int n = r.length;
             int i = 0;
-            Iterator<?> it = iterator();
-            while (it.hasNext()) {
+            for (E e : this) {
                 if (i == n) {
                     if (n >= MAX_ARRAY_SIZE)
                         throw new OutOfMemoryError(oomeMsg);
@@ -4525,7 +4542,7 @@ public class ConcurrentHashMap<K, V>
                         n += (n >>> 1) + 1;
                     r = Arrays.copyOf(r, n);
                 }
-                r[i++] = (T)it.next();
+                r[i++] = (T)e;
             }
             if (a == r && i < n) {
                 r[i] = null; // null-terminate
@@ -4534,17 +4551,21 @@ public class ConcurrentHashMap<K, V>
             return (i == n) ? r : Arrays.copyOf(r, i);
         }
 
-        public final int hashCode() {
-            int h = 0;
-            for (Iterator<?> it = iterator(); it.hasNext();)
-                h += it.next().hashCode();
-            return h;
-        }
-
+        /**
+         * Returns a string representation of this collection.
+         * The string representation consists of the string representations
+         * of the collection's elements in the order they are returned by
+         * its iterator, enclosed in square brackets ({@code "[]"}).
+         * Adjacent elements are separated by the characters {@code ", "}
+         * (comma and space).  Elements are converted to strings as by
+         * {@link String#valueOf(Object)}.
+         *
+         * @return a string representation of this collection
+         */
         public final String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append('[');
-            Iterator<?> it = iterator();
+            Iterator<E> it = iterator();
             if (it.hasNext()) {
                 for (;;) {
                     Object e = it.next();
@@ -4559,8 +4580,7 @@ public class ConcurrentHashMap<K, V>
 
         public final boolean containsAll(Collection<?> c) {
             if (c != this) {
-                for (Iterator<?> it = c.iterator(); it.hasNext();) {
-                    Object e = it.next();
+                for (Object e : c) {
                     if (e == null || !contains(e))
                         return false;
                 }
@@ -4570,7 +4590,7 @@ public class ConcurrentHashMap<K, V>
 
         public final boolean removeAll(Collection<?> c) {
             boolean modified = false;
-            for (Iterator<?> it = iterator(); it.hasNext();) {
+            for (Iterator<E> it = iterator(); it.hasNext();) {
                 if (c.contains(it.next())) {
                     it.remove();
                     modified = true;
@@ -4581,7 +4601,7 @@ public class ConcurrentHashMap<K, V>
 
         public final boolean retainAll(Collection<?> c) {
             boolean modified = false;
-            for (Iterator<?> it = iterator(); it.hasNext();) {
+            for (Iterator<E> it = iterator(); it.hasNext();) {
                 if (!c.contains(it.next())) {
                     it.remove();
                     modified = true;
@@ -4592,6 +4612,38 @@ public class ConcurrentHashMap<K, V>
 
     }
 
+    abstract static class CHMSetView<K, V, E>
+            extends CHMCollectionView<K, V, E>
+            implements Set<E>, java.io.Serializable {
+        private static final long serialVersionUID = 7249069246763182397L;
+        CHMSetView(ConcurrentHashMap<K, V> map) { super(map); }
+
+        // Implement Set API
+
+        /**
+         * Implements {@link Set#hashCode()}.
+         * @return the hash code value for this set
+         */
+        public final int hashCode() {
+            int h = 0;
+            for (E e : this)
+                h += e.hashCode();
+            return h;
+        }
+
+        /**
+         * Implements {@link Set#equals(Object)}.
+         * @param o object to be compared for equality with this set
+         * @return {@code true} if the specified object is equal to this set
+        */
+        public final boolean equals(Object o) {
+            Set<?> c;
+            return ((o instanceof Set) &&
+                    ((c = (Set<?>)o) == this ||
+                     (containsAll(c) && c.containsAll(this))));
+        }
+    }
+
     /**
      * A view of a ConcurrentHashMap as a {@link Set} of keys, in
      * which additions may optionally be enabled by mapping to a
@@ -4599,8 +4651,9 @@ public class ConcurrentHashMap<K, V>
      * {@link #keySet()}, {@link #keySet(Object)}, {@link #newKeySet()},
      * {@link #newKeySet(int)}.
      */
-    public static class KeySetView<K,V> extends CHMView<K,V>
-        implements Set<K>, java.io.Serializable {
+    public static class KeySetView<K,V>
+            extends CHMSetView<K,V,K>
+            implements Set<K>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
         private final V value;
         KeySetView(ConcurrentHashMap<K, V> map, V value) {  // non-public
@@ -4617,28 +4670,56 @@ public class ConcurrentHashMap<K, V>
          */
         public V getMappedValue() { return value; }
 
-        // implement Set API
-
+        /**
+         * {@inheritDoc}
+         * @throws NullPointerException if the specified key is null
+         */
         public boolean contains(Object o) { return map.containsKey(o); }
-        public boolean remove(Object o)   { return map.remove(o) != null; }
 
         /**
-         * Returns a "weakly consistent" iterator that will never
-         * throw {@link ConcurrentModificationException}, and
-         * guarantees to traverse elements as they existed upon
-         * construction of the iterator, and may (but is not
-         * guaranteed to) reflect any modifications subsequent to
-         * construction.
+         * Removes the key from this map view, by removing the key (and its
+         * corresponding value) from the backing map.  This method does
+         * nothing if the key is not in the map.
          *
-         * @return an iterator over the keys of this map
+         * @param  o the key to be removed from the backing map
+         * @return {@code true} if the backing map contained the specified key
+         * @throws NullPointerException if the specified key is null
          */
-        public Iterator<K> iterator()     { return new KeyIterator<K,V>(map); }
+        public boolean remove(Object o) { return map.remove(o) != null; }
+
+        /**
+         * @return an iterator over the keys of the backing map
+         */
+        public Iterator<K> iterator() { return new KeyIterator<K,V>(map); }
+
+        /**
+         * Adds the specified key to this set view by mapping the key to
+         * the default mapped value in the backing map, if defined.
+         *
+         * @param e key to be added
+         * @return {@code true} if this set changed as a result of the call
+         * @throws NullPointerException if the specified key is null
+         * @throws UnsupportedOperationException if no default mapped value
+         * for additions was provided
+         */
         public boolean add(K e) {
             V v;
             if ((v = value) == null)
                 throw new UnsupportedOperationException();
             return map.internalPut(e, v, true) == null;
         }
+
+        /**
+         * Adds all of the elements in the specified collection to this set,
+         * as if by calling {@link #add} on each one.
+         *
+         * @param c the elements to be inserted into this set
+         * @return {@code true} if this set changed as a result of the call
+         * @throws NullPointerException if the collection or any of its
+         * elements are {@code null}
+         * @throws UnsupportedOperationException if no default mapped value
+         * for additions was provided
+         */
         public boolean addAll(Collection<? extends K> c) {
             boolean added = false;
             V v;
@@ -4649,12 +4730,6 @@ public class ConcurrentHashMap<K, V>
                     added = true;
             }
             return added;
-        }
-        public boolean equals(Object o) {
-            Set<?> c;
-            return ((o instanceof Set) &&
-                    ((c = (Set<?>)o) == this ||
-                     (containsAll(c) && c.containsAll(this))));
         }
 
         public Stream<K> stream() {
@@ -4677,15 +4752,17 @@ public class ConcurrentHashMap<K, V>
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
      */
-    public static final class ValuesView<K,V> extends CHMView<K,V>
-        implements Collection<V> {
+    public static final class ValuesView<K,V>
+            extends CHMCollectionView<K,V,V>
+            implements Collection<V>, java.io.Serializable {
         private static final long serialVersionUID = 2249069246763182397L;
-        ValuesView(ConcurrentHashMap<K, V> map)   { super(map); }
-        public final boolean contains(Object o) { return map.containsValue(o); }
+        ValuesView(ConcurrentHashMap<K, V> map) { super(map); }
+        public final boolean contains(Object o) {
+            return map.containsValue(o);
+        }
         public final boolean remove(Object o) {
             if (o != null) {
-                Iterator<V> it = new ValueIterator<K,V>(map);
-                while (it.hasNext()) {
+                for (Iterator<V> it = iterator(); it.hasNext();) {
                     if (o.equals(it.next())) {
                         it.remove();
                         return true;
@@ -4696,21 +4773,17 @@ public class ConcurrentHashMap<K, V>
         }
 
         /**
-         * Returns a "weakly consistent" iterator that will never
-         * throw {@link ConcurrentModificationException}, and
-         * guarantees to traverse elements as they existed upon
-         * construction of the iterator, and may (but is not
-         * guaranteed to) reflect any modifications subsequent to
-         * construction.
-         *
-         * @return an iterator over the values of this map
+         * @return an iterator over the values of the backing map
          */
         public final Iterator<V> iterator() {
             return new ValueIterator<K,V>(map);
         }
+
+        /** Always throws {@link UnsupportedOperationException}. */
         public final boolean add(V e) {
             throw new UnsupportedOperationException();
         }
+        /** Always throws {@link UnsupportedOperationException}. */
         public final boolean addAll(Collection<? extends V> c) {
             throw new UnsupportedOperationException();
         }
@@ -4731,10 +4804,12 @@ public class ConcurrentHashMap<K, V>
      * entries.  This class cannot be directly instantiated. See
      * {@link #entrySet()}.
      */
-    public static final class EntrySetView<K,V> extends CHMView<K,V>
-        implements Set<Map.Entry<K,V>> {
+    public static final class EntrySetView<K,V>
+            extends CHMSetView<K,V,Map.Entry<K,V>>
+            implements Set<Map.Entry<K,V>>, java.io.Serializable {
         private static final long serialVersionUID = 2249069246763182397L;
         EntrySetView(ConcurrentHashMap<K, V> map) { super(map); }
+
         public final boolean contains(Object o) {
             Object k, v, r; Map.Entry<?,?> e;
             return ((o instanceof Map.Entry) &&
@@ -4752,22 +4827,31 @@ public class ConcurrentHashMap<K, V>
         }
 
         /**
-         * Returns a "weakly consistent" iterator that will never
-         * throw {@link ConcurrentModificationException}, and
-         * guarantees to traverse elements as they existed upon
-         * construction of the iterator, and may (but is not
-         * guaranteed to) reflect any modifications subsequent to
-         * construction.
-         *
-         * @return an iterator over the entries of this map
+         * @return an iterator over the entries of the backing map
          */
         public final Iterator<Map.Entry<K,V>> iterator() {
             return new EntryIterator<K,V>(map);
         }
 
+        /**
+         * Adds the specified mapping to this view.
+         *
+         * @param e mapping to be added
+         * @return {@code true} if this set changed as a result of the call
+         * @throws NullPointerException if the entry, its key, or its
+         * value is null
+         */
         public final boolean add(Entry<K,V> e) {
             return map.internalPut(e.getKey(), e.getValue(), false) == null;
         }
+        /**
+         * Adds all of the mappings in the specified collection to this
+         * set, as if by calling {@link #add(Map.Entry)} on each one.
+         * @param c the mappings to be inserted into this set
+         * @return {@code true} if this set changed as a result of the call
+         * @throws NullPointerException if the collection or any of its
+         * entries, keys, or values are null
+         */
         public final boolean addAll(Collection<? extends Entry<K,V>> c) {
             boolean added = false;
             for (Entry<K,V> e : c) {
@@ -4775,12 +4859,6 @@ public class ConcurrentHashMap<K, V>
                     added = true;
             }
             return added;
-        }
-        public boolean equals(Object o) {
-            Set<?> c;
-            return ((o instanceof Set) &&
-                    ((c = (Set<?>)o) == this ||
-                     (containsAll(c) && c.containsAll(this))));
         }
 
         public Stream<Map.Entry<K,V>> stream() {

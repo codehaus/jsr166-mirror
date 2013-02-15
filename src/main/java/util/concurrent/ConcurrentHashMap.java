@@ -4647,9 +4647,11 @@ public class ConcurrentHashMap<K, V>
     /**
      * A view of a ConcurrentHashMap as a {@link Set} of keys, in
      * which additions may optionally be enabled by mapping to a
-     * common value.  This class cannot be directly instantiated. See
-     * {@link #keySet()}, {@link #keySet(Object)}, {@link #newKeySet()},
-     * {@link #newKeySet(int)}.
+     * common value.  This class cannot be directly instantiated.
+     * See {@link #keySet() keySet()},
+     * {@link #keySet(Object) keySet(V)},
+     * {@link #newKeySet() newKeySet()},
+     * {@link #newKeySet(int) newKeySet(int)}.
      */
     public static class KeySetView<K,V>
             extends CHMSetView<K,V,K>

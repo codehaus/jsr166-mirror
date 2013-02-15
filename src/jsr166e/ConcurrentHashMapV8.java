@@ -212,8 +212,8 @@ import java.io.Serializable;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class ConcurrentHashMapV8<K, V>
-    implements ConcurrentMap<K, V>, Serializable {
+public class ConcurrentHashMapV8<K,V>
+    implements ConcurrentMap<K,V>, Serializable {
     private static final long serialVersionUID = 7249069246763182397L;
 
     /**
@@ -2279,7 +2279,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     @SuppressWarnings("serial") static class Traverser<K,V,R>
         extends CountedCompleter<R> {
-        final ConcurrentHashMapV8<K, V> map;
+        final ConcurrentHashMapV8<K,V> map;
         Node<V> next;        // the next entry to use
         Object nextKey;      // cached key field of next
         V nextVal;           // cached val field of next
@@ -2291,7 +2291,7 @@ public class ConcurrentHashMapV8<K, V>
         int batch;           // split control
 
         /** Creates iterator for all entries in the table. */
-        Traverser(ConcurrentHashMapV8<K, V> map) {
+        Traverser(ConcurrentHashMapV8<K,V> map) {
             this.map = map;
         }
 
@@ -2323,7 +2323,7 @@ public class ConcurrentHashMapV8<K, V>
                 if (e != null)                  // advance past used/skipped node
                     e = e.next;
                 while (e == null) {             // get to next non-null bin
-                    ConcurrentHashMapV8<K, V> m;
+                    ConcurrentHashMapV8<K,V> m;
                     Node<V>[] t; int b, i, n; Object ek; //  must use locals
                     if ((t = tab) != null)
                         n = t.length;
@@ -2376,7 +2376,7 @@ public class ConcurrentHashMapV8<K, V>
          * anyway.
          */
         final int preSplit() {
-            ConcurrentHashMapV8<K, V> m; int b; Node<V>[] t;  ForkJoinPool pool;
+            ConcurrentHashMapV8<K,V> m; int b; Node<V>[] t;  ForkJoinPool pool;
             if ((b = batch) < 0 && (m = map) != null) { // force initialization
                 if ((t = tab) == null && (t = tab = m.table) != null)
                     baseLimit = baseSize = t.length;
@@ -2687,7 +2687,7 @@ public class ConcurrentHashMapV8<K, V>
      * memoized result, as in:
      *
      *  <pre> {@code
-     * map.computeIfAbsent(key, new Fun<K, V>() {
+     * map.computeIfAbsent(key, new Fun<K,V>() {
      *   public V map(K k) { return new Value(f(k)); }});}</pre>
      *
      * @param key key with which the specified value is to be associated
@@ -3068,8 +3068,8 @@ public class ConcurrentHashMapV8<K, V>
     @SuppressWarnings("serial") static final class KeyIterator<K,V>
         extends Traverser<K,V,Object>
         implements Spliterator<K>, Enumeration<K> {
-        KeyIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
-        KeyIterator(ConcurrentHashMapV8<K, V> map, Traverser<K,V,Object> it) {
+        KeyIterator(ConcurrentHashMapV8<K,V> map) { super(map); }
+        KeyIterator(ConcurrentHashMapV8<K,V> map, Traverser<K,V,Object> it) {
             super(map, it, -1);
         }
         public KeyIterator<K,V> split() {
@@ -3091,8 +3091,8 @@ public class ConcurrentHashMapV8<K, V>
     @SuppressWarnings("serial") static final class ValueIterator<K,V>
         extends Traverser<K,V,Object>
         implements Spliterator<V>, Enumeration<V> {
-        ValueIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
-        ValueIterator(ConcurrentHashMapV8<K, V> map, Traverser<K,V,Object> it) {
+        ValueIterator(ConcurrentHashMapV8<K,V> map) { super(map); }
+        ValueIterator(ConcurrentHashMapV8<K,V> map, Traverser<K,V,Object> it) {
             super(map, it, -1);
         }
         public ValueIterator<K,V> split() {
@@ -3115,8 +3115,8 @@ public class ConcurrentHashMapV8<K, V>
     @SuppressWarnings("serial") static final class EntryIterator<K,V>
         extends Traverser<K,V,Object>
         implements Spliterator<Map.Entry<K,V>> {
-        EntryIterator(ConcurrentHashMapV8<K, V> map) { super(map); }
-        EntryIterator(ConcurrentHashMapV8<K, V> map, Traverser<K,V,Object> it) {
+        EntryIterator(ConcurrentHashMapV8<K,V> map) { super(map); }
+        EntryIterator(ConcurrentHashMapV8<K,V> map, Traverser<K,V,Object> it) {
             super(map, it, -1);
         }
         public EntryIterator<K,V> split() {
@@ -3138,11 +3138,11 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * Exported Entry for iterators
      */
-    static final class MapEntry<K,V> implements Map.Entry<K, V> {
+    static final class MapEntry<K,V> implements Map.Entry<K,V> {
         final K key; // non-null
         V val;       // non-null
-        final ConcurrentHashMapV8<K, V> map;
-        MapEntry(K key, V val, ConcurrentHashMapV8<K, V> map) {
+        final ConcurrentHashMapV8<K,V> map;
+        MapEntry(K key, V val, ConcurrentHashMapV8<K,V> map) {
             this.key = key;
             this.val = val;
             this.map = map;
@@ -4578,9 +4578,9 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * Base class for views.
      */
-    abstract static class CHMView<K, V> {
-        final ConcurrentHashMapV8<K, V> map;
-        CHMView(ConcurrentHashMapV8<K, V> map)  { this.map = map; }
+    abstract static class CHMView<K,V> {
+        final ConcurrentHashMapV8<K,V> map;
+        CHMView(ConcurrentHashMapV8<K,V> map)  { this.map = map; }
 
         /**
          * Returns the map backing this view.
@@ -4722,7 +4722,7 @@ public class ConcurrentHashMapV8<K, V>
         implements Set<K>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
         private final V value;
-        KeySetView(ConcurrentHashMapV8<K, V> map, V value) {  // non-public
+        KeySetView(ConcurrentHashMapV8<K,V> map, V value) {  // non-public
             super(map);
             this.value = value;
         }
@@ -4790,7 +4790,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     public static final class ValuesView<K,V> extends CHMView<K,V>
         implements Collection<V> {
-        ValuesView(ConcurrentHashMapV8<K, V> map)   { super(map); }
+        ValuesView(ConcurrentHashMapV8<K,V> map)   { super(map); }
         public final boolean contains(Object o) { return map.containsValue(o); }
         public final boolean remove(Object o) {
             if (o != null) {
@@ -4834,7 +4834,7 @@ public class ConcurrentHashMapV8<K, V>
      */
     public static final class EntrySetView<K,V> extends CHMView<K,V>
         implements Set<Map.Entry<K,V>> {
-        EntrySetView(ConcurrentHashMapV8<K, V> map) { super(map); }
+        EntrySetView(ConcurrentHashMapV8<K,V> map) { super(map); }
         public final boolean contains(Object o) {
             Object k, v, r; Map.Entry<?,?> e;
             return ((o instanceof Map.Entry) &&

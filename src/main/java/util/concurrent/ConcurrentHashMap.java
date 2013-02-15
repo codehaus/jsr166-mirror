@@ -214,8 +214,8 @@ import java.io.Serializable;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class ConcurrentHashMap<K, V>
-    implements ConcurrentMap<K, V>, Serializable {
+public class ConcurrentHashMap<K,V>
+    implements ConcurrentMap<K,V>, Serializable {
     private static final long serialVersionUID = 7249069246763182397L;
 
     /*
@@ -2188,7 +2188,7 @@ public class ConcurrentHashMap<K, V>
      */
     @SuppressWarnings("serial") static class Traverser<K,V,R>
         extends CountedCompleter<R> {
-        final ConcurrentHashMap<K, V> map;
+        final ConcurrentHashMap<K,V> map;
         Node<V> next;        // the next entry to use
         K nextKey;           // cached key field of next
         V nextVal;           // cached val field of next
@@ -2199,7 +2199,7 @@ public class ConcurrentHashMap<K, V>
         int baseSize;        // initial table size
         int batch;           // split control
         /** Creates iterator for all entries in the table. */
-        Traverser(ConcurrentHashMap<K, V> map) {
+        Traverser(ConcurrentHashMap<K,V> map) {
             this.map = map;
             Node<V>[] t;
             if ((t = tab = map.table) != null)
@@ -2258,7 +2258,7 @@ public class ConcurrentHashMap<K, V>
                 if (e != null)                  // advance past used/skipped node
                     e = e.next;
                 while (e == null) {             // get to next non-null bin
-                    ConcurrentHashMap<K, V> m;
+                    ConcurrentHashMap<K,V> m;
                     Node<V>[] t; int b, i, n; Object ek; //  must use locals
                     if ((t = tab) != null)
                         n = t.length;
@@ -2935,8 +2935,8 @@ public class ConcurrentHashMap<K, V>
     @SuppressWarnings("serial") static final class KeyIterator<K,V>
         extends Traverser<K,V,Object>
         implements Spliterator<K>, Iterator<K>, Enumeration<K> {
-        KeyIterator(ConcurrentHashMap<K, V> map) { super(map); }
-        KeyIterator(ConcurrentHashMap<K, V> map, Traverser<K,V,Object> it) {
+        KeyIterator(ConcurrentHashMap<K,V> map) { super(map); }
+        KeyIterator(ConcurrentHashMap<K,V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
         public KeyIterator<K,V> trySplit() {
@@ -2974,8 +2974,8 @@ public class ConcurrentHashMap<K, V>
     @SuppressWarnings("serial") static final class ValueIterator<K,V>
         extends Traverser<K,V,Object>
         implements Spliterator<V>, Iterator<V>, Enumeration<V> {
-        ValueIterator(ConcurrentHashMap<K, V> map) { super(map); }
-        ValueIterator(ConcurrentHashMap<K, V> map, Traverser<K,V,Object> it) {
+        ValueIterator(ConcurrentHashMap<K,V> map) { super(map); }
+        ValueIterator(ConcurrentHashMap<K,V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
         public ValueIterator<K,V> trySplit() {
@@ -3017,8 +3017,8 @@ public class ConcurrentHashMap<K, V>
     @SuppressWarnings("serial") static final class EntryIterator<K,V>
         extends Traverser<K,V,Object>
         implements Spliterator<Map.Entry<K,V>>, Iterator<Map.Entry<K,V>> {
-        EntryIterator(ConcurrentHashMap<K, V> map) { super(map); }
-        EntryIterator(ConcurrentHashMap<K, V> map, Traverser<K,V,Object> it) {
+        EntryIterator(ConcurrentHashMap<K,V> map) { super(map); }
+        EntryIterator(ConcurrentHashMap<K,V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
         public EntryIterator<K,V> trySplit() {
@@ -3059,11 +3059,11 @@ public class ConcurrentHashMap<K, V>
     /**
      * Exported Entry for iterators
      */
-    static final class MapEntry<K,V> implements Map.Entry<K, V> {
+    static final class MapEntry<K,V> implements Map.Entry<K,V> {
         final K key; // non-null
         V val;       // non-null
-        final ConcurrentHashMap<K, V> map;
-        MapEntry(K key, V val, ConcurrentHashMap<K, V> map) {
+        final ConcurrentHashMap<K,V> map;
+        MapEntry(K key, V val, ConcurrentHashMap<K,V> map) {
             this.key = key;
             this.val = val;
             this.map = map;
@@ -4465,8 +4465,8 @@ public class ConcurrentHashMap<K, V>
     abstract static class CHMCollectionView<K, V, E>
             implements Collection<E>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
-        final ConcurrentHashMap<K, V> map;
-        CHMCollectionView(ConcurrentHashMap<K, V> map)  { this.map = map; }
+        final ConcurrentHashMap<K,V> map;
+        CHMCollectionView(ConcurrentHashMap<K,V> map)  { this.map = map; }
 
         /**
          * Returns the map backing this view.
@@ -4616,7 +4616,7 @@ public class ConcurrentHashMap<K, V>
             extends CHMCollectionView<K, V, E>
             implements Set<E>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
-        CHMSetView(ConcurrentHashMap<K, V> map) { super(map); }
+        CHMSetView(ConcurrentHashMap<K,V> map) { super(map); }
 
         // Implement Set API
 
@@ -4658,7 +4658,7 @@ public class ConcurrentHashMap<K, V>
             implements Set<K>, java.io.Serializable {
         private static final long serialVersionUID = 7249069246763182397L;
         private final V value;
-        KeySetView(ConcurrentHashMap<K, V> map, V value) {  // non-public
+        KeySetView(ConcurrentHashMap<K,V> map, V value) {  // non-public
             super(map);
             this.value = value;
         }
@@ -4758,7 +4758,7 @@ public class ConcurrentHashMap<K, V>
             extends CHMCollectionView<K,V,V>
             implements Collection<V>, java.io.Serializable {
         private static final long serialVersionUID = 2249069246763182397L;
-        ValuesView(ConcurrentHashMap<K, V> map) { super(map); }
+        ValuesView(ConcurrentHashMap<K,V> map) { super(map); }
         public final boolean contains(Object o) {
             return map.containsValue(o);
         }
@@ -4810,7 +4810,7 @@ public class ConcurrentHashMap<K, V>
             extends CHMSetView<K,V,Map.Entry<K,V>>
             implements Set<Map.Entry<K,V>>, java.io.Serializable {
         private static final long serialVersionUID = 2249069246763182397L;
-        EntrySetView(ConcurrentHashMap<K, V> map) { super(map); }
+        EntrySetView(ConcurrentHashMap<K,V> map) { super(map); }
 
         public final boolean contains(Object o) {
             Object k, v, r; Map.Entry<?,?> e;

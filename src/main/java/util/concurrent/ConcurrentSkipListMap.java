@@ -3428,10 +3428,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          */
 
         private static final long serialVersionUID = 7249069246763182397L;
-        private final ConcurrentSkipListMap<K, V> m;
+        private final ConcurrentSkipListMap<K,V> m;
         private final V value;
 
-        KeySetView(ConcurrentSkipListMap<K, V> map, V value) {  // non-public
+        KeySetView(ConcurrentSkipListMap<K,V> map, V value) {  // non-public
             this.m = map;
             this.value = value;
         }

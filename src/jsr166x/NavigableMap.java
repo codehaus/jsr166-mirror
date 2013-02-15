@@ -234,7 +234,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *
      * @return a set view of the mappings contained in this map
      */
-    Set<Map.Entry<K, V>> descendingEntrySet();
+    Set<Map.Entry<K,V>> descendingEntrySet();
 
     /**
      * Returns a view of the portion of this map whose keys range from

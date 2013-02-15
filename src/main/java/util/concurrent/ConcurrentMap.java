@@ -27,7 +27,7 @@ import java.util.Map;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public interface ConcurrentMap<K, V> extends Map<K, V> {
+public interface ConcurrentMap<K,V> extends Map<K,V> {
     /**
      * If the specified key is not already associated
      * with a value, associate it with the given value.

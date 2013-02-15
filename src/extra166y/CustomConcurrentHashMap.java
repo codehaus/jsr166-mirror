@@ -110,8 +110,8 @@ import sun.misc.Unsafe;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
-    implements ConcurrentMap<K, V>, Serializable {
+public class CustomConcurrentHashMap<K,V> extends AbstractMap<K,V>
+    implements ConcurrentMap<K,V>, Serializable {
     private static final long serialVersionUID = 7249069246764182397L;
 
     /*
@@ -226,7 +226,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * A function computing a mapping from the given key to a value,
      * or {@code null} if there is no mapping.
      */
-    public static interface MappingFunction<K, V> {
+    public static interface MappingFunction<K,V> {
         /**
          * Returns a value for the given key, or null if there is no
          * mapping. If this function throws an (unchecked) exception,
@@ -247,7 +247,7 @@ public class CustomConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * current value to a new value, or {@code null} if there is
      * no mapping.
      */
-    public static interface RemappingFunction<K, V> {
+    public static interface RemappingFunction<K,V> {
         /**
          * Returns a new value for the given key and its current, or
          * null if there is no mapping.

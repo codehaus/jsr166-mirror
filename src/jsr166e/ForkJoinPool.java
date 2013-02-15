@@ -2185,7 +2185,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * producing extra tasks amortizes the uncertainty of progress and
      * diffusion assumptions.
      *
-     * So, users will want to use values larger, but not much larger
+     * So, users will want to use values larger (but not much larger)
      * than 1 to both smooth over transient shortages and hedge
      * against uneven progress; as traded off against the cost of
      * extra task overhead. We leave the user to pick a threshold

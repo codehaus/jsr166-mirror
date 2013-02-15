@@ -95,9 +95,9 @@ import java.io.Serializable;
  * <p>A ConcurrentHashMap can be used as scalable frequency map (a
  * form of histogram or multiset) by using {@link
  * java.util.concurrent.atomic.LongAdder} values and initializing via
- * {@link #computeIfAbsent}. For example, to add a count to a {@code
- * ConcurrentHashMap<String,LongAdder> freqs}, you can use {@code
- * freqs.computeIfAbsent(k -> new LongAdder()).increment();}
+ * {@link #computeIfAbsent computeIfAbsent}. For example, to add a count
+ * to a {@code ConcurrentHashMap<String,LongAdder> freqs}, you can use
+ * {@code freqs.computeIfAbsent(k -> new LongAdder()).increment();}
  *
  * <p>This class and its views and iterators implement all of the
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
@@ -149,8 +149,8 @@ import java.io.Serializable;
  * <li> Reductions to scalar doubles, longs, and ints, using a
  * given basis value.</li>
  *
- * </li>
  * </ul>
+ * </li>
  * </ul>
  *
  * <p>The concurrency properties of bulk operations follow
@@ -2551,7 +2551,7 @@ public class ConcurrentHashMap<K, V>
     /**
      * Legacy method testing if some key maps into the specified value
      * in this table.  This method is identical in functionality to
-     * {@link #containsValue}, and exists solely to ensure
+     * {@link #containsValue(Object)}, and exists solely to ensure
      * full compatibility with class {@link java.util.Hashtable},
      * which supported this method prior to introduction of the
      * Java Collections framework.
@@ -2780,9 +2780,9 @@ public class ConcurrentHashMap<K, V>
     /**
      * Returns a {@link Set} view of the keys in this map, using the
      * given common mapped value for any additions (i.e., {@link
-     * Collection#add} and {@link Collection#addAll}). This is of
-     * course only appropriate if it is acceptable to use the same
-     * value for all additions from this view.
+     * Collection#add} and {@link Collection#addAll(Collection)}).
+     * This is of course only appropriate if it is acceptable to use
+     * the same value for all additions from this view.
      *
      * @param mappedValue the mapped value to use for any additions
      * @return the set view
@@ -3587,6 +3587,7 @@ public class ConcurrentHashMap<K, V>
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
+     * @param action the action
      */
     public <U> void forEachValueSequentially
         (Function<? super V, ? extends U> transformer,
@@ -4196,6 +4197,7 @@ public class ConcurrentHashMap<K, V>
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
+     * @param action the action
      */
     public <U> void forEachValueInParallel
         (Function<? super V, ? extends U> transformer,
@@ -4594,7 +4596,7 @@ public class ConcurrentHashMap<K, V>
      * A view of a ConcurrentHashMap as a {@link Set} of keys, in
      * which additions may optionally be enabled by mapping to a
      * common value.  This class cannot be directly instantiated. See
-     * {@link #keySet}, {@link #keySet(Object)}, {@link #newKeySet()},
+     * {@link #keySet()}, {@link #keySet(Object)}, {@link #newKeySet()},
      * {@link #newKeySet(int)}.
      */
     public static class KeySetView<K,V> extends CHMView<K,V>
@@ -4635,8 +4637,6 @@ public class ConcurrentHashMap<K, V>
             V v;
             if ((v = value) == null)
                 throw new UnsupportedOperationException();
-            if (e == null)
-                throw new NullPointerException();
             return map.internalPut(e, v, true) == null;
         }
         public boolean addAll(Collection<? extends K> c) {
@@ -4645,8 +4645,6 @@ public class ConcurrentHashMap<K, V>
             if ((v = value) == null)
                 throw new UnsupportedOperationException();
             for (K e : c) {
-                if (e == null)
-                    throw new NullPointerException();
                 if (map.internalPut(e, v, true) == null)
                     added = true;
             }
@@ -4671,7 +4669,7 @@ public class ConcurrentHashMap<K, V>
     /**
      * A view of a ConcurrentHashMap as a {@link Collection} of
      * values, in which additions are disabled. This class cannot be
-     * directly instantiated. See {@link #values},
+     * directly instantiated. See {@link #values()}.
      *
      * <p>The view's {@code iterator} is a "weakly consistent" iterator
      * that will never throw {@link ConcurrentModificationException},
@@ -4731,7 +4729,7 @@ public class ConcurrentHashMap<K, V>
     /**
      * A view of a ConcurrentHashMap as a {@link Set} of (key, value)
      * entries.  This class cannot be directly instantiated. See
-     * {@link #entrySet}.
+     * {@link #entrySet()}.
      */
     public static final class EntrySetView<K,V> extends CHMView<K,V>
         implements Set<Map.Entry<K,V>> {
@@ -4768,11 +4766,7 @@ public class ConcurrentHashMap<K, V>
         }
 
         public final boolean add(Entry<K,V> e) {
-            K key = e.getKey();
-            V value = e.getValue();
-            if (key == null || value == null)
-                throw new NullPointerException();
-            return map.internalPut(key, value, false) == null;
+            return map.internalPut(e.getKey(), e.getValue(), false) == null;
         }
         public final boolean addAll(Collection<? extends Entry<K,V>> c) {
             boolean added = false;
@@ -4946,6 +4940,7 @@ public class ConcurrentHashMap<K, V>
          * using the given reducer to combine values, and the given
          * basis as an identity value.
          *
+         * @param map the map
          * @param transformer a function returning the transformation
          * for an element
          * @param basis the identity (initial default value) for the reduction

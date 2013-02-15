@@ -1975,9 +1975,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Returns a {@link Set} view of the keys in this map, using the
      * given common mapped value for any additions (i.e., {@link
-     * Collection#add} and {@link Collection#addAll}). This is of
-     * course only appropriate if it is acceptable to use the same
-     * value for all additions from this view.
+     * Collection#add} and {@link Collection#addAll(Collection)}).
+     * This is of course only appropriate if it is acceptable to use
+     * the same value for all additions from this view.
      *
      * @param mappedValue the mapped value to use for any additions
      * @return the set view
@@ -3415,7 +3415,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * A view of a ConcurrentSkipListMap as a {@link Set} of keys, in
      * which additions may optionally be enabled by mapping to a
      * common value.  This class cannot be directly instantiated. See
-     * {@link #keySet}, {@link #keySet(Object)}, {@link #newKeySet()},
+     * {@link #keySet()}, {@link #keySet(Object)}, {@link #newKeySet()},
      * {@link #newKeySet(Comparator)}.
      */
     public static class KeySetView<K,V> extends AbstractSet<K>

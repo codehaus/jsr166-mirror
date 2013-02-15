@@ -337,6 +337,8 @@ public class StampedLock implements java.io.Serializable {
      * Behavior under timeout and interruption matches that specified
      * for method {@link Lock#tryLock(long,TimeUnit)}.
      *
+     * @param time the maximum time to wait for the lock
+     * @param unit the time unit of the {@code time} argument
      * @return a stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available
      * @throws InterruptedException if the current thread is interrupted
@@ -416,6 +418,8 @@ public class StampedLock implements java.io.Serializable {
      * Behavior under timeout and interruption matches that specified
      * for method {@link Lock#tryLock(long,TimeUnit)}.
      *
+     * @param time the maximum time to wait for the lock
+     * @param unit the time unit of the {@code time} argument
      * @return a stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available
      * @throws InterruptedException if the current thread is interrupted
@@ -481,6 +485,7 @@ public class StampedLock implements java.io.Serializable {
      * obtained from {@link #tryOptimisticRead} or a locking method
      * for this lock has no defined effect or result.
      *
+     * @param stamp a stamp
      * @return true if the lock has not been exclusively acquired
      * since issuance of the given stamp; else false
      */

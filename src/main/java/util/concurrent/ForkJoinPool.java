@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -75,6 +76,7 @@ import java.util.concurrent.TimeUnit;
  * there is little difference among choice of methods.
  *
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Summary of task execution methods</caption>
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER> <b>Call from non-fork/join clients</b></td>
@@ -98,15 +100,18 @@ import java.util.concurrent.TimeUnit;
  * </table>
  *
  * <p>The common pool is by default constructed with default
- * parameters, but these may be controlled by setting three {@link
- * System#getProperty system properties} with prefix {@code
- * java.util.concurrent.ForkJoinPool.common}: {@code parallelism} --
- * an integer greater than zero, {@code threadFactory} -- the class
- * name of a {@link ForkJoinWorkerThreadFactory}, and {@code
- * exceptionHandler} -- the class name of a {@link
- * java.lang.Thread.UncaughtExceptionHandler
- * Thread.UncaughtExceptionHandler}. Upon any error in establishing
- * these settings, default parameters are used.
+ * parameters, but these may be controlled by setting three
+ * {@linkplain System#getProperty system properties} with prefix
+ * {@code "java.util.concurrent.ForkJoinPool.common."}:
+ * {@code parallelism} -- a non-negative integer,
+ * {@code threadFactory} -- the class name of a
+ * {@link ForkJoinWorkerThreadFactory}, and
+ * {@code exceptionHandler} --
+ * the class name of a {@link UncaughtExceptionHandler}.
+ * Upon any error in establishing these settings, default parameters
+ * are used. It is possible to disable or limit the use of threads in
+ * the common pool by setting the parallelism property to zero, and/or
+ * using a factory that may return {@code null}.
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
@@ -1048,7 +1053,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     static final ForkJoinPool common;
 
     /**
-     * Common pool parallelism. Must equal common.parallelism.
+     * Common pool parallelism. To allow simpler use and management
+     * when common pool threads are disabled, we allow the underlying
+     * common.config field to be zero, but in that case still report
+     * parallelism as 1 to reflect resulting caller-runs mechanics.
      */
     static final int commonParallelism;
 
@@ -1210,7 +1218,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     final int config;                          // mode and parallelism level
     WorkQueue[] workQueues;                    // main registry
     final ForkJoinWorkerThreadFactory factory;
-    final Thread.UncaughtExceptionHandler ueh; // per-worker UEH
+    final UncaughtExceptionHandler ueh;        // per-worker UEH
     final String workerNamePrefix;             // to create worker name string
 
     volatile Object pad10, pad11, pad12, pad13, pad14, pad15, pad16, pad17;
@@ -1304,7 +1312,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @return the worker's queue
      */
     final WorkQueue registerWorker(ForkJoinWorkerThread wt) {
-        Thread.UncaughtExceptionHandler handler; WorkQueue[] ws; int s, ps;
+        UncaughtExceptionHandler handler; WorkQueue[] ws; int s, ps;
         wt.setDaemon(true);
         if ((handler = ueh) != null)
             wt.setUncaughtExceptionHandler(handler);
@@ -2142,7 +2150,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * producing extra tasks amortizes the uncertainty of progress and
      * diffusion assumptions.
      *
-     * So, users will want to use values larger, but not much larger
+     * So, users will want to use values larger (but not much larger)
      * than 1 to both smooth over transient shortages and hedge
      * against uneven progress; as traded off against the cost of
      * extra task overhead. We leave the user to pick a threshold
@@ -2356,9 +2364,10 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if (task != null)
                     task.doExec();
                 if (root.status < 0 ||
-                    (u = (int)(ctl >>> 32)) >= 0 || (u >> UAC_SHIFT) >= 0)
+                    (config != 0 &&
+                     ((u = (int)(ctl >>> 32)) >= 0 || (u >> UAC_SHIFT) >= 0)))
                     break;
-                if (task == null) {
+               if (task == null) {
                     helpSignal(root, q.poolIndex);
                     if (root.status >= 0)
                         helpComplete(root, SHARED_QUEUE);
@@ -2471,7 +2480,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public ForkJoinPool(int parallelism,
                         ForkJoinWorkerThreadFactory factory,
-                        Thread.UncaughtExceptionHandler handler,
+                        UncaughtExceptionHandler handler,
                         boolean asyncMode) {
         this(checkParallelism(parallelism),
              checkFactory(factory),
@@ -2501,7 +2510,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private ForkJoinPool(int parallelism,
                          ForkJoinWorkerThreadFactory factory,
-                         Thread.UncaughtExceptionHandler handler,
+                         UncaughtExceptionHandler handler,
                          boolean asyncMode,
                          String workerNamePrefix) {
         this.workerNamePrefix = workerNamePrefix;
@@ -2519,8 +2528,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * ongoing processing are automatically terminated upon program
      * {@link System#exit}.  Any program that relies on asynchronous
      * task processing to complete before program termination should
-     * invoke {@code commonPool().}{@link #awaitQuiescence}, before
-     * exit.
+     * invoke {@code commonPool().}{@link #awaitQuiescence awaitQuiescence},
+     * before exit.
      *
      * @return the common pool instance
      * @since 1.8
@@ -2685,7 +2694,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @return the handler, or {@code null} if none
      */
-    public Thread.UncaughtExceptionHandler getUncaughtExceptionHandler() {
+    public UncaughtExceptionHandler getUncaughtExceptionHandler() {
         return ueh;
     }
 
@@ -2695,7 +2704,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @return the targeted parallelism level of this pool
      */
     public int getParallelism() {
-        return config & SMASK;
+        int par = (config & SMASK);
+        return (par > 0) ? par : 1;
     }
 
     /**
@@ -3047,7 +3057,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * is interrupted, whichever happens first. Because the {@link
      * #commonPool()} never terminates until program shutdown, when
      * applied to the common pool, this method is equivalent to {@link
-     * #awaitQuiescence} but always returns {@code false}.
+     * #awaitQuiescence(long, TimeUnit)} but always returns {@code false}.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
@@ -3146,9 +3156,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      * not necessary. Method {@code block} blocks the current thread
      * if necessary (perhaps internally invoking {@code isReleasable}
      * before actually blocking). These actions are performed by any
-     * thread invoking {@link ForkJoinPool#managedBlock}.  The
-     * unusual methods in this API accommodate synchronizers that may,
-     * but don't usually, block for long periods. Similarly, they
+     * thread invoking {@link ForkJoinPool#managedBlock(ManagedBlocker)}.
+     * The unusual methods in this API accommodate synchronizers that
+     * may, but don't usually, block for long periods. Similarly, they
      * allow more efficient internal handling of cases in which
      * additional workers may be, but usually are not, needed to
      * ensure sufficient parallelism.  Toward this end,
@@ -3326,7 +3336,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         common = java.security.AccessController.doPrivileged
             (new java.security.PrivilegedAction<ForkJoinPool>() {
                 public ForkJoinPool run() { return makeCommonPool(); }});
-        commonParallelism = common.config; // cannot be async
+        int par = common.config; // report 1 even if threads disabled
+        commonParallelism = par > 0 ? par : 1;
     }
 
     /**
@@ -3334,10 +3345,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      * specified via system properties.
      */
     private static ForkJoinPool makeCommonPool() {
-        int parallelism = 0;
+        int parallelism = -1;
         ForkJoinWorkerThreadFactory factory
             = defaultForkJoinWorkerThreadFactory;
-        Thread.UncaughtExceptionHandler handler = null;
+        UncaughtExceptionHandler handler = null;
         try {  // ignore exceptions in accesing/parsing properties
             String pp = System.getProperty
                 ("java.util.concurrent.ForkJoinPool.common.parallelism");
@@ -3351,16 +3362,15 @@ public class ForkJoinPool extends AbstractExecutorService {
                 factory = ((ForkJoinWorkerThreadFactory)ClassLoader.
                            getSystemClassLoader().loadClass(fp).newInstance());
             if (hp != null)
-                handler = ((Thread.UncaughtExceptionHandler)ClassLoader.
+                handler = ((UncaughtExceptionHandler)ClassLoader.
                            getSystemClassLoader().loadClass(hp).newInstance());
         } catch (Exception ignore) {
         }
 
-        if (parallelism <= 0)
+        if (parallelism < 0)
             parallelism = Runtime.getRuntime().availableProcessors();
         if (parallelism > MAX_CAP)
             parallelism = MAX_CAP;
-
         return new ForkJoinPool(parallelism, factory, handler, false,
                                 "ForkJoinPool.commonPool-worker-");
     }

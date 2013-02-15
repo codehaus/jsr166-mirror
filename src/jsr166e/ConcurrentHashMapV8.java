@@ -4715,7 +4715,7 @@ public class ConcurrentHashMapV8<K, V>
      * A view of a ConcurrentHashMapV8 as a {@link Set} of keys, in
      * which additions may optionally be enabled by mapping to a
      * common value.  This class cannot be directly instantiated. See
-     * {@link #keySet}, {@link #keySet(Object)}, {@link #newKeySet()},
+     * {@link #keySet()}, {@link #keySet(Object)}, {@link #newKeySet()},
      * {@link #newKeySet(int)}.
      */
     public static class KeySetView<K,V> extends CHMView<K,V>
@@ -4756,8 +4756,6 @@ public class ConcurrentHashMapV8<K, V>
             V v;
             if ((v = value) == null)
                 throw new UnsupportedOperationException();
-            if (e == null)
-                throw new NullPointerException();
             return map.internalPut(e, v, true) == null;
         }
         public boolean addAll(Collection<? extends K> c) {
@@ -4766,8 +4764,6 @@ public class ConcurrentHashMapV8<K, V>
             if ((v = value) == null)
                 throw new UnsupportedOperationException();
             for (K e : c) {
-                if (e == null)
-                    throw new NullPointerException();
                 if (map.internalPut(e, v, true) == null)
                     added = true;
             }
@@ -4784,7 +4780,7 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * A view of a ConcurrentHashMapV8 as a {@link Collection} of
      * values, in which additions are disabled. This class cannot be
-     * directly instantiated. See {@link #values},
+     * directly instantiated. See {@link #values()}.
      *
      * <p>The view's {@code iterator} is a "weakly consistent" iterator
      * that will never throw {@link ConcurrentModificationException},
@@ -4834,7 +4830,7 @@ public class ConcurrentHashMapV8<K, V>
     /**
      * A view of a ConcurrentHashMapV8 as a {@link Set} of (key, value)
      * entries.  This class cannot be directly instantiated. See
-     * {@link #entrySet}.
+     * {@link #entrySet()}.
      */
     public static final class EntrySetView<K,V> extends CHMView<K,V>
         implements Set<Map.Entry<K,V>> {
@@ -4870,11 +4866,7 @@ public class ConcurrentHashMapV8<K, V>
         }
 
         public final boolean add(Entry<K,V> e) {
-            K key = e.getKey();
-            V value = e.getValue();
-            if (key == null || value == null)
-                throw new NullPointerException();
-            return map.internalPut(key, value, false) == null;
+            return map.internalPut(e.getKey(), e.getValue(), false) == null;
         }
         public final boolean addAll(Collection<? extends Entry<K,V>> c) {
             boolean added = false;

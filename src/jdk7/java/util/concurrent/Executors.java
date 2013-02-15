@@ -86,7 +86,7 @@ public class Executors {
 
     /**
      * Creates a work-stealing thread pool using all
-     * (@link Runtime#availableProcessors available processors}
+     * {@link Runtime#availableProcessors available processors}
      * as its target parallelism level.
      * @return the newly created thread pool
      * @since 1.8

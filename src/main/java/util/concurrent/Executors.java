@@ -86,7 +86,7 @@ public class Executors {
 
     /**
      * Creates a work-stealing thread pool using all
-     * (@link Runtime#availableProcessors available processors}
+     * {@link Runtime#availableProcessors available processors}
      * as its target parallelism level.
      * @return the newly created thread pool
      * @since 1.8
@@ -332,9 +332,10 @@ public class Executors {
      * be the same as the thread invoking this
      * {@code privilegedThreadFactory} method.  A new
      * {@code privilegedThreadFactory} can be created within an
-     * {@link AccessController#doPrivileged} action setting the
-     * current thread's access control context to create threads with
-     * the selected permission settings holding within that action.
+     * {@link AccessController#doPrivileged AccessController.doPrivileged}
+     * action setting the current thread's access control context to
+     * create threads with the selected permission settings holding
+     * within that action.
      *
      * <p>Note that while tasks running within such threads will have
      * the same access control and class loader settings as the
@@ -343,12 +344,12 @@ public class Executors {
      * java.lang.InheritableThreadLocal} values. If necessary,
      * particular values of thread locals can be set or reset before
      * any task runs in {@link ThreadPoolExecutor} subclasses using
-     * {@link ThreadPoolExecutor#beforeExecute}. Also, if it is
-     * necessary to initialize worker threads to have the same
-     * InheritableThreadLocal settings as some other designated
-     * thread, you can create a custom ThreadFactory in which that
-     * thread waits for and services requests to create others that
-     * will inherit its values.
+     * {@link ThreadPoolExecutor#beforeExecute(Thread, Runnable)}.
+     * Also, if it is necessary to initialize worker threads to have
+     * the same InheritableThreadLocal settings as some other
+     * designated thread, you can create a custom ThreadFactory in
+     * which that thread waits for and services requests to create
+     * others that will inherit its values.
      *
      * @return a thread factory
      * @throws AccessControlException if the current access control
@@ -418,13 +419,13 @@ public class Executors {
     }
 
     /**
-     * Returns a {@link Callable} object that will, when
-     * called, execute the given {@code callable} under the current
-     * access control context. This method should normally be
-     * invoked within an {@link AccessController#doPrivileged} action
-     * to create callables that will, if possible, execute under the
-     * selected permission settings holding within that action; or if
-     * not possible, throw an associated {@link
+     * Returns a {@link Callable} object that will, when called,
+     * execute the given {@code callable} under the current access
+     * control context. This method should normally be invoked within
+     * an {@link AccessController#doPrivileged AccessController.doPrivileged}
+     * action to create callables that will, if possible, execute
+     * under the selected permission settings holding within that
+     * action; or if not possible, throw an associated {@link
      * AccessControlException}.
      * @param callable the underlying task
      * @return a callable object
@@ -437,17 +438,18 @@ public class Executors {
     }
 
     /**
-     * Returns a {@link Callable} object that will, when
-     * called, execute the given {@code callable} under the current
-     * access control context, with the current context class loader
-     * as the context class loader. This method should normally be
-     * invoked within an {@link AccessController#doPrivileged} action
-     * to create callables that will, if possible, execute under the
-     * selected permission settings holding within that action; or if
-     * not possible, throw an associated {@link
+     * Returns a {@link Callable} object that will, when called,
+     * execute the given {@code callable} under the current access
+     * control context, with the current context class loader as the
+     * context class loader. This method should normally be invoked
+     * within an
+     * {@link AccessController#doPrivileged AccessController.doPrivileged}
+     * action to create callables that will, if possible, execute
+     * under the selected permission settings holding within that
+     * action; or if not possible, throw an associated {@link
      * AccessControlException}.
-     * @param callable the underlying task
      *
+     * @param callable the underlying task
      * @return a callable object
      * @throws NullPointerException if callable null
      * @throws AccessControlException if the current access control

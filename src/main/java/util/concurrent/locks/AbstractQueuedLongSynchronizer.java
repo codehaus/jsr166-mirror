@@ -1937,7 +1937,7 @@ public abstract class AbstractQueuedLongSynchronizer
 
         /**
          * Queries whether any threads are waiting on this condition.
-         * Implements {@link AbstractQueuedLongSynchronizer#hasWaiters}.
+         * Implements {@link AbstractQueuedLongSynchronizer#hasWaiters(ConditionObject)}.
          *
          * @return {@code true} if there are any waiting threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
@@ -1956,7 +1956,7 @@ public abstract class AbstractQueuedLongSynchronizer
         /**
          * Returns an estimate of the number of threads waiting on
          * this condition.
-         * Implements {@link AbstractQueuedLongSynchronizer#getWaitQueueLength}.
+         * Implements {@link AbstractQueuedLongSynchronizer#getWaitQueueLength(ConditionObject)}.
          *
          * @return the estimated number of waiting threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
@@ -1976,7 +1976,7 @@ public abstract class AbstractQueuedLongSynchronizer
         /**
          * Returns a collection containing those threads that may be
          * waiting on this Condition.
-         * Implements {@link AbstractQueuedLongSynchronizer#getWaitingThreads}.
+         * Implements {@link AbstractQueuedLongSynchronizer#getWaitingThreads(ConditionObject)}.
          *
          * @return the collection of threads
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}

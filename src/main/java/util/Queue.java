@@ -20,6 +20,7 @@ package java.util;
  *
  * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>Summary of Queue methods</caption>
  *  <tr>
  *    <td></td>
  *    <td ALIGN=CENTER><em>Throws exception</em></td>

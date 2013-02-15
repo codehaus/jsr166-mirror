@@ -57,7 +57,7 @@ import java.util.function.Consumer;
  * elements.
  *
  * <p>A {@link Set} projection of a ConcurrentSkipListMap may be
- * created (using {@link #newKeySet()}}), or viewed (using {@link
+ * created (using {@link #newKeySet()}), or viewed (using {@link
  * #keySet(Object)} when only keys are of interest, and the mapped
  * values are (perhaps transiently) not used or all take the same
  * mapping value.

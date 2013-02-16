@@ -2729,7 +2729,6 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param fn the function to use to compute the value of the
      * returned CompletableFuture
-
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<U> handle

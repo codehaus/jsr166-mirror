@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * as a group with respect to isolation from other groups. A default
  * annotation without a tag indicates contention with all other
  * fields, including other {@code @Contended} ones.
-
+ *
  * <p>When the annotation is used at the class level, all unannotated
  * fields of the object are considered to be in the same default
  * group, separate from any fields that carry their own (possibly

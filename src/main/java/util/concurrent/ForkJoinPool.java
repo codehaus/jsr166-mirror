@@ -101,13 +101,15 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The common pool is by default constructed with default
  * parameters, but these may be controlled by setting three
- * {@linkplain System#getProperty system properties} with prefix
- * {@code "java.util.concurrent.ForkJoinPool.common."}:
- * {@code parallelism} -- a non-negative integer,
- * {@code threadFactory} -- the class name of a
- * {@link ForkJoinWorkerThreadFactory}, and
- * {@code exceptionHandler} --
- * the class name of a {@link UncaughtExceptionHandler}.
+ * {@linkplain System#getProperty system properties}:
+ * <ul>
+ * <li>{@code java.util.concurrent.ForkJoinPool.common.parallelism}
+ * - the parallelism level, a non-negative integer
+ * <li>{@code java.util.concurrent.ForkJoinPool.common.threadFactory}
+ * - the class name of a {@link ForkJoinWorkerThreadFactory}
+ * <li>{@code java.util.concurrent.ForkJoinPool.common.exceptionHandler}
+ * - the class name of a {@link UncaughtExceptionHandler}
+ * </ul>
  * Upon any error in establishing these settings, default parameters
  * are used. It is possible to disable or limit the use of threads in
  * the common pool by setting the parallelism property to zero, and/or

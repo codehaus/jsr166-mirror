@@ -111,8 +111,6 @@ public class MatrixMultiply {
      *  A21 | A22     B21 | B21     A21*B11 | A21*B21     A22*B21 | A22*B22
      * </pre>
      */
-
-
     static class Multiplier extends RecursiveAction {
         final float[][] A;   // Matrix A
         final int aRow;      // first row    of current quadrant of A

@@ -18,7 +18,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         return new TestSuite(ThreadLocalRandomTest.class);
     }
 
-    /**
+    /*
      * Testing coverage notes:
      *
      * We don't test randomness properties, but only that repeated

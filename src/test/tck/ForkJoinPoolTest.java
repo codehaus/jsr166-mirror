@@ -39,7 +39,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         return new TestSuite(ForkJoinPoolTest.class);
     }
 
-    /**
+    /*
      * Testing coverage notes:
      *
      * 1. shutdown and related methods are tested via super.joinPool.

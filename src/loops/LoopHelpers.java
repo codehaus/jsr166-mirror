@@ -1,10 +1,9 @@
-/**
- * Misc utilities in JSR166 performance tests
- */
-
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
+/**
+ * Misc utilities in JSR166 performance tests
+ */
 class LoopHelpers {
 
     static final SimpleRandom staticRNG = new SimpleRandom();

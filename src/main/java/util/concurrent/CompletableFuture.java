@@ -47,20 +47,28 @@ import java.util.concurrent.locks.LockSupport;
  * these methods.  There are no guarantees about the order of
  * processing completions unless constrained by these methods.
  *
+ * <p>Since (unlike {@link FutureTask}) this class has no direct
+ * control over the computation that causes it to be completed,
+ * cancellation is treated as just another form of exceptional completion.
+ * Method {@link #cancel cancel} has the same effect as
+ * {@code completeExceptionally(new CancellationException())}.
+ *
  * <p>Upon exceptional completion (including cancellation), or when a
- * completion entails computation, and it terminates abruptly with an
- * (unchecked) exception or error, then further completions act as
- * {@code completeExceptionally} with a {@link CompletionException}
- * holding that exception as its cause.  If a CompletableFuture
- * completes exceptionally, and is not followed by a {@link
- * #exceptionally} or {@link #handle} completion, then all of its
- * dependents (and their dependents) also complete exceptionally with
- * CompletionExceptions holding the ultimate cause.  In case of a
- * CompletionException, methods {@link #get()} and {@link #get(long,
- * TimeUnit)} throw an {@link ExecutionException} with the same cause
- * as would be held in the corresponding CompletionException. However,
- * in these cases, methods {@link #join()} and {@link #getNow} throw
- * the CompletionException, which simplifies usage.
+ * completion entails an additional computation which terminates
+ * abruptly with an (unchecked) exception or error, then all of their
+ * dependent completions (and their dependents in turn) generally act
+ * as {@code completeExceptionally} with a {@link CompletionException}
+ * holding that exception as its cause.  However, the {@link
+ * #exceptionally exceptionally} and {@link #handle handle}
+ * completions <em>are</em> able to handle exceptional completions of
+ * the CompletableFutures they depend on.
+ *
+ * <p>In case of exceptional completion with a CompletionException,
+ * methods {@link #get()} and {@link #get(long, TimeUnit)} throw an
+ * {@link ExecutionException} with the same cause as held in the
+ * corresponding CompletionException.  However, in these cases,
+ * methods {@link #join()} and {@link #getNow} throw the
+ * CompletionException, which simplifies usage.
  *
  * <p>CompletableFutures themselves do not execute asynchronously.
  * However, the {@code async} methods provide commonly useful ways to
@@ -106,10 +114,10 @@ public class CompletableFuture<T> implements Future<T> {
      * extends AtomicInteger so callers can claim the action via
      * compareAndSet(0, 1).  The Completion.run methods are all
      * written a boringly similar uniform way (that sometimes includes
-     * unnecessary-looking checks, kept to maintain uniformity). There
-     * are enough dimensions upon which they differ that attempts to
-     * factor commonalities while maintaining efficiency require more
-     * lines of code than they would save.
+     * unnecessary-looking checks, kept to maintain uniformity).
+     * There are enough dimensions upon which they differ that
+     * attempts to factor commonalities while maintaining efficiency
+     * require more lines of code than they would save.
      *
      * 4. The exported then/and/or methods do support a bit of
      * factoring (see doThenApply etc). They must cope with the
@@ -1484,8 +1492,8 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @return the result value
      * @throws CancellationException if the computation was cancelled
-     * @throws CompletionException if a completion computation threw
-     * an exception
+     * @throws CompletionException if this future completed
+     * exceptionally or a completion computation threw an exception
      */
     public T join() {
         Object r; Throwable ex;
@@ -1511,8 +1519,8 @@ public class CompletableFuture<T> implements Future<T> {
      * @param valueIfAbsent the value to return if not completed
      * @return the result value, if completed, else the given valueIfAbsent
      * @throws CancellationException if the computation was cancelled
-     * @throws CompletionException if a completion computation threw
-     * an exception
+     * @throws CompletionException if this future completed
+     * exceptionally or a completion computation threw an exception
      */
     public T getNow(T valueIfAbsent) {
         Object r; Throwable ex;

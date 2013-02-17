@@ -530,8 +530,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             final int count = this.count;
             Object[] a = new Object[count];
-            for (int i = takeIndex, k = 0; k < count; i = inc(i), k++)
-                a[k] = items[i];
+            int n = items.length - takeIndex;
+            if (count <= n) {
+                System.arraycopy(items, takeIndex, a, 0, count);
+            } else {
+                System.arraycopy(items, takeIndex, a, 0, n);
+                System.arraycopy(items, 0, a, n, count - n);
+            }
             return a;
         } finally {
             lock.unlock();
@@ -584,8 +589,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (len < count)
                 a = (T[])java.lang.reflect.Array.newInstance(
                     a.getClass().getComponentType(), count);
-            for (int i = takeIndex, k = 0; k < count; i = inc(i), k++)
-                a[k] = (T) items[i];
+            int n = items.length - takeIndex;
+            if (count <= n)
+                System.arraycopy(items, takeIndex, a, 0, count);
+            else {
+                System.arraycopy(items, takeIndex, a, 0, n);
+                System.arraycopy(items, 0, a, n, count - n);
+            }
             if (len > count)
                 a[count] = null;
             return a;

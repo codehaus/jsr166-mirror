@@ -15,20 +15,21 @@
  */
 
 package java.util.concurrent;
+import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.AbstractList;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.RandomAccess;
-import java.util.NoSuchElementException;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.RandomAccess;
 import java.util.Spliterator;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
-import java.util.function.Consumer;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A thread-safe variant of {@link java.util.ArrayList} in which all mutative
@@ -982,19 +983,17 @@ public class CopyOnWriteArrayList<E>
         return new COWIterator<E>(elements, index);
     }
 
+    Spliterator<E> spliterator() {
+        return Collections.arraySnapshotSpliterator
+            (getArray(), Spliterator.IMMUTABLE | Spliterator.ORDERED);
+    }
+
     public Stream<E> stream() {
-        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
-        Object[] a = getArray();
-        int n = a.length;
-        return Streams.stream
-            (() -> new COWSpliterator<E>(a, 0, n), flags);
+        return Streams.stream(spliterator());
+
     }
     public Stream<E> parallelStream() {
-        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
-        Object[] a = getArray();
-        int n = a.length;
-        return Streams.parallelStream
-            (() -> new COWSpliterator<E>(a, 0, n), flags);
+        return Streams.parallelStream(spliterator());
     }
 
     static final class COWIterator<E> implements ListIterator<E> {
@@ -1268,8 +1267,7 @@ public class CopyOnWriteArrayList<E>
             }
         }
 
-        public Stream<E> stream() {
-            int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
+        Spliterator<E> spliterator() {
             int lo = offset;
             int hi = offset + size;
             Object[] a = expectedArray;
@@ -1277,25 +1275,18 @@ public class CopyOnWriteArrayList<E>
                 throw new ConcurrentModificationException();
             if (lo < 0 || hi > a.length)
                 throw new IndexOutOfBoundsException();
-            return Streams.stream
-                (() -> new COWSpliterator<E>(a, lo, hi), flags);
+            return Collections.arraySnapshotSpliterator
+                (a, lo, hi, Spliterator.IMMUTABLE | Spliterator.ORDERED);
+        }
+
+        public Stream<E> stream() {
+            return Streams.stream(spliterator());
         }
 
         public Stream<E> parallelStream() {
-            int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
-            int lo = offset;
-            int hi = offset + size;
-            Object[] a = expectedArray;
-            if (l.getArray() != a)
-                throw new ConcurrentModificationException();
-            if (lo < 0 || hi > a.length)
-                throw new IndexOutOfBoundsException();
-            return Streams.parallelStream
-                (() -> new COWSpliterator<E>(a, lo, hi), flags);
+            return Streams.parallelStream(spliterator());
         }
-
     }
-
 
     private static class COWSubListIterator<E> implements ListIterator<E> {
         private final ListIterator<E> it;
@@ -1350,52 +1341,6 @@ public class CopyOnWriteArrayList<E>
             throw new UnsupportedOperationException();
         }
     }
-
-    /** Index-based split-by-two Spliterator */
-    static final class COWSpliterator<E> implements Spliterator<E> {
-        private final Object[] array;
-        private int index;        // current index, modified on advance/split
-        private final int fence;  // one past last index
-
-        /** Create new spliterator covering the given array and range */
-        COWSpliterator(Object[] array, int origin, int fence) {
-            this.array = array; this.index = origin; this.fence = fence;
-        }
-
-        public COWSpliterator<E> trySplit() {
-            int lo = index, mid = (lo + fence) >>> 1;
-            return (lo >= mid) ? null :
-                new COWSpliterator<E>(array, lo, index = mid);
-        }
-
-        public void forEach(Consumer<? super E> block) {
-            Object[] a; int i, hi; // hoist accesses and checks from loop
-            if (block == null)
-                throw new NullPointerException();
-            if ((a = array).length >= (hi = fence) &&
-                (i = index) >= 0 && i < hi) {
-                index = hi;
-                do {
-                    @SuppressWarnings("unchecked") E e = (E) a[i];
-                    block.accept(e);
-                } while (++i < hi);
-            }
-        }
-
-        public boolean tryAdvance(Consumer<? super E> block) {
-            if (index >= 0 && index < fence) {
-                @SuppressWarnings("unchecked") E e = (E) array[index++];
-                block.accept(e);
-                return true;
-            }
-            return false;
-        }
-
-        public long estimateSize() { return (long)(fence - index); }
-        public boolean hasExactSize() { return true; }
-        public boolean hasExactSplits() { return true; }
-    }
-
 
     // Support for resetting lock while deserializing
     private void resetLock() {

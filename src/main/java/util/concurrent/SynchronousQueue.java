@@ -9,6 +9,10 @@ package java.util.concurrent;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Consumer;
 
 /**
  * A {@linkplain BlockingQueue blocking queue} in which each insert
@@ -1046,6 +1050,18 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         public boolean hasNext() { return false; }
         public E next() { throw new NoSuchElementException(); }
         public void remove() { throw new IllegalStateException(); }
+    }
+
+    Spliterator<E> spliterator() {
+        return Streams.emptySpliterator();
+    }
+    
+    public Stream<E> stream() {
+        return Streams.stream(spliterator());
+    }
+
+    public Stream<E> parallelStream() {
+        return Streams.parallelStream(spliterator());
     }
 
     /**

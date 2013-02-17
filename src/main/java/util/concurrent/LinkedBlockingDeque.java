@@ -8,10 +8,15 @@ package java.util.concurrent;
 
 import java.util.AbstractQueue;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Consumer;
 
 /**
  * An optionally-bounded {@linkplain BlockingDeque blocking deque} based on
@@ -1114,12 +1119,147 @@ public class LinkedBlockingDeque<E>
     private class Itr extends AbstractItr {
         Node<E> firstNode() { return first; }
         Node<E> nextNode(Node<E> n) { return n.next; }
+        // minimal, unsplittable Spliterator implementation
+        public boolean tryAdvance(Consumer<? super E> action) {
+            if (hasNext()) {
+                action.accept(next());
+                return true;
+            }
+            return false;
+        }
+        public void forEach(Consumer<? super E> action) {
+            while (hasNext())
+                action.accept(next());
+        }
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.CONCURRENT;
+        }
     }
 
     /** Descending iterator */
     private class DescendingItr extends AbstractItr {
         Node<E> firstNode() { return last; }
         Node<E> nextNode(Node<E> n) { return n.prev; }
+    }
+
+    static final class LBDSpliterator<E> implements Spliterator<E> {
+        // Similar idea to ConcurrentLinkedQueue spliterator
+        static final int MAX_BATCH = 1 << 11;  // saturate batch size
+        final LinkedBlockingDeque<E> queue;
+        Node<E> current;    // current node; null until initialized
+        int batch;          // batch size for splits
+        boolean exhausted;  // true when no more nodes
+        long est;           // size estimate
+        LBDSpliterator(LinkedBlockingDeque<E> queue) { 
+            this.queue = queue;
+            this.est = queue.size();
+        }
+
+        public long estimateSize() { return est; }
+
+        public Spliterator<E> trySplit() {
+            int n;
+            final LinkedBlockingDeque<E> q = this.queue;
+            final ReentrantLock lock = q.lock;
+            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH) {
+                Object[] a = new Object[batch = n];
+                int i = 0;
+                Node<E> p = current;
+                lock.lock();
+                try {
+                    if (p != null || (p = q.first) != null) {
+                        do {
+                            if ((a[i] = p.item) != null)
+                                ++i;
+                        } while ((p = p.next) != null && i < n);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+                if ((current = p) == null) {
+                    est = 0L;
+                    exhausted = true;
+                }
+                else if ((est -= i) <= 0L)
+                    est = 1L;
+                return Collections.arraySnapshotSpliterator
+                    (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                     Spliterator.CONCURRENT);
+            }
+            return null;
+        }
+
+        public void forEach(Consumer<? super E> action) {
+            if (action == null) throw new NullPointerException();
+            final LinkedBlockingDeque<E> q = this.queue;
+            final ReentrantLock lock = q.lock;
+            if (!exhausted) {
+                exhausted = true;
+                Node<E> p = current;
+                do {
+                    E e = null;
+                    lock.lock();
+                    try {
+                        if (p == null)
+                            p = q.first;
+                        while (p != null) {
+                            e = p.item;
+                            p = p.next;
+                            if (e != null)
+                                break;
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
+                    if (e != null)
+                        action.accept(e);
+                } while (p != null);
+            }
+        }
+
+        public boolean tryAdvance(Consumer<? super E> action) {
+            if (action == null) throw new NullPointerException();
+            final LinkedBlockingDeque<E> q = this.queue;
+            final ReentrantLock lock = q.lock;
+            if (!exhausted) {
+                E e = null;
+                lock.lock();
+                try {
+                    if (current == null)
+                        current = q.first;
+                    while (current != null) {
+                        e = current.item;
+                        current = current.next;
+                        if (e != null)
+                            break;
+                    }
+                } finally {
+                    lock.unlock();
+                }
+                if (e != null) {
+                    action.accept(e);
+                    return true;
+                }
+                exhausted = true;
+            }
+            return false;
+        }
+
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL |
+                Spliterator.CONCURRENT;
+        }
+    }
+
+    Spliterator<E> spliterator() {
+        return new LBDSpliterator<E>(this);
+    }
+    public Stream<E> stream() {
+        return Streams.stream(spliterator());
+    }
+
+    public Stream<E> parallelStream() {
+        return Streams.parallelStream(spliterator());
     }
 
     /**

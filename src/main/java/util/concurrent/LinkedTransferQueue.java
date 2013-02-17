@@ -7,12 +7,18 @@
 package java.util.concurrent;
 
 import java.util.AbstractQueue;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Consumer;
 
 /**
  * An unbounded {@link TransferQueue} based on linked nodes.
@@ -748,6 +754,24 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Version of firstOfMode used by Spliterator
+     */
+    final Node firstDataNode() {
+        for (Node p = head; p != null;) {
+            Object item = p.item;
+            if (p.isData) {
+                if (item != null && item != p)
+                    return p;
+            }
+            else if (item == null)
+                break;
+            if (p == (p = p.next))
+                p = head;
+        }
+        return null;
+    }
+
+    /**
      * Returns the item in the first unmatched node with isData; or
      * null if none.  Used by peek.
      */
@@ -879,6 +903,107 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (lastRet.tryMatchData())
                 unsplice(lastPred, lastRet);
         }
+    }
+    
+    // Very similar to ConcurrentLinkedQueue spliterator
+    static final class LTQSpliterator<E> implements Spliterator<E> {
+        static final int MAX_BATCH = 1 << 10;  // saturate batch size
+        final LinkedTransferQueue<E> queue;
+        Node current;    // current node; null until initialized
+        int batch;          // batch size for splits
+        boolean exhausted;  // true when no more nodes
+        LTQSpliterator(LinkedTransferQueue<E> queue) { 
+            this.queue = queue;
+        }
+
+        /*
+         * Split into arrays of arithmetically increasing batch sizes,
+         * giving up at MAX_BATCH.  Treat the result as a
+         * CopyOnWriteArrayList array snapshot.  This will only
+         * improve parallel performance if per-element forEach actions
+         * are more costly than transfering them into an array. If
+         * not, we limit slowdowns by eventually returning null split.
+         */
+        public Spliterator<E> trySplit() {
+            Node p; int n;
+            final LinkedTransferQueue<E> q = this.queue;
+            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
+                ((p = current) != null || (p = q.firstDataNode()) != null)) {
+                Object[] a = new Object[batch = n];
+                int i = 0;
+                do {
+                    if ((a[i] = p.item) != null)
+                        ++i;
+                    if (p == (p = p.next)) 
+                        p = q.firstDataNode();
+                } while (p != null && i < n);
+                if ((current = p) == null)
+                    exhausted = true;
+                return Collections.arraySnapshotSpliterator
+                    (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                     Spliterator.CONCURRENT);
+            }
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        public void forEach(Consumer<? super E> action) {
+            Node p;
+            if (action == null) throw new NullPointerException();
+            final LinkedTransferQueue<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.firstDataNode()) != null)) {
+                exhausted = true;
+                do {
+                    Object e = p.item;
+                    if (p == (p = p.next)) 
+                        p = q.firstDataNode();
+                    if (e != null)
+                        action.accept((E)e);
+                } while (p != null);
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        public boolean tryAdvance(Consumer<? super E> action) {
+            Node p;
+            if (action == null) throw new NullPointerException();
+            final LinkedTransferQueue<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.firstDataNode()) != null)) {
+                Object e;
+                do {
+                    e = p.item;
+                    if (p == (p = p.next)) 
+                        p = q.firstDataNode();
+                } while (e == null && p != null);
+                if ((current = p) == null)
+                    exhausted = true;
+                if (e != null) {
+                    action.accept((E)e);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL |
+                Spliterator.CONCURRENT;
+        }
+    }
+
+
+    Spliterator<E> spliterator() {
+        return new LTQSpliterator<E>(this);
+    }
+
+    public Stream<E> stream() {
+        return Streams.stream(spliterator());
+    }
+
+    public Stream<E> parallelStream() {
+        return Streams.parallelStream(spliterator());
     }
 
     /* -------------- Removal methods -------------- */

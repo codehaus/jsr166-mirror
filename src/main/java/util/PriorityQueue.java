@@ -24,10 +24,9 @@
  */
 
 package java.util;
-import java.util.stream.Stream;
-import java.util.Spliterator;
-import java.util.stream.Streams;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
 
 /**
  * An unbounded priority {@linkplain Queue queue} based on a priority heap.
@@ -543,7 +542,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
                     cursor--;
                 else {
                     if (forgetMeNot == null)
-                        forgetMeNot = new ArrayDeque<E>();
+                        forgetMeNot = new ArrayDeque<>();
                     forgetMeNot.add(moved);
                 }
             } else if (lastRetElt != null) {
@@ -784,66 +783,91 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         heapify();
     }
 
-    // wrapping constructor in method avoids transient javac problems
-    final PriorityQueueSpliterator<E> spliterator(int origin, int fence,
-                                                  int expectedModCount) {
-        return new PriorityQueueSpliterator<E>(this, origin, fence,
-                                               expectedModCount);
+    final Spliterator<E> spliterator() {
+        return new PriorityQueueSpliterator<E>(this, 0, -1, 0);
     }
 
     public Stream<E> stream() {
-        int flags = Streams.STREAM_IS_SIZED;
-        return Streams.stream
-            (() -> spliterator(0, size, modCount), flags);
-    }
-    public Stream<E> parallelStream() {
-        int flags = Streams.STREAM_IS_SIZED;
-        return Streams.parallelStream
-            (() -> spliterator(0, size, modCount), flags);
+        return Streams.stream(spliterator());
     }
 
-    /** Index-based split-by-two Spliterator */
+    public Stream<E> parallelStream() {
+        return Streams.parallelStream(spliterator());
+    }
+
     static final class PriorityQueueSpliterator<E> implements Spliterator<E> {
+        /*
+         * This is very similar to ArrayList Spliterator, except for
+         * extra null checks.
+         */
         private final PriorityQueue<E> pq;
-        private int index;           // current index, modified on advance/split
-        private final int fence;     // one past last index
-        private final int expectedModCount; // for comodification checks
+        private int index;            // current index, modified on advance/split
+        private int fence;            // -1 until first use
+        private int expectedModCount; // initialized when fence set
 
         /** Create new spliterator covering the given  range */
         PriorityQueueSpliterator(PriorityQueue<E> pq, int origin, int fence,
                              int expectedModCount) {
-            this.pq = pq; this.index = origin; this.fence = fence;
+            this.pq = pq;
+            this.index = origin;
+            this.fence = fence;
             this.expectedModCount = expectedModCount;
         }
 
+        private int getFence() { // initialize fence to size on first use
+            int hi;
+            if ((hi = fence) < 0) {
+                expectedModCount = pq.modCount;
+                hi = fence = pq.size;
+            }
+            return hi;
+        }
+            
         public PriorityQueueSpliterator<E> trySplit() {
-            int lo = index, mid = (lo + fence) >>> 1;
+            int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
             return (lo >= mid) ? null :
-                new PriorityQueueSpliterator<E>(pq, lo, index = mid,
+                new PriorityQueueSpliterator<E>(pq, lo, index = mid, 
                                                 expectedModCount);
         }
 
-        public void forEach(Consumer<? super E> block) {
-            Object[] a; int i, hi; // hoist accesses and checks from loop
-            if (block == null)
+        @SuppressWarnings("unchecked")
+        public void forEach(Consumer<? super E> action) {
+            int i, hi, mc; // hoist accesses and checks from loop
+            PriorityQueue<E> q; Object[] a;
+            if (action == null)
                 throw new NullPointerException();
-            if ((a = pq.queue).length >= (hi = fence) &&
-                (i = index) >= 0 && i < hi) {
-                index = hi;
-                do {
-                    @SuppressWarnings("unchecked") E e = (E) a[i];
-                    block.accept(e);
-                } while (++i < hi);
-                if (pq.modCount != expectedModCount)
-                    throw new ConcurrentModificationException();
+            if ((q = pq) != null && (a = q.queue) != null) {
+                if ((hi = fence) < 0) {
+                    mc = q.modCount;
+                    hi = q.size;
+                }
+                else
+                    mc = expectedModCount;
+                if ((i = index) >= 0 && (index = hi) <= a.length) {
+                    for (E e;; ++i) {
+                        if (i < hi) {
+                            if ((e = (E) a[i]) == null) // must be CME
+                                break;
+                            action.accept(e);
+                        }
+                        else if (q.modCount != mc)
+                            break;
+                        else
+                            return;
+                    }
+                }
             }
+            throw new ConcurrentModificationException();
         }
 
-        public boolean tryAdvance(Consumer<? super E> block) {
-            if (index >= 0 && index < fence) {
-                @SuppressWarnings("unchecked") E e =
-                    (E)pq.queue[index++];
-                block.accept(e);
+        public boolean tryAdvance(Consumer<? super E> action) {
+            int hi = getFence(), lo = index;
+            if (lo >= 0 && lo < hi) {
+                index = lo + 1;
+                @SuppressWarnings("unchecked") E e = (E)pq.queue[lo];
+                if (e == null)
+                    throw new ConcurrentModificationException();
+                action.accept(e);
                 if (pq.modCount != expectedModCount)
                     throw new ConcurrentModificationException();
                 return true;
@@ -851,8 +875,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             return false;
         }
 
-        public long estimateSize() { return (long)(fence - index); }
-        public boolean hasExactSize() { return true; }
-        public boolean hasExactSplits() { return true; }
+        public long estimateSize() { 
+            return (long) (getFence() - index); 
+        }
+
+        public int characteristics() {
+            return Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL;
+        }
     }
 }

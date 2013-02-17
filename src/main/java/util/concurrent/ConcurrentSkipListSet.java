@@ -5,7 +5,16 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
+import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
@@ -444,30 +453,20 @@ public class ConcurrentSkipListSet<E>
         return new ConcurrentSkipListSet<E>(m.descendingMap());
     }
 
-    public Stream<E> stream() {
-        int flags = Streams.STREAM_IS_DISTINCT |
-            Streams.STREAM_IS_SORTED | Streams.STREAM_IS_ORDERED;
-        int sizedFlags = flags | Streams.STREAM_IS_SIZED;
+    @SuppressWarnings("unchecked")
+    Spliterator<E> spliterator() {
         if (m instanceof ConcurrentSkipListMap)
-            return Streams.stream
-                (() -> ((ConcurrentSkipListMap<E,?>)m).keySpliterator(),
-                 sizedFlags);
+            return ((ConcurrentSkipListMap<E,?>)m).keySpliterator();
         else
-            return Streams.stream
-                (Streams.spliteratorUnknownSize(iterator()), flags);
+            return (Spliterator<E>)((ConcurrentSkipListMap.SubMap<E,?>)m).keyIterator();
     }
 
+    public Stream<E> stream() {
+        return Streams.stream(spliterator());
+    }
+    
     public Stream<E> parallelStream() {
-        int flags = Streams.STREAM_IS_DISTINCT |
-            Streams.STREAM_IS_SORTED | Streams.STREAM_IS_ORDERED;
-        int sizedFlags = flags | Streams.STREAM_IS_SIZED;
-        if (m instanceof ConcurrentSkipListMap)
-            return Streams.parallelStream
-                (() -> ((ConcurrentSkipListMap<E,?>)m).keySpliterator(),
-                 sizedFlags);
-        else
-            return Streams.parallelStream
-                (Streams.spliteratorUnknownSize(iterator()), flags);
+        return Streams.parallelStream(spliterator());
     }
 
     // Support for resetting map in clone

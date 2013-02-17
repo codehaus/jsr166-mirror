@@ -1,14 +1,13 @@
 /*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/publicdomain/zero/1.0/
+ * Written by Josh Bloch of Google Inc. and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/.
  */
 
 package java.util;
-import java.util.Spliterator;
+import java.io.Serializable;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
-import java.util.function.Consumer;
 
 /**
  * Resizable-array implementation of the {@link Deque} interface.  Array
@@ -56,7 +55,7 @@ import java.util.function.Consumer;
  * @param <E> the type of elements held in this collection
  */
 public class ArrayDeque<E> extends AbstractCollection<E>
-                           implements Deque<E>, Cloneable, java.io.Serializable
+                           implements Deque<E>, Cloneable, Serializable
 {
     /**
      * The array in which the elements of the deque are stored.
@@ -847,80 +846,93 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             elements[i] = s.readObject();
     }
 
-    public Stream<E> stream() {
-        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
-        return Streams.stream
-            (() -> new DeqSpliterator<E>(this, head, tail), flags);
-    }
-    public Stream<E> parallelStream() {
-        int flags = Streams.STREAM_IS_ORDERED | Streams.STREAM_IS_SIZED;
-        return Streams.parallelStream
-            (() -> new DeqSpliterator<E>(this, head, tail), flags);
+    Spliterator<E> spliterator() {
+        return new DeqSpliterator<E>(this, -1, -1);
     }
 
+    public Stream<E> stream() {
+        return Streams.stream(spliterator());
+    }
+
+    public Stream<E> parallelStream() {
+        return Streams.parallelStream(spliterator());
+    }
 
     static final class DeqSpliterator<E> implements Spliterator<E> {
         private final ArrayDeque<E> deq;
-        private final int fence;  // initially tail
-        private int index;        // current index, modified on traverse/split
-
+        private int fence;  // -1 until first use
+        private int index;  // current index, modified on traverse/split
+        
         /** Create new spliterator covering the given array and range */
         DeqSpliterator(ArrayDeque<E> deq, int origin, int fence) {
-            this.deq = deq; this.index = origin; this.fence = fence;
+            this.deq = deq;
+            this.index = origin;
+            this.fence = fence;
+        }
+
+        private int getFence() { // force initialization
+            int t;
+            if ((t = fence) < 0) {
+                t = fence = deq.tail;
+                index = deq.head;
+            }
+            return t;
         }
 
         public DeqSpliterator<E> trySplit() {
-            int n = deq.elements.length;
-            int h = index, t = fence;
+            int t = getFence(), h = index, n = deq.elements.length;
             if (h != t && ((h + 1) & (n - 1)) != t) {
                 if (h > t)
                     t += n;
                 int m = ((h + t) >>> 1) & (n - 1);
-                return new DeqSpliterator<E>(deq, h, index = m);
+                return new DeqSpliterator<>(deq, h, index = m);
             }
             return null;
         }
 
-        public void forEach(Consumer<? super E> block) {
-            if (block == null)
+        public void forEach(Consumer<? super E> consumer) {
+            if (consumer == null)
                 throw new NullPointerException();
             Object[] a = deq.elements;
-            int m = a.length - 1, f = fence, i = index;
+            int m = a.length - 1, f = getFence(), i = index;
             index = f;
             while (i != f) {
                 @SuppressWarnings("unchecked") E e = (E)a[i];
                 i = (i + 1) & m;
                 if (e == null)
                     throw new ConcurrentModificationException();
-                block.accept(e);
+                consumer.accept(e);
             }
         }
 
-        public boolean tryAdvance(Consumer<? super E> block) {
-            if (block == null)
+        public boolean tryAdvance(Consumer<? super E> consumer) {
+            if (consumer == null)
                 throw new NullPointerException();
             Object[] a = deq.elements;
-            int m = a.length - 1, i = index;
+            int m = a.length - 1, f = getFence(), i = index;
             if (i != fence) {
                 @SuppressWarnings("unchecked") E e = (E)a[i];
                 index = (i + 1) & m;
                 if (e == null)
                     throw new ConcurrentModificationException();
-                block.accept(e);
+                consumer.accept(e);
                 return true;
             }
             return false;
         }
 
-        // Other spliterator methods
         public long estimateSize() {
-            int n = fence - index;
+            int n = getFence() - index;
             if (n < 0)
                 n += deq.elements.length;
-            return (long)n;
+            return (long) n;
         }
-        public boolean hasExactSize() { return true; }
-        public boolean hasExactSplits() { return true; }
+
+        @Override
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.SIZED | 
+                Spliterator.NONNULL | Spliterator.SUBSIZED;
+        }
     }
 
 }

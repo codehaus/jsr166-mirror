@@ -294,7 +294,6 @@ class Random implements java.io.Serializable {
      * @throws IllegalArgumentException if n is not positive
      * @since 1.2
      */
-
     public int nextInt(int n) {
         if (n <= 0)
             throw new IllegalArgumentException("n must be positive");

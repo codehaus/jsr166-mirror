@@ -132,19 +132,41 @@ public class IteratorConsistency {
     }
 
     void checkRemoveThrowsISE(Iterator it) {
-        if (rnd.nextBoolean()) {
-            try { it.remove(); fail("should throw"); }
-            catch (IllegalStateException success) {}
-        }
+        if (rnd.nextBoolean())
+            return;
+        try { it.remove(); fail("should throw"); }
+        catch (IllegalStateException success) {}
     }
 
     void checkRemoveHasNoEffect(Iterator it, Collection c) {
-        if (rnd.nextBoolean()) {
-            int size = c.size();
-            it.remove(); // no effect
-            equal(c.size(), size);
-            checkRemoveThrowsISE(it);
+        if (rnd.nextBoolean())
+            return;
+        int size = c.size();
+        it.remove(); // no effect
+        equal(c.size(), size);
+        checkRemoveThrowsISE(it);
+    }
+
+    void checkIterationSanity(Queue q) {
+        if (rnd.nextBoolean())
+            return;
+        int size = q.size();
+        Object[] a = q.toArray();
+        Object[] b = new Object[size+2];
+        Arrays.fill(b, Boolean.TRUE);
+        Object[] c = q.toArray(b);
+        equal(a.length, size);
+        check(b == c);
+        check(b[size] == null);
+        equal(q.toString(), Arrays.toString(a));
+        Iterator it = q.iterator();
+        for (int i = 0; i < size; i++) {
+            check(it.hasNext());
+            Object x = it.next();
+            check(x == a[i]);
+            check(x == b[i]);
         }
+        check(!it.hasNext());
     }
 
     private static void waitForFinalizersToRun() {
@@ -606,6 +628,31 @@ public class IteratorConsistency {
             check(isDetached(itMid));
             equal(capacity, q.size());
             equal(0, q.remainingCapacity());
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
+        // Check collective sanity of iteration, toArray() and toString()
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            for (int i = 0; i < capacity; i++) {
+                checkIterationSanity(q);
+                q.add(i);
+            }
+            for (int i = 0; i < (capacity + (capacity >> 1)); i++) {
+                checkIterationSanity(q);
+                equal(i, q.peek());
+                equal(i, q.poll());
+                checkIterationSanity(q);
+                q.add(capacity + i);
+            }
+            for (int i = 0; i < capacity; i++) {
+                checkIterationSanity(q);
+                int expected = i + capacity + (capacity >> 1);
+                equal(expected, q.peek());
+                equal(expected, q.poll());
+            }
+            checkIterationSanity(q);
         } catch (Throwable t) { unexpected(t); }
 
     }

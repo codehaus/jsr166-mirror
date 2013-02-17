@@ -1788,7 +1788,6 @@ public class CompletableFuture<T> implements Future<T> {
      * @param executor the executor to use for asynchronous execution
      * @return the new CompletableFuture
      */
-
     public <U,V> CompletableFuture<V> thenCombineAsync(CompletableFuture<? extends U> other,
                                                        BiFun<? super T,? super U,? extends V> fn,
                                                        Executor executor) {
@@ -2555,7 +2554,6 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param fn the function to use to compute the value of the
      * returned CompletableFuture
-
      * @return the new CompletableFuture
      */
     public <U> CompletableFuture<U> handle(BiFun<? super T, Throwable, ? extends U> fn) {

@@ -17,7 +17,7 @@ public class MapReduceDemo {
      * Sequential version, for performance comparison
      */
     static <T, U> U seqMapReduce(T[] array,
-                                 Ops.Op<T, U> mapper,
+                                 Ops.Op<T,U> mapper,
                                  Ops.Reducer<U> reducer,
                                  U base) {
         int n = array.length;

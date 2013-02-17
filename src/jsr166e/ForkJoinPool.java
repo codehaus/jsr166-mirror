@@ -1131,7 +1131,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private static final int SEED_INCREMENT = 0x61c88647;
 
-    /**
+    /*
      * Bits and masks for control variables
      *
      * Field ctl is a long packed with:

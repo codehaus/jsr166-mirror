@@ -1,7 +1,12 @@
-// Barrier version of Jacobi iteration
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
 
 import java.util.concurrent.*;
 
+/** Barrier version of Jacobi iteration */
 public class FJPhaserJacobi {
 
     static int dimGran;

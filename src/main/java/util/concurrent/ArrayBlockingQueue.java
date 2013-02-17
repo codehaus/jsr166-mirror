@@ -397,7 +397,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return (count == 0) ? null : itemAt(takeIndex);
+            return itemAt(takeIndex); // null when queue is empty
         } finally {
             lock.unlock();
         }

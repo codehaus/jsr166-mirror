@@ -2508,7 +2508,7 @@ public class ConcurrentHashMap<K,V>
     /**
      * Tests if the specified object is a key in this table.
      *
-     * @param  key   possible key
+     * @param  key possible key
      * @return {@code true} if and only if the specified object
      *         is a key in this table, as determined by the
      *         {@code equals} method; {@code false} otherwise

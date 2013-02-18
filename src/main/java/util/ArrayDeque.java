@@ -863,7 +863,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         private int fence;  // -1 until first use
         private int index;  // current index, modified on traverse/split
 
-        /** Create new spliterator covering the given array and range */
+        /** Creates new spliterator covering the given array and range */
         DeqSpliterator(ArrayDeque<E> deq, int origin, int fence) {
             this.deq = deq;
             this.index = origin;

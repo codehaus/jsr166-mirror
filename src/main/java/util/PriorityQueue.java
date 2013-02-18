@@ -805,7 +805,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         private int fence;            // -1 until first use
         private int expectedModCount; // initialized when fence set
 
-        /** Create new spliterator covering the given  range */
+        /** Creates new spliterator covering the given  range */
         PriorityQueueSpliterator(PriorityQueue<E> pq, int origin, int fence,
                              int expectedModCount) {
             this.pq = pq;

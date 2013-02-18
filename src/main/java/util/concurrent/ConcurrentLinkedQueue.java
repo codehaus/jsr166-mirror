@@ -7,11 +7,17 @@
 package java.util.concurrent;
 
 import java.util.AbstractQueue;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Consumer;
 
 /**
  * An unbounded thread-safe {@linkplain Queue queue} based on linked nodes.
@@ -762,6 +768,104 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         head = h;
         tail = t;
     }
+
+    static final class CLQSpliterator<E> implements Spliterator<E> {
+        static final int MAX_BATCH = 1 << 10;  // saturate batch size
+        final ConcurrentLinkedQueue<E> queue;
+        Node<E> current;    // current node; null until initialized
+        int batch;          // batch size for splits
+        boolean exhausted;  // true when no more nodes
+        CLQSpliterator(ConcurrentLinkedQueue<E> queue) {
+            this.queue = queue;
+        }
+
+        /*
+         * Split into arrays of arithmetically increasing batch sizes,
+         * giving up at MAX_BATCH.  This will only improve parallel
+         * performance if per-element forEach actions are more costly
+         * than transfering them into an array. If not, we limit
+         * slowdowns by eventually returning null split.
+         */
+        public Spliterator<E> trySplit() {
+            Node<E> p; int n;
+            final ConcurrentLinkedQueue<E> q = this.queue;
+            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                Object[] a = new Object[batch = n];
+                int i = 0;
+                do {
+                    if ((a[i] = p.item) != null)
+                        ++i;
+                    if (p == (p = p.next))
+                        p = q.first();
+                } while (p != null && i < n);
+                if ((current = p) == null)
+                    exhausted = true;
+                return Collections.arraySnapshotSpliterator
+                    (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                     Spliterator.CONCURRENT);
+            }
+            return null;
+        }
+
+        public void forEach(Consumer<? super E> action) {
+            Node<E> p;
+            if (action == null) throw new NullPointerException();
+            final ConcurrentLinkedQueue<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                exhausted = true;
+                do {
+                    E e = p.item;
+                    if (p == (p = p.next))
+                        p = q.first();
+                    if (e != null)
+                        action.accept(e);
+                } while (p != null);
+            }
+        }
+
+        public boolean tryAdvance(Consumer<? super E> action) {
+            Node<E> p;
+            if (action == null) throw new NullPointerException();
+            final ConcurrentLinkedQueue<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                E e;
+                do {
+                    e = p.item;
+                    if (p == (p = p.next))
+                        p = q.first();
+                } while (e == null && p != null);
+                if ((current = p) == null)
+                    exhausted = true;
+                if (e != null) {
+                    action.accept(e);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL |
+                Spliterator.CONCURRENT;
+        }
+    }
+
+
+    Spliterator<E> spliterator() {
+        return new CLQSpliterator<E>(this);
+    }
+
+    public Stream<E> stream() {
+        return Streams.stream(spliterator());
+    }
+
+    public Stream<E> parallelStream() {
+        return Streams.parallelStream(spliterator());
+    }
+
 
     /**
      * Throws NullPointerException if argument is null.

@@ -143,7 +143,7 @@ public class ParallelArrayAsListTest extends JSR166TestCase {
     }
 
     /**
-     * get returns the  value at the given index
+     * get returns the value at the given index
      */
     public void testGet() {
         List full = populatedArray(3);

@@ -2327,14 +2327,6 @@ public class ConcurrentHashMap<K,V>
 
         // spliterator support
 
-        public boolean hasExactSize() {
-            return false;
-        }
-
-        public boolean hasExactSplits() {
-            return false;
-        }
-
         public long estimateSize() {
             return batch;
         }
@@ -2516,7 +2508,7 @@ public class ConcurrentHashMap<K,V>
     /**
      * Tests if the specified object is a key in this table.
      *
-     * @param  key   possible key
+     * @param  key possible key
      * @return {@code true} if and only if the specified object
      *         is a key in this table, as determined by the
      *         {@code equals} method; {@code false} otherwise
@@ -2969,6 +2961,12 @@ public class ConcurrentHashMap<K,V>
             block.accept(nextKey);
             return true;
         }
+
+        public int characteristics() {
+            return Spliterator.DISTINCT | Spliterator.CONCURRENT |
+                Spliterator.NONNULL;
+        }
+
     }
 
     @SuppressWarnings("serial") static final class ValueIterator<K,V>
@@ -3012,6 +3010,9 @@ public class ConcurrentHashMap<K,V>
             return true;
         }
 
+        public int characteristics() {
+            return Spliterator.CONCURRENT | Spliterator.NONNULL;
+        }
     }
 
     @SuppressWarnings("serial") static final class EntryIterator<K,V>
@@ -3054,6 +3055,10 @@ public class ConcurrentHashMap<K,V>
             return true;
         }
 
+        public int characteristics() {
+            return Spliterator.DISTINCT | Spliterator.CONCURRENT |
+                Spliterator.NONNULL;
+        }
     }
 
     /**
@@ -4735,11 +4740,10 @@ public class ConcurrentHashMap<K,V>
         }
 
         public Stream<K> stream() {
-            return Streams.stream(() -> new KeyIterator<K,V>(map), 0);
+            return Streams.stream(new KeyIterator<>(map, null));
         }
         public Stream<K> parallelStream() {
-            return Streams.parallelStream(() -> new KeyIterator<K,V>(map, null),
-                                          0);
+            return Streams.parallelStream(new KeyIterator<K,V>(map, null));
         }
     }
 
@@ -4791,12 +4795,11 @@ public class ConcurrentHashMap<K,V>
         }
 
         public Stream<V> stream() {
-            return Streams.stream(() -> new ValueIterator<K,V>(map), 0);
+            return Streams.stream(new ValueIterator<K,V>(map, null));
         }
 
         public Stream<V> parallelStream() {
-            return Streams.parallelStream(() -> new ValueIterator<K,V>(map, null),
-                                          0);
+            return Streams.parallelStream(new ValueIterator<K,V>(map, null));
         }
 
     }
@@ -4864,12 +4867,11 @@ public class ConcurrentHashMap<K,V>
         }
 
         public Stream<Map.Entry<K,V>> stream() {
-            return Streams.stream(() -> new EntryIterator<K,V>(map), 0);
+            return Streams.stream(new EntryIterator<K,V>(map, null));
         }
 
         public Stream<Map.Entry<K,V>> parallelStream() {
-            return Streams.parallelStream(() -> new EntryIterator<K,V>(map, null),
-                                          0);
+            return Streams.parallelStream(new EntryIterator<K,V>(map, null));
         }
     }
 

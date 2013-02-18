@@ -9,10 +9,15 @@ package java.util.concurrent;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.Streams;
+import java.util.function.Consumer;
 
 /**
  * An unbounded concurrent {@linkplain Deque deque} based on linked nodes.
@@ -1354,6 +1359,20 @@ public class ConcurrentLinkedDeque<E>
     private class DescendingItr extends AbstractItr {
         Node<E> startNode() { return last(); }
         Node<E> nextNode(Node<E> p) { return pred(p); }
+    }
+
+    Spliterator<E> spliterator() {
+        return Collections.iteratorBasedSpliterator
+            (iterator(), Spliterator.ORDERED | Spliterator.NONNULL |
+             Spliterator.CONCURRENT);
+    }
+
+    public Stream<E> stream() {
+        return Streams.stream(spliterator());
+    }
+
+    public Stream<E> parallelStream() {
+        return Streams.parallelStream(spliterator());
     }
 
     /**

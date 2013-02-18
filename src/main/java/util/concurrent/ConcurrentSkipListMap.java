@@ -3739,7 +3739,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public int characteristics() {
-            return  Spliterator.DISTINCT | Spliterator.SORTED |
+            return Spliterator.DISTINCT | Spliterator.SORTED |
                 Spliterator.ORDERED | Spliterator.CONCURRENT |
                 Spliterator.NONNULL;
         }
@@ -3922,7 +3922,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public int characteristics() {
-            return  Spliterator.DISTINCT | Spliterator.SORTED |
+            return Spliterator.DISTINCT | Spliterator.SORTED |
                 Spliterator.ORDERED | Spliterator.CONCURRENT |
                 Spliterator.NONNULL;
         }

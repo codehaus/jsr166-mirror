@@ -158,13 +158,23 @@ public class IteratorConsistency {
         equal(a.length, size);
         check(b == c);
         check(b[size] == null);
+        check(b[size+1] == Boolean.TRUE);
         equal(q.toString(), Arrays.toString(a));
+        Integer[] xx = null, yy = null;
+        if (size > 0) {
+            xx = new Integer[size - 1];
+            Arrays.fill(xx, 42);
+            yy = ((Queue<Integer>)q).toArray(xx);
+            for (Integer zz : xx)
+                equal(42, zz);
+        }
         Iterator it = q.iterator();
         for (int i = 0; i < size; i++) {
             check(it.hasNext());
             Object x = it.next();
             check(x == a[i]);
             check(x == b[i]);
+            if (xx != null) check(x == yy[i]);
         }
         check(!it.hasNext());
     }
@@ -637,17 +647,21 @@ public class IteratorConsistency {
             ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
             for (int i = 0; i < capacity; i++) {
                 checkIterationSanity(q);
+                equal(capacity, q.size() + q.remainingCapacity());
                 q.add(i);
             }
             for (int i = 0; i < (capacity + (capacity >> 1)); i++) {
                 checkIterationSanity(q);
+                equal(capacity, q.size() + q.remainingCapacity());
                 equal(i, q.peek());
                 equal(i, q.poll());
                 checkIterationSanity(q);
+                equal(capacity, q.size() + q.remainingCapacity());
                 q.add(capacity + i);
             }
             for (int i = 0; i < capacity; i++) {
                 checkIterationSanity(q);
+                equal(capacity, q.size() + q.remainingCapacity());
                 int expected = i + capacity + (capacity >> 1);
                 equal(expected, q.peek());
                 equal(expected, q.poll());

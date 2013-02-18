@@ -1055,7 +1055,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     Spliterator<E> spliterator() {
         return Streams.emptySpliterator();
     }
-    
+
     public Stream<E> stream() {
         return Streams.stream(spliterator());
     }

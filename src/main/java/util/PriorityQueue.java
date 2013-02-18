@@ -822,11 +822,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             }
             return hi;
         }
-            
+
         public PriorityQueueSpliterator<E> trySplit() {
             int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
             return (lo >= mid) ? null :
-                new PriorityQueueSpliterator<E>(pq, lo, index = mid, 
+                new PriorityQueueSpliterator<E>(pq, lo, index = mid,
                                                 expectedModCount);
         }
 
@@ -875,8 +875,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             return false;
         }
 
-        public long estimateSize() { 
-            return (long) (getFence() - index); 
+        public long estimateSize() {
+            return (long) (getFence() - index);
         }
 
         public int characteristics() {

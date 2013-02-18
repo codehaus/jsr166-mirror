@@ -862,7 +862,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         private final ArrayDeque<E> deq;
         private int fence;  // -1 until first use
         private int index;  // current index, modified on traverse/split
-        
+
         /** Create new spliterator covering the given array and range */
         DeqSpliterator(ArrayDeque<E> deq, int origin, int fence) {
             this.deq = deq;
@@ -930,7 +930,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
 
         @Override
         public int characteristics() {
-            return Spliterator.ORDERED | Spliterator.SIZED | 
+            return Spliterator.ORDERED | Spliterator.SIZED |
                 Spliterator.NONNULL | Spliterator.SUBSIZED;
         }
     }

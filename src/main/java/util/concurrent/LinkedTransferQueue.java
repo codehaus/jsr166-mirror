@@ -904,7 +904,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 unsplice(lastPred, lastRet);
         }
     }
-    
+
     // Very similar to ConcurrentLinkedQueue spliterator
     static final class LTQSpliterator<E> implements Spliterator<E> {
         static final int MAX_BATCH = 1 << 10;  // saturate batch size
@@ -912,7 +912,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         Node current;    // current node; null until initialized
         int batch;          // batch size for splits
         boolean exhausted;  // true when no more nodes
-        LTQSpliterator(LinkedTransferQueue<E> queue) { 
+        LTQSpliterator(LinkedTransferQueue<E> queue) {
             this.queue = queue;
         }
 
@@ -934,7 +934,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 do {
                     if ((a[i] = p.item) != null)
                         ++i;
-                    if (p == (p = p.next)) 
+                    if (p == (p = p.next))
                         p = q.firstDataNode();
                 } while (p != null && i < n);
                 if ((current = p) == null)
@@ -956,7 +956,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 exhausted = true;
                 do {
                     Object e = p.item;
-                    if (p == (p = p.next)) 
+                    if (p == (p = p.next))
                         p = q.firstDataNode();
                     if (e != null)
                         action.accept((E)e);
@@ -974,7 +974,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 Object e;
                 do {
                     e = p.item;
-                    if (p == (p = p.next)) 
+                    if (p == (p = p.next))
                         p = q.firstDataNode();
                 } while (e == null && p != null);
                 if ((current = p) == null)

@@ -464,7 +464,7 @@ public class ConcurrentSkipListSet<E>
     public Stream<E> stream() {
         return Streams.stream(spliterator());
     }
-    
+
     public Stream<E> parallelStream() {
         return Streams.parallelStream(spliterator());
     }

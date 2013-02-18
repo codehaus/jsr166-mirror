@@ -2748,7 +2748,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return (Spliterator<Map.Entry<K1,V1>>)
                     ((SubMap<K1,V1>)m).entryIterator();
         }
-        
+
         public Stream<Map.Entry<K1,V1>> stream() {
             return Streams.stream(spliterator());
         }
@@ -3739,8 +3739,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public int characteristics() {
-            return  Spliterator.DISTINCT | Spliterator.SORTED | 
-                Spliterator.ORDERED | Spliterator.CONCURRENT | 
+            return  Spliterator.DISTINCT | Spliterator.SORTED |
+                Spliterator.ORDERED | Spliterator.CONCURRENT |
                 Spliterator.NONNULL;
         }
 
@@ -3922,8 +3922,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public int characteristics() {
-            return  Spliterator.DISTINCT | Spliterator.SORTED | 
-                Spliterator.ORDERED | Spliterator.CONCURRENT | 
+            return  Spliterator.DISTINCT | Spliterator.SORTED |
+                Spliterator.ORDERED | Spliterator.CONCURRENT |
                 Spliterator.NONNULL;
         }
     }

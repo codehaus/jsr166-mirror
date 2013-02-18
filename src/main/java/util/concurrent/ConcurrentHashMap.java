@@ -2963,7 +2963,7 @@ public class ConcurrentHashMap<K,V>
         }
 
         public int characteristics() {
-            return Spliterator.DISTINCT | Spliterator.CONCURRENT | 
+            return Spliterator.DISTINCT | Spliterator.CONCURRENT |
                 Spliterator.NONNULL;
         }
 
@@ -3056,7 +3056,7 @@ public class ConcurrentHashMap<K,V>
         }
 
         public int characteristics() {
-            return Spliterator.DISTINCT | Spliterator.CONCURRENT | 
+            return Spliterator.DISTINCT | Spliterator.CONCURRENT |
                 Spliterator.NONNULL;
         }
     }

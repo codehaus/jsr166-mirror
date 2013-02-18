@@ -1150,7 +1150,7 @@ public class LinkedBlockingDeque<E>
         int batch;          // batch size for splits
         boolean exhausted;  // true when no more nodes
         long est;           // size estimate
-        LBDSpliterator(LinkedBlockingDeque<E> queue) { 
+        LBDSpliterator(LinkedBlockingDeque<E> queue) {
             this.queue = queue;
             this.est = queue.size();
         }

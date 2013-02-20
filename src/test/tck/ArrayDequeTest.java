@@ -625,26 +625,90 @@ public class ArrayDequeTest extends JSR166TestCase {
         }
     }
 
+    void checkToArray(ArrayDeque q) {
+        int size = q.size();
+        Object[] o = q.toArray();
+        assertEquals(size, o.length);
+        Iterator it = q.iterator();
+        for (int i = 0; i < size; i++) {
+            Integer x = (Integer) it.next();
+            assertEquals((Integer)o[0] + i, (int) x);
+            assertSame(o[i], x);
+        }
+    }
+
     /**
      * toArray() contains all elements in FIFO order
      */
     public void testToArray() {
-        ArrayDeque q = populatedDeque(SIZE);
-        Object[] o = q.toArray();
-        for (int i = 0; i < o.length; i++)
-            assertSame(o[i], q.pollFirst());
+        ArrayDeque q = new ArrayDeque();
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray(q);
+            q.addLast(i);
+        }
+        // Provoke wraparound
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray(q);
+            assertEquals(i, q.poll());
+            q.addLast(SIZE+i);
+        }
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray(q);
+            assertEquals(SIZE+i, q.poll());
+        }
+    }
+
+    void checkToArray2(ArrayDeque q) {
+        int size = q.size();
+        Integer[] a1 = size == 0 ? null : new Integer[size-1];
+        Integer[] a2 = new Integer[size];
+        Integer[] a3 = new Integer[size+2];
+        if (size > 0) Arrays.fill(a1, 42);
+        Arrays.fill(a2, 42);
+        Arrays.fill(a3, 42);
+        Integer[] b1 = size == 0 ? null : (Integer[]) q.toArray(a1);
+        Integer[] b2 = (Integer[]) q.toArray(a2);
+        Integer[] b3 = (Integer[]) q.toArray(a3);
+        assertSame(a2, b2);
+        assertSame(a3, b3);
+        Iterator it = q.iterator();
+        for (int i = 0; i < size; i++) {
+            Integer x = (Integer) it.next();
+            assertSame(b1[i], x);
+            assertEquals(b1[0] + i, (int) x);
+            assertSame(b2[i], x);
+            assertSame(b3[i], x);
+        }
+        assertNull(a3[size]);
+        assertEquals(42, (int) a3[size+1]);
+        if (size > 0) {
+            assertNotSame(a1, b1);
+            assertEquals(size, b1.length);
+            for (int i = 0; i < a1.length; i++) {
+                assertEquals(42, (int) a1[i]);
+            }
+        }
     }
 
     /**
      * toArray(a) contains all elements in FIFO order
      */
     public void testToArray2() {
-        ArrayDeque<Integer> q = populatedDeque(SIZE);
-        Integer[] ints = new Integer[SIZE];
-        Integer[] array = q.toArray(ints);
-        assertSame(ints, array);
-        for (int i = 0; i < ints.length; i++)
-            assertSame(ints[i], q.remove());
+        ArrayDeque q = new ArrayDeque();
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray2(q);
+            q.addLast(i);
+        }
+        // Provoke wraparound
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray2(q);
+            assertEquals(i, q.poll());
+            q.addLast(SIZE+i);
+        }
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray2(q);
+            assertEquals(SIZE+i, q.poll());
+        }
     }
 
     /**

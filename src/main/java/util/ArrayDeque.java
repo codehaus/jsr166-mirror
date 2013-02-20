@@ -19,16 +19,18 @@ import java.util.stream.Streams;
  * when used as a queue.
  *
  * <p>Most {@code ArrayDeque} operations run in amortized constant time.
- * Exceptions include {@link #remove(Object) remove}, {@link
- * #removeFirstOccurrence removeFirstOccurrence}, {@link #removeLastOccurrence
- * removeLastOccurrence}, {@link #contains contains}, {@link #iterator
- * iterator.remove()}, and the bulk operations, all of which run in linear
- * time.
+ * Exceptions include
+ * {@link #remove(Object) remove},
+ * {@link #removeFirstOccurrence removeFirstOccurrence},
+ * {@link #removeLastOccurrence removeLastOccurrence},
+ * {@link #contains contains},
+ * {@link #iterator iterator.remove()},
+ * and the bulk operations, all of which run in linear time.
  *
- * <p>The iterators returned by this class's {@code iterator} method are
- * <i>fail-fast</i>: If the deque is modified at any time after the iterator
- * is created, in any way except through the iterator's own {@code remove}
- * method, the iterator will generally throw a {@link
+ * <p>The iterators returned by this class's {@link #iterator() iterator}
+ * method are <em>fail-fast</em>: If the deque is modified at any time after
+ * the iterator is created, in any way except through the iterator's own
+ * {@code remove} method, the iterator will generally throw a {@link
  * ConcurrentModificationException}.  Thus, in the face of concurrent
  * modification, the iterator fails quickly and cleanly, rather than risking
  * arbitrary, non-deterministic behavior at an undetermined time in the

@@ -591,26 +591,92 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
     }
 
+    void checkToArray(ArrayBlockingQueue q) {
+        int size = q.size();
+        Object[] o = q.toArray();
+        assertEquals(size, o.length);
+        Iterator it = q.iterator();
+        for (int i = 0; i < size; i++) {
+            Integer x = (Integer) it.next();
+            assertEquals((Integer)o[0] + i, (int) x);
+            assertSame(o[i], x);
+        }
+    }
+
     /**
-     * toArray contains all elements in FIFO order
+     * toArray() contains all elements in FIFO order
      */
     public void testToArray() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
-        Object[] o = q.toArray();
-        for (int i = 0; i < o.length; i++)
-            assertSame(o[i], q.poll());
+        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray(q);
+            q.add(i);
+        }
+        // Provoke wraparound
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray(q);
+            assertEquals(i, q.poll());
+            checkToArray(q);
+            q.add(SIZE+i);
+        }
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray(q);
+            assertEquals(SIZE+i, q.poll());
+        }
+    }
+
+    void checkToArray2(ArrayBlockingQueue q) {
+        int size = q.size();
+        Integer[] a1 = size == 0 ? null : new Integer[size-1];
+        Integer[] a2 = new Integer[size];
+        Integer[] a3 = new Integer[size+2];
+        if (size > 0) Arrays.fill(a1, 42);
+        Arrays.fill(a2, 42);
+        Arrays.fill(a3, 42);
+        Integer[] b1 = size == 0 ? null : (Integer[]) q.toArray(a1);
+        Integer[] b2 = (Integer[]) q.toArray(a2);
+        Integer[] b3 = (Integer[]) q.toArray(a3);
+        assertSame(a2, b2);
+        assertSame(a3, b3);
+        Iterator it = q.iterator();
+        for (int i = 0; i < size; i++) {
+            Integer x = (Integer) it.next();
+            assertSame(b1[i], x);
+            assertEquals(b1[0] + i, (int) x);
+            assertSame(b2[i], x);
+            assertSame(b3[i], x);
+        }
+        assertNull(a3[size]);
+        assertEquals(42, (int) a3[size+1]);
+        if (size > 0) {
+            assertNotSame(a1, b1);
+            assertEquals(size, b1.length);
+            for (int i = 0; i < a1.length; i++) {
+                assertEquals(42, (int) a1[i]);
+            }
+        }
     }
 
     /**
      * toArray(a) contains all elements in FIFO order
      */
     public void testToArray2() {
-        ArrayBlockingQueue<Integer> q = populatedQueue(SIZE);
-        Integer[] ints = new Integer[SIZE];
-        Integer[] array = q.toArray(ints);
-        assertSame(ints, array);
-        for (int i = 0; i < ints.length; i++)
-            assertSame(ints[i], q.poll());
+        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray2(q);
+            q.add(i);
+        }
+        // Provoke wraparound
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray2(q);
+            assertEquals(i, q.poll());
+            checkToArray2(q);
+            q.add(SIZE+i);
+        }
+        for (int i = 0; i < SIZE; i++) {
+            checkToArray2(q);
+            assertEquals(SIZE+i, q.poll());
+        }
     }
 
     /**

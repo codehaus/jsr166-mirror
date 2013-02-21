@@ -19,16 +19,18 @@ import java.util.stream.Streams;
  * when used as a queue.
  *
  * <p>Most {@code ArrayDeque} operations run in amortized constant time.
- * Exceptions include {@link #remove(Object) remove}, {@link
- * #removeFirstOccurrence removeFirstOccurrence}, {@link #removeLastOccurrence
- * removeLastOccurrence}, {@link #contains contains}, {@link #iterator
- * iterator.remove()}, and the bulk operations, all of which run in linear
- * time.
+ * Exceptions include
+ * {@link #remove(Object) remove},
+ * {@link #removeFirstOccurrence removeFirstOccurrence},
+ * {@link #removeLastOccurrence removeLastOccurrence},
+ * {@link #contains contains},
+ * {@link #iterator iterator.remove()},
+ * and the bulk operations, all of which run in linear time.
  *
- * <p>The iterators returned by this class's {@code iterator} method are
- * <i>fail-fast</i>: If the deque is modified at any time after the iterator
- * is created, in any way except through the iterator's own {@code remove}
- * method, the iterator will generally throw a {@link
+ * <p>The iterators returned by this class's {@link #iterator() iterator}
+ * method are <em>fail-fast</em>: If the deque is modified at any time after
+ * the iterator is created, in any way except through the iterator's own
+ * {@code remove} method, the iterator will generally throw a {@link
  * ConcurrentModificationException}.  Thus, in the face of concurrent
  * modification, the iterator fails quickly and cleanly, rather than risking
  * arbitrary, non-deterministic behavior at an undetermined time in the
@@ -132,24 +134,6 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         elements = a;
         head = 0;
         tail = n;
-    }
-
-    /**
-     * Copies the elements from our element array into the specified array,
-     * in order (from first to last element in the deque).  It is assumed
-     * that the array is large enough to hold all elements in the deque.
-     *
-     * @return its argument
-     */
-    private <T> T[] copyElements(T[] a) {
-        if (head < tail) {
-            System.arraycopy(elements, head, a, 0, size());
-        } else if (head > tail) {
-            int headPortionLen = elements.length - head;
-            System.arraycopy(elements, head, a, 0, headPortionLen);
-            System.arraycopy(elements, 0, a, headPortionLen, tail);
-        }
-        return a;
     }
 
     /**
@@ -737,7 +721,14 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return an array containing all of the elements in this deque
      */
     public Object[] toArray() {
-        return copyElements(new Object[size()]);
+        final int head = this.head;
+        final int tail = this.tail;
+        boolean wrap = (tail < head);
+        int end = wrap ? tail + elements.length : tail;
+        Object[] a = Arrays.copyOfRange(elements, head, end);
+        if (wrap)
+            System.arraycopy(elements, 0, a, elements.length - head, tail);
+        return a;
     }
 
     /**
@@ -778,13 +769,22 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      */
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
-        int size = size();
-        if (a.length < size)
-            a = (T[])java.lang.reflect.Array.newInstance(
-                    a.getClass().getComponentType(), size);
-        copyElements(a);
-        if (a.length > size)
-            a[size] = null;
+        final int head = this.head;
+        final int tail = this.tail;
+        boolean wrap = (tail < head);
+        int size = (tail - head) + (wrap ? elements.length : 0);
+        int firstLeg = size - (wrap ? tail : 0);
+        int len = a.length;
+        if (size > len) {
+            a = (T[]) Arrays.copyOfRange(elements, head, head + size,
+                                         a.getClass());
+        } else {
+            System.arraycopy(elements, head, a, 0, firstLeg);
+            if (size < len)
+                a[size] = null;
+        }
+        if (wrap)
+            System.arraycopy(elements, 0, a, firstLeg, tail);
         return a;
     }
 

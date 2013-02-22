@@ -110,7 +110,7 @@ import java.util.concurrent.TimeUnit;
  * <li>{@code java.util.concurrent.ForkJoinPool.common.exceptionHandler}
  * - the class name of a {@link UncaughtExceptionHandler}
  * </ul>
- * The system class loader is used to load these classes. 
+ * The system class loader is used to load these classes.
  * Upon any error in establishing these settings, default parameters
  * are used. It is possible to disable or limit the use of threads in
  * the common pool by setting the parallelism property to zero, and/or

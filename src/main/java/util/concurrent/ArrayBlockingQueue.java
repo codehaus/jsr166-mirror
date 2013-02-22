@@ -1370,8 +1370,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 //         }
     }
 
-    Spliterator<E> spliterator() { // cheaper to use snapshot than track array
-        return Collections.arraySnapshotSpliterator
+    Spliterator<E> spliterator() {
+        return Collections.iteratorBasedSpliterator
             (this, Spliterator.ORDERED | Spliterator.NONNULL |
              Spliterator.CONCURRENT);
     }

@@ -1361,10 +1361,86 @@ public class ConcurrentLinkedDeque<E>
         Node<E> nextNode(Node<E> p) { return pred(p); }
     }
 
+    // Same idea as ConcurrentLinkedQueue Spliterator
+    static final class CLDSpliterator<E> implements Spliterator<E> {
+        static final int MAX_BATCH = 1 << 10;  // saturate batch size
+        final ConcurrentLinkedDeque<E> queue;
+        Node<E> current;    // current node; null until initialized
+        int batch;          // batch size for splits
+        boolean exhausted;  // true when no more nodes
+        CLDSpliterator(ConcurrentLinkedDeque<E> queue) {
+            this.queue = queue;
+        }
+
+        public Spliterator<E> trySplit() {
+            Node<E> p; int n;
+            final ConcurrentLinkedDeque<E> q = this.queue;
+            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                Object[] a = new Object[batch = n];
+                int i = 0;
+                do {
+                    if ((a[i] = p.item) != null)
+                        ++i;
+                    if (p == (p = p.next))
+                        p = q.first();
+                } while (p != null && i < n);
+                if ((current = p) == null)
+                    exhausted = true;
+                return Collections.arraySnapshotSpliterator
+                    (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                     Spliterator.CONCURRENT);
+            }
+            return null;
+        }
+
+        public void forEach(Consumer<? super E> action) {
+            Node<E> p;
+            if (action == null) throw new NullPointerException();
+            final ConcurrentLinkedDeque<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                exhausted = true;
+                do {
+                    E e = p.item;
+                    if (p == (p = p.next))
+                        p = q.first();
+                    if (e != null)
+                        action.accept(e);
+                } while (p != null);
+            }
+        }
+
+        public boolean tryAdvance(Consumer<? super E> action) {
+            Node<E> p;
+            if (action == null) throw new NullPointerException();
+            final ConcurrentLinkedDeque<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                E e;
+                do {
+                    e = p.item;
+                    if (p == (p = p.next))
+                        p = q.first();
+                } while (e == null && p != null);
+                if ((current = p) == null)
+                    exhausted = true;
+                if (e != null) {
+                    action.accept(e);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL |
+                Spliterator.CONCURRENT;
+        }
+    }
+
     Spliterator<E> spliterator() {
-        return Collections.iteratorBasedSpliterator
-            (iterator(), Spliterator.ORDERED | Spliterator.NONNULL |
-             Spliterator.CONCURRENT);
+        return new CLDSpliterator<E>(this);
     }
 
     public Stream<E> stream() {

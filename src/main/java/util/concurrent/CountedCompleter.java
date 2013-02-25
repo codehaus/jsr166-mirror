@@ -493,8 +493,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * @param delta the value to add
      */
     public final void addToPendingCount(int delta) {
-        int c; // note: can replace with intrinsic in jdk8
-        do {} while (!U.compareAndSwapInt(this, PENDING, c = pending, c+delta));
+        U.getAndAddInt(this, PENDING, delta);
     }
 
     /**

@@ -9,10 +9,10 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.AbstractQueue;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.lang.ref.WeakReference;
+import java.util.Spliterators;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
@@ -1371,7 +1371,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     Spliterator<E> spliterator() {
-        return Collections.iteratorBasedSpliterator
+        return Spliterators.spliterator
             (this, Spliterator.ORDERED | Spliterator.NONNULL |
              Spliterator.CONCURRENT);
     }

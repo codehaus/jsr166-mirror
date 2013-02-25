@@ -128,6 +128,7 @@ import java.util.concurrent.TimeUnit;
  * @since 1.7
  * @author Doug Lea
  */
+//@sun.misc.Contended
 public class ForkJoinPool extends AbstractExecutorService {
 
     /*
@@ -614,6 +615,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * arrays are initialized by workers before use. Others are
      * allocated on first use.
      */
+    // disabled until compatible builds    @sun.misc.Contended
     static final class WorkQueue {
         /**
          * Capacity of work-stealing queue array upon initialization.
@@ -945,7 +947,8 @@ public class ForkJoinPool extends AbstractExecutorService {
          */
         final boolean pollAndExecCC(ForkJoinTask<?> root) {
             ForkJoinTask<?>[] a; int b; Object o;
-            outer: while ((b = base) - top < 0 && (a = array) != null) {
+            outer: while (root.status >= 0 && (b = base) - top < 0 &&
+                          (a = array) != null) {
                 long j = (((a.length - 1) & b) << ASHIFT) + ABASE;
                 if ((o = U.getObject(a, j)) == null ||
                     !(o instanceof CountedCompleter))
@@ -1199,7 +1202,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     static final int SHARED_QUEUE        = -1;
 
     // bounds for #steps in scan loop -- must be power 2 minus 1
-    private static final int MIN_SCAN    = 0x1ff;   // cover estimation slop
+    private static final int MIN_SCAN    = 0x7ff;   // cover estimation slop
     private static final int MAX_SCAN    = 0x1ffff; // 4 * max workers
 
     // Instance fields
@@ -1897,22 +1900,16 @@ public class ForkJoinPool extends AbstractExecutorService {
      * and run tasks within the target's computation.
      *
      * @param task the task to join
-     * @param mode if shared, exit upon completing any task
-     * if all workers are active
      */
-    private int helpComplete(ForkJoinTask<?> task, int mode) {
+    private int helpComplete(ForkJoinTask<?> task) {
         WorkQueue[] ws; WorkQueue q; int m, n, s, u;
-        if (task != null && (ws = workQueues) != null &&
+        if (task != null && task.status >= 0 && (ws = workQueues) != null &&
             (m = ws.length - 1) >= 0) {
             for (int j = 1, origin = j;;) {
                 if ((s = task.status) < 0)
                     return s;
-                if ((q = ws[j & m]) != null && q.pollAndExecCC(task)) {
+                if ((q = ws[j & m]) != null && q.pollAndExecCC(task))
                     origin = j;
-                    if (mode == SHARED_QUEUE &&
-                        ((u = (int)(ctl >>> 32)) >= 0 || (u >> UAC_SHIFT) >= 0))
-                        break;
-                }
                 else if ((j = (j + 2) & m) == origin)
                     break;
             }
@@ -1988,7 +1985,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 helpSignal(task, joiner.poolIndex);
                 if ((s = task.status) >= 0 &&
                     (task instanceof CountedCompleter))
-                    s = helpComplete(task, LIFO_QUEUE);
+                    s = helpComplete(task);
             }
             while (s >= 0 && (s = task.status) >= 0) {
                 if ((!joiner.isEmpty() ||           // try helping
@@ -2038,7 +2035,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 helpSignal(task, joiner.poolIndex);
                 if ((s = task.status) >= 0 &&
                     (task instanceof CountedCompleter))
-                    s = helpComplete(task, LIFO_QUEUE);
+                    s = helpComplete(task);
             }
             if (s >= 0 && joiner.isEmpty()) {
                 do {} while (task.status >= 0 &&
@@ -2340,11 +2337,13 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private void externalHelpComplete(WorkQueue q, ForkJoinTask<?> root) {
         ForkJoinTask<?>[] a; int m;
-        if (q != null && (a = q.array) != null && (m = (a.length - 1)) >= 0 &&
-            root != null && root.status >= 0) {
-            for (;;) {
-                int s, u; Object o; CountedCompleter<?> task = null;
-                if ((s = q.top) - q.base > 0) {
+        if (root != null && q != null && (a = q.array) != null &&
+            (m = (a.length - 1)) >= 0) {
+            outer: for (;;) {
+                int s, b, u; Object o;
+                if (root.status < 0)
+                    return;
+                if ((s = q.top) - q.base > 0) { // try pop
                     long j = ((m & (s - 1)) << ASHIFT) + ABASE;
                     if ((o = U.getObject(a, j)) != null &&
                         (o instanceof CountedCompleter)) {
@@ -2355,28 +2354,42 @@ public class ForkJoinPool extends AbstractExecutorService {
                                     if (q.array == a && q.top == s &&
                                         U.compareAndSwapObject(a, j, t, null)) {
                                         q.top = s - 1;
-                                        task = t;
+                                        q.qlock = 0;
+                                        t.doExec();
                                     }
-                                    q.qlock = 0;
+                                    else
+                                        q.qlock = 0;
                                 }
-                                break;
+                                continue outer;
                             }
                         } while ((r = r.completer) != null);
                     }
                 }
-                if (task != null)
-                    task.doExec();
-                if (root.status < 0 ||
-                    (config != 0 &&
-                     ((u = (int)(ctl >>> 32)) >= 0 || (u >> UAC_SHIFT) >= 0)))
-                    break;
-               if (task == null) {
-                    helpSignal(root, q.poolIndex);
-                    if (root.status >= 0)
-                        helpComplete(root, SHARED_QUEUE);
-                    break;
+                if ((b = q.base) - q.top < 0) { // try poll
+                    if (root.status < 0)
+                        return;
+                    long j = (((a.length - 1) & b) << ASHIFT) + ABASE;
+                    if ((o = U.getObject(a, j)) == null ||
+                        !(o instanceof CountedCompleter))
+                        break;
+                    CountedCompleter<?> t = (CountedCompleter<?>)o, r = t;
+                    for (;;) {
+                        if (r == root) {
+                            if (q.base == b &&
+                                U.compareAndSwapObject(a, j, t, null)) {
+                                q.base = b + 1;
+                                t.doExec();
+                            }
+                            break;
+                        }
+                        if ((r = r.completer) == null)
+                            break outer;
+                    }
                 }
+                else
+                    break;
             }
+            helpComplete(root);
         }
     }
 
@@ -3371,7 +3384,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         if (parallelism < 0)
-            parallelism = Runtime.getRuntime().availableProcessors();
+            parallelism = Runtime.getRuntime().availableProcessors() - 1;
         if (parallelism > MAX_CAP)
             parallelism = MAX_CAP;
         return new ForkJoinPool(parallelism, factory, handler, false,

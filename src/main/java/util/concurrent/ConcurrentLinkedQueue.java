@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
 import java.util.function.Consumer;
@@ -790,7 +791,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             Node<E> p; int n;
             final ConcurrentLinkedQueue<E> q = this.queue;
             if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
-                ((p = current) != null || (p = q.first()) != null)) {
+                ((p = current) != null || (p = q.first()) != null) &&
+                p.next != null) {
                 Object[] a = new Object[batch = n];
                 int i = 0;
                 do {
@@ -801,7 +803,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                 } while (p != null && i < n);
                 if ((current = p) == null)
                     exhausted = true;
-                return Collections.arraySnapshotSpliterator
+                return Spliterators.spliterator
                     (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
                      Spliterator.CONCURRENT);
             }
@@ -846,6 +848,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             }
             return false;
         }
+
+        public long estimateSize() { return Long.MAX_VALUE; }
 
         public int characteristics() {
             return Spliterator.ORDERED | Spliterator.NONNULL |

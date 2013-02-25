@@ -2144,15 +2144,12 @@ public class ConcurrentHashMap<K,V>
      * valid. To support iterator.remove, the nextKey field is not
      * updated (nulled out) when the iterator cannot advance.
      *
-     * Internal traversals directly access these fields, as in:
-     * {@code while (it.advanceValue() != null) { process(it.nextKey); }}
-     *
      * Exported iterators must track whether the iterator has advanced
      * (in hasNext vs next) (by setting/checking/nulling field
      * nextVal), and then extract key, value, or key-value pairs as
      * return values of next().
      *
-     * The iterator visits once each still-valid node that was
+     * Method advance visits once each still-valid node that was
      * reachable upon iterator construction. It might miss some that
      * were added to a bin after the bin was visited, which is OK wrt
      * consistency guarantees. Maintaining this property in the face
@@ -2168,6 +2165,11 @@ public class ConcurrentHashMap<K,V>
      * paranoically cope with potential sharing by users of iterators
      * across threads, iteration terminates if a bounds checks fails
      * for a table read.
+     *
+     * Methods advanceKey and advanceValue are specializations of the
+     * common cases of advance, relaying to the full version
+     * otherwise. The forEachKey and forEachValue methods further
+     * specialize, bypassing all incremental field updates in most cases.
      *
      * This class supports both Spliterator-based traversal and
      * CountedCompleter-based bulk tasks. The same "batch" field is
@@ -2196,14 +2198,14 @@ public class ConcurrentHashMap<K,V>
         int index;           // index of bin to use next
         int baseIndex;       // current index of initial table
         int baseLimit;       // index bound for initial table
-        int baseSize;        // initial table size
+        final int baseSize;  // initial table size
         int batch;           // split control
+
         /** Creates iterator for all entries in the table. */
         Traverser(ConcurrentHashMap<K,V> map) {
             this.map = map;
-            Node<V>[] t;
-            if ((t = tab = map.table) != null)
-                baseLimit = baseSize = t.length;
+            Node<V>[] t = this.tab = map.table;
+            baseLimit = baseSize = (t == null) ? 0 : t.length;
         }
 
         /** Task constructor */
@@ -2212,9 +2214,8 @@ public class ConcurrentHashMap<K,V>
             this.map = map;
             this.batch = batch; // -1 if unknown
             if (it == null) {
-                Node<V>[] t;
-                if ((t = tab = map.table) != null)
-                    baseLimit = baseSize = t.length;
+                Node<V>[] t = this.tab = map.table;
+                baseLimit = baseSize = (t == null) ? 0 : t.length;
             }
             else { // split parent
                 this.tab = it.tab;
@@ -2230,9 +2231,8 @@ public class ConcurrentHashMap<K,V>
             super(it);
             this.map = map;
             if (it == null) {
-                Node<V>[] t;
-                if ((t = tab = map.table) != null)
-                    baseLimit = baseSize = t.length;
+                Node<V>[] t = this.tab = map.table;
+                baseLimit = baseSize = (t == null) ? 0 : t.length;
                 long n = map.sumCount();
                 batch = ((n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
                          (int)n);
@@ -2247,68 +2247,189 @@ public class ConcurrentHashMap<K,V>
             }
         }
 
-        /**
-         * Advances next; returns nextVal or null if terminated.
-         * See above for explanation.
+        /*
+         * Advances if possible, returning next valid value or null if none
          */
-        @SuppressWarnings("unchecked") final V advanceValue() {
-            V v;
-            Node<V> e = next;
-            outer: do {
+        @SuppressWarnings("unchecked") final V advance() {
+            for (Node<V> e = next;;) {
                 if (e != null)                  // advance past used/skipped node
-                    e = e.next;
+                    e = next = e.next;
                 while (e == null) {             // get to next non-null bin
-                    Node<V>[] t; int b, i, n; Object ek; //  must use locals
-                    if ((t = tab) == null || (n = t.length) <= (i = index) ||
-                        i < 0 || (b = baseIndex) >= baseLimit) {
-                        v = null;
-                        break outer;
-                    }
-                    if ((e = tabAt(t, i)) != null && e.hash < 0) {
+                    Node<V>[] t; int i, n;      // must use locals in checks
+                    if (baseIndex >= baseLimit || (t = tab) == null ||
+                        (n = t.length) <= (i = index) || i < 0)
+                        return nextVal = null;
+                    if ((e = next = tabAt(t, index)) != null && e.hash < 0) {
+                        Object ek;
                         if ((ek = e.key) instanceof TreeBin)
                             e = ((TreeBin<V>)ek).first;
                         else {
                             tab = (Node<V>[])ek;
                             continue;           // restarts due to null val
                         }
-                    }                           // visit upper slots if present
-                    index = (i += baseSize) < n ? i : (baseIndex = b + 1);
+                    }
+                    if ((index += baseSize) >= n)
+                        index = ++baseIndex;    // visit upper slots if present
                 }
-                nextKey = (K)e.key;            // skip deleted or special nodes
-            } while ((v = e.val) == null);
-            next = e;
-            return nextVal = v;
+                nextKey = (K)e.key;
+                if ((nextVal = e.val) != null) // skip deleted or special nodes
+                    return nextVal;
+            }
         }
 
-        // Same idea, but with fewer accesses for key traversals
+        /**
+         * Common case version for value traversal
+         */
+        @SuppressWarnings("unchecked") final V advanceValue() {
+            outer: for (Node<V> e = next;;) {
+                if (e == null || (e = e.next) == null) {
+                    Node<V>[] t; int i, len, n; Object ek;
+                    if ((t = tab) == null ||
+                        baseSize != (len = t.length) ||
+                        len < (n = baseLimit) ||
+                        baseIndex != (i = index))
+                        break;
+                    do {
+                        if (i < 0 || i >= n) {
+                            index = baseIndex = n;
+                            next = null;
+                            return nextVal = null;
+                        }
+                        if ((e = tabAt(t, i)) != null && e.hash < 0) {
+                            if ((ek = e.key) instanceof TreeBin)
+                                e = ((TreeBin<V>)ek).first;
+                            else {
+                                index = baseIndex = i;
+                                next = null;
+                                tab = (Node<V>[])ek;
+                                break outer;
+                            }
+                        }
+                        ++i;
+                    } while (e == null);
+                    index = baseIndex = i;
+                }
+                V v;
+                K k = (K)e.key;
+                if ((v = e.val) != null) {
+                    nextVal = v;
+                    nextKey = k;
+                    next = e;
+                    return v;
+                }
+            }
+            return advance();
+        }
+
+        /**
+         * Common case version for key traversal
+         */
         @SuppressWarnings("unchecked") final K advanceKey() {
-            K k;
-            Node<V> e = next;
-            outer: do {
-                if (e != null)
-                    e = e.next;
-                while (e == null) {
-                    Node<V>[] t; int b, i, n; Object ek;
-                    if ((t = tab) == null || (n = t.length) <= (i = index) ||
-                        i < 0 || (b = baseIndex) >= baseLimit) {
-                        nextVal = null;
-                        k = null;
-                        break outer;
-                    }
-                    if ((e = tabAt(t, i)) != null && e.hash < 0) {
-                        if ((ek = e.key) instanceof TreeBin)
-                            e = ((TreeBin<V>)ek).first;
-                        else {
-                            tab = (Node<V>[])ek;
-                            continue;
+            outer: for (Node<V> e = next;;) {
+                if (e == null || (e = e.next) == null) {
+                    Node<V>[] t; int i, len, n; Object ek;
+                    if ((t = tab) == null ||
+                        baseSize != (len = t.length) ||
+                        len < (n = baseLimit) ||
+                        baseIndex != (i = index))
+                        break;
+                    do {
+                        if (i < 0 || i >= n) {
+                            index = baseIndex = n;
+                            next = null;
+                            nextVal = null;
+                            return null;
+                        }
+                        if ((e = tabAt(t, i)) != null && e.hash < 0) {
+                            if ((ek = e.key) instanceof TreeBin)
+                                e = ((TreeBin<V>)ek).first;
+                            else {
+                                index = baseIndex = i;
+                                next = null;
+                                tab = (Node<V>[])ek;
+                                break outer;
+                            }
+                        }
+                        ++i;
+                    } while (e == null);
+                    index = baseIndex = i;
+                }
+                V v;
+                K k = (K)e.key;
+                if ((v = e.val) != null) {
+                    nextVal = v;
+                    nextKey = k;
+                    next = e;
+                    return k;
+                }
+            }
+            return (advance() == null) ? null : nextKey;
+        }
+
+        @SuppressWarnings("unchecked") final void forEachValue(Consumer<? super V> action) {
+            if (action == null) throw new NullPointerException();
+            Node<V>[] t; int i, len, n;
+            if ((t = tab) != null && baseSize == (len = t.length) &&
+                len >= (n = baseLimit) && baseIndex == (i = index)) {
+                Node<V> e = next;
+                index = baseIndex = n;
+                next = null;
+                nextVal = null;
+                outer: for (;; e = e.next) {
+                    V v; Object ek;
+                    for (; e == null; ++i) {
+                        if (i < 0 || i >= n)
+                            return;
+                        if ((e = tabAt(t, i)) != null && e.hash < 0) {
+                            if ((ek = e.key) instanceof TreeBin)
+                                e = ((TreeBin<V>)ek).first;
+                            else {
+                                index = baseIndex = i;
+                                tab = (Node<V>[])ek;
+                                break outer;
+                            }
                         }
                     }
-                    index = (i += baseSize) < n ? i : (baseIndex = b + 1);
+                    if ((v = e.val) != null)
+                        action.accept(v);
                 }
-                k = (K)e.key;
-            } while ((nextVal = e.val) == null);
-            next = e;
-            return nextKey = k;
+            }
+            V v;
+            while ((v = advance()) != null)
+                action.accept(v);
+        }
+
+        @SuppressWarnings("unchecked") final void forEachKey(Consumer<? super K> action) {
+            if (action == null) throw new NullPointerException();
+            Node<V>[] t; int i, len, n;
+            if ((t = tab) != null && baseSize == (len = t.length) &&
+                len >= (n = baseLimit) && baseIndex == (i = index)) {
+                Node<V> e = next;
+                index = baseIndex = n;
+                next = null;
+                nextVal = null;
+                outer: for (;; e = e.next) {
+                    for (; e == null; ++i) {
+                        if (i < 0 || i >= n)
+                            return;
+                        if ((e = tabAt(t, i)) != null && e.hash < 0) {
+                            Object ek;
+                            if ((ek = e.key) instanceof TreeBin)
+                                e = ((TreeBin<V>)ek).first;
+                            else {
+                                index = baseIndex = i;
+                                tab = (Node<V>[])ek;
+                                break outer;
+                            }
+                        }
+                    }
+                    Object k = e.key;
+                    if (e.val != null)
+                        action.accept((K)k);
+                }
+            }
+            while (advance() != null)
+                action.accept(nextKey);
         }
 
         public final void remove() {
@@ -2325,6 +2446,8 @@ public class ConcurrentHashMap<K,V>
         public final boolean hasMoreElements() { return hasNext(); }
 
         public void compute() { } // default no-op CountedCompleter body
+
+        public long estimateSize() { return batch; }
 
         /**
          * Returns a batch value > 0 if this task should (and must) be
@@ -2345,18 +2468,11 @@ public class ConcurrentHashMap<K,V>
                 long n = map.sumCount();
                 b = (n <= 0L) ? 0 : (n < (long)sp) ? (int)n : sp;
             }
-            b = (b <= 1 || baseIndex == baseLimit) ? 0 : (b >>> 1);
+            b = (b <= 1 || baseIndex >= baseLimit) ? 0 : (b >>> 1);
             if ((batch = b) > 0)
                 addToPendingCount(1);
             return b;
         }
-
-        // spliterator support
-
-        public long estimateSize() {
-            return batch;
-        }
-
     }
 
     /* ---------------- Public operations -------------- */
@@ -2958,8 +3074,8 @@ public class ConcurrentHashMap<K,V>
         KeyIterator(ConcurrentHashMap<K,V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
-        public KeyIterator<K,V> trySplit() {
-            return (baseIndex == baseLimit) ? null :
+        public Spliterator<K> trySplit() {
+            return (baseIndex >= baseLimit) ? null :
                 new KeyIterator<K,V>(map, this);
         }
         public final K next() {
@@ -2975,10 +3091,7 @@ public class ConcurrentHashMap<K,V>
         public Iterator<K> iterator() { return this; }
 
         public void forEach(Consumer<? super K> action) {
-            if (action == null) throw new NullPointerException();
-            K k;
-            while ((k = advanceKey()) != null)
-                action.accept(k);
+            forEachKey(action);
         }
 
         public boolean tryAdvance(Consumer<? super K> block) {
@@ -3004,8 +3117,8 @@ public class ConcurrentHashMap<K,V>
         ValueIterator(ConcurrentHashMap<K,V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
-        public ValueIterator<K,V> trySplit() {
-            return (baseIndex == baseLimit) ? null :
+        public Spliterator<V> trySplit() {
+            return (baseIndex >= baseLimit) ? null :
                 new ValueIterator<K,V>(map, this);
         }
 
@@ -3022,10 +3135,7 @@ public class ConcurrentHashMap<K,V>
         public Iterator<V> iterator() { return this; }
 
         public void forEach(Consumer<? super V> action) {
-            if (action == null) throw new NullPointerException();
-            V v;
-            while ((v = advanceValue()) != null)
-                action.accept(v);
+            forEachValue(action);
         }
 
         public boolean tryAdvance(Consumer<? super V> block) {
@@ -3049,8 +3159,8 @@ public class ConcurrentHashMap<K,V>
         EntryIterator(ConcurrentHashMap<K,V> map, Traverser<K,V,Object> it) {
             super(map, it);
         }
-        public EntryIterator<K,V> trySplit() {
-            return (baseIndex == baseLimit) ? null :
+        public Spliterator<Map.Entry<K,V>> trySplit() {
+            return (baseIndex >= baseLimit) ? null :
                 new EntryIterator<K,V>(map, this);
         }
 
@@ -3431,11 +3541,7 @@ public class ConcurrentHashMap<K,V>
      */
     public void forEachKeySequentially
         (Consumer<? super K> action) {
-        if (action == null) throw new NullPointerException();
-        Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
-        K k;
-        while ((k = it.advanceKey()) != null)
-            action.accept(k);
+        new Traverser<K,V,Object>(this).forEachKey(action);
     }
 
     /**
@@ -3611,11 +3717,7 @@ public class ConcurrentHashMap<K,V>
      * @param action the action
      */
     public void forEachValueSequentially(Consumer<? super V> action) {
-        if (action == null) throw new NullPointerException();
-        Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
-        V v;
-        while ((v = it.advanceValue()) != null)
-            action.accept(v);
+        new Traverser<K,V,Object>(this).forEachValue(action);
     }
 
     /**
@@ -5610,9 +5712,7 @@ public class ConcurrentHashMap<K,V>
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachKeyTask<K,V>(map, this, b, action).fork();
-                K k;
-                while ((k = advanceKey()) != null)
-                    action.accept(k);
+                forEachKey(action);
                 propagateCompletion();
             }
         }
@@ -5632,9 +5732,7 @@ public class ConcurrentHashMap<K,V>
             if ((action = this.action) != null) {
                 for (int b; (b = preSplit()) > 0;)
                     new ForEachValueTask<K,V>(map, this, b, action).fork();
-                V v;
-                while ((v = advanceValue()) != null)
-                    action.accept(v);
+                forEachValue(action);
                 propagateCompletion();
             }
         }

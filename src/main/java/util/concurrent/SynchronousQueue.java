@@ -10,6 +10,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.*;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
 import java.util.function.Consumer;
@@ -1053,7 +1054,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     Spliterator<E> spliterator() {
-        return Streams.emptySpliterator();
+        return Spliterators.emptySpliterator();
     }
 
     public Stream<E> stream() {

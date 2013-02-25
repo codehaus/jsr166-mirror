@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
 import java.util.function.Consumer;
@@ -1119,21 +1120,6 @@ public class LinkedBlockingDeque<E>
     private class Itr extends AbstractItr {
         Node<E> firstNode() { return first; }
         Node<E> nextNode(Node<E> n) { return n.next; }
-        // minimal, unsplittable Spliterator implementation
-        public boolean tryAdvance(Consumer<? super E> action) {
-            if (hasNext()) {
-                action.accept(next());
-                return true;
-            }
-            return false;
-        }
-        public void forEach(Consumer<? super E> action) {
-            while (hasNext())
-                action.accept(next());
-        }
-        public int characteristics() {
-            return Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.CONCURRENT;
-        }
     }
 
     /** Descending iterator */
@@ -1182,7 +1168,7 @@ public class LinkedBlockingDeque<E>
                 }
                 else if ((est -= i) <= 0L)
                     est = 1L;
-                return Collections.arraySnapshotSpliterator
+                return Spliterators.spliterator
                     (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
                      Spliterator.CONCURRENT);
             }

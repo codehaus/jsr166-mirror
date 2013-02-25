@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
 import java.util.function.Consumer;
@@ -871,7 +872,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 }
                 else if ((est -= i) <= 0L)
                     est = 1L;
-                return Collections.arraySnapshotSpliterator
+                return Spliterators.spliterator
                     (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
                      Spliterator.CONCURRENT);
             }

@@ -3594,8 +3594,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * remaining number of elements of a skip list when advancing
      * either across or down decreases by about 25%. To make this
      * observation useful, we need to know initial size, which we
-     * don't. But we use (1 << 2*levels) as a rough overestimate that
-     * minimizes risk of prematurely zeroing out while splitting.
+     * don't. But we can just use Integer.MAX_VALUE so that we
+     * don't prematurely zero out while splitting.
      */
     static class CSLMSpliterator<K,V> {
         final Comparator<? super K> comparator;
@@ -3605,24 +3605,20 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         int est;           // pseudo-size estimate
 
         CSLMSpliterator(ConcurrentSkipListMap<K,V> m) {
-            HeadIndex<K,V> h; Node<K,V> p; int d, n; Index<K,V> hd;
             this.comparator = m.comparator;
             this.fence = null;
-            for (;;) { // ensure h and n correspond to origin p
+            for (;;) { // ensure h corresponds to origin p
+                HeadIndex<K,V> h; Node<K,V> p;
                 Node<K,V> b = (h = m.head).node;
-                if ((p = b.next) == null) {
-                    n = 0;
-                    break;
-                }
-                if (p.value != null) {
-                    n = (d = h.level << 1) >= 31 ? Integer.MAX_VALUE : 1 << d;
+                if ((p = b.next) == null || p.value != null) {
+                    this.est = ((p == null) ? 0 : 
+                                (p.next == null) ? 1 : Integer.MAX_VALUE);
+                    this.current = p;
+                    this.row = h;
                     break;
                 }
                 p.helpDelete(b, p.next);
             }
-            this.est = n;
-            this.current = p;
-            this.row = (h.right == null && (hd = h.down) != null) ? hd : h;
         }
 
         CSLMSpliterator(Comparator<? super K> comparator, Index<K,V> row,
@@ -3669,7 +3665,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         @SuppressWarnings("unchecked")
-        public KeySpliterator<K,V> trySplit() {
+        public Spliterator<K> trySplit() {
             Node<K,V> e;
             Comparator<? super K> cmp = comparator;
             K f = fence;
@@ -3758,7 +3754,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         @SuppressWarnings("unchecked")
-        public ValueSpliterator<K,V> trySplit() {
+        public Spliterator<V> trySplit() {
             Node<K,V> e;
             Comparator<? super K> cmp = comparator;
             K f = fence;
@@ -3845,7 +3841,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         @SuppressWarnings("unchecked")
-        public EntrySpliterator<K,V> trySplit() {
+        public Spliterator<Map.Entry<K,V>> trySplit() {
             Node<K,V> e;
             Comparator<? super K> cmp = comparator;
             K f = fence;

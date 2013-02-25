@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
 import java.util.function.Consumer;
@@ -928,7 +929,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             Node p; int n;
             final LinkedTransferQueue<E> q = this.queue;
             if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
-                ((p = current) != null || (p = q.firstDataNode()) != null)) {
+                ((p = current) != null || (p = q.firstDataNode()) != null) &&
+                p.next != null) {
                 Object[] a = new Object[batch = n];
                 int i = 0;
                 do {
@@ -939,7 +941,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 } while (p != null && i < n);
                 if ((current = p) == null)
                     exhausted = true;
-                return Collections.arraySnapshotSpliterator
+                return Spliterators.spliterator
                     (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
                      Spliterator.CONCURRENT);
             }
@@ -986,6 +988,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
             return false;
         }
+
+        public long estimateSize() { return Long.MAX_VALUE; }
 
         public int characteristics() {
             return Spliterator.ORDERED | Spliterator.NONNULL |

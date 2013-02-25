@@ -3611,7 +3611,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 HeadIndex<K,V> h; Node<K,V> p;
                 Node<K,V> b = (h = m.head).node;
                 if ((p = b.next) == null || p.value != null) {
-                    this.est = ((p == null) ? 0 : 
+                    this.est = ((p == null) ? 0 :
                                 (p.next == null) ? 1 : Integer.MAX_VALUE);
                     this.current = p;
                     this.row = h;

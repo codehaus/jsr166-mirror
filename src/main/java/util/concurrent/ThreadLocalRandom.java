@@ -343,6 +343,29 @@ public class ThreadLocalRandom extends Random {
     private static final long serialVersionUID = -5851777807851030925L;
 
     /**
+     * @serialField rnd long
+     *              seed for random computations
+     * @serialField initialized boolean
+     *              always true
+     */
+    private static final ObjectStreamField[] serialPersistentFields = {
+            new ObjectStreamField("rnd", long.class),
+            new ObjectStreamField("initialized", boolean.class),
+    };
+
+    /**
+     * Saves the {@code ThreadLocalRandom} to a stream (that is, serializes it).
+     */
+    private void writeObject(java.io.ObjectOutputStream out)
+        throws java.io.IOException {
+
+        java.io.ObjectOutputStream.PutField fields = out.putFields();
+        fields.put("rnd", UNSAFE.getLong(Thread.currentThread(), SEED));
+        fields.put("initialized", true);
+        out.writeFields();
+    }
+
+    /**
      * Returns the {@link #current() current} thread's {@code ThreadLocalRandom}.
      */
     private Object readResolve() {

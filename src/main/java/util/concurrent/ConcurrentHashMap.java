@@ -2247,8 +2247,8 @@ public class ConcurrentHashMap<K,V>
             }
         }
 
-        /*
-         * Advances if possible, returning next valid value or null if none
+        /**
+         * Advances if possible, returning next valid value, or null if none.
          */
         @SuppressWarnings("unchecked") final V advance() {
             for (Node<V> e = next;;) {

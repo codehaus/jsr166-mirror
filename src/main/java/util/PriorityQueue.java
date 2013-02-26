@@ -795,11 +795,11 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         return Streams.parallelStream(spliterator());
     }
 
+    /**
+     * This is very similar to ArrayList Spliterator, except for extra
+     * null checks.
+     */
     static final class PriorityQueueSpliterator<E> implements Spliterator<E> {
-        /*
-         * This is very similar to ArrayList Spliterator, except for
-         * extra null checks.
-         */
         private final PriorityQueue<E> pq;
         private int index;            // current index, modified on advance/split
         private int fence;            // -1 until first use

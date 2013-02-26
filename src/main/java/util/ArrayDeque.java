@@ -613,12 +613,12 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         }
     }
 
+    /**
+     * This class is nearly a mirror-image of DeqIterator, using tail
+     * instead of head for initial cursor, and head instead of tail
+     * for fence.
+     */
     private class DescendingIterator implements Iterator<E> {
-        /*
-         * This class is nearly a mirror-image of DeqIterator, using
-         * tail instead of head for initial cursor, and head instead of
-         * tail for fence.
-         */
         private int cursor = tail;
         private int fence = head;
         private int lastRet = -1;

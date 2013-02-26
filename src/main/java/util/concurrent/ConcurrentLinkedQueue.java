@@ -780,8 +780,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             this.queue = queue;
         }
 
-        /*
-         * Split into arrays of arithmetically increasing batch sizes,
+        /**
+         * Splits into arrays of arithmetically increasing batch sizes,
          * giving up at MAX_BATCH.  This will only improve parallel
          * performance if per-element forEach actions are more costly
          * than transfering them into an array. If not, we limit

@@ -917,8 +917,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             this.queue = queue;
         }
 
-        /*
-         * Split into arrays of arithmetically increasing batch sizes,
+        /**
+         * Splits into arrays of arithmetically increasing batch sizes,
          * giving up at MAX_BATCH.  Treat the result as a
          * CopyOnWriteArrayList array snapshot.  This will only
          * improve parallel performance if per-element forEach actions

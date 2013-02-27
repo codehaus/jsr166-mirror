@@ -54,22 +54,20 @@ public class ThreadLocalRandom extends Random {
      * programs.
      *
      * Because this class is in a different package than class Thread,
-     * field access methods must use Unsafe to bypass access control
-     * rules.  The base functionality of Random methods is
-     * conveniently isolated in method next(bits), that just reads and
-     * writes the Thread field rather than its own field. However, to
-     * conform to the requirements of the Random constructor, during
-     * construction, the common static ThreadLocalRandom must maintain
-     * initialization and value fields, mainly for the sake of
-     * disabling user calls to setSeed while still allowing a call
-     * from constructor.  For serialization compatibility, these
-     * fields are left with the same declarations as used in the
-     * previous ThreadLocal-based version of this class, that used
-     * them differently. Note that serialization is completely
-     * unnecessary because there is only a static singleton. But these
-     * mechanics still ensure compatibility across versions.
+     * field access methods use Unsafe to bypass access control rules.
+     * The base functionality of Random methods is conveniently
+     * isolated in method next(bits), that just reads and writes the
+     * Thread field rather than its own field.  However, to conform to
+     * the requirements of the Random superclass constructor, the
+     * common static ThreadLocalRandom maintains an "initialized"
+     * field for the sake of rejecting user calls to setSeed while
+     * still allowing a call from constructor.  Note that
+     * serialization is completely unnecessary because there is only a
+     * static singleton.  But we generate a serial form containing
+     * "rnd" and "initialized" fields to ensure compatibility across
+     * versions.
      *
-     * Per-instance initialization is similar to that in the no-arg
+     * Per-thread initialization is similar to that in the no-arg
      * Random constructor, but we avoid correlation among not only
      * initial seeds of those created in different threads, but also
      * those created using class Random itself; while at the same time
@@ -156,7 +154,8 @@ public class ThreadLocalRandom extends Random {
      * @throws UnsupportedOperationException always
      */
     public void setSeed(long seed) {
-        if (initialized) // allow call from super() constructor
+        // only allow call from super() constructor
+        if (initialized)
             throw new UnsupportedOperationException();
     }
 

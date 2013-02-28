@@ -14,7 +14,7 @@ public class IntegerMax {
     static final AtomicInteger checksum = new AtomicInteger();
     static boolean print;
     static boolean allClasses = false; // true if also test dumb/default classes
-    static final BinaryOperator<Integer> MAX = 
+    static final BinaryOperator<Integer> MAX =
         (Integer x, Integer y) -> x >= y ? x : y;
 
     public static void main(String[] args) throws Exception {
@@ -36,7 +36,7 @@ public class IntegerMax {
         }
     }
 
-    static String sep() { return print? "\n" : " "; }
+    static String sep() { return print ? "\n" : " "; }
 
     static void allTests(int size, int trials) throws Exception {
         System.out.println("---------------------------------------------");
@@ -111,7 +111,7 @@ public class IntegerMax {
             throw new Error("bad computation");
     }
 
-    static void ctest(Collection<Integer> c, List<Integer> klist, int kmax, int size, int trials) 
+    static void ctest(Collection<Integer> c, List<Integer> klist, int kmax, int size, int trials)
         throws Exception {
         String cn = c.getClass().getName();
         if (cn.startsWith("java.util.concurrent."))
@@ -159,7 +159,7 @@ public class IntegerMax {
         long tlast =  System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             Integer pmax = Integer.valueOf(Integer.MIN_VALUE - checksum.get());
-            for (Integer x : c) 
+            for (Integer x : c)
                 pmax = MAX.apply(pmax, x);
             checksum.getAndAdd(max - pmax);
         }

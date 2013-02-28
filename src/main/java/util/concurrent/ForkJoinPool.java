@@ -2310,7 +2310,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * other queues via helpComplete.
      */
     private void externalHelpComplete(WorkQueue q, ForkJoinTask<?> root) {
-        ForkJoinTask<?>[] a; int m; WorkQueue[] ws; 
+        ForkJoinTask<?>[] a; int m; WorkQueue[] ws;
         if (root != null && q != null && (a = q.array) != null &&
             (m = (a.length - 1)) >= 0) {
             outer: for (;;) {

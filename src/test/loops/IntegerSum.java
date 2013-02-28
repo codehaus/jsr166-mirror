@@ -36,7 +36,7 @@ public class IntegerSum {
         }
     }
 
-    static String sep() { return print? "\n" : " "; }
+    static String sep() { return print ? "\n" : " "; }
 
     static void allTests(int size, int trials) throws Exception {
         System.out.println("---------------------------------------------");
@@ -112,7 +112,7 @@ public class IntegerSum {
             throw new Error("bad computation");
     }
 
-    static void ctest(Collection<Integer> c, List<Integer> klist, int ksum, int size, int trials) 
+    static void ctest(Collection<Integer> c, List<Integer> klist, int ksum, int size, int trials)
         throws Exception {
         String cn = c.getClass().getName();
         if (cn.startsWith("java.util.concurrent."))
@@ -160,7 +160,7 @@ public class IntegerSum {
         long tlast =  System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             Integer psum = Integer.valueOf(checksum.get());
-            for (Integer x : c) 
+            for (Integer x : c)
                 psum = SUM.apply(psum, x);
             checksum.getAndAdd(sum - psum);
         }

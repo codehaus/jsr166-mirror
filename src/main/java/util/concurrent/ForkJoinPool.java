@@ -128,7 +128,7 @@ import java.util.concurrent.TimeUnit;
  * @since 1.7
  * @author Doug Lea
  */
-//@sun.misc.Contended
+//@sun.misc.Contended // enable when @Contended is stable
 public class ForkJoinPool extends AbstractExecutorService {
 
     /*
@@ -457,8 +457,11 @@ public class ForkJoinPool extends AbstractExecutorService {
      * fullExternalPush during the first submission to the pool.
      *
      * When external threads submit to the common pool, they can
-     * perform some subtask processing (see externalHelpJoin and
-     * related methods).  We do not need to record whether these
+     * perform subtask processing (see externalHelpJoin and related
+     * methods).  This caller-helps policymakes it sensible to set
+     * common pool parallelism level to one (or more) less than the
+     * total number of available cores, or even zero for pure
+     * caller-runs.  We do not need to record whether external
      * submissions are to the common pool -- if not, externalHelpJoin
      * returns quickly (at the most helping to signal some common pool
      * workers). These submitters would otherwise be blocked waiting
@@ -603,19 +606,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      * do not want multiple WorkQueue instances or multiple queue
      * arrays sharing cache lines. (It would be best for queue objects
      * and their arrays to share, but there is nothing available to
-     * help arrange that).  Unfortunately, because they are recorded
-     * in a common array, WorkQueue instances are often moved to be
-     * adjacent by garbage collectors. To reduce impact, we use field
-     * padding that works OK on common platforms; this effectively
-     * trades off slightly slower average field access for the sake of
-     * avoiding really bad worst-case access. (Until better JVM
-     * support is in place, this padding is dependent on transient
-     * properties of JVM field layout rules.) We also take care in
-     * allocating, sizing and resizing the array. Non-shared queue
-     * arrays are initialized by workers before use. Others are
-     * allocated on first use.
+     * help arrange that). The @Contended annotation alerts JVMs to
+     * try to keep instances apart.
      */
-    // disabled until compatible builds    @sun.misc.Contended
+    //@sun.misc.Contended // enable when @Contended is stable
     static final class WorkQueue {
         /**
          * Capacity of work-stealing queue array upon initialization.
@@ -637,9 +631,6 @@ public class ForkJoinPool extends AbstractExecutorService {
          */
         static final int MAXIMUM_QUEUE_CAPACITY = 1 << 26; // 64M
 
-        // Heuristic padding to ameliorate unfortunate memory placements
-        volatile long pad00, pad01, pad02, pad03, pad04, pad05, pad06;
-
         int seed;                  // for random scanning; initialize nonzero
         volatile int eventCount;   // encoded inactivation count; < 0 if inactive
         int nextWait;              // encoded record of next event waiter
@@ -656,9 +647,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         volatile Thread parker;    // == owner during call to park; else null
         volatile ForkJoinTask<?> currentJoin;  // task being joined in awaitJoin
         ForkJoinTask<?> currentSteal; // current non-local task being executed
-
-        volatile Object pad10, pad11, pad12, pad13, pad14, pad15, pad16, pad17;
-        volatile Object pad18, pad19, pad1a, pad1b, pad1c, pad1d;
 
         WorkQueue(ForkJoinPool pool, ForkJoinWorkerThread owner, int mode,
                   int seed) {
@@ -1202,21 +1190,10 @@ public class ForkJoinPool extends AbstractExecutorService {
     static final int SHARED_QUEUE        = -1;
 
     // bounds for #steps in scan loop -- must be power 2 minus 1
-    private static final int MIN_SCAN    = 0x7ff;   // cover estimation slop
+    private static final int MIN_SCAN    = 0x3ff;   // cover estimation slop
     private static final int MAX_SCAN    = 0x1ffff; // 4 * max workers
 
     // Instance fields
-
-    /*
-     * Field layout of this class tends to matter more than one would
-     * like. Runtime layout order is only loosely related to
-     * declaration order and may differ across JVMs, but the following
-     * empirically works OK on current JVMs.
-     */
-
-    // Heuristic padding to ameliorate unfortunate memory placements
-    volatile long pad00, pad01, pad02, pad03, pad04, pad05, pad06;
-
     volatile long stealCount;                  // collects worker counts
     volatile long ctl;                         // main pool control
     volatile int plock;                        // shutdown status and seqLock
@@ -1226,9 +1203,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     final ForkJoinWorkerThreadFactory factory;
     final UncaughtExceptionHandler ueh;        // per-worker UEH
     final String workerNamePrefix;             // to create worker name string
-
-    volatile Object pad10, pad11, pad12, pad13, pad14, pad15, pad16, pad17;
-    volatile Object pad18, pad19, pad1a, pad1b;
 
     /**
      * Acquires the plock lock to protect worker array and related
@@ -1902,15 +1876,15 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param task the task to join
      */
     private int helpComplete(ForkJoinTask<?> task) {
-        WorkQueue[] ws; WorkQueue q; int m, n, s, u;
-        if (task != null && task.status >= 0 && (ws = workQueues) != null &&
+        WorkQueue[] ws; int m;
+        if (task != null && (ws = workQueues) != null &&
             (m = ws.length - 1) >= 0) {
-            for (int j = 1, origin = j;;) {
+            for (int j = ((m + m + 1) | MIN_SCAN) & MAX_SCAN;;) {
+                WorkQueue q; int s;
                 if ((s = task.status) < 0)
                     return s;
-                if ((q = ws[j & m]) != null && q.pollAndExecCC(task))
-                    origin = j;
-                else if ((j = (j + 2) & m) == origin)
+                if (((q = ws[j & m]) == null || !q.pollAndExecCC(task)) &&
+                    (j -= 2) <= 0)
                     break;
             }
         }
@@ -2336,7 +2310,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * other queues via helpComplete.
      */
     private void externalHelpComplete(WorkQueue q, ForkJoinTask<?> root) {
-        ForkJoinTask<?>[] a; int m;
+        ForkJoinTask<?>[] a; int m; WorkQueue[] ws; 
         if (root != null && q != null && (a = q.array) != null &&
             (m = (a.length - 1)) >= 0) {
             outer: for (;;) {
@@ -3383,8 +3357,9 @@ public class ForkJoinPool extends AbstractExecutorService {
         } catch (Exception ignore) {
         }
 
-        if (parallelism < 0)
-            parallelism = Runtime.getRuntime().availableProcessors() - 1;
+        if (parallelism < 0 && // default 1 less than #cores
+            (parallelism = Runtime.getRuntime().availableProcessors() - 1) < 0)
+            parallelism = 0;
         if (parallelism > MAX_CAP)
             parallelism = MAX_CAP;
         return new ForkJoinPool(parallelism, factory, handler, false,

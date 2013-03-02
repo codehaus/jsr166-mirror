@@ -26,6 +26,7 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -984,7 +985,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     Spliterator<E> spliterator() {
-        return Collections.arraySnapshotSpliterator
+        return Spliterators.spliterator
             (getArray(), Spliterator.IMMUTABLE | Spliterator.ORDERED);
     }
 
@@ -1275,7 +1276,7 @@ public class CopyOnWriteArrayList<E>
                 throw new ConcurrentModificationException();
             if (lo < 0 || hi > a.length)
                 throw new IndexOutOfBoundsException();
-            return Collections.arraySnapshotSpliterator
+            return Spliterators.spliterator
                 (a, lo, hi, Spliterator.IMMUTABLE | Spliterator.ORDERED);
         }
 

@@ -14,6 +14,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Spliterators;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
@@ -1377,19 +1378,23 @@ public class ConcurrentLinkedDeque<E>
             final ConcurrentLinkedDeque<E> q = this.queue;
             if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
                 ((p = current) != null || (p = q.first()) != null)) {
-                Object[] a = new Object[batch = n];
-                int i = 0;
-                do {
-                    if ((a[i] = p.item) != null)
-                        ++i;
-                    if (p == (p = p.next))
-                        p = q.first();
-                } while (p != null && i < n);
-                if ((current = p) == null)
-                    exhausted = true;
-                return Collections.arraySnapshotSpliterator
-                    (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
-                     Spliterator.CONCURRENT);
+                if (p.item == null && p == (p = p.next))
+                    current = p = q.first();
+                if (p.next != null) {
+                    Object[] a = new Object[batch = n];
+                    int i = 0;
+                    do {
+                        if ((a[i] = p.item) != null)
+                            ++i;
+                        if (p == (p = p.next))
+                            p = q.first();
+                    } while (p != null && i < n);
+                    if ((current = p) == null)
+                        exhausted = true;
+                    return Spliterators.spliterator
+                        (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                         Spliterator.CONCURRENT);
+                }
             }
             return null;
         }
@@ -1432,6 +1437,8 @@ public class ConcurrentLinkedDeque<E>
             }
             return false;
         }
+
+        public long estimateSize() { return Long.MAX_VALUE; }
 
         public int characteristics() {
             return Spliterator.ORDERED | Spliterator.NONNULL |

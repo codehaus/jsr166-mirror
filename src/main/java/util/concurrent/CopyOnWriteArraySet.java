@@ -12,6 +12,7 @@ import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.stream.Stream;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Streams;
 
 /**
@@ -254,7 +255,10 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * @see #add(Object)
      */
     public boolean addAll(Collection<? extends E> c) {
-        return al.addAllAbsent(c) > 0;
+        if (c instanceof Set)
+            return al.addAll(c);
+        else
+            return al.addAllAbsent(c) > 0;
     }
 
     /**
@@ -361,7 +365,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     }
 
     Spliterator<E> spliterator() {
-        return Collections.arraySnapshotSpliterator
+        return Spliterators.spliterator
             (al.getArray(), Spliterator.IMMUTABLE |
              Spliterator.DISTINCT | Spliterator.ORDERED);
     }

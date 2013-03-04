@@ -125,7 +125,6 @@ public class AtomicDouble extends Number implements java.io.Serializable {
      *
      * <p><a
      * href="http://download.oracle.com/javase/7/docs/api/java/util/concurrent/atomic/package-summary.html#Spurious">
-
      * May fail spuriously and does not provide ordering guarantees</a>,
      * so is only rarely an appropriate alternative to {@code compareAndSet}.
      *

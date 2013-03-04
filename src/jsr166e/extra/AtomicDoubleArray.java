@@ -162,11 +162,11 @@ public class AtomicDoubleArray implements java.io.Serializable {
      * if the current value is <a href="#bitEquals">bitwise equal</a>
      * to the expected value.
      *
-     * <p>May <a
+     * <p><a
      * href="http://download.oracle.com/javase/7/docs/api/java/util/concurrent/atomic/package-summary.html#Spurious">
-     * fail spuriously</a>
-     * and does not provide ordering guarantees, so is only rarely an
-     * appropriate alternative to {@code compareAndSet}.
+
+     * May fail spuriously and does not provide ordering guarantees</a>,
+     * so is only rarely an appropriate alternative to {@code compareAndSet}.
      *
      * @param i the index
      * @param expect the expected value

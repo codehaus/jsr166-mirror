@@ -187,7 +187,7 @@
  * it may (or may not) reflect any updates since the iterator was
  * created.
  *
- * <h2><a name="MemoryVisibility">Memory Consistency Properties</a></h2>
+ * <h2 id="MemoryVisibility">Memory Consistency Properties</h2>
  *
  * <a href="http://java.sun.com/docs/books/jls/third_edition/html/memory.html">
  * Chapter 17 of the Java Language Specification</a> defines the

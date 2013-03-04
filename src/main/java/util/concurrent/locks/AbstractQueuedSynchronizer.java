@@ -119,7 +119,7 @@ import sun.misc.Unsafe;
  *
  * (Shared mode is similar but may involve cascading signals.)
  *
- * <p><a name="barging">Because checks in acquire are invoked before
+ * <p id="barging">Because checks in acquire are invoked before
  * enqueuing, a newly acquiring thread may <em>barge</em> ahead of
  * others that are blocked and queued.  However, you can, if desired,
  * define {@code tryAcquire} and/or {@code tryAcquireShared} to
@@ -128,7 +128,7 @@ import sun.misc.Unsafe;
  * In particular, most fair synchronizers can define {@code tryAcquire}
  * to return {@code false} if {@link #hasQueuedPredecessors} (a method
  * specifically designed to be used by fair synchronizers) returns
- * {@code true}.  Other variations are possible.</a>
+ * {@code true}.  Other variations are possible.
  *
  * <p>Throughput and scalability are generally highest for the
  * default barging (also known as <em>greedy</em>,

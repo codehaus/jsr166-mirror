@@ -19,7 +19,7 @@ import static java.lang.Double.longBitsToDouble;
  * this class does extend {@code Number} to allow uniform access by
  * tools and utilities that deal with numerically-based classes.
  *
- * <p><a name="bitEquals">This class compares primitive {@code double}
+ * <p id="bitEquals">This class compares primitive {@code double}
  * values in methods such as {@link #compareAndSet} by comparing their
  * bitwise representation using {@link Double#doubleToRawLongBits},
  * which differs from both the primitive double {@code ==} operator
@@ -29,7 +29,7 @@ import static java.lang.Double.longBitsToDouble;
  *   long xBits = Double.doubleToRawLongBits(x);
  *   long yBits = Double.doubleToRawLongBits(y);
  *   return xBits == yBits;
- * }}</pre></a>
+ * }}</pre>
  *
  * @see jsr166e.DoubleAdder
  * @see jsr166e.DoubleMaxUpdater

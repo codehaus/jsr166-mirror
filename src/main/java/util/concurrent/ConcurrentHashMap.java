@@ -4870,16 +4870,10 @@ public class ConcurrentHashMap<K,V>
             return added;
         }
 
-        Spliterator<K> spliterator() {
+        public Spliterator<K> spliterator() {
             return new KeyIterator<>(map, null);
         }
 
-        public Stream<K> stream() {
-            return Streams.stream(spliterator());
-        }
-        public Stream<K> parallelStream() {
-            return Streams.parallelStream(spliterator());
-        }
     }
 
     /**
@@ -4929,16 +4923,8 @@ public class ConcurrentHashMap<K,V>
             throw new UnsupportedOperationException();
         }
 
-        Spliterator<V> spliterator() {
+        public Spliterator<V> spliterator() {
             return new ValueIterator<K,V>(map, null);
-        }
-
-        public Stream<V> stream() {
-            return Streams.stream(spliterator());
-        }
-
-        public Stream<V> parallelStream() {
-            return Streams.parallelStream(spliterator());
         }
 
     }
@@ -5005,17 +4991,10 @@ public class ConcurrentHashMap<K,V>
             return added;
         }
 
-        Spliterator<Map.Entry<K,V>> spliterator() {
+        public Spliterator<Map.Entry<K,V>> spliterator() {
             return new EntryIterator<K,V>(map, null);
         }
 
-        public Stream<Map.Entry<K,V>> stream() {
-            return Streams.stream(spliterator());
-        }
-
-        public Stream<Map.Entry<K,V>> parallelStream() {
-            return Streams.parallelStream(spliterator());
-        }
     }
 
     // ---------------------------------------------------------------------

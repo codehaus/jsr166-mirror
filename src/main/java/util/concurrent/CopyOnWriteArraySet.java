@@ -364,17 +364,10 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         return k == len;
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return Spliterators.spliterator
             (al.getArray(), Spliterator.IMMUTABLE |
              Spliterator.DISTINCT | Spliterator.ORDERED);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     /**

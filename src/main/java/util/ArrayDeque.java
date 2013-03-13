@@ -846,16 +846,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             elements[i] = s.readObject();
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new DeqSpliterator<E>(this, -1, -1);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     static final class DeqSpliterator<E> implements Spliterator<E> {
@@ -879,7 +871,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             return t;
         }
 
-        public DeqSpliterator<E> trySplit() {
+        public Spliterator<E> trySplit() {
             int t = getFence(), h = index, n = deq.elements.length;
             if (h != t && ((h + 1) & (n - 1)) != t) {
                 if (h > t)

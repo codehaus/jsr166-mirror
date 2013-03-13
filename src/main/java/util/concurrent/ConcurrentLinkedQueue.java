@@ -858,18 +858,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new CLQSpliterator<E>(this);
     }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
-    }
-
 
     /**
      * Throws NullPointerException if argument is null.

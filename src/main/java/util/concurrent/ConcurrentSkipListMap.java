@@ -2629,19 +2629,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new KeySet<E>(m.descendingMap());
         }
         @SuppressWarnings("unchecked")
-        Spliterator<E> spliterator() {
+        public Spliterator<E> spliterator() {
             if (m instanceof ConcurrentSkipListMap)
                 return ((ConcurrentSkipListMap<E,?>)m).keySpliterator();
             else
                 return (Spliterator<E>)((SubMap<E,?>)m).keyIterator();
-        }
-
-        public Stream<E> stream() {
-            return Streams.stream(spliterator());
-        }
-
-        public Stream<E> parallelStream() {
-            return Streams.parallelStream(spliterator());
         }
     }
 
@@ -2672,19 +2664,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public Object[] toArray()     { return toList(this).toArray();  }
         public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
         @SuppressWarnings("unchecked")
-        Spliterator<E> spliterator() {
+        public Spliterator<E> spliterator() {
             if (m instanceof ConcurrentSkipListMap)
                 return ((ConcurrentSkipListMap<?,E>)m).valueSpliterator();
             else
                 return (Spliterator<E>)((SubMap<?,E>)m).valueIterator();
-        }
-
-        public Stream<E> stream() {
-            return Streams.stream(spliterator());
-        }
-
-        public Stream<E> parallelStream() {
-            return Streams.parallelStream(spliterator());
         }
     }
 
@@ -2741,22 +2725,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public Object[] toArray()     { return toList(this).toArray();  }
         public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
         @SuppressWarnings("unchecked")
-        Spliterator<Map.Entry<K1,V1>> spliterator() {
+        public Spliterator<Map.Entry<K1,V1>> spliterator() {
             if (m instanceof ConcurrentSkipListMap)
                 return ((ConcurrentSkipListMap<K1,V1>)m).entrySpliterator();
             else
                 return (Spliterator<Map.Entry<K1,V1>>)
                     ((SubMap<K1,V1>)m).entryIterator();
         }
-
-        public Stream<Map.Entry<K1,V1>> stream() {
-            return Streams.stream(spliterator());
-        }
-
-        public Stream<Map.Entry<K1,V1>> parallelStream() {
-            return Streams.parallelStream(spliterator());
-        }
-
     }
 
     /**
@@ -3566,16 +3541,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new KeySet<K>(m.descendingMap());
         }
 
-        Spliterator<K> spliterator() {
+        public Spliterator<K> spliterator() {
             return m.keySpliterator();
-        }
-
-        public Stream<K> stream() {
-            return Streams.stream(spliterator());
-        }
-
-        public Stream<K> parallelStream() {
-            return Streams.parallelStream(spliterator());
         }
 
     }

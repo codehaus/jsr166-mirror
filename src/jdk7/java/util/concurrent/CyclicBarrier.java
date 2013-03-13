@@ -314,7 +314,7 @@ public class CyclicBarrier {
      * the broken state.
      *
      * @return the arrival index of the current thread, where index
-     *         <tt>{@link #getParties()} - 1</tt> indicates the first
+     *         {@code getParties() - 1} indicates the first
      *         to arrive and zero indicates the last to arrive
      * @throws InterruptedException if the current thread was interrupted
      *         while waiting
@@ -383,7 +383,7 @@ public class CyclicBarrier {
      * @param timeout the time to wait for the barrier
      * @param unit the time unit of the timeout parameter
      * @return the arrival index of the current thread, where index
-     *         <tt>{@link #getParties()} - 1</tt> indicates the first
+     *         {@code getParties() - 1} indicates the first
      *         to arrive and zero indicates the last to arrive
      * @throws InterruptedException if the current thread was interrupted
      *         while waiting

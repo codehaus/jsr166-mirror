@@ -122,13 +122,12 @@
  * semantics for their array elements, which is not supported for
  * ordinary arrays.
  *
- * <a name="Spurious">
- * <p>The atomic classes also support method {@code weakCompareAndSet},
- * which has limited applicability.  On some platforms, the weak version
- * may be more efficient than {@code compareAndSet} in the normal case,
- * but differs in that any given invocation of the
- * {@code weakCompareAndSet} method may return {@code false}
- * <em>spuriously</em> (that is, for no apparent reason)</a>.  A
+ * <p id="weakCompareAndSet">The atomic classes also support method
+ * {@code weakCompareAndSet}, which has limited applicability.  On some
+ * platforms, the weak version may be more efficient than {@code
+ * compareAndSet} in the normal case, but differs in that any given
+ * invocation of the {@code weakCompareAndSet} method may return {@code
+ * false} <em>spuriously</em> (that is, for no apparent reason).  A
  * {@code false} return means only that the operation may be retried if
  * desired, relying on the guarantee that repeated invocation when the
  * variable holds {@code expectedValue} and no other thread is also

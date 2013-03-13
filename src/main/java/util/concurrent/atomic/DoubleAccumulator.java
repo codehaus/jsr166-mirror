@@ -36,7 +36,7 @@ import java.util.function.DoubleBinaryOperator;
  * <p>Class {@link DoubleAdder} provides analogs of the functionality
  * of this class for the common special case of maintaining sums.  The
  * call {@code new DoubleAdder()} is equivalent to {@code new
- * DoubleAccumulator((x, y) -> x + y, 0.0}.
+ * DoubleAccumulator((x, y) -> x + y, 0.0)}.
  *
  * <p>This class extends {@link Number}, but does <em>not</em> define
  * methods such as {@code equals}, {@code hashCode} and {@code

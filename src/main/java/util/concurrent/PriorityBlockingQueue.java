@@ -979,14 +979,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new PBQSpliterator<E>(this, null, 0, -1);
-    }
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     // Unsafe mechanics

@@ -454,19 +454,11 @@ public class ConcurrentSkipListSet<E>
     }
 
     @SuppressWarnings("unchecked")
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         if (m instanceof ConcurrentSkipListMap)
             return ((ConcurrentSkipListMap<E,?>)m).keySpliterator();
         else
             return (Spliterator<E>)((ConcurrentSkipListMap.SubMap<E,?>)m).keyIterator();
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     // Support for resetting map in clone

@@ -984,17 +984,9 @@ public class CopyOnWriteArrayList<E>
         return new COWIterator<E>(elements, index);
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return Spliterators.spliterator
             (getArray(), Spliterator.IMMUTABLE | Spliterator.ORDERED);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-
-    }
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     static final class COWIterator<E> implements ListIterator<E> {
@@ -1268,7 +1260,7 @@ public class CopyOnWriteArrayList<E>
             }
         }
 
-        Spliterator<E> spliterator() {
+        public Spliterator<E> spliterator() {
             int lo = offset;
             int hi = offset + size;
             Object[] a = expectedArray;
@@ -1280,13 +1272,6 @@ public class CopyOnWriteArrayList<E>
                 (a, lo, hi, Spliterator.IMMUTABLE | Spliterator.ORDERED);
         }
 
-        public Stream<E> stream() {
-            return Streams.stream(spliterator());
-        }
-
-        public Stream<E> parallelStream() {
-            return Streams.parallelStream(spliterator());
-        }
     }
 
     private static class COWSubListIterator<E> implements ListIterator<E> {

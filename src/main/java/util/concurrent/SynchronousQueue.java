@@ -1053,16 +1053,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         public void remove() { throw new IllegalStateException(); }
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return Spliterators.emptySpliterator();
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     /**

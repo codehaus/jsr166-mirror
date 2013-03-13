@@ -783,16 +783,8 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         heapify();
     }
 
-    final Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new PriorityQueueSpliterator<E>(this, 0, -1, 0);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     /**
@@ -823,7 +815,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
             return hi;
         }
 
-        public PriorityQueueSpliterator<E> trySplit() {
+        public Spliterator<E> trySplit() {
             int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
             return (lo >= mid) ? null :
                 new PriorityQueueSpliterator<E>(pq, lo, index = mid,

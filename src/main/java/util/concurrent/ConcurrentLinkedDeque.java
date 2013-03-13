@@ -1380,7 +1380,7 @@ public class ConcurrentLinkedDeque<E>
                 ((p = current) != null || (p = q.first()) != null)) {
                 if (p.item == null && p == (p = p.next))
                     current = p = q.first();
-                if (p.next != null) {
+                if (p != null && p.next != null) {
                     Object[] a = new Object[batch = n];
                     int i = 0;
                     do {
@@ -1446,16 +1446,8 @@ public class ConcurrentLinkedDeque<E>
         }
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new CLDSpliterator<E>(this);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     /**

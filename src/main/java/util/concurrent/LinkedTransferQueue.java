@@ -998,16 +998,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new LTQSpliterator<E>(this);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     /* -------------- Removal methods -------------- */

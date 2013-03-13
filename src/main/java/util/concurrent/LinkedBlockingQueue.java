@@ -924,11 +924,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 } finally {
                     q.fullyUnlock();
                 }
+                if (current == null)
+                    exhausted = true;
                 if (e != null) {
                     action.accept(e);
                     return true;
                 }
-                exhausted = true;
             }
             return false;
         }
@@ -939,16 +940,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new LBQSpliterator<E>(this);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     /**

@@ -1370,18 +1370,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 //         }
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return Spliterators.spliterator
             (this, Spliterator.ORDERED | Spliterator.NONNULL |
              Spliterator.CONCURRENT);
-    }
-
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
 }

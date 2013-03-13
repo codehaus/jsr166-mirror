@@ -1237,15 +1237,8 @@ public class LinkedBlockingDeque<E>
         }
     }
 
-    Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() {
         return new LBDSpliterator<E>(this);
-    }
-    public Stream<E> stream() {
-        return Streams.stream(spliterator());
-    }
-
-    public Stream<E> parallelStream() {
-        return Streams.parallelStream(spliterator());
     }
 
     /**

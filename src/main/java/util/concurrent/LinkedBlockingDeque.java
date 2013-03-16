@@ -1128,9 +1128,10 @@ public class LinkedBlockingDeque<E>
         Node<E> nextNode(Node<E> n) { return n.prev; }
     }
 
+    /** A customized variant of Spliterators.IteratorSpliterator */
     static final class LBDSpliterator<E> implements Spliterator<E> {
-        // Similar idea to ConcurrentLinkedQueue spliterator
-        static final int MAX_BATCH = 1 << 11;  // saturate batch size
+        static final int MAX_BATCH = 1 << 20;  // max batch array size;
+        static final int MAX_QUEUED = 1 << 12; // max task backlog
         final LinkedBlockingDeque<E> queue;
         Node<E> current;    // current node; null until initialized
         int batch;          // batch size for splits
@@ -1144,11 +1145,19 @@ public class LinkedBlockingDeque<E>
         public long estimateSize() { return est; }
 
         public Spliterator<E> trySplit() {
-            int n;
+            int b;
             final LinkedBlockingDeque<E> q = this.queue;
             final ReentrantLock lock = q.lock;
-            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH) {
-                Object[] a = new Object[batch = n];
+            if (!exhausted && 
+                ((b = batch) < MAX_QUEUED || 
+                 java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED)) {
+                int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                Object[] a;
+                try {
+                    a = new Object[n];
+                } catch (OutOfMemoryError oome) {
+                    return null;
+                }
                 int i = 0;
                 Node<E> p = current;
                 lock.lock();
@@ -1166,8 +1175,8 @@ public class LinkedBlockingDeque<E>
                     est = 0L;
                     exhausted = true;
                 }
-                else if ((est -= i) <= 0L)
-                    est = 1L;
+                else if ((est -= i) < 0L)
+                    est = 0L;
                 return Spliterators.spliterator
                     (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
                      Spliterator.CONCURRENT);
@@ -1222,11 +1231,12 @@ public class LinkedBlockingDeque<E>
                 } finally {
                     lock.unlock();
                 }
+                if (current == null)
+                    exhausted = true;
                 if (e != null) {
                     action.accept(e);
                     return true;
                 }
-                exhausted = true;
             }
             return false;
         }

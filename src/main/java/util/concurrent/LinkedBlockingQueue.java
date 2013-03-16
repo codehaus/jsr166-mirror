@@ -833,9 +833,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /** A customized variant of Spliterators.IteratorSpliterator */
     static final class LBQSpliterator<E> implements Spliterator<E> {
-        // Similar idea to ConcurrentLinkedQueue spliterator
-        static final int MAX_BATCH = 1 << 11;  // saturate batch size
+        static final int MAX_BATCH = 1 << 20;  // max batch array size;
+        static final int MAX_QUEUED = 1 << 12; // max task backlog
         final LinkedBlockingQueue<E> queue;
         Node<E> current;    // current node; null until initialized
         int batch;          // batch size for splits
@@ -849,10 +850,18 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         public long estimateSize() { return est; }
 
         public Spliterator<E> trySplit() {
-            int n;
+            int b;
             final LinkedBlockingQueue<E> q = this.queue;
-            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH) {
-                Object[] a = new Object[batch = n];
+            if (!exhausted && 
+                ((b = batch) < MAX_QUEUED || 
+                 java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED)) {
+                int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                Object[] a;
+                try {
+                    a = new Object[n];
+                } catch (OutOfMemoryError oome) {
+                    return null;
+                }
                 int i = 0;
                 Node<E> p = current;
                 q.fullyLock();
@@ -870,8 +879,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                     est = 0L;
                     exhausted = true;
                 }
-                else if ((est -= i) <= 0L)
-                    est = 1L;
+                else if ((est -= i) < 0L)
+                    est = 0L;
                 return Spliterators.spliterator
                     (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
                      Spliterator.CONCURRENT);

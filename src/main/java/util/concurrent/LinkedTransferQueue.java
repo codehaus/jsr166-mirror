@@ -906,9 +906,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
-    // Very similar to ConcurrentLinkedQueue spliterator
+    /** A customized variant of Spliterators.IteratorSpliterator */
     static final class LTQSpliterator<E> implements Spliterator<E> {
-        static final int MAX_BATCH = 1 << 10;  // saturate batch size
+        static final int MAX_BATCH = 1 << 20;  // max batch array size;
+        static final int MAX_QUEUED = 1 << 12; // max task backlog
         final LinkedTransferQueue<E> queue;
         Node current;    // current node; null until initialized
         int batch;          // batch size for splits
@@ -926,12 +927,20 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * not, we limit slowdowns by eventually returning null split.
          */
         public Spliterator<E> trySplit() {
-            Node p; int n;
+            Node p; int b;
             final LinkedTransferQueue<E> q = this.queue;
-            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
+            if (!exhausted && 
+                ((b = batch) < MAX_QUEUED || 
+                 java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED) &&
                 ((p = current) != null || (p = q.firstDataNode()) != null) &&
                 p.next != null) {
-                Object[] a = new Object[batch = n];
+                int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                Object[] a;
+                try {
+                    a = new Object[n];
+                } catch (OutOfMemoryError oome) {
+                    return null;
+                }
                 int i = 0;
                 do {
                     if ((a[i] = p.item) != null)

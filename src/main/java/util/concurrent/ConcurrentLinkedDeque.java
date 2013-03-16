@@ -1362,9 +1362,10 @@ public class ConcurrentLinkedDeque<E>
         Node<E> nextNode(Node<E> p) { return pred(p); }
     }
 
-    // Same idea as ConcurrentLinkedQueue Spliterator
+    /** A customized variant of Spliterators.IteratorSpliterator */
     static final class CLDSpliterator<E> implements Spliterator<E> {
-        static final int MAX_BATCH = 1 << 10;  // saturate batch size
+        static final int MAX_BATCH = 1 << 20;  // max batch array size;
+        static final int MAX_QUEUED = 1 << 12; // max task backlog
         final ConcurrentLinkedDeque<E> queue;
         Node<E> current;    // current node; null until initialized
         int batch;          // batch size for splits
@@ -1374,14 +1375,22 @@ public class ConcurrentLinkedDeque<E>
         }
 
         public Spliterator<E> trySplit() {
-            Node<E> p; int n;
+            Node<E> p; int b;
             final ConcurrentLinkedDeque<E> q = this.queue;
-            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
+            if (!exhausted && 
                 ((p = current) != null || (p = q.first()) != null)) {
                 if (p.item == null && p == (p = p.next))
                     current = p = q.first();
-                if (p != null && p.next != null) {
-                    Object[] a = new Object[batch = n];
+                if (p != null && p.next != null &&
+                    ((b = batch) < MAX_QUEUED || 
+                     java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED)) {
+                    int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                    Object[] a;
+                    try {
+                        a = new Object[n];
+                    } catch (OutOfMemoryError oome) {
+                        return null;
+                    }
                     int i = 0;
                     do {
                         if ((a[i] = p.item) != null)

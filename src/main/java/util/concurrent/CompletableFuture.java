@@ -447,8 +447,8 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncApply<T,U> extends Async {
-        final Function<? super T,? extends U> fn;
         final T arg;
+        final Function<? super T,? extends U> fn;
         final CompletableFuture<U> dst;
         AsyncApply(T arg, Function<? super T,? extends U> fn,
                    CompletableFuture<U> dst) {
@@ -472,9 +472,9 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncBiApply<T,U,V> extends Async {
-        final BiFunction<? super T,? super U,? extends V> fn;
         final T arg1;
         final U arg2;
+        final BiFunction<? super T,? super U,? extends V> fn;
         final CompletableFuture<V> dst;
         AsyncBiApply(T arg1, U arg2,
                      BiFunction<? super T,? super U,? extends V> fn,
@@ -499,8 +499,8 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncAccept<T> extends Async {
-        final Consumer<? super T> fn;
         final T arg;
+        final Consumer<? super T> fn;
         final CompletableFuture<Void> dst;
         AsyncAccept(T arg, Consumer<? super T> fn,
                     CompletableFuture<Void> dst) {
@@ -523,9 +523,9 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncBiAccept<T,U> extends Async {
-        final BiConsumer<? super T,? super U> fn;
         final T arg1;
         final U arg2;
+        final BiConsumer<? super T,? super U> fn;
         final CompletableFuture<Void> dst;
         AsyncBiAccept(T arg1, U arg2,
                       BiConsumer<? super T,? super U> fn,
@@ -549,8 +549,8 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     static final class AsyncCompose<T,U> extends Async {
-        final Function<? super T, CompletableFuture<U>> fn;
         final T arg;
+        final Function<? super T, CompletableFuture<U>> fn;
         final CompletableFuture<U> dst;
         AsyncCompose(T arg,
                      Function<? super T, CompletableFuture<U>> fn,

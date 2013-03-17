@@ -76,7 +76,7 @@ import java.util.concurrent.locks.LockSupport;
  * Executor} or by default the {@link ForkJoinPool#commonPool()}, of a
  * function or action that will result in the completion of a new
  * CompletableFuture. To simplify monitoring, debugging, and tracking,
- * all generated asynchronous tasks are instances of the tagging
+ * all generated asynchronous tasks are instances of the marker
  * interface {@link AsynchronousCompletionTask}.
  *
  * @author Doug Lea

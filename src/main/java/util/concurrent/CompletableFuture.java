@@ -1574,7 +1574,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed with
+     * Returns a new CompletableFuture that is completed with
      * the result of the given function of this CompletableFuture.
      * If this CompletableFuture completes exceptionally,
      * then the returned CompletableFuture also does so,
@@ -1590,7 +1590,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is asynchronously
+     * Returns a new CompletableFuture that is asynchronously
      * completed using the {@link ForkJoinPool#commonPool()} with the
      * result of the given function of this CompletableFuture.  If
      * this CompletableFuture completes exceptionally, then the
@@ -1607,7 +1607,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is asynchronously
+     * Returns a new CompletableFuture that is asynchronously
      * completed using the given executor with the result of the given
      * function of this CompletableFuture.  If this CompletableFuture
      * completes exceptionally, then the returned CompletableFuture
@@ -1672,7 +1672,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed after
+     * Returns a new CompletableFuture that is completed after
      * performing the given action with this CompletableFuture's
      * result when it completes.  If this CompletableFuture
      * completes exceptionally, then the returned CompletableFuture
@@ -1688,7 +1688,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is asynchronously
+     * Returns a new CompletableFuture that is asynchronously
      * completed using the {@link ForkJoinPool#commonPool()} with this
      * CompletableFuture's result when it completes.  If this
      * CompletableFuture completes exceptionally, then the returned
@@ -1704,7 +1704,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is asynchronously
+     * Returns a new CompletableFuture that is asynchronously
      * completed using the given executor with this
      * CompletableFuture's result when it completes.  If this
      * CompletableFuture completes exceptionally, then the returned
@@ -1766,7 +1766,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed after
+     * Returns a new CompletableFuture that is completed after
      * performing the given action when this CompletableFuture
      * completes.  If this CompletableFuture completes exceptionally,
      * then the returned CompletableFuture also does so, with a
@@ -1781,7 +1781,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is asynchronously
+     * Returns a new CompletableFuture that is asynchronously
      * completed using the {@link ForkJoinPool#commonPool()} after
      * performing the given action when this CompletableFuture
      * completes.  If this CompletableFuture completes exceptionally,
@@ -1797,7 +1797,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is asynchronously
+     * Returns a new CompletableFuture that is asynchronously
      * completed using the given executor after performing the given
      * action when this CompletableFuture completes.  If this
      * CompletableFuture completes exceptionally, then the returned
@@ -1854,7 +1854,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed with
+     * Returns a new CompletableFuture that is completed with
      * the result of the given function of this and the other given
      * CompletableFuture's results when both complete.  If this or
      * the other CompletableFuture complete exceptionally, then the
@@ -1873,7 +1873,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is asynchronously
+     * Returns a new CompletableFuture that is asynchronously
      * completed using the {@link ForkJoinPool#commonPool()} with
      * the result of the given function of this and the other given
      * CompletableFuture's results when both complete.  If this or
@@ -1893,7 +1893,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is
+     * Returns a new CompletableFuture that is
      * asynchronously completed using the given executor with the
      * result of the given function of this and the other given
      * CompletableFuture's results when both complete.  If this or
@@ -1984,7 +1984,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed with
+     * Returns a new CompletableFuture that is completed with
      * the results of this and the other given CompletableFuture if
      * both complete.  If this and/or the other CompletableFuture
      * complete exceptionally, then the returned CompletableFuture
@@ -2003,7 +2003,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the {@link ForkJoinPool#commonPool()} with
      * the results of this and the other given CompletableFuture when
      * both complete.  If this and/or the other CompletableFuture
@@ -2023,7 +2023,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the given executor with the results of
      * this and the other given CompletableFuture when both complete.
      * If this and/or the other CompletableFuture complete exceptionally,
@@ -2112,7 +2112,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed when
+     * Returns a new CompletableFuture that is completed when
      * this and the other given CompletableFuture both complete.
      * If this and/or the other CompletableFuture complete exceptionally,
      * then the returned CompletableFuture also does so, with a
@@ -2129,7 +2129,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the {@link ForkJoinPool#commonPool()}
      * when this and the other given CompletableFuture both complete.
      * If this and/or the other CompletableFuture complete exceptionally,
@@ -2147,7 +2147,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the given executor when this and the
      * other given CompletableFuture both complete.
      * If this and/or the other CompletableFuture complete exceptionally,
@@ -2221,7 +2221,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed with
+     * Returns a new CompletableFuture that is completed with
      * the result of the given function of either this or the other
      * given CompletableFuture's results when either complete.
      * If this and/or the other CompletableFuture complete exceptionally,
@@ -2242,7 +2242,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the {@link ForkJoinPool#commonPool()} with
      * the result of the given function of either this or the other
      * given CompletableFuture's results when either complete.
@@ -2264,7 +2264,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the given executor with the result of the
      * given function of either this or the other given
      * CompletableFuture's results when either complete.  If this
@@ -2341,7 +2341,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed after
+     * Returns a new CompletableFuture that is completed after
      * performing the given action with the result of either this or the
      * other given CompletableFuture's result, when either complete.
      * If this and/or the other CompletableFuture complete exceptionally,
@@ -2362,7 +2362,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the {@link ForkJoinPool#commonPool()},
      * performing the given action with the result of either this or
      * the other given CompletableFuture's result, when either complete.
@@ -2384,7 +2384,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the given executor, performing the given
      * action with the result of either this or the other given
      * CompletableFuture's result, when either complete.
@@ -2460,7 +2460,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * after this or the other given CompletableFuture complete.
      * If this and/or the other CompletableFuture complete exceptionally,
      * then the returned CompletableFuture may also do so, with a
@@ -2479,7 +2479,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the {@link ForkJoinPool#commonPool()}
      * after this or the other given CompletableFuture complete.
      * If this and/or the other CompletableFuture complete exceptionally,
@@ -2500,7 +2500,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed
+     * Returns a new CompletableFuture that is completed
      * asynchronously using the given executor after this or the other
      * given CompletableFuture complete.
      * If this and/or the other CompletableFuture complete exceptionally,
@@ -2680,7 +2680,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed with
+     * Returns a new CompletableFuture that is completed with
      * the result of the given function of the exception triggering
      * this CompletableFuture's completion when it completes
      * exceptionally; Otherwise, if this CompletableFuture completes
@@ -2729,7 +2729,7 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Creates and returns a CompletableFuture that is completed with
+     * Returns a new CompletableFuture that is completed with
      * the result of the given function of the result and exception of
      * this CompletableFuture's completion when it completes.  The
      * given function is invoked with the result (or {@code null} if

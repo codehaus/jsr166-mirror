@@ -787,7 +787,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             final ConcurrentLinkedQueue<E> q = this.queue;
             if (!exhausted &&
                 ((b = batch) < MAX_QUEUED ||
-                 java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED) &&
+                 ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED) &&
                 ((p = current) != null || (p = q.first()) != null) &&
                 p.next != null) {
                 int n = batch = (b >= MAX_BATCH) ? MAX_BATCH : b + 1;

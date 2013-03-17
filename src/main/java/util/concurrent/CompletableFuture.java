@@ -562,17 +562,13 @@ public class CompletableFuture<T> implements Future<T> {
             if ((d = this.dst) != null && d.result == null) {
                 try {
                     fr = fn.apply(arg);
-                    ex = null;
+                    ex = (fr == null) ? new NullPointerException() : null;
                 } catch (Throwable rex) {
                     ex = rex;
                     fr = null;
                 }
                 if (ex != null)
                     u = null;
-                else if (fr == null) {
-                    ex = new NullPointerException();
-                    u = null;
-                }
                 else {
                     Object r = fr.result;
                     if (r instanceof AltResult) {
@@ -2660,15 +2656,13 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     try {
-                        dst = fn.apply(t);
+                        if ((dst = fn.apply(t)) == null)
+                            ex = new NullPointerException();
                     } catch (Throwable rex) {
                         ex = rex;
                     }
-                    if (dst == null) {
+                    if (dst == null)
                         dst = new CompletableFuture<U>();
-                        if (ex == null)
-                            ex = new NullPointerException();
-                    }
                 }
             }
             if (e == null && ex != null)

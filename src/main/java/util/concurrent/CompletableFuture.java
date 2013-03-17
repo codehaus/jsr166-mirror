@@ -2806,7 +2806,7 @@ public class CompletableFuture<T> implements Future<T> {
      * c3).join();}.
      *
      * @param cfs the CompletableFutures
-     * @return a new CompletableFuture that is complete when all of the
+     * @return a new CompletableFuture that is completed when all of the
      * given CompletableFutures complete
      * @throws NullPointerException if the array or any of its elements are
      * {@code null}
@@ -2897,7 +2897,7 @@ public class CompletableFuture<T> implements Future<T> {
      * of components is zero, returns an incomplete CompletableFuture.
      *
      * @param cfs the CompletableFutures
-     * @return a new CompletableFuture that is complete when any of the
+     * @return a new CompletableFuture that is completed when any of the
      * given CompletableFutures complete
      * @throws NullPointerException if the array or any of its elements are
      * {@code null}

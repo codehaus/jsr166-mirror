@@ -2222,7 +2222,7 @@ public class ConcurrentHashMap<K,V>
                 this.baseSize = it.baseSize;
                 int hi = this.baseLimit = it.baseLimit;
                 it.baseLimit = this.index = this.baseIndex =
-                    (hi + it.baseIndex + 1) >>> 1;
+                    (hi + it.baseIndex) >>> 1;
             }
         }
 
@@ -2242,7 +2242,7 @@ public class ConcurrentHashMap<K,V>
                 this.baseSize = it.baseSize;
                 int hi = this.baseLimit = it.baseLimit;
                 it.baseLimit = this.index = this.baseIndex =
-                    (hi + it.baseIndex + 1) >>> 1;
+                    (hi + it.baseIndex) >>> 1;
                 this.batch = it.batch >>>= 1;
             }
         }
@@ -2371,10 +2371,12 @@ public class ConcurrentHashMap<K,V>
             Node<V>[] t; int i, len, n;
             if ((t = tab) != null && baseSize == (len = t.length) &&
                 len >= (n = baseLimit) && baseIndex == (i = index)) {
-                Node<V> e = next;
                 index = baseIndex = n;
-                next = null;
                 nextVal = null;
+                Node<V> e = next;
+                next = null;
+                if (e != null)
+                    e = e.next;
                 outer: for (;; e = e.next) {
                     V v; Object ek;
                     for (; e == null; ++i) {
@@ -2404,10 +2406,12 @@ public class ConcurrentHashMap<K,V>
             Node<V>[] t; int i, len, n;
             if ((t = tab) != null && baseSize == (len = t.length) &&
                 len >= (n = baseLimit) && baseIndex == (i = index)) {
-                Node<V> e = next;
                 index = baseIndex = n;
-                next = null;
                 nextVal = null;
+                Node<V> e = next;
+                next = null;
+                if (e != null)
+                    e = e.next;
                 outer: for (;; e = e.next) {
                     for (; e == null; ++i) {
                         if (i < 0 || i >= n)
@@ -2643,7 +2647,7 @@ public class ConcurrentHashMap<K,V>
      * @return the mapping for the key, if present; else the defaultValue
      * @throws NullPointerException if the specified key is null
      */
-    public V getValueOrDefault(Object key, V defaultValue) {
+    public V getOrDefault(Object key, V defaultValue) {
         V v;
         return (v = internalGet(key)) == null ? defaultValue : v;
     }
@@ -3075,7 +3079,7 @@ public class ConcurrentHashMap<K,V>
             super(map, it);
         }
         public Spliterator<K> trySplit() {
-            return (baseIndex >= baseLimit) ? null :
+            return (baseLimit - baseIndex <= 1) ? null :
                 new KeyIterator<K,V>(map, this);
         }
         public final K next() {
@@ -3118,7 +3122,7 @@ public class ConcurrentHashMap<K,V>
             super(map, it);
         }
         public Spliterator<V> trySplit() {
-            return (baseIndex >= baseLimit) ? null :
+            return (baseLimit - baseIndex <= 1) ? null :
                 new ValueIterator<K,V>(map, this);
         }
 
@@ -3160,7 +3164,7 @@ public class ConcurrentHashMap<K,V>
             super(map, it);
         }
         public Spliterator<Map.Entry<K,V>> trySplit() {
-            return (baseIndex >= baseLimit) ? null :
+            return (baseLimit - baseIndex <= 1) ? null :
                 new EntryIterator<K,V>(map, this);
         }
 

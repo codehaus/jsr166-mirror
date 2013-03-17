@@ -3358,6 +3358,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 lastReturned = null;
             }
 
+            public Spliterator<T> trySplit() {
+                return null;
+            } 
+
             public boolean tryAdvance(Consumer<? super T> action) {
                 if (hasNext()) {
                     action.accept(next());

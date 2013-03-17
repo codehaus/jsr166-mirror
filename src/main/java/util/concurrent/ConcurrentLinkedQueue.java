@@ -770,8 +770,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         tail = t;
     }
 
+    /** A customized variant of Spliterators.IteratorSpliterator */
     static final class CLQSpliterator<E> implements Spliterator<E> {
-        static final int MAX_BATCH = 1 << 10;  // saturate batch size
+        static final int MAX_BATCH = 1 << 20;  // max batch array size;
+        static final int MAX_QUEUED = 1 << 12; // max task backlog
         final ConcurrentLinkedQueue<E> queue;
         Node<E> current;    // current node; null until initialized
         int batch;          // batch size for splits
@@ -780,20 +782,21 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             this.queue = queue;
         }
 
-        /**
-         * Splits into arrays of arithmetically increasing batch sizes,
-         * giving up at MAX_BATCH.  This will only improve parallel
-         * performance if per-element forEach actions are more costly
-         * than transfering them into an array. If not, we limit
-         * slowdowns by eventually returning null split.
-         */
         public Spliterator<E> trySplit() {
-            Node<E> p; int n;
+            Node<E> p; int b;
             final ConcurrentLinkedQueue<E> q = this.queue;
-            if (!exhausted && (n = batch + 1) > 0 && n <= MAX_BATCH &&
+            if (!exhausted && 
+                ((b = batch) < MAX_QUEUED || 
+                 java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED) &&
                 ((p = current) != null || (p = q.first()) != null) &&
                 p.next != null) {
-                Object[] a = new Object[batch = n];
+                int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                Object[] a;
+                try {
+                    a = new Object[n];
+                } catch (OutOfMemoryError oome) {
+                    return null;
+                }
                 int i = 0;
                 do {
                     if ((a[i] = p.item) != null)

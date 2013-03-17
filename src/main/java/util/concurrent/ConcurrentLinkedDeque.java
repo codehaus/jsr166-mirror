@@ -1377,14 +1377,14 @@ public class ConcurrentLinkedDeque<E>
         public Spliterator<E> trySplit() {
             Node<E> p; int b;
             final ConcurrentLinkedDeque<E> q = this.queue;
-            if (!exhausted && 
+            if (!exhausted &&
                 ((p = current) != null || (p = q.first()) != null)) {
                 if (p.item == null && p == (p = p.next))
                     current = p = q.first();
                 if (p != null && p.next != null &&
-                    ((b = batch) < MAX_QUEUED || 
+                    ((b = batch) < MAX_QUEUED ||
                      java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED)) {
-                    int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                    int n = batch = (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
                     Object[] a;
                     try {
                         a = new Object[n];

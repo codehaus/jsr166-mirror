@@ -852,10 +852,10 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         public Spliterator<E> trySplit() {
             int b;
             final LinkedBlockingQueue<E> q = this.queue;
-            if (!exhausted && 
-                ((b = batch) < MAX_QUEUED || 
+            if (!exhausted &&
+                ((b = batch) < MAX_QUEUED ||
                  java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED)) {
-                int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                int n = batch = (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
                 Object[] a;
                 try {
                     a = new Object[n];

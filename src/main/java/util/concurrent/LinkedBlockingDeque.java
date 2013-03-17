@@ -1148,10 +1148,10 @@ public class LinkedBlockingDeque<E>
             int b;
             final LinkedBlockingDeque<E> q = this.queue;
             final ReentrantLock lock = q.lock;
-            if (!exhausted && 
-                ((b = batch) < MAX_QUEUED || 
+            if (!exhausted &&
+                ((b = batch) < MAX_QUEUED ||
                  java.util.concurrent.ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED)) {
-                int n = batch = (b >= MAX_BATCH)? MAX_BATCH : b + 1;
+                int n = batch = (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
                 Object[] a;
                 try {
                     a = new Object[n];

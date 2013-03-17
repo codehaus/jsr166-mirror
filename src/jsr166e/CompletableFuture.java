@@ -380,7 +380,7 @@ public class CompletableFuture<T> implements Future<T> {
     /* ------------- Async tasks -------------- */
 
     /**
-     * A tagging interface identifying asynchronous tasks produced by
+     * A marker interface identifying asynchronous tasks produced by
      * {@code async} methods. This may be useful for monitoring,
      * debugging, and tracking asynchronous activities.
      */

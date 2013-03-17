@@ -1345,7 +1345,7 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param supplier a function returning the value to be used
      * to complete the returned CompletableFuture
-     * @return the CompletableFuture
+     * @return the new CompletableFuture
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
         if (supplier == null) throw new NullPointerException();
@@ -1363,7 +1363,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @param supplier a function returning the value to be used
      * to complete the returned CompletableFuture
      * @param executor the executor to use for asynchronous execution
-     * @return the CompletableFuture
+     * @return the new CompletableFuture
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier,
                                                        Executor executor) {
@@ -1381,7 +1381,7 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param runnable the action to run before completing the
      * returned CompletableFuture
-     * @return the CompletableFuture
+     * @return the new CompletableFuture
      */
     public static CompletableFuture<Void> runAsync(Runnable runnable) {
         if (runnable == null) throw new NullPointerException();
@@ -1399,7 +1399,7 @@ public class CompletableFuture<T> implements Future<T> {
      * @param runnable the action to run before completing the
      * returned CompletableFuture
      * @param executor the executor to use for asynchronous execution
-     * @return the CompletableFuture
+     * @return the new CompletableFuture
      */
     public static CompletableFuture<Void> runAsync(Runnable runnable,
                                                    Executor executor) {
@@ -2806,7 +2806,7 @@ public class CompletableFuture<T> implements Future<T> {
      * c3).join();}.
      *
      * @param cfs the CompletableFutures
-     * @return a CompletableFuture that is complete when all of the
+     * @return a new CompletableFuture that is complete when all of the
      * given CompletableFutures complete
      * @throws NullPointerException if the array or any of its elements are
      * {@code null}
@@ -2897,7 +2897,7 @@ public class CompletableFuture<T> implements Future<T> {
      * of components is zero, returns an incomplete CompletableFuture.
      *
      * @param cfs the CompletableFutures
-     * @return a CompletableFuture that is complete when any of the
+     * @return a new CompletableFuture that is complete when any of the
      * given CompletableFutures complete
      * @throws NullPointerException if the array or any of its elements are
      * {@code null}

@@ -161,32 +161,35 @@ public class ForkJoinPool extends AbstractExecutorService {
      * (http://research.sun.com/scalable/pubs/index.html) and
      * "Idempotent work stealing" by Michael, Saraswat, and Vechev,
      * PPoPP 2009 (http://portal.acm.org/citation.cfm?id=1504186).
-     * The main differences ultimately stem from GC requirements that
-     * we null out taken slots as soon as we can, to maintain as small
-     * a footprint as possible even in programs generating huge
-     * numbers of tasks. To accomplish this, we shift the CAS
-     * arbitrating pop vs poll (steal) from being on the indices
-     * ("base" and "top") to the slots themselves.  So, both a
-     * successful pop and poll mainly entail a CAS of a slot from
-     * non-null to null.  Because we rely on CASes of references, we
-     * do not need tag bits on base or top.  They are simple ints as
-     * used in any circular array-based queue (see for example
-     * ArrayDeque).  Updates to the indices must still be ordered in a
-     * way that guarantees that top == base means the queue is empty,
-     * but otherwise may err on the side of possibly making the queue
-     * appear nonempty when a push, pop, or poll have not fully
-     * committed. Note that this means that the poll operation,
-     * considered individually, is not wait-free. One thief cannot
-     * successfully continue until another in-progress one (or, if
-     * previously empty, a push) completes.  However, in the
-     * aggregate, we ensure at least probabilistic non-blockingness.
-     * If an attempted steal fails, a thief always chooses a different
-     * random victim target to try next. So, in order for one thief to
-     * progress, it suffices for any in-progress poll or new push on
-     * any empty queue to complete. (This is why we normally use
-     * method pollAt and its variants that try once at the apparent
-     * base index, else consider alternative actions, rather than
-     * method poll.)
+     * See also "Correct and Efficient Work-Stealing for Weak Memory
+     * Models" by Le, Pop, Cohen, and Nardelli, PPoPP 2013
+     * (http://www.di.ens.fr/~zappa/readings/ppopp13.pdf) for an
+     * analysis of memory ordering (atomic, volatile etc) issues.  The
+     * main differences ultimately stem from GC requirements that we
+     * null out taken slots as soon as we can, to maintain as small a
+     * footprint as possible even in programs generating huge numbers
+     * of tasks. To accomplish this, we shift the CAS arbitrating pop
+     * vs poll (steal) from being on the indices ("base" and "top") to
+     * the slots themselves.  So, both a successful pop and poll
+     * mainly entail a CAS of a slot from non-null to null.  Because
+     * we rely on CASes of references, we do not need tag bits on base
+     * or top.  They are simple ints as used in any circular
+     * array-based queue (see for example ArrayDeque).  Updates to the
+     * indices must still be ordered in a way that guarantees that top
+     * == base means the queue is empty, but otherwise may err on the
+     * side of possibly making the queue appear nonempty when a push,
+     * pop, or poll have not fully committed. Note that this means
+     * that the poll operation, considered individually, is not
+     * wait-free. One thief cannot successfully continue until another
+     * in-progress one (or, if previously empty, a push) completes.
+     * However, in the aggregate, we ensure at least probabilistic
+     * non-blockingness.  If an attempted steal fails, a thief always
+     * chooses a different random victim target to try next. So, in
+     * order for one thief to progress, it suffices for any
+     * in-progress poll or new push on any empty queue to
+     * complete. (This is why we normally use method pollAt and its
+     * variants that try once at the apparent base index, else
+     * consider alternative actions, rather than method poll.)
      *
      * This approach also enables support of a user mode in which local
      * task processing is in FIFO, not LIFO order, simply by using
@@ -764,7 +767,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if ((t = (ForkJoinTask<?>)U.getObjectVolatile(a, j)) != null &&
                     base == b &&
                     U.compareAndSwapObject(a, j, t, null)) {
-                    base = b + 1;
+                    U.putOrderedInt(this, QBASE, b + 1);
                     return t;
                 }
             }
@@ -782,7 +785,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if (t != null) {
                     if (base == b &&
                         U.compareAndSwapObject(a, j, t, null)) {
-                        base = b + 1;
+                        U.putOrderedInt(this, QBASE, b + 1);
                         return t;
                     }
                 }
@@ -945,7 +948,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     if (r == root) {
                         if (base == b &&
                             U.compareAndSwapObject(a, j, t, null)) {
-                            base = b + 1;
+                            U.putOrderedInt(this, QBASE, b + 1);
                             t.doExec();
                             return true;
                         }
@@ -1002,6 +1005,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
         // Unsafe mechanics
         private static final sun.misc.Unsafe U;
+        private static final long QBASE;
         private static final long QLOCK;
         private static final int ABASE;
         private static final int ASHIFT;
@@ -1010,6 +1014,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                 U = sun.misc.Unsafe.getUnsafe();
                 Class<?> k = WorkQueue.class;
                 Class<?> ak = ForkJoinTask[].class;
+                QBASE = U.objectFieldOffset
+                    (k.getDeclaredField("base"));
                 QLOCK = U.objectFieldOffset
                     (k.getDeclaredField("qlock"));
                 ABASE = U.arrayBaseOffset(ak);
@@ -1190,7 +1196,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     static final int SHARED_QUEUE        = -1;
 
     // bounds for #steps in scan loop -- must be power 2 minus 1
-    private static final int MIN_SCAN    = 0x3ff;   // cover estimation slop
+    private static final int MIN_SCAN    = 0x7ff;   // cover estimation slop
     private static final int MAX_SCAN    = 0x1ffff; // 4 * max workers
 
     // Instance fields
@@ -1622,16 +1628,19 @@ public class ForkJoinPool extends AbstractExecutorService {
                 WorkQueue q; ForkJoinTask<?>[] a; int b;
                 if ((q = ws[(r + j) & m]) != null && (b = q.base) - q.top < 0 &&
                     (a = q.array) != null) {     // probably nonempty
-                    int i = (((a.length - 1) & b) << ASHIFT) + ABASE;
-                    ForkJoinTask<?> t = (ForkJoinTask<?>)
-                        U.getObjectVolatile(a, i);
-                    if (q.base == b && ec >= 0 && t != null &&
-                        U.compareAndSwapObject(a, i, t, null)) {
-                        if ((q.base = b + 1) - q.top < 0)
-                            signalWork(q);
-                        return t;                // taken
+                    long i = (((a.length - 1) & b) << ASHIFT) + ABASE;
+                    if (ec >= 0) {
+                        ForkJoinTask<?> t = (ForkJoinTask<?>)
+                            U.getObjectVolatile(a, i);
+                        if (q.base == b && t != null &&
+                            U.compareAndSwapObject(a, i, t, null)) {
+                            U.putOrderedInt(q, QBASE, ++b);
+                            if (b - q.top < 0)
+                                signalWork(q);
+                            return t;            // taken
+                        }
                     }
-                    else if ((ec < 0 || j < m) && (int)(ctl >> AC_SHIFT) <= 0) {
+                    if ((ec < 0 || j < m) && (int)(ctl >> AC_SHIFT) <= 0) {
                         w.hint = (r + j) & m;    // help signal below
                         break;                   // cannot take
                     }
@@ -1843,7 +1852,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                             stat = 1;               // apparent progress
                             if (t != null && v.base == b &&
                                 U.compareAndSwapObject(a, i, t, null)) {
-                                v.base = b + 1;     // help stealer
+                                U.putOrderedInt(v, QBASE, b + 1);
                                 joiner.runSubtask(t);
                             }
                             else if (v.base == b && ++steps == MAX_HELP)
@@ -2351,7 +2360,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         if (r == root) {
                             if (q.base == b &&
                                 U.compareAndSwapObject(a, j, t, null)) {
-                                q.base = b + 1;
+                                U.putOrderedInt(q, QBASE, b + 1);
                                 t.doExec();
                             }
                             break;
@@ -3288,6 +3297,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final long STEALCOUNT;
     private static final long PLOCK;
     private static final long INDEXSEED;
+    private static final long QBASE;
     private static final long QLOCK;
 
     static {
@@ -3307,6 +3317,8 @@ public class ForkJoinPool extends AbstractExecutorService {
             PARKBLOCKER = U.objectFieldOffset
                 (tk.getDeclaredField("parkBlocker"));
             Class<?> wk = WorkQueue.class;
+            QBASE = U.objectFieldOffset
+                (wk.getDeclaredField("base"));
             QLOCK = U.objectFieldOffset
                 (wk.getDeclaredField("qlock"));
             Class<?> ak = ForkJoinTask[].class;

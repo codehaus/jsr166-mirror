@@ -33,19 +33,32 @@ import java.util.concurrent.locks.LockSupport;
  * {@link #cancel cancel}
  * a CompletableFuture, only one of them succeeds.
  *
- * <p>Methods are available for adding dependents based on Functions,
- * Consumers, and Runnables. The appropriate form to use depends on
- * whether actions require arguments and/or produce results. Actions
- * may also be triggered after either or both the current and another
+ * <p>Methods are available for adding dependents based on
+ * user-provided Functions, Consumers, or Runnables. The appropriate
+ * form to use depends on whether actions require arguments and/or
+ * produce results.  Completion of a dependent action will trigger the
+ * completion of another CompletableFuture.  Actions may also be
+ * triggered after either or both the current and another
  * CompletableFuture complete.  Multiple CompletableFutures may also
  * be grouped as one using {@link #anyOf(CompletableFuture...)} and
  * {@link #allOf(CompletableFuture...)}.
  *
- * <p>Actions supplied for dependent completions (mainly using methods
- * with prefix {@code then}) may be performed by the thread that
- * completes the current CompletableFuture, or by any other caller of
- * these methods.  There are no guarantees about the order of
- * processing completions unless constrained by these methods.
+ * <p>CompletableFutures themselves do not execute asynchronously.
+ * However, actions supplied for dependent completions of another
+ * CompletableFuture may do so, depending on whether they are provided
+ * via one of the <em>async</em> methods (that is, methods with names
+ * of the form <tt><var>xxx</var>Async</tt>).  The <em>async</em>
+ * methods provide a way to commence asynchronous processing of an
+ * action using either a given {@link Executor} or by default the
+ * {@link ForkJoinPool#commonPool()}. To simplify monitoring,
+ * debugging, and tracking, all generated asynchronous tasks are
+ * instances of the marker interface {@link AsynchronousCompletionTask}.
+ *
+ * <p>Actions supplied for dependent completions of <em>non-async</em>
+ * methods may be performed by the thread that completes the current
+ * CompletableFuture, or by any other caller of these methods.  There
+ * are no guarantees about the order of processing completions unless
+ * constrained by these methods.
  *
  * <p>Since (unlike {@link FutureTask}) this class has no direct
  * control over the computation that causes it to be completed,
@@ -69,15 +82,6 @@ import java.util.concurrent.locks.LockSupport;
  * corresponding CompletionException.  However, in these cases,
  * methods {@link #join()} and {@link #getNow} throw the
  * CompletionException, which simplifies usage.
- *
- * <p>CompletableFutures themselves do not execute asynchronously.
- * However, the {@code async} methods provide commonly useful ways to
- * commence asynchronous processing, using either a given {@link
- * Executor} or by default the {@link ForkJoinPool#commonPool()}, of a
- * function or action that will result in the completion of a new
- * CompletableFuture. To simplify monitoring, debugging, and tracking,
- * all generated asynchronous tasks are instances of the marker
- * interface {@link AsynchronousCompletionTask}.
  *
  * @author Doug Lea
  * @since 1.8

@@ -1214,7 +1214,7 @@ public class CompletableFuture<T> implements Future<T> {
         final CompletableFuture<U> dst;
         HandleCompletion(CompletableFuture<? extends T> src,
                          BiFunction<? super T, Throwable, ? extends U> fn,
-                         final CompletableFuture<U> dst) {
+                         CompletableFuture<U> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
         public final void run() {
@@ -1255,7 +1255,7 @@ public class CompletableFuture<T> implements Future<T> {
         final Executor executor;
         ComposeCompletion(CompletableFuture<? extends T> src,
                           Function<? super T, CompletableFuture<U>> fn,
-                          final CompletableFuture<U> dst, Executor executor) {
+                          CompletableFuture<U> dst, Executor executor) {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }

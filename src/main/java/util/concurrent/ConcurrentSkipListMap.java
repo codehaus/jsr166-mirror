@@ -1974,22 +1974,22 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *         or the mappingFunction is null
      * @since 1.8
      */
-    public V computeIfAbsent(K key, 
+    public V computeIfAbsent(K key,
                              Function<? super K, ? extends V> mappingFunction) {
-	if (key == null || mappingFunction == null)
-	    throw new NullPointerException();
+        if (key == null || mappingFunction == null)
+            throw new NullPointerException();
         Comparator<? super K> cmp;
-	V v, p, r;
-	if ((cmp = comparator) == null) {
-	    if ((v = doGet(key)) == null &&
-		(r = mappingFunction.apply(key)) != null)
-		v = (p = doPut(key, r, true)) == null ? r : p;
-	}
-	else {
-	    if ((v = doGetCmp(cmp, key)) == null &&
-		(r = mappingFunction.apply(key)) != null)
-		v = (p = doPutCmp(cmp, key, r, true)) == null ? r : p;
-	}
+        V v, p, r;
+        if ((cmp = comparator) == null) {
+            if ((v = doGet(key)) == null &&
+                (r = mappingFunction.apply(key)) != null)
+                v = (p = doPut(key, r, true)) == null ? r : p;
+        }
+        else {
+            if ((v = doGetCmp(cmp, key)) == null &&
+                (r = mappingFunction.apply(key)) != null)
+                v = (p = doPutCmp(cmp, key, r, true)) == null ? r : p;
+        }
         return v;
     }
 
@@ -2006,10 +2006,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *         or the remappingFunction is null
      * @since 1.8
      */
-    public V computeIfPresent(K key, 
+    public V computeIfPresent(K key,
                               BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-	if (key == null || remappingFunction == null)
-	    throw new NullPointerException();
+        if (key == null || remappingFunction == null)
+            throw new NullPointerException();
         Comparator<? super K> cmp;
         if ((cmp = comparator) == null) {
             Node<K,V> n; Object v;
@@ -2026,7 +2026,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     else if (doRemove(k, vv) != null)
                         break;
                 }
-	    }
+            }
         }
         else {
             Node<K,V> n; Object v;
@@ -2042,8 +2042,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                         break;
                 }
             }
-	}
-	return null;
+        }
+        return null;
     }
 
     /**
@@ -2059,10 +2059,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *         or the remappingFunction is null
      * @since 1.8
      */
-    public V compute(K key, 
+    public V compute(K key,
                      BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-	if (key == null || remappingFunction == null)
-	    throw new NullPointerException();
+        if (key == null || remappingFunction == null)
+            throw new NullPointerException();
         Comparator<? super K> cmp;
         if ((cmp = comparator) == null) {
             @SuppressWarnings("unchecked") Comparable<? super K> k =
@@ -2106,7 +2106,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 }
             }
         }
-	return null;
+        return null;
     }
 
     /**
@@ -2126,8 +2126,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public V merge(K key, V value,
                    BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-	if (key == null || value == null || remappingFunction == null)
-	    throw new NullPointerException();
+        if (key == null || value == null || remappingFunction == null)
+            throw new NullPointerException();
         Comparator<? super K> cmp;
         if ((cmp = comparator) == null) {
             @SuppressWarnings("unchecked") Comparable<? super K> k =
@@ -2166,7 +2166,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                         return null;
                 }
             }
-	}
+        }
     }
 
     /* ---------------- View methods -------------- */

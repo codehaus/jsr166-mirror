@@ -62,7 +62,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * Removes the entry for a key only if currently mapped to a given value.
      * This is equivalent to
      *  <pre> {@code
-     * if (map.containsKey(key) && map.get(key).equals(value)) {
+     * if (map.containsKey(key) && Objects.equals(map.get(key), value)) {
      *   map.remove(key);
      *   return true;
      * } else
@@ -88,7 +88,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * Replaces the entry for a key only if currently mapped to a given value.
      * This is equivalent to
      *  <pre> {@code
-     * if (map.containsKey(key) && map.get(key).equals(oldValue)) {
+     * if (map.containsKey(key) && Objects.equals(map.get(key), oldValue)) {
      *   map.put(key, newValue);
      *   return true;
      * } else

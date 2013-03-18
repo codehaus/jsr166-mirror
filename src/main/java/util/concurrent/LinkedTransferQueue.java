@@ -908,8 +908,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /** A customized variant of Spliterators.IteratorSpliterator */
     static final class LTQSpliterator<E> implements Spliterator<E> {
-        static final int MAX_BATCH = 1 << 20;  // max batch array size;
-        static final int MAX_QUEUED = 1 << 12; // max task backlog
+        static final int MAX_BATCH = 1 << 25;  // max batch array size;
         final LinkedTransferQueue<E> queue;
         Node current;    // current node; null until initialized
         int batch;          // batch size for splits
@@ -918,23 +917,14 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             this.queue = queue;
         }
 
-        /**
-         * Splits into arrays of arithmetically increasing batch sizes,
-         * giving up at MAX_BATCH.  Treat the result as a
-         * CopyOnWriteArrayList array snapshot.  This will only
-         * improve parallel performance if per-element forEach actions
-         * are more costly than transfering them into an array. If
-         * not, we limit slowdowns by eventually returning null split.
-         */
         public Spliterator<E> trySplit() {
-            Node p; int b;
+            Node p;
             final LinkedTransferQueue<E> q = this.queue;
+            int b = batch;
+            int n = (b <= 0) ? 1 : (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
             if (!exhausted &&
-                ((b = batch) < MAX_QUEUED ||
-                 ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED) &&
                 ((p = current) != null || (p = q.firstDataNode()) != null) &&
                 p.next != null) {
-                int n = batch = (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
                 Object[] a;
                 try {
                     a = new Object[n];
@@ -950,9 +940,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 } while (p != null && i < n);
                 if ((current = p) == null)
                     exhausted = true;
-                return Spliterators.spliterator
-                    (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
-                     Spliterator.CONCURRENT);
+                if (i > 0) {
+                    batch = i;
+                    return Spliterators.spliterator
+                        (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                         Spliterator.CONCURRENT);
+                }
             }
             return null;
         }

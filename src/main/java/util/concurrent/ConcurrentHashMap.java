@@ -7,10 +7,13 @@
 package java.util.concurrent;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.CountedCompleter;
-import java.util.function.*;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
+import java.util.function.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import java.util.Comparator;
 import java.util.Arrays;

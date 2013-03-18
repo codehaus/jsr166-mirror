@@ -10,6 +10,8 @@ import java.util.stream.Stream;
 import java.util.Spliterator;
 import java.util.stream.Streams;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
  * A scalable concurrent {@link ConcurrentNavigableMap} implementation.
@@ -1842,6 +1844,22 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
+     * Returns the value to which the specified key is mapped,
+     * or the given defaultValue if this map contains no mapping for the key.
+     *
+     * @param key the key
+     * @param defaultValue the value to return if this map contains
+     * no mapping for the given key
+     * @return the mapping for the key, if present; else the defaultValue
+     * @throws NullPointerException if the specified key is null
+     * @since 1.8
+     */
+    public V getOrDefault(Object key, V defaultValue) {
+        V v;
+        return (v = get(key)) == null ? defaultValue : v;
+    }
+
+    /**
      * Associates the specified value with the specified key in this map.
      * If the map previously contained a mapping for the key, the old
      * value is replaced.
@@ -1939,6 +1957,216 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      */
     public void clear() {
         initialize();
+    }
+
+    /**
+     * If the specified key is not already associated with a value,
+     * attempts to compute its value using the given mapping function
+     * and enters it into this map unless {@code null}.  The function
+     * is <em>NOT</em> guaranteed to be applied once atomically only
+     * if the value is not present.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param mappingFunction the function to compute a value
+     * @return the current (existing or computed) value associated with
+     *         the specified key, or null if the computed value is null
+     * @throws NullPointerException if the specified key is null
+     *         or the mappingFunction is null
+     * @since 1.8
+     */
+    public V computeIfAbsent(K key, 
+                             Function<? super K, ? extends V> mappingFunction) {
+	if (key == null || mappingFunction == null)
+	    throw new NullPointerException();
+        Comparator<? super K> cmp;
+	V v, p, r;
+	if ((cmp = comparator) == null) {
+	    if ((v = doGet(key)) == null &&
+		(r = mappingFunction.apply(key)) != null)
+		v = (p = doPut(key, r, true)) == null ? r : p;
+	}
+	else {
+	    if ((v = doGetCmp(cmp, key)) == null &&
+		(r = mappingFunction.apply(key)) != null)
+		v = (p = doPutCmp(cmp, key, r, true)) == null ? r : p;
+	}
+        return v;
+    }
+
+    /**
+     * If the value for the specified key is present, attempts to
+     * compute a new mapping given the key and its current mapped
+     * value. The function is <em>NOT</em> guaranteed to be applied
+     * once atomically.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param remappingFunction the function to compute a value
+     * @return the new value associated with the specified key, or null if none
+     * @throws NullPointerException if the specified key is null
+     *         or the remappingFunction is null
+     * @since 1.8
+     */
+    public V computeIfPresent(K key, 
+                              BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+	if (key == null || remappingFunction == null)
+	    throw new NullPointerException();
+        Comparator<? super K> cmp;
+        if ((cmp = comparator) == null) {
+            Node<K,V> n; Object v;
+            @SuppressWarnings("unchecked") Comparable<? super K> k =
+                (Comparable<? super K>) key;
+            while ((n = findNode(k)) != null) {
+                if ((v = n.value) != null) {
+                    @SuppressWarnings("unchecked") V vv = (V) v;
+                    V r = remappingFunction.apply(key, vv);
+                    if (r != null) {
+                        if (n.casValue(vv, r))
+                            return r;
+                    }
+                    else if (doRemove(k, vv) != null)
+                        break;
+                }
+	    }
+        }
+        else {
+            Node<K,V> n; Object v;
+            while ((n = findNodeCmp(cmp, key)) != null) {
+                if ((v = n.value) != null) {
+                    @SuppressWarnings("unchecked") V vv = (V) v;
+                    V r = remappingFunction.apply(key, vv);
+                    if (r != null) {
+                        if (n.casValue(vv, r))
+                            return r;
+                    }
+                    else if (doRemoveCmp(cmp, key, vv) != null)
+                        break;
+                }
+            }
+	}
+	return null;
+    }
+
+    /**
+     * Attempts to compute a mapping for the specified key and its
+     * current mapped value (or {@code null} if there is no current
+     * mapping). The function is <em>NOT</em> guaranteed to be applied
+     * once atomically.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param remappingFunction the function to compute a value
+     * @return the new value associated with the specified key, or null if none
+     * @throws NullPointerException if the specified key is null
+     *         or the remappingFunction is null
+     * @since 1.8
+     */
+    public V compute(K key, 
+                     BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+	if (key == null || remappingFunction == null)
+	    throw new NullPointerException();
+        Comparator<? super K> cmp;
+        if ((cmp = comparator) == null) {
+            @SuppressWarnings("unchecked") Comparable<? super K> k =
+                (Comparable<? super K>) key;
+            for (;;) {
+                Node<K,V> n; Object v; V r;
+                if ((n = findNode(k)) == null) {
+                    if ((r = remappingFunction.apply(key, null)) == null)
+                        break;
+                    if (doPut(key, r, false) == null)
+                        return r;
+                }
+                else if ((v = n.value) != null) {
+                    @SuppressWarnings("unchecked") V vv = (V) v;
+                    if ((r = remappingFunction.apply(key, vv)) != null) {
+                        if (n.casValue(vv, r))
+                            return r;
+                    }
+                    else if (doRemove(k, vv) != null)
+                        break;
+                }
+            }
+        }
+        else {
+            for (;;) {
+                Node<K,V> n; Object v; V r;
+                if ((n = findNodeCmp(cmp, key)) == null) {
+                    if ((r = remappingFunction.apply(key, null)) == null)
+                        break;
+                    if (doPutCmp(cmp, key, r, false) == null)
+                        return r;
+                }
+                else if ((v = n.value) != null) {
+                    @SuppressWarnings("unchecked") V vv = (V) v;
+                    if ((r = remappingFunction.apply(key, vv)) != null) {
+                        if (n.casValue(vv, r))
+                            return r;
+                    }
+                    else if (doRemoveCmp(cmp, key, vv) != null)
+                        break;
+                }
+            }
+        }
+	return null;
+    }
+
+    /**
+     * If the specified key is not already associated with a value,
+     * associates it with the given value.  Otherwise, replaces the
+     * value with the results of the given remapping function, or
+     * removes if {@code null}. The function is <em>NOT</em>
+     * guaranteed to be applied once atomically.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value the value to use if absent
+     * @param remappingFunction the function to recompute a value if present
+     * @return the new value associated with the specified key, or null if none
+     * @throws NullPointerException if the specified key or value is null
+     *         or the remappingFunction is null
+     * @since 1.8
+     */
+    public V merge(K key, V value,
+                   BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+	if (key == null || value == null || remappingFunction == null)
+	    throw new NullPointerException();
+        Comparator<? super K> cmp;
+        if ((cmp = comparator) == null) {
+            @SuppressWarnings("unchecked") Comparable<? super K> k =
+                (Comparable<? super K>) key;
+            for (;;) {
+                Node<K,V> n; Object v; V r;
+                if ((n = findNode(k)) == null) {
+                    if (doPut(key, value, false) == null)
+                        return value;
+                }
+                else if ((v = n.value) != null) {
+                    @SuppressWarnings("unchecked") V vv = (V) v;
+                    if ((r = remappingFunction.apply(vv, value)) != null) {
+                        if (n.casValue(vv, r))
+                            return r;
+                    }
+                    else if (doRemove(k, vv) != null)
+                        return null;
+                }
+            }
+        }
+        else {
+            for (;;) {
+                Node<K,V> n; Object v; V r;
+                if ((n = findNodeCmp(cmp, key)) == null) {
+                    if (doPutCmp(cmp, key, value, false) == null)
+                        return value;
+                }
+                else if ((v = n.value) != null) {
+                    @SuppressWarnings("unchecked") V vv = (V) v;
+                    if ((r = remappingFunction.apply(vv, value)) != null) {
+                        if (n.casValue(vv, r))
+                            return r;
+                    }
+                    else if (doRemoveCmp(cmp, key, vv) != null)
+                        return null;
+                }
+            }
+	}
     }
 
     /* ---------------- View methods -------------- */
@@ -3544,11 +3772,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public NavigableSet<K> descendingSet() {
             return new KeySet<K>(m.descendingMap());
         }
-
         public Spliterator<K> spliterator() {
             return m.keySpliterator();
         }
-
     }
 
     /**
@@ -3582,8 +3808,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 HeadIndex<K,V> h; Node<K,V> p;
                 Node<K,V> b = (h = m.head).node;
                 if ((p = b.next) == null || p.value != null) {
-                    this.est = ((p == null) ? 0 :
-                                (p.next == null) ? 1 : Integer.MAX_VALUE);
+                    this.est = (p == null) ? 0 : Integer.MAX_VALUE;
                     this.current = p;
                     this.row = h;
                     break;
@@ -3643,7 +3868,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if ((e = current) != null) {
                 for (Index<K,V> q = row; q != null; q = row = q.down) {
                     Index<K,V> s; Node<K,V> n; K sk;
-                    est -= est >>> 2;
                     if ((s = q.right) != null) {
                         for (;;) {
                             Node<K,V> b = s.node;
@@ -3658,6 +3882,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             current = n;
                             Index<K,V> r = q.down;
                             row = (s.right != null) ? s : s.down;
+                            est -= est >>> 2;
                             return new KeySpliterator<K,V>(cmp, r, e, sk, est);
                         }
                     }
@@ -3732,7 +3957,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if ((e = current) != null) {
                 for (Index<K,V> q = row; q != null; q = row = q.down) {
                     Index<K,V> s; Node<K,V> n; K sk;
-                    est -= est >>> 2;
                     if ((s = q.right) != null) {
                         for (;;) {
                             Node<K,V> b = s.node;
@@ -3747,6 +3971,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             current = n;
                             Index<K,V> r = q.down;
                             row = (s.right != null) ? s : s.down;
+                            est -= est >>> 2;
                             return new ValueSpliterator<K,V>(cmp, r, e, sk, est);
                         }
                     }
@@ -3819,7 +4044,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if ((e = current) != null) {
                 for (Index<K,V> q = row; q != null; q = row = q.down) {
                     Index<K,V> s; Node<K,V> n; K sk;
-                    est -= est >>> 2;
                     if ((s = q.right) != null) {
                         for (;;) {
                             Node<K,V> b = s.node;
@@ -3835,6 +4059,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             current = n;
                             Index<K,V> r = q.down;
                             row = (s.right != null) ? s : s.down;
+                            est -= est >>> 2;
                             return new EntrySpliterator<K,V>(cmp, r, e, sk, est);
                         }
                     }

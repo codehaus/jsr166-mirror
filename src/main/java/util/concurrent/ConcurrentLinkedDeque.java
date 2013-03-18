@@ -1364,8 +1364,7 @@ public class ConcurrentLinkedDeque<E>
 
     /** A customized variant of Spliterators.IteratorSpliterator */
     static final class CLDSpliterator<E> implements Spliterator<E> {
-        static final int MAX_BATCH = 1 << 20;  // max batch array size;
-        static final int MAX_QUEUED = 1 << 12; // max task backlog
+        static final int MAX_BATCH = 1 << 25;  // max batch array size;
         final ConcurrentLinkedDeque<E> queue;
         Node<E> current;    // current node; null until initialized
         int batch;          // batch size for splits
@@ -1375,16 +1374,15 @@ public class ConcurrentLinkedDeque<E>
         }
 
         public Spliterator<E> trySplit() {
-            Node<E> p; int b;
+            Node<E> p;
             final ConcurrentLinkedDeque<E> q = this.queue;
+            int b = batch;
+            int n = (b <= 0) ? 1 : (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
             if (!exhausted &&
                 ((p = current) != null || (p = q.first()) != null)) {
                 if (p.item == null && p == (p = p.next))
                     current = p = q.first();
-                if (p != null && p.next != null &&
-                    ((b = batch) < MAX_QUEUED ||
-                     ForkJoinTask.getQueuedTaskCount() < MAX_QUEUED)) {
-                    int n = batch = (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
+                if (p != null && p.next != null) {
                     Object[] a;
                     try {
                         a = new Object[n];
@@ -1400,9 +1398,12 @@ public class ConcurrentLinkedDeque<E>
                     } while (p != null && i < n);
                     if ((current = p) == null)
                         exhausted = true;
-                    return Spliterators.spliterator
-                        (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
-                         Spliterator.CONCURRENT);
+                    if (i > 0) {
+                        batch = i;
+                        return Spliterators.spliterator
+                            (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                             Spliterator.CONCURRENT);
+                    }
                 }
             }
             return null;

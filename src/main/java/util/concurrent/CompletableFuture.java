@@ -575,6 +575,8 @@ public class CompletableFuture<T> implements Future<T> {
                     u = null;
                 else {
                     Object r = fr.result;
+                    if (r == null)
+                        r = fr.waitingGet(false);
                     if (r instanceof AltResult) {
                         ex = ((AltResult)r).ex;
                         u = null;

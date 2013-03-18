@@ -1999,7 +1999,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * value. The function is <em>NOT</em> guaranteed to be applied
      * once atomically.
      *
-     * @param key key with which the specified value is to be associated
+     * @param key key with which a value may be associated
      * @param remappingFunction the function to compute a value
      * @return the new value associated with the specified key, or null if none
      * @throws NullPointerException if the specified key is null

@@ -2785,7 +2785,7 @@ public class ConcurrentHashMap<K,V>
      * so the computation should be short and simple, and must not
      * attempt to update any other mappings of this Map.
      *
-     * @param key key with which the specified value is to be associated
+     * @param key key with which a value may be associated
      * @param remappingFunction the function to compute a value
      * @return the new value associated with the specified key, or null if none
      * @throws NullPointerException if the specified key or remappingFunction

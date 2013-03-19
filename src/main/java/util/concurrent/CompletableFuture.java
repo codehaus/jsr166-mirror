@@ -1581,8 +1581,8 @@ public class CompletableFuture<T> implements Future<T> {
      * given function of this CompletableFuture's result.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied function throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param fn the function to use to compute the value of
@@ -1600,8 +1600,8 @@ public class CompletableFuture<T> implements Future<T> {
      * task running in the {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied function throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param fn the function to use to compute the value of
@@ -1620,8 +1620,8 @@ public class CompletableFuture<T> implements Future<T> {
      * task running in the given executor.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied function throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param fn the function to use to compute the value of
@@ -1687,8 +1687,8 @@ public class CompletableFuture<T> implements Future<T> {
      * action with this CompletableFuture's result.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied action throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param block the action to perform before completing the
@@ -1706,8 +1706,8 @@ public class CompletableFuture<T> implements Future<T> {
      * in the {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied action throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param block the action to perform before completing the
@@ -1725,8 +1725,8 @@ public class CompletableFuture<T> implements Future<T> {
      * in the given executor.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied action throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param block the action to perform before completing the
@@ -1789,8 +1789,8 @@ public class CompletableFuture<T> implements Future<T> {
      * action.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied action throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param action the action to perform before completing the
@@ -1807,8 +1807,8 @@ public class CompletableFuture<T> implements Future<T> {
      * action from a task running in the {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied action throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param action the action to perform before completing the
@@ -1825,8 +1825,8 @@ public class CompletableFuture<T> implements Future<T> {
      * action from a task running in the given executor.
      *
      * <p>If this CompletableFuture completes exceptionally, or the
-     * supplied function throws an unchecked exception, then the
-     * returned CompletableFuture completes exceptionally with a
+     * supplied action throws an exception, then the returned
+     * CompletableFuture completes exceptionally with a
      * CompletionException holding the exception as its cause.
      *
      * @param action the action to perform before completing the
@@ -1885,10 +1885,9 @@ public class CompletableFuture<T> implements Future<T> {
      * CompletableFutures.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied function throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied function throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param fn the function to use to compute the value of
@@ -1909,10 +1908,9 @@ public class CompletableFuture<T> implements Future<T> {
      * {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied function throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied function throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param fn the function to use to compute the value of
@@ -1932,10 +1930,9 @@ public class CompletableFuture<T> implements Future<T> {
      * CompletableFutures from a task running in the given executor.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied function throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied function throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param fn the function to use to compute the value of
@@ -2026,10 +2023,9 @@ public class CompletableFuture<T> implements Future<T> {
      * CompletableFutures.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied action throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param block the action to perform before completing the
@@ -2050,10 +2046,9 @@ public class CompletableFuture<T> implements Future<T> {
      * ForkJoinPool#commonPool()}.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied action throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param block the action to perform before completing the
@@ -2073,10 +2068,9 @@ public class CompletableFuture<T> implements Future<T> {
      * CompletableFutures from a task running in the given executor.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied action throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param block the action to perform before completing the
@@ -2165,10 +2159,9 @@ public class CompletableFuture<T> implements Future<T> {
      * after performing the given action.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied action throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param action the action to perform before completing the
@@ -2187,10 +2180,9 @@ public class CompletableFuture<T> implements Future<T> {
      * {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied action throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param action the action to perform before completing the
@@ -2209,10 +2201,9 @@ public class CompletableFuture<T> implements Future<T> {
      * given executor.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, or the supplied action throws an unchecked
-     * exception, then the returned CompletableFuture completes
-     * exceptionally with a CompletionException holding the exception
-     * as its cause.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture completes exceptionally
+     * with a CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param action the action to perform before completing the
@@ -2287,11 +2278,11 @@ public class CompletableFuture<T> implements Future<T> {
      * CompletableFuture's result.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied function throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied function throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param fn the function to use to compute the value of
@@ -2312,11 +2303,11 @@ public class CompletableFuture<T> implements Future<T> {
      * {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied function throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied function throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param fn the function to use to compute the value of
@@ -2337,11 +2328,11 @@ public class CompletableFuture<T> implements Future<T> {
      * given executor.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied function throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied function throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param fn the function to use to compute the value of
@@ -2416,11 +2407,11 @@ public class CompletableFuture<T> implements Future<T> {
      * or the other CompletableFuture's result.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied action throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param block the action to perform before completing the
@@ -2441,11 +2432,11 @@ public class CompletableFuture<T> implements Future<T> {
      * the {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied action throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param block the action to perform before completing the
@@ -2466,11 +2457,11 @@ public class CompletableFuture<T> implements Future<T> {
      * the given executor.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied action throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param block the action to perform before completing the
@@ -2543,11 +2534,11 @@ public class CompletableFuture<T> implements Future<T> {
      * after performing the given action.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied action throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param action the action to perform before completing the
@@ -2566,11 +2557,11 @@ public class CompletableFuture<T> implements Future<T> {
      * {@link ForkJoinPool#commonPool()}.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied action throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param action the action to perform before completing the
@@ -2590,11 +2581,11 @@ public class CompletableFuture<T> implements Future<T> {
      * given executor.
      *
      * <p>If this and/or the other CompletableFuture complete
-     * exceptionally, exceptionally, or the supplied action throws
-     * an unchecked exception, then the returned CompletableFuture may
-     * also do so, with a CompletionException holding one of these
-     * exceptions as its cause.  No guarantees are made about which
-     * result or exception is used in the returned CompletableFuture.
+     * exceptionally, or the supplied action throws an exception,
+     * then the returned CompletableFuture may also do so, with a
+     * CompletionException holding one of these exceptions as its
+     * cause.  No guarantees are made about which result or exception
+     * is used in the returned CompletableFuture.
      *
      * @param other the other CompletableFuture
      * @param action the action to perform before completing the

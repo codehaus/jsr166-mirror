@@ -1889,9 +1889,6 @@ public class CompletableFuture<T> implements Future<T> {
      * exception, then the returned CompletableFuture completes
      * exceptionally with a CompletionException holding the exception
      * as its cause.
-
-     * then the returned CompletableFuture also does so, with a
-     * CompletionException holding the exception as its cause.
      *
      * @param other the other CompletableFuture
      * @param fn the function to use to compute the value of

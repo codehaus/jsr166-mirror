@@ -2621,17 +2621,18 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Returns a CompletableFuture (or an equivalent one) produced by the
-     * given function of the result of this CompletableFuture when completed.
+     * Returns a CompletableFuture that upon completion, has the same
+     * value as produced by the given function of the result of this
+     * CompletableFuture.
      *
-     * <p>If this CompletableFuture completes exceptionally,
-     * then the returned CompletableFuture also does so, with a
+     * <p>If this CompletableFuture completes exceptionally, then the
+     * returned CompletableFuture also does so, with a
      * CompletionException holding this exception as its cause.
+     * Similarly, if the computed CompletableFuture completes
+     * exceptionally, then so does the returned CompletableFuture.
      *
      * @param fn the function returning a new CompletableFuture
-     * @return the CompletableFuture, that {@code isDone()} upon
-     * return if completed by the given function, or an exception
-     * occurs
+     * @return the CompletableFuture
      */
     public <U> CompletableFuture<U> thenCompose
         (Function<? super T, CompletableFuture<U>> fn) {
@@ -2639,19 +2640,19 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Returns a CompletableFuture (or an equivalent one) produced
-     * asynchronously using the {@link ForkJoinPool#commonPool()} by
-     * the given function of the result of this CompletableFuture when
-     * completed.
+     * Returns a CompletableFuture that upon completion, has the same
+     * value as that produced asynchronously using the {@link
+     * ForkJoinPool#commonPool()} by the given function of the result
+     * of this CompletableFuture.
      *
-     * <p>If this CompletableFuture completes exceptionally,
-     * then the returned CompletableFuture also does so, with a
+     * <p>If this CompletableFuture completes exceptionally, then the
+     * returned CompletableFuture also does so, with a
      * CompletionException holding this exception as its cause.
+     * Similarly, if the computed CompletableFuture completes
+     * exceptionally, then so does the returned CompletableFuture.
      *
      * @param fn the function returning a new CompletableFuture
-     * @return the CompletableFuture, that {@code isDone()} upon
-     * return if completed by the given function, or an exception
-     * occurs
+     * @return the CompletableFuture
      */
     public <U> CompletableFuture<U> thenComposeAsync
         (Function<? super T, CompletableFuture<U>> fn) {
@@ -2659,13 +2660,15 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Returns a CompletableFuture (or an equivalent one) produced
-     * asynchronously using the given executor by the given function
-     * of the result of this CompletableFuture when completed.
+     * Returns a CompletableFuture that upon completion, has the same
+     * value as that produced asynchronously using the given executor
+     * by the given function of this CompletableFuture.
      *
-     * <p>If this CompletableFuture completes exceptionally,
-     * then the returned CompletableFuture also does so, with a
+     * <p>If this CompletableFuture completes exceptionally, then the
+     * returned CompletableFuture also does so, with a
      * CompletionException holding this exception as its cause.
+     * Similarly, if the computed CompletableFuture completes
+     * exceptionally, then so does the returned CompletableFuture.
      *
      * @param fn the function returning a new CompletableFuture
      * @param executor the executor to use for asynchronous execution

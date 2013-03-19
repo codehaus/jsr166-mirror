@@ -2672,9 +2672,7 @@ public class CompletableFuture<T> implements Future<T> {
      *
      * @param fn the function returning a new CompletableFuture
      * @param executor the executor to use for asynchronous execution
-     * @return the CompletableFuture, that {@code isDone()} upon
-     * return if completed by the given function, or an exception
-     * occurs
+     * @return the CompletableFuture
      */
     public <U> CompletableFuture<U> thenComposeAsync
         (Function<? super T, CompletableFuture<U>> fn,

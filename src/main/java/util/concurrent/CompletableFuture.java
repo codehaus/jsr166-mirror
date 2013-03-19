@@ -2850,12 +2850,14 @@ public class CompletableFuture<T> implements Future<T> {
     /**
      * Returns a new CompletableFuture that is completed when all of
      * the given CompletableFutures complete.  If any of the given
-     * CompletableFutures complete exceptionally, then so does the
-     * returned CompletableFuture. Otherwise, the results, if any, of
-     * the given CompletableFutures are not reflected in the returned
-     * CompletableFuture, but may be obtained by inspecting them
-     * individually. If no CompletableFutures are provided, returns a
-     * CompletableFuture completed with the value {@code null}.
+     * CompletableFutures complete exceptionally, then the returned
+     * CompletableFuture also does so, with a CompletionException
+     * holding this exception as its cause.  Otherwise, the results,
+     * if any, of the given CompletableFutures are not reflected in
+     * the returned CompletableFuture, but may be obtained by
+     * inspecting them individually. If no CompletableFutures are
+     * provided, returns a CompletableFuture completed with the value
+     * {@code null}.
      *
      * <p>Among the applications of this method is to await completion
      * of a set of independent CompletableFutures before continuing a
@@ -2948,9 +2950,11 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Returns a new CompletableFuture that is completed when any of
-     * the given CompletableFutures complete; with the same result if
-     * it completed normally, otherwise exceptionally. If no
+     * Returns a new CompletableFuture that is completed when any of the
+     * given CompletableFutures complete, with the same result if it
+     * completed normally.  Otherwise, if it completed exceptionally,
+     * the returned CompletableFuture also does so, with a
+     * CompletionException holding this exception as its cause.  If no
      * CompletableFutures are provided, returns an incomplete
      * CompletableFuture.
      *

@@ -7,10 +7,13 @@
 package java.util.concurrent;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.CountedCompleter;
-import java.util.function.*;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Streams;
+import java.util.function.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import java.util.Comparator;
 import java.util.Arrays;
@@ -2782,7 +2785,7 @@ public class ConcurrentHashMap<K,V>
      * so the computation should be short and simple, and must not
      * attempt to update any other mappings of this Map.
      *
-     * @param key key with which the specified value is to be associated
+     * @param key key with which a value may be associated
      * @param remappingFunction the function to compute a value
      * @return the new value associated with the specified key, or null if none
      * @throws NullPointerException if the specified key or remappingFunction

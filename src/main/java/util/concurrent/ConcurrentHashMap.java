@@ -3571,8 +3571,6 @@ public class ConcurrentHashMap<K,V>
             if ((u = transformer.apply(k)) != null)
                 action.accept(u);
         }
-        ForkJoinTasks.forEachKey
-            (this, transformer, action).invoke();
     }
 
     /**

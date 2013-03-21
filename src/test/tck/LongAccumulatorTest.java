@@ -119,7 +119,7 @@ public class LongAccumulatorTest extends JSR166TestCase {
         LongAccumulator a = new LongAccumulator(Long::max, 0L);
         Phaser phaser = new Phaser(nthreads + 1);
         for (int i = 0; i < nthreads; ++i)
-            pool.execute(new AccumulateerTask(a, phaser, incs));
+            pool.execute(new AccTask(a, phaser, incs));
         phaser.arriveAndAwaitAdvance();
         phaser.arriveAndAwaitAdvance();
         long expected = incs - 1;
@@ -128,20 +128,20 @@ public class LongAccumulatorTest extends JSR166TestCase {
         pool.shutdown();
     }
 
-   static final class AccumulateerTask implements Runnable {
-        final LongAccumulator accumulateer;
+   static final class AccTask implements Runnable {
+        final LongAccumulator acc;
         final Phaser phaser;
         final int incs;
         volatile long result;
-        AccumulateerTask(LongAccumulator accumulateer, Phaser phaser, int incs) { 
-            this.accumulateer = accumulateer; 
+        AccTask(LongAccumulator acc, Phaser phaser, int incs) { 
+            this.acc = acc; 
             this.phaser = phaser;
             this.incs = incs;
         }
 
         public void run() {
             phaser.arriveAndAwaitAdvance();
-            LongAccumulator a = accumulateer;
+            LongAccumulator a = acc;
             for (int i = 0; i < incs; ++i)
                 a.accumulate(i);
             result = a.get();

@@ -286,12 +286,13 @@ public class JSR166TestCase extends TestCase {
         // Java8+ test classes
         if (atLeastJava8()) {
             String[] java8TestClassNames = {
-                "LongAdderTest",
-                "LongAccumulatorTest",
-                "DoubleAdderTest",
-                "DoubleAccumulatorTest",
                 "CompletableFutureTest",
+                "CountedCompleterTest",
+                "DoubleAccumulatorTest",
+                "DoubleAdderTest",
                 "ForkJoinPool8Test",
+                "LongAccumulatorTest",
+                "LongAdderTest",
                 "StampedLockTest",
             };
             addNamedTestClasses(suite, java8TestClassNames);

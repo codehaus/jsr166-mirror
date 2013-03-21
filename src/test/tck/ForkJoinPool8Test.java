@@ -18,11 +18,6 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         return new TestSuite(ForkJoinPool8Test.class);
     }
 
-    // XXXX Just a skeleton implementation for now.
-    public void testTODO() {
-        fail("Please add some real tests!");
-    }
-
     /**
      * Common pool exists and has expected parallelism.
      */

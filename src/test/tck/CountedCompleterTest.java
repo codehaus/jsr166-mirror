@@ -33,7 +33,7 @@ public class CountedCompleterTest extends JSR166TestCase {
         Math.max(2, Runtime.getRuntime().availableProcessors());
 
     /**
-     * Analog of CheckedRunnable for CountedCompleter
+     * Analog of CheckedRunnable for ForkJoinTasks
      */
     public abstract class CheckedFJTask extends RecursiveAction {
         protected abstract void realCompute() throws Throwable;
@@ -215,107 +215,6 @@ public class CountedCompleterTest extends JSR166TestCase {
 
     public static final class FJException extends RuntimeException {
         FJException() { super(); }
-    }
-
-    static abstract class FailingCCF extends CountedCompleter {
-        int number;
-        int rnumber;
-
-        public FailingCCF(CountedCompleter parent, int n) {
-            super(parent, 1);
-            this.number = n;
-        }
-
-        public final void compute() {
-            CountedCompleter p;
-            FailingCCF f = this;
-            int n = number;
-            while (n >= 2) {
-                new RFCCF(f, n - 2).fork();
-                f = new LFCCF(f, --n);
-            }
-            f.number = n;
-            f.onCompletion(f);
-            if ((p = f.getCompleter()) != null)
-                p.tryComplete();
-            else 
-                f.quietlyComplete(); 
-        }
-    }
-
-    static final class LFCCF extends FailingCCF {
-        public LFCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            FailingCCF p = (FailingCCF)getCompleter();
-            int n = number + rnumber;
-            if (p != null)
-                p.number = n;
-            else
-                number = n;
-        }
-    }
-    static final class RFCCF extends FailingCCF {
-        public RFCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            completeExceptionally(new FJException());
-        }
-    }
-
-    static abstract class CCF extends CountedCompleter {
-        int number;
-        int rnumber;
-
-        public CCF(CountedCompleter parent, int n) {
-            super(parent, 1);
-            this.number = n;
-        }
-
-        public final void compute() {
-            CountedCompleter p;
-            CCF f = this;
-            int n = number;
-            while (n >= 2) {
-                new RCCF(f, n - 2).fork();
-                f = new LCCF(f, --n);
-            }
-            f.number = n;
-            f.onCompletion(f);
-            if ((p = f.getCompleter()) != null)
-                p.tryComplete();
-            else 
-                f.quietlyComplete(); 
-        }
-    }
-
-    static final class LCCF extends CCF {
-        public LCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            CCF p = (CCF)getCompleter();
-            int n = number + rnumber;
-            if (p != null)
-                p.number = n;
-            else
-                number = n;
-        }
-    }
-    static final class RCCF extends CCF {
-        public RCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            CCF p = (CCF)getCompleter();
-            int n = number + rnumber;
-            if (p != null)
-                p.rnumber = n;
-            else
-                number = n;
-        }
     }
 
     static final class NoopCountedCompleter extends CountedCompleter {
@@ -510,6 +409,113 @@ public class CountedCompleterTest extends JSR166TestCase {
         b.quietlyCompleteRoot();
         assertTrue(a.isDone());
         assertFalse(b.isDone());
+    }
+
+    // Invocation tests use some interdependent task classes
+    // to better test propagation etc
+
+    
+    // Version of Fibonacci with different classes for left vs right forks
+    static abstract class CCF extends CountedCompleter {
+        int number;
+        int rnumber;
+
+        public CCF(CountedCompleter parent, int n) {
+            super(parent, 1);
+            this.number = n;
+        }
+
+        public final void compute() {
+            CountedCompleter p;
+            CCF f = this;
+            int n = number;
+            while (n >= 2) {
+                new RCCF(f, n - 2).fork();
+                f = new LCCF(f, --n);
+            }
+            f.number = n;
+            f.onCompletion(f);
+            if ((p = f.getCompleter()) != null)
+                p.tryComplete();
+            else 
+                f.quietlyComplete(); 
+        }
+    }
+
+    static final class LCCF extends CCF {
+        public LCCF(CountedCompleter parent, int n) {
+            super(parent, n);
+        }
+        public final void onCompletion(CountedCompleter caller) {
+            CCF p = (CCF)getCompleter();
+            int n = number + rnumber;
+            if (p != null)
+                p.number = n;
+            else
+                number = n;
+        }
+    }
+    static final class RCCF extends CCF {
+        public RCCF(CountedCompleter parent, int n) {
+            super(parent, n);
+        }
+        public final void onCompletion(CountedCompleter caller) {
+            CCF p = (CCF)getCompleter();
+            int n = number + rnumber;
+            if (p != null)
+                p.rnumber = n;
+            else
+                number = n;
+        }
+    }
+
+    // Version of CCF with forced failure in left completions
+    static abstract class FailingCCF extends CountedCompleter {
+        int number;
+        int rnumber;
+
+        public FailingCCF(CountedCompleter parent, int n) {
+            super(parent, 1);
+            this.number = n;
+        }
+
+        public final void compute() {
+            CountedCompleter p;
+            FailingCCF f = this;
+            int n = number;
+            while (n >= 2) {
+                new RFCCF(f, n - 2).fork();
+                f = new LFCCF(f, --n);
+            }
+            f.number = n;
+            f.onCompletion(f);
+            if ((p = f.getCompleter()) != null)
+                p.tryComplete();
+            else 
+                f.quietlyComplete(); 
+        }
+    }
+
+    static final class LFCCF extends FailingCCF {
+        public LFCCF(CountedCompleter parent, int n) {
+            super(parent, n);
+        }
+        public final void onCompletion(CountedCompleter caller) {
+            FailingCCF p = (FailingCCF)getCompleter();
+            int n = number + rnumber;
+            if (p != null)
+                p.number = n;
+            else
+                number = n;
+        }
+    }
+    static final class RFCCF extends FailingCCF {
+        public RFCCF(CountedCompleter parent, int n) {
+            super(parent, n);
+        }
+        public final void onCompletion(CountedCompleter caller) {
+            completeExceptionally(new FJException());
+        }
     }
     
     /**

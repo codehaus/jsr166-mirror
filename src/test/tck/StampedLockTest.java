@@ -650,6 +650,7 @@ public class StampedLockTest extends JSR166TestCase {
         clone.unlockWrite(s);
         assertFalse(clone.isWriteLocked());
     }
+
     /**
      * toString indicates current lock state
      */

@@ -59,7 +59,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
      * RecursiveAction and CountedCompleter, but with all actions
      * executed in the common pool, generally implicitly via
      * checkInvoke.
-     */ 
+     */
 
     private void checkInvoke(ForkJoinTask a) {
         checkNotDone(a);
@@ -889,7 +889,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         }
     }
 
-    static abstract class CCF extends CountedCompleter {
+    abstract static class CCF extends CountedCompleter {
         int number;
         int rnumber;
 
@@ -910,8 +910,8 @@ public class ForkJoinPool8Test extends JSR166TestCase {
             f.onCompletion(f);
             if ((p = f.getCompleter()) != null)
                 p.tryComplete();
-            else 
-                f.quietlyComplete(); 
+            else
+                f.quietlyComplete();
         }
     }
 
@@ -943,7 +943,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
     }
 
     // Version of CCF with forced failure in left completions
-    static abstract class FailingCCF extends CountedCompleter {
+    abstract static class FailingCCF extends CountedCompleter {
         int number;
         int rnumber;
 
@@ -964,8 +964,8 @@ public class ForkJoinPool8Test extends JSR166TestCase {
             f.onCompletion(f);
             if ((p = f.getCompleter()) != null)
                 p.tryComplete();
-            else 
-                f.quietlyComplete(); 
+            else
+                f.quietlyComplete();
         }
     }
 
@@ -990,7 +990,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
             completeExceptionally(new FJException());
         }
     }
-    
+
     /**
      * invoke returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally

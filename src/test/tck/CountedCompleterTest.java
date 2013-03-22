@@ -228,7 +228,7 @@ public class CountedCompleterTest extends JSR166TestCase {
     }
 
     /**
-     * A newly constructed CountedCompleter is not completed; 
+     * A newly constructed CountedCompleter is not completed;
      * complete() causes completion.
      */
     public void testComplete() {
@@ -320,7 +320,7 @@ public class CountedCompleterTest extends JSR166TestCase {
         CountedCompleter b = new NoopCountedCompleter(a);
         assertEquals(a, b.getCompleter());
     }
-     
+
     /**
      * getRoot returns self if no parent, else parent's root
      */
@@ -330,7 +330,7 @@ public class CountedCompleterTest extends JSR166TestCase {
         assertEquals(a, a.getRoot());
         assertEquals(a, b.getRoot());
     }
-              
+
     /**
      * tryComplete causes completion if pending count is zero
      */
@@ -414,9 +414,9 @@ public class CountedCompleterTest extends JSR166TestCase {
     // Invocation tests use some interdependent task classes
     // to better test propagation etc
 
-    
+
     // Version of Fibonacci with different classes for left vs right forks
-    static abstract class CCF extends CountedCompleter {
+    abstract static class CCF extends CountedCompleter {
         int number;
         int rnumber;
 
@@ -437,8 +437,8 @@ public class CountedCompleterTest extends JSR166TestCase {
             f.onCompletion(f);
             if ((p = f.getCompleter()) != null)
                 p.tryComplete();
-            else 
-                f.quietlyComplete(); 
+            else
+                f.quietlyComplete();
         }
     }
 
@@ -470,7 +470,7 @@ public class CountedCompleterTest extends JSR166TestCase {
     }
 
     // Version of CCF with forced failure in left completions
-    static abstract class FailingCCF extends CountedCompleter {
+    abstract static class FailingCCF extends CountedCompleter {
         int number;
         int rnumber;
 
@@ -491,8 +491,8 @@ public class CountedCompleterTest extends JSR166TestCase {
             f.onCompletion(f);
             if ((p = f.getCompleter()) != null)
                 p.tryComplete();
-            else 
-                f.quietlyComplete(); 
+            else
+                f.quietlyComplete();
         }
     }
 
@@ -517,7 +517,7 @@ public class CountedCompleterTest extends JSR166TestCase {
             completeExceptionally(new FJException());
         }
     }
-    
+
     /**
      * invoke returns when task completes normally.
      * isCompletedAbnormally and isCancelled return false for normally

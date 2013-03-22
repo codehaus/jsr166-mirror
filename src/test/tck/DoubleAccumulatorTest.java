@@ -128,13 +128,13 @@ public class DoubleAccumulatorTest extends JSR166TestCase {
         pool.shutdown();
     }
 
-   static final class AccTask implements Runnable {
+    static final class AccTask implements Runnable {
         final DoubleAccumulator acc;
         final Phaser phaser;
         final int incs;
         volatile double result;
-        AccTask(DoubleAccumulator acc, Phaser phaser, int incs) { 
-            this.acc = acc; 
+        AccTask(DoubleAccumulator acc, Phaser phaser, int incs) {
+            this.acc = acc;
             this.phaser = phaser;
             this.incs = incs;
         }

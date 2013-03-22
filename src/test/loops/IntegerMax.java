@@ -76,15 +76,15 @@ public class IntegerMax {
         ctest(new TreeSet<Integer>(), vlist, vmax, size, trials);
         ctest(new ConcurrentSkipListSet<Integer>(), klist, kmax, size, trials);
         ctest(new ConcurrentSkipListSet<Integer>(), vlist, vmax, size, trials);
-        
+
         mtest(new HashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new IdentityHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new WeakHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new ConcurrentHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
-        
+
         mtest(new TreeMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new ConcurrentSkipListMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
-    
+
         if (allClasses) {
             mtest(new Hashtable<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
             mtest(new LinkedHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);

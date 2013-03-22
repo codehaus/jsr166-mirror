@@ -170,8 +170,8 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
   <macrodef name="run-tck-tests">
     <attribute name="tck.src.dir" default="${tck.src.dir}"/>
-    <attribute name="source" default="6"/>
     <attribute name="target"/>
+    <attribute name="compile-target" default="@{target}"/>
     <attribute name="workdir"/>
     <attribute name="classes"/>
     <attribute name="jvmflags" default=""/>
@@ -185,12 +185,13 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
-           source="@{source}"
+           source="@{compile-target}"
+           target="@{compile-target}"
            classpath="${junit.jar}"
-           bootclasspath="@{classes}:${bootclasspath@{source}}"
+           bootclasspath="@{classes}:${bootclasspath@{compile-target}}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
-           executable="${javac@{target}}"
+           executable="${javac@{compile-target}}"
            fork="true">
 
       <include name="*.java"/>
@@ -664,6 +665,10 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       <javac-elements>
         <!-- JDK8+ test classes -->
         <exclude name="*8Test.java"/>
+        <exclude name="DoubleAccumulatorTest.java"/>
+        <exclude name="DoubleAdderTest.java"/>
+        <exclude name="LongAccumulatorTest.java"/>
+        <exclude name="LongAdderTest.java"/>
         <exclude name="CompletableFutureTest.java"/>
         <exclude name="StampedLockTest.java"/>
       </javac-elements>
@@ -1103,8 +1108,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
     <run-tck-tests
       tck.src.dir="${test.src.dir}/tck-jsr166e"
-      source="7"
-      target="8"
+      target="7"
       workdir="${build.jsr166e.dir}"
       classes="${jsr166e.jar}"/>
   </target>

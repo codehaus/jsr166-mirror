@@ -75,31 +75,27 @@ public class CompletableFutureTest extends JSR166TestCase {
         try {
             f.join();
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CompletionException &&
-                       ((CompletionException)ex).getCause() instanceof CFException);
+        } catch (CompletionException success) {
+            assertTrue(success.getCause() instanceof CFException);
         }
         try {
             f.getNow(null);
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CompletionException &&
-                       ((CompletionException)ex).getCause() instanceof CFException);
+        } catch (CompletionException success) {
+            assertTrue(success.getCause() instanceof CFException);
         }
         try {
             f.get();
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof ExecutionException &&
-                       ((ExecutionException)ex).getCause() instanceof CFException);
-        }
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof CFException);
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
         try {
             f.get(0L, SECONDS);
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof ExecutionException &&
-                       ((ExecutionException)ex).getCause() instanceof CFException);
-        }
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof CFException);
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
     }
@@ -108,27 +104,21 @@ public class CompletableFutureTest extends JSR166TestCase {
         try {
             f.join();
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CancellationException);
-        }
+        } catch (CancellationException success) {}
         try {
             f.getNow(null);
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CancellationException);
-        }
+        } catch (CancellationException success) {}
         try {
             f.get();
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CancellationException);
-        }
+        } catch (CancellationException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
         try {
             f.get(0L, SECONDS);
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CancellationException);
-        }
+        } catch (CancellationException success) {
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertTrue(f.isCancelled());
     }
@@ -137,31 +127,27 @@ public class CompletableFutureTest extends JSR166TestCase {
         try {
             f.join();
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CompletionException &&
-                       ((CompletionException)ex).getCause() instanceof CancellationException);
+        } catch (CompletionException success) {
+            assertTrue(success.getCause() instanceof CancellationException);
         }
         try {
             f.getNow(null);
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof CompletionException &&
-                       ((CompletionException)ex).getCause() instanceof CancellationException);
+        } catch (CompletionException success) {
+            assertTrue(success.getCause() instanceof CancellationException);
         }
         try {
             f.get();
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof ExecutionException &&
-                       ((ExecutionException)ex).getCause() instanceof CancellationException);
-        }
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof CancellationException);
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
         try {
             f.get(0L, SECONDS);
             shouldThrow();
-        } catch (Throwable ex) {
-            assertTrue(ex instanceof ExecutionException &&
-                       ((ExecutionException)ex).getCause() instanceof CancellationException);
-        }
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof CancellationException);
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
     }

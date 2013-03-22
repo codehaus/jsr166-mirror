@@ -777,7 +777,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     public void testReduceKeysToIntSequentially() {
         ConcurrentHashMap<Long, Long> m = longMap();
         int ir = m.reduceKeysToIntSequentially((Long x) -> x.intValue(), 0, Integer::sum);
-        assertEquals(ir, (int)SIZE * (SIZE - 1) / 2);
+        assertEquals(ir, SIZE * (SIZE - 1) / 2);
     }
 
     /*
@@ -804,7 +804,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     public void testReduceValuesToIntSequentially() {
         ConcurrentHashMap<Long, Long> m = longMap();
         int ir = m.reduceValuesToIntSequentially((Long x) -> x.intValue(), 0, Integer::sum);
-        assertEquals(ir, (int)SIZE * (SIZE - 1));
+        assertEquals(ir, SIZE * (SIZE - 1));
     }
 
     /*
@@ -831,7 +831,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     public void testReduceKeysToIntInParallel() {
         ConcurrentHashMap<Long, Long> m = longMap();
         int ir = m.reduceKeysToIntInParallel((Long x) -> x.intValue(), 0, Integer::sum);
-        assertEquals(ir, (int)SIZE * (SIZE - 1) / 2);
+        assertEquals(ir, SIZE * (SIZE - 1) / 2);
     }
 
     /*
@@ -858,7 +858,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     public void testReduceValuesToIntInParallel() {
         ConcurrentHashMap<Long, Long> m = longMap();
         int ir = m.reduceValuesToIntInParallel((Long x) -> x.intValue(), 0, Integer::sum);
-        assertEquals(ir, (int)SIZE * (SIZE - 1));
+        assertEquals(ir, SIZE * (SIZE - 1));
     }
 
     /*
@@ -1043,7 +1043,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(lr, (long)SIZE * (SIZE - 1) / 2);
         ir = ConcurrentHashMap.ForkJoinTasks.reduceKeysToInt
             (m, (Long x) -> x.intValue(), 0, Integer::sum).invoke();
-        assertEquals(ir, (int)SIZE * (SIZE - 1) / 2);
+        assertEquals(ir, SIZE * (SIZE - 1) / 2);
         dr = ConcurrentHashMap.ForkJoinTasks.reduceKeysToDouble
             (m, (Long x) -> x.doubleValue(), 0.0, Double::sum).invoke();
         assertEquals(dr, (double)SIZE * (SIZE - 1) / 2);
@@ -1056,7 +1056,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(lr, (long)SIZE * (SIZE - 1));
         ir = ConcurrentHashMap.ForkJoinTasks.reduceValuesToInt
             (m, (Long x) -> x.intValue(), 0, Integer::sum).invoke();
-        assertEquals(ir, (int)SIZE * (SIZE - 1));
+        assertEquals(ir, SIZE * (SIZE - 1));
         dr = ConcurrentHashMap.ForkJoinTasks.reduceValuesToDouble
             (m, (Long x) -> x.doubleValue(), 0.0, Double::sum).invoke();
         assertEquals(dr, (double)SIZE * (SIZE - 1));

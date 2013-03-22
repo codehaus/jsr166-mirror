@@ -403,23 +403,6 @@ public class ForkJoinPool8Test extends JSR166TestCase {
     }
 
     /**
-     * helpQuiesce returns when tasks are complete.
-     * getQueuedTaskCount returns 0 when quiescent
-     */
-    public void testForkHelpQuiesce() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
-                FibAction f = new FibAction(8);
-                assertSame(f, f.fork());
-                helpQuiesce();
-                assertEquals(21, f.result);
-                assertEquals(0, getQueuedTaskCount());
-                checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
      * invoke task throws exception when task completes abnormally
      */
     public void testAbnormalInvoke() {
@@ -1094,23 +1077,6 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertSame(f, f.fork());
                 f.quietlyJoin();
                 assertEquals(21, f.number);
-                checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * helpQuiesce returns when tasks are complete.
-     * getQueuedTaskCount returns 0 when quiescent
-     */
-    public void testForkHelpQuiesceCC() {
-       ForkJoinTask a =  new CheckedFJTask() {
-            public void realCompute() {
-                CCF f = new LCCF(null, 8);
-                assertSame(f, f.fork());
-                helpQuiesce();
-                assertEquals(21, f.number);
-                assertEquals(0, getQueuedTaskCount());
                 checkCompletedNormally(f);
             }};
         checkInvoke(a);

@@ -343,7 +343,7 @@ public class CountedCompleterTest extends JSR166TestCase {
     }
 
     /**
-     * propagateCompletion causes completion without invokein
+     * propagateCompletion causes completion without invoking
      * onCompletion if pending count is zero
      */
     public void testPropagateCompletion() {
@@ -355,7 +355,7 @@ public class CountedCompleterTest extends JSR166TestCase {
     }
 
     /**
-     * tryComplete decrments pending count unless zero
+     * tryComplete decrements pending count unless zero
      */
     public void testTryComplete2() {
         NoopCountedCompleter a = new NoopCountedCompleter();

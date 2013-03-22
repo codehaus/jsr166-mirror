@@ -456,7 +456,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertTrue(r.ran);
     }
 
-    // seq conmpletion methods
+    // seq completion methods
 
     /**
      * thenRun result completes normally after normal completion of source
@@ -1671,7 +1671,8 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * thenCompse result completes normally after normal completion of source
+     * thenComposeAsync result completes normally after normal
+     * completion of source
      */
     public void testThenComposeAsync() {
         CompletableFuture<Integer> f = new CompletableFuture<Integer>();
@@ -1682,8 +1683,8 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * thenComposeAsync result completes exceptionally after exceptional
-     * completion of source
+     * thenComposeAsync result completes exceptionally after
+     * exceptional completion of source
      */
     public void testThenComposeAsync2() {
         CompletableFuture<Integer> f = new CompletableFuture<Integer>();
@@ -1716,7 +1717,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
 
-    // aaync with explicit executors
+    // async with explicit executors
 
     /**
      * thenRunAsync result completes normally after normal completion of source
@@ -2293,7 +2294,8 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * thenCompse result completes normally after normal completion of source
+     * thenComposeAsync result completes normally after normal
+     * completion of source
      */
     public void testThenComposeAsyncE() {
         CompletableFuture<Integer> f = new CompletableFuture<Integer>();
@@ -2304,8 +2306,8 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * thenComposeAsync result completes exceptionally after exceptional
-     * completion of source
+     * thenComposeAsync result completes exceptionally after
+     * exceptional completion of source
      */
     public void testThenComposeAsync2E() {
         CompletableFuture<Integer> f = new CompletableFuture<Integer>();

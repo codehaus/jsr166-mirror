@@ -67,23 +67,24 @@ public class IntegerMax {
         ctest(new CopyOnWriteArrayList<Integer>(), vlist, vmax, size, trials);
         ctest(new PriorityQueue<Integer>(), klist, kmax, size, trials);
         ctest(new PriorityQueue<Integer>(), vlist, vmax, size, trials);
+
         ctest(new HashSet<Integer>(), klist, kmax, size, trials);
         ctest(new HashSet<Integer>(), vlist, vmax, size, trials);
         ctest(ConcurrentHashMap.<Integer>newKeySet(), klist, kmax, size, trials);
         ctest(ConcurrentHashMap.<Integer>newKeySet(), vlist, vmax, size, trials);
         ctest(new TreeSet<Integer>(), klist, kmax, size, trials);
         ctest(new TreeSet<Integer>(), vlist, vmax, size, trials);
-        ctest(ConcurrentSkipListMap.<Integer>newKeySet(), klist, kmax, size, trials);
-        ctest(ConcurrentSkipListMap.<Integer>newKeySet(), vlist, vmax, size, trials);
-
+        ctest(new ConcurrentSkipListSet<Integer>(), klist, kmax, size, trials);
+        ctest(new ConcurrentSkipListSet<Integer>(), vlist, vmax, size, trials);
+        
         mtest(new HashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new IdentityHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new WeakHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new ConcurrentHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
-
+        
         mtest(new TreeMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
         mtest(new ConcurrentSkipListMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
-
+    
         if (allClasses) {
             mtest(new Hashtable<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
             mtest(new LinkedHashMap<Integer,Integer>(), keys, vals, kmax, vmax, size, trials);
@@ -91,6 +92,8 @@ public class IntegerMax {
             ctest(new LinkedHashSet<Integer>(), vlist, vmax, size, trials);
             ctest(new LinkedList<Integer>(), klist, kmax, size, trials);
             ctest(new LinkedList<Integer>(), vlist, vmax, size, trials);
+            //            catest(new LinkedList<Integer>(), klist, kmax, size, trials);
+            //            catest(new LinkedList<Integer>(), vlist, vmax, size, trials);
             ctest(new ConcurrentLinkedQueue<Integer>(), klist, kmax, size, trials);
             ctest(new ConcurrentLinkedQueue<Integer>(), vlist, vmax, size, trials);
             ctest(new ConcurrentLinkedDeque<Integer>(), klist, kmax, size, trials);
@@ -107,8 +110,7 @@ public class IntegerMax {
             ctest(new PriorityBlockingQueue<Integer>(SIZE), vlist, vmax, size, trials);
         }
 
-        if (checksum.get() != 0)
-            throw new Error("bad computation");
+        if (checksum.get() != 0) throw new Error("bad computation");
     }
 
     static void ctest(Collection<Integer> c, List<Integer> klist, int kmax, int size, int trials)
@@ -120,6 +122,20 @@ public class IntegerMax {
             cn = cn.substring(10);
         c.addAll(klist);
         isptest(c, kmax, size, trials);
+        System.out.print(cn + sep());
+    }
+
+    static void catest(Collection<Integer> c, List<Integer> klist, int kmax, int size, int trials)
+        throws Exception {
+        String cn = c.getClass().getName();
+        if (cn.startsWith("java.util.concurrent."))
+            cn = cn.substring(21);
+        else if (cn.startsWith("java.util."))
+            cn = cn.substring(10);
+        cn = cn + ".toArrayList";
+        c.addAll(klist);
+        ArrayList<Integer> ac = new ArrayList<Integer>(c);
+        isptest(ac, kmax, size, trials);
         System.out.print(cn + sep());
     }
 
@@ -141,6 +157,7 @@ public class IntegerMax {
         long ti = itest(c, max, trials);
         long ts = stest(c, max, trials);
         long tp = ptest(c, max, trials);
+        if (checksum.get() != 0) throw new Error("bad computation");
         if (print) {
             long scale = (long)size * trials;
             double di = ((double)ti) / scale;

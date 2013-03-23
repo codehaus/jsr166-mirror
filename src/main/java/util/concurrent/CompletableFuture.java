@@ -178,7 +178,7 @@ public class CompletableFuture<T> implements Future<T> {
      * CompletionException unless it is one already.  Otherwise uses
      * the given result, boxed as NIL if null.
      */
-    final void internalComplete(Object v, Throwable ex) {
+    final void internalComplete(T v, Throwable ex) {
         if (result == null)
             UNSAFE.compareAndSwapObject
                 (this, RESULT, null,
@@ -1119,30 +1119,26 @@ public class CompletableFuture<T> implements Future<T> {
     static final class OrCompletion extends Completion {
         final CompletableFuture<?> src;
         final CompletableFuture<?> snd;
-        final CompletableFuture<?> dst;
+        final CompletableFuture<Void> dst;
         OrCompletion(CompletableFuture<?> src,
                      CompletableFuture<?> snd,
-                     CompletableFuture<?> dst) {
+                     CompletableFuture<Void> dst) {
             this.src = src; this.snd = snd; this.dst = dst;
         }
         public final void run() {
             final CompletableFuture<?> a;
             final CompletableFuture<?> b;
-            final CompletableFuture<?> dst;
-            Object r, t; Throwable ex;
+            final CompletableFuture<Void> dst;
+            Object r; Throwable ex;
             if ((dst = this.dst) != null &&
                 (((a = this.src) != null && (r = a.result) != null) ||
                  ((b = this.snd) != null && (r = b.result) != null)) &&
                 compareAndSet(0, 1)) {
-                if (r instanceof AltResult) {
+                if (r instanceof AltResult)
                     ex = ((AltResult)r).ex;
-                    t = null;
-                }
-                else {
+                else
                     ex = null;
-                    t = r;
-                }
-                dst.internalComplete(t, ex);
+                dst.internalComplete(null, ex);
             }
         }
         private static final long serialVersionUID = 5232453952276885070L;
@@ -1185,17 +1181,17 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
-    static final class ThenCopy extends Completion {
-        final CompletableFuture<?> src;
-        final CompletableFuture<?> dst;
-        ThenCopy(CompletableFuture<?> src,
-                 CompletableFuture<?> dst) {
+    static final class ThenCopy<T> extends Completion {
+        final CompletableFuture<T> src;
+        final CompletableFuture<T> dst;
+        ThenCopy(CompletableFuture<T> src,
+                 CompletableFuture<T> dst) {
             this.src = src; this.dst = dst;
         }
         public final void run() {
-            final CompletableFuture<?> a;
-            final CompletableFuture<?> dst;
-            Object r; Object t; Throwable ex;
+            final CompletableFuture<T> a;
+            final CompletableFuture<T> dst;
+            Object r; T t; Throwable ex;
             if ((dst = this.dst) != null &&
                 (a = this.src) != null &&
                 (r = a.result) != null &&
@@ -1206,9 +1202,36 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 else {
                     ex = null;
-                    t = r;
+                    @SuppressWarnings("unchecked") T tr = (T) r;
+                    t = tr;
                 }
                 dst.internalComplete(t, ex);
+            }
+        }
+        private static final long serialVersionUID = 5232453952276885070L;
+    }
+
+    // version of ThenCopy for CompletableFuture<Void> dst
+    static final class ThenPropagate extends Completion {
+        final CompletableFuture<?> src;
+        final CompletableFuture<Void> dst;
+        ThenPropagate(CompletableFuture<?> src,
+                      CompletableFuture<Void> dst) {
+            this.src = src; this.dst = dst;
+        }
+        public final void run() {
+            final CompletableFuture<?> a;
+            final CompletableFuture<Void> dst;
+            Object r; Throwable ex;
+            if ((dst = this.dst) != null &&
+                (a = this.src) != null &&
+                (r = a.result) != null &&
+                compareAndSet(0, 1)) {
+                if (r instanceof AltResult)
+                    ex = ((AltResult)r).ex;
+                else
+                    ex = null;
+                dst.internalComplete(null, ex);
             }
         }
         private static final long serialVersionUID = 5232453952276885070L;
@@ -1300,11 +1323,11 @@ public class CompletableFuture<T> implements Future<T> {
                     }
                 }
                 if (c != null) {
-                    ThenCopy d = null;
+                    ThenCopy<U> d = null;
                     Object s;
                     if ((s = c.result) == null) {
                         CompletionNode p = new CompletionNode
-                            (d = new ThenCopy(c, dst));
+                            (d = new ThenCopy<U>(c, dst));
                         while ((s = c.result) == null) {
                             if (UNSAFE.compareAndSwapObject
                                 (c, COMPLETIONS, p.next = c.completions, p))
@@ -2924,12 +2947,12 @@ public class CompletableFuture<T> implements Future<T> {
             else if ((f = cfs[0]) == null)
                 throw new NullPointerException();
             else {
-                ThenCopy d = null;
+                ThenPropagate d = null;
                 CompletionNode p = null;
                 Object r;
                 while ((r = f.result) == null) {
                     if (d == null)
-                        d = new ThenCopy(f, dst);
+                        d = new ThenPropagate(f, dst);
                     else if (p == null)
                         p = new CompletionNode(d);
                     else if (UNSAFE.compareAndSwapObject
@@ -3006,24 +3029,24 @@ public class CompletableFuture<T> implements Future<T> {
      * @throws NullPointerException if the array or any of its elements are
      * {@code null}
      */
-    public static CompletableFuture<?> anyOf(CompletableFuture<?>... cfs) {
+    public static CompletableFuture<Void> anyOf(CompletableFuture<?>... cfs) {
         int len = cfs.length; // Same idea as allOf
         if (len > 1)
             return anyTree(cfs, 0, len - 1);
         else {
-            CompletableFuture<?> dst = new CompletableFuture<Object>();
+            CompletableFuture<Void> dst = new CompletableFuture<Void>();
             CompletableFuture<?> f;
             if (len == 0)
                 ; // skip
             else if ((f = cfs[0]) == null)
                 throw new NullPointerException();
             else {
-                ThenCopy d = null;
+                ThenPropagate d = null;
                 CompletionNode p = null;
                 Object r;
                 while ((r = f.result) == null) {
                     if (d == null)
-                        d = new ThenCopy(f, dst);
+                        d = new ThenPropagate(f, dst);
                     else if (p == null)
                         p = new CompletionNode(d);
                     else if (UNSAFE.compareAndSwapObject
@@ -3032,15 +3055,10 @@ public class CompletableFuture<T> implements Future<T> {
                 }
                 if (r != null && (d == null || d.compareAndSet(0, 1))) {
                     Throwable ex; Object t;
-                    if (r instanceof AltResult) {
+                    if (r instanceof AltResult)
                         ex = ((AltResult)r).ex;
-                        t = null;
-                    }
-                    else {
-                        ex = null;
-                        t = r;
-                    }
-                    dst.internalComplete(t, ex);
+                    ex = null;
+                    dst.internalComplete(null, ex);
                 }
                 f.helpPostComplete();
             }
@@ -3051,14 +3069,14 @@ public class CompletableFuture<T> implements Future<T> {
     /**
      * Recursively constructs an Or'ed tree of CompletableFutures.
      */
-    private static CompletableFuture<?> anyTree(CompletableFuture<?>[] cfs,
-                                                int lo, int hi) {
+    private static CompletableFuture<Void> anyTree(CompletableFuture<?>[] cfs,
+                                                   int lo, int hi) {
         CompletableFuture<?> fst, snd;
         int mid = (lo + hi) >>> 1;
         if ((fst = (lo == mid   ? cfs[lo] : anyTree(cfs, lo,    mid))) == null ||
             (snd = (hi == mid+1 ? cfs[hi] : anyTree(cfs, mid+1, hi))) == null)
             throw new NullPointerException();
-        CompletableFuture<?> dst = new CompletableFuture<Object>();
+        CompletableFuture<Void> dst = new CompletableFuture<Void>();
         OrCompletion d = null;
         CompletionNode p = null, q = null;
         Object r;
@@ -3079,16 +3097,13 @@ public class CompletableFuture<T> implements Future<T> {
         if ((r != null || (r = fst.result) != null ||
              (r = snd.result) != null) &&
             (d == null || d.compareAndSet(0, 1))) {
-            Throwable ex; Object t;
+            Throwable ex;
             if (r instanceof AltResult) {
                 ex = ((AltResult)r).ex;
-                t = null;
             }
-            else {
+            else
                 ex = null;
-                t = r;
-            }
-            dst.internalComplete(t, ex);
+            dst.internalComplete(null, ex);
         }
         fst.helpPostComplete();
         snd.helpPostComplete();

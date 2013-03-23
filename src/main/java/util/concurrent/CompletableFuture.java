@@ -3015,13 +3015,12 @@ public class CompletableFuture<T> implements Future<T> {
     }
 
     /**
-     * Returns a new CompletableFuture that is completed when any of the
-     * given CompletableFutures complete, with the same result if it
-     * completed normally.  Otherwise, if it completed exceptionally,
-     * the returned CompletableFuture also does so, with a
-     * CompletionException holding this exception as its cause.  If no
-     * CompletableFutures are provided, returns an incomplete
-     * CompletableFuture.
+     * Returns a new CompletableFuture that is completed when any of
+     * the given CompletableFutures complete.  Otherwise, if it
+     * completed exceptionally, the returned CompletableFuture also
+     * does so, with a CompletionException holding this exception as
+     * its cause.  If no CompletableFutures are provided, returns an
+     * incomplete CompletableFuture.
      *
      * @param cfs the CompletableFutures
      * @return a new CompletableFuture that is completed when any of the

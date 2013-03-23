@@ -128,13 +128,13 @@ public class LongAccumulatorTest extends JSR166TestCase {
         pool.shutdown();
     }
 
-   static final class AccTask implements Runnable {
+    static final class AccTask implements Runnable {
         final LongAccumulator acc;
         final Phaser phaser;
         final int incs;
         volatile long result;
-        AccTask(LongAccumulator acc, Phaser phaser, int incs) { 
-            this.acc = acc; 
+        AccTask(LongAccumulator acc, Phaser phaser, int incs) {
+            this.acc = acc;
             this.phaser = phaser;
             this.incs = incs;
         }

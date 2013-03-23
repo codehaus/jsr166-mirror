@@ -128,7 +128,7 @@ import java.util.concurrent.TimeUnit;
  * @since 1.7
  * @author Doug Lea
  */
-@sun.misc.Contended // enable when @Contended is stable
+@sun.misc.Contended
 public class ForkJoinPool extends AbstractExecutorService {
 
     /*
@@ -612,7 +612,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * help arrange that). The @Contended annotation alerts JVMs to
      * try to keep instances apart.
      */
-    @sun.misc.Contended // enable when @Contended is stable
+    @sun.misc.Contended
     static final class WorkQueue {
         /**
          * Capacity of work-stealing queue array upon initialization.

@@ -57,12 +57,6 @@ import java.util.function.BiFunction;
  * null return values cannot be reliably distinguished from the absence of
  * elements.
  *
- * <p>A {@link Set} projection of a ConcurrentSkipListMap may be
- * created (using {@link #newKeySet()}), or viewed (using {@link
- * #keySet(Object)} when only keys are of interest, and the mapped
- * values are (perhaps transiently) not used or all take the same
- * mapping value.
- *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
@@ -1603,33 +1597,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Creates a new {@link Set} backed by a ConcurrentSkipListMap
-     * from the given type to {@code Boolean.TRUE}.
-     *
-     * @return the new set
-     */
-    public static <K> KeySetView<K,Boolean> newKeySet() {
-        return new KeySetView<K,Boolean>(new ConcurrentSkipListMap<K,Boolean>(),
-                                         Boolean.TRUE);
-    }
-
-    /**
-     * Creates a new {@link Set} backed by a ConcurrentSkipListMap
-     * from the given type to {@code Boolean.TRUE}, using the
-     * given comparator.
-     *
-     * @param comparator the comparator that will be used to order this map.
-     *        If {@code null}, the {@linkplain Comparable natural
-     *        ordering} of the keys will be used.
-     *
-     * @return the new set
-     */
-    public static <K> KeySetView<K,Boolean> newKeySet(Comparator<? super K> comparator) {
-        return new KeySetView<K,Boolean>
-            (new ConcurrentSkipListMap<K,Boolean>(comparator), Boolean.TRUE);
-    }
-
-    /**
      * Returns a shallow copy of this {@code ConcurrentSkipListMap}
      * instance. (The keys and values themselves are not cloned.)
      *
@@ -2209,24 +2176,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     public NavigableSet<K> navigableKeySet() {
         KeySetView<K,V> ks = keySet;
         return (ks != null) ? ks : (keySet = new KeySetView<K,V>(this, null));
-    }
-
-    /**
-     * Returns a {@link Set} view of the keys in this map, using the
-     * given common mapped value for any additions (i.e., {@link
-     * Collection#add} and {@link Collection#addAll(Collection)}).
-     * This is of course only appropriate if it is acceptable to use
-     * the same value for all additions from this view.
-     *
-     * @param mappedValue the mapped value to use for any
-     * additions.
-     * @return the set view
-     * @throws NullPointerException if the mappedValue is null
-     */
-    public KeySetView<K,V> keySet(V mappedValue) {
-        if (mappedValue == null)
-            throw new NullPointerException();
-        return new KeySetView<K,V>(this, mappedValue);
     }
 
     /**
@@ -3646,11 +3595,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * A view of a ConcurrentSkipListMap as a {@link Set} of keys, in
      * which additions may optionally be enabled by mapping to a
-     * common value.  This class cannot be directly instantiated. See
-     * {@link #keySet()}, {@link #keySet(Object)}, {@link #newKeySet()},
-     * {@link #newKeySet(Comparator)}.
+     * common value.
      */
-    public static class KeySetView<K,V> extends AbstractSet<K>
+    static class KeySetView<K,V> extends AbstractSet<K>
         implements NavigableSet<K>, java.io.Serializable {
 
         /*

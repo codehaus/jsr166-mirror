@@ -162,13 +162,13 @@ public class LongAdderTest extends JSR166TestCase {
         pool.shutdown();
     }
 
-   static final class AdderTask implements Runnable {
+    static final class AdderTask implements Runnable {
         final LongAdder adder;
         final Phaser phaser;
         final int incs;
         volatile long result;
-        AdderTask(LongAdder adder, Phaser phaser, int incs) { 
-            this.adder = adder; 
+        AdderTask(LongAdder adder, Phaser phaser, int incs) {
+            this.adder = adder;
             this.phaser = phaser;
             this.incs = incs;
         }

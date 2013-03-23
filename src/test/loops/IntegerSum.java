@@ -74,8 +74,8 @@ public class IntegerSum {
         ctest(ConcurrentHashMap.<Integer>newKeySet(), vlist, vsum, size, trials);
         ctest(new TreeSet<Integer>(), klist, ksum, size, trials);
         ctest(new TreeSet<Integer>(), vlist, vsum, size, trials);
-        ctest(ConcurrentSkipListMap.<Integer>newKeySet(), klist, ksum, size, trials);
-        ctest(ConcurrentSkipListMap.<Integer>newKeySet(), vlist, vsum, size, trials);
+        ctest(new ConcurrentSkipListSet<Integer>(), klist, ksum, size, trials);
+        ctest(new ConcurrentSkipListSet<Integer>(), vlist, vsum, size, trials);
 
         mtest(new HashMap<Integer,Integer>(), keys, vals, ksum, vsum, size, trials);
         mtest(new IdentityHashMap<Integer,Integer>(), keys, vals, ksum, vsum, size, trials);
@@ -108,8 +108,7 @@ public class IntegerSum {
             ctest(new PriorityBlockingQueue<Integer>(SIZE), vlist, vsum, size, trials);
         }
 
-        if (checksum.get() != 0)
-            throw new Error("bad computation");
+        if (checksum.get() != 0) throw new Error("bad computation");
     }
 
     static void ctest(Collection<Integer> c, List<Integer> klist, int ksum, int size, int trials)
@@ -142,6 +141,7 @@ public class IntegerSum {
         long ti = itest(c, sum, trials);
         long ts = stest(c, sum, trials);
         long tp = ptest(c, sum, trials);
+        if (checksum.get() != 0) throw new Error("bad computation");
         if (print) {
             long scale = (long)size * trials;
             double di = ((double)ti) / scale;

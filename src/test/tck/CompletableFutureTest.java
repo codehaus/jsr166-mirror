@@ -271,6 +271,14 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
 
+    /**
+     * completedFuture returns a completed CompletableFuture with give value
+     */
+    public void testCompletedFuture() {
+        CompletableFuture<String> f = CompletableFuture.completedFuture("test");
+        checkCompletedNormally(f, "test");
+    }
+
     static final Supplier<Integer> supplyOne =
         () -> Integer.valueOf(1);
     static final Function<Integer, Integer> inc =
@@ -2344,13 +2352,12 @@ public class CompletableFutureTest extends JSR166TestCase {
             CompletableFuture[] fs = new CompletableFuture[k];
             for (int i = 0; i < k; ++i)
                 fs[i] = new CompletableFuture<Integer>();
-            CompletableFuture<?> f = CompletableFuture.allOf(fs);
+            CompletableFuture<Void> f = CompletableFuture.allOf(fs);
             for (int i = 0; i < k; ++i) {
                 checkIncomplete(f);
                 fs[i].complete(one);
             }
-            assertTrue(f.isDone());
-            assertFalse(f.isCancelled());
+            checkCompletedNormally(f, null);
         }
     }
 
@@ -2370,11 +2377,11 @@ public class CompletableFutureTest extends JSR166TestCase {
             CompletableFuture[] fs = new CompletableFuture[k];
             for (int i = 0; i < k; ++i)
                 fs[i] = new CompletableFuture<Integer>();
-            CompletableFuture<?> f = CompletableFuture.anyOf(fs);
+            CompletableFuture<Object> f = CompletableFuture.anyOf(fs);
             checkIncomplete(f);
             for (int i = 0; i < k; ++i) {
                 fs[i].complete(one);
-                assertTrue(f.isDone());
+                checkCompletedNormally(f, one);
             }
         }
     }

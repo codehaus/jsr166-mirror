@@ -882,7 +882,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             return null;
         }
 
-        public void forEach(Consumer<? super E> consumer) {
+        public void forEachRemaining(Consumer<? super E> consumer) {
             if (consumer == null)
                 throw new NullPointerException();
             Object[] a = deq.elements;

@@ -823,7 +823,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
         }
 
         @SuppressWarnings("unchecked")
-        public void forEach(Consumer<? super E> action) {
+        public void forEachRemaining(Consumer<? super E> action) {
             int i, hi, mc; // hoist accesses and checks from loop
             PriorityQueue<E> q; Object[] a;
             if (action == null)

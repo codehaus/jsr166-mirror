@@ -949,7 +949,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
 
         @SuppressWarnings("unchecked")
-        public void forEach(Consumer<? super E> action) {
+        public void forEachRemaining(Consumer<? super E> action) {
             Object[] a; int i, hi; // hoist accesses and checks from loop
             if (action == null)
                 throw new NullPointerException();

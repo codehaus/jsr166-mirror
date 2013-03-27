@@ -3547,10 +3547,15 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return false;
             }
 
-            public void forEach(Consumer<? super T> action) {
+            public void forEachRemaining(Consumer<? super T> action) {
                 while (hasNext())
                     action.accept(next());
             }
+
+            public long estimateSize() { 
+                return Long.MAX_VALUE; 
+            }
+
         }
 
         final class SubMapValueIterator extends SubMapIter<V> {
@@ -3838,7 +3843,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return null;
         }
 
-        public void forEach(Consumer<? super K> action) {
+        public void forEachRemaining(Consumer<? super K> action) {
             if (action == null) throw new NullPointerException();
             K f = fence;
             Comparator<? super K> cmp = comparator;
@@ -3927,7 +3932,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return null;
         }
 
-        public void forEach(Consumer<? super V> action) {
+        public void forEachRemaining(Consumer<? super V> action) {
             if (action == null) throw new NullPointerException();
             K f = fence;
             Comparator<? super K> cmp = comparator;
@@ -4015,7 +4020,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return null;
         }
 
-        public void forEach(Consumer<? super Map.Entry<K,V>> action) {
+        public void forEachRemaining(Consumer<? super Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
             K f = fence;
             Comparator<? super K> cmp = comparator;
@@ -4065,6 +4070,12 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 Spliterator.ORDERED | Spliterator.CONCURRENT |
                 Spliterator.NONNULL;
         }
+
+        public final Comparator<Map.Entry<K,V>> getComparator() {
+            return comparator == null ? null :
+                Comparators.byKey(comparator);
+        }
+
     }
 
     // Unsafe mechanics

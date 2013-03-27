@@ -272,7 +272,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * completedFuture returns a completed CompletableFuture with give value
+     * completedFuture returns a completed CompletableFuture with given value
      */
     public void testCompletedFuture() {
         CompletableFuture<String> f = CompletableFuture.completedFuture("test");

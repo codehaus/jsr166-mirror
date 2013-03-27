@@ -3033,8 +3033,8 @@ public class CompletableFuture<T> implements Future<T> {
 
     /**
      * Returns a new CompletableFuture that is completed when any of
-     * the given CompletableFutures complete, with the same
-     * result. Otherwise, if it completed exceptionally, the returned
+     * the given CompletableFutures complete, with the same result.
+     * Otherwise, if it completed exceptionally, the returned
      * CompletableFuture also does so, with a CompletionException
      * holding this exception as its cause.  If no CompletableFutures
      * are provided, returns an incomplete CompletableFuture.
@@ -3092,7 +3092,7 @@ public class CompletableFuture<T> implements Future<T> {
      * Recursively constructs an Or'ed tree of CompletableFutures.
      */
     private static CompletableFuture<Object> anyTree(CompletableFuture<?>[] cfs,
-                                                   int lo, int hi) {
+                                                     int lo, int hi) {
         CompletableFuture<?> fst, snd;
         int mid = (lo + hi) >>> 1;
         if ((fst = (lo == mid   ? cfs[lo] : anyTree(cfs, lo,    mid))) == null ||

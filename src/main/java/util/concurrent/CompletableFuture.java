@@ -1448,7 +1448,7 @@ public class CompletableFuture<T> implements Future<T> {
      */
     public static <U> CompletableFuture<U> completedFuture(U value) {
         CompletableFuture<U> f = new CompletableFuture<U>();
-        f.result = (value == null)? NIL : value;
+        f.result = (value == null) ? NIL : value;
         return f;
     }
 

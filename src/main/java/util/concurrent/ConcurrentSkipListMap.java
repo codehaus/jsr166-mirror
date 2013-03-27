@@ -3552,8 +3552,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     action.accept(next());
             }
 
-            public long estimateSize() { 
-                return Long.MAX_VALUE; 
+            public long estimateSize() {
+                return Long.MAX_VALUE;
             }
 
         }

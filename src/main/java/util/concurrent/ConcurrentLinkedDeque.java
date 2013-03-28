@@ -1409,7 +1409,7 @@ public class ConcurrentLinkedDeque<E>
             return null;
         }
 
-        public void forEach(Consumer<? super E> action) {
+        public void forEachRemaining(Consumer<? super E> action) {
             Node<E> p;
             if (action == null) throw new NullPointerException();
             final ConcurrentLinkedDeque<E> q = this.queue;

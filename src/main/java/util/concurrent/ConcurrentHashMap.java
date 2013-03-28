@@ -3097,7 +3097,7 @@ public class ConcurrentHashMap<K,V>
 
         public Iterator<K> iterator() { return this; }
 
-        public void forEach(Consumer<? super K> action) {
+        public void forEachRemaining(Consumer<? super K> action) {
             forEachKey(action);
         }
 
@@ -3141,7 +3141,7 @@ public class ConcurrentHashMap<K,V>
 
         public Iterator<V> iterator() { return this; }
 
-        public void forEach(Consumer<? super V> action) {
+        public void forEachRemaining(Consumer<? super V> action) {
             forEachValue(action);
         }
 
@@ -3182,7 +3182,7 @@ public class ConcurrentHashMap<K,V>
 
         public Iterator<Map.Entry<K,V>> iterator() { return this; }
 
-        public void forEach(Consumer<? super Map.Entry<K,V>> action) {
+        public void forEachRemaining(Consumer<? super Map.Entry<K,V>> action) {
             if (action == null) throw new NullPointerException();
             V v;
             while ((v = advanceValue()) != null)

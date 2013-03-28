@@ -814,7 +814,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             return null;
         }
 
-        public void forEach(Consumer<? super E> action) {
+        public void forEachRemaining(Consumer<? super E> action) {
             Node<E> p;
             if (action == null) throw new NullPointerException();
             final ConcurrentLinkedQueue<E> q = this.queue;

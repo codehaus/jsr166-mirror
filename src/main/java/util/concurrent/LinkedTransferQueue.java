@@ -951,7 +951,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
 
         @SuppressWarnings("unchecked")
-        public void forEach(Consumer<? super E> action) {
+        public void forEachRemaining(Consumer<? super E> action) {
             Node p;
             if (action == null) throw new NullPointerException();
             final LinkedTransferQueue<E> q = this.queue;

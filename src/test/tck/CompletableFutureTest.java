@@ -2393,6 +2393,9 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Integer> f = new CompletableFuture<Integer>();
         CompletableFuture<Integer> g = new CompletableFuture<Integer>();
         CompletableFuture h;
+        Runnable[] actions = {
+            () => f.thenApply(null),
+        }
         try { h = f.thenApply(null); } catch (NullPointerException ok) {}
         try { h = f.thenAccept(null); } catch (NullPointerException ok) {}
         try { h = f.thenRun(null); } catch (NullPointerException ok) {}

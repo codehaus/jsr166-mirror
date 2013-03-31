@@ -53,7 +53,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    void checkCompletedNormally(CompletableFuture<?> f, Object value) {
+    <T> void checkCompletedNormally(CompletableFuture<T> f, T value) {
         try {
             assertEquals(value, f.join());
         } catch (Throwable fail) { threadUnexpectedException(fail); }

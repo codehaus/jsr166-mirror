@@ -1348,4 +1348,25 @@ public class JSR166TestCase extends TestCase {
             return null;
         }
     }
+
+    public void assertThrows(Class<? extends Throwable> expectedExceptionClass,
+                             Runnable... throwingActions) {
+        for (Runnable throwingAction : throwingActions) {
+            boolean threw = false;
+            try { throwingAction.run(); }
+            catch (Throwable t) {
+                threw = true;
+                if (!expectedExceptionClass.isInstance(t)) {
+                    AssertionFailedError afe =
+                        new AssertionFailedError
+                        ("Expected " + expectedExceptionClass.getName() +
+                         ", got " + t.getClass().getName());
+                    afe.initCause(t);
+                    threadUnexpectedException(afe);
+                }
+            }
+            if (!threw)
+                shouldThrow(expectedExceptionClass.getName());
+        }
+    }
 }

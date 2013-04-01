@@ -21,14 +21,17 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
         return new TestSuite(AtomicReferenceFieldUpdaterTest.class);
     }
 
+    AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer> updaterFor(String fieldName) {
+        return AtomicReferenceFieldUpdater.newUpdater
+            (AtomicReferenceFieldUpdaterTest.class, Integer.class, fieldName);
+    }
+
     /**
      * Construction with non-existent field throws RuntimeException
      */
     public void testConstructor() {
         try {
-            AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
-                a = AtomicReferenceFieldUpdater.newUpdater
-                (AtomicReferenceFieldUpdaterTest.class, Integer.class, "y");
+            updaterFor("y");
             shouldThrow();
         } catch (RuntimeException success) {}
     }
@@ -38,9 +41,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         try {
-            AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
-                a = AtomicReferenceFieldUpdater.newUpdater
-                (AtomicReferenceFieldUpdaterTest.class, Integer.class, "z");
+            updaterFor("z");
             shouldThrow();
         } catch (RuntimeException success) {}
     }
@@ -50,9 +51,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
-                a = AtomicReferenceFieldUpdater.newUpdater
-                (AtomicReferenceFieldUpdaterTest.class, Integer.class, "w");
+            updaterFor("w");
             shouldThrow();
         } catch (RuntimeException success) {}
     }
@@ -62,11 +61,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      */
     public void testGetSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
-        try {
-            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
-        } catch (RuntimeException ok) {
-            return;
-        }
+        a = updaterFor("x");
         x = one;
         assertSame(one, a.get(this));
         a.set(this, two);
@@ -80,11 +75,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      */
     public void testGetLazySet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
-        try {
-            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
-        } catch (RuntimeException ok) {
-            return;
-        }
+        a = updaterFor("x");
         x = one;
         assertSame(one, a.get(this));
         a.lazySet(this, two);
@@ -98,11 +89,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      */
     public void testCompareAndSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
-        try {
-            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
-        } catch (RuntimeException ok) {
-            return;
-        }
+        a = updaterFor("x");
         x = one;
         assertTrue(a.compareAndSet(this, one, two));
         assertTrue(a.compareAndSet(this, two, m4));
@@ -120,11 +107,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     public void testCompareAndSetInMultipleThreads() throws Exception {
         x = one;
         final AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
-        try {
-            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
-        } catch (RuntimeException ok) {
-            return;
-        }
+        a = updaterFor("x");
 
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
@@ -145,11 +128,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
-        try {
-            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
-        } catch (RuntimeException ok) {
-            return;
-        }
+        a = updaterFor("x");
         x = one;
         while (!a.weakCompareAndSet(this, one, two));
         while (!a.weakCompareAndSet(this, two, m4));
@@ -163,11 +142,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
      */
     public void testGetAndSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
-        try {
-            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
-        } catch (RuntimeException ok) {
-            return;
-        }
+        a = updaterFor("x");
         x = one;
         assertSame(one, a.getAndSet(this, zero));
         assertSame(zero, a.getAndSet(this, m10));

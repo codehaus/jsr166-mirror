@@ -349,4 +349,15 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         assertEquals(y, x);
     }
 
+    /**
+     * addAll is idempotent
+     */
+    public void testAddAll_idempotent() throws Exception {
+        Set x = populatedSet(SIZE);
+        Set y = new CopyOnWriteArraySet(x);
+        y.addAll(x);
+        assertEquals(x, y);
+        assertEquals(y, x);
+    }
+
 }

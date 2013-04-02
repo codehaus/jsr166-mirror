@@ -13,6 +13,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     volatile Integer x = null;
     Object z;
     Integer w;
+    volatile int i;
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
@@ -39,13 +40,13 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     * construction with field not of given type throws RuntimeException
+     * construction with field not of given type throws ClassCastException
      */
     public void testConstructor2() {
         try {
             updaterFor("z");
             shouldThrow();
-        } catch (RuntimeException success) {}
+        } catch (ClassCastException success) {}
     }
 
     /**
@@ -56,6 +57,16 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
             updaterFor("w");
             shouldThrow();
         } catch (IllegalArgumentException success) {}
+    }
+
+    /**
+     * Constructor with non-reference field throws ClassCastException
+     */
+    public void testConstructor4() {
+        try {
+            updaterFor("i");
+            shouldThrow();
+        } catch (ClassCastException success) {}
     }
 
     /**

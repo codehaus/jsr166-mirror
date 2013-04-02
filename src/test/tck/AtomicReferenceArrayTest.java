@@ -51,7 +51,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
     }
 
     /**
-     * Initialize AtomicReference<Class> with SubClass[]
+     * Initialize AtomicReferenceArray<Class> with SubClass[]
      */
     public void testConstructorSubClassArray() {
         Integer[] a = { two, one, three, four, seven };

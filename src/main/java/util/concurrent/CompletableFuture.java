@@ -83,6 +83,10 @@ import java.util.concurrent.locks.LockSupport;
  * methods {@link #join()} and {@link #getNow} throw the
  * CompletionException, which simplifies usage.
  *
+ * <p>Arguments used to pass a completion result (that is, for parameters
+ * of type {@code T}) may be null, but passing a null value for any other
+ * parameter will result in a {@link NullPointerException} being thrown.
+ *
  * @author Doug Lea
  * @since 1.8
  */

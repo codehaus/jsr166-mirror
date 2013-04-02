@@ -98,6 +98,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
+        assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
 
     void checkCancelled(CompletableFuture<?> f) {
@@ -121,6 +122,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertTrue(f.isCancelled());
+        assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
 
     void checkCompletedWithWrappedCancellationException(CompletableFuture<?> f) {
@@ -150,6 +152,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
+        assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
 
     /**
@@ -402,6 +405,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Void> f = CompletableFuture.runAsync(r);
         assertNull(f.join());
         assertTrue(r.ran);
+        checkCompletedNormally(f, null);
     }
 
     /**
@@ -412,6 +416,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Void> f = CompletableFuture.runAsync(r, new ThreadExecutor());
         assertNull(f.join());
         assertTrue(r.ran);
+        checkCompletedNormally(f, null);
     }
 
     /**
@@ -2370,7 +2375,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * allOf returns a future completed when any components complete
+     * anyOf returns a future completed when any components complete
      */
     public void testAnyOf() throws Exception {
         for (int k = 1; k < 20; ++k) {
@@ -2392,39 +2397,110 @@ public class CompletableFutureTest extends JSR166TestCase {
     public void testNPE() {
         CompletableFuture<Integer> f = new CompletableFuture<Integer>();
         CompletableFuture<Integer> g = new CompletableFuture<Integer>();
-        CompletableFuture h;
-        try { h = f.thenApply(null); } catch (NullPointerException ok) {}
-        try { h = f.thenAccept(null); } catch (NullPointerException ok) {}
-        try { h = f.thenRun(null); } catch (NullPointerException ok) {}
-        try { h = f.thenCombine(g, null); } catch (NullPointerException ok) {}
-        try { h = f.thenCombine(null, null); } catch (NullPointerException ok) {}
-        try { h = f.applyToEither(g, null); } catch (NullPointerException ok) {}
-        try { h = f.applyToEither(null, null); } catch (NullPointerException ok) {}
-        try { h = f.thenAcceptBoth(g, null); } catch (NullPointerException ok) {}
-        try { h = f.thenAcceptBoth(null, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterEither(g, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterEither(null, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterBoth(g, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterBoth(null, null); } catch (NullPointerException ok) {}
-        try { h = f.exceptionally(null); } catch (NullPointerException ok) {}
-        try { h = f.handle(null); } catch (NullPointerException ok) {}
-        try { h = f.thenCompose(null); } catch (NullPointerException ok) {}
+        CompletableFuture<Integer> nullFuture = (CompletableFuture<Integer>)null;
+        CompletableFuture<?> h;
+        Executor exec = new ThreadExecutor();
 
-        try { h = f.thenApplyAsync(null); } catch (NullPointerException ok) {}
-        try { h = f.thenAcceptAsync(null); } catch (NullPointerException ok) {}
-        try { h = f.thenRunAsync(null); } catch (NullPointerException ok) {}
-        try { h = f.thenCombineAsync(g, null); } catch (NullPointerException ok) {}
-        try { h = f.thenCombineAsync(null, null); } catch (NullPointerException ok) {}
-        try { h = f.applyToEitherAsync(g, null); } catch (NullPointerException ok) {}
-        try { h = f.applyToEitherAsync(null, null); } catch (NullPointerException ok) {}
-        try { h = f.thenAcceptBothAsync(g, null); } catch (NullPointerException ok) {}
-        try { h = f.thenAcceptBothAsync(null, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterEitherAsync(g, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterEitherAsync(null, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterBothAsync(g, null); } catch (NullPointerException ok) {}
-        try { h = f.runAfterBothAsync(null, null); } catch (NullPointerException ok) {}
+        Runnable[] throwingActions = {
+            () -> { CompletableFuture.supplyAsync(null); },
+            () -> { CompletableFuture.supplyAsync(null, exec); },
+            () -> { CompletableFuture.supplyAsync(() -> one, null); },
 
+            () -> { CompletableFuture.runAsync(null); },
+            () -> { CompletableFuture.runAsync(null, exec); },
+            () -> { CompletableFuture.runAsync(() -> {}, null); },
+
+            () -> { f.completeExceptionally(null); },
+
+            () -> { f.thenApply(null); },
+            () -> { f.thenApplyAsync(null); },
+            () -> { f.thenApplyAsync((x) -> x, null); },
+            () -> { f.thenApplyAsync(null, exec); },
+
+            () -> { f.thenAccept(null); },
+            () -> { f.thenAcceptAsync(null); },
+            () -> { f.thenAcceptAsync((x) -> { ; }, null); },
+            () -> { f.thenAcceptAsync(null, exec); },
+
+            () -> { f.thenRun(null); },
+            () -> { f.thenRunAsync(null); },
+            () -> { f.thenRunAsync(() -> { ; }, null); },
+            () -> { f.thenRunAsync(null, exec); },
+
+            () -> { f.thenCombine(g, null); },
+            () -> { f.thenCombineAsync(g, null); },
+            () -> { f.thenCombineAsync(g, null, exec); },
+            () -> { f.thenCombine(nullFuture, (x, y) -> x); },
+            () -> { f.thenCombineAsync(nullFuture, (x, y) -> x); },
+            () -> { f.thenCombineAsync(nullFuture, (x, y) -> x, exec); },
+            () -> { f.thenCombineAsync(g, (x, y) -> x, null); },
+
+            () -> { f.thenAcceptBoth(g, null); },
+            () -> { f.thenAcceptBothAsync(g, null); },
+            () -> { f.thenAcceptBothAsync(g, null, exec); },
+            () -> { f.thenAcceptBoth(nullFuture, (x, y) -> {}); },
+            () -> { f.thenAcceptBothAsync(nullFuture, (x, y) -> {}); },
+            () -> { f.thenAcceptBothAsync(nullFuture, (x, y) -> {}, exec); },
+            () -> { f.thenAcceptBothAsync(g, (x, y) -> {}, null); },
+
+            () -> { f.runAfterBoth(g, null); },
+            () -> { f.runAfterBothAsync(g, null); },
+            () -> { f.runAfterBothAsync(g, null, exec); },
+            () -> { f.runAfterBoth(nullFuture, () -> {}); },
+            () -> { f.runAfterBothAsync(nullFuture, () -> {}); },
+            () -> { f.runAfterBothAsync(nullFuture, () -> {}, exec); },
+            () -> { f.runAfterBothAsync(g, () -> {}, null); },
+
+            () -> { f.applyToEither(g, null); },
+            () -> { f.applyToEitherAsync(g, null); },
+            () -> { f.applyToEitherAsync(g, null, exec); },
+            () -> { f.applyToEither(nullFuture, (x) -> x); },
+            () -> { f.applyToEitherAsync(nullFuture, (x) -> x); },
+            () -> { f.applyToEitherAsync(nullFuture, (x) -> x, exec); },
+            () -> { f.applyToEitherAsync(g, (x) -> x, null); },
+
+            () -> { f.acceptEither(g, null); },
+            () -> { f.acceptEitherAsync(g, null); },
+            () -> { f.acceptEitherAsync(g, null, exec); },
+            () -> { f.acceptEither(nullFuture, (x) -> {}); },
+            () -> { f.acceptEitherAsync(nullFuture, (x) -> {}); },
+            () -> { f.acceptEitherAsync(nullFuture, (x) -> {}, exec); },
+            () -> { f.acceptEitherAsync(g, (x) -> {}, null); },
+
+            () -> { f.runAfterEither(g, null); },
+            () -> { f.runAfterEitherAsync(g, null); },
+            () -> { f.runAfterEitherAsync(g, null, exec); },
+            () -> { f.runAfterEither(nullFuture, () -> {}); },
+            () -> { f.runAfterEitherAsync(nullFuture, () -> {}); },
+            () -> { f.runAfterEitherAsync(nullFuture, () -> {}, exec); },
+            () -> { f.runAfterEitherAsync(g, () -> {}, null); },
+
+            () -> { f.thenCompose(null); },
+            () -> { f.thenComposeAsync(null); },
+            () -> { f.thenComposeAsync(new CompletableFutureInc(), null); },
+            () -> { f.thenComposeAsync(null, exec); },
+
+            () -> { f.exceptionally(null); },
+
+            () -> { f.handle(null); },
+
+            () -> { CompletableFuture.allOf((CompletableFuture<?>)null); },
+            () -> { CompletableFuture.allOf((CompletableFuture<?>[])null); },
+            () -> { CompletableFuture.allOf(f, null); },
+            () -> { CompletableFuture.allOf(null, f); },
+
+            () -> { CompletableFuture.anyOf((CompletableFuture<?>)null); },
+            () -> { CompletableFuture.anyOf((CompletableFuture<?>[])null); },
+            () -> { CompletableFuture.anyOf(f, null); },
+            () -> { CompletableFuture.anyOf(null, f); },
+
+            // TODO: Crashes javac with lambda-8-2013-03-31...
+            //() -> { CompletableFuture<?> x = f.thenAccept(null); },
+            //() -> { CompletableFuture<Void> x = f.thenRun(null); },
+            //() -> { CompletableFuture<Integer> x = f.thenApply(() -> { ; }); },
+        };
+
+        assertThrows(NullPointerException.class, throwingActions);
     }
-
 
 }

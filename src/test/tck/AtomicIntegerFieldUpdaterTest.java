@@ -32,27 +32,29 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         try {
             updaterFor("y");
             shouldThrow();
-        } catch (RuntimeException success) {}
+        } catch (RuntimeException success) {
+            assertTrue(success.getCause() != null);
+        }
     }
 
     /**
-     * construction with field not of given type throws RuntimeException
+     * construction with field not of given type throws IllegalArgumentException
      */
     public void testConstructor2() {
         try {
             updaterFor("z");
             shouldThrow();
-        } catch (RuntimeException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
-     * construction with non-volatile field throws RuntimeException
+     * construction with non-volatile field throws IllegalArgumentException
      */
     public void testConstructor3() {
         try {
             updaterFor("w");
             shouldThrow();
-        } catch (RuntimeException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**

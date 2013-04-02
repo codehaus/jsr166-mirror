@@ -33,7 +33,9 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
         try {
             updaterFor("y");
             shouldThrow();
-        } catch (RuntimeException success) {}
+        } catch (RuntimeException success) {
+            assertTrue(success.getCause() != null);
+        }
     }
 
     /**
@@ -47,13 +49,13 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     }
 
     /**
-     * Constructor with non-volatile field throws exception
+     * Constructor with non-volatile field throws IllegalArgumentException
      */
     public void testConstructor3() {
         try {
             updaterFor("w");
             shouldThrow();
-        } catch (RuntimeException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**

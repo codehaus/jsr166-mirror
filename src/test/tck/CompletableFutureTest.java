@@ -355,7 +355,9 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     static final class IntegerHandler implements BiFunction<Integer, Throwable, Integer> {
+        boolean ran;
         public Integer apply(Integer x, Throwable t) {
+            ran = true;
             return (t == null) ? two : three;
         }
     }
@@ -384,16 +386,33 @@ public class CompletableFutureTest extends JSR166TestCase {
      * normal or exceptional completion of source
      */
     public void testHandle() {
-        CompletableFuture<Integer> f = new CompletableFuture<Integer>();
-        IntegerHandler r = new IntegerHandler();
-        CompletableFuture<Integer> g = f.handle(r);
+        CompletableFuture<Integer> f, g;
+        IntegerHandler r;
+
+        f = new CompletableFuture<Integer>();
         f.completeExceptionally(new CFException());
+        g = f.handle(r = new IntegerHandler());
+        assertTrue(r.ran);
         checkCompletedNormally(g, three);
 
         f = new CompletableFuture<Integer>();
-        r = new IntegerHandler();
-        g = f.handle(r);
+        g = f.handle(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.completeExceptionally(new CFException());
+        checkCompletedNormally(g, three);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<Integer>();
         f.complete(one);
+        g = f.handle(r = new IntegerHandler());
+        assertTrue(r.ran);
+        checkCompletedNormally(g, two);
+
+        f = new CompletableFuture<Integer>();
+        g = f.handle(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.complete(one);
+        assertTrue(r.ran);
         checkCompletedNormally(g, two);
     }
 

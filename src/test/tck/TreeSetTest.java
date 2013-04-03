@@ -691,6 +691,17 @@ public class TreeSetTest extends JSR166TestCase {
                    0, setSize - 1, true);
     }
 
+    /**
+     * addAll is idempotent
+     */
+    public void testAddAll_idempotent() throws Exception {
+        Set x = populatedSet(SIZE);
+        Set y = new TreeSet(x);
+        y.addAll(x);
+        assertEquals(x, y);
+        assertEquals(y, x);
+    }
+
     static NavigableSet<Integer> newSet(Class cl) throws Exception {
         NavigableSet<Integer> result = (NavigableSet<Integer>) cl.newInstance();
         assertEquals(0, result.size());

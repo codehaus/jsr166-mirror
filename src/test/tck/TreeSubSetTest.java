@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class TreeSubSetTest extends JSR166TestCase {
@@ -1103,6 +1104,17 @@ public class TreeSubSetTest extends JSR166TestCase {
         assertEquals(1, ssm.size());
         assertEquals(3, sm.size());
         assertEquals(4, set.size());
+    }
+
+    /**
+     * addAll is idempotent
+     */
+    public void testAddAll_idempotent() throws Exception {
+        Set x = populatedSet(SIZE);
+        Set y = new TreeSet(x);
+        y.addAll(x);
+        assertEquals(x, y);
+        assertEquals(y, x);
     }
 
 }

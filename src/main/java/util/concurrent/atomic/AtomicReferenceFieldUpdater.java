@@ -61,7 +61,8 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
      * @param vclass the class of the field
      * @param fieldName the name of the field to be updated
      * @return the updater
-     * @throws IllegalArgumentException if the field is not a volatile reference type
+     * @throws ClassCastException if the field is of the wrong type
+     * @throws IllegalArgumentException if the field is not volatile
      * @throws RuntimeException with a nested reflection-based
      * exception if the class does not hold field or is the wrong type,
      * or the field is inaccessible to the caller according to Java language

@@ -2820,10 +2820,10 @@ public class CompletableFuture<T> implements Future<T> {
                     } catch (Throwable rex) {
                         ex = rex;
                     }
-                    if (dst == null)
-                        dst = new CompletableFuture<U>();
                 }
             }
+            if (dst == null)
+                dst = new CompletableFuture<U>();
             if (e == null && ex != null)
                 dst.internalComplete(null, ex);
         }

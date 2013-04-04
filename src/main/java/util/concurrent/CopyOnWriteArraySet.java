@@ -255,10 +255,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * @see #add(Object)
      */
     public boolean addAll(Collection<? extends E> c) {
-        if (c instanceof Set)
-            return al.addAll(c);
-        else
-            return al.addAllAbsent(c) > 0;
+        return al.addAllAbsent(c) > 0;
     }
 
     /**

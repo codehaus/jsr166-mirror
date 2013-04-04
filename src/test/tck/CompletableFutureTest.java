@@ -2423,7 +2423,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         Runnable[] throwingActions = {
             () -> { CompletableFuture.supplyAsync(null); },
             () -> { CompletableFuture.supplyAsync(null, exec); },
-            () -> { CompletableFuture.supplyAsync(() -> one, null); },
+            () -> { CompletableFuture.supplyAsync(supplyOne, null); },
 
             () -> { CompletableFuture.runAsync(null); },
             () -> { CompletableFuture.runAsync(null, exec); },
@@ -2512,11 +2512,6 @@ public class CompletableFutureTest extends JSR166TestCase {
             () -> { CompletableFuture.anyOf((CompletableFuture<?>[])null); },
             () -> { CompletableFuture.anyOf(f, null); },
             () -> { CompletableFuture.anyOf(null, f); },
-
-            // TODO: Crashes javac with lambda-8-2013-03-31...
-            //() -> { CompletableFuture<?> x = f.thenAccept(null); },
-            //() -> { CompletableFuture<Void> x = f.thenRun(null); },
-            //() -> { CompletableFuture<Integer> x = f.thenApply(() -> { ; }); },
         };
 
         assertThrows(NullPointerException.class, throwingActions);

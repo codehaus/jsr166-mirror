@@ -714,12 +714,12 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
-    static final class ThenRun<T> extends Completion {
-        final CompletableFuture<? extends T> src;
+    static final class ThenRun extends Completion {
+        final CompletableFuture<?> src;
         final Runnable fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
-        ThenRun(CompletableFuture<? extends T> src,
+        ThenRun(CompletableFuture<?> src,
                 Runnable fn,
                 CompletableFuture<Void> dst,
                 Executor executor) {
@@ -727,7 +727,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.executor = executor;
         }
         public final void run() {
-            final CompletableFuture<? extends T> a;
+            final CompletableFuture<?> a;
             final Runnable fn;
             final CompletableFuture<Void> dst;
             Object r; Throwable ex;
@@ -889,13 +889,13 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
-    static final class RunAfterBoth<T> extends Completion {
-        final CompletableFuture<? extends T> src;
+    static final class RunAfterBoth extends Completion {
+        final CompletableFuture<?> src;
         final CompletableFuture<?> snd;
         final Runnable fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
-        RunAfterBoth(CompletableFuture<? extends T> src,
+        RunAfterBoth(CompletableFuture<?> src,
                      CompletableFuture<?> snd,
                      Runnable fn,
                      CompletableFuture<Void> dst,
@@ -905,7 +905,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.executor = executor;
         }
         public final void run() {
-            final CompletableFuture<? extends T> a;
+            final CompletableFuture<?> a;
             final CompletableFuture<?> b;
             final Runnable fn;
             final CompletableFuture<Void> dst;
@@ -1080,13 +1080,13 @@ public class CompletableFuture<T> implements Future<T> {
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
-    static final class RunAfterEither<T> extends Completion {
-        final CompletableFuture<? extends T> src;
+    static final class RunAfterEither extends Completion {
+        final CompletableFuture<?> src;
         final CompletableFuture<?> snd;
         final Runnable fn;
         final CompletableFuture<Void> dst;
         final Executor executor;
-        RunAfterEither(CompletableFuture<? extends T> src,
+        RunAfterEither(CompletableFuture<?> src,
                        CompletableFuture<?> snd,
                        Runnable fn,
                        CompletableFuture<Void> dst,
@@ -1096,7 +1096,7 @@ public class CompletableFuture<T> implements Future<T> {
             this.executor = executor;
         }
         public final void run() {
-            final CompletableFuture<? extends T> a;
+            final CompletableFuture<?> a;
             final CompletableFuture<?> b;
             final Runnable fn;
             final CompletableFuture<Void> dst;
@@ -1897,11 +1897,11 @@ public class CompletableFuture<T> implements Future<T> {
                                               Executor e) {
         if (action == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
-        ThenRun<T> d = null;
+        ThenRun d = null;
         Object r;
         if ((r = result) == null) {
             CompletionNode p = new CompletionNode
-                (d = new ThenRun<T>(this, action, dst, e));
+                (d = new ThenRun(this, action, dst, e));
             while ((r = result) == null) {
                 if (UNSAFE.compareAndSwapObject
                     (this, COMPLETIONS, p.next = completions, p))
@@ -2276,10 +2276,10 @@ public class CompletableFuture<T> implements Future<T> {
                                                    Executor e) {
         if (other == null || action == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
-        RunAfterBoth<T> d = null;
+        RunAfterBoth d = null;
         Object r, s = null;
         if ((r = result) == null || (s = other.result) == null) {
-            d = new RunAfterBoth<T>(this, other, action, dst, e);
+            d = new RunAfterBoth(this, other, action, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r == null && (r = result) == null) ||
                    (s == null && (s = other.result) == null)) {
@@ -2678,10 +2678,10 @@ public class CompletableFuture<T> implements Future<T> {
          Executor e) {
         if (other == null || action == null) throw new NullPointerException();
         CompletableFuture<Void> dst = new CompletableFuture<Void>();
-        RunAfterEither<T> d = null;
+        RunAfterEither d = null;
         Object r;
         if ((r = result) == null && (r = other.result) == null) {
-            d = new RunAfterEither<T>(this, other, action, dst, e);
+            d = new RunAfterEither(this, other, action, dst, e);
             CompletionNode q = null, p = new CompletionNode(d);
             while ((r = result) == null && (r = other.result) == null) {
                 if (q != null) {

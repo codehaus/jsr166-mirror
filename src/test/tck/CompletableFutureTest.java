@@ -345,7 +345,10 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     // Used for explicit executor tests
     static final class ThreadExecutor implements Executor {
+        AtomicInteger count = new AtomicInteger(0);
+
         public void execute(Runnable r) {
+            count.getAndIncrement();
             new Thread(r).start();
         }
     }
@@ -432,10 +435,12 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testRunAsync2() {
         Noop r = new Noop();
-        CompletableFuture<Void> f = CompletableFuture.runAsync(r, new ThreadExecutor());
+        ThreadExecutor exec = new ThreadExecutor();
+        CompletableFuture<Void> f = CompletableFuture.runAsync(r, exec);
         assertNull(f.join());
         assertTrue(r.ran);
         checkCompletedNormally(f, null);
+        assertEquals(1, exec.count.get());
     }
 
     /**
@@ -452,16 +457,20 @@ public class CompletableFutureTest extends JSR166TestCase {
      * supplyAsync completes with result of supplier
      */
     public void testSupplyAsync() {
-        CompletableFuture<Integer> f = CompletableFuture.supplyAsync(supplyOne);
+        CompletableFuture<Integer> f;
+        f = CompletableFuture.supplyAsync(supplyOne);
         assertEquals(f.join(), one);
+        checkCompletedNormally(f, one);
     }
 
     /**
      * supplyAsync with executor completes with result of supplier
      */
     public void testSupplyAsync2() {
-        CompletableFuture<Integer> f = CompletableFuture.supplyAsync(supplyOne, new ThreadExecutor());
+        CompletableFuture<Integer> f;
+        f = CompletableFuture.supplyAsync(supplyOne, new ThreadExecutor());
         assertEquals(f.join(), one);
+        checkCompletedNormally(f, one);
     }
 
     /**
@@ -2418,7 +2427,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Integer> g = new CompletableFuture<Integer>();
         CompletableFuture<Integer> nullFuture = (CompletableFuture<Integer>)null;
         CompletableFuture<?> h;
-        Executor exec = new ThreadExecutor();
+        ThreadExecutor exec = new ThreadExecutor();
 
         Runnable[] throwingActions = {
             () -> { CompletableFuture.supplyAsync(null); },
@@ -2515,6 +2524,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         };
 
         assertThrows(NullPointerException.class, throwingActions);
+        assertEquals(0, exec.count.get());
     }
 
 }

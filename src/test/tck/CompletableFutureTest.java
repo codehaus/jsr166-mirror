@@ -345,7 +345,10 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     // Used for explicit executor tests
     static final class ThreadExecutor implements Executor {
+        AtomicInteger count = new AtomicInteger(0);
+
         public void execute(Runnable r) {
+            count.getAndIncrement();
             new Thread(r).start();
         }
     }
@@ -355,7 +358,9 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     static final class IntegerHandler implements BiFunction<Integer, Throwable, Integer> {
+        boolean ran;
         public Integer apply(Integer x, Throwable t) {
+            ran = true;
             return (t == null) ? two : three;
         }
     }
@@ -384,16 +389,33 @@ public class CompletableFutureTest extends JSR166TestCase {
      * normal or exceptional completion of source
      */
     public void testHandle() {
-        CompletableFuture<Integer> f = new CompletableFuture<Integer>();
-        IntegerHandler r = new IntegerHandler();
-        CompletableFuture<Integer> g = f.handle(r);
+        CompletableFuture<Integer> f, g;
+        IntegerHandler r;
+
+        f = new CompletableFuture<Integer>();
         f.completeExceptionally(new CFException());
+        g = f.handle(r = new IntegerHandler());
+        assertTrue(r.ran);
         checkCompletedNormally(g, three);
 
         f = new CompletableFuture<Integer>();
-        r = new IntegerHandler();
-        g = f.handle(r);
+        g = f.handle(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.completeExceptionally(new CFException());
+        checkCompletedNormally(g, three);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<Integer>();
         f.complete(one);
+        g = f.handle(r = new IntegerHandler());
+        assertTrue(r.ran);
+        checkCompletedNormally(g, two);
+
+        f = new CompletableFuture<Integer>();
+        g = f.handle(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.complete(one);
+        assertTrue(r.ran);
         checkCompletedNormally(g, two);
     }
 
@@ -413,10 +435,12 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testRunAsync2() {
         Noop r = new Noop();
-        CompletableFuture<Void> f = CompletableFuture.runAsync(r, new ThreadExecutor());
+        ThreadExecutor exec = new ThreadExecutor();
+        CompletableFuture<Void> f = CompletableFuture.runAsync(r, exec);
         assertNull(f.join());
         assertTrue(r.ran);
         checkCompletedNormally(f, null);
+        assertEquals(1, exec.count.get());
     }
 
     /**
@@ -433,16 +457,20 @@ public class CompletableFutureTest extends JSR166TestCase {
      * supplyAsync completes with result of supplier
      */
     public void testSupplyAsync() {
-        CompletableFuture<Integer> f = CompletableFuture.supplyAsync(supplyOne);
+        CompletableFuture<Integer> f;
+        f = CompletableFuture.supplyAsync(supplyOne);
         assertEquals(f.join(), one);
+        checkCompletedNormally(f, one);
     }
 
     /**
      * supplyAsync with executor completes with result of supplier
      */
     public void testSupplyAsync2() {
-        CompletableFuture<Integer> f = CompletableFuture.supplyAsync(supplyOne, new ThreadExecutor());
+        CompletableFuture<Integer> f;
+        f = CompletableFuture.supplyAsync(supplyOne, new ThreadExecutor());
         assertEquals(f.join(), one);
+        checkCompletedNormally(f, one);
     }
 
     /**
@@ -2399,12 +2427,12 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Integer> g = new CompletableFuture<Integer>();
         CompletableFuture<Integer> nullFuture = (CompletableFuture<Integer>)null;
         CompletableFuture<?> h;
-        Executor exec = new ThreadExecutor();
+        ThreadExecutor exec = new ThreadExecutor();
 
         Runnable[] throwingActions = {
             () -> { CompletableFuture.supplyAsync(null); },
             () -> { CompletableFuture.supplyAsync(null, exec); },
-            () -> { CompletableFuture.supplyAsync(() -> one, null); },
+            () -> { CompletableFuture.supplyAsync(supplyOne, null); },
 
             () -> { CompletableFuture.runAsync(null); },
             () -> { CompletableFuture.runAsync(null, exec); },
@@ -2493,14 +2521,10 @@ public class CompletableFutureTest extends JSR166TestCase {
             () -> { CompletableFuture.anyOf((CompletableFuture<?>[])null); },
             () -> { CompletableFuture.anyOf(f, null); },
             () -> { CompletableFuture.anyOf(null, f); },
-
-            // TODO: Crashes javac with lambda-8-2013-03-31...
-            //() -> { CompletableFuture<?> x = f.thenAccept(null); },
-            //() -> { CompletableFuture<Void> x = f.thenRun(null); },
-            //() -> { CompletableFuture<Integer> x = f.thenApply(() -> { ; }); },
         };
 
         assertThrows(NullPointerException.class, throwingActions);
+        assertEquals(0, exec.count.get());
     }
 
 }

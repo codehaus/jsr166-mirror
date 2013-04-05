@@ -579,17 +579,13 @@ public class CopyOnWriteArrayList<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            // Copy while checking if already present.
-            // This wins in the most common case where it is not present
             Object[] elements = getArray();
             int len = elements.length;
-            Object[] newElements = new Object[len + 1];
             for (int i = 0; i < len; ++i) {
                 if (eq(e, elements[i]))
-                    return false; // exit, throwing away copy
-                else
-                    newElements[i] = elements[i];
+                    return false;
             }
+            Object[] newElements = Arrays.copyOf(elements, len + 1);
             newElements[len] = e;
             setArray(newElements);
             return true;

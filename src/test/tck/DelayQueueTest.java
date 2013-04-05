@@ -62,6 +62,8 @@ public class DelayQueueTest extends JSR166TestCase {
             return (other instanceof PDelay) &&
                 this.pseudodelay == ((PDelay)other).pseudodelay;
         }
+        // suppress [overrides] javac warning
+        public int hashCode() { return pseudodelay; }
         public long getDelay(TimeUnit ignore) {
             return Integer.MIN_VALUE + pseudodelay;
         }
@@ -96,6 +98,9 @@ public class DelayQueueTest extends JSR166TestCase {
         public boolean equals(NanoDelay other) {
             return other.trigger == trigger;
         }
+
+        // suppress [overrides] javac warning
+        public int hashCode() { return (int) trigger; }
 
         public long getDelay(TimeUnit unit) {
             long n = trigger - System.nanoTime();

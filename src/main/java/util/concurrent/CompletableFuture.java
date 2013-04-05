@@ -773,40 +773,38 @@ public class CompletableFuture<T> implements Future<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-
         public final void run() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends U> b;
             final BiFunction<? super T,? super U,? extends V> fn;
             final CompletableFuture<V> dst;
-            if ((dst = this.dst) == null ||
-                (fn = this.fn) == null ||
-                (a = this.src) == null ||
-                (b = this.snd) == null)
-                return;
-            final Object r = a.result, s = b.result;
-            final T t; final U u; Throwable ex;
-            if (r instanceof AltResult) {
-                ex = ((AltResult)r).ex;
-                t = null;
-            } else {
-                ex = null;
-                @SuppressWarnings("unchecked") T tr = (T) r;
-                t = tr;
-            }
-            if (ex != null)
-                u = null;
-            else if (s instanceof AltResult) {
-                ex = ((AltResult)s).ex;
-                u = null;
-            } else {
-                ex = null;
-                @SuppressWarnings("unchecked") U us = (U) s;
-                u = us;
-            }
-
-            if ((ex != null || (r != null && s != null))
-                && compareAndSet(0, 1)) {
+            Object r, s; T t; U u; Throwable ex;
+            if ((dst = this.dst) != null &&
+                (fn = this.fn) != null &&
+                (a = this.src) != null &&
+                (r = a.result) != null &&
+                (b = this.snd) != null &&
+                (s = b.result) != null &&
+                compareAndSet(0, 1)) {
+                if (r instanceof AltResult) {
+                    ex = ((AltResult)r).ex;
+                    t = null;
+                }
+                else {
+                    ex = null;
+                    @SuppressWarnings("unchecked") T tr = (T) r;
+                    t = tr;
+                }
+                if (ex != null)
+                    u = null;
+                else if (s instanceof AltResult) {
+                    ex = ((AltResult)s).ex;
+                    u = null;
+                }
+                else {
+                    @SuppressWarnings("unchecked") U us = (U) s;
+                    u = us;
+                }
                 Executor e = executor;
                 V v = null;
                 if (ex == null) {
@@ -846,33 +844,33 @@ public class CompletableFuture<T> implements Future<T> {
             final CompletableFuture<? extends U> b;
             final BiConsumer<? super T,? super U> fn;
             final CompletableFuture<Void> dst;
-            if ((dst = this.dst) == null ||
-                (fn = this.fn) == null ||
-                (a = this.src) == null ||
-                (b = this.snd) == null)
-                return;
-            final Object r = a.result, s = b.result;
-            final T t; final U u; Throwable ex;
-            if (r instanceof AltResult) {
-                ex = ((AltResult)r).ex;
-                t = null;
-            } else {
-                ex = null;
-                @SuppressWarnings("unchecked") T tr = (T) r;
-                t = tr;
-            }
-            if (ex != null)
-                u = null;
-            else if (s instanceof AltResult) {
-                ex = ((AltResult)s).ex;
-                u = null;
-            } else {
-                ex = null;
-                @SuppressWarnings("unchecked") U us = (U) s;
-                u = us;
-            }
-            if ((ex != null || (r != null && s != null))
-                && compareAndSet(0, 1)) {
+            Object r, s; T t; U u; Throwable ex;
+            if ((dst = this.dst) != null &&
+                (fn = this.fn) != null &&
+                (a = this.src) != null &&
+                (r = a.result) != null &&
+                (b = this.snd) != null &&
+                (s = b.result) != null &&
+                compareAndSet(0, 1)) {
+                if (r instanceof AltResult) {
+                    ex = ((AltResult)r).ex;
+                    t = null;
+                }
+                else {
+                    ex = null;
+                    @SuppressWarnings("unchecked") T tr = (T) r;
+                    t = tr;
+                }
+                if (ex != null)
+                    u = null;
+                else if (s instanceof AltResult) {
+                    ex = ((AltResult)s).ex;
+                    u = null;
+                }
+                else {
+                    @SuppressWarnings("unchecked") U us = (U) s;
+                    u = us;
+                }
                 Executor e = executor;
                 if (ex == null) {
                     try {
@@ -911,21 +909,20 @@ public class CompletableFuture<T> implements Future<T> {
             final CompletableFuture<?> b;
             final Runnable fn;
             final CompletableFuture<Void> dst;
-            if ((dst = this.dst) == null ||
-                (fn = this.fn) == null ||
-                (a = this.src) == null ||
-                (b = this.snd) == null)
-                return;
-            final Object r = a.result, s = b.result;
-            Throwable ex;
-            if (r instanceof AltResult)
-                ex = ((AltResult)r).ex;
-            else
-                ex = null;
-            if (ex == null && (s instanceof AltResult))
-                ex = ((AltResult)s).ex;
-            if ((ex != null || (r != null && s != null))
-                && compareAndSet(0, 1)) {
+            Object r, s; Throwable ex;
+            if ((dst = this.dst) != null &&
+                (fn = this.fn) != null &&
+                (a = this.src) != null &&
+                (r = a.result) != null &&
+                (b = this.snd) != null &&
+                (s = b.result) != null &&
+                compareAndSet(0, 1)) {
+                if (r instanceof AltResult)
+                    ex = ((AltResult)r).ex;
+                else
+                    ex = null;
+                if (ex == null && (s instanceof AltResult))
+                    ex = ((AltResult)s).ex;
                 Executor e = executor;
                 if (ex == null) {
                     try {

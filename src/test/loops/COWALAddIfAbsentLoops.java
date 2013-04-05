@@ -7,14 +7,19 @@
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-/*
+/**
  * A simple test for evaluating different implementations of
  * CopyOnWriteArrayList.addIfAbsent.
  */
-
 public class COWALAddIfAbsentLoops {
 
-    static final int SIZE = 25000;
+    static final int SIZE = 35000;
+
+    /**
+     * Set to 1 for  0% cache hit ratio (every addIfAbsent a cache miss).
+     * Set to 2 for 50% cache hit ratio.
+     */
+    static final int CACHE_HIT_FACTOR = 1;
 
     public static void main(String[] args) throws Exception {
         for (int reps = 0; reps < 4; ++reps) {
@@ -23,19 +28,19 @@ public class COWALAddIfAbsentLoops {
         }
     }
 
-    static AtomicInteger result = new AtomicInteger();
+    static final AtomicInteger result = new AtomicInteger();
 
     public static void test(int n) throws Exception {
         result.set(0);
-        Phaser started = new Phaser(n + 1);
+        Thread[] ts = new Thread[CACHE_HIT_FACTOR*n];
+        Phaser started = new Phaser(ts.length + 1);
         CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<Integer>();
-        Thread[] ts = new Thread[n];
-        for (int i = 0; i < n; ++i)
-            (ts[i] = new Thread(new Task(i, n, list, started))).start();
+        for (int i = 0; i < ts.length; ++i)
+            (ts[i] = new Thread(new Task(i%n, n, list, started))).start();
         long p = started.arriveAndAwaitAdvance();
         long st = System.nanoTime();
-        for (int i = 0; i < n; ++i)
-            ts[i].join();
+        for (Thread thread : ts)
+            thread.join();
         double secs = ((double)System.nanoTime() - st) / (1000L * 1000 * 1000);
         System.out.println("Threads: " + n + " Time: " + secs);
         if (result.get() != SIZE)

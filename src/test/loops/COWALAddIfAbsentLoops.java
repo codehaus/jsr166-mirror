@@ -21,7 +21,7 @@ public class COWALAddIfAbsentLoops {
      */
     static final int CACHE_HIT_FACTOR = Integer.getInteger("cache.hit.factor", 1);
 
-    static final int MAX_STRIPES = Integer.getInteger("max.stripes", 3);
+    static final int MAX_STRIPES = Integer.getInteger("max.stripes", 4);
 
     static final int REPS = Integer.getInteger("reps", 3);
 

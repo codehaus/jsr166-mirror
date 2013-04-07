@@ -10,10 +10,13 @@ import java.util.concurrent.atomic.*;
 /**
  * A simple test for evaluating different implementations of
  * CopyOnWriteArrayList.addIfAbsent.
+ *
+ * This benchmark differs from COWALAddIfAbsentLoops mainly by having
+ * a more expensive element equals method.
  */
-public class COWALAddIfAbsentLoops {
+public class COWALAddIfAbsentStringLoops {
 
-    static final int SIZE = Integer.getInteger("size", 35000);
+    static final int SIZE = Integer.getInteger("size", 25000);
 
     /**
      * Set to 1 for  0% cache hit ratio (every addIfAbsent a cache miss).
@@ -38,7 +41,7 @@ public class COWALAddIfAbsentLoops {
         result.set(0);
         Thread[] ts = new Thread[CACHE_HIT_FACTOR*n];
         Phaser started = new Phaser(ts.length + 1);
-        CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<Integer>();
+        CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
         for (int i = 0; i < ts.length; ++i)
             (ts[i] = new Thread(new Task(i%n, n, list, started))).start();
         long p = started.arriveAndAwaitAdvance();
@@ -53,21 +56,21 @@ public class COWALAddIfAbsentLoops {
 
     static final class Task implements Runnable {
         final int id, stride;
-        final CopyOnWriteArrayList<Integer> list;
+        final CopyOnWriteArrayList<String> list;
         final Phaser started;
         Task(int id, int stride,
-             CopyOnWriteArrayList<Integer> list, Phaser started) {
+             CopyOnWriteArrayList<String> list, Phaser started) {
             this.id = id;
             this.stride = stride;
             this.list = list;
             this.started = started;
         }
         public void run() {
-            final CopyOnWriteArrayList<Integer> list = this.list;
+            final CopyOnWriteArrayList<String> list = this.list;
             int origin = id, inc = stride, adds = 0;
             started.arriveAndAwaitAdvance();
             for (int i = origin; i < SIZE; i += inc) {
-                if (list.addIfAbsent(i))
+                if (list.addIfAbsent("asjdklfjsdfjsdjf" + i))
                     ++adds;
             }
             result.getAndAdd(adds);

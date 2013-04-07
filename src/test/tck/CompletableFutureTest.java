@@ -1314,6 +1314,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertTrue(f.cancel(true));
         checkCompletedWithWrappedCancellationException(g);
     }
+
     /**
      * thenCombineAsync result completes normally after normal
      * completion of sources

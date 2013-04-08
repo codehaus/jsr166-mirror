@@ -1127,11 +1127,20 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenCompose result completes normally after normal completion of source
      */
     public void testThenCompose() {
-        CompletableFuture<Integer> f = new CompletableFuture<Integer>();
-        CompletableFutureInc r = new CompletableFutureInc();
-        CompletableFuture<Integer> g = f.thenCompose(r);
+        CompletableFuture<Integer> f, g;
+        CompletableFutureInc r;
+
+        f = new CompletableFuture<Integer>();
+        g = f.thenCompose(r = new CompletableFutureInc());
         f.complete(one);
         checkCompletedNormally(g, two);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<Integer>();
+        f.complete(one);
+        g = f.thenCompose(r = new CompletableFutureInc());
+        checkCompletedNormally(g, two);
+        assertTrue(r.ran);
     }
 
     /**
@@ -1139,10 +1148,17 @@ public class CompletableFutureTest extends JSR166TestCase {
      * completion of source
      */
     public void testThenCompose2() {
-        CompletableFuture<Integer> f = new CompletableFuture<Integer>();
-        CompletableFutureInc r = new CompletableFutureInc();
-        CompletableFuture<Integer> g = f.thenCompose(r);
+        CompletableFuture<Integer> f, g;
+        CompletableFutureInc r;
+
+        f = new CompletableFuture<Integer>();
+        g = f.thenCompose(r = new CompletableFutureInc());
         f.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(g);
+
+        f = new CompletableFuture<Integer>();
+        f.completeExceptionally(new CFException());
+        g = f.thenCompose(r = new CompletableFutureInc());
         checkCompletedWithWrappedCFException(g);
     }
 
@@ -1150,10 +1166,17 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenCompose result completes exceptionally if action does
      */
     public void testThenCompose3() {
-        CompletableFuture<Integer> f = new CompletableFuture<Integer>();
-        FailingCompletableFutureFunction r = new FailingCompletableFutureFunction();
-        CompletableFuture<Integer> g = f.thenCompose(r);
+        CompletableFuture<Integer> f, g;
+        FailingCompletableFutureFunction r;
+
+        f = new CompletableFuture<Integer>();
+        g = f.thenCompose(r = new FailingCompletableFutureFunction());
         f.complete(one);
+        checkCompletedWithWrappedCFException(g);
+
+        f = new CompletableFuture<Integer>();
+        f.complete(one);
+        g = f.thenCompose(r = new FailingCompletableFutureFunction());
         checkCompletedWithWrappedCFException(g);
     }
 
@@ -1161,10 +1184,17 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenCompose result completes exceptionally if source cancelled
      */
     public void testThenCompose4() {
-        CompletableFuture<Integer> f = new CompletableFuture<Integer>();
-        CompletableFutureInc r = new CompletableFutureInc();
-        CompletableFuture<Integer> g = f.thenCompose(r);
+        CompletableFuture<Integer> f, g;
+        CompletableFutureInc r;
+
+        f = new CompletableFuture<Integer>();
+        g = f.thenCompose(r = new CompletableFutureInc());
         assertTrue(f.cancel(true));
+        checkCompletedWithWrappedCancellationException(g);
+
+        f = new CompletableFuture<Integer>();
+        assertTrue(f.cancel(true));
+        g = f.thenCompose(r = new CompletableFutureInc());
         checkCompletedWithWrappedCancellationException(g);
     }
 
@@ -1840,12 +1870,12 @@ public class CompletableFutureTest extends JSR166TestCase {
     public void testThenComposeAsync3() {
         CompletableFuture<Integer> f, g;
         FailingCompletableFutureFunction r;
-        
+
         f = new CompletableFuture<Integer>();
         g = f.thenComposeAsync(r = new FailingCompletableFutureFunction());
         f.complete(one);
         checkCompletedWithWrappedCFException(g);
-        
+
         f = new CompletableFuture<Integer>();
         f.complete(one);
         g = f.thenComposeAsync(r = new FailingCompletableFutureFunction());

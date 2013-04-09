@@ -363,14 +363,14 @@ public class ConcurrentSkipListSet<E>
     }
 
     /**
-     * @throws NoSuchElementException {@inheritDoc}
+     * @throws java.util.NoSuchElementException {@inheritDoc}
      */
     public E first() {
         return m.firstKey();
     }
 
     /**
-     * @throws NoSuchElementException {@inheritDoc}
+     * @throws java.util.NoSuchElementException {@inheritDoc}
      */
     public E last() {
         return m.lastKey();

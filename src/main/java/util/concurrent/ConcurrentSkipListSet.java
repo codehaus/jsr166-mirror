@@ -33,9 +33,9 @@ import java.util.stream.Streams;
  * Iterators are <i>weakly consistent</i>, returning elements
  * reflecting the state of the set at some point at or since the
  * creation of the iterator.  They do <em>not</em> throw {@link
- * ConcurrentModificationException}, and may proceed concurrently with
- * other operations.  Ascending ordered views and their iterators are
- * faster than descending ones.
+ * java.util.ConcurrentModificationException}, and may proceed
+ * concurrently with other operations.  Ascending ordered views and
+ * their iterators are faster than descending ones.
  *
  * <p>Beware that, unlike in most collections, the {@code size}
  * method is <em>not</em> a constant-time operation. Because of the

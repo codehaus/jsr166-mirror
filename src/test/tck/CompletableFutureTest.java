@@ -495,17 +495,21 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenRun result completes normally after normal completion of source
      */
     public void testThenRun() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        Noop r = new Noop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        Noop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new Noop());
         f.complete(null);
         checkCompletedNormally(g, null);
-        // reordered version
+        assertTrue(r.ran);
+
         f = new CompletableFuture<>();
         f.complete(null);
-        r = new Noop();
-        g = f.thenRun(r);
+        g = f.thenRun(r = new Noop());
         checkCompletedNormally(g, null);
+        assertTrue(r.ran);
     }
 
     /**
@@ -513,21 +517,39 @@ public class CompletableFutureTest extends JSR166TestCase {
      * completion of source
      */
     public void testThenRun2() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        Noop r = new Noop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        Noop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new Noop());
         f.completeExceptionally(new CFException());
         checkCompletedWithWrappedCFException(g);
+        assertFalse(r.ran);
+
+        f = new CompletableFuture<>();
+        f.completeExceptionally(new CFException());
+        g = f.thenRun(r = new Noop());
+        checkCompletedWithWrappedCFException(g);
+        assertFalse(r.ran);
     }
 
     /**
      * thenRun result completes exceptionally if action does
      */
     public void testThenRun3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        FailingNoop r = new FailingNoop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        FailingNoop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new FailingNoop());
         f.complete(null);
+        checkCompletedWithWrappedCFException(g);
+
+        f = new CompletableFuture<>();
+        f.complete(null);
+        g = f.thenRun(r = new FailingNoop());
         checkCompletedWithWrappedCFException(g);
     }
 
@@ -535,10 +557,18 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenRun result completes exceptionally if source cancelled
      */
     public void testThenRun4() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        Noop r = new Noop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        Noop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new Noop());
         assertTrue(f.cancel(true));
+        checkCompletedWithWrappedCancellationException(g);
+
+        f = new CompletableFuture<>();
+        assertTrue(f.cancel(true));
+        g = f.thenRun(r = new Noop());
         checkCompletedWithWrappedCancellationException(g);
     }
 

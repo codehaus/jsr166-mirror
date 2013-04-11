@@ -774,14 +774,6 @@ public class ConcurrentHashMap<K,V>
         }
 
         /**
-         * Finds or adds a node. A front-end for recursive version
-         * @return null if added
-         */
-        final TreeNode<V> putTreeNode(int h, Object k, V v) {
-            return putTreeNode(h, k, v, comparableClassFor(k));
-        }
-
-        /**
          * Returns the TreeNode (or null if not found) for the given key
          * starting at given root.
          */
@@ -835,13 +827,13 @@ public class ConcurrentHashMap<K,V>
             return r == null ? null : r.val;
         }
 
-
         /**
-         * recursive add.
+         * Finds or adds a node.
          * @return null if added
          */
         @SuppressWarnings("unchecked") final TreeNode<V> putTreeNode
-            (int h, Object k, V v, Class<?> cc) {
+            (int h, Object k, V v) {
+            Class<?> cc = comparableClassFor(k);
             TreeNode<V> pp = root, p = null;
             int dir = 0;
             while (pp != null) { // find existing node or leaf to insert at

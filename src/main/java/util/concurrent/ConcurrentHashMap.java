@@ -321,7 +321,7 @@ public class ConcurrentHashMap<K,V>
      * a threshold, and at least one of the keys implements
      * Comparable.  These TreeBins use a balanced tree to hold nodes
      * (a specialized form of red-black trees), bounding search time
-     * to O(log N).  Each search step in a TreeBin is around twice as
+     * to O(log N).  Each search step in a TreeBin is at least twice as
      * slow as in a regular list, but given that N cannot exceed
      * (1<<64) (before running out of addresses) this bounds search
      * steps, lock hold times, etc, to reasonable constants (roughly
@@ -772,14 +772,12 @@ public class ConcurrentHashMap<K,V>
                     return p;
                 else if (cc == null || comparableClassFor(pk) != cc ||
                          (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
-                    TreeNode<V> r, pl, pr; // check both sides
+                    TreeNode<V> r, pr; // check both sides
                     if ((pr = p.right) != null && h >= pr.hash &&
                         (r = getTreeNode(h, k, pr, cc)) != null)
                         return r;
-                    else if ((pl = p.left) != null && h <= pl.hash)
+                    else // continue left
                         dir = -1;
-                    else // nothing there
-                        break;
                 }
                 p = (dir > 0) ? p.right : p.left;
             }
@@ -823,7 +821,7 @@ public class ConcurrentHashMap<K,V>
             TreeNode<V> pp = root, p = null;
             int dir = 0;
             while (pp != null) { // find existing node or leaf to insert at
-                int ph;  Object pk;
+                int ph; Object pk;
                 p = pp;
                 if ((ph = p.hash) != h)
                     dir = (h < ph) ? -1 : 1;

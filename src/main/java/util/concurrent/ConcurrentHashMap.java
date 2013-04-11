@@ -754,15 +754,14 @@ public class ConcurrentHashMap<K,V>
         /**
          * Compares k and x: if k's comparable class (cc) matches x's,
          * uses Comparable.compareTo. Otherwise compares on comparable
-         * class name if either exist, else 0.
+         * class name if both exist, else 0.
          */
         @SuppressWarnings("unchecked")
         static int cccompare(Class<?> cc, Object k, Object x) {
-            Class<?> cx = comparableClassFor(x);
-            return ((cc == null) ? ((cx == null) ? 0 : 1) :
-                    (cx == null) ? -1 :
-                    (cx == cc) ? ((Comparable<Object>)k).compareTo(x) :
-                    cc.getName().compareTo(cx.getName()));
+            Class<?> cx;
+            return ((cc != null && (cx = comparableClassFor(x)) != null) ?
+                    ((cx == cc) ? ((Comparable<Object>)k).compareTo(x) :
+                     cc.getName().compareTo(cx.getName())) : 0);
         }
 
         /**

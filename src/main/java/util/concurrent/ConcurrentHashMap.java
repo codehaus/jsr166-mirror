@@ -652,8 +652,7 @@ public class ConcurrentHashMap<K,V>
      * elements that are Comparable but not necessarily Comparable<T>
      * for the same T, so we cannot invoke compareTo among them. To
      * handle this, the tree is ordered primarily by hash value, then
-     * by Comparable.compareTo order if applicable, else by class
-     * names if both comparable but not to each other.  On lookup at a
+     * by Comparable.compareTo order if applicable.  On lookup at a
      * node, if elements are not comparable or compare as 0 then both
      * left and right children may need to be searched in the case of
      * tied hash values. (This corresponds to the full list search
@@ -752,19 +751,6 @@ public class ConcurrentHashMap<K,V>
         }
 
         /**
-         * Compares k and x: if k's comparable class (cc) matches x's,
-         * uses Comparable.compareTo. Otherwise compares on comparable
-         * class name if both exist, else 0.
-         */
-        @SuppressWarnings("unchecked")
-        static int cccompare(Class<?> cc, Object k, Object x) {
-            Class<?> cx;
-            return ((cc != null && (cx = comparableClassFor(x)) != null) ?
-                    ((cx == cc) ? ((Comparable<Object>)k).compareTo(x) :
-                     cc.getName().compareTo(cx.getName())) : 0);
-        }
-
-        /**
          * Returns the TreeNode (or null if not found) for the given
          * key.  A front-end for recursive version.
          */
@@ -784,7 +770,8 @@ public class ConcurrentHashMap<K,V>
                     dir = (h < ph) ? -1 : 1;
                 else if ((pk = p.key) == k || k.equals(pk))
                     return p;
-                else if ((dir = cccompare(cc, k, pk)) == 0) {
+                else if (cc == null || comparableClassFor(pk) != cc ||
+                         (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
                     TreeNode<V> r, pl, pr; // check both sides
                     if ((pr = p.right) != null && h >= pr.hash &&
                         (r = getTreeNode(h, k, pr, cc)) != null)
@@ -842,7 +829,8 @@ public class ConcurrentHashMap<K,V>
                     dir = (h < ph) ? -1 : 1;
                 else if ((pk = p.key) == k || k.equals(pk))
                     return p;
-                else if ((dir = cccompare(cc, k, pk)) == 0) {
+                else if (cc == null || comparableClassFor(pk) != cc ||
+                         (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
                     TreeNode<V> r, pr;
                     if ((pr = p.right) != null && h >= pr.hash &&
                         (r = getTreeNode(h, k, pr, cc)) != null)

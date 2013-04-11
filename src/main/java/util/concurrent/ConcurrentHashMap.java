@@ -759,7 +759,7 @@ public class ConcurrentHashMap<K,V>
         @SuppressWarnings("unchecked")
         static int cccompare(Class<?> cc, Object k, Object x) {
             Class<?> cx = comparableClassFor(x);
-            return ((cc == null)? ((cx == null)? 0 : 1) :
+            return ((cc == null) ? ((cx == null) ? 0 : 1) :
                     (cx == null) ? -1 :
                     (cx == cc) ? ((Comparable<Object>)k).compareTo(x) :
                     cc.getName().compareTo(cx.getName()));

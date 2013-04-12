@@ -498,35 +498,44 @@ public class CopyOnWriteArrayList<E>
      * @return {@code true} if this list contained the specified element
      */
     public boolean remove(Object o) {
+        Object[] snapshot = getArray();
+        int index = indexOf(o, snapshot, 0, snapshot.length);
+        return (index < 0) ? false : remove(o, snapshot, index);
+    }
+
+    /**
+     * A version of remove(Object) using the strong hint that given
+     * recent snapshot contains o at the given index.
+     */
+    private boolean remove(Object o, Object[] snapshot, int index) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            Object[] elements = getArray();
-            int len = elements.length;
-            if (len != 0) {
-                // Copy while searching for element to remove
-                // This wins in the normal case of element being present
-                int newlen = len - 1;
-                Object[] newElements = new Object[newlen];
-
-                for (int i = 0; i < newlen; ++i) {
-                    if (eq(o, elements[i])) {
-                        // found one;  copy remaining and exit
-                        for (int k = i + 1; k < len; ++k)
-                            newElements[k-1] = elements[k];
-                        setArray(newElements);
-                        return true;
-                    } else
-                        newElements[i] = elements[i];
+            Object[] current = getArray();
+            int len = current.length;
+            if (snapshot != current) findIndex: {
+                int prefix = Math.min(index, len);
+                for (int i = 0; i < prefix; i++) {
+                    if (current[i] != snapshot[i] && eq(o, current[i])) {
+                        index = i;
+                        break findIndex;
+                    }
                 }
-
-                // special handling for last cell
-                if (eq(o, elements[newlen])) {
-                    setArray(newElements);
-                    return true;
-                }
+                if (index >= len)
+                    return false;
+                if (current[index] == o)
+                    break findIndex;
+                index = indexOf(o, current, index, len);
+                if (index < 0)
+                    return false;
             }
-            return false;
+            Object[] newElements = new Object[len - 1];
+            System.arraycopy(current, 0, newElements, 0, index);
+            System.arraycopy(current, index + 1,
+                             newElements, index,
+                             len - index - 1);
+            setArray(newElements);
+            return true;
         } finally {
             lock.unlock();
         }
@@ -576,16 +585,31 @@ public class CopyOnWriteArrayList<E>
      * @return {@code true} if the element was added
      */
     public boolean addIfAbsent(E e) {
+        Object[] snapshot = getArray();
+        return indexOf(e, snapshot, 0, snapshot.length) >= 0 ? false :
+            addIfAbsent(e, snapshot);
+    }
+
+    /**
+     * A version of addIfAbsent using the strong hint that given
+     * recent snapshot does not contain e.
+     */
+    private boolean addIfAbsent(E e, Object[] snapshot) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            Object[] elements = getArray();
-            int len = elements.length;
-            for (int i = 0; i < len; ++i) {
-                if (eq(e, elements[i]))
-                    return false;
+            Object[] current = getArray();
+            int len = current.length;
+            if (snapshot != current) {
+                // Optimize for lost race to another addXXX operation
+                int common = Math.min(snapshot.length, len);
+                for (int i = 0; i < common; i++)
+                    if (current[i] != snapshot[i] && eq(e, current[i]))
+                        return false;
+                if (indexOf(e, current, common, len) >= 0)
+                        return false;
             }
-            Object[] newElements = Arrays.copyOf(elements, len + 1);
+            Object[] newElements = Arrays.copyOf(current, len + 1);
             newElements[len] = e;
             setArray(newElements);
             return true;

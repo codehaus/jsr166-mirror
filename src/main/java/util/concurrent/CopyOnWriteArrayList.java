@@ -715,22 +715,22 @@ public class CopyOnWriteArrayList<E>
         Object[] cs = c.toArray();
         if (cs.length == 0)
             return 0;
-        Object[] uniq = new Object[cs.length];
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             Object[] elements = getArray();
             int len = elements.length;
             int added = 0;
-            for (int i = 0; i < cs.length; ++i) { // scan for duplicates
+            // uniquify and compact elements in cs
+            for (int i = 0; i < cs.length; ++i) {
                 Object e = cs[i];
                 if (indexOf(e, elements, 0, len) < 0 &&
-                    indexOf(e, uniq, 0, added) < 0)
-                    uniq[added++] = e;
+                    indexOf(e, cs, 0, added) < 0)
+                    cs[added++] = e;
             }
             if (added > 0) {
                 Object[] newElements = Arrays.copyOf(elements, len + added);
-                System.arraycopy(uniq, 0, newElements, len, added);
+                System.arraycopy(cs, 0, newElements, len, added);
                 setArray(newElements);
             }
             return added;

@@ -2856,7 +2856,7 @@ public class CompletableFutureTest extends JSR166TestCase {
      * with the value null
      */
     public void testAllOf_empty() throws Exception {
-        CompletableFuture<?> f = CompletableFuture.allOf();
+        CompletableFuture<Void> f = CompletableFuture.allOf();
         checkCompletedNormally(f, null);
     }
 
@@ -2871,9 +2871,11 @@ public class CompletableFutureTest extends JSR166TestCase {
             CompletableFuture<Void> f = CompletableFuture.allOf(fs);
             for (int i = 0; i < k; ++i) {
                 checkIncomplete(f);
+                checkIncomplete(CompletableFuture.allOf(fs));
                 fs[i].complete(one);
             }
             checkCompletedNormally(f, null);
+            checkCompletedNormally(CompletableFuture.allOf(fs), null);
         }
     }
 
@@ -2881,15 +2883,15 @@ public class CompletableFutureTest extends JSR166TestCase {
      * anyOf(no component futures) returns an incomplete future
      */
     public void testAnyOf_empty() throws Exception {
-        CompletableFuture<?> f = CompletableFuture.anyOf();
+        CompletableFuture<Object> f = CompletableFuture.anyOf();
         checkIncomplete(f);
     }
 
     /**
      * anyOf returns a future completed when any components complete
      */
-    public void testAnyOf() throws Exception {
-        for (int k = 1; k < 20; ++k) {
+    public void testAnyOf_normal() throws Exception {
+        for (int k = 0; k < 10; ++k) {
             CompletableFuture[] fs = new CompletableFuture[k];
             for (int i = 0; i < k; ++i)
                 fs[i] = new CompletableFuture<>();
@@ -2898,6 +2900,25 @@ public class CompletableFutureTest extends JSR166TestCase {
             for (int i = 0; i < k; ++i) {
                 fs[i].complete(one);
                 checkCompletedNormally(f, one);
+                checkCompletedNormally(CompletableFuture.anyOf(fs), one);
+            }
+        }
+    }
+
+    /**
+     * anyOf result completes exceptionally when any component does.
+     */
+    public void testAnyOf_exceptional() throws Exception {
+        for (int k = 0; k < 10; ++k) {
+            CompletableFuture[] fs = new CompletableFuture[k];
+            for (int i = 0; i < k; ++i)
+                fs[i] = new CompletableFuture<>();
+            CompletableFuture<Object> f = CompletableFuture.anyOf(fs);
+            checkIncomplete(f);
+            for (int i = 0; i < k; ++i) {
+                fs[i].completeExceptionally(new CFException());
+                checkCompletedWithWrappedCFException(f);
+                checkCompletedWithWrappedCFException(CompletableFuture.anyOf(fs));
             }
         }
     }

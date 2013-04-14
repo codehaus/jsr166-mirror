@@ -342,12 +342,38 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     * remove removes and returns the object at the given index
+     * remove(int) removes and returns the object at the given index
      */
-    public void testRemove() {
-        CopyOnWriteArrayList full = populatedArray(3);
-        assertEquals(2, full.remove(2));
-        assertEquals(2, full.size());
+    public void testRemove_int() {
+        int SIZE = 3;
+        for (int i = 0; i < SIZE; i++) {
+            CopyOnWriteArrayList full = populatedArray(SIZE);
+            assertEquals(i, full.remove(i));
+            assertEquals(SIZE - 1, full.size());
+            assertFalse(full.contains(new Integer(i)));
+        }
+    }
+
+    /**
+     * remove(Object) removes the object if found and returns true
+     */
+    public void testRemove_Object() {
+        int SIZE = 3;
+        for (int i = 0; i < SIZE; i++) {
+            CopyOnWriteArrayList full = populatedArray(SIZE);
+            assertFalse(full.remove(new Integer(-42)));
+            assertTrue(full.remove(new Integer(i)));
+            assertEquals(SIZE - 1, full.size());
+            assertFalse(full.contains(new Integer(i)));
+        }
+        CopyOnWriteArrayList x = new CopyOnWriteArrayList(Arrays.asList(4, 5, 6));
+        assertTrue(x.remove(new Integer(6)));
+        assertEquals(x, Arrays.asList(4, 5));
+        assertTrue(x.remove(new Integer(4)));
+        assertEquals(x, Arrays.asList(5));
+        assertTrue(x.remove(new Integer(5)));
+        assertEquals(x, Arrays.asList());
+        assertFalse(x.remove(new Integer(5)));
     }
 
     /**

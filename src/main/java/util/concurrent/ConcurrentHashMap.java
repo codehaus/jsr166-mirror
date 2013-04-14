@@ -34,6 +34,8 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.io.Serializable;
+import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
 
 /**
  * A hash table supporting full concurrency of retrievals and
@@ -319,7 +321,7 @@ public class ConcurrentHashMap<K,V>
      * a threshold, and at least one of the keys implements
      * Comparable.  These TreeBins use a balanced tree to hold nodes
      * (a specialized form of red-black trees), bounding search time
-     * to O(log N).  Each search step in a TreeBin is around twice as
+     * to O(log N).  Each search step in a TreeBin is at least twice as
      * slow as in a regular list, but given that N cannot exceed
      * (1<<64) (before running out of addresses) this bounds search
      * steps, lock hold times, etc, to reasonable constants (roughly
@@ -449,7 +451,7 @@ public class ConcurrentHashMap<K,V>
      * bin.  The value reflects the approximate break-even point for
      * using tree-based operations.
      */
-    private static final int TREE_THRESHOLD = 8;
+    private static final int TREE_THRESHOLD = 16;
 
     /**
      * Minimum number of rebinnings per transfer step. Ranges are
@@ -613,6 +615,32 @@ public class ConcurrentHashMap<K,V>
         }
     }
 
+
+    /**
+     * Returns a Class for the given object of the form "class C
+     * implements Comparable<C>", if one exists, else null.  See below
+     * for explanation.
+     */
+    static Class<?> comparableClassFor(Object x) {
+        Class<?> c, s, cmpc; Type[] ts, as; Type t; ParameterizedType p;
+        if ((c = x.getClass()) == String.class) // bypass checks
+            return c;
+        if ((cmpc = Comparable.class).isAssignableFrom(c)) {
+            while (cmpc.isAssignableFrom(s = c.getSuperclass()))
+                c = s; // find topmost comparable class
+            if ((ts  = c.getGenericInterfaces()) != null) {
+                for (int i = 0; i < ts.length; ++i) {
+                    if (((t = ts[i]) instanceof ParameterizedType) &&
+                        ((p = (ParameterizedType)t).getRawType() == cmpc) &&
+                        (as = p.getActualTypeArguments()) != null &&
+                        as.length == 1 && as[0] == c) // type arg is c
+                        return c;
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * A specialized form of red-black tree for use in bins
      * whose size exceeds a threshold.
@@ -624,13 +652,12 @@ public class ConcurrentHashMap<K,V>
      * elements that are Comparable but not necessarily Comparable<T>
      * for the same T, so we cannot invoke compareTo among them. To
      * handle this, the tree is ordered primarily by hash value, then
-     * by getClass().getName() order, and then by Comparator order
-     * among elements of the same class.  On lookup at a node, if
-     * elements are not comparable or compare as 0, both left and
-     * right children may need to be searched in the case of tied hash
-     * values. (This corresponds to the full list search that would be
-     * necessary if all elements were non-Comparable and had tied
-     * hashes.)  The red-black balancing code is updated from
+     * by Comparable.compareTo order if applicable.  On lookup at a
+     * node, if elements are not comparable or compare as 0 then both
+     * left and right children may need to be searched in the case of
+     * tied hash values. (This corresponds to the full list search
+     * that would be necessary if all elements were non-Comparable and
+     * had tied hashes.)  The red-black balancing code is updated from
      * pre-jdk-collections
      * (http://gee.cs.oswego.edu/dl/classes/collections/RBCell.java)
      * based in turn on Cormen, Leiserson, and Rivest "Introduction to
@@ -724,35 +751,34 @@ public class ConcurrentHashMap<K,V>
         }
 
         /**
+         * Returns the TreeNode (or null if not found) for the given
+         * key.  A front-end for recursive version.
+         */
+        final TreeNode<V> getTreeNode(int h, Object k) {
+            return getTreeNode(h, k, root, comparableClassFor(k));
+        }
+
+        /**
          * Returns the TreeNode (or null if not found) for the given key
          * starting at given root.
          */
         @SuppressWarnings("unchecked") final TreeNode<V> getTreeNode
-            (int h, Object k, TreeNode<V> p) {
-            Class<?> c = k.getClass();
+            (int h, Object k, TreeNode<V> p, Class<?> cc) {
             while (p != null) {
-                int dir, ph;  Object pk; Class<?> pc;
-                if ((ph = p.hash) == h) {
-                    if ((pk = p.key) == k || k.equals(pk))
-                        return p;
-                    if (c != (pc = pk.getClass()) ||
-                        !(k instanceof Comparable) ||
-                        (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
-                        if ((dir = (c == pc) ? 0 :
-                             c.getName().compareTo(pc.getName())) == 0) {
-                            TreeNode<V> r = null, pl, pr; // check both sides
-                            if ((pr = p.right) != null && h >= pr.hash &&
-                                (r = getTreeNode(h, k, pr)) != null)
-                                return r;
-                            else if ((pl = p.left) != null && h <= pl.hash)
-                                dir = -1;
-                            else // nothing there
-                                return null;
-                        }
-                    }
-                }
-                else
+                int dir, ph;  Object pk;
+                if ((ph = p.hash) != h)
                     dir = (h < ph) ? -1 : 1;
+                else if ((pk = p.key) == k || k.equals(pk))
+                    return p;
+                else if (cc == null || comparableClassFor(pk) != cc ||
+                         (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
+                    TreeNode<V> r, pr; // check both sides
+                    if ((pr = p.right) != null && h >= pr.hash &&
+                        (r = getTreeNode(h, k, pr, cc)) != null)
+                        return r;
+                    else // continue left
+                        dir = -1;
+                }
                 p = (dir > 0) ? p.right : p.left;
             }
             return null;
@@ -769,7 +795,7 @@ public class ConcurrentHashMap<K,V>
             for (Node<V> e = first; e != null; e = e.next) {
                 if (c <= 0 && compareAndSetState(c, c - 1)) {
                     try {
-                        r = getTreeNode(h, k, root);
+                        r = getTreeNode(h, k, root, comparableClassFor(k));
                     } finally {
                         releaseShared(0);
                     }
@@ -791,35 +817,25 @@ public class ConcurrentHashMap<K,V>
          */
         @SuppressWarnings("unchecked") final TreeNode<V> putTreeNode
             (int h, Object k, V v) {
-            Class<?> c = k.getClass();
+            Class<?> cc = comparableClassFor(k);
             TreeNode<V> pp = root, p = null;
             int dir = 0;
             while (pp != null) { // find existing node or leaf to insert at
-                int ph;  Object pk; Class<?> pc;
+                int ph; Object pk;
                 p = pp;
-                if ((ph = p.hash) == h) {
-                    if ((pk = p.key) == k || k.equals(pk))
-                        return p;
-                    if (c != (pc = pk.getClass()) ||
-                        !(k instanceof Comparable) ||
-                        (dir = ((Comparable)k).compareTo((Comparable)pk)) == 0) {
-                        TreeNode<V> s = null, r = null, pr;
-                        if ((dir = (c == pc) ? 0 :
-                             c.getName().compareTo(pc.getName())) == 0) {
-                            if ((pr = p.right) != null && h >= pr.hash &&
-                                (r = getTreeNode(h, k, pr)) != null)
-                                return r;
-                            else // continue left
-                                dir = -1;
-                        }
-                        else if ((pr = p.right) != null && h >= pr.hash)
-                            s = pr;
-                        if (s != null && (r = getTreeNode(h, k, s)) != null)
-                            return r;
-                    }
-                }
-                else
+                if ((ph = p.hash) != h)
                     dir = (h < ph) ? -1 : 1;
+                else if ((pk = p.key) == k || k.equals(pk))
+                    return p;
+                else if (cc == null || comparableClassFor(pk) != cc ||
+                         (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
+                    TreeNode<V> r, pr;
+                    if ((pr = p.right) != null && h >= pr.hash &&
+                        (r = getTreeNode(h, k, pr, cc)) != null)
+                        return r;
+                    else // continue left
+                        dir = -1;
+                }
                 pp = (dir > 0) ? p.right : p.left;
             }
 
@@ -1089,7 +1105,7 @@ public class ConcurrentHashMap<K,V>
      * only when locked.
      */
     private final void replaceWithTreeBin(Node<V>[] tab, int index, Object key) {
-        if (key instanceof Comparable) {
+        if (comparableClassFor(key) != null) {
             TreeBin<V> t = new TreeBin<V>();
             for (Node<V> e = tabAt(tab, index); e != null; e = e.next)
                 t.putTreeNode(e.hash, e.key, e.val);
@@ -1145,7 +1161,7 @@ public class ConcurrentHashMap<K,V>
                     try {
                         if (tabAt(tab, i) == f) {
                             validated = true;
-                            TreeNode<V> p = t.getTreeNode(h, k, t.root);
+                            TreeNode<V> p = t.getTreeNode(h, k);
                             if (p != null) {
                                 V pv = p.val;
                                 if (cv == null || cv == pv || cv.equals(pv)) {
@@ -1346,7 +1362,7 @@ public class ConcurrentHashMap<K,V>
                     try {
                         if (tabAt(tab, i) == f) {
                             len = 1;
-                            TreeNode<V> p = t.getTreeNode(h, k, t.root);
+                            TreeNode<V> p = t.getTreeNode(h, k);
                             if (p != null)
                                 val = p.val;
                             else if ((val = mf.apply(k)) != null) {
@@ -1453,7 +1469,7 @@ public class ConcurrentHashMap<K,V>
                     try {
                         if (tabAt(tab, i) == f) {
                             len = 1;
-                            TreeNode<V> p = t.getTreeNode(h, k, t.root);
+                            TreeNode<V> p = t.getTreeNode(h, k);
                             if (p == null && onlyIfPresent)
                                 break;
                             V pv = (p == null) ? null : p.val;
@@ -1552,7 +1568,7 @@ public class ConcurrentHashMap<K,V>
                     try {
                         if (tabAt(tab, i) == f) {
                             len = 1;
-                            TreeNode<V> p = t.getTreeNode(h, k, t.root);
+                            TreeNode<V> p = t.getTreeNode(h, k);
                             val = (p == null) ? v : mf.apply(p.val, v);
                             if (val != null) {
                                 if (p != null)
@@ -1653,7 +1669,7 @@ public class ConcurrentHashMap<K,V>
                             try {
                                 if (tabAt(tab, i) == f) {
                                     validated = true;
-                                    TreeNode<V> p = t.getTreeNode(h, k, t.root);
+                                    TreeNode<V> p = t.getTreeNode(h, k);
                                     if (p != null)
                                         p.val = v;
                                     else {

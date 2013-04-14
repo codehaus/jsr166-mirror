@@ -495,17 +495,21 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenRun result completes normally after normal completion of source
      */
     public void testThenRun() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        Noop r = new Noop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        Noop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new Noop());
         f.complete(null);
         checkCompletedNormally(g, null);
-        // reordered version
+        assertTrue(r.ran);
+
         f = new CompletableFuture<>();
         f.complete(null);
-        r = new Noop();
-        g = f.thenRun(r);
+        g = f.thenRun(r = new Noop());
         checkCompletedNormally(g, null);
+        assertTrue(r.ran);
     }
 
     /**
@@ -513,21 +517,39 @@ public class CompletableFutureTest extends JSR166TestCase {
      * completion of source
      */
     public void testThenRun2() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        Noop r = new Noop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        Noop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new Noop());
         f.completeExceptionally(new CFException());
         checkCompletedWithWrappedCFException(g);
+        assertFalse(r.ran);
+
+        f = new CompletableFuture<>();
+        f.completeExceptionally(new CFException());
+        g = f.thenRun(r = new Noop());
+        checkCompletedWithWrappedCFException(g);
+        assertFalse(r.ran);
     }
 
     /**
      * thenRun result completes exceptionally if action does
      */
     public void testThenRun3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        FailingNoop r = new FailingNoop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        FailingNoop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new FailingNoop());
         f.complete(null);
+        checkCompletedWithWrappedCFException(g);
+
+        f = new CompletableFuture<>();
+        f.complete(null);
+        g = f.thenRun(r = new FailingNoop());
         checkCompletedWithWrappedCFException(g);
     }
 
@@ -535,10 +557,18 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenRun result completes exceptionally if source cancelled
      */
     public void testThenRun4() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        Noop r = new Noop();
-        CompletableFuture<Void> g = f.thenRun(r);
+        CompletableFuture<Integer> f;
+        CompletableFuture<Void> g;
+        Noop r;
+
+        f = new CompletableFuture<>();
+        g = f.thenRun(r = new Noop());
         assertTrue(f.cancel(true));
+        checkCompletedWithWrappedCancellationException(g);
+
+        f = new CompletableFuture<>();
+        assertTrue(f.cancel(true));
+        g = f.thenRun(r = new Noop());
         checkCompletedWithWrappedCancellationException(g);
     }
 
@@ -2826,7 +2856,7 @@ public class CompletableFutureTest extends JSR166TestCase {
      * with the value null
      */
     public void testAllOf_empty() throws Exception {
-        CompletableFuture<?> f = CompletableFuture.allOf();
+        CompletableFuture<Void> f = CompletableFuture.allOf();
         checkCompletedNormally(f, null);
     }
 
@@ -2841,9 +2871,11 @@ public class CompletableFutureTest extends JSR166TestCase {
             CompletableFuture<Void> f = CompletableFuture.allOf(fs);
             for (int i = 0; i < k; ++i) {
                 checkIncomplete(f);
+                checkIncomplete(CompletableFuture.allOf(fs));
                 fs[i].complete(one);
             }
             checkCompletedNormally(f, null);
+            checkCompletedNormally(CompletableFuture.allOf(fs), null);
         }
     }
 
@@ -2851,15 +2883,15 @@ public class CompletableFutureTest extends JSR166TestCase {
      * anyOf(no component futures) returns an incomplete future
      */
     public void testAnyOf_empty() throws Exception {
-        CompletableFuture<?> f = CompletableFuture.anyOf();
+        CompletableFuture<Object> f = CompletableFuture.anyOf();
         checkIncomplete(f);
     }
 
     /**
      * anyOf returns a future completed when any components complete
      */
-    public void testAnyOf() throws Exception {
-        for (int k = 1; k < 20; ++k) {
+    public void testAnyOf_normal() throws Exception {
+        for (int k = 0; k < 10; ++k) {
             CompletableFuture[] fs = new CompletableFuture[k];
             for (int i = 0; i < k; ++i)
                 fs[i] = new CompletableFuture<>();
@@ -2868,6 +2900,25 @@ public class CompletableFutureTest extends JSR166TestCase {
             for (int i = 0; i < k; ++i) {
                 fs[i].complete(one);
                 checkCompletedNormally(f, one);
+                checkCompletedNormally(CompletableFuture.anyOf(fs), one);
+            }
+        }
+    }
+
+    /**
+     * anyOf result completes exceptionally when any component does.
+     */
+    public void testAnyOf_exceptional() throws Exception {
+        for (int k = 0; k < 10; ++k) {
+            CompletableFuture[] fs = new CompletableFuture[k];
+            for (int i = 0; i < k; ++i)
+                fs[i] = new CompletableFuture<>();
+            CompletableFuture<Object> f = CompletableFuture.anyOf(fs);
+            checkIncomplete(f);
+            for (int i = 0; i < k; ++i) {
+                fs[i].completeExceptionally(new CFException());
+                checkCompletedWithWrappedCFException(f);
+                checkCompletedWithWrappedCFException(CompletableFuture.anyOf(fs));
             }
         }
     }

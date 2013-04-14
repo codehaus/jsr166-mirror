@@ -699,7 +699,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(r.getKey().longValue(), (long)SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * Mapped reduceKeysSequentially accumulates mapped keys
      */
     public void testMapReduceKeysSequentially() {
@@ -709,7 +709,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals((long)r, (long)4 * SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * Mapped reduceValuesSequentially accumulates mapped values
      */
     public void testMapReduceValuesSequentially() {
@@ -730,7 +730,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals((long)r, (long)3 * SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * Mapped reduceKeysInParallel, accumulates mapped keys
      */
     public void testMapReduceKeysInParallel() {
@@ -740,7 +740,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals((long)r, (long)4 * SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * Mapped reduceValuesInParallel accumulates mapped values
      */
     public void testMapReduceValuesInParallel() {
@@ -762,7 +762,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     }
 
 
-    /*
+    /**
      * reduceKeysToLongSequentially accumulates mapped keys
      */
     public void testReduceKeysToLongSequentially() {
@@ -771,7 +771,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(lr, (long)SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * reduceKeysToIntSequentially accumulates mapped keys
      */
     public void testReduceKeysToIntSequentially() {
@@ -780,7 +780,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(ir, SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * reduceKeysToDoubleSequentially accumulates mapped keys
      */
     public void testReduceKeysToDoubleSequentially() {
@@ -789,7 +789,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(dr, (double)SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * reduceValuesToLongSequentially accumulates mapped values
      */
     public void testReduceValuesToLongSequentially() {
@@ -798,7 +798,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(lr, (long)SIZE * (SIZE - 1));
     }
 
-    /*
+    /**
      * reduceValuesToIntSequentially accumulates mapped values
      */
     public void testReduceValuesToIntSequentially() {
@@ -807,7 +807,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(ir, SIZE * (SIZE - 1));
     }
 
-    /*
+    /**
      * reduceValuesToDoubleSequentially accumulates mapped values
      */
     public void testReduceValuesToDoubleSequentially() {
@@ -816,7 +816,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(dr, (double)SIZE * (SIZE - 1));
     }
 
-    /*
+    /**
      * reduceKeysToLongInParallel accumulates mapped keys
      */
     public void testReduceKeysToLongInParallel() {
@@ -825,7 +825,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(lr, (long)SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * reduceKeysToIntInParallel accumulates mapped keys
      */
     public void testReduceKeysToIntInParallel() {
@@ -834,7 +834,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(ir, SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * reduceKeysToDoubleInParallel accumulates mapped values
      */
     public void testReduceKeysToDoubleInParallel() {
@@ -843,7 +843,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(dr, (double)SIZE * (SIZE - 1) / 2);
     }
 
-    /*
+    /**
      * reduceValuesToLongInParallel accumulates mapped values
      */
     public void testReduceValuesToLongInParallel() {
@@ -852,7 +852,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(lr, (long)SIZE * (SIZE - 1));
     }
 
-    /*
+    /**
      * reduceValuesToIntInParallel accumulates mapped values
      */
     public void testReduceValuesToIntInParallel() {
@@ -861,7 +861,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(ir, SIZE * (SIZE - 1));
     }
 
-    /*
+    /**
      * reduceValuesToDoubleInParallel accumulates mapped values
      */
     public void testReduceValuesToDoubleInParallel() {

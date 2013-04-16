@@ -816,7 +816,7 @@ public class ConcurrentHashMap<K,V>
             (int h, Object k, TreeNode<V> p) {
             Class<?> c = k.getClass();
             while (p != null) {
-                int dir, ph;  Object pk; Class<?> pc;
+                int dir, ph; Object pk; Class<?> pc;
                 if ((ph = p.hash) == h) {
                     if ((pk = p.key) == k || k.equals(pk))
                         return p;
@@ -880,7 +880,7 @@ public class ConcurrentHashMap<K,V>
             TreeNode<V> pp = root, p = null;
             int dir = 0;
             while (pp != null) { // find existing node or leaf to insert at
-                int ph;  Object pk; Class<?> pc;
+                int ph; Object pk; Class<?> pc;
                 p = pp;
                 if ((ph = p.hash) == h) {
                     if ((pk = p.key) == k || k.equals(pk))
@@ -2371,7 +2371,7 @@ public class ConcurrentHashMap<K,V>
          * anyway.
          */
         final int preSplit() {
-            ConcurrentHashMap<K,V> m; int b; Node<V>[] t;  ForkJoinPool pool;
+            ConcurrentHashMap<K,V> m; int b; Node<V>[] t; ForkJoinPool pool;
             if ((b = batch) < 0 && (m = map) != null) { // force initialization
                 if ((t = tab) == null && (t = tab = m.table) != null)
                     baseLimit = baseSize = t.length;

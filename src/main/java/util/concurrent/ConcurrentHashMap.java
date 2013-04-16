@@ -628,7 +628,7 @@ public class ConcurrentHashMap<K,V>
         if ((cmpc = Comparable.class).isAssignableFrom(c)) {
             while (cmpc.isAssignableFrom(s = c.getSuperclass()))
                 c = s; // find topmost comparable class
-            if ((ts  = c.getGenericInterfaces()) != null) {
+            if ((ts = c.getGenericInterfaces()) != null) {
                 for (int i = 0; i < ts.length; ++i) {
                     if (((t = ts[i]) instanceof ParameterizedType) &&
                         ((p = (ParameterizedType)t).getRawType() == cmpc) &&
@@ -765,7 +765,7 @@ public class ConcurrentHashMap<K,V>
         @SuppressWarnings("unchecked") final TreeNode<V> getTreeNode
             (int h, Object k, TreeNode<V> p, Class<?> cc) {
             while (p != null) {
-                int dir, ph;  Object pk;
+                int dir, ph; Object pk;
                 if ((ph = p.hash) != h)
                     dir = (h < ph) ? -1 : 1;
                 else if ((pk = p.key) == k || k.equals(pk))
@@ -2483,7 +2483,7 @@ public class ConcurrentHashMap<K,V>
          * anyway.
          */
         final int preSplit() {
-            int b;  ForkJoinPool pool;
+            int b; ForkJoinPool pool;
             if ((b = batch) < 0) { // force initialization
                 int sp = (((pool = getPool()) == null) ?
                           ForkJoinPool.getCommonPoolParallelism() :

@@ -1522,7 +1522,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param q if non-null, the queue holding tasks to be processed
      */
     final void signalWork(WorkQueue q) {
-        long c; int e, u, i, n; WorkQueue[] ws; WorkQueue w;  Thread p;
+        long c; int e, u, i, n; WorkQueue[] ws; WorkQueue w; Thread p;
         if ((u = (int)((c = ctl) >>> 32)) < 0) {
             if ((e = (int)c) > 0) {
                 if ((ws = workQueues) != null && ws.length > (i = e & SMASK) &&
@@ -1786,7 +1786,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         }
                     }
                     for (;;) { // help stealer or descend to its stealer
-                        ForkJoinTask[] a;  int b;
+                        ForkJoinTask[] a; int b;
                         if (subtask.status < 0)     // surround probes with
                             continue restart;       //   consistency checks
                         if ((b = v.base) - v.top < 0 && (a = v.array) != null) {
@@ -2230,7 +2230,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     static boolean tryExternalUnpush(ForkJoinTask<?> t) {
         ForkJoinPool p; WorkQueue[] ws; WorkQueue q;
-        ForkJoinTask<?>[] a;  int m, s, z;
+        ForkJoinTask<?>[] a; int m, s, z;
         if (t != null &&
             (z = ThreadLocalRandom.getProbe()) != 0 &&
             (p = common) != null &&
@@ -2325,7 +2325,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     static void externalHelpJoin(ForkJoinTask<?> t) {
         // Some hard-to-avoid overlap with tryExternalUnpush
         ForkJoinPool p; WorkQueue[] ws; WorkQueue q, w;
-        ForkJoinTask<?>[] a;  int m, s, n, z;
+        ForkJoinTask<?>[] a; int m, s, n, z;
         if (t != null &&
             (z = ThreadLocalRandom.getProbe()) != 0 &&
             (p = common) != null &&

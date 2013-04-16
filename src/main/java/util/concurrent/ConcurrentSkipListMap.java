@@ -3579,7 +3579,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return Spliterator.DISTINCT | Spliterator.ORDERED |
                     Spliterator.SORTED;
             }
-            public final Comparator<? super K>  getComparator() {
+            public final Comparator<? super K> getComparator() {
                 return SubMap.this.comparator();
             }
         }
@@ -3888,7 +3888,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 Spliterator.NONNULL;
         }
 
-        public final Comparator<? super K>  getComparator() {
+        public final Comparator<? super K> getComparator() {
             return comparator;
         }
     }

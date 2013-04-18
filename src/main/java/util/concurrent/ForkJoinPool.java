@@ -1608,7 +1608,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (w != null && (ws = workQueues) != null && (m = ws.length - 1) >= 0) {
             int ec = w.eventCount;                   // ec negative if inactive
             int r = w.seed; r ^= r << 13; r ^= r >>> 17; w.seed = r ^= r << 5;
-            for (int j = (m << 1) | (ec < 0 ? MIN_RESCANS : 1);;) {
+            for (int j = (m << 1) | (ec < 0 ? MIN_RESCANS : 0xf);;) {
                 WorkQueue q; int b, s; ForkJoinTask<?>[] a;
                 if ((q = ws[(r - j) & m]) != null && // probably nonempty
                     (b = q.base) - (s = q.top) < 0 && (a = q.array) != null) {
@@ -1623,18 +1623,19 @@ public class ForkJoinPool extends AbstractExecutorService {
                             signalWork(q);
                         return t;
                     }
-                    if (--j < m) {               // restart to revisit
-                        if (ec < 0)              // help activate
+                    if (--j < m) {                   // restart to revisit
+                        if (ec < 0)                  // help activate
                             signalWork(q);
                         break;
                     }
                 }
                 else if (--j < 0) {
-                    long c = ctl;
+                    long c = ctl; int e;
                     long nc = (long)ec | ((c - AC_UNIT) & (AC_MASK|TC_MASK));
-                    int e = (int)c;
                     if (plock == ps) {
-                        if (e >= 0 && ec >= 0) {
+                        if ((e = (int)c) < 0)
+                            w.qlock = -1;            // pool is terminating
+                        else if (ec >= 0) {
                             w.nextWait = e;          // try to enqueue/inactivate
                             w.eventCount = ec | INT_SIGN;
                             if (!U.compareAndSwapLong(this, CTL, c, nc))
@@ -1663,42 +1664,38 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param c the ctl value triggering possible quiescence
      */
     private final void onEmptyScan(WorkQueue w, long c) {
-        int ec, ns, e, d;
-        if (w != null && ctl == c) {
-            if ((e = (int)c) < 0)
-                w.qlock = -1;                         // pool is terminating
-            else if ((ec = w.eventCount) < 0 &&
-                     ((d = (int)(c >> AC_SHIFT) + (config & SMASK)) != 0 ||
-                      !tryTerminate(false, false))) {
-                long pc = 0L, parkTime = 0L, deadline = 0L;
-                if (d == 0 && ec == (e | INT_SIGN) &&
-                    (pc = (((long)(w.nextWait & E_MASK)) |
-                           ((long)(((int)(c >>> 32)) + UAC_UNIT) << 32))) != 0) {
-                    int dc = -(short)(c >>> TC_SHIFT);
-                    parkTime = (dc < 0 ? FAST_IDLE_TIMEOUT:
-                                (dc + 1) * IDLE_TIMEOUT);
-                    deadline = System.nanoTime() + parkTime - TIMEOUT_SLOP;
-                }
-                if ((ns = w.nsteals) != 0) {
-                    long sc = stealCount;
-                    if (U.compareAndSwapLong(this, STEALCOUNT, sc, sc + ns))
-                        w.nsteals = 0;                    // collect and rescan
-                }
-                else if (w.eventCount < 0 && ctl == c) {
-                    Thread wt = Thread.currentThread();
-                    Thread.interrupted();             // clear status
-                    U.putObject(wt, PARKBLOCKER, this);
-                    w.parker = wt;                    // emulate LockSupport.park
-                    if (w.eventCount < 0 && ctl == c) // recheck
-                        U.park(false, parkTime);      // block
-                    w.parker = null;
-                    U.putObject(wt, PARKBLOCKER, null);
-                    if (parkTime != 0L && w.eventCount < 0 && ctl == c &&
-                        deadline - System.nanoTime() <= 0L &&
-                        U.compareAndSwapLong(this, CTL, c, pc)) {
-                        w.eventCount = (w.eventCount + E_SEQ) | E_MASK;
-                        w.qlock = -1;   // shrink
-                    }
+        int ec, ns;
+        int d = (int)(c >> AC_SHIFT) + (config & SMASK); // 0 if quiescent
+        if (w != null && (ec = w.eventCount) < 0 &&
+            (d != 0 || !tryTerminate(false, false))) {
+            long pc = 0L, parkTime = 0L, deadline = 0L;
+            if (d == 0 && ec == (((int)c) | INT_SIGN) &&
+                (pc = (((long)(w.nextWait & E_MASK)) |
+                       ((long)(((int)(c >>> 32)) + UAC_UNIT) << 32))) != 0) {
+                int dc = -(short)(c >>> TC_SHIFT);
+                parkTime = (dc < 0 ? FAST_IDLE_TIMEOUT:
+                            (dc + 1) * IDLE_TIMEOUT);
+                deadline = System.nanoTime() + parkTime - TIMEOUT_SLOP;
+            }
+            if ((ns = w.nsteals) != 0) {
+                long sc = stealCount;
+                if (U.compareAndSwapLong(this, STEALCOUNT, sc, sc + ns))
+                    w.nsteals = 0;                // collect steals and rescan
+            }
+            else if (w.eventCount < 0) {
+                Thread wt = Thread.currentThread();
+                Thread.interrupted();             // clear status
+                U.putObject(wt, PARKBLOCKER, this);
+                w.parker = wt;                    // emulate LockSupport.park
+                if (w.eventCount < 0)             // recheck
+                    U.park(false, parkTime);      // block
+                w.parker = null;
+                U.putObject(wt, PARKBLOCKER, null);
+                if (parkTime != 0L && w.eventCount < 0 && ctl == c &&
+                    deadline - System.nanoTime() <= 0L &&
+                    U.compareAndSwapLong(this, CTL, c, pc)) {
+                    w.eventCount = (w.eventCount + E_SEQ) | E_MASK;
+                    w.qlock = -1;   // shrink
                 }
             }
         }

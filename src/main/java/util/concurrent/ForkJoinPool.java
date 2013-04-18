@@ -328,7 +328,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * waiting workers (or trigger creation of new ones if fewer than
      * the given parallelism level -- signalWork).  These primary
      * signals are buttressed by others whenever other threads remove
-     * a task from a queue a notice that there are other tasks there
+     * a task from a queue and notice that there are other tasks there
      * as well.  So in general, pools will be over-signalled. On most
      * platforms, signalling (unpark) overhead time is noticeably
      * long, and the time between signalling a thread and it actually

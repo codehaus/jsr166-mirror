@@ -447,7 +447,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Common Pool
      * ===========
      *
-     * The static common Pool always exists after static
+     * The static common pool always exists after static
      * initialization.  Since it (or any other created pool) need
      * never be used, we minimize initial construction overhead and
      * footprint to the setup of about a dozen fields, with no nested
@@ -456,7 +456,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * When external threads submit to the common pool, they can
      * perform subtask processing (see externalHelpJoin and related
-     * methods).  This caller-helps policymakes it sensible to set
+     * methods).  This caller-helps policy makes it sensible to set
      * common pool parallelism level to one (or more) less than the
      * total number of available cores, or even zero for pure
      * caller-runs.  We do not need to record whether external

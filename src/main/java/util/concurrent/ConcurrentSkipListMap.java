@@ -3814,10 +3814,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         @SuppressWarnings("unchecked")
         public Spliterator<K> trySplit() {
-            Node<K,V> e;
+            Node<K,V> e; K ek;
             Comparator<? super K> cmp = comparator;
             K f = fence;
-            if ((e = current) != null) {
+            if ((e = current) != null && (ek = e.key) != null) {
                 for (Index<K,V> q = row; q != null; q = row = q.down) {
                     Index<K,V> s; Node<K,V> n; K sk;
                     if ((s = q.right) != null) {
@@ -3828,9 +3828,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             n.helpDelete(b, n.next);
                         }
                         if (n != null && (sk = n.key) != null &&
+                            (cmp != null ? 
+                             (cmp.compare(sk, ek) > 0) :
+                             ((Comparable<? super K>)sk).compareTo(ek) > 0) &&
                             (f == null ||
-                             (cmp != null ? (cmp.compare(f, sk) > 0) :
-                              (((Comparable<? super K>)f).compareTo(sk) > 0)))) {
+                             (cmp != null ? 
+                              (cmp.compare(sk, f) < 0) :
+                              ((Comparable<? super K>)sk).compareTo(f) < 0))) {
                             current = n;
                             Index<K,V> r = q.down;
                             row = (s.right != null) ? s : s.down;
@@ -3903,10 +3907,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         @SuppressWarnings("unchecked")
         public Spliterator<V> trySplit() {
-            Node<K,V> e;
+            Node<K,V> e; K ek;
             Comparator<? super K> cmp = comparator;
             K f = fence;
-            if ((e = current) != null) {
+            if ((e = current) != null && (ek = e.key) != null) {
                 for (Index<K,V> q = row; q != null; q = row = q.down) {
                     Index<K,V> s; Node<K,V> n; K sk;
                     if ((s = q.right) != null) {
@@ -3917,9 +3921,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             n.helpDelete(b, n.next);
                         }
                         if (n != null && (sk = n.key) != null &&
+                            (cmp != null ? 
+                             (cmp.compare(sk, ek) > 0) :
+                             ((Comparable<? super K>)sk).compareTo(ek) > 0) &&
                             (f == null ||
-                             (cmp != null ? (cmp.compare(f, sk) > 0) :
-                              (((Comparable<? super K>)f).compareTo(sk) > 0)))) {
+                             (cmp != null ? 
+                              (cmp.compare(sk, f) < 0) :
+                              ((Comparable<? super K>)sk).compareTo(f) < 0))) {
                             current = n;
                             Index<K,V> r = q.down;
                             row = (s.right != null) ? s : s.down;
@@ -3990,10 +3998,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         @SuppressWarnings("unchecked")
         public Spliterator<Map.Entry<K,V>> trySplit() {
-            Node<K,V> e;
+            Node<K,V> e; K ek;
             Comparator<? super K> cmp = comparator;
             K f = fence;
-            if ((e = current) != null) {
+            if ((e = current) != null && (ek = e.key) != null) {
                 for (Index<K,V> q = row; q != null; q = row = q.down) {
                     Index<K,V> s; Node<K,V> n; K sk;
                     if ((s = q.right) != null) {
@@ -4004,10 +4012,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             n.helpDelete(b, n.next);
                         }
                         if (n != null && (sk = n.key) != null &&
+                            (cmp != null ? 
+                             (cmp.compare(sk, ek) > 0) :
+                             ((Comparable<? super K>)sk).compareTo(ek) > 0) &&
                             (f == null ||
-                             (cmp != null ?
-                              (cmp.compare(f, sk) > 0) :
-                              (((Comparable<? super K>)f).compareTo(sk) > 0)))) {
+                             (cmp != null ? 
+                              (cmp.compare(sk, f) < 0) :
+                              ((Comparable<? super K>)sk).compareTo(f) < 0))) {
                             current = n;
                             Index<K,V> r = q.down;
                             row = (s.right != null) ? s : s.down;

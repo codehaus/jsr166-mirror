@@ -3828,11 +3828,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             n.helpDelete(b, n.next);
                         }
                         if (n != null && (sk = n.key) != null &&
-                            (cmp != null ? 
+                            (cmp != null ?
                              (cmp.compare(sk, ek) > 0) :
                              ((Comparable<? super K>)sk).compareTo(ek) > 0) &&
                             (f == null ||
-                             (cmp != null ? 
+                             (cmp != null ?
                               (cmp.compare(sk, f) < 0) :
                               ((Comparable<? super K>)sk).compareTo(f) < 0))) {
                             current = n;
@@ -3921,11 +3921,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             n.helpDelete(b, n.next);
                         }
                         if (n != null && (sk = n.key) != null &&
-                            (cmp != null ? 
+                            (cmp != null ?
                              (cmp.compare(sk, ek) > 0) :
                              ((Comparable<? super K>)sk).compareTo(ek) > 0) &&
                             (f == null ||
-                             (cmp != null ? 
+                             (cmp != null ?
                               (cmp.compare(sk, f) < 0) :
                               ((Comparable<? super K>)sk).compareTo(f) < 0))) {
                             current = n;
@@ -4012,11 +4012,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                             n.helpDelete(b, n.next);
                         }
                         if (n != null && (sk = n.key) != null &&
-                            (cmp != null ? 
+                            (cmp != null ?
                              (cmp.compare(sk, ek) > 0) :
                              ((Comparable<? super K>)sk).compareTo(ek) > 0) &&
                             (f == null ||
-                             (cmp != null ? 
+                             (cmp != null ?
                               (cmp.compare(sk, f) < 0) :
                               ((Comparable<? super K>)sk).compareTo(f) < 0))) {
                             current = n;

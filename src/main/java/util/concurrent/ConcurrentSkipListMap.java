@@ -341,7 +341,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * The comparator used to maintain order in this map, or null if
      * using natural ordering.  (Non-private to simplify access in
-     * nested clases.)
+     * nested classes.)
      * @serial
      */
     final Comparator<? super K> comparator;
@@ -3311,7 +3311,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return comparator;
         }
     }
-    // factory method for Keyspliterator
+    // factory method for KeySpliterator
     final KeySpliterator<K,V> keySpliterator() {
         Comparator<? super K> cmp = comparator;
         for (;;) { // ensure h corresponds to origin p

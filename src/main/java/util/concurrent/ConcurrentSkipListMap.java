@@ -44,9 +44,9 @@ import java.util.function.Function;
  * multiple threads.  Iterators are <i>weakly consistent</i>, returning
  * elements reflecting the state of the map at some point at or since
  * the creation of the iterator.  They do <em>not</em> throw {@link
- * ConcurrentModificationException}, and may proceed concurrently with
- * other operations. Ascending key ordered views and their iterators
- * are faster than descending ones.
+ * java.util.ConcurrentModificationException ConcurrentModificationException},
+ * and may proceed concurrently with other operations. Ascending key ordered
+ * views and their iterators are faster than descending ones.
  *
  * <p>All {@code Map.Entry} pairs returned by methods in this class
  * and its views represent snapshots of mappings at the time they were
@@ -1786,11 +1786,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * operations.  It does not support the {@code add} or {@code addAll}
      * operations.
      *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's {@code iterator} is a "weakly consistent" iterator that
+     * will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}, and guarantees to traverse elements
+     * as they existed upon construction of the iterator, and may (but is not
+     * guaranteed to) reflect any modifications subsequent to construction.
      *
      * <p>This method is equivalent to method {@code navigableKeySet}.
      *
@@ -1818,11 +1818,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * {@code retainAll} and {@code clear} operations.  It does not
      * support the {@code add} or {@code addAll} operations.
      *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's {@code iterator} is a "weakly consistent" iterator that
+     * will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}, and guarantees to traverse elements
+     * as they existed upon construction of the iterator, and may (but is not
+     * guaranteed to) reflect any modifications subsequent to construction.
      */
     public Collection<V> values() {
         Values<V> vs = values;
@@ -1840,11 +1840,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * operations.  It does not support the {@code add} or
      * {@code addAll} operations.
      *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's {@code iterator} is a "weakly consistent" iterator that
+     * will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}, and guarantees to traverse elements
+     * as they existed upon construction of the iterator, and may (but is not
+     * guaranteed to) reflect any modifications subsequent to construction.
      *
      * <p>The {@code Map.Entry} elements returned by
      * {@code iterator.next()} do <em>not</em> support the

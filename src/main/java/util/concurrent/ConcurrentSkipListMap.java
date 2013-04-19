@@ -3221,7 +3221,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * don't. But we can just use Integer.MAX_VALUE so that we
      * don't prematurely zero out while splitting.
      */
-    static abstract class CSLMSpliterator<K,V> {
+    abstract static class CSLMSpliterator<K,V> {
         final Comparator<? super K> comparator;
         final K fence;     // exclusive upper bound for keys, or null if to end
         Index<K,V> row;    // the level to split out

@@ -61,7 +61,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
     public DoubleAccumulator(DoubleBinaryOperator accumulatorFunction,
                              double identity) {
         this.function = accumulatorFunction;
-        base = this.identity =  Double.doubleToRawLongBits(identity);
+        base = this.identity = Double.doubleToRawLongBits(identity);
     }
 
     /**

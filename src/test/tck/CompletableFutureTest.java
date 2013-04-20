@@ -2861,9 +2861,10 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * allOf returns a future completed when all components complete
+     * allOf returns a future completed normally with the value null
+     * when all components complete normally
      */
-    public void testAllOf() throws Exception {
+    public void testAllOf_normal() throws Exception {
         for (int k = 1; k < 20; ++k) {
             CompletableFuture<Integer>[] fs = (CompletableFuture<Integer>[]) new CompletableFuture[k];
             for (int i = 0; i < k; ++i)
@@ -2888,7 +2889,8 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * anyOf returns a future completed when any components complete
+     * anyOf returns a future completed normally with a value when
+     * a component future does
      */
     public void testAnyOf_normal() throws Exception {
         for (int k = 0; k < 10; ++k) {

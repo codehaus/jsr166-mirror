@@ -590,51 +590,55 @@ public class FutureTaskTest extends JSR166TestCase {
      * CancellationException
      */
     public void testTimedGet_Cancellation() {
-        for (final boolean mayInterruptIfRunning :
-                 new boolean[] { true, false }) {
-            final CountDownLatch pleaseCancel = new CountDownLatch(3);
-            final CountDownLatch cancelled = new CountDownLatch(1);
-            final PublicFutureTask task =
-                new PublicFutureTask(new CheckedCallable<Object>() {
-                    public Object realCall() throws InterruptedException {
-                        pleaseCancel.countDown();
-                        if (mayInterruptIfRunning) {
-                            try {
-                                delay(2*LONG_DELAY_MS);
-                            } catch (InterruptedException success) {}
-                        } else {
-                            await(cancelled);
-                        }
-                        return two;
-                    }});
+        testTimedGet_Cancellation(false);
+    }
+    public void testTimedGet_Cancellation_interrupt() {
+        testTimedGet_Cancellation(true);
+    }
+    public void testTimedGet_Cancellation(final boolean mayInterruptIfRunning) {
+        final CountDownLatch pleaseCancel = new CountDownLatch(3);
+        final CountDownLatch cancelled = new CountDownLatch(1);
+        final Callable<Object> callable =
+            new CheckedCallable<Object>() {
+            public Object realCall() throws InterruptedException {
+                pleaseCancel.countDown();
+                if (mayInterruptIfRunning) {
+                    try {
+                        delay(2*LONG_DELAY_MS);
+                    } catch (InterruptedException success) {}
+                } else {
+                    await(cancelled);
+                }
+                return two;
+            }};
+        final PublicFutureTask task = new PublicFutureTask(callable);
 
-            Thread t1 = new ThreadShouldThrow(CancellationException.class) {
+        Thread t1 = new ThreadShouldThrow(CancellationException.class) {
                 public void realRun() throws Exception {
                     pleaseCancel.countDown();
                     task.get();
                 }};
-            Thread t2 = new ThreadShouldThrow(CancellationException.class) {
+        Thread t2 = new ThreadShouldThrow(CancellationException.class) {
                 public void realRun() throws Exception {
                     pleaseCancel.countDown();
                     task.get(2*LONG_DELAY_MS, MILLISECONDS);
                 }};
-            t1.start();
-            t2.start();
-            Thread t3 = newStartedThread(task);
-            await(pleaseCancel);
-            checkIsRunning(task);
-            task.cancel(mayInterruptIfRunning);
-            checkCancelled(task);
-            awaitTermination(t1);
-            awaitTermination(t2);
-            cancelled.countDown();
-            awaitTermination(t3);
-            assertEquals(1, task.runCount());
-            assertEquals(1, task.setCount());
-            assertEquals(0, task.setExceptionCount());
-            tryToConfuseDoneTask(task);
-            checkCancelled(task);
-        }
+        t1.start();
+        t2.start();
+        Thread t3 = newStartedThread(task);
+        await(pleaseCancel);
+        checkIsRunning(task);
+        task.cancel(mayInterruptIfRunning);
+        checkCancelled(task);
+        awaitTermination(t1);
+        awaitTermination(t2);
+        cancelled.countDown();
+        awaitTermination(t3);
+        assertEquals(1, task.runCount());
+        assertEquals(1, task.setCount());
+        assertEquals(0, task.setExceptionCount());
+        tryToConfuseDoneTask(task);
+        checkCancelled(task);
     }
 
     /**

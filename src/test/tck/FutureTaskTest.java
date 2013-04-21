@@ -37,16 +37,31 @@ public class FutureTaskTest extends JSR166TestCase {
             assertEquals(1, pf.doneCount());
             assertFalse(pf.runAndReset());
             assertEquals(1, pf.doneCount());
+            Object r = null; Object exInfo = null;
+            try {
+                r = f.get();
+            } catch (CancellationException t) {
+                exInfo = CancellationException.class;
+            } catch (ExecutionException t) {
+                exInfo = t.getCause();
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
 
             // Check that run and runAndReset have no effect.
             int savedRunCount = pf.runCount();
-            int savedSetCount = pf.setCount();
-            int savedSetExceptionCount = pf.setExceptionCount();
             pf.run();
             pf.runAndReset();
             assertEquals(savedRunCount, pf.runCount());
-            assertEquals(savedSetCount, pf.setCount());
-            assertEquals(savedSetExceptionCount, pf.setExceptionCount());
+            try {
+                assertSame(r, f.get());
+            } catch (CancellationException t) {
+                assertSame(exInfo, CancellationException.class);
+            } catch (ExecutionException t) {
+                assertSame(exInfo, t.getCause());
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
             assertTrue(f.isDone());
         }
     }
@@ -68,8 +83,13 @@ public class FutureTaskTest extends JSR166TestCase {
             FutureTask ft = (FutureTask<?>) f;
             // Check that run methods do nothing
             ft.run();
-            if (f instanceof PublicFutureTask)
-                assertFalse(((PublicFutureTask) f).runAndReset());
+            if (f instanceof PublicFutureTask) {
+                PublicFutureTask pf = (PublicFutureTask) f;
+                int savedRunCount = pf.runCount();
+                pf.run();
+                assertFalse(pf.runAndReset());
+                assertEquals(savedRunCount, pf.runCount());
+            }
             checkNotDone(f);
         }
     }

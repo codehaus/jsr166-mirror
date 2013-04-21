@@ -128,11 +128,19 @@ public class JSR166TestCase extends TestCase {
     private static final long profileThreshold =
         Long.getLong("jsr166.profileThreshold", 100);
 
+    /**
+     * The number of repetitions per test (for tickling rare bugs).
+     */
+    private static final int runsPerTest =
+        Integer.getInteger("jsr166.runsPerTest", 1);
+
     protected void runTest() throws Throwable {
-        if (profileTests)
-            runTestProfiled();
-        else
-            super.runTest();
+        for (int i = 0; i < runsPerTest; i++) {
+            if (profileTests)
+                runTestProfiled();
+            else
+                super.runTest();
+        }
     }
 
     protected void runTestProfiled() throws Throwable {

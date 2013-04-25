@@ -5,37 +5,44 @@
  */
 
 package java.util.concurrent;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.CountedCompleter;
-import java.util.Spliterator;
-import java.util.stream.Stream;
-import java.util.stream.Streams;
-import java.util.function.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.BiFunction;
-
-import java.util.Comparator;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.Collection;
+import java.io.Serializable;
+import java.io.ObjectStreamField;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.AbstractCollection;
-import java.util.Hashtable;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Enumeration;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.Spliterator;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicReference;
-import java.io.Serializable;
-import java.lang.reflect.Type;
-import java.lang.reflect.ParameterizedType;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.Function;
+import java.util.function.IntBinaryOperator;
+import java.util.function.LongBinaryOperator;
+import java.util.function.ToDoubleBiFunction;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntBiFunction;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongBiFunction;
+import java.util.function.ToLongFunction;
 
 /**
  * A hash table supporting full concurrency of retrievals and
@@ -471,6 +478,11 @@ public class ConcurrentHashMap<K,V>
     /** Number of CPUS, to place bounds on some sizings */
     static final int NCPU = Runtime.getRuntime().availableProcessors();
 
+    /** For serialization compatibility. */
+    private static final ObjectStreamField[] serialPersistentFields = {
+        new ObjectStreamField("segments", Segment[].class)
+    };
+
     /* ---------------- Counters -------------- */
 
     // Adapted from LongAdder and Striped64.
@@ -538,9 +550,6 @@ public class ConcurrentHashMap<K,V>
     private transient KeySetView<K,V> keySet;
     private transient ValuesView<K,V> values;
     private transient EntrySetView<K,V> entrySet;
-
-    /** For serialization compatibility. Null unless serialized; see below */
-    private Segment<K,V>[] segments;
 
     /* ---------------- Table element access -------------- */
 
@@ -614,7 +623,6 @@ public class ConcurrentHashMap<K,V>
             this.parent = parent;
         }
     }
-
 
     /**
      * Returns a Class for the given object of the form "class C
@@ -3277,7 +3285,7 @@ public class ConcurrentHashMap<K,V>
      * Stripped-down version of helper class used in previous version,
      * declared for the sake of serialization compatibility
      */
-    static class Segment<K,V> implements Serializable {
+    static class Segment<K,V> extends ReentrantLock implements Serializable {
         private static final long serialVersionUID = 2249069246763182397L;
         final float loadFactor;
         Segment(float lf) { this.loadFactor = lf; }
@@ -3295,13 +3303,13 @@ public class ConcurrentHashMap<K,V>
     @SuppressWarnings("unchecked") private void writeObject
         (java.io.ObjectOutputStream s)
         throws java.io.IOException {
-        if (segments == null) { // for serialization compatibility
-            segments = (Segment<K,V>[])
-                new Segment<?,?>[DEFAULT_CONCURRENCY_LEVEL];
-            for (int i = 0; i < segments.length; ++i)
-                segments[i] = new Segment<K,V>(LOAD_FACTOR);
-        }
-        s.defaultWriteObject();
+        // For serialization compatibility
+        Segment<K,V>[] segments = (Segment<K,V>[])
+            new Segment<?,?>[DEFAULT_CONCURRENCY_LEVEL];
+        for (int i = 0; i < segments.length; ++i)
+            segments[i] = new Segment<K,V>(LOAD_FACTOR);
+        s.putFields().put("segments", segments);
+        s.writeFields();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v;
         while ((v = it.advanceValue()) != null) {
@@ -3321,7 +3329,6 @@ public class ConcurrentHashMap<K,V>
         (java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
-        this.segments = null; // unneeded
 
         // Create all nodes, then place in table once size is known
         long size = 0L;

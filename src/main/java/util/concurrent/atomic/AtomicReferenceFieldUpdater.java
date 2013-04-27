@@ -13,6 +13,8 @@ import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedActionException;
+import sun.reflect.CallerSensitive;
+import sun.reflect.Reflection;
 
 /**
  * A reflection-based utility that enables atomic updates to
@@ -68,10 +70,10 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
      * or the field is inaccessible to the caller according to Java language
      * access control
      */
+    @CallerSensitive
     public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
-        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass,
-                                                        vclass,
-                                                        fieldName);
+        return new AtomicReferenceFieldUpdaterImpl<U,W>
+            (tclass, vclass, fieldName, Reflection.getCallerClass());
     }
 
     /**
@@ -268,11 +270,11 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
          */
 
         AtomicReferenceFieldUpdaterImpl(final Class<T> tclass,
-                                        Class<V> vclass,
-                                        final String fieldName) {
+                                        final Class<V> vclass,
+                                        final String fieldName,
+                                        final Class<?> caller) {
             final Field field;
             final Class<?> fieldClass;
-            final Class<?> caller;
             final int modifiers;
             try {
                 field = AccessController.doPrivileged(
@@ -281,7 +283,6 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
                             return tclass.getDeclaredField(fieldName);
                         }
                     });
-                caller = sun.reflect.Reflection.getCallerClass(3);
                 modifiers = field.getModifiers();
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
                     caller, tclass, null, modifiers);

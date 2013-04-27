@@ -13,6 +13,8 @@ import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedActionException;
+import sun.reflect.CallerSensitive;
+import sun.reflect.Reflection;
 
 /**
  * A reflection-based utility that enables atomic updates to
@@ -48,8 +50,9 @@ public abstract class AtomicIntegerFieldUpdater<T> {
      * or the field is inaccessible to the caller according to Java language
      * access control
      */
+    @CallerSensitive
     public static <U> AtomicIntegerFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
-        return new AtomicIntegerFieldUpdaterImpl<U>(tclass, fieldName);
+        return new AtomicIntegerFieldUpdaterImpl<U>(tclass, fieldName, Reflection.getCallerClass());
     }
 
     /**
@@ -336,9 +339,10 @@ public abstract class AtomicIntegerFieldUpdater<T> {
         private final Class<T> tclass;
         private final Class<?> cclass;
 
-        AtomicIntegerFieldUpdaterImpl(final Class<T> tclass, final String fieldName) {
+        AtomicIntegerFieldUpdaterImpl(final Class<T> tclass,
+                                      final String fieldName,
+                                      final Class<?> caller) {
             final Field field;
-            final Class<?> caller;
             final int modifiers;
             try {
                 field = AccessController.doPrivileged(
@@ -347,7 +351,6 @@ public abstract class AtomicIntegerFieldUpdater<T> {
                             return tclass.getDeclaredField(fieldName);
                         }
                     });
-                caller = sun.reflect.Reflection.getCallerClass(3);
                 modifiers = field.getModifiers();
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
                     caller, tclass, null, modifiers);

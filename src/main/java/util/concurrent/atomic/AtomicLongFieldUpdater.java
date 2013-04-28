@@ -51,7 +51,8 @@ public abstract class AtomicLongFieldUpdater<T> {
      * access control
      */
     @CallerSensitive
-    public static <U> AtomicLongFieldUpdater<U> newUpdater(Class<U> tclass, String fieldName) {
+    public static <U> AtomicLongFieldUpdater<U> newUpdater(Class<U> tclass,
+                                                           String fieldName) {
         Class<?> caller = Reflection.getCallerClass();
         if (AtomicLong.VM_SUPPORTS_LONG_CAS)
             return new CASUpdater<U>(tclass, fieldName, caller);

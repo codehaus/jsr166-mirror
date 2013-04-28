@@ -71,7 +71,9 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
      * access control
      */
     @CallerSensitive
-    public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
+    public static <U,W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass,
+                                                                    Class<W> vclass,
+                                                                    String fieldName) {
         return new AtomicReferenceFieldUpdaterImpl<U,W>
             (tclass, vclass, fieldName, Reflection.getCallerClass());
     }

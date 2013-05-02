@@ -30,7 +30,6 @@ import java.util.Spliterators;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.Streams;
 
 /**
  * A thread-safe variant of {@link java.util.ArrayList} in which all mutative

@@ -167,9 +167,10 @@ package java.util;
 public interface Deque<E> extends Queue<E> {
     /**
      * Inserts the specified element at the front of this deque if it is
-     * possible to do so immediately without violating capacity restrictions.
-     * When using a capacity-restricted deque, it is generally preferable to
-     * use method {@link #offerFirst}.
+     * possible to do so immediately without violating capacity restrictions,
+     * throwing an {@code IllegalStateException} if no space is currently
+     * available.  When using a capacity-restricted deque, it is generally
+     * preferable to use method {@link #offerFirst}.
      *
      * @param e the element to add
      * @throws IllegalStateException if the element cannot be added at this
@@ -185,9 +186,10 @@ public interface Deque<E> extends Queue<E> {
 
     /**
      * Inserts the specified element at the end of this deque if it is
-     * possible to do so immediately without violating capacity restrictions.
-     * When using a capacity-restricted deque, it is generally preferable to
-     * use method {@link #offerLast}.
+     * possible to do so immediately without violating capacity restrictions,
+     * throwing an {@code IllegalStateException} if no space is currently
+     * available.  When using a capacity-restricted deque, it is generally
+     * preferable to use method {@link #offerLast}.
      *
      * <p>This method is equivalent to {@link #add}.
      *
@@ -453,8 +455,7 @@ public interface Deque<E> extends Queue<E> {
     /**
      * Pushes an element onto the stack represented by this deque (in other
      * words, at the head of this deque) if it is possible to do so
-     * immediately without violating capacity restrictions, returning
-     * {@code true} upon success and throwing an
+     * immediately without violating capacity restrictions, throwing an
      * {@code IllegalStateException} if no space is currently available.
      *
      * <p>This method is equivalent to {@link #addFirst}.

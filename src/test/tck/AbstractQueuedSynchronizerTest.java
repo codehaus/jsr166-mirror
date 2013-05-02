@@ -1190,17 +1190,24 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
      */
     public void testTryAcquireSharedNanos_Timeout() {
         final BooleanLatch l = new BooleanLatch();
+        final BooleanLatch observedQueued = new BooleanLatch();
+        final long timeoutMillis = timeoutMillis();
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertFalse(l.isSignalled());
-                long startTime = System.nanoTime();
-                long nanos = MILLISECONDS.toNanos(timeoutMillis());
-                assertFalse(l.tryAcquireSharedNanos(0, nanos));
-                assertTrue(millisElapsedSince(startTime) >= timeoutMillis());
+                for (long millis = timeoutMillis();
+                     !observedQueued.isSignalled();
+                     millis *= 2) {
+                    long nanos = MILLISECONDS.toNanos(millis);
+                    long startTime = System.nanoTime();
+                    assertFalse(l.tryAcquireSharedNanos(0, nanos));
+                    assertTrue(millisElapsedSince(startTime) >= millis);
+                }
                 assertFalse(l.isSignalled());
             }});
 
         waitForQueuedThread(l, t);
+        observedQueued.releaseShared(0);
         assertFalse(l.isSignalled());
         awaitTermination(t);
         assertFalse(l.isSignalled());

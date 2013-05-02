@@ -44,6 +44,12 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   <property name="build.deprecation"    value="false"/>
   <property name="build.javadoc.access" value="protected"/>
 
+  <!-- Tck options; see JSR166TestCase.java -->
+  <!-- Use via, e.g. ant -Djsr166.profileTests=true -Djsr166.runsPerTest=100 test-tck -->
+  <property name="jsr166.profileTests"     value="false"/>
+  <property name="jsr166.profileThreshold" value="100"/>
+  <property name="jsr166.runsPerTest"      value="1"/>
+
   <!-- Build locations -->
   <property name="build.dir"                   location="build"/>
   <property name="build.classes.dir"           location="${build.dir}/classes"/>
@@ -208,6 +214,9 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
           fork="true">
 	<jvmarg value="-Xbootclasspath/p:@{classes}"/>
 	<jvmarg line="@{jvmflags}"/>
+        <sysproperty key="jsr166.profileTests"     value="${jsr166.profileTests}"/>
+        <sysproperty key="jsr166.profileThreshold" value="${jsr166.profileThreshold}"/>
+        <sysproperty key="jsr166.runsPerTest"      value="${jsr166.runsPerTest}"/>
 	<classpath>
 	  <pathelement location="${junit.jar}"/>
 	  <pathelement location="@{workdir}/tck-classes"/>

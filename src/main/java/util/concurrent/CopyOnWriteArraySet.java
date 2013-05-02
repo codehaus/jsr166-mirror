@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Streams;
 
 /**
  * A {@link java.util.Set} that uses an internal {@link CopyOnWriteArrayList}

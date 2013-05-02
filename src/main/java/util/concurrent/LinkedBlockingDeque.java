@@ -16,7 +16,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
-import java.util.stream.Streams;
 import java.util.function.Consumer;
 
 /**
@@ -292,8 +291,8 @@ public class LinkedBlockingDeque<E>
     // BlockingDeque methods
 
     /**
-     * @throws IllegalStateException {@inheritDoc}
-     * @throws NullPointerException  {@inheritDoc}
+     * @throws IllegalStateException if this deque is full
+     * @throws NullPointerException {@inheritDoc}
      */
     public void addFirst(E e) {
         if (!offerFirst(e))
@@ -301,7 +300,7 @@ public class LinkedBlockingDeque<E>
     }
 
     /**
-     * @throws IllegalStateException {@inheritDoc}
+     * @throws IllegalStateException if this deque is full
      * @throws NullPointerException  {@inheritDoc}
      */
     public void addLast(E e) {
@@ -600,8 +599,7 @@ public class LinkedBlockingDeque<E>
      *
      * <p>This method is equivalent to {@link #addLast}.
      *
-     * @throws IllegalStateException if the element cannot be added at this
-     *         time due to capacity restrictions
+     * @throws IllegalStateException if this deque is full
      * @throws NullPointerException if the specified element is null
      */
     public boolean add(E e) {
@@ -738,8 +736,8 @@ public class LinkedBlockingDeque<E>
     // Stack methods
 
     /**
-     * @throws IllegalStateException {@inheritDoc}
-     * @throws NullPointerException  {@inheritDoc}
+     * @throws IllegalStateException if this deque is full
+     * @throws NullPointerException {@inheritDoc}
      */
     public void push(E e) {
         addFirst(e);
@@ -829,7 +827,7 @@ public class LinkedBlockingDeque<E>
 //      * @throws ClassCastException            {@inheritDoc}
 //      * @throws NullPointerException          {@inheritDoc}
 //      * @throws IllegalArgumentException      {@inheritDoc}
-//      * @throws IllegalStateException         {@inheritDoc}
+//      * @throws IllegalStateException if this deque is full
 //      * @see #add(Object)
 //      */
 //     public boolean addAll(Collection<? extends E> c) {

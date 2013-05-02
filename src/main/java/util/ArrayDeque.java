@@ -7,7 +7,6 @@ package java.util;
 import java.io.Serializable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.Streams;
 
 /**
  * Resizable-array implementation of the {@link Deque} interface.  Array

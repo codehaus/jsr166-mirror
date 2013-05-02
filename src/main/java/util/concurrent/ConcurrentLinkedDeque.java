@@ -17,7 +17,6 @@ import java.util.Queue;
 import java.util.Spliterators;
 import java.util.Spliterator;
 import java.util.stream.Stream;
-import java.util.stream.Streams;
 import java.util.function.Consumer;
 
 /**
@@ -1001,11 +1000,27 @@ public class ConcurrentLinkedDeque<E>
     }
 
     public E poll()           { return pollFirst(); }
-    public E remove()         { return removeFirst(); }
     public E peek()           { return peekFirst(); }
-    public E element()        { return getFirst(); }
-    public void push(E e)     { addFirst(e); }
+
+    /**
+     * @throws NoSuchElementException {@inheritDoc}
+     */
+    public E remove()         { return removeFirst(); }
+
+    /**
+     * @throws NoSuchElementException {@inheritDoc}
+     */
     public E pop()            { return removeFirst(); }
+
+    /**
+     * @throws NoSuchElementException {@inheritDoc}
+     */
+    public E element()        { return getFirst(); }
+
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public void push(E e)     { addFirst(e); }
 
     /**
      * Removes the first element {@code e} such that

@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.stream.Stream;
-import java.util.stream.Streams;
 
 /**
  * A scalable concurrent {@link NavigableSet} implementation based on

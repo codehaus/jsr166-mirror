@@ -26,7 +26,6 @@
 package java.util;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.Streams;
 
 /**
  * An unbounded priority {@linkplain Queue queue} based on a priority heap.

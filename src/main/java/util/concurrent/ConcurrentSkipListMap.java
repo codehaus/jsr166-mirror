@@ -825,14 +825,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
         }
 
-        int rnd; // generate a random level
-        Thread thread = Thread.currentThread();
-        if ((rnd = UNSAFE.getInt(thread, SECONDARY)) == 0)  // initialize
-            rnd = ThreadLocalRandom.current().nextInt();
-        rnd ^= rnd << 13;   // xorshift
-        rnd ^= rnd >>> 17;
-        rnd ^= rnd << 5;
-        UNSAFE.putInt(thread, SECONDARY, rnd);
+        int rnd = ThreadLocalRandom.nextSecondarySeed();
         if ((rnd & 0x80000001) == 0) { // test highest and lowest bits
             int level = 1, max;
             while (((rnd >>>= 1) & 1) != 0)

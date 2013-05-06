@@ -10,9 +10,10 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.AbstractSet;
 import java.util.Iterator;
-import java.util.stream.Stream;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Predicate;
+import java.util.function.Consumer;
 
 /**
  * A {@link java.util.Set} that uses an internal {@link CopyOnWriteArrayList}
@@ -85,8 +86,15 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * @throws NullPointerException if the specified collection is null
      */
     public CopyOnWriteArraySet(Collection<? extends E> c) {
-        al = new CopyOnWriteArrayList<E>();
-        al.addAllAbsent(c);
+        if (c.getClass() == CopyOnWriteArraySet.class) {
+            @SuppressWarnings("unchecked") CopyOnWriteArraySet<E> cc =
+                (CopyOnWriteArraySet<E>)c;
+            al = new CopyOnWriteArrayList<E>(cc.al);
+        }
+        else {
+            al = new CopyOnWriteArrayList<E>();
+            al.addAllAbsent(c);
+        }
     }
 
     /**
@@ -358,6 +366,14 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
             return false;
         }
         return k == len;
+    }
+
+    public boolean removeIf(Predicate<? super E> filter) {
+        return al.removeIf(filter);
+    }
+
+    public void forEach(Consumer<? super E> action) {
+        al.forEach(action);
     }
 
     public Spliterator<E> spliterator() {

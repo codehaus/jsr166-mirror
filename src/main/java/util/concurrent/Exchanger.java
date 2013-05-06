@@ -128,9 +128,10 @@ public class Exchanger<V> {
      * writing, there is no way to determine cacheline size, we define
      * a value that is enough for common platforms.  Additionally,
      * extra care elsewhere is taken to avoid other false/unintended
-     * sharing and to enhance locality, including adding padding to
-     * Nodes, embedding "bound" as an Exchanger field, and reworking
-     * some park/unpark mechanics compared to LockSupport versions.
+     * sharing and to enhance locality, including adding padding (via
+     * sun.misc.Contended) to Nodes, embedding "bound" as an Exchanger
+     * field, and reworking some park/unpark mechanics compared to
+     * LockSupport versions.
      *
      * The arena starts out with only one used slot. We expand the
      * effective arena size by tracking collisions; i.e., failed CASes
@@ -277,9 +278,10 @@ public class Exchanger<V> {
 
     /**
      * Nodes hold partially exchanged data, plus other per-thread
-     * bookkeeping.
+     * bookkeeping. Padded via @sun.misc.Contended to reduce memory
+     * contention.
      */
-    static final class Node {
+    @sun.misc.Contended static final class Node {
         int index;              // Arena index
         int bound;              // Last recorded value of Exchanger.bound
         int collides;           // Number of CAS failures at current bound
@@ -287,10 +289,6 @@ public class Exchanger<V> {
         Object item;            // This thread's current item
         volatile Object match;  // Item provided by releasing thread
         volatile Thread parked; // Set to this thread when parked, else null
-
-        // Padding to ameliorate unfortunate memory placements
-        Object p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, pa, pb, pc, pd, pe, pf;
-        Object q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, qa, qb, qc, qd, qe, qf;
     }
 
     /** The corresponding thread local class */

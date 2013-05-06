@@ -285,25 +285,35 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int externalAwaitDone() {
         int s;
-        ForkJoinPool.externalHelpJoin(this);
-        boolean interrupted = false;
-        while ((s = status) >= 0) {
-            if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
-                synchronized (this) {
-                    if (status >= 0) {
-                        try {
-                            wait();
-                        } catch (InterruptedException ie) {
-                            interrupted = true;
+        ForkJoinPool cp = ForkJoinPool.common;
+        if ((s = status) >= 0) {
+            if (cp != null) {
+                if (this instanceof CountedCompleter)
+                    s = cp.externalHelpComplete((CountedCompleter<?>)this);
+                else if (cp.tryExternalUnpush(this))
+                    s = doExec();
+            }
+            if (s >= 0 && (s = status) >= 0) {
+                boolean interrupted = false;
+                do {
+                    if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
+                        synchronized (this) {
+                            if (status >= 0) {
+                                try {
+                                    wait();
+                                } catch (InterruptedException ie) {
+                                    interrupted = true;
+                                }
+                            }
+                            else
+                                notifyAll();
                         }
                     }
-                    else
-                        notifyAll();
-                }
+                } while ((s = status) >= 0);
+                if (interrupted)
+                    Thread.currentThread().interrupt();
             }
         }
-        if (interrupted)
-            Thread.currentThread().interrupt();
         return s;
     }
 
@@ -312,9 +322,15 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int externalInterruptibleAwaitDone() throws InterruptedException {
         int s;
+        ForkJoinPool cp = ForkJoinPool.common;
         if (Thread.interrupted())
             throw new InterruptedException();
-        ForkJoinPool.externalHelpJoin(this);
+        if ((s = status) >= 0 && cp != null) {
+            if (this instanceof CountedCompleter)
+                cp.externalHelpComplete((CountedCompleter<?>)this);
+            else if (cp.tryExternalUnpush(this))
+                doExec();
+        }
         while ((s = status) >= 0) {
             if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
                 synchronized (this) {
@@ -981,6 +997,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         // Messy in part because we measure in nanosecs, but wait in millisecs
         int s; long ms;
         long ns = unit.toNanos(timeout);
+        ForkJoinPool cp;
         if ((s = status) >= 0 && ns > 0L) {
             long deadline = System.nanoTime() + ns;
             ForkJoinPool p = null;
@@ -992,8 +1009,12 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                 w = wt.workQueue;
                 p.helpJoinOnce(w, this); // no retries on failure
             }
-            else
-                ForkJoinPool.externalHelpJoin(this);
+            else if ((cp = ForkJoinPool.common) != null) {
+                if (this instanceof CountedCompleter)
+                    cp.externalHelpComplete((CountedCompleter<?>)this);
+                else if (cp.tryExternalUnpush(this))
+                    doExec();
+            }
             boolean canBlock = false;
             boolean interrupted = false;
             try {
@@ -1001,7 +1022,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
                     if (w != null && w.qlock < 0)
                         cancelIgnoringExceptions(this);
                     else if (!canBlock) {
-                        if (p == null || p.tryCompensate())
+                        if (p == null || p.tryCompensate(p.ctl))
                             canBlock = true;
                     }
                     else {
@@ -1142,7 +1163,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         Thread t;
         return (((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
                 ((ForkJoinWorkerThread)t).workQueue.tryUnpush(this) :
-                ForkJoinPool.tryExternalUnpush(this));
+                ForkJoinPool.common.tryExternalUnpush(this));
     }
 
     /**

@@ -19,6 +19,7 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +30,8 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * A thread-safe variant of {@link java.util.ArrayList} in which all mutative
@@ -109,10 +111,15 @@ public class CopyOnWriteArrayList<E>
      * @throws NullPointerException if the specified collection is null
      */
     public CopyOnWriteArrayList(Collection<? extends E> c) {
-        Object[] elements = c.toArray();
-        // c.toArray might (incorrectly) not return Object[] (see 6260652)
-        if (elements.getClass() != Object[].class)
-            elements = Arrays.copyOf(elements, elements.length, Object[].class);
+        Object[] elements;
+        if (c.getClass() == CopyOnWriteArrayList.class)
+            elements = ((CopyOnWriteArrayList<?>)c).getArray();
+        else {
+            elements = c.toArray();
+            // c.toArray might (incorrectly) not return Object[] (see 6260652)
+            if (elements.getClass() != Object[].class)
+                elements = Arrays.copyOf(elements, elements.length, Object[].class);
+        }
         setArray(elements);
     }
 
@@ -787,7 +794,8 @@ public class CopyOnWriteArrayList<E>
      * @see #add(Object)
      */
     public boolean addAll(Collection<? extends E> c) {
-        Object[] cs = c.toArray();
+        Object[] cs = (c.getClass() == CopyOnWriteArrayList.class) ?
+            ((CopyOnWriteArrayList<?>)c).getArray() : c.toArray();
         if (cs.length == 0)
             return false;
         final ReentrantLock lock = this.lock;
@@ -795,9 +803,13 @@ public class CopyOnWriteArrayList<E>
         try {
             Object[] elements = getArray();
             int len = elements.length;
-            Object[] newElements = Arrays.copyOf(elements, len + cs.length);
-            System.arraycopy(cs, 0, newElements, len, cs.length);
-            setArray(newElements);
+            if (len == 0 && cs.getClass() == Object[].class)
+                setArray(cs);
+            else {
+                Object[] newElements = Arrays.copyOf(elements, len + cs.length);
+                System.arraycopy(cs, 0, newElements, len, cs.length);
+                setArray(newElements);
+            }
             return true;
         } finally {
             lock.unlock();
@@ -846,6 +858,73 @@ public class CopyOnWriteArrayList<E>
             System.arraycopy(cs, 0, newElements, index, cs.length);
             setArray(newElements);
             return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void forEach(Consumer<? super E> action) {
+        if (action == null) throw new NullPointerException();
+        Object[] elements = getArray();
+        int len = elements.length;
+        for (int i = 0; i < len; ++i) {
+            @SuppressWarnings("unchecked") E e = (E) elements[i];
+            action.accept(e);
+        }
+    }
+
+    public boolean removeIf(Predicate<? super E> filter) {
+        if (filter == null) throw new NullPointerException();
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            Object[] elements = getArray();
+            int len = elements.length;
+            if (len != 0) {
+                int newlen = 0;
+                Object[] temp = new Object[len];
+                for (int i = 0; i < len; ++i) {
+                    @SuppressWarnings("unchecked") E e = (E) elements[i];
+                    if (!filter.test(e))
+                        temp[newlen++] = e;
+                }
+                if (newlen != len) {
+                    setArray(Arrays.copyOf(temp, newlen));
+                    return true;
+                }
+            }
+            return false;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void replaceAll(UnaryOperator<E> operator) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            Object[] elements = getArray();
+            int len = elements.length;
+            Object[] newElements = Arrays.copyOf(elements, len);
+            for (int i = 0; i < len; ++i) {
+                @SuppressWarnings("unchecked") E e = (E) elements[i];
+                newElements[i] = operator.apply(e);
+            }
+            setArray(newElements);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void sort(Comparator<? super E> c) {
+         final ReentrantLock lock = this.lock;
+         lock.lock();
+         try {
+             Object[] elements = getArray();
+             Object[] newElements = Arrays.copyOf(elements, elements.length);
+             @SuppressWarnings("unchecked") E[] es = (E[])newElements;
+             Arrays.sort(es, c);
+             setArray(newElements);
         } finally {
             lock.unlock();
         }
@@ -1276,6 +1355,19 @@ public class CopyOnWriteArrayList<E>
                                          toIndex + offset);
             } finally {
                 lock.unlock();
+            }
+        }
+
+        public void forEach(Consumer<? super E> action) {
+            if (action == null) throw new NullPointerException();
+            int lo = offset;
+            int hi = offset + size;
+            Object[] a = expectedArray;
+            if (l.getArray() != a)
+                throw new ConcurrentModificationException();
+            for (int i = lo; i < hi; ++i) {
+                @SuppressWarnings("unchecked") E e = (E) a[i];
+                action.accept(e);
             }
         }
 

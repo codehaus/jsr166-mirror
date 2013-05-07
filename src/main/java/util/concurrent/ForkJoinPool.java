@@ -925,7 +925,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Tries to polls for and execute the given task or any other
+         * Tries to poll for and execute the given task or any other
          * task in its CountedCompleter computation.
          */
         final boolean pollAndExecCC(CountedCompleter<?> root) {

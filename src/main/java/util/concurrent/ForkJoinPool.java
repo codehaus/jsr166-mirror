@@ -667,7 +667,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             return (n >= 0) ? 0 : -n; // ignore transient negative
         }
 
-       /**
+        /**
          * Provides a more accurate estimate of whether this queue has
          * any tasks than does queueSize, by checking whether a
          * near-empty queue has at least one unclaimed task.
@@ -925,7 +925,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Tries to polls for and execute the given task or any other
+         * Tries to poll for and execute the given task or any other
          * task in its CountedCompleter computation.
          */
         final boolean pollAndExecCC(CountedCompleter<?> root) {

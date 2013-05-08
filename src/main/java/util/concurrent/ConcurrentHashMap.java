@@ -480,7 +480,9 @@ public class ConcurrentHashMap<K,V>
 
     /** For serialization compatibility. */
     private static final ObjectStreamField[] serialPersistentFields = {
-        new ObjectStreamField("segments", Segment[].class)
+        new ObjectStreamField("segments", Segment[].class),
+        new ObjectStreamField("segmentMask", Integer.TYPE),
+        new ObjectStreamField("segmentShift", Integer.TYPE)
     };
 
     /* ---------------- Counters -------------- */
@@ -2495,7 +2497,7 @@ public class ConcurrentHashMap<K,V>
             if ((b = batch) < 0) { // force initialization
                 int sp = (((pool = getPool()) == null) ?
                           ForkJoinPool.getCommonPoolParallelism() :
-                          pool.getParallelism()) << 3; // slack of 8
+                          pool.getParallelism()) << 2; // slack of 4
                 long n = map.sumCount();
                 b = (n <= 0L) ? 0 : (n < (long)sp) ? (int)n : sp;
             }
@@ -3304,11 +3306,23 @@ public class ConcurrentHashMap<K,V>
         (java.io.ObjectOutputStream s)
         throws java.io.IOException {
         // For serialization compatibility
+        // Emulate segment calculation from previous version of this class
+        int sshift = 0;
+        int ssize = 1;
+        while (ssize < DEFAULT_CONCURRENCY_LEVEL) {
+            ++sshift;
+            ssize <<= 1;
+        }
+        int segmentShift = 32 - sshift;
+        int segmentMask = ssize - 1;
         Segment<K,V>[] segments = (Segment<K,V>[])
             new Segment<?,?>[DEFAULT_CONCURRENCY_LEVEL];
         for (int i = 0; i < segments.length; ++i)
             segments[i] = new Segment<K,V>(LOAD_FACTOR);
         s.putFields().put("segments", segments);
+        s.putFields().put("segmentShift", segmentShift);
+        s.putFields().put("segmentMask", segmentMask);
+
         s.writeFields();
         Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
         V v;
@@ -4084,6 +4098,22 @@ public class ConcurrentHashMap<K,V>
         while ((v = it.advanceValue()) != null)
             r = reducer.applyAsInt(r, transformer.applyAsInt(entryFor(it.nextKey, v)));
         return r;
+    }
+
+    // Overrides of other default Map methods
+
+    public void forEach(BiConsumer<? super K, ? super V> action) {
+        forEachSequentially(action);
+    }
+
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        if (function == null) throw new NullPointerException();
+        Traverser<K,V,Object> it = new Traverser<K,V,Object>(this);
+        V v;
+        while ((v = it.advanceValue()) != null) {
+            K k = it.nextKey;
+            internalPut(k, function.apply(k, v), false);
+        }
     }
 
     // Parallel bulk operations

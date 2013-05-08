@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -3193,6 +3194,30 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             }
             public int characteristics() {
                 return Spliterator.DISTINCT;
+            }
+        }
+    }
+
+    // default Map method overrides
+
+    public void forEach(BiConsumer<? super K, ? super V> action) {
+        if (action == null) throw new NullPointerException();
+        V v;
+        for (Node<K,V> n = findFirst(); n != null; n = n.next) {
+            if ((v = n.getValidValue()) != null)
+                action.accept(n.key, v);
+        }
+    }
+
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        if (function == null) throw new NullPointerException();
+        V v;
+        for (Node<K,V> n = findFirst(); n != null; n = n.next) {
+            while ((v = n.getValidValue()) != null) {
+                V r = function.apply(n.key, v);
+                if (r == null) throw new NullPointerException();
+                if (n.casValue(v, r))
+                    break;
             }
         }
     }

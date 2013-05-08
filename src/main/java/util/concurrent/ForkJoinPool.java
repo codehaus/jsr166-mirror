@@ -1670,15 +1670,13 @@ public class ForkJoinPool extends AbstractExecutorService {
     private final int awaitWork(WorkQueue w, long c, int ec) {
         int stat = 0;
         if (w != null && w.eventCount == ec && ctl == c) {
-            int h, ns;
+            int ns;
             int e = (int)c;
             int u = (int)(c >>> 32);
             int d = (u >> UAC_SHIFT) + (config & SMASK); // 0 if quiescent
 
             if (e < 0 || (d == 0 && tryTerminate(false, false)))
                 w.qlock = stat = -1;              // pool is terminating
-            else if (w.hint != (h = e ^ u))
-                w.hint = h;                       // don't block if ctl changing
             else if ((ns = w.nsteals) != 0) {
                 long sc = stealCount;             // collect steals
                 if (U.compareAndSwapLong(this, STEALCOUNT, sc, sc + ns))

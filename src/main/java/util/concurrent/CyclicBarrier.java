@@ -391,7 +391,8 @@ public class CyclicBarrier {
      *         to arrive and zero indicates the last to arrive
      * @throws InterruptedException if the current thread was interrupted
      *         while waiting
-     * @throws TimeoutException if the specified timeout elapses
+     * @throws TimeoutException if the specified timeout elapses.
+     *         In this case the barrier will be broken.
      * @throws BrokenBarrierException if <em>another</em> thread was
      *         interrupted or timed out while the current thread was
      *         waiting, or the barrier was reset, or the barrier was broken

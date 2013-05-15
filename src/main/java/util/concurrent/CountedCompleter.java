@@ -445,7 +445,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * entry to this method, this task {@link
      * ForkJoinTask#isCompletedAbnormally}.  The return value of this
      * method controls further propagation: If {@code true} and this
-     * task has a completer, then this completer is also completed
+     * task has a completer, then that completer is also completed
      * exceptionally.  The default implementation of this method does
      * nothing except return {@code true}.
      *

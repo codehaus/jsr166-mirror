@@ -94,7 +94,7 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public abstract boolean compareAndSet(T obj, V expect, V update);
 
@@ -112,7 +112,7 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public abstract boolean weakCompareAndSet(T obj, V expect, V update);
 

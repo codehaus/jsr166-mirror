@@ -452,7 +452,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * @param ex the exception
      * @param caller the task invoking this method (which may
      * be this task itself)
-     * @return true if this exception should be propagated to this
+     * @return {@code true} if this exception should be propagated to this
      * task's completer, if one exists
      */
     public boolean onExceptionalCompletion(Throwable ex, CountedCompleter<?> caller) {
@@ -502,7 +502,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      *
      * @param expected the expected value
      * @param count the new value
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public final boolean compareAndSetPendingCount(int expected, int count) {
         return U.compareAndSwapInt(this, PENDING, expected, count);

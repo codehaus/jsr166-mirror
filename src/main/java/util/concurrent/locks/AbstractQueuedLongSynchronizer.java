@@ -307,7 +307,7 @@ public abstract class AbstractQueuedLongSynchronizer
      *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful. False return indicates that the actual
+     * @return {@code true} if successful. False return indicates that the actual
      *         value was not equal to the expected value.
      */
     protected final boolean compareAndSetState(long expect, long update) {

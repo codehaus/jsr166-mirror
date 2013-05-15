@@ -263,7 +263,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * designed for use with tasks that intrinsically execute more
      * than once.
      *
-     * @return true if successfully run and reset
+     * @return {@code true} if successfully run and reset
      */
     protected boolean runAndReset() {
         if (state != NEW ||

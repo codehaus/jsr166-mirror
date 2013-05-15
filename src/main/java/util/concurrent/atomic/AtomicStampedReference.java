@@ -91,7 +91,7 @@ public class AtomicStampedReference<V> {
      * @param newReference the new value for the reference
      * @param expectedStamp the expected value of the stamp
      * @param newStamp the new value for the stamp
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public boolean weakCompareAndSet(V   expectedReference,
                                      V   newReference,
@@ -111,7 +111,7 @@ public class AtomicStampedReference<V> {
      * @param newReference the new value for the reference
      * @param expectedStamp the expected value of the stamp
      * @param newStamp the new value for the stamp
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public boolean compareAndSet(V   expectedReference,
                                  V   newReference,
@@ -149,7 +149,7 @@ public class AtomicStampedReference<V> {
      *
      * @param expectedReference the expected value of the reference
      * @param newStamp the new value for the stamp
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public boolean attemptStamp(V expectedReference, int newStamp) {
         Pair<V> current = pair;

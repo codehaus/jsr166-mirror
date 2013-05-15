@@ -80,7 +80,7 @@ public class AtomicReference<V> implements java.io.Serializable {
      * if the current value {@code ==} the expected value.
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful. False return indicates that
+     * @return {@code true} if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
     public final boolean compareAndSet(V expect, V update) {
@@ -97,7 +97,7 @@ public class AtomicReference<V> implements java.io.Serializable {
      *
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public final boolean weakCompareAndSet(V expect, V update) {
         return unsafe.compareAndSwapObject(this, valueOffset, expect, update);

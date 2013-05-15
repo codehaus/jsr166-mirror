@@ -76,7 +76,7 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful
+     * @return {@code true} if successful
      * @throws ClassCastException if {@code obj} is not an instance
      * of the class possessing the field established in the constructor
      */
@@ -96,7 +96,7 @@ public abstract class AtomicLongFieldUpdater<T> {
      * @param obj An object whose field to conditionally set
      * @param expect the expected value
      * @param update the new value
-     * @return true if successful
+     * @return {@code true} if successful
      * @throws ClassCastException if {@code obj} is not an instance
      * of the class possessing the field established in the constructor
      */

@@ -1411,7 +1411,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * ignored or suppressed interruption, causing this executor not
      * to properly terminate.
      *
-     * @return true if terminating but not yet terminated
+     * @return {@code true} if terminating but not yet terminated
      */
     public boolean isTerminating() {
         int c = ctl.get();
@@ -1715,7 +1715,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * remove those Futures that have been cancelled.
      *
      * @param task the task to remove
-     * @return true if the task was removed
+     * @return {@code true} if the task was removed
      */
     public boolean remove(Runnable task) {
         boolean removed = workQueue.remove(task);

@@ -227,9 +227,9 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Returns true if this is a periodic (not a one-shot) action.
+         * Returns {@code true} if this is a periodic (not a one-shot) action.
          *
-         * @return true if periodic
+         * @return {@code true} if periodic
          */
         public boolean isPeriodic() {
             return period != 0;

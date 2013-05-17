@@ -445,14 +445,15 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * entry to this method, this task {@link
      * ForkJoinTask#isCompletedAbnormally}.  The return value of this
      * method controls further propagation: If {@code true} and this
-     * task has a completer, then this completer is also completed
-     * exceptionally.  The default implementation of this method does
-     * nothing except return {@code true}.
+     * task has a completer, then that completer is also completed
+     * exceptionally, with the same exception as this completer.
+     * The default implementation of this method does nothing except
+     * return {@code true}.
      *
      * @param ex the exception
      * @param caller the task invoking this method (which may
      * be this task itself)
-     * @return true if this exception should be propagated to this
+     * @return {@code true} if this exception should be propagated to this
      * task's completer, if one exists
      */
     public boolean onExceptionalCompletion(Throwable ex, CountedCompleter<?> caller) {
@@ -502,7 +503,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      *
      * @param expected the expected value
      * @param count the new value
-     * @return true if successful
+     * @return {@code true} if successful
      */
     public final boolean compareAndSetPendingCount(int expected, int count) {
         return U.compareAndSwapInt(this, PENDING, expected, count);

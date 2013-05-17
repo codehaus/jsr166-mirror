@@ -1668,26 +1668,24 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param ec the worker's eventCount on entry to scan
      */
     private final int awaitWork(WorkQueue w, long c, int ec) {
-        int stat = 0;
-        if (w != null && w.eventCount == ec && ctl == c) {
-            int ns;
+        int stat, ns; long parkTime, deadline;
+        if ((stat = w.qlock) >= 0 && w.eventCount == ec && ctl == c &&
+            !Thread.interrupted()) {
             int e = (int)c;
             int u = (int)(c >>> 32);
             int d = (u >> UAC_SHIFT) + (config & SMASK); // 0 if quiescent
 
             if (e < 0 || (d == 0 && tryTerminate(false, false)))
-                w.qlock = stat = -1;              // pool is terminating
-            else if ((ns = w.nsteals) != 0) {
-                long sc = stealCount;             // collect steals
-                if (U.compareAndSwapLong(this, STEALCOUNT, sc, sc + ns))
-                    w.nsteals = 0;
+                stat = w.qlock = -1;          // pool is terminating
+            else if ((ns = w.nsteals) != 0) { // collect steals and retry
+                w.nsteals = 0;
+                U.getAndAddLong(this, STEALCOUNT, (long)ns);
             }
-            else if (!Thread.interrupted()) {
-                long parkTime, deadline;
+            else {
                 long pc = ((d != 0 || ec != (e | INT_SIGN)) ? 0L :
                            ((long)(w.nextWait & E_MASK)) | // ctl to restore
                            ((long)(u + UAC_UNIT)) << 32);
-                if (pc != 0L) {                   // timed wait if last waiter
+                if (pc != 0L) {               // timed wait if last waiter
                     int dc = -(short)(c >>> TC_SHIFT);
                     parkTime = (dc < 0 ? FAST_IDLE_TIMEOUT:
                                 (dc + 1) * IDLE_TIMEOUT);
@@ -1698,7 +1696,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if (w.eventCount == ec && ctl == c) {
                     Thread wt = Thread.currentThread();
                     U.putObject(wt, PARKBLOCKER, this);
-                    w.parker = wt;                // emulate LockSupport.park
+                    w.parker = wt;            // emulate LockSupport.park
                     if (w.eventCount == ec && ctl == c)
                         U.park(false, parkTime);  // must recheck before park
                     w.parker = null;
@@ -1706,7 +1704,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     if (parkTime != 0L && ctl == c &&
                         deadline - System.nanoTime() <= 0L &&
                         U.compareAndSwapLong(this, CTL, c, pc))
-                        w.qlock = stat = -1;      // shrink pool
+                        stat = w.qlock = -1;  // shrink pool
                 }
             }
         }

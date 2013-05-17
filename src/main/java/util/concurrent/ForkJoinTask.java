@@ -1332,7 +1332,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      *
      * @param e the expected tag value
      * @param tag the new tag value
-     * @return true if successful; i.e., the current value was
+     * @return {@code true} if successful; i.e., the current value was
      * equal to e and is now tag.
      * @since 1.8
      */

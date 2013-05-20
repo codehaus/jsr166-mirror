@@ -195,14 +195,14 @@ public class ConcurrentLinkedDeque<E>
         /**
          * Returns true if this is a header node.
          */
-        boolean isHeader()  {
+        boolean isHeader() {
             return getPrev() == null;
         }
 
         /**
          * Returns true if this is a marker node.
          */
-        boolean isMarker()  {
+        boolean isMarker() {
             return getPrev() == this;
         }
 
@@ -561,7 +561,7 @@ public class ConcurrentLinkedDeque<E>
     /**
      * @throws NoSuchElementException {@inheritDoc}
      */
-    public E getLast()  {
+    public E getLast() {
         return screenNullResult(peekLast());
     }
 

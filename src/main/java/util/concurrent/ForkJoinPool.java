@@ -2949,19 +2949,20 @@ public class ForkJoinPool extends AbstractExecutorService {
         long nanos = unit.toNanos(timeout);
         if (isTerminated())
             return true;
-        long startTime = System.nanoTime();
-        boolean terminated = false;
+        if (nanos <= 0L)
+            return false;
+        long deadline = System.nanoTime() + nanos;
         synchronized (this) {
-            for (long waitTime = nanos, millis = 0L;;) {
-                if (terminated = isTerminated() ||
-                    waitTime <= 0L ||
-                    (millis = unit.toMillis(waitTime)) <= 0L)
-                    break;
-                wait(millis);
-                waitTime = nanos - (System.nanoTime() - startTime);
+            for (;;)  {
+                if (isTerminated())
+                    return true;
+                if (nanos <= 0L)
+                    return false;
+                long millis = TimeUnit.NANOSECONDS.toMillis(nanos);
+                wait(millis > 0L ? millis : 1L);
+                nanos = deadline - System.nanoTime();
             }
         }
-        return terminated;
     }
 
     /**

@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.security.AccessControlException;
 import java.security.Policy;
 import java.security.PrivilegedAction;
@@ -223,6 +224,33 @@ public class ForkJoinPoolTest extends JSR166TestCase {
         } finally {
             joinPool(p);
         }
+    }
+
+    /**
+     * awaitTermination on a non-shutdown pool times out
+     */
+    public void testAwaitTermination_timesOut() throws InterruptedException {
+        ForkJoinPool p = new ForkJoinPool(1);
+        assertFalse(p.isTerminated());
+        assertFalse(p.awaitTermination(Long.MIN_VALUE, NANOSECONDS));
+        assertFalse(p.awaitTermination(Long.MIN_VALUE, MILLISECONDS));
+        assertFalse(p.awaitTermination(-1L, NANOSECONDS));
+        assertFalse(p.awaitTermination(-1L, MILLISECONDS));
+        assertFalse(p.awaitTermination(0L, NANOSECONDS));
+        assertFalse(p.awaitTermination(0L, MILLISECONDS));
+        long timeoutNanos = 999999L;
+        long startTime = System.nanoTime();
+        assertFalse(p.awaitTermination(timeoutNanos, NANOSECONDS));
+        assertTrue(System.nanoTime() - startTime >= timeoutNanos);
+        assertFalse(p.isTerminated());
+        startTime = System.nanoTime();
+        long timeoutMillis = timeoutMillis();
+        assertFalse(p.awaitTermination(timeoutMillis, MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
+        assertFalse(p.isTerminated());
+        p.shutdown();
+        assertTrue(p.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
+        assertTrue(p.isTerminated());
     }
 
     /**

@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.util.*;
 
 public class ThreadPoolExecutorTest extends JSR166TestCase {
@@ -398,6 +399,36 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         try { p.shutdown(); } catch (SecurityException ok) { return; }
         assertTrue(p.isShutdown());
         joinPool(p);
+    }
+
+    /**
+     * awaitTermination on a non-shutdown pool times out
+     */
+    public void testAwaitTermination_timesOut() throws InterruptedException {
+        final ThreadPoolExecutor p =
+            new ThreadPoolExecutor(1, 1,
+                                   LONG_DELAY_MS, MILLISECONDS,
+                                   new ArrayBlockingQueue<Runnable>(10));
+        assertFalse(p.isTerminated());
+        assertFalse(p.awaitTermination(Long.MIN_VALUE, NANOSECONDS));
+        assertFalse(p.awaitTermination(Long.MIN_VALUE, MILLISECONDS));
+        assertFalse(p.awaitTermination(-1L, NANOSECONDS));
+        assertFalse(p.awaitTermination(-1L, MILLISECONDS));
+        assertFalse(p.awaitTermination(0L, NANOSECONDS));
+        assertFalse(p.awaitTermination(0L, MILLISECONDS));
+        long timeoutNanos = 999999L;
+        long startTime = System.nanoTime();
+        assertFalse(p.awaitTermination(timeoutNanos, NANOSECONDS));
+        assertTrue(System.nanoTime() - startTime >= timeoutNanos);
+        assertFalse(p.isTerminated());
+        startTime = System.nanoTime();
+        long timeoutMillis = timeoutMillis();
+        assertFalse(p.awaitTermination(timeoutMillis, MILLISECONDS));
+        assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
+        assertFalse(p.isTerminated());
+        p.shutdown();
+        assertTrue(p.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
+        assertTrue(p.isTerminated());
     }
 
     /**

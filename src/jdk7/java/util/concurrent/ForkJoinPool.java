@@ -3118,7 +3118,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             return false;
         long deadline = System.nanoTime() + nanos;
         synchronized (this) {
-            for (;;)  {
+            for (;;) {
                 if (isTerminated())
                     return true;
                 if (nanos <= 0L)

@@ -14,8 +14,8 @@ package java.util.concurrent;
  * scheduling or execution.  However, you can override initialization
  * and termination methods surrounding the main task processing loop.
  * If you do create such a subclass, you will also need to supply a
- * custom {@link ForkJoinPool.ForkJoinWorkerThreadFactory} to use it
- * in a {@code ForkJoinPool}.
+ * custom {@link ForkJoinPool.ForkJoinWorkerThreadFactory} to
+ * {@linkplain ForkJoinPool#ForkJoinPool use it} in a {@code ForkJoinPool}.
  *
  * @since 1.7
  * @author Doug Lea

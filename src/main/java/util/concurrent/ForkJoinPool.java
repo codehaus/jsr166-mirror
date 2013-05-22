@@ -1546,9 +1546,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     final void incrementActiveCount() {
         long c;
-        do {} while(!U.compareAndSwapLong
-                    (this, CTL, c = ctl, ((c & ~AC_MASK) |
-                                          ((c & AC_MASK) + AC_UNIT))));
+        do {} while (!U.compareAndSwapLong
+                     (this, CTL, c = ctl, ((c & ~AC_MASK) |
+                                           ((c & AC_MASK) + AC_UNIT))));
     }
 
     /**
@@ -1959,10 +1959,10 @@ public class ForkJoinPool extends AbstractExecutorService {
                             }
                         }
                         long c; // reactivate
-                        do {} while(!U.compareAndSwapLong
-                                    (this, CTL, c = ctl,
-                                     ((c & ~AC_MASK) |
-                                      ((c & AC_MASK) + AC_UNIT))));
+                        do {} while (!U.compareAndSwapLong
+                                     (this, CTL, c = ctl,
+                                      ((c & ~AC_MASK) |
+                                       ((c & AC_MASK) + AC_UNIT))));
                     }
                 }
             }
@@ -2032,10 +2032,10 @@ public class ForkJoinPool extends AbstractExecutorService {
             if ((q = findNonEmptyStealQueue()) != null) {
                 if (!active) {      // re-establish active count
                     active = true;
-                    do {} while(!U.compareAndSwapLong
-                                (this, CTL, c = ctl,
-                                 ((c & ~AC_MASK) |
-                                  ((c & AC_MASK) + AC_UNIT))));
+                    do {} while (!U.compareAndSwapLong
+                                 (this, CTL, c = ctl,
+                                  ((c & ~AC_MASK) |
+                                   ((c & AC_MASK) + AC_UNIT))));
                 }
                 if ((b = q.base) - q.top < 0 && (t = q.pollAt(b)) != null) {
                     (w.currentSteal = t).doExec();

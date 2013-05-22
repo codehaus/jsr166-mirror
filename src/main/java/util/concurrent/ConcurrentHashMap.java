@@ -581,8 +581,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Key-value entry.  This class is never exported out as a
      * user-mutable Map.Entry (i.e., one supporting setValue; see
      * MapEntry below), but can be used for read-only traversals used
-     * in curom bulk tasks.  Nodes with a hash field of MOVED are
-     * special, and do not contain user keys or values (and are never
+     * in bulk tasks.  Nodes with a hash field of MOVED are special,
+     * and do not contain user keys or values (and are never
      * exported).  Otherwise, keys and vals are never null.
      */
     static class Node<K,V> implements Map.Entry<K,V> {

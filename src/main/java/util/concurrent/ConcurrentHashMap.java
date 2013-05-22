@@ -3241,7 +3241,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Performs the given action for each (key, value).
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param action the action
      */
     public void forEach(long parallelismThreshold,
@@ -3257,7 +3257,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * of each (key, value).
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
@@ -3281,7 +3281,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * function are ignored.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
      * @return a non-null result from applying the given search
@@ -3301,7 +3301,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * combine values, or null if none.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
@@ -3325,7 +3325,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * combine values, and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3350,7 +3350,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * combine values, and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3375,7 +3375,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * combine values, and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3398,7 +3398,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Performs the given action for each key.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param action the action
      */
     public void forEachKey(long parallelismThreshold,
@@ -3414,7 +3414,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * of each key.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
@@ -3438,7 +3438,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * ignored.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
      * @return a non-null result from applying the given search
@@ -3457,7 +3457,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * reducer to combine values, or null if none.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param reducer a commutative associative combining function
      * @return the result of accumulating all keys using the given
      * reducer to combine values, or null if none
@@ -3476,7 +3476,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * null if none.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
@@ -3500,7 +3500,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3525,7 +3525,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3550,7 +3550,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3573,7 +3573,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Performs the given action for each value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param action the action
      */
     public void forEachValue(long parallelismThreshold,
@@ -3590,7 +3590,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * of each value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
@@ -3614,7 +3614,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * ignored.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
      * @return a non-null result from applying the given search
@@ -3633,7 +3633,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * given reducer to combine values, or null if none.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param reducer a commutative associative combining function
      * @return the result of accumulating all values
      */
@@ -3651,7 +3651,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * null if none.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
@@ -3675,7 +3675,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3700,7 +3700,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3725,7 +3725,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3748,7 +3748,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Performs the given action for each entry.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param action the action
      */
     public void forEachEntry(long parallelismThreshold,
@@ -3763,7 +3763,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * of each entry.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
@@ -3787,7 +3787,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * ignored.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
      * @return a non-null result from applying the given search
@@ -3806,7 +3806,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * given reducer to combine values, or null if none.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param reducer a commutative associative combining function
      * @return the result of accumulating all entries
      */
@@ -3824,7 +3824,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * or null if none.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
@@ -3848,7 +3848,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3873,7 +3873,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction
@@ -3898,7 +3898,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * and the given basis as an identity value.
      *
      * @param parallelismThreshold the (estimated) number of elements
-     * needed for this operation to be executed in parallel.
+     * needed for this operation to be executed in parallel
      * @param transformer a function returning the transformation
      * for an element
      * @param basis the identity (initial default value) for the reduction

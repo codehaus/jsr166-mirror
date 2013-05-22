@@ -647,7 +647,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
          * value to return is somewhat arbitrary here. Since we do not
          * necessarily track asynchronous changes, the most recent
          * "previous" value could be different from what we return (or
-         * could even have been removed in which case the put will
+         * could even have been removed, in which case the put will
          * re-establish). We do not and cannot guarantee more.
          */
         public V setValue(V value) {

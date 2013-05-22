@@ -2187,7 +2187,6 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * paranoically cope with potential sharing by users of iterators
      * across threads, iteration terminates if a bounds checks fails
      * for a table read.
-     *
      */
     static class Traverser<K,V> {
         Node<K,V>[] tab;        // current table; updated if resized
@@ -4353,7 +4352,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Base class for bulk tasks. Repeats some fields and code from
      * class Traverser, because we need to subclass CountedCompleter.
      */
-    static abstract class BulkTask<K,V,R> extends CountedCompleter<R> {
+    abstract static class BulkTask<K,V,R> extends CountedCompleter<R> {
         Node<K,V>[] tab;        // same as Traverser
         Node<K,V> next;
         int index;

@@ -60,11 +60,12 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Returns the index number of this thread in its pool.  The
-     * returned value ranges from zero to the maximum number of
-     * threads (minus one) that may exist in the pool.
-     * This method may be useful for applications that track status or
-     * collect results per-worker rather than per-task.
+     * Returns the unique index number of this thread in its pool.
+     * The returned value ranges from zero to the maximum number of
+     * threads (minus one) that may exist in the pool, and does not
+     * change during the lifetime of the thread.  This method may be
+     * useful for applications that track status or collect results
+     * per-worker-thread rather than per-task.
      *
      * @return the index number
      */

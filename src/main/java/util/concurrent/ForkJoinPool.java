@@ -1807,8 +1807,13 @@ public class ForkJoinPool extends AbstractExecutorService {
                                 if (U.compareAndSwapObject(a, i, t, null)) {
                                     U.putOrderedInt(v, QBASE, b + 1);
                                     ForkJoinTask<?> ps = joiner.currentSteal;
-                                    joiner.currentSteal = t;
-                                    t.doExec();
+                                    int jt = joiner.top;
+                                    do {
+                                        joiner.currentSteal = t;
+                                        t.doExec(); // clear local tasks too
+                                    } while (task.status >= 0 &&
+                                             joiner.top != jt &&
+                                             (t = joiner.pop()) != null);
                                     joiner.currentSteal = ps;
                                     break restart;
                                 }

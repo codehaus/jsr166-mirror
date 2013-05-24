@@ -2707,15 +2707,14 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     }
 
     /**
-     * If the specified key is not already associated with a value (or
-     * is mapped to {@code null}), attempts to compute its value using
-     * the given mapping function and enters it into this map unless
-     * {@code null}. The entire method invocation is performed
-     * atomically, so the function is applied at most once per key.
-     * Some attempted update operations on this map by other threads
-     * may be blocked while computation is in progress, so the
-     * computation should be short and simple, and must not attempt to
-     * update any other mappings of this Map.
+     * If the specified key is not already associated with a value,
+     * attempts to compute its value using the given mapping function
+     * and enters it into this map unless {@code null}.  The entire
+     * method invocation is performed atomically, so the function is
+     * applied at most once per key.  Some attempted update operations
+     * on this map by other threads may be blocked while computation
+     * is in progress, so the computation should be short and simple,
+     * and must not attempt to update any other mappings of this map.
      *
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
@@ -2734,13 +2733,13 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     }
 
     /**
-     * If the value for the specified key is present and non-null,
-     * attempts to compute a new mapping given the key and its current
-     * mapped value.  The entire method invocation is performed
-     * atomically.  Some attempted update operations on this map by
-     * other threads may be blocked while computation is in progress,
-     * so the computation should be short and simple, and must not
-     * attempt to update any other mappings of this Map.
+     * If the value for the specified key is present, attempts to
+     * compute a new mapping given the key and its current mapped
+     * value.  The entire method invocation is performed atomically.
+     * Some attempted update operations on this map by other threads
+     * may be blocked while computation is in progress, so the
+     * computation should be short and simple, and must not attempt to
+     * update any other mappings of this map.
      *
      * @param key key with which a value may be associated
      * @param remappingFunction the function to compute a value

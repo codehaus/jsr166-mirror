@@ -616,7 +616,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * A version of "sneaky throw" to relay exceptions
      */
-    static void rethrow(final Throwable ex) {
+    static void rethrow(Throwable ex) {
         if (ex != null)
             ForkJoinTask.<RuntimeException>uncheckedThrow(ex);
     }

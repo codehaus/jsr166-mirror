@@ -439,16 +439,16 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
-     * Performs an action when method {@link #completeExceptionally(Throwable)}
-     * is invoked or method {@link #compute} throws an exception, and
-     * this task has not otherwise already completed normally. On
-     * entry to this method, this task {@link
-     * ForkJoinTask#isCompletedAbnormally}.  The return value of this
-     * method controls further propagation: If {@code true} and this
-     * task has a completer, then that completer is also completed
-     * exceptionally, with the same exception as this completer.
-     * The default implementation of this method does nothing except
-     * return {@code true}.
+     * Performs an action when method {@link
+     * #completeExceptionally(Throwable)} is invoked or method {@link
+     * #compute} throws an exception, and this task has not otherwise
+     * already completed normally. On entry to this method, this task
+     * {@link ForkJoinTask#isCompletedAbnormally}.  The return value
+     * of this method controls further propagation: If {@code true}
+     * and this task has a completer that has not completed, then that
+     * completer is also completed exceptionally, with the same
+     * exception as this completer.  The default implementation of
+     * this method does nothing except return {@code true}.
      *
      * @param ex the exception
      * @param caller the task invoking this method (which may
@@ -670,8 +670,9 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     void internalPropagateException(Throwable ex) {
         CountedCompleter<?> a = this, s = a;
         while (a.onExceptionalCompletion(ex, s) &&
-               (a = (s = a).completer) != null && a.status >= 0)
-            a.recordExceptionalCompletion(ex);
+               (a = (s = a).completer) != null && a.status >= 0 &&
+               a.recordExceptionalCompletion(ex) == EXCEPTIONAL)
+            ;
     }
 
     /**

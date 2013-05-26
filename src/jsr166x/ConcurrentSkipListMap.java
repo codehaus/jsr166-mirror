@@ -2842,7 +2842,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     final class DescendingEntryIterator extends EntryIter
-        implements Iterator<Map.Entry<K,V>>  {
+        implements Iterator<Map.Entry<K,V>> {
         DescendingEntryIterator() {
             initDescending();
         }
@@ -2854,7 +2854,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     final class DescendingSubMapEntryIterator extends EntryIter
-        implements Iterator<Map.Entry<K,V>>  {
+        implements Iterator<Map.Entry<K,V>> {
         final K least;
         DescendingSubMapEntryIterator(K least, K fence) {
             initDescending(least, fence);

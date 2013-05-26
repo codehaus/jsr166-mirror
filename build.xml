@@ -45,10 +45,13 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   <property name="build.javadoc.access" value="protected"/>
 
   <!-- Tck options; see JSR166TestCase.java -->
-  <!-- Use via, e.g. ant -Djsr166.profileTests=true -Djsr166.runsPerTest=100 test-tck -->
+  <!-- ant -Djsr166.profileTests=true -Djsr166.runsPerTest=100 test-tck -->
   <property name="jsr166.profileTests"     value="false"/>
   <property name="jsr166.profileThreshold" value="100"/>
   <property name="jsr166.runsPerTest"      value="1"/>
+  <!-- Allow running an individual tck test class -->
+  <!-- ant -Djsr166.tckTestClass=CountedCompleterTest -Djsr166.runsPerTest=100 test-tck -->
+  <property name="jsr166.tckTestClass"     value="JSR166TestCase"/>
 
   <!-- Build locations -->
   <property name="build.dir"                   location="build"/>
@@ -208,7 +211,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
     </javac>
 
-    <java classname="JSR166TestCase"
+    <java classname="${jsr166.tckTestClass}"
           failonerror="true"
           jvm="${java@{target}}"
           fork="true">
@@ -707,7 +710,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
       <formatter type="brief"/>
 
-      <test name="JSR166TestCase" haltonfailure="no">
+      <test name="${jsr166.tckTestClass}" haltonfailure="no">
       </test>
 
     </junit>

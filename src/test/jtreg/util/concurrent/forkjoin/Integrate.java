@@ -33,7 +33,7 @@ public final class Integrate {
     static final int FORK = 1;
 
     /** the function to integrate */
-    static double computeFunction(double x)  {
+    static double computeFunction(double x) {
         return (x * x + 1.0) * x;
     }
 

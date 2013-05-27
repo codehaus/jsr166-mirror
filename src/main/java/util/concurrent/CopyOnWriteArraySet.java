@@ -378,8 +378,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
 
     public Spliterator<E> spliterator() {
         return Spliterators.spliterator
-            (al.getArray(), Spliterator.IMMUTABLE |
-             Spliterator.DISTINCT | Spliterator.ORDERED);
+            (al.getArray(), Spliterator.IMMUTABLE | Spliterator.DISTINCT);
     }
 
     /**

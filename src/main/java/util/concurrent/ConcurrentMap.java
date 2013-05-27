@@ -28,6 +28,21 @@ import java.util.Map;
  * @param <V> the type of mapped values
  */
 public interface ConcurrentMap<K,V> extends Map<K,V> {
+
+    /**
+     * {@inheritDoc}
+     *
+     * @implNote This implementation assumes that the ConcurrentMap cannot
+     * contain null values and get() returning null unambiguously means the key
+     * is absent. Implementations which support null values must override this
+     * default implementation.
+     */
+    @Override
+    default V getOrDefault(Object key, V defaultValue) {
+        V v;
+        return ((v = get(key)) != null) ? v : defaultValue;
+    }
+
     /**
      * If the specified key is not already associated
      * with a value, associate it with the given value.

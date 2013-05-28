@@ -66,8 +66,8 @@
  *
  * <p>The memory effects for accesses and updates of atomics generally
  * follow the rules for volatiles, as stated in
- * <a href="http://java.sun.com/docs/books/jls/"> The Java Language
- * Specification, Third Edition (17.4 Memory Model)</a>:
+ * <a href="http://docs.oracle.com/javase/specs/jls/se7/html/index.html">
+ * The Java Language Specification (17.4 Memory Model)</a>:
  *
  * <ul>
  *

@@ -91,8 +91,9 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>All {@code Lock} implementations <em>must</em> enforce the same
  * memory synchronization semantics as provided by the built-in monitor
- * lock, as described in <a href="http://java.sun.com/docs/books/jls/">
- * The Java Language Specification, Third Edition (17.4 Memory Model)</a>:
+ * lock, as described in
+ * <a href="http://docs.oracle.com/javase/specs/jls/se7/html/index.html">
+ * The Java Language Specification (17.4 Memory Model)</a>:
  * <ul>
  * <li>A successful {@code lock} operation has the same memory
  * synchronization effects as a successful <em>Lock</em> action.

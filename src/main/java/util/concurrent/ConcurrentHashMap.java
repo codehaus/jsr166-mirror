@@ -166,9 +166,12 @@ import java.util.stream.Stream;
  * argument. Methods proceed sequentially if the current map size is
  * estimated to be less than the given threshold. Using a value of
  * {@code Long.MAX_VALUE} suppresses all parallelism.  Using a value
- * of {@code 1} results in maximal parallelism.  In-between values can
- * be used to trade off overhead versus throughput. Parallel forms use
- * the {@link ForkJoinPool#commonPool()}.
+ * of {@code 1} results in maximal parallelism by partitioning into
+ * enough subtasks to utilize all processors. Normally, you would
+ * initially choose one of these extreme values, and then measure
+ * performance of using in-between values that trade off overhead
+ * versus throughput. Parallel forms use the {@link
+ * ForkJoinPool#commonPool()}.
  *
  * <p>The concurrency properties of bulk operations follow
  * from those of ConcurrentHashMap: Any non-null result returned
@@ -795,7 +798,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 else if (cc == null || comparableClassFor(pk) != cc ||
                          (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
                     TreeNode<K,V> r, pr; // check both sides
-                    if ((pr = p.right) != null && h >= pr.hash &&
+                    if ((pr = p.right) != null &&
                         (r = getTreeNode(h, k, pr, cc)) != null)
                         return r;
                     else // continue left
@@ -850,7 +853,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 else if (cc == null || comparableClassFor(pk) != cc ||
                          (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
                     TreeNode<K,V> r, pr;
-                    if ((pr = p.right) != null && h >= pr.hash &&
+                    if ((pr = p.right) != null &&
                         (r = getTreeNode(h, k, pr, cc)) != null)
                         return r;
                     else // continue left
@@ -864,7 +867,6 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
             if (p == null)
                 root = x;
             else { // attach and rebalance; adapted from CLR
-                TreeNode<K,V> xp, xpp;
                 if (f != null)
                     f.prev = x;
                 if (dir <= 0)
@@ -872,13 +874,20 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 else
                     p.right = x;
                 x.red = true;
-                while (x != null && (xp = x.parent) != null && xp.red &&
-                       (xpp = xp.parent) != null) {
-                    TreeNode<K,V> xppl = xpp.left;
-                    if (xp == xppl) {
-                        TreeNode<K,V> y = xpp.right;
-                        if (y != null && y.red) {
-                            y.red = false;
+                for (TreeNode<K,V> xp, xpp, xppl, xppr;;) {
+                    if ((xp = x.parent) == null) {
+                        (root = x).red = false;
+                        break;
+                    }
+                    else if (!xp.red || (xpp = xp.parent) == null) {
+                        TreeNode<K,V> r = root;
+                        if (r != null && r.red)
+                            r.red = false;
+                        break;
+                    }
+                    else if ((xppl = xpp.left) == xp) {
+                        if ((xppr = xpp.right) != null && xppr.red) {
+                            xppr.red = false;
                             xp.red = false;
                             xpp.red = true;
                             x = xpp;
@@ -898,9 +907,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                         }
                     }
                     else {
-                        TreeNode<K,V> y = xppl;
-                        if (y != null && y.red) {
-                            y.red = false;
+                        if (xppl != null && xppl.red) {
+                            xppl.red = false;
                             xp.red = false;
                             xpp.red = true;
                             x = xpp;
@@ -920,10 +928,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                         }
                     }
                 }
-                TreeNode<K,V> r = root;
-                if (r != null && r.red)
-                    r.red = false;
             }
+            assert checkInvariants();
             return null;
         }
 
@@ -944,6 +950,10 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 pred.next = next;
             if (next != null)
                 next.prev = pred;
+            else if (pred == null) {
+                root = null;
+                return;
+            }
             TreeNode<K,V> replacement;
             TreeNode<K,V> pl = p.left;
             TreeNode<K,V> pr = p.right;
@@ -980,20 +990,19 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     pp.left = s;
                 else
                     pp.right = s;
-                replacement = sr;
+                if (sr != null)
+                    replacement = sr;
+                else
+                    replacement = p;
             }
+            else if (pl != null)
+                replacement = pl;
+            else if (pr != null)
+                replacement = pr;
             else
-                replacement = (pl != null) ? pl : pr;
-            TreeNode<K,V> pp = p.parent;
-            if (replacement == null) {
-                if (pp == null) {
-                    root = null;
-                    return;
-                }
                 replacement = p;
-            }
-            else {
-                replacement.parent = pp;
+            if (replacement != p) {
+                TreeNode<K,V> pp = replacement.parent = p.parent;
                 if (pp == null)
                     root = replacement;
                 else if (p == pp.left)
@@ -1003,42 +1012,40 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 p.left = p.right = p.parent = null;
             }
             if (!p.red) { // rebalance, from CLR
-                TreeNode<K,V> x = replacement;
-                while (x != null) {
-                    TreeNode<K,V> xp, xpl;
+                for (TreeNode<K,V> x = replacement; x != null; ) {
+                    TreeNode<K,V> xp, xpl, xpr;
                     if (x.red || (xp = x.parent) == null) {
                         x.red = false;
                         break;
                     }
-                    if (x == (xpl = xp.left)) {
-                        TreeNode<K,V> sib = xp.right;
-                        if (sib != null && sib.red) {
-                            sib.red = false;
+                    else if ((xpl = xp.left) == x) {
+                        if ((xpr = xp.right) != null && xpr.red) {
+                            xpr.red = false;
                             xp.red = true;
                             rotateLeft(xp);
-                            sib = (xp = x.parent) == null ? null : xp.right;
+                            xpr = (xp = x.parent) == null ? null : xp.right;
                         }
-                        if (sib == null)
+                        if (xpr == null)
                             x = xp;
                         else {
-                            TreeNode<K,V> sl = sib.left, sr = sib.right;
+                            TreeNode<K,V> sl = xpr.left, sr = xpr.right;
                             if ((sr == null || !sr.red) &&
                                 (sl == null || !sl.red)) {
-                                sib.red = true;
+                                xpr.red = true;
                                 x = xp;
                             }
                             else {
                                 if (sr == null || !sr.red) {
                                     if (sl != null)
                                         sl.red = false;
-                                    sib.red = true;
-                                    rotateRight(sib);
-                                    sib = (xp = x.parent) == null ?
+                                    xpr.red = true;
+                                    rotateRight(xpr);
+                                    xpr = (xp = x.parent) == null ?
                                         null : xp.right;
                                 }
-                                if (sib != null) {
-                                    sib.red = (xp == null) ? false : xp.red;
-                                    if ((sr = sib.right) != null)
+                                if (xpr != null) {
+                                    xpr.red = (xp == null) ? false : xp.red;
+                                    if ((sr = xpr.right) != null)
                                         sr.red = false;
                                 }
                                 if (xp != null) {
@@ -1050,34 +1057,33 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                         }
                     }
                     else { // symmetric
-                        TreeNode<K,V> sib = xpl;
-                        if (sib != null && sib.red) {
-                            sib.red = false;
+                        if (xpl != null && xpl.red) {
+                            xpl.red = false;
                             xp.red = true;
                             rotateRight(xp);
-                            sib = (xp = x.parent) == null ? null : xp.left;
+                            xpl = (xp = x.parent) == null ? null : xp.left;
                         }
-                        if (sib == null)
+                        if (xpl == null)
                             x = xp;
                         else {
-                            TreeNode<K,V> sl = sib.left, sr = sib.right;
+                            TreeNode<K,V> sl = xpl.left, sr = xpl.right;
                             if ((sl == null || !sl.red) &&
                                 (sr == null || !sr.red)) {
-                                sib.red = true;
+                                xpl.red = true;
                                 x = xp;
                             }
                             else {
                                 if (sl == null || !sl.red) {
                                     if (sr != null)
                                         sr.red = false;
-                                    sib.red = true;
-                                    rotateLeft(sib);
-                                    sib = (xp = x.parent) == null ?
+                                    xpl.red = true;
+                                    rotateLeft(xpl);
+                                    xpl = (xp = x.parent) == null ?
                                         null : xp.left;
                                 }
-                                if (sib != null) {
-                                    sib.red = (xp == null) ? false : xp.red;
-                                    if ((sl = sib.left) != null)
+                                if (xpl != null) {
+                                    xpl.red = (xp == null) ? false : xp.red;
+                                    if ((sl = xpl.left) != null)
                                         sl.red = false;
                                 }
                                 if (xp != null) {
@@ -1090,13 +1096,53 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     }
                 }
             }
-            if (p == replacement && (pp = p.parent) != null) {
-                if (p == pp.left) // detach pointers
-                    pp.left = null;
-                else if (p == pp.right)
-                    pp.right = null;
-                p.parent = null;
+            if (p == replacement) {  // detach pointers
+                TreeNode<K,V> pp;
+                if ((pp = p.parent) != null) {
+                    if (p == pp.left)
+                        pp.left = null;
+                    else if (p == pp.right)
+                        pp.right = null;
+                    p.parent = null;
+                }
             }
+            assert checkInvariants();
+        }
+
+        /**
+         * Checks linkage and balance invariants at root
+         */
+        final boolean checkInvariants() {
+            TreeNode<K,V> r = root;
+            if (r == null)
+                return (first == null);
+            else
+                return (first != null) && checkTreeNode(r);
+        }
+
+        /**
+         * Recursive invariant check
+         */
+        final boolean checkTreeNode(TreeNode<K,V> t) {
+            TreeNode<K,V> tp = t.parent, tl = t.left, tr = t.right,
+                tb = t.prev, tn = (TreeNode<K,V>)t.next;
+            if (tb != null && tb.next != t)
+                return false;
+            if (tn != null && tn.prev != t)
+                return false;
+            if (tp != null && t != tp.left && t != tp.right)
+                return false;
+            if (tl != null && (tl.parent != t || tl.hash > t.hash))
+                return false;
+            if (tr != null && (tr.parent != t || tr.hash < t.hash))
+                return false;
+            if (t.red && tl != null && tl.red && tr != null && tr.red)
+                return false;
+            if (tl != null && !checkTreeNode(tl))
+                return false;
+            if (tr != null && !checkTreeNode(tr))
+                return false;
+            return true;
         }
     }
 
@@ -2596,13 +2642,14 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     }
 
     /**
-     * Returns the value to which the specified key is mapped,
-     * or the given defaultValue if this map contains no mapping for the key.
+     * Returns the value to which the specified key is mapped, or the
+     * given default value if this map contains no mapping for the
+     * key.
      *
-     * @param key the key
+     * @param @param key the key whose associated value is to be returned
      * @param defaultValue the value to return if this map contains
      * no mapping for the given key
-     * @return the mapping for the key, if present; else the defaultValue
+     * @return the mapping for the key, if present; else the default value
      * @throws NullPointerException if the specified key is null
      */
     public V getOrDefault(Object key, V defaultValue) {

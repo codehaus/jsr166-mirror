@@ -651,7 +651,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         Map x = map5();
         Map y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.size(), y.size());
         assertEquals(x, y);
         assertEquals(y, x);

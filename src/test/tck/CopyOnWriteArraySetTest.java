@@ -341,7 +341,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         Set x = populatedSet(SIZE);
         Set y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(y, x);
         assertEquals(x.size(), y.size());
         assertEquals(x.toString(), y.toString());
         assertTrue(Arrays.equals(x.toArray(), y.toArray()));

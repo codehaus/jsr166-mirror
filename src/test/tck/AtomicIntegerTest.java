@@ -194,7 +194,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
     public void testSerialization() throws Exception {
         AtomicInteger x = new AtomicInteger();
         AtomicInteger y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         x.set(22);
         AtomicInteger z = serialClone(x);
         assertEquals(22, x.get());

@@ -34,7 +34,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
             updaterFor("y");
             shouldThrow();
         } catch (RuntimeException success) {
-            assertTrue(success.getCause() != null);
+            assertNotNull(success.getCause());
         }
     }
 

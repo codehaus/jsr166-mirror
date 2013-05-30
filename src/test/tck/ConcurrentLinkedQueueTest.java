@@ -503,7 +503,7 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         Queue x = populatedQueue(SIZE);
         Queue y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.size(), y.size());
         assertEquals(x.toString(), y.toString());
         assertTrue(Arrays.equals(x.toArray(), y.toArray()));

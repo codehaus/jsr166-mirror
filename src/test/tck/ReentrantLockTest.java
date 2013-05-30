@@ -83,7 +83,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             Thread.yield();
         }
         assertTrue(t.isAlive());
-        assertTrue(lock.getOwner() != t);
+        assertNotSame(t, lock.getOwner());
     }
 
     /**

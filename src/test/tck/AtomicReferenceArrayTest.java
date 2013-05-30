@@ -199,7 +199,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
             x.set(i, new Integer(-i));
         }
         AtomicReferenceArray y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.length(), y.length());
         for (int i = 0; i < SIZE; i++) {
             assertEquals(x.get(i), y.get(i));

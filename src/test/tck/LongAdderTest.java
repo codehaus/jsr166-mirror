@@ -85,9 +85,10 @@ public class LongAdderTest extends JSR166TestCase {
     public void testSerialization() throws Exception {
         LongAdder x = new LongAdder();
         LongAdder y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         x.add(-22);
         LongAdder z = serialClone(x);
+        assertNotSame(y, z);
         assertEquals(-22, x.sum());
         assertEquals(0, y.sum());
         assertEquals(-22, z.sum());

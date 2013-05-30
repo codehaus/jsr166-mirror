@@ -651,7 +651,7 @@ public class DelayQueueTest extends JSR166TestCase {
             public void realRun() throws InterruptedException {
                 assertNull(q.poll());
                 threadsStarted.await();
-                assertTrue(null != q.poll(LONG_DELAY_MS, MILLISECONDS));
+                assertNotNull(q.poll(LONG_DELAY_MS, MILLISECONDS));
                 checkEmpty(q);
             }});
 

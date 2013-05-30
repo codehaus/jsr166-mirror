@@ -196,9 +196,10 @@ public class AtomicLongTest extends JSR166TestCase {
     public void testSerialization() throws Exception {
         AtomicLong x = new AtomicLong();
         AtomicLong y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         x.set(-22);
         AtomicLong z = serialClone(x);
+        assertNotSame(y, z);
         assertEquals(-22, x.get());
         assertEquals(0, y.get());
         assertEquals(-22, z.get());

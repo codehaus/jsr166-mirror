@@ -8,8 +8,8 @@ package java.util.concurrent;
 
 /**
  * A {@link ForkJoinTask} with a completion action performed when
- * triggered and there are no remaining pending
- * actions. CountedCompleters are in general more robust in the
+ * triggered and there are no remaining pending actions.
+ * CountedCompleters are in general more robust in the
  * presence of subtask stalls and blockage than are other forms of
  * ForkJoinTasks, but are less intuitive to program.  Uses of
  * CountedCompleter are similar to those of other completion based
@@ -99,8 +99,8 @@ package java.util.concurrent;
  * improve load balancing. In the recursive case, the second of each
  * pair of subtasks to finish triggers completion of its parent
  * (because no result combination is performed, the default no-op
- * implementation of method {@code onCompletion} is not overridden). A
- * static utility method sets up the base task and invokes it
+ * implementation of method {@code onCompletion} is not overridden).
+ * A static utility method sets up the base task and invokes it
  * (here, implicitly using the {@link ForkJoinPool#commonPool()}).
  *
  * <pre> {@code

@@ -359,7 +359,7 @@ package java.util.concurrent;
  *
  * <p><b>Triggers.</b> Some CountedCompleters are themselves never
  * forked, but instead serve as bits of plumbing in other designs;
- * including those in which the completion of one of more async tasks
+ * including those in which the completion of one or more async tasks
  * triggers another async task. For example:
  *
  * <pre> {@code

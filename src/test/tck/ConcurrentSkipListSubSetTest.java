@@ -494,7 +494,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet x = populatedSet(SIZE);
         NavigableSet y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(y, x);
         assertEquals(x.size(), y.size());
         assertEquals(x, y);
         assertEquals(y, x);
@@ -994,7 +994,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         NavigableSet x = dset5();
         NavigableSet y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(y, x);
         assertEquals(x.size(), y.size());
         assertEquals(x, y);
         assertEquals(y, x);

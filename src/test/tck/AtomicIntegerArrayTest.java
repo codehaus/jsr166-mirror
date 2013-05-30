@@ -323,7 +323,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; i++)
             x.set(i, -i);
         AtomicIntegerArray y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.length(), y.length());
         for (int i = 0; i < SIZE; i++) {
             assertEquals(x.get(i), y.get(i));

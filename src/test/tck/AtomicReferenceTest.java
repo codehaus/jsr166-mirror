@@ -119,9 +119,10 @@ public class AtomicReferenceTest extends JSR166TestCase {
     public void testSerialization() throws Exception {
         AtomicReference x = new AtomicReference();
         AtomicReference y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         x.set(one);
         AtomicReference z = serialClone(x);
+        assertNotSame(y, z);
         assertEquals(one, x.get());
         assertEquals(null, y.get());
         assertEquals(one, z.get());

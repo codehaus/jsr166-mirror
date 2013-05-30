@@ -322,7 +322,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; i++)
             x.set(i, -i);
         AtomicLongArray y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.length(), y.length());
         for (int i = 0; i < SIZE; i++) {
             assertEquals(x.get(i), y.get(i));

@@ -63,7 +63,7 @@ public class DoubleAdderTest extends JSR166TestCase {
     public void testSerialization() throws Exception {
         DoubleAdder x = new DoubleAdder();
         DoubleAdder y = serialClone(x);
-        assertTrue(x != y);
+        assertNotSame(x, y);
         x.add(-22.0);
         DoubleAdder z = serialClone(x);
         assertEquals(-22.0, x.sum());

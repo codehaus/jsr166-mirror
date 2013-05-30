@@ -536,7 +536,7 @@ public class TreeSetTest extends JSR166TestCase {
         NavigableSet x = populatedSet(SIZE);
         NavigableSet y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.size(), y.size());
         assertEquals(x, y);
         assertEquals(y, x);

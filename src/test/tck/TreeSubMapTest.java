@@ -429,7 +429,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         NavigableMap x = map5();
         NavigableMap y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.size(), y.size());
         assertEquals(x.toString(), y.toString());
         assertEquals(x, y);
@@ -956,7 +956,7 @@ public class TreeSubMapTest extends JSR166TestCase {
         NavigableMap x = dmap5();
         NavigableMap y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.size(), y.size());
         assertEquals(x.toString(), y.toString());
         assertEquals(x, y);

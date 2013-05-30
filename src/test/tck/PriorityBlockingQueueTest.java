@@ -644,7 +644,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         Queue x = populatedQueue(SIZE);
         Queue y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.size(), y.size());
         while (!x.isEmpty()) {
             assertFalse(y.isEmpty());

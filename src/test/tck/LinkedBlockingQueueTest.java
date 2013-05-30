@@ -513,7 +513,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         assertTrue(q.remove(new Integer(1)));
         assertTrue(q.remove(new Integer(2)));
         assertTrue(q.add(new Integer(3)));
-        assertTrue(q.take() != null);
+        assertNotNull(q.take());
     }
 
     /**
@@ -755,7 +755,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         Queue x = populatedQueue(SIZE);
         Queue y = serialClone(x);
 
-        assertTrue(x != y);
+        assertNotSame(x, y);
         assertEquals(x.size(), y.size());
         assertEquals(x.toString(), y.toString());
         assertTrue(Arrays.equals(x.toArray(), y.toArray()));

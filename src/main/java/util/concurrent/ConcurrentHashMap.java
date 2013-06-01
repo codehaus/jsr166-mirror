@@ -167,11 +167,11 @@ import java.util.stream.Stream;
  * estimated to be less than the given threshold. Using a value of
  * {@code Long.MAX_VALUE} suppresses all parallelism.  Using a value
  * of {@code 1} results in maximal parallelism by partitioning into
- * enough subtasks to utilize all processors. Normally, you would
- * initially choose one of these extreme values, and then measure
- * performance of using in-between values that trade off overhead
- * versus throughput. Parallel forms use the {@link
- * ForkJoinPool#commonPool()}.
+ * enough subtasks to fully utilize the {@link
+ * ForkJoinPool#commonPool()} that is used for all parallel
+ * computations. Normally, you would initially choose one of these
+ * extreme values, and then measure performance of using in-between
+ * values that trade off overhead versus throughput.
  *
  * <p>The concurrency properties of bulk operations follow
  * from those of ConcurrentHashMap: Any non-null result returned
@@ -683,15 +683,15 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     }
 
     /**
-     * Returns a Class for the given object of the form "class C
+     * Returns a Class for the given type of the form "class C
      * implements Comparable<C>", if one exists, else null.  See below
      * for explanation.
      */
-    static Class<?> comparableClassFor(Object x) {
-        Class<?> c, s, cmpc; Type[] ts, as; Type t; ParameterizedType p;
-        if ((c = x.getClass()) == String.class) // bypass checks
+    static Class<?> comparableClassFor(Class<?> c) {
+        Class<?> s, cmpc; Type[] ts, as; Type t; ParameterizedType p;
+        if (c == String.class) // bypass checks
             return c;
-        if ((cmpc = Comparable.class).isAssignableFrom(c)) {
+        if (c != null && (cmpc = Comparable.class).isAssignableFrom(c)) {
             while (cmpc.isAssignableFrom(s = c.getSuperclass()))
                 c = s; // find topmost comparable class
             if ((ts = c.getGenericInterfaces()) != null) {
@@ -790,12 +790,14 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
         final TreeNode<K,V> getTreeNode(int h, Object k, TreeNode<K,V> p,
                                         Class<?> cc) {
             while (p != null) {
-                int dir, ph; Object pk;
+                int dir, ph; Object pk; Class<?> pc;
                 if ((ph = p.hash) != h)
                     dir = (h < ph) ? -1 : 1;
                 else if ((pk = p.key) == k || k.equals(pk))
                     return p;
-                else if (cc == null || comparableClassFor(pk) != cc ||
+                else if (cc == null || pk == null ||
+                         ((pc = pk.getClass()) != cc &&
+                          comparableClassFor(pc) != cc) ||
                          (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
                     TreeNode<K,V> r, pr; // check both sides
                     if ((pr = p.right) != null &&
@@ -815,7 +817,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
          * lock, searches along next links.
          */
         final V getValue(int h, Object k) {
-            Class<?> cc = comparableClassFor(k);
+            Class<?> cc = comparableClassFor(k.getClass());
             Node<K,V> r = null;
             for (Node<K,V> e = first; e != null; e = e.next) {
                 long s;
@@ -840,17 +842,19 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
          * @return null if added
          */
         final TreeNode<K,V> putTreeNode(int h, Object k, V v) {
-            Class<?> cc = comparableClassFor(k);
+            Class<?> cc = comparableClassFor(k.getClass());
             TreeNode<K,V> pp = root, p = null;
             int dir = 0;
             while (pp != null) { // find existing node or leaf to insert at
-                int ph; Object pk;
+                int ph; Object pk; Class<?> pc;
                 p = pp;
                 if ((ph = p.hash) != h)
                     dir = (h < ph) ? -1 : 1;
                 else if ((pk = p.key) == k || k.equals(pk))
                     return p;
-                else if (cc == null || comparableClassFor(pk) != cc ||
+                else if (cc == null || pk == null ||
+                         ((pc = pk.getClass()) != cc &&
+                          comparableClassFor(pc) != cc) ||
                          (dir = ((Comparable<Object>)k).compareTo(pk)) == 0) {
                     TreeNode<K,V> r, pr;
                     if ((pr = p.right) != null &&
@@ -1171,7 +1175,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * only when locked.
      */
     private final void replaceWithTreeBin(Node<K,V>[] tab, int index, Object key) {
-        if (tab != null && comparableClassFor(key) != null) {
+        if (tab != null && comparableClassFor(key.getClass()) != null) {
             TreeBin<K,V> t = new TreeBin<K,V>();
             for (Node<K,V> e = tabAt(tab, index); e != null; e = e.next)
                 t.putTreeNode(e.hash, e.key, e.val);
@@ -1233,7 +1237,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     try {
                         if (tabAt(tab, i) == f) {
                             validated = true;
-                            Class<?> cc = comparableClassFor(k);
+                            Class<?> cc = comparableClassFor(k.getClass());
                             TreeNode<K,V> p = t.getTreeNode(h, k, t.root, cc);
                             if (p != null) {
                                 V pv = p.val;
@@ -1431,7 +1435,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     try {
                         if (tabAt(tab, i) == f) {
                             len = 2;
-                            Class<?> cc = comparableClassFor(k);
+                            Class<?> cc = comparableClassFor(k.getClass());
                             TreeNode<K,V> p = t.getTreeNode(h, k, t.root, cc);
                             if (p != null)
                                 val = p.val;
@@ -1530,7 +1534,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     try {
                         if (tabAt(tab, i) == f) {
                             len = 2;
-                            Class<?> cc = comparableClassFor(k);
+                            Class<?> cc = comparableClassFor(k.getClass());
                             TreeNode<K,V> p = t.getTreeNode(h, k, t.root, cc);
                             if (p != null || !onlyIfPresent) {
                                 V pv = (p == null) ? null : p.val;
@@ -1628,7 +1632,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     try {
                         if (tabAt(tab, i) == f) {
                             len = 2;
-                            Class<?> cc = comparableClassFor(k);
+                            Class<?> cc = comparableClassFor(k.getClass());
                             TreeNode<K,V> p = t.getTreeNode(h, k, t.root, cc);
                             val = (p == null) ? v : mf.apply(p.val, v);
                             if (val != null) {
@@ -1727,7 +1731,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                             try {
                                 if (tabAt(tab, i) == f) {
                                     validated = true;
-                                    Class<?> cc = comparableClassFor(k);
+                                    Class<?> cc = comparableClassFor(k.getClass());
                                     TreeNode<K,V> p = t.getTreeNode(h, k,
                                                                     t.root, cc);
                                     if (p != null)

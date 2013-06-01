@@ -2646,7 +2646,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * given default value if this map contains no mapping for the
      * key.
      *
-     * @param @param key the key whose associated value is to be returned
+     * @param key the key whose associated value is to be returned
      * @param defaultValue the value to return if this map contains
      * no mapping for the given key
      * @return the mapping for the key, if present; else the default value

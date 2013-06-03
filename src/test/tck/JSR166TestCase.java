@@ -1240,7 +1240,7 @@ public class JSR166TestCase extends TestCase {
     public abstract class CheckedRecursiveAction extends RecursiveAction {
         protected abstract void realCompute() throws Throwable;
 
-        public final void compute() {
+        @Override protected final void compute() {
             try {
                 realCompute();
             } catch (Throwable t) {
@@ -1255,7 +1255,7 @@ public class JSR166TestCase extends TestCase {
     public abstract class CheckedRecursiveTask<T> extends RecursiveTask<T> {
         protected abstract T realCompute() throws Throwable;
 
-        public final T compute() {
+        @Override protected final T compute() {
             try {
                 return realCompute();
             } catch (Throwable t) {

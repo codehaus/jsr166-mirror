@@ -441,8 +441,8 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     /**
      * Performs an action when method {@link
      * #completeExceptionally(Throwable)} is invoked or method {@link
-     * #compute} throws an exception, and this task has not otherwise
-     * already completed normally. On entry to this method, this task
+     * #compute} throws an exception, and this task has not already
+     * otherwise completed normally. On entry to this method, this task
      * {@link ForkJoinTask#isCompletedAbnormally}.  The return value
      * of this method controls further propagation: If {@code true}
      * and this task has a completer that has not completed, then that

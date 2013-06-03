@@ -384,7 +384,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvoke() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertNull(f.invoke());
                 assertEquals(21, f.number);
@@ -400,7 +400,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testQuietlyInvoke() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 f.quietlyInvoke();
                 assertEquals(21, f.number);
@@ -414,7 +414,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkJoin() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 assertNull(f.join());
@@ -429,7 +429,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkGet() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 assertNull(f.get());
@@ -444,7 +444,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkTimedGet() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 assertNull(f.get(LONG_DELAY_MS, MILLISECONDS));
@@ -459,7 +459,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkTimedGetNPE() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -475,7 +475,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkQuietlyJoin() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 f.quietlyJoin();
@@ -491,7 +491,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkHelpQuiesce() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 helpQuiesce();
@@ -507,7 +507,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvoke() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 try {
                     f.invoke();
@@ -524,7 +524,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalQuietlyInvoke() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 f.quietlyInvoke();
                 assertTrue(f.getException() instanceof FJException);
@@ -538,7 +538,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkJoin() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -556,7 +556,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkGet() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -576,7 +576,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkTimedGet() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -596,7 +596,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkQuietlyJoin() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 f.quietlyJoin();
@@ -611,7 +611,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledInvoke() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 try {
@@ -629,7 +629,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkJoin() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -648,7 +648,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkGet() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -667,7 +667,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkTimedGet() throws Exception {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -686,7 +686,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkQuietlyJoin() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -702,7 +702,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     public void testGetPool() {
         final ForkJoinPool mainPool = mainPool();
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 assertSame(mainPool, getPool());
             }};
         testInvokeOnPool(mainPool, a);
@@ -713,7 +713,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testGetPool2() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 assertNull(getPool());
             }};
         assertNull(a.invoke());
@@ -724,7 +724,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInForkJoinPool() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 assertTrue(inForkJoinPool());
             }};
         testInvokeOnPool(mainPool(), a);
@@ -735,7 +735,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInForkJoinPool2() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 assertFalse(inForkJoinPool());
             }};
         assertNull(a.invoke());
@@ -746,7 +746,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testSetRawResult() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 setRawResult(null);
                 assertNull(getRawResult());
             }};
@@ -758,7 +758,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCompleteExceptionally() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 f.completeExceptionally(new FJException());
                 try {
@@ -776,7 +776,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll2() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 invokeAll(f, g);
@@ -793,7 +793,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll1() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 invokeAll(f);
                 checkCompletedNormally(f);
@@ -807,7 +807,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll3() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
@@ -827,7 +827,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAllCollection() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
@@ -851,7 +851,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAllNPE() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = null;
@@ -868,7 +868,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll2() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 FailingAsyncFib g = new FailingAsyncFib(9);
                 try {
@@ -886,7 +886,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll1() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib g = new FailingAsyncFib(9);
                 try {
                     invokeAll(g);
@@ -903,7 +903,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll3() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 FailingAsyncFib g = new FailingAsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
@@ -922,7 +922,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAllCollection() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
@@ -946,7 +946,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testTryUnfork() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib g = new AsyncFib(9);
                 assertSame(g, g.fork());
                 AsyncFib f = new AsyncFib(8);
@@ -965,7 +965,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testGetSurplusQueuedTaskCount() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib h = new AsyncFib(7);
                 assertSame(h, h.fork());
                 AsyncFib g = new AsyncFib(9);
@@ -987,7 +987,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPeekNextLocalTask() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib g = new AsyncFib(9);
                 assertSame(g, g.fork());
                 AsyncFib f = new AsyncFib(8);
@@ -1007,7 +1007,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollNextLocalTask() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib g = new AsyncFib(9);
                 assertSame(g, g.fork());
                 AsyncFib f = new AsyncFib(8);
@@ -1026,7 +1026,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollTask() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib g = new AsyncFib(9);
                 assertSame(g, g.fork());
                 AsyncFib f = new AsyncFib(8);
@@ -1044,7 +1044,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPeekNextLocalTaskAsync() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib g = new AsyncFib(9);
                 assertSame(g, g.fork());
                 AsyncFib f = new AsyncFib(8);
@@ -1065,7 +1065,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollNextLocalTaskAsync() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib g = new AsyncFib(9);
                 assertSame(g, g.fork());
                 AsyncFib f = new AsyncFib(8);
@@ -1085,7 +1085,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testPollTaskAsync() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib g = new AsyncFib(9);
                 assertSame(g, g.fork());
                 AsyncFib f = new AsyncFib(8);
@@ -1108,7 +1108,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertNull(f.invoke());
                 assertEquals(21, f.number);
@@ -1124,7 +1124,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testQuietlyInvokeSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 f.quietlyInvoke();
                 assertEquals(21, f.number);
@@ -1138,7 +1138,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkJoinSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 assertNull(f.join());
@@ -1153,7 +1153,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkGetSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 assertNull(f.get());
@@ -1168,7 +1168,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkTimedGetSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 assertNull(f.get(LONG_DELAY_MS, MILLISECONDS));
@@ -1183,7 +1183,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkTimedGetNPESingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -1199,7 +1199,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkQuietlyJoinSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 f.quietlyJoin();
@@ -1215,7 +1215,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testForkHelpQuiesceSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertSame(f, f.fork());
                 helpQuiesce();
@@ -1231,7 +1231,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 try {
                     f.invoke();
@@ -1248,7 +1248,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalQuietlyInvokeSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 f.quietlyInvoke();
                 assertTrue(f.getException() instanceof FJException);
@@ -1262,7 +1262,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkJoinSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -1280,7 +1280,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkGetSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -1300,7 +1300,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkTimedGetSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 try {
@@ -1320,7 +1320,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalForkQuietlyJoinSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 assertSame(f, f.fork());
                 f.quietlyJoin();
@@ -1335,7 +1335,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledInvokeSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 try {
@@ -1353,7 +1353,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkJoinSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -1372,7 +1372,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkGetSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -1391,7 +1391,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkTimedGetSingleton() throws Exception {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() throws Exception {
+            protected void realCompute() throws Exception {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -1410,7 +1410,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCancelledForkQuietlyJoinSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 assertTrue(f.cancel(true));
                 assertSame(f, f.fork());
@@ -1425,7 +1425,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testCompleteExceptionallySingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 f.completeExceptionally(new FJException());
                 try {
@@ -1443,7 +1443,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll2Singleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 invokeAll(f, g);
@@ -1460,7 +1460,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll1Singleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 invokeAll(f);
                 checkCompletedNormally(f);
@@ -1474,7 +1474,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAll3Singleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
@@ -1494,7 +1494,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAllCollectionSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
@@ -1518,7 +1518,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testInvokeAllNPESingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = null;
@@ -1535,7 +1535,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll2Singleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 FailingAsyncFib g = new FailingAsyncFib(9);
                 try {
@@ -1553,7 +1553,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll1Singleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib g = new FailingAsyncFib(9);
                 try {
                     invokeAll(g);
@@ -1570,7 +1570,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAll3Singleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 FailingAsyncFib g = new FailingAsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
@@ -1589,7 +1589,7 @@ public class ForkJoinTaskTest extends JSR166TestCase {
      */
     public void testAbnormalInvokeAllCollectionSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
-            public void realCompute() {
+            protected void realCompute() {
                 FailingAsyncFib f = new FailingAsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = new AsyncFib(7);

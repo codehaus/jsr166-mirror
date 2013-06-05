@@ -3962,6 +3962,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all entries
+     * @since 1.8
      */
     public long reduceEntriesToLong(long parallelismThreshold,
                                     ToLongFunction<Map.Entry<K,V>> transformer,
@@ -3987,6 +3988,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all entries
+     * @since 1.8
      */
     public int reduceEntriesToInt(long parallelismThreshold,
                                   ToIntFunction<Map.Entry<K,V>> transformer,
@@ -4162,6 +4164,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * {@link #keySet(Object) keySet(V)},
      * {@link #newKeySet() newKeySet()},
      * {@link #newKeySet(int) newKeySet(int)}.
+     *
+     * @since 1.8
      */
     public static class KeySetView<K,V> extends CollectionView<K,V,K>
         implements Set<K>, java.io.Serializable {

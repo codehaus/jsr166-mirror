@@ -446,7 +446,9 @@ public class CountedCompleterTest extends JSR166TestCase {
         NoopCC a = new NoopCC();
         a.setPendingCount(1);
         assertNull(a.firstComplete());
-        assertEquals(a, a.firstComplete());
+        a.checkIncomplete();
+        assertSame(a, a.firstComplete());
+        a.checkIncomplete();
     }
 
     /**
@@ -459,12 +461,17 @@ public class CountedCompleterTest extends JSR166TestCase {
         a.setPendingCount(1);
         b.setPendingCount(1);
         assertNull(b.firstComplete());
-        CountedCompleter c = b.firstComplete();
-        assertSame(b, c);
-        CountedCompleter d = c.nextComplete();
-        assertNull(d);
-        CountedCompleter e = c.nextComplete();
-        assertSame(a, e);
+        assertSame(b, b.firstComplete());
+        assertNull(b.nextComplete());
+        a.checkIncomplete();
+        b.checkIncomplete();
+        assertSame(a, b.nextComplete());
+        assertSame(a, b.nextComplete());
+        a.checkIncomplete();
+        b.checkIncomplete();
+        assertNull(a.nextComplete());
+        b.checkIncomplete();
+        checkCompletedNormally(a);
     }
 
     /**

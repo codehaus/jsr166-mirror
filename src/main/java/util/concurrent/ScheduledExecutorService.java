@@ -33,7 +33,7 @@ package java.util.concurrent;
  * which the task is enabled due to network time synchronization
  * protocols, clock drift, or other factors.
  *
- * The {@link Executors} class provides convenient factory methods for
+ * <p>The {@link Executors} class provides convenient factory methods for
  * the ScheduledExecutorService implementations provided in this package.
  *
  * <h3>Usage Example</h3>

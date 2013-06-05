@@ -136,7 +136,7 @@ import java.lang.reflect.Constructor;
  * supports other methods and techniques (for example the use of
  * {@link Phaser}, {@link #helpQuiesce}, and {@link #complete}) that
  * may be of use in constructing custom subclasses for problems that
- * are not statically structured as DAGs. To support such usages a
+ * are not statically structured as DAGs. To support such usages, a
  * ForkJoinTask may be atomically <em>tagged</em> with a {@code short}
  * value using {@link #setForkJoinTaskTag} or {@link
  * #compareAndSetForkJoinTaskTag} and checked using {@link

@@ -2578,6 +2578,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * from the given type to {@code Boolean.TRUE}.
      *
      * @return the new set
+     * @since 1.8
      */
     public static <K> KeySetView<K,Boolean> newKeySet() {
         return new KeySetView<K,Boolean>
@@ -2593,6 +2594,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative
      * @return the new set
+     * @since 1.8
      */
     public static <K> KeySetView<K,Boolean> newKeySet(int initialCapacity) {
         return new KeySetView<K,Boolean>
@@ -2624,6 +2626,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * there are concurrent insertions or removals.
      *
      * @return the number of mappings
+     * @since 1.8
      */
     public long mappingCount() {
         long n = sumCount();
@@ -3293,6 +3296,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param parallelismThreshold the (estimated) number of elements
      * needed for this operation to be executed in parallel
      * @param action the action
+     * @since 1.8
      */
     public void forEach(long parallelismThreshold,
                         BiConsumer<? super K,? super V> action) {
@@ -3312,6 +3316,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @since 1.8
      */
     public <U> void forEach(long parallelismThreshold,
                             BiFunction<? super K, ? super V, ? extends U> transformer,
@@ -3336,6 +3341,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * result on success, else null
      * @return a non-null result from applying the given search
      * function on each (key, value), or null if none
+     * @since 1.8
      */
     public <U> U search(long parallelismThreshold,
                         BiFunction<? super K, ? super V, ? extends U> searchFunction) {
@@ -3358,6 +3364,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
+     * @since 1.8
      */
     public <U> U reduce(long parallelismThreshold,
                         BiFunction<? super K, ? super V, ? extends U> transformer,
@@ -3382,6 +3389,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
+     * @since 1.8
      */
     public double reduceToDoubleIn(long parallelismThreshold,
                                    ToDoubleBiFunction<? super K, ? super V> transformer,
@@ -3407,6 +3415,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
+     * @since 1.8
      */
     public long reduceToLong(long parallelismThreshold,
                              ToLongBiFunction<? super K, ? super V> transformer,
@@ -3432,6 +3441,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
+     * @since 1.8
      */
     public int reduceToInt(long parallelismThreshold,
                            ToIntBiFunction<? super K, ? super V> transformer,
@@ -3450,6 +3460,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param parallelismThreshold the (estimated) number of elements
      * needed for this operation to be executed in parallel
      * @param action the action
+     * @since 1.8
      */
     public void forEachKey(long parallelismThreshold,
                            Consumer<? super K> action) {
@@ -3469,6 +3480,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @since 1.8
      */
     public <U> void forEachKey(long parallelismThreshold,
                                Function<? super K, ? extends U> transformer,
@@ -3493,6 +3505,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * result on success, else null
      * @return a non-null result from applying the given search
      * function on each key, or null if none
+     * @since 1.8
      */
     public <U> U searchKeys(long parallelismThreshold,
                             Function<? super K, ? extends U> searchFunction) {
@@ -3511,6 +3524,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating all keys using the given
      * reducer to combine values, or null if none
+     * @since 1.8
      */
     public K reduceKeys(long parallelismThreshold,
                         BiFunction<? super K, ? super K, ? extends K> reducer) {
@@ -3533,6 +3547,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all keys
+     * @since 1.8
      */
     public <U> U reduceKeys(long parallelismThreshold,
                             Function<? super K, ? extends U> transformer,
@@ -3557,6 +3572,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all keys
+     * @since 1.8
      */
     public double reduceKeysToDouble(long parallelismThreshold,
                                      ToDoubleFunction<? super K> transformer,
@@ -3582,6 +3598,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all keys
+     * @since 1.8
      */
     public long reduceKeysToLong(long parallelismThreshold,
                                  ToLongFunction<? super K> transformer,
@@ -3607,6 +3624,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all keys
+     * @since 1.8
      */
     public int reduceKeysToInt(long parallelismThreshold,
                                ToIntFunction<? super K> transformer,
@@ -3625,6 +3643,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param parallelismThreshold the (estimated) number of elements
      * needed for this operation to be executed in parallel
      * @param action the action
+     * @since 1.8
      */
     public void forEachValue(long parallelismThreshold,
                              Consumer<? super V> action) {
@@ -3645,6 +3664,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @since 1.8
      */
     public <U> void forEachValue(long parallelismThreshold,
                                  Function<? super V, ? extends U> transformer,
@@ -3669,6 +3689,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * result on success, else null
      * @return a non-null result from applying the given search
      * function on each value, or null if none
+     * @since 1.8
      */
     public <U> U searchValues(long parallelismThreshold,
                               Function<? super V, ? extends U> searchFunction) {
@@ -3686,6 +3707,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * needed for this operation to be executed in parallel
      * @param reducer a commutative associative combining function
      * @return the result of accumulating all values
+     * @since 1.8
      */
     public V reduceValues(long parallelismThreshold,
                           BiFunction<? super V, ? super V, ? extends V> reducer) {
@@ -3708,6 +3730,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all values
+     * @since 1.8
      */
     public <U> U reduceValues(long parallelismThreshold,
                               Function<? super V, ? extends U> transformer,
@@ -3732,6 +3755,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all values
+     * @since 1.8
      */
     public double reduceValuesToDouble(long parallelismThreshold,
                                        ToDoubleFunction<? super V> transformer,
@@ -3757,6 +3781,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all values
+     * @since 1.8
      */
     public long reduceValuesToLong(long parallelismThreshold,
                                    ToLongFunction<? super V> transformer,
@@ -3782,6 +3807,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all values
+     * @since 1.8
      */
     public int reduceValuesToInt(long parallelismThreshold,
                                  ToIntFunction<? super V> transformer,
@@ -3800,6 +3826,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param parallelismThreshold the (estimated) number of elements
      * needed for this operation to be executed in parallel
      * @param action the action
+     * @since 1.8
      */
     public void forEachEntry(long parallelismThreshold,
                              Consumer<? super Map.Entry<K,V>> action) {
@@ -3818,6 +3845,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @since 1.8
      */
     public <U> void forEachEntry(long parallelismThreshold,
                                  Function<Map.Entry<K,V>, ? extends U> transformer,
@@ -3842,6 +3870,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * result on success, else null
      * @return a non-null result from applying the given search
      * function on each entry, or null if none
+     * @since 1.8
      */
     public <U> U searchEntries(long parallelismThreshold,
                                Function<Map.Entry<K,V>, ? extends U> searchFunction) {
@@ -3859,6 +3888,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * needed for this operation to be executed in parallel
      * @param reducer a commutative associative combining function
      * @return the result of accumulating all entries
+     * @since 1.8
      */
     public Map.Entry<K,V> reduceEntries(long parallelismThreshold,
                                         BiFunction<Map.Entry<K,V>, Map.Entry<K,V>, ? extends Map.Entry<K,V>> reducer) {
@@ -3881,6 +3911,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all entries
+     * @since 1.8
      */
     public <U> U reduceEntries(long parallelismThreshold,
                                Function<Map.Entry<K,V>, ? extends U> transformer,
@@ -3905,6 +3936,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * @param reducer a commutative associative combining function
      * @return the result of accumulating the given transformation
      * of all entries
+     * @since 1.8
      */
     public double reduceEntriesToDouble(long parallelismThreshold,
                                         ToDoubleFunction<Map.Entry<K,V>> transformer,

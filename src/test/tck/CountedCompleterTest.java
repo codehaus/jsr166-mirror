@@ -252,7 +252,9 @@ public class CountedCompleterTest extends JSR166TestCase {
         }
         void checkCompletes(Object rawResult) {
             checkIncomplete();
+            int pendingCount = getPendingCount();
             complete(rawResult);
+            assertEquals(pendingCount, getPendingCount());
             assertEquals(0, computeN());
             assertEquals(1, onCompletionN());
             assertEquals(0, onExceptionalCompletionN());
@@ -283,15 +285,19 @@ public class CountedCompleterTest extends JSR166TestCase {
 
     /**
      * A newly constructed CountedCompleter is not completed;
-     * complete() causes completion.
+     * complete() causes completion. pendingCount is ignored.
      */
     public void testComplete() {
         for (Object x : new Object[] { Boolean.TRUE, null }) {
-            new NoopCC()
-                .checkCompletes(x);
-            new NoopCC(new NoopCC())
-                .checkCompletes(x);
+            for (int pendingCount : new int[] { 0, 42 }) {
+                testComplete(new NoopCC(), x, pendingCount);
+                testComplete(new NoopCC(new NoopCC()), x, pendingCount);
+            }
         }
+    }
+    void testComplete(NoopCC cc, Object x, int pendingCount) {
+        cc.setPendingCount(pendingCount);
+        cc.checkCompletes(x);
     }
 
     /**

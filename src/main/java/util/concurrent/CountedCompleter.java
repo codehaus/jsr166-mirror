@@ -587,7 +587,8 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * used as an argument to {@link #setRawResult} before invoking
      * {@link #onCompletion(CountedCompleter)} or marking this task
      * as complete; its value is meaningful only for classes
-     * overriding {@code setRawResult}.
+     * overriding {@code setRawResult}.  This method does not modify
+     * the pending count.
      *
      * <p>This method may be useful when forcing completion as soon as
      * any one (versus all) of several subtask results are obtained.

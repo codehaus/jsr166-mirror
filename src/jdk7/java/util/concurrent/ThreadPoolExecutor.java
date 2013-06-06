@@ -46,18 +46,19 @@ import java.util.*;
  * corePoolSize (see {@link #getCorePoolSize}) and
  * maximumPoolSize (see {@link #getMaximumPoolSize}).
  *
- * When a new task is submitted in method {@link #execute}, and fewer
- * than corePoolSize threads are running, a new thread is created to
- * handle the request, even if other worker threads are idle.  If
- * there are more than corePoolSize but less than maximumPoolSize
- * threads running, a new thread will be created only if the queue is
- * full.  By setting corePoolSize and maximumPoolSize the same, you
- * create a fixed-size thread pool. By setting maximumPoolSize to an
- * essentially unbounded value such as {@code Integer.MAX_VALUE}, you
- * allow the pool to accommodate an arbitrary number of concurrent
- * tasks. Most typically, core and maximum pool sizes are set only
- * upon construction, but they may also be changed dynamically using
- * {@link #setCorePoolSize} and {@link #setMaximumPoolSize}. </dd>
+ * When a new task is submitted in method {@link #execute(Runnable)},
+ * and fewer than corePoolSize threads are running, a new thread is
+ * created to handle the request, even if other worker threads are
+ * idle.  If there are more than corePoolSize but less than
+ * maximumPoolSize threads running, a new thread will be created only
+ * if the queue is full.  By setting corePoolSize and maximumPoolSize
+ * the same, you create a fixed-size thread pool. By setting
+ * maximumPoolSize to an essentially unbounded value such as {@code
+ * Integer.MAX_VALUE}, you allow the pool to accommodate an arbitrary
+ * number of concurrent tasks. Most typically, core and maximum pool
+ * sizes are set only upon construction, but they may also be changed
+ * dynamically using {@link #setCorePoolSize} and {@link
+ * #setMaximumPoolSize}. </dd>
  *
  * <dt>On-demand construction</dt>
  *
@@ -88,17 +89,17 @@ import java.util.*;
  *
  * <dd>If the pool currently has more than corePoolSize threads,
  * excess threads will be terminated if they have been idle for more
- * than the keepAliveTime (see {@link #getKeepAliveTime}). This
- * provides a means of reducing resource consumption when the pool is
- * not being actively used. If the pool becomes more active later, new
- * threads will be constructed. This parameter can also be changed
- * dynamically using method {@link #setKeepAliveTime}. Using a value
- * of {@code Long.MAX_VALUE} {@link TimeUnit#NANOSECONDS} effectively
- * disables idle threads from ever terminating prior to shut down. By
- * default, the keep-alive policy applies only when there are more
- * than corePoolSize threads. But method {@link
- * #allowCoreThreadTimeOut(boolean)} can be used to apply this
- * time-out policy to core threads as well, so long as the
+ * than the keepAliveTime (see {@link #getKeepAliveTime(TimeUnit)}).
+ * This provides a means of reducing resource consumption when the
+ * pool is not being actively used. If the pool becomes more active
+ * later, new threads will be constructed. This parameter can also be
+ * changed dynamically using method {@link #setKeepAliveTime(long,
+ * TimeUnit)}.  Using a value of {@code Long.MAX_VALUE} {@link
+ * TimeUnit#NANOSECONDS} effectively disables idle threads from ever
+ * terminating prior to shut down. By default, the keep-alive policy
+ * applies only when there are more than corePoolSize threads. But
+ * method {@link #allowCoreThreadTimeOut(boolean)} can be used to
+ * apply this time-out policy to core threads as well, so long as the
  * keepAliveTime value is non-zero. </dd>
  *
  * <dt>Queuing</dt>
@@ -168,14 +169,14 @@ import java.util.*;
  *
  * <dt>Rejected tasks</dt>
  *
- * <dd>New tasks submitted in method {@link #execute} will be
- * <em>rejected</em> when the Executor has been shut down, and also
- * when the Executor uses finite bounds for both maximum threads and
- * work queue capacity, and is saturated.  In either case, the {@code
- * execute} method invokes the {@link
- * RejectedExecutionHandler#rejectedExecution} method of its {@link
- * RejectedExecutionHandler}.  Four predefined handler policies are
- * provided:
+ * <dd>New tasks submitted in method {@link #execute(Runnable)} will be
+ * <em>rejected</em> when the Executor has been shut down, and also when
+ * the Executor uses finite bounds for both maximum threads and work queue
+ * capacity, and is saturated.  In either case, the {@code execute} method
+ * invokes the {@link
+ * RejectedExecutionHandler#rejectedExecution(Runnable, ThreadPoolExecutor)}
+ * method of its {@link RejectedExecutionHandler}.  Four predefined handler
+ * policies are provided:
  *
  * <ol>
  *
@@ -205,26 +206,27 @@ import java.util.*;
  *
  * <dt>Hook methods</dt>
  *
- * <dd>This class provides {@code protected} overridable {@link
- * #beforeExecute} and {@link #afterExecute} methods that are called
+ * <dd>This class provides {@code protected} overridable
+ * {@link #beforeExecute(Thread, Runnable)} and
+ * {@link #afterExecute(Runnable, Throwable)} methods that are called
  * before and after execution of each task.  These can be used to
  * manipulate the execution environment; for example, reinitializing
- * ThreadLocals, gathering statistics, or adding log
- * entries. Additionally, method {@link #terminated} can be overridden
- * to perform any special processing that needs to be done once the
- * Executor has fully terminated.
+ * ThreadLocals, gathering statistics, or adding log entries.
+ * Additionally, method {@link #terminated} can be overridden to perform
+ * any special processing that needs to be done once the Executor has
+ * fully terminated.
  *
  * <p>If hook or callback methods throw exceptions, internal worker
  * threads may in turn fail and abruptly terminate.</dd>
  *
  * <dt>Queue maintenance</dt>
  *
- * <dd>Method {@link #getQueue} allows access to the work queue for
- * purposes of monitoring and debugging.  Use of this method for any
- * other purpose is strongly discouraged.  Two supplied methods,
- * {@link #remove} and {@link #purge} are available to assist in
- * storage reclamation when large numbers of queued tasks become
- * cancelled.</dd>
+ * <dd>Method {@link #getQueue()} allows access to the work queue
+ * for purposes of monitoring and debugging.  Use of this method for
+ * any other purpose is strongly discouraged.  Two supplied methods,
+ * {@link #remove(Runnable)} and {@link #purge} are available to
+ * assist in storage reclamation when large numbers of queued tasks
+ * become cancelled.</dd>
  *
  * <dt>Finalization</dt>
  *
@@ -1409,7 +1411,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * ignored or suppressed interruption, causing this executor not
      * to properly terminate.
      *
-     * @return true if terminating but not yet terminated
+     * @return {@code true} if terminating but not yet terminated
      */
     public boolean isTerminating() {
         int c = ctl.get();
@@ -1463,7 +1465,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Returns the thread factory used to create new threads.
      *
      * @return the current thread factory
-     * @see #setThreadFactory
+     * @see #setThreadFactory(ThreadFactory)
      */
     public ThreadFactory getThreadFactory() {
         return threadFactory;
@@ -1486,7 +1488,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Returns the current handler for unexecutable tasks.
      *
      * @return the current handler
-     * @see #setRejectedExecutionHandler
+     * @see #setRejectedExecutionHandler(RejectedExecutionHandler)
      */
     public RejectedExecutionHandler getRejectedExecutionHandler() {
         return handler;
@@ -1658,7 +1660,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @param unit the time unit of the {@code time} argument
      * @throws IllegalArgumentException if {@code time} less than zero or
      *         if {@code time} is zero and {@code allowsCoreThreadTimeOut}
-     * @see #getKeepAliveTime
+     * @see #getKeepAliveTime(TimeUnit)
      */
     public void setKeepAliveTime(long time, TimeUnit unit) {
         if (time < 0)
@@ -1679,7 +1681,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *
      * @param unit the desired time unit of the result
      * @return the time limit
-     * @see #setKeepAliveTime
+     * @see #setKeepAliveTime(long, TimeUnit)
      */
     public long getKeepAliveTime(TimeUnit unit) {
         return unit.convert(keepAliveTime, TimeUnit.NANOSECONDS);
@@ -1713,7 +1715,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * remove those Futures that have been cancelled.
      *
      * @param task the task to remove
-     * @return true if the task was removed
+     * @return {@code true} if the task was removed
      */
     public boolean remove(Runnable task) {
         boolean removed = workQueue.remove(task);

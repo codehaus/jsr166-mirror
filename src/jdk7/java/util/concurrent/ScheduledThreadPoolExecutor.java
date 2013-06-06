@@ -52,7 +52,7 @@ import java.util.*;
  * without threads to handle tasks once they become eligible to run.
  *
  * <p><b>Extension notes:</b> This class overrides the
- * {@link ThreadPoolExecutor#execute execute} and
+ * {@link ThreadPoolExecutor#execute(Runnable) execute} and
  * {@link AbstractExecutorService#submit(Runnable) submit}
  * methods to generate internal {@link ScheduledFuture} objects to
  * control per-task delays and scheduling.  To preserve
@@ -227,9 +227,9 @@ public class ScheduledThreadPoolExecutor
         }
 
         /**
-         * Returns true if this is a periodic (not a one-shot) action.
+         * Returns {@code true} if this is a periodic (not a one-shot) action.
          *
-         * @return true if periodic
+         * @return {@code true} if periodic
          */
         public boolean isPeriodic() {
             return period != 0;
@@ -1052,7 +1052,8 @@ public class ScheduledThreadPoolExecutor
                         long delay = first.getDelay(NANOSECONDS);
                         if (delay <= 0)
                             return finishPoll(first);
-                        else if (leader != null)
+                        first = null; // don't retain ref while waiting
+                        if (leader != null)
                             available.await();
                         else {
                             Thread thisThread = Thread.currentThread();
@@ -1092,6 +1093,7 @@ public class ScheduledThreadPoolExecutor
                             return finishPoll(first);
                         if (nanos <= 0)
                             return null;
+                        first = null; // don't retain ref while waiting
                         if (nanos < delay || leader != null)
                             nanos = available.awaitNanos(nanos);
                         else {

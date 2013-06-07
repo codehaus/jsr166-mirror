@@ -1398,12 +1398,7 @@ public class ConcurrentLinkedDeque<E>
                 if (p.item == null && p == (p = p.next))
                     current = p = q.first();
                 if (p != null && p.next != null) {
-                    Object[] a;
-                    try {
-                        a = new Object[n];
-                    } catch (OutOfMemoryError oome) {
-                        return null;
-                    }
+                    Object[] a = new Object[n];
                     int i = 0;
                     do {
                         if ((a[i] = p.item) != null)

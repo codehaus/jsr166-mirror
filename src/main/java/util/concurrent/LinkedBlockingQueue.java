@@ -855,12 +855,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             if (!exhausted &&
                 ((h = current) != null || (h = q.head.next) != null) &&
                 h.next != null) {
-                Object[] a;
-                try {
-                    a = new Object[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                Object[] a = new Object[n];
                 int i = 0;
                 Node<E> p = current;
                 q.fullyLock();

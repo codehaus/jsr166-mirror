@@ -8,8 +8,8 @@ package java.util.concurrent;
 import java.util.Map;
 
 /**
- * A {@link java.util.Map} providing additional atomic
- * {@code putIfAbsent}, {@code remove}, and {@code replace} methods.
+ * A {@link java.util.Map} providing thread safety and atomicity 
+ * guarantees.
  *
  * <p>Memory consistency effects: As with other concurrent
  * collections, actions in a thread prior to placing an object into a

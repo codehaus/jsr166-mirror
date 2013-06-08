@@ -1149,12 +1149,7 @@ public class LinkedBlockingDeque<E>
             if (!exhausted &&
                 ((h = current) != null || (h = q.first) != null) &&
                 h.next != null) {
-                Object[] a;
-                try {
-                    a = new Object[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                Object[] a = new Object[n];
                 final ReentrantLock lock = q.lock;
                 int i = 0;
                 Node<E> p = current;

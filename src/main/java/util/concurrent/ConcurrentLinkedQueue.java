@@ -788,12 +788,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             if (!exhausted &&
                 ((p = current) != null || (p = q.first()) != null) &&
                 p.next != null) {
-                Object[] a;
-                try {
-                    a = new Object[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                Object[] a = new Object[n];
                 int i = 0;
                 do {
                     if ((a[i] = p.item) != null)

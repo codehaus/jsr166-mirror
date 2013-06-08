@@ -8,7 +8,7 @@ package java.util.concurrent;
 import java.util.Map;
 
 /**
- * A {@link java.util.Map} providing thread safety and atomicity 
+ * A {@link java.util.Map} providing thread safety and atomicity
  * guarantees.
  *
  * <p>Memory consistency effects: As with other concurrent

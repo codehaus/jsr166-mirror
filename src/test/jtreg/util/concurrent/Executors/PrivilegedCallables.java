@@ -52,6 +52,11 @@ public class PrivilegedCallables {
     Throwable randomThrowable() {
         return throwables[rnd.nextInt(throwables.length)];
     }
+    void throwThrowable(Throwable t) throws Exception {
+        if (t instanceof Error) throw (Error) t;
+        if (t instanceof RuntimeException) throw (RuntimeException) t;
+        throw (Exception) t;
+    }
 
     //----------------------------------------------------------------
     // A Policy class designed to make permissions fiddling very easy.
@@ -120,9 +125,8 @@ public class PrivilegedCallables {
             if (rnd.nextBoolean()) {
                 final Throwable t = randomThrowable();
                 real = new Callable<Integer>() {
-                    @SuppressWarnings("deprecation")
                     public Integer call() throws Exception {
-                        Thread.currentThread().stop(t);
+                        throwThrowable(t);
                         return null; }};
                 try {
                     c.call();

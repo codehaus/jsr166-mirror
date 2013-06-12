@@ -84,7 +84,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * class are found.
      */
     public void testComparableFamily() {
-        ConcurrentHashMap<BI, Boolean> m = new ConcurrentHashMap<>();
+        ConcurrentHashMap<BI, Boolean> m =
+            new ConcurrentHashMap<BI, Boolean>();
         for (int i = 0; i < 1000; i++) {
             assertTrue(m.put(new CI(i), true) == null);
         }
@@ -99,7 +100,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * on Comparable can be inserted and found.
      */
     public void testGenericComparable() {
-        ConcurrentHashMap<Object, Boolean> m = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Object, Boolean> m =
+            new ConcurrentHashMap<Object, Boolean>();
         for (int i = 0; i < 1000; i++) {
             BI bi = new BI(i);
             BS bs = new BS(String.valueOf(i));
@@ -122,7 +124,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * inserted and found.
      */
     public void testGenericComparable2() {
-        ConcurrentHashMap<Object, Boolean> m = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Object, Boolean> m =
+            new ConcurrentHashMap<Object, Boolean>();
         for (int i = 0; i < 1000; i++) {
             m.put(new ArrayList(Collections.singleton(new BI(i))), true);
         }

@@ -2516,7 +2516,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 U.compareAndSwapInt(this, SIZECTL, sc, -2))
                 transfer(tab, null);
             else if ((b = tabAt(tab, index)) != null) {
-                synchronized(b) {
+                synchronized (b) {
                     if (tabAt(tab, index) == b) {
                         TreeNode<K,V> hd = null, tl = null;
                         for (Node<K,V> e = b; e != null; e = e.next) {

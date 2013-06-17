@@ -1913,7 +1913,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Tree version of putVal. 
+         * Tree version of putVal.
          */
         final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                        int h, K k, V v) {
@@ -2046,7 +2046,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 p.left = p.right = p.parent = null;
             }
 
-            TreeNode<K,V> r = (p.red)? root : balanceDeletion(root, replacement);
+            TreeNode<K,V> r = p.red ? root : balanceDeletion(root, replacement);
 
             if (replacement == p) {  // detach
                 TreeNode<K,V> pp = p.parent;

@@ -1705,7 +1705,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if ((n = findNode(key)) == null) {
                 if ((r = remappingFunction.apply(key, null)) == null)
                     break;
-                if (doPut(key, r, false) == null)
+                if (doPut(key, r, true) == null)
                     return r;
             }
             else if ((v = n.value) != null) {
@@ -1743,7 +1743,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         for (;;) {
             Node<K,V> n; Object v; V r;
             if ((n = findNode(key)) == null) {
-                if (doPut(key, value, false) == null)
+                if (doPut(key, value, true) == null)
                     return value;
             }
             else if ((v = n.value) != null) {

@@ -41,7 +41,8 @@ public class COWALAddIfAbsentStringLoops {
         result.set(0);
         Thread[] ts = new Thread[CACHE_HIT_FACTOR*n];
         Phaser started = new Phaser(ts.length + 1);
-        CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+        CopyOnWriteArrayList<String> list =
+            new CopyOnWriteArrayList<String>();
         for (int i = 0; i < ts.length; ++i)
             (ts[i] = new Thread(new Task(i%n, n, list, started))).start();
         long p = started.arriveAndAwaitAdvance();

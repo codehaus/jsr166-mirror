@@ -202,7 +202,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * (method TreeNode.root()).
      *
      * All applicable internal methods accept a hash code as an
-     * argument (as normally supplied from a public methd), allowing
+     * argument (as normally supplied from a public method), allowing
      * them to call each other without recomputing user hashCodes.
      *
      * When bin lists are treeified, split, or untreeified, we keep

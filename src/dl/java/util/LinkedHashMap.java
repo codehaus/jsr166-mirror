@@ -148,7 +148,6 @@ import java.io.IOException;
  * @see     Hashtable
  * @since   1.4
  */
-
 public class LinkedHashMap<K,V>
     extends HashMap<K,V>
     implements Map<K,V>

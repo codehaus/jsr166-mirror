@@ -167,7 +167,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
     @Override
     default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         if (function == null) throw new NullPointerException();
-        for (Map.Entry<K, V> entry : entrySet()) {
+        for (Map.Entry<K,V> entry : entrySet()) {
             K k; V v;
             try {
                 k = entry.getKey();

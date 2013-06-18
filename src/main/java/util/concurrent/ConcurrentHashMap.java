@@ -2597,13 +2597,13 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                         return p;
                     else if (pl == null && pr == null)
                         break;
-                    else if ((kc != null || 
+                    else if ((kc != null ||
                               (kc = comparableClassFor(k)) != null) &&
                              (dir = compareComparables(kc, k, pk)) != 0)
                         p = (dir < 0) ? pl : pr;
                     else if (pl == null)
                         p = pr;
-                    else if (pr == null || 
+                    else if (pr == null ||
                              (q = pr.findTreeNode(h, k, kc)) == null)
                         p = pl;
                     else
@@ -3098,6 +3098,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 }
             }
         }
+
         /**
          * Recursive invariant check
          */

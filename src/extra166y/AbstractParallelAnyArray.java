@@ -132,7 +132,7 @@ public abstract class AbstractParallelAnyArray {
      */
     Object[] ogetArray() { return null; }
     double[] dgetArray() { return null; }
-    long[]  lgetArray() { return null; }
+    long[]   lgetArray() { return null; }
     abstract Object oget(int index);
     abstract double dget(int index);
     abstract long lget(int index);

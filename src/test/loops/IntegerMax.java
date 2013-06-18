@@ -173,7 +173,7 @@ public class IntegerMax {
     static long itest(Collection<Integer> c, int max, int trials) throws Exception {
         if (c == null) throw new Error();
         Thread.sleep(250);
-        long tlast =  System.nanoTime();
+        long tlast = System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             Integer pmax = Integer.valueOf(Integer.MIN_VALUE - checksum.get());
             for (Integer x : c)
@@ -186,7 +186,7 @@ public class IntegerMax {
     static long stest(Collection<Integer> c, int max, int trials) throws Exception {
         if (c == null) throw new Error();
         Thread.sleep(250);
-        long tlast =  System.nanoTime();
+        long tlast = System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             int pmax = c.stream().reduce
                 (Integer.valueOf(Integer.MIN_VALUE - checksum.get()), MAX);
@@ -198,7 +198,7 @@ public class IntegerMax {
     static long ptest(Collection<Integer> c, int max, int trials) throws Exception {
         if (c == null) throw new Error();
         Thread.sleep(250);
-        long tlast =  System.nanoTime();
+        long tlast = System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             int pmax = c.parallelStream().reduce
                 (Integer.valueOf(Integer.MIN_VALUE - checksum.get()), MAX);

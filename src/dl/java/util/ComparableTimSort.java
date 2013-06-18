@@ -61,7 +61,7 @@ class ComparableTimSort {
      * When we get into galloping mode, we stay there until both runs win less
      * often than MIN_GALLOP consecutive times.
      */
-    private static final int  MIN_GALLOP = 7;
+    private static final int MIN_GALLOP = 7;
 
     /**
      * This controls when we get *into* galloping mode.  It is initialized
@@ -876,7 +876,7 @@ class ComparableTimSort {
      * @param minCapacity the minimum required capacity of the tmp array
      * @return tmp, whether or not it grew
      */
-    private Object[]  ensureCapacity(int minCapacity) {
+    private Object[] ensureCapacity(int minCapacity) {
         if (tmpLen < minCapacity) {
             // Compute smallest power of 2 > minCapacity
             int newSize = minCapacity;

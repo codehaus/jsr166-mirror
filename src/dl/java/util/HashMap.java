@@ -1299,10 +1299,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     // These methods are also used when serializing HashSets
-    final float loadFactor()  { return loadFactor;   }
+    final float loadFactor() { return loadFactor; }
     final int capacity() {
-        return (table != null ?  table.length :
-                (threshold > 0 ? threshold : DEFAULT_INITIAL_CAPACITY));
+        return (table != null) ? table.length :
+            (threshold > 0) ? threshold :
+            DEFAULT_INITIAL_CAPACITY;
     }
 
     /**
@@ -2047,7 +2048,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 p.left = p.right = p.parent = null;
             }
 
-            TreeNode<K,V> r =  p.red ? root : balanceDeletion(root, replacement);
+            TreeNode<K,V> r = p.red ? root : balanceDeletion(root, replacement);
 
             if (replacement == p) {  // detach
                 TreeNode<K,V> pp = p.parent;

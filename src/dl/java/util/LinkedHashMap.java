@@ -156,9 +156,9 @@ public class LinkedHashMap<K,V>
     /*
      * Implementation note.  A previous version of this class was
      * internally structured a little differently. Because superclass
-     * HashMap now now uses trees for some of its nodes,
+     * HashMap now uses trees for some of its nodes,
      * LinkedHashMap's nodes are now declared in class HashMap as an
-     * intermediaty node class. This also requires using two fields
+     * intermediate node class. This also requires using two fields
      * (head, tail) rather than a pointer to a header node to maintain
      * the doubly-linked before/after list. It also used a different
      * style of callback methods upon access, insertion, and removal,

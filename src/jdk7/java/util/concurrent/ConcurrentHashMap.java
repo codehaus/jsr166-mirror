@@ -3177,9 +3177,9 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
             Class<?> ck = CounterCell.class;
             CELLVALUE = U.objectFieldOffset
                 (ck.getDeclaredField("value"));
-            Class<?> sc = Node[].class;
-            ABASE = U.arrayBaseOffset(sc);
-            int scale = U.arrayIndexScale(sc);
+            Class<?> ak = Node[].class;
+            ABASE = U.arrayBaseOffset(ak);
+            int scale = U.arrayIndexScale(ak);
             if ((scale & (scale - 1)) != 0)
                 throw new Error("data type scale not a power of two");
             ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);

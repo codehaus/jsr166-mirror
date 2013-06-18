@@ -309,11 +309,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
 
-  <target name="test"
-          depends="configure-tests, report-tests"
-          description="Runs all tests (requires JUnit 3.8.1 in ${ant.home}/lib)" />
-
-
   <target name="docs"
           description="Builds javadocs for src/main to dist dir">
 
@@ -380,9 +375,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
 
-  <!-- Internal targets -->
-
-
   <target name="dist-jar"
           depends="clean, jar">
     <copy file="${product.jar}" todir="${dist.dir}"/>
@@ -393,69 +385,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
     <mirror-dir src="${docs.dir}" dst="${dist.docs.dir}"/>
   </target>
 
-
-  <target name="compile-tests"
-          depends="jar">
-
-    <mkdir dir="${build.testcases.dir}"/>
-
-    <javac srcdir="${tck.src.dir}"
-           destdir="${build.testcases.dir}"
-           debug="${build.debug}"
-           debuglevel="${build.debuglevel}"
-           deprecation="${build.deprecation}"
-           source="6"
-           classpath="${junit.jar}"
-           bootclasspath="@{product.jar}:${bootclasspath6}"
-           includeAntRuntime="false"
-           includeJavaRuntime="false"
-           executable="${javac8}"
-           fork="true">
-
-      <include name="**/*.java"/>
-      <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
-      <compilerarg line="${build.args}"/>
-
-    </javac>
-
-    <javac srcdir="${test.src.dir}"
-           destdir="${build.testcases.dir}"
-           debug="${build.debug}"
-           debuglevel="${build.debuglevel}"
-           deprecation="${build.deprecation}"
-           source="6"
-           classpath=""
-           bootclasspath="@{product.jar}:${bootclasspath6}"
-           includeAntRuntime="false"
-           includeJavaRuntime="false"
-           executable="${javac8}"
-           fork="true">
-
-      <include name="jsr166/test/**/*.java"/>
-      <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
-      <compilerarg line="${build.args}"/>
-
-    </javac>
-
-<!--
-    <javac srcdir="${jtreg.src.dir}"
-          destdir="${build.testcases.dir}"
-            debug="${build.debug}"
-       debuglevel="${build.debuglevel}"
-      deprecation="${build.deprecation}"
-           source="${build.sourcelevel}"
-             fork="true">
-
-      <compilerarg value="-Xbootclasspath/p:${product.jar}"/>
-      <compilerarg value="-XDignore.symbol.file=true"/>
-      <compilerarg line="${build.args}"/>
-
-    </javac>
--->
-
-  </target>
 
   <target name="test-tck"
 	  depends="jar"
@@ -476,82 +405,11 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
        classes="${product.jar}"/>
   </target>
 
-  <target name="test-ng"
+  <target name="test"
           depends="test-tck, test-jtreg"
           description="Runs tck and jtreg tests for main">
   </target>
 
-  <target name="run-tests"
-          depends="compile-tests">
-
-    <!-- May be overridden by user.properties -->
-    <property name="testcase" value="*"/>
-
-    <mkdir dir="${build.reports.dir}"/>
-
-    <junit printsummary="true"
-             showoutput="true"
-          errorProperty="junit.failed"
-        failureProperty="junit.failed"
-                    dir="${build.reports.dir}"
-                    jvm="${java8}"
-                   fork="true">
-
-      <jvmarg value="-Xbootclasspath/p:${product.jar}"/>
-      <jvmarg value="-server"/>
-      <jvmarg value="-showversion"/>
-
-      <classpath refid="test.classpath"/>
-
-      <formatter type="xml"/>
-
-      <batchtest todir="${build.reports.dir}" unless="no.test.tck">
-        <fileset dir="${tck.src.dir}">
-          <include name="**/${testcase}Test.java"/>
-        </fileset>
-      </batchtest>
-
-      <batchtest todir="${build.reports.dir}" if="do.test.old">
-        <fileset dir="${test.src.dir}">
-          <include name="jsr166/test/**/${testcase}Test.java"/>
-        </fileset>
-      </batchtest>
-
-<!--
-      <batchtest todir="${build.reports.dir}" if="do.test.jtreg">
-        <fileset dir="${jtreg.src.dir}">
-          <include name="**/${testcase}Test.java"/>
-        </fileset>
-      </batchtest>
--->
-
-    </junit>
-
-  </target>
-
-
-  <target name="report-tests"
-          depends="run-tests">
-
-    <!-- Sets junit.report.format to frames if redirection is present,
-         otherwise sets it to noframes. -->
-    <available property="junit.report.format"
-                  value="frames"
-              classname="org.apache.xalan.lib.Redirect"
-    />
-    <property name="junit.report.format" value="noframes"/>
-
-    <junitreport todir="${build.reports.dir}">
-      <fileset dir="${build.reports.dir}">
-        <include name="TEST-*.xml"/>
-      </fileset>
-      <report format="${junit.report.format}" todir="${build.reports.dir}"
-      />
-    </junitreport>
-
-    <fail message="Test Cases Failed" if="junit.failed"/>
-
-  </target>
 
 
   <target name="configure-compiler">
@@ -570,29 +428,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
   </target>
 
-
-  <target name="configure-tests"
-       depends="configure-compiler">
-
-    <!-- junit.framework.Protectable is in JUnit 3.8.1 but not in 3.7 -->
-    <available property="junit.available"
-               classname="junit.framework.Protectable"/>
-
-    <!-- Xalan -->
-    <available property="xalan.available"
-               classname="org.apache.xalan.Version"/>
-
-
-    <!-- Ant 1.6beta and later don't need or want this check -->
-    <!--
-    <fail message="Need JUnit 3.8.1 in ${ant.home}${file.separator}lib to run tests"
-          unless="junit.available"/>
-
-    <fail message="Need Xalan 2.5.1 jar in ${ant.home}${file.separator}lib to run tests"
-          unless="xalan.available"/>
-    -->
-
-  </target>
 
 
   <!-- Various demos and test programs -->

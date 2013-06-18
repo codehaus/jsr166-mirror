@@ -248,15 +248,15 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * the same or better than java.util.HashMap, and to support high
      * initial insertion rates on an empty table by many threads.
      *
-     * This map usually acts as a binned (bucketed) hash table.
-     * Each key-value mapping is held in a Node.  Most nodes are
-     * instances of the basic Node class with hash, key, value, and
-     * next fields. However, various subclasses exist: TreeNodes are
+     * This map usually acts as a binned (bucketed) hash table.  Each
+     * key-value mapping is held in a Node.  Most nodes are instances
+     * of the basic Node class with hash, key, value, and next
+     * fields. However, various subclasses exist: TreeNodes are
      * arranged in balanced trees, not lists.  TreeBins hold the roots
      * of sets of TreeNodes. ForwardingNodes are placed at the heads
      * of bins during resizing. ReservationNodes are used as
      * placeholders while establishing values in computeIfAbsent and
-     * related methods.  The three type TreeBin, ForwardingNode, and
+     * related methods.  The types TreeBin, ForwardingNode, and
      * ReservationNode do not hold normal user keys, values, or
      * hashes, and are readily distinguishable during search etc
      * because they have negative hash fields and null key and value
@@ -326,16 +326,16 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * includes the case when N > (1<<30), so some keys MUST collide.
      * Similarly for dumb or hostile usages in which multiple keys are
      * designed to have identical hash codes or ones that differs only
-     * in high bits. So we use a secondary strategy that applies when
-     * the number of nodes in a bin exceeds a threshold. These
-     * TreeBins use a balanced tree to hold nodes (a specialized form
-     * of red-black trees), bounding search time to O(log N).  Each
-     * search step in a TreeBin is at least twice as slow as in a
-     * regular list, but given that N cannot exceed (1<<64) (before
-     * running out of addresses) this bounds search steps, lock hold
-     * times, etc, to reasonable constants (roughly 100 nodes
-     * inspected per operation worst case) so long as keys are
-     * Comparable (which is very common -- String, Long, etc).
+     * in masked-out high bits. So we use a secondary strategy that
+     * applies when the number of nodes in a bin exceeds a
+     * threshold. These TreeBins use a balanced tree to hold nodes (a
+     * specialized form of red-black trees), bounding search time to
+     * O(log N).  Each search step in a TreeBin is at least twice as
+     * slow as in a regular list, but given that N cannot exceed
+     * (1<<64) (before running out of addresses) this bounds search
+     * steps, lock hold times, etc, to reasonable constants (roughly
+     * 100 nodes inspected per operation worst case) so long as keys
+     * are Comparable (which is very common -- String, Long, etc).
      * TreeBin nodes (TreeNodes) also maintain the same "next"
      * traversal pointers as regular nodes, so can be traversed in
      * iterators in the same way.
@@ -424,7 +424,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Algorithms" (CLR).
      *
      * TreeBins also require an additional locking mechanism.  While
-     * list traversal is always possible by readers evern during
+     * list traversal is always possible by readers even during
      * updates, tree traversal is not, mainly beause of tree-rotations
      * that may change the root node and/or its linkages.  TreeBins
      * include a simple read-write lock mechanism parasitic on the
@@ -449,7 +449,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * only when serializing.
      *
      * This file is organized to make things a little easier to follow
-     * while reading than they might otherwise:. First the main static
+     * while reading than they might otherwise: First the main static
      * declarations and utilities, then fields, then main public
      * methods (with a few factorings of multiple public methods into
      * internal ones), then sizing methods, trees, traversers, and
@@ -497,9 +497,10 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     /**
      * The bin count threshold for using a tree rather than list for a
      * bin.  Bins are converted to trees when adding an element to a
-     * bin with at least this many nodes. The value should be at least
-     * 8 to mesh with assumptions in tree removal about conversion
-     * back to plain bins upon shrinkage.
+     * bin with at least this many nodes. The value must be greater
+     * than 2, and should be at least 8 to mesh with assumptions in
+     * tree removal about conversion back to plain bins upon
+     * shrinkage.
      */
     static final int TREEIFY_THRESHOLD = 8;
 
@@ -513,8 +514,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     /**
      * The smallest table capacity for which bins may be treeified.
      * (Otherwise the table is resized if too many nodes in a bin.)
-     * Should be at least 4 * TREEIFY_THRESHOLD to avoid conflicts
-     * between resizing and treeification thresholds.
+     * The value should be at least 4 * TREEIFY_THRESHOLD to avoid
+     * conflicts between resizing and treeification thresholds.
      */
     static final int MIN_TREEIFY_CAPACITY = 64;
 
@@ -551,9 +552,9 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Key-value entry.  This class is never exported out as a
      * user-mutable Map.Entry (i.e., one supporting setValue; see
      * MapEntry below), but can be used for read-only traversals used
-     * in bulk tasks.  Subclasses of Node with a hash field of MOVED are special,
-     * and contain null keys and values (but are never exported).
-     * Otherwise, keys and vals are never null.
+     * in bulk tasks.  Subclasses of Node with a negativehash field
+     * are special, and contain null keys and values (but are never
+     * exported).  Otherwise, keys and vals are never null.
      */
     static class Node<K,V> implements Map.Entry<K,V> {
         final int hash;
@@ -585,6 +586,9 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     (v == (u = val) || v.equals(u)));
         }
 
+        /**
+         * Virtualized support for map.get(); overridden in subclasses.
+         */
         Node<K,V> find(int h, Object k) {
             Node<K,V> e = this;
             if (k != null) {
@@ -2511,10 +2515,11 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     private final void treeifyBin(Node<K,V>[] tab, int index) {
         Node<K,V> b; int n, sc;
         if (tab != null) {
-            if ((n = tab.length) < MIN_TREEIFY_CAPACITY &&
-                tab == table && (sc = sizeCtl) >= 0 &&
-                U.compareAndSwapInt(this, SIZECTL, sc, -2))
-                transfer(tab, null);
+            if ((n = tab.length) < MIN_TREEIFY_CAPACITY) {
+                if (tab == table && (sc = sizeCtl) >= 0 &&
+                    U.compareAndSwapInt(this, SIZECTL, sc, -2))
+                    transfer(tab, null);
+            }
             else if ((b = tabAt(tab, index)) != null) {
                 synchronized (b) {
                     if (tabAt(tab, index) == b) {
@@ -2579,30 +2584,32 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
          * starting at given root.
          */
         final TreeNode<K,V> findTreeNode(int h, Object k, Class<?> kc) {
-            if (k == null)
-                return null;
-            TreeNode<K,V> p = this;
-            do  {
-                int ph, dir; K pk; TreeNode<K,V> q;
-                TreeNode<K,V> pl = p.left, pr = p.right;
-                if ((ph = p.hash) > h)
-                    p = pl;
-                else if (ph < h)
-                    p = pr;
-                else if ((pk = p.key) == k || (pk != null && k.equals(pk)))
-                    return p;
-                else if (pl == null && pr == null)
-                    break;
-                else if ((kc != null || (kc = comparableClassFor(k)) != null) &&
-                         (dir = compareComparables(kc, k, pk)) != 0)
-                    p = (dir < 0) ? pl : pr;
-                else if (pl == null)
-                    p = pr;
-                else if (pr == null || (q = pr.findTreeNode(h, k, kc)) == null)
-                    p = pl;
-                else
-                    return q;
-            } while (p != null);
+            if (k != null) {
+                TreeNode<K,V> p = this;
+                do  {
+                    int ph, dir; K pk; TreeNode<K,V> q;
+                    TreeNode<K,V> pl = p.left, pr = p.right;
+                    if ((ph = p.hash) > h)
+                        p = pl;
+                    else if (ph < h)
+                        p = pr;
+                    else if ((pk = p.key) == k || (pk != null && k.equals(pk)))
+                        return p;
+                    else if (pl == null && pr == null)
+                        break;
+                    else if ((kc != null || 
+                              (kc = comparableClassFor(k)) != null) &&
+                             (dir = compareComparables(kc, k, pk)) != 0)
+                        p = (dir < 0) ? pl : pr;
+                    else if (pl == null)
+                        p = pr;
+                    else if (pr == null || 
+                             (q = pr.findTreeNode(h, k, kc)) == null)
+                        p = pl;
+                    else
+                        return q;
+                } while (p != null);
+            }
             return null;
         }
     }
@@ -2620,17 +2627,18 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
         TreeNode<K,V> root;
         volatile TreeNode<K,V> first;
         volatile Thread waiter;
-        static final int WRITER = 1; // values for lockState
-        static final int WAITER = 2;
-        static final int READER = 4;
         volatile int lockState;
+        // values for lockState
+        static final int WRITER = 1; // set while holding write lock
+        static final int WAITER = 2; // set when waiting for write lock
+        static final int READER = 4; // increment value for setting read lock
 
         /**
          * Creates bin with initial set of nodes headed by b.
          */
         TreeBin(TreeNode<K,V> b) {
             super(TREEBIN, null, null, null);
-            first = b;
+            this.first = b;
             TreeNode<K,V> r = null;
             for (TreeNode<K,V> x = b, next; x != null; x = next) {
                 next = (TreeNode<K,V>)x.next;
@@ -2668,7 +2676,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                     }
                 }
             }
-            root = r;
+            this.root = r;
         }
 
         /**
@@ -2748,15 +2756,14 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
          * @return null if added
          */
         final TreeNode<K,V> putTreeVal(int h, K k, V v) {
-            TreeNode<K,V> p;
-            if ((p = root) == null) {
-                first = root = new TreeNode<K,V>(h, k, v, null, null);
-                return null;
-            }
             Class<?> kc = null;
-            for (;;) {
+            for (TreeNode<K,V> p = root;;) {
                 int dir, ph; K pk; TreeNode<K,V> q, pr;
-                if ((ph = p.hash) > h)
+                if (p == null) {
+                    first = root = new TreeNode<K,V>(h, k, v, null, null);
+                    break;
+                }
+                else if ((ph = p.hash) > h)
                     dir = -1;
                 else if (ph < h)
                     dir = 1;
@@ -2793,10 +2800,11 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                             unlockRoot();
                         }
                     }
-                    //                    assert checkInvariants(root);
-                    return null;
+                    break;
                 }
             }
+            assert checkInvariants(root);
+            return null;
         }
 
         /**
@@ -2823,7 +2831,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 root = null;
                 return true;
             }
-            if ((r = root) == null || r.right == null ||
+            if ((r = root) == null || r.right == null || // too small
                 (rl = r.left) == null || rl.left == null)
                 return true;
             lockRoot();
@@ -2901,7 +2909,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
             } finally {
                 unlockRoot();
             }
-            //            assert checkInvariants(root);
+            assert checkInvariants(root);
             return false;
         }
 
@@ -2910,8 +2918,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
 
         static <K,V> TreeNode<K,V> rotateLeft(TreeNode<K,V> root,
                                               TreeNode<K,V> p) {
-            if (p != null) {
-                TreeNode<K,V> r = p.right, pp, rl;
+            TreeNode<K,V> r, pp, rl;
+            if (p != null && (r = p.right) != null) {
                 if ((rl = p.right = r.left) != null)
                     rl.parent = p;
                 if ((pp = r.parent = p.parent) == null)
@@ -2928,8 +2936,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
 
         static <K,V> TreeNode<K,V> rotateRight(TreeNode<K,V> root,
                                                TreeNode<K,V> p) {
-            if (p != null) {
-                TreeNode<K,V> l = p.left, pp, lr;
+            TreeNode<K,V> l, pp, lr;
+            if (p != null && (l = p.left) != null) {
                 if ((lr = p.left = l.right) != null)
                     lr.parent = p;
                 if ((pp = l.parent = p.parent) == null)
@@ -3090,11 +3098,10 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 }
             }
         }
-
         /**
          * Recursive invariant check
          */
-        static <K,V> boolean checkTreeNode(TreeNode<K,V> t) {
+        static <K,V> boolean checkInvariants(TreeNode<K,V> t) {
             TreeNode<K,V> tp = t.parent, tl = t.left, tr = t.right,
                 tb = t.prev, tn = (TreeNode<K,V>)t.next;
             if (tb != null && tb.next != t)
@@ -3109,9 +3116,9 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 return false;
             if (t.red && tl != null && tl.red && tr != null && tr.red)
                 return false;
-            if (tl != null && !checkTreeNode(tl))
+            if (tl != null && !checkInvariants(tl))
                 return false;
-            if (tr != null && !checkTreeNode(tr))
+            if (tr != null && !checkInvariants(tr))
                 return false;
             return true;
         }
@@ -3183,7 +3190,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 if (baseIndex >= baseLimit || (t = tab) == null ||
                     (n = t.length) <= (i = index) || i < 0)
                     return next = null;
-                if ((e = tabAt(t, index)) != null && e.key == null) {
+                if ((e = tabAt(t, index)) != null && e.hash < 0) {
                     if (e instanceof ForwardingNode) {
                         tab = ((ForwardingNode<K,V>)e).nextTable;
                         e = null;
@@ -4650,7 +4657,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 if (baseIndex >= baseLimit || (t = tab) == null ||
                     (n = t.length) <= (i = index) || i < 0)
                     return next = null;
-                if ((e = tabAt(t, index)) != null && e.key == null) {
+                if ((e = tabAt(t, index)) != null && e.hash < 0) {
                     if (e instanceof ForwardingNode) {
                         tab = ((ForwardingNode<K,V>)e).nextTable;
                         e = null;

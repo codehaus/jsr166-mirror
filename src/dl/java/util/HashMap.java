@@ -152,10 +152,6 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * when overpopulated. However, since the vast majority of bins in
      * normal use are not overpopulated, checking for existence of
      * tree bins may be delayed in the course of table methods.
-     * Statistically, most operations in normal usages access only the
-     * first node (if present) of a bin, so most methods check this
-     * first, avoiding extra overhead and cache misses in the most
-     * common paths.
      *
      * Tree bins (i.e., bins whose elements are all TreeNodes) are
      * ordered primarily by hashCode, but in the case of ties, if two
@@ -202,8 +198,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * (method TreeNode.root()).
      *
      * All applicable internal methods accept a hash code as an
-     * argument (as normally supplied from a public method), allowing
+     * argument (as normally supplied from a public methd), allowing
      * them to call each other without recomputing user hashCodes.
+     * Most internal methods also accept a "tab" argument, that is
+     * normally the current table, but may be a new or old one when
+     * resizing.
      *
      * When bin lists are treeified, split, or untreeified, we keep
      * them in the same relative access/traversal order (i.e., field
@@ -215,7 +214,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * complicated by the existence of subclass LinkedHashMap. See
      * below for hook methods defined to be invoked upon insertion,
      * removal and access that allow LinkedHashMap internals to
-     * otherwise remain independent of these mechanics.
+     * otherwise remain independent of these mechanics. (This also
+     * requires that a map instance be passed to some utility methods
+     * that may create new nodes.)
      *
      * Sorry if you don't like the concurrent-programming-like
      * SSA-based coding style, that helps avoid aliasing errors
@@ -242,9 +243,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * The bin count threshold for using a tree rather than list for a
      * bin.  Bins are converted to trees when adding an element to a
-     * bin with at least this many nodes. The value should be at least
-     * 8 to mesh with assumptions in tree removal about conversion
-     * back to plain bins upon shrinkage.
+     * bin with at least this many nodes. The value must be greater
+     * than 2 and should be at least 8 to mesh with assumptions in
+     * tree removal about conversion back to plain bins upon
+     * shrinkage.
      */
     static final int TREEIFY_THRESHOLD = 8;
 
@@ -678,9 +680,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                      oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // double threshold
         }
-        else if (oldThr > 0)
+        else if (oldThr > 0) // initial capacity was placed in threshold
             newCap = oldThr;
-        else {
+        else {               // zero initial threshold signifies using defaults
             newCap = DEFAULT_INITIAL_CAPACITY;
             newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
         }
@@ -1304,8 +1306,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Saves the state of the <tt>HashMap</tt> instance to a stream (i.e.,
-     * serializes it).
+     * Save the state of the <tt>HashMap</tt> instance to a stream (i.e.,
+     * serialize it).
      *
      * @serialData The <i>capacity</i> of the HashMap (the length of the
      *             bucket array) is emitted (int), followed by the
@@ -1325,8 +1327,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Reconstitutes the {@code HashMap} instance from a stream (i.e.,
-     * deserializes it).
+     * Reconstitute the {@code HashMap} instance from a stream (i.e.,
+     * deserialize it).
      */
     private void readObject(java.io.ObjectInputStream s)
         throws IOException, ClassNotFoundException {
@@ -1399,8 +1401,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 throw new ConcurrentModificationException();
             if (e == null)
                 throw new NoSuchElementException();
-            current = e;
-            if ((next = e.next) == null && (t = table) != null) {
+            if ((next = (current = e).next) == null && (t = table) != null) {
                 do {} while (index < t.length && (next = t[index++]) == null);
             }
             return e;
@@ -1417,7 +1418,6 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             removeNode(hash(key), key, null, false, false);
             expectedModCount = modCount;
         }
-
     }
 
     final class KeyIterator extends HashIterator
@@ -1767,7 +1767,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Entry for Tree bins. Subclasses LinkedNode so can be used as
-     * either extension of regular or linked node.
+     * extension of either regular or linked node.
      */
     static final class TreeNode<K,V> extends LinkedNode<K,V> {
         TreeNode<K,V> parent;  // red-black tree links
@@ -1779,6 +1779,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             super(hash, key, val, next);
         }
 
+        /**
+         * Returns root of tree containing this node
+         */
         final TreeNode<K,V> root() {
             for (TreeNode<K,V> r = this, p;;) {
                 if ((p = r.parent) == null)
@@ -1796,10 +1799,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 int index = (n - 1) & root.hash;
                 TreeNode<K,V> first = (TreeNode<K,V>)tab[index];
                 if (root != first) {
+                    Node<K,V> rn;
                     tab[index] = root;
                     TreeNode<K,V> rp = root.prev;
-                    Node<K,V> rn = root.next;
-                    if (rn != null)
+                    if ((rn = root.next) != null)
                         ((TreeNode<K,V>)rn).prev = rp;
                     if (rp != null)
                         rp.next = rn;
@@ -1808,6 +1811,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     root.next = first;
                     root.prev = null;
                 }
+                assert checkInvariants(root);
             }
         }
 
@@ -1892,11 +1896,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 }
             }
             moveRootToFront(tab, root);
-            assert checkInvariants(root);
         }
 
         /**
-         * Returns a list on non-TreeNodes replacing those linked from
+         * Returns a list of non-TreeNodes replacing those linked from
          * this node.
          */
         final Node<K,V> untreeify(HashMap<K,V> map) {
@@ -1949,9 +1952,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     x.parent = x.prev = xp;
                     if (xpn != null)
                         ((TreeNode<K,V>)xpn).prev = x;
-                    TreeNode<K,V> r = balanceInsertion(root, x);
-                    moveRootToFront(tab, r);
-                    assert checkInvariants(r);
+                    moveRootToFront(tab, balanceInsertion(root, x));
                     return null;
                 }
             }
@@ -2046,7 +2047,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 p.left = p.right = p.parent = null;
             }
 
-            TreeNode<K,V> r = p.red ? root : balanceDeletion(root, replacement);
+            TreeNode<K,V> r = (p.red)? root : balanceDeletion(root, replacement);
 
             if (replacement == p) {  // detach
                 TreeNode<K,V> pp = p.parent;
@@ -2060,12 +2061,17 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             }
             if (movable)
                 moveRootToFront(tab, r);
-            assert checkInvariants(r);
         }
 
         /**
          * Splits nodes in a tree bin into lower and upper tree bins,
-         * or untreeifies if now too small.
+         * or untreeifies if now too small. Called only from resize;
+         * see above discussion about split bits and indices.
+         *
+         * @param map the map
+         * @param tab the table for recording bin heads
+         * @param index the index of the table being split
+         * @param bit the bit of hash to split on
          */
         final void split(HashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {
             TreeNode<K,V> b = this;
@@ -2119,8 +2125,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
         static <K,V> TreeNode<K,V> rotateLeft(TreeNode<K,V> root,
                                               TreeNode<K,V> p) {
-            if (p != null) {
-                TreeNode<K,V> r = p.right, pp, rl;
+            TreeNode<K,V> r, pp, rl;
+            if (p != null && (r = p.right) != null) {
                 if ((rl = p.right = r.left) != null)
                     rl.parent = p;
                 if ((pp = r.parent = p.parent) == null)
@@ -2137,8 +2143,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
         static <K,V> TreeNode<K,V> rotateRight(TreeNode<K,V> root,
                                                TreeNode<K,V> p) {
-            if (p != null) {
-                TreeNode<K,V> l = p.left, pp, lr;
+            TreeNode<K,V> l, pp, lr;
+            if (p != null && (l = p.left) != null) {
                 if ((lr = p.left = l.right) != null)
                     lr.parent = p;
                 if ((pp = l.parent = p.parent) == null)

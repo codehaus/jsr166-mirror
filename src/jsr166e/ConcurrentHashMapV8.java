@@ -2422,10 +2422,10 @@ public class ConcurrentHashMapV8<K,V>
                                     ++hc;
                                 }
                             }
-                            ln = (lc <= UNTREEIFY_THRESHOLD ?  untreeify(lo) :
-                                  (hc != 0) ? new TreeBin<K,V>(lo) : t);
-                            hn = (hc <= UNTREEIFY_THRESHOLD ? untreeify(hi) :
-                                  (lc != 0) ? new TreeBin<K,V>(hi) : t);
+                            ln = (lc <= UNTREEIFY_THRESHOLD) ? untreeify(lo) :
+                                (hc != 0) ? new TreeBin<K,V>(lo) : t;
+                            hn = (hc <= UNTREEIFY_THRESHOLD) ? untreeify(hi) :
+                                (lc != 0) ? new TreeBin<K,V>(hi) : t;
                         }
                         else
                             ln = hn = null;

@@ -3231,7 +3231,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         ForkJoinWorkerThreadFactory factory
             = defaultForkJoinWorkerThreadFactory;
         UncaughtExceptionHandler handler = null;
-        try {  // ignore exceptions in accesing/parsing properties
+        try {  // ignore exceptions in accessing/parsing properties
             String pp = System.getProperty
                 ("java.util.concurrent.ForkJoinPool.common.parallelism");
             String fp = System.getProperty

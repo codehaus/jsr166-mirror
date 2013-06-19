@@ -344,7 +344,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         return s;
     }
 
-
     /**
      * Implementation for join, get, quietlyJoin. Directly handles
      * only cases of already-completed, external wait, and

@@ -3047,7 +3047,6 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
     static final ThreadLocal<CounterHashCode> threadCounterHashCode =
         new ThreadLocal<CounterHashCode>();
 
-
     final long sumCount() {
         CounterCell[] as = counterCells; CounterCell a;
         long sum = baseCount;

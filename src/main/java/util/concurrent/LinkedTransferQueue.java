@@ -993,7 +993,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         }
     }
 
-
     public Spliterator<E> spliterator() {
         return new LTQSpliterator<E>(this);
     }

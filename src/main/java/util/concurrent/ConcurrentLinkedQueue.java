@@ -855,7 +855,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
     }
 
-
     public Spliterator<E> spliterator() {
         return new CLQSpliterator<E>(this);
     }

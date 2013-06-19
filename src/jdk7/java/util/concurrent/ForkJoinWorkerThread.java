@@ -6,7 +6,6 @@
 
 package java.util.concurrent;
 
-
 /**
  * A thread managed by a {@link ForkJoinPool}, which executes
  * {@link ForkJoinTask}s.

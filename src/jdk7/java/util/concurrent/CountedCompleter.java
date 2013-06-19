@@ -608,7 +608,6 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
             p.tryComplete();
     }
 
-
     /**
      * If this task's pending count is zero, returns this task;
      * otherwise decrements its pending count and returns {@code

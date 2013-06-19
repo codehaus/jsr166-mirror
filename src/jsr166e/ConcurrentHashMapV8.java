@@ -228,7 +228,7 @@ public class ConcurrentHashMapV8<K,V>
      * java.util.Spliterator.
      */
     public static interface ConcurrentHashMapSpliterator<T> {
-        /** 
+        /**
          * If possible, returns a new spliterator covering
          * approximately one half of the elements, which will not be
          * covered by this spliterator. Returns null if cannot be
@@ -735,11 +735,11 @@ public class ConcurrentHashMapV8<K,V>
                                         Node<K,V> c, Node<K,V> v) {
         return U.compareAndSwapObject(tab, ((long)i << ASHIFT) + ABASE, c, v);
     }
-    
+
     static final <K,V> void setTabAt(Node<K,V>[] tab, int i, Node<K,V> v) {
         U.putOrderedObject(tab, ((long)i << ASHIFT) + ABASE, v);
     }
-    
+
     /* ---------------- Fields -------------- */
 
     /**
@@ -2530,13 +2530,13 @@ public class ConcurrentHashMapV8<K,V>
                         return p;
                     else if (pl == null && pr == null)
                         break;
-                    else if ((kc != null || 
+                    else if ((kc != null ||
                               (kc = comparableClassFor(k)) != null) &&
                              (dir = compareComparables(kc, k, pk)) != 0)
                         p = (dir < 0) ? pl : pr;
                     else if (pl == null)
                         p = pr;
-                    else if (pr == null || 
+                    else if (pr == null ||
                              (q = pr.findTreeNode(h, k, kc)) == null)
                         p = pl;
                     else
@@ -3034,6 +3034,7 @@ public class ConcurrentHashMapV8<K,V>
                 }
             }
         }
+
         /**
          * Recursive invariant check
          */

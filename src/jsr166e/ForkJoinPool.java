@@ -878,7 +878,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 }
             }
         }
-       
+
         /**
          * If present, removes from queue and executes the given task,
          * or any other cancelled task. Returns (true) on any CAS
@@ -1386,8 +1386,9 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (wt != null && (w = wt.workQueue) != null) {
             int ps; long sc;
             w.qlock = -1;                // ensure set
-            do {} while(!U.compareAndSwapLong(this, STEALCOUNT, sc = stealCount,
-                                              sc + w.nsteals));
+            do {} while (!U.compareAndSwapLong(this, STEALCOUNT,
+                                               sc = stealCount,
+                                               sc + w.nsteals));
             if (((ps = plock) & PL_LOCK) != 0 ||
                 !U.compareAndSwapInt(this, PLOCK, ps, ps += PL_LOCK))
                 ps = acquirePlock();
@@ -1733,8 +1734,8 @@ public class ForkJoinPool extends AbstractExecutorService {
             else if ((ns = w.nsteals) != 0) { // collect steals and retry
                 long sc;
                 w.nsteals = 0;
-                do {} while(!U.compareAndSwapLong(this, STEALCOUNT, 
-                                                  sc = stealCount, sc + ns));
+                do {} while (!U.compareAndSwapLong(this, STEALCOUNT,
+                                                   sc = stealCount, sc + ns));
             }
             else {
                 long pc = ((d > 0 || ec != (e | INT_SIGN)) ? 0L :

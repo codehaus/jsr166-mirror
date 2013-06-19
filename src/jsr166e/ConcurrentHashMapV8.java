@@ -2475,7 +2475,7 @@ public class ConcurrentHashMapV8<K,V>
     }
 
     /**
-     * Returns a list on non-TreeNodes replacing those in given list
+     * Returns a list on non-TreeNodes replacing those in given list.
      */
     static <K,V> Node<K,V> untreeify(Node<K,V> b) {
         Node<K,V> hd = null, tl = null;
@@ -2613,7 +2613,7 @@ public class ConcurrentHashMapV8<K,V>
         }
 
         /**
-         * Acquires write lock for tree restructuring
+         * Acquires write lock for tree restructuring.
          */
         private final void lockRoot() {
             if (!U.compareAndSwapInt(this, LOCKSTATE, 0, WRITER))
@@ -2621,14 +2621,14 @@ public class ConcurrentHashMapV8<K,V>
         }
 
         /**
-         * Releases write lock for tree restructuring
+         * Releases write lock for tree restructuring.
          */
         private final void unlockRoot() {
             lockState = 0;
         }
 
         /**
-         * Possibly blocks awaiting root lock
+         * Possibly blocks awaiting root lock.
          */
         private final void contendedLock() {
             boolean waiting = false;
@@ -3146,7 +3146,7 @@ public class ConcurrentHashMapV8<K,V>
 
     /**
      * Base of key, value, and entry Iterators. Adds fields to
-     * Traverser to support iterator.remove
+     * Traverser to support iterator.remove.
      */
     static class BaseIterator<K,V> extends Traverser<K,V> {
         final ConcurrentHashMapV8<K,V> map;
@@ -5986,7 +5986,7 @@ public class ConcurrentHashMapV8<K,V>
     }
 
     /**
-     * Generates initial value for per-thread CounterHashCodes
+     * Generates initial value for per-thread CounterHashCodes.
      */
     static final AtomicInteger counterHashCodeGenerator = new AtomicInteger();
 

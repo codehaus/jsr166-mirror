@@ -2815,7 +2815,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
          * that are accessible independently of lock. So instead we
          * swap the tree linkages.
          *
-         * @return true if now too small so should be untreeified.
+         * @return true if now too small, so should be untreeified
          */
         final boolean removeTreeNode(TreeNode<K,V> p) {
             TreeNode<K,V> next = (TreeNode<K,V>)p.next;

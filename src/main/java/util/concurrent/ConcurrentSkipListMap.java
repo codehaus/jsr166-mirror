@@ -482,7 +482,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * Returns value if this node contains a valid key-value pair,
          * else null.
          * @return this node's value if it isn't a marker or header or
-         * is deleted, else null.
+         * is deleted, else null
          */
         V getValidValue() {
             Object v = value;

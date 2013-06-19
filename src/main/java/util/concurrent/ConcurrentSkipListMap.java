@@ -3112,7 +3112,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             private void descend() {
                 Comparator<? super K> cmp = m.comparator;
                 for (;;) {
-                    next =  m.findNear(lastReturned.key, LT, cmp);
+                    next = m.findNear(lastReturned.key, LT, cmp);
                     if (next == null)
                         break;
                     Object x = next.value;

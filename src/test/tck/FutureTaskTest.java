@@ -481,10 +481,9 @@ public class FutureTaskTest extends JSR166TestCase {
                     try {
                         pleaseCancel.countDown();
                         delay(LONG_DELAY_MS);
-                        shouldThrow();
-                    } catch (Throwable t) {
-                        assertTrue(t instanceof InterruptedException);
-                    }
+                        threadShouldThrow();
+                    } catch (InterruptedException success) {
+                    } catch (Throwable t) { threadUnexpectedException(t); }
                     throw new RuntimeException();
                 }});
 

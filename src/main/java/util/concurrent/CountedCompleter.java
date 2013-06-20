@@ -665,6 +665,24 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     }
 
     /**
+     * If this task has not completed, attempts to process at most the
+     * given number of other unprocessed tasks for which this task is
+     * a completer, if any are known to exist.
+     *
+     * @param maxTasks the maximum number of tasks to process.
+     */
+    public final void helpComplete(int maxTasks) {
+        Thread t; ForkJoinWorkerThread wt;
+        if (maxTasks > 0 && status >= 0) {
+            if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)
+                (wt = (ForkJoinWorkerThread)t).pool.
+                    helpComplete(wt.workQueue, this, maxTasks);
+            else
+                ForkJoinPool.common.externalHelpComplete(this, maxTasks);
+        }
+    }
+
+    /**
      * Supports ForkJoinTask exception propagation.
      */
     void internalPropagateException(Throwable ex) {

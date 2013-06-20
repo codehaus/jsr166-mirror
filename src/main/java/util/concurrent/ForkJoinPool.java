@@ -1844,8 +1844,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      * and run tasks within the target's computation.
      *
      * @param task the task to join
+     * @param maxTasks the maximum number of other tasks to run
      */
-    private int helpComplete(WorkQueue joiner, CountedCompleter<?> task) {
+    final int helpComplete(WorkQueue joiner, CountedCompleter<?> task,
+                           int maxTasks) {
         WorkQueue[] ws; int m;
         int s = 0;
         if ((ws = workQueues) != null && (m = ws.length - 1) >= 0 &&
@@ -1857,12 +1859,22 @@ public class ForkJoinPool extends AbstractExecutorService {
                 WorkQueue q;
                 if ((s = task.status) < 0)
                     break;
-                else if (joiner.internalPopAndExecCC(task))
+                else if (joiner.internalPopAndExecCC(task)) {
+                    if (--maxTasks <= 0) {
+                        s = task.status;
+                        break;
+                    }
                     k = scans;
+                }
                 else if ((s = task.status) < 0)
                     break;
-                else if ((q = ws[j & m]) != null && q.pollAndExecCC(task))
+                else if ((q = ws[j & m]) != null && q.pollAndExecCC(task)) {
+                    if (--maxTasks <= 0) {
+                        s = task.status;
+                        break;
+                    }
                     k = scans;
+                }
                 else if (--k < 0) {
                     if (c == (c = ctl))
                         break;
@@ -1943,7 +1955,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             do {} while (joiner.tryRemoveAndExec(task) && // process local tasks
                          (s = task.status) >= 0);
             if (s >= 0 && (task instanceof CountedCompleter))
-                s = helpComplete(joiner, (CountedCompleter<?>)task);
+                s = helpComplete(joiner, (CountedCompleter<?>)task, Integer.MAX_VALUE);
             long cc = 0;        // for stability checks
             while (s >= 0 && (s = task.status) >= 0) {
                 if ((s = tryHelpStealer(joiner, task)) == 0 &&
@@ -1993,7 +2005,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                          (s = task.status) >= 0);
             if (s >= 0) {
                 if (task instanceof CountedCompleter)
-                    helpComplete(joiner, (CountedCompleter<?>)task);
+                    helpComplete(joiner, (CountedCompleter<?>)task, Integer.MAX_VALUE);
                 do {} while (task.status >= 0 &&
                              tryHelpStealer(joiner, task) > 0);
             }
@@ -2279,7 +2291,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         return popped;
     }
 
-    final int externalHelpComplete(CountedCompleter<?> task) {
+    final int externalHelpComplete(CountedCompleter<?> task, int maxTasks) {
         WorkQueue joiner; int m;
         WorkQueue[] ws = workQueues;
         int j = ThreadLocalRandom.getProbe();
@@ -2293,12 +2305,22 @@ public class ForkJoinPool extends AbstractExecutorService {
                 WorkQueue q;
                 if ((s = task.status) < 0)
                     break;
-                else if (joiner.externalPopAndExecCC(task))
+                else if (joiner.externalPopAndExecCC(task)) {
+                    if (--maxTasks <= 0) {
+                        s = task.status;
+                        break;
+                    }
                     k = scans;
+                }
                 else if ((s = task.status) < 0)
                     break;
-                else if ((q = ws[j & m]) != null && q.pollAndExecCC(task))
+                else if ((q = ws[j & m]) != null && q.pollAndExecCC(task)) {
+                    if (--maxTasks <= 0) {
+                        s = task.status;
+                        break;
+                    }
                     k = scans;
+                }
                 else if (--k < 0) {
                     if (c == (c = ctl))
                         break;

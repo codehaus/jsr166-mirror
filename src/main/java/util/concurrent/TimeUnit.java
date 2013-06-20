@@ -145,14 +145,13 @@ public enum TimeUnit {
     // etc. are not declared abstract but otherwise act as abstract methods.
 
     /**
-     * Convert the given time duration in the given unit to this
-     * unit.  Conversions from finer to coarser granularities
-     * truncate, so lose precision. For example converting
-     * {@code 999} milliseconds to seconds results in
-     * {@code 0}. Conversions from coarser to finer granularities
-     * with arguments that would numerically overflow saturate to
-     * {@code Long.MIN_VALUE} if negative or {@code Long.MAX_VALUE}
-     * if positive.
+     * Converts the given time duration in the given unit to this unit.
+     * Conversions from finer to coarser granularities truncate, so
+     * lose precision. For example, converting {@code 999} milliseconds
+     * to seconds results in {@code 0}. Conversions from coarser to
+     * finer granularities with arguments that would numerically
+     * overflow saturate to {@code Long.MIN_VALUE} if negative or
+     * {@code Long.MAX_VALUE} if positive.
      *
      * <p>For example, to convert 10 minutes to milliseconds, use:
      * {@code TimeUnit.MILLISECONDS.convert(10L, TimeUnit.MINUTES)}

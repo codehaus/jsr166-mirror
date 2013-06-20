@@ -157,7 +157,7 @@ public class IntegerSum {
     static long itest(Collection<Integer> c, int sum, int trials) throws Exception {
         if (c == null) throw new Error();
         Thread.sleep(250);
-        long tlast =  System.nanoTime();
+        long tlast = System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             Integer psum = Integer.valueOf(checksum.get());
             for (Integer x : c)
@@ -170,7 +170,7 @@ public class IntegerSum {
     static long stest(Collection<Integer> c, int sum, int trials) throws Exception {
         if (c == null) throw new Error();
         Thread.sleep(250);
-        long tlast =  System.nanoTime();
+        long tlast = System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             int psum = c.stream().reduce
                 (Integer.valueOf(checksum.get()), SUM);
@@ -182,7 +182,7 @@ public class IntegerSum {
     static long ptest(Collection<Integer> c, int sum, int trials) throws Exception {
         if (c == null) throw new Error();
         Thread.sleep(250);
-        long tlast =  System.nanoTime();
+        long tlast = System.nanoTime();
         for (int i = 0; i < trials; ++i) {
             int psum = c.parallelStream().reduce
                 (Integer.valueOf(checksum.get()), SUM);

@@ -46,7 +46,7 @@ class ComparableTimSort {
      *
      * If you decrease this constant, you must change the stackLen
      * computation in the TimSort constructor, or you risk an
-     * ArrayOutOfBounds exception.  See listsort.txt for a discussion
+     * ArrayIndexOutofBoundsException.  See listsort.txt for a discussion
      * of the minimum stack length required as a function of the length
      * of the array being sorted and the minimum merge sequence length.
      */
@@ -61,7 +61,7 @@ class ComparableTimSort {
      * When we get into galloping mode, we stay there until both runs win less
      * often than MIN_GALLOP consecutive times.
      */
-    private static final int  MIN_GALLOP = 7;
+    private static final int MIN_GALLOP = 7;
 
     /**
      * This controls when we get *into* galloping mode.  It is initialized
@@ -103,9 +103,10 @@ class ComparableTimSort {
     private final int[] runLen;
 
     /**
-     * Asserts have been placed in if-statements for performace. To enable them,
-     * set this field to true and enable them in VM with a command line flag.
-     * If you modify this class, please do test the asserts!
+     * Asserts have been placed in if-statements for performance.
+     * To enable them, set this field to true and enable them in VM
+     * with a command line flag.  If you modify this class, please do
+     * test the asserts!
      */
     private static final boolean DEBUG = false;
 
@@ -875,7 +876,7 @@ class ComparableTimSort {
      * @param minCapacity the minimum required capacity of the tmp array
      * @return tmp, whether or not it grew
      */
-    private Object[]  ensureCapacity(int minCapacity) {
+    private Object[] ensureCapacity(int minCapacity) {
         if (tmpLen < minCapacity) {
             // Compute smallest power of 2 > minCapacity
             int newSize = minCapacity;

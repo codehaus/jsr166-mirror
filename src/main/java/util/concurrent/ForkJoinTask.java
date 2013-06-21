@@ -289,7 +289,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         if ((s = status) >= 0) {
             if (cp != null) {
                 if (this instanceof CountedCompleter)
-                    s = cp.externalHelpComplete((CountedCompleter<?>)this);
+                    s = cp.externalHelpComplete((CountedCompleter<?>)this, Integer.MAX_VALUE);
                 else if (cp.tryExternalUnpush(this))
                     s = doExec();
             }
@@ -327,7 +327,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             throw new InterruptedException();
         if ((s = status) >= 0 && cp != null) {
             if (this instanceof CountedCompleter)
-                cp.externalHelpComplete((CountedCompleter<?>)this);
+                cp.externalHelpComplete((CountedCompleter<?>)this, Integer.MAX_VALUE);
             else if (cp.tryExternalUnpush(this))
                 doExec();
         }
@@ -1004,7 +1004,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             }
             else if ((cp = ForkJoinPool.common) != null) {
                 if (this instanceof CountedCompleter)
-                    cp.externalHelpComplete((CountedCompleter<?>)this);
+                    cp.externalHelpComplete((CountedCompleter<?>)this, Integer.MAX_VALUE);
                 else if (cp.tryExternalUnpush(this))
                     doExec();
             }

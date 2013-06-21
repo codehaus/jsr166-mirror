@@ -1,4 +1,31 @@
 /*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * This file is available under and governed by the GNU General Public
+ * License version 2 only, as published by the Free Software Foundation.
+ * However, the following notice accompanied the original version of this
+ * file:
+ *
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
@@ -477,7 +504,7 @@ public class Basic {
             cf1 = supplyAsync(() -> { throw new RuntimeException(); });
             cf2 = supplyAsync(() -> 2);
             cf3 = cf1.applyToEither(cf2, (x) -> { check(x == 2); return x; });
-            try { check(cf3.join() == 1); } catch (CompletionException x) { pass(); }
+            try { check(cf3.join() == 2); } catch (CompletionException x) { pass(); }
             check(cf3.isDone());
             check(cf1.isDone() || cf2.isDone());
 
@@ -493,6 +520,27 @@ public class Basic {
             cf3 = cf1.applyToEitherAsync(cf2, (x) -> { fail(); return x; });
             checkCompletedExceptionally(cf3);
             check(cf1.isDone() || cf2.isDone());
+
+            final Phaser cf3Done = new Phaser(2);
+            cf1 = supplyAsync(() -> { cf3Done.arriveAndAwaitAdvance(); return 1; });
+            cf2 = supplyAsync(() -> 2);
+            cf3 = cf1.applyToEither(cf2, (x) -> { check(x == 2); return x; });
+            checkCompletedNormally(cf3, 2);
+            checkCompletedNormally(cf2, 2);
+            check(!cf1.isDone());
+            cf3Done.arrive();
+            checkCompletedNormally(cf1, 1);
+            checkCompletedNormally(cf3, 2);
+
+            cf1 = supplyAsync(() -> 1);
+            cf2 = supplyAsync(() -> { cf3Done.arriveAndAwaitAdvance(); return 2; });
+            cf3 = cf1.applyToEitherAsync(cf2, (x) -> { check(x == 1); return x; });
+            checkCompletedNormally(cf3, 1);
+            checkCompletedNormally(cf1, 1);
+            check(!cf2.isDone());
+            cf3Done.arrive();
+            checkCompletedNormally(cf2, 2);
+            checkCompletedNormally(cf3, 1);
         } catch (Throwable t) { unexpected(t); }
 
         //----------------------------------------------------------------
@@ -543,6 +591,27 @@ public class Basic {
             cf3 = cf2.acceptEitherAsync(cf1, (x) -> { fail(); });
             checkCompletedExceptionally(cf3);
             check(cf1.isDone() || cf2.isDone());
+
+            final Phaser cf3Done = new Phaser(2);
+            cf1 = supplyAsync(() -> { cf3Done.arriveAndAwaitAdvance(); return 1; });
+            cf2 = supplyAsync(() -> 2);
+            cf3 = cf1.acceptEither(cf2, (x) -> { check(x == 2); });
+            checkCompletedNormally(cf3, null);
+            checkCompletedNormally(cf2, 2);
+            check(!cf1.isDone());
+            cf3Done.arrive();
+            checkCompletedNormally(cf1, 1);
+            checkCompletedNormally(cf3, null);
+
+            cf1 = supplyAsync(() -> 1);
+            cf2 = supplyAsync(() -> { cf3Done.arriveAndAwaitAdvance(); return 2; });
+            cf3 = cf1.acceptEitherAsync(cf2, (x) -> { check(x == 1); });
+            checkCompletedNormally(cf3, null);
+            checkCompletedNormally(cf1, 1);
+            check(!cf2.isDone());
+            cf3Done.arrive();
+            checkCompletedNormally(cf2, 2);
+            checkCompletedNormally(cf3, null);
         } catch (Throwable t) { unexpected(t); }
 
         //----------------------------------------------------------------
@@ -578,19 +647,23 @@ public class Basic {
             cf1 = runAsync(() -> { throw new RuntimeException(); });
             cf2 = runAsync(() -> { });
             cf3 = cf2.runAfterEither(cf1, () -> { atomicInt.incrementAndGet(); });
-            try { check(cf3.join() == null); } catch (CompletionException x) { pass(); }
+            try {
+                check(cf3.join() == null);
+                check(atomicInt.get() == (before + 1));
+            } catch (CompletionException x) { pass(); }
             check(cf3.isDone());
             check(cf1.isDone() || cf2.isDone());
-            check(atomicInt.get() == (before + 1));
 
             before = atomicInt.get();
             cf1 = runAsync(() -> { });
             cf2 = runAsync(() -> { throw new RuntimeException(); });
             cf3 = cf1.runAfterEitherAsync(cf2, () -> { atomicInt.incrementAndGet(); });
-            try { check(cf3.join() == null); } catch (CompletionException x) { pass(); }
+            try {
+                check(cf3.join() == null);
+                check(atomicInt.get() == (before + 1));
+            } catch (CompletionException x) { pass(); }
             check(cf3.isDone());
             check(cf1.isDone() || cf2.isDone());
-            check(atomicInt.get() == (before + 1));
 
             before = atomicInt.get();
             cf1 = runAsync(() -> { throw new RuntimeException(); });
@@ -599,6 +672,31 @@ public class Basic {
             checkCompletedExceptionally(cf3);
             check(cf1.isDone() || cf2.isDone());
             check(atomicInt.get() == before);
+
+            final Phaser cf3Done = new Phaser(2);
+            before = atomicInt.get();
+            cf1 = runAsync(() -> { cf3Done.arriveAndAwaitAdvance(); });
+            cf2 = runAsync(() -> { });
+            cf3 = cf1.runAfterEither(cf2, () -> { atomicInt.incrementAndGet(); });
+            checkCompletedNormally(cf3, null);
+            checkCompletedNormally(cf2, null);
+            check(!cf1.isDone());
+            check(atomicInt.get() == (before + 1));
+            cf3Done.arrive();
+            checkCompletedNormally(cf1, null);
+            checkCompletedNormally(cf3, null);
+
+            before = atomicInt.get();
+            cf1 = runAsync(() -> { });
+            cf2 = runAsync(() -> { cf3Done.arriveAndAwaitAdvance(); });
+            cf3 = cf1.runAfterEitherAsync(cf2, () -> { atomicInt.incrementAndGet(); });
+            checkCompletedNormally(cf3, null);
+            checkCompletedNormally(cf1, null);
+            check(!cf2.isDone());
+            check(atomicInt.get() == (before + 1));
+            cf3Done.arrive();
+            checkCompletedNormally(cf2, null);
+            checkCompletedNormally(cf3, null);
         } catch (Throwable t) { unexpected(t); }
 
         //----------------------------------------------------------------

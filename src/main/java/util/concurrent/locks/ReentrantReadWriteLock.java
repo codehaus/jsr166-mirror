@@ -248,7 +248,7 @@ public class ReentrantReadWriteLock
         static final class HoldCounter {
             int count = 0;
             // Use id, not reference, to avoid garbage retention
-            final long tid = Thread.currentThread().getId();
+            final long tid = getThreadId(Thread.currentThread());
         }
 
         /**
@@ -391,7 +391,7 @@ public class ReentrantReadWriteLock
                     firstReaderHoldCount--;
             } else {
                 HoldCounter rh = cachedHoldCounter;
-                if (rh == null || rh.tid != current.getId())
+                if (rh == null || rh.tid != getThreadId(current))
                     rh = readHolds.get();
                 int count = rh.count;
                 if (count <= 1) {
@@ -449,7 +449,7 @@ public class ReentrantReadWriteLock
                     firstReaderHoldCount++;
                 } else {
                     HoldCounter rh = cachedHoldCounter;
-                    if (rh == null || rh.tid != current.getId())
+                    if (rh == null || rh.tid != getThreadId(current))
                         cachedHoldCounter = rh = readHolds.get();
                     else if (rh.count == 0)
                         readHolds.set(rh);
@@ -486,7 +486,7 @@ public class ReentrantReadWriteLock
                     } else {
                         if (rh == null) {
                             rh = cachedHoldCounter;
-                            if (rh == null || rh.tid != current.getId()) {
+                            if (rh == null || rh.tid != getThreadId(current)) {
                                 rh = readHolds.get();
                                 if (rh.count == 0)
                                     readHolds.remove();
@@ -507,7 +507,7 @@ public class ReentrantReadWriteLock
                     } else {
                         if (rh == null)
                             rh = cachedHoldCounter;
-                        if (rh == null || rh.tid != current.getId())
+                        if (rh == null || rh.tid != getThreadId(current))
                             rh = readHolds.get();
                         else if (rh.count == 0)
                             readHolds.set(rh);
@@ -563,7 +563,7 @@ public class ReentrantReadWriteLock
                         firstReaderHoldCount++;
                     } else {
                         HoldCounter rh = cachedHoldCounter;
-                        if (rh == null || rh.tid != current.getId())
+                        if (rh == null || rh.tid != getThreadId(current))
                             cachedHoldCounter = rh = readHolds.get();
                         else if (rh.count == 0)
                             readHolds.set(rh);
@@ -614,7 +614,7 @@ public class ReentrantReadWriteLock
                 return firstReaderHoldCount;
 
             HoldCounter rh = cachedHoldCounter;
-            if (rh != null && rh.tid == current.getId())
+            if (rh != null && rh.tid == getThreadId(current))
                 return rh.count;
 
             int count = readHolds.get().count;
@@ -1453,6 +1453,31 @@ public class ReentrantReadWriteLock
 
         return super.toString() +
             "[Write locks = " + w + ", Read locks = " + r + "]";
+    }
+
+    
+    /**
+     * Returns the thread id For the given thread. We must access this
+     * directly rather than via method Thread.getId() because getId()
+     * is not final, and has been known to be overridden in ways that
+     * do not preserve unique mappings.
+     */
+    static final long getThreadId(Thread thread) {
+        return UNSAFE.getLongVolatile(thread, TID_OFFSET);
+    }
+
+    // Unsafe mechanics
+    private static final sun.misc.Unsafe UNSAFE;
+    private static final long TID_OFFSET;
+    static {
+        try {
+            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            Class<?> tk = Thread.class;
+            TID_OFFSET = UNSAFE.objectFieldOffset
+                (tk.getDeclaredField("tid"));
+        } catch (Exception e) {
+            throw new Error(e);
+        }
     }
 
 }

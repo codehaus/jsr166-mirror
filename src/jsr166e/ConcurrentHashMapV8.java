@@ -3498,10 +3498,10 @@ public class ConcurrentHashMapV8<K,V>
      * of all (key, value) pairs
      * @since 1.8
      */
-    public double reduceToDoubleIn(long parallelismThreshold,
-                                   ObjectByObjectToDouble<? super K, ? super V> transformer,
-                                   double basis,
-                                   DoubleByDoubleToDouble reducer) {
+    public double reduceToDouble(long parallelismThreshold,
+                                 ObjectByObjectToDouble<? super K, ? super V> transformer,
+                                 double basis,
+                                 DoubleByDoubleToDouble reducer) {
         if (transformer == null || reducer == null)
             throw new NullPointerException();
         return new MapReduceMappingsToDoubleTask<K,V>

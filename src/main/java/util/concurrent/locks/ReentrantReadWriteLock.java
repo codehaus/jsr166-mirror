@@ -1455,12 +1455,11 @@ public class ReentrantReadWriteLock
             "[Write locks = " + w + ", Read locks = " + r + "]";
     }
 
-    
     /**
-     * Returns the thread id For the given thread. We must access this
-     * directly rather than via method Thread.getId() because getId()
-     * is not final, and has been known to be overridden in ways that
-     * do not preserve unique mappings.
+     * Returns the thread id for the given thread.  We must access
+     * this directly rather than via method Thread.getId() because
+     * getId() is not final, and has been known to be overridden in
+     * ways that do not preserve unique mappings.
      */
     static final long getThreadId(Thread thread) {
         return UNSAFE.getLongVolatile(thread, TID_OFFSET);

@@ -3573,10 +3573,10 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * of all (key, value) pairs
      * @since 1.8
      */
-    public double reduceToDoubleIn(long parallelismThreshold,
-                                   ToDoubleBiFunction<? super K, ? super V> transformer,
-                                   double basis,
-                                   DoubleBinaryOperator reducer) {
+    public double reduceToDouble(long parallelismThreshold,
+                                 ToDoubleBiFunction<? super K, ? super V> transformer,
+                                 double basis,
+                                 DoubleBinaryOperator reducer) {
         if (transformer == null || reducer == null)
             throw new NullPointerException();
         return new MapReduceMappingsToDoubleTask<K,V>

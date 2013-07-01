@@ -131,7 +131,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * because they have negative hash fields and null key and value
      * fields. (These special nodes are either uncommon or transient,
      * so the impact of carrying around some unused fields is
-     * insignficant.)
+     * insignificant.)
      *
      * The table is lazily initialized to a power-of-two size upon the
      * first insertion.  Each bin in the table normally contains a
@@ -294,7 +294,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      *
      * TreeBins also require an additional locking mechanism.  While
      * list traversal is always possible by readers even during
-     * updates, tree traversal is not, mainly beause of tree-rotations
+     * updates, tree traversal is not, mainly because of tree-rotations
      * that may change the root node and/or its linkages.  TreeBins
      * include a simple read-write lock mechanism parasitic on the
      * main bin-synchronization strategy: Structural adjustments
@@ -401,7 +401,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Encodings for Node hash fields. See above for explanation.
      */
     static final int MOVED     = 0x8fffffff; // (-1) hash for forwarding nodes
-    static final int TREEBIN   = 0x80000000; // hash for heads of treea
+    static final int TREEBIN   = 0x80000000; // hash for roots of trees
     static final int RESERVED  = 0x80000001; // hash for transient reservations
     static final int HASH_BITS = 0x7fffffff; // usable bits of normal node hash
 
@@ -421,7 +421,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Key-value entry.  This class is never exported out as a
      * user-mutable Map.Entry (i.e., one supporting setValue; see
      * MapEntry below), but can be used for read-only traversals used
-     * in bulk tasks.  Subclasses of Node with a negativehash field
+     * in bulk tasks.  Subclasses of Node with a negative hash field
      * are special, and contain null keys and values (but are never
      * exported).  Otherwise, keys and vals are never null.
      */
@@ -2008,7 +2008,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
 
         /**
          * Returns matching node or null if none. Tries to search
-         * using tree compareisons from root, but continues linear
+         * using tree comparisons from root, but continues linear
          * search when lock not available.
          */
         final Node<K,V> find(int h, Object k) {

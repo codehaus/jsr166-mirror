@@ -23,11 +23,11 @@ import java.util.concurrent.Executor;
  * <li>The computation performed by a stage may be expressed as a
  * Function, Consumer, or Runnable (using methods with names including
  * <em>apply</em>, <em>accept</em>, or <em>run</em>, respectively)
- * depending on whether it requires arguments and/or produce results.
+ * depending on whether it requires arguments and/or produces results.
  * For example, {@code stage.thenApply(x -> square(x)).thenAccept(x ->
  * System.out.print(x)).thenRun(() -> System.out.println())}. An
  * additional form (<em>compose</em>) applies functions of stages
- * themselves, rather than their results. <li>
+ * themselves, rather than their results. </li>
  *
  * <li> One stage's execution may be triggered by completion of a
  * single stage, or both of two stages, or either of two stages.
@@ -45,7 +45,7 @@ import java.util.concurrent.Executor;
  * be arranged in any of three ways: default execution, default
  * asynchronous execution (using methods with suffix <em>async</em>
  * that employ the stage's default asynchronous execution facility),
- * or custom (via supplied a {@link Executor}).  The execution
+ * or custom (via a supplied {@link Executor}).  The execution
  * properties of default and async modes are specified by
  * CompletionStage implementations, not this interface. Methods with
  * explicit Executor arguments may have arbitrary execution
@@ -69,7 +69,7 @@ import java.util.concurrent.Executor;
  * <em>either</em> of two others, and only one of them completes
  * exceptionally, no guarantees are made about whether the dependent
  * stage completes normally or exceptionally. In the case of method
- * {@code whenComplete}, if the supplied action itself encounters an
+ * {@code whenComplete}, when the supplied action itself encounters an
  * exception, then the stage exceptionally completes with this
  * exception if not already completed exceptionally.</li>
  *

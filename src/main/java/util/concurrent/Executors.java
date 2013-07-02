@@ -89,6 +89,7 @@ public class Executors {
      * {@link Runtime#availableProcessors available processors}
      * as its target parallelism level.
      * @return the newly created thread pool
+     * @see #newWorkStealingPool(int)
      * @since 1.8
      */
     public static ExecutorService newWorkStealingPool() {

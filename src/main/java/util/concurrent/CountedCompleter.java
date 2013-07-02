@@ -667,7 +667,7 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     /**
      * If this task has not completed, attempts to process at most the
      * given number of other unprocessed tasks for which this task is
-     * a completer, if any are known to exist.
+     * on the completion path, if any are known to exist.
      *
      * @param maxTasks the maximum number of tasks to process.
      */

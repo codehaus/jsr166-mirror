@@ -2011,7 +2011,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 @SuppressWarnings("unchecked") T tr = (T) r;
                 t = tr;
             }
-            U u = null; 
+            U u = null;
             Throwable dx = null;
             try {
                 if (e != null)

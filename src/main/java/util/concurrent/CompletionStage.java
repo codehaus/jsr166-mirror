@@ -83,7 +83,7 @@ import java.util.concurrent.Executor;
  * value for any other parameter will result in a {@link
  * NullPointerException} being thrown.
  *
- * <p> This interface does not define methods for initially creating,
+ * <p>This interface does not define methods for initially creating,
  * forcibly completing normally or exceptionally, probing completion
  * status or results, or awaiting completion of a stage.
  * Implementations of CompletionStage may provide means of achieving

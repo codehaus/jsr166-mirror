@@ -2141,20 +2141,29 @@ public class ConcurrentHashMapV8<K,V>
         }
 
         Node<K,V> find(int h, Object k) {
-            Node<K,V> e; int n;
-            Node<K,V>[] tab = nextTable;
-            if (k != null && tab != null && (n = tab.length) > 0 &&
-                (e = tabAt(tab, (n - 1) & h)) != null) {
-                do {
+            // loop to avoid arbitrarily deep recursion on forwarding nodes
+            outer: for (Node<K,V>[] tab = nextTable;;) {
+                Node<K,V> e; int n;
+                if (k == null || tab == null || (n = tab.length) == 0 ||
+                    (e = tabAt(tab, (n - 1) & h)) == null)
+                    return null;
+                for (;;) {
                     int eh; K ek;
                     if ((eh = e.hash) == h &&
                         ((ek = e.key) == k || (ek != null && k.equals(ek))))
                         return e;
-                    if (eh < 0)
-                        return e.find(h, k);
-                } while ((e = e.next) != null);
+                    if (eh < 0) {
+                        if (e instanceof ForwardingNode) {
+                            tab = ((ForwardingNode<K,V>)e).nextTable;
+                            continue outer;
+                        }
+                        else
+                            return e.find(h, k);
+                    }
+                    if ((e = e.next) == null)
+                        return null;
+                }
             }
-            return null;
         }
     }
 
@@ -2328,10 +2337,11 @@ public class ConcurrentHashMapV8<K,V>
         int nextn = nextTab.length;
         ForwardingNode<K,V> fwd = new ForwardingNode<K,V>(nextTab);
         boolean advance = true;
+        boolean finishing = false; // to ensure sweep before committing nextTab
         for (int i = 0, bound = 0;;) {
             int nextIndex, nextBound, fh; Node<K,V> f;
             while (advance) {
-                if (--i >= bound)
+                if (--i >= bound || finishing)
                     advance = false;
                 else if ((nextIndex = transferIndex) <= transferOrigin) {
                     i = -1;
@@ -2347,14 +2357,19 @@ public class ConcurrentHashMapV8<K,V>
                 }
             }
             if (i < 0 || i >= n || i + n >= nextn) {
+                if (finishing) {
+                    nextTable = null;
+                    table = nextTab;
+                    sizeCtl = (n << 1) - (n >>> 1);
+                    return;
+                }
                 for (int sc;;) {
                     if (U.compareAndSwapInt(this, SIZECTL, sc = sizeCtl, ++sc)) {
-                        if (sc == -1) {
-                            nextTable = null;
-                            table = nextTab;
-                            sizeCtl = (n << 1) - (n >>> 1);
-                        }
-                        return;
+                        if (sc != -1)
+                            return;
+                        finishing = advance = true;
+                        i = n; // recheck before commit
+                        break;
                     }
                 }
             }

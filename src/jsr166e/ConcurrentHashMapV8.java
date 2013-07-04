@@ -568,9 +568,9 @@ public class ConcurrentHashMapV8<K,V>
     /*
      * Encodings for Node hash fields. See above for explanation.
      */
-    static final int MOVED     = 0x8fffffff; // (-1) hash for forwarding nodes
-    static final int TREEBIN   = 0x80000000; // hash for roots of trees
-    static final int RESERVED  = 0x80000001; // hash for transient reservations
+    static final int MOVED     = -1; // hash for forwarding nodes
+    static final int TREEBIN   = -2; // hash for roots of trees
+    static final int RESERVED  = -3; // hash for transient reservations
     static final int HASH_BITS = 0x7fffffff; // usable bits of normal node hash
 
     /** Number of CPUS, to place bounds on some sizings */
@@ -597,7 +597,7 @@ public class ConcurrentHashMapV8<K,V>
         final int hash;
         final K key;
         volatile V val;
-        Node<K,V> next;
+        volatile Node<K,V> next;
 
         Node(int hash, K key, V val, Node<K,V> next) {
             this.hash = hash;
@@ -722,8 +722,9 @@ public class ConcurrentHashMapV8<K,V>
      * errors by users, these checks must operate on local variables,
      * which accounts for some odd-looking inline assignments below.
      * Note that calls to setTabAt always occur within locked regions,
-     * and so do not need full volatile semantics, but still require
-     * ordering to maintain concurrent readability.
+     * and so in principle require only release ordering, not need
+     * full volatile semantics, but are currently coded as volatile
+     * writes to be conservative.
      */
 
     @SuppressWarnings("unchecked")
@@ -737,7 +738,7 @@ public class ConcurrentHashMapV8<K,V>
     }
 
     static final <K,V> void setTabAt(Node<K,V>[] tab, int i, Node<K,V> v) {
-        U.putOrderedObject(tab, ((long)i << ASHIFT) + ABASE, v);
+        U.putObjectVolatile(tab, ((long)i << ASHIFT) + ABASE, v);
     }
 
     /* ---------------- Fields -------------- */
@@ -2395,6 +2396,10 @@ public class ConcurrentHashMapV8<K,V>
                                 else
                                     hn = new Node<K,V>(ph, pk, pv, hn);
                             }
+                            setTabAt(nextTab, i, ln);
+                            setTabAt(nextTab, i + n, hn);
+                            setTabAt(tab, i, fwd);
+                            advance = true;
                         }
                         else if (f instanceof TreeBin) {
                             TreeBin<K,V> t = (TreeBin<K,V>)f;
@@ -2426,13 +2431,11 @@ public class ConcurrentHashMapV8<K,V>
                                 (hc != 0) ? new TreeBin<K,V>(lo) : t;
                             hn = (hc <= UNTREEIFY_THRESHOLD) ? untreeify(hi) :
                                 (lc != 0) ? new TreeBin<K,V>(hi) : t;
+                            setTabAt(nextTab, i, ln);
+                            setTabAt(nextTab, i + n, hn);
+                            setTabAt(tab, i, fwd);
+                            advance = true;
                         }
-                        else
-                            ln = hn = null;
-                        setTabAt(nextTab, i, ln);
-                        setTabAt(nextTab, i + n, hn);
-                        setTabAt(tab, i, fwd);
-                        advance = true;
                     }
                 }
             }
@@ -2453,7 +2456,7 @@ public class ConcurrentHashMapV8<K,V>
                     U.compareAndSwapInt(this, SIZECTL, sc, -2))
                     transfer(tab, null);
             }
-            else if ((b = tabAt(tab, index)) != null) {
+            else if ((b = tabAt(tab, index)) != null && b.hash >= 0) {
                 synchronized (b) {
                     if (tabAt(tab, index) == b) {
                         TreeNode<K,V> hd = null, tl = null;

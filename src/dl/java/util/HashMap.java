@@ -159,19 +159,23 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * type then their compareTo method is used for ordering. (We
      * conservatively check generic types via reflection to validate
      * this -- see method comparableClassFor).  The added complexity
-     * of tree bins is worthwhile in providing worst-case O(n)
+     * of tree bins is worthwhile in providing worst-case O(log n)
      * operations when keys either have distinct hashes or are
      * orderable, Thus, performance degrades gracefully under
      * accidental or malicious usages in which hashCode() methods
      * return values that are poorly distributed, as well as those in
      * which many keys share a hashCode, so long as they are also
-     * Comparable.
+     * Comparable. (If neither of these apply, we may waste about a
+     * factor of two in time and space compared to taking no
+     * precautions. But the only known cases stem from poor user
+     * programming practices that are already so slow that this makes
+     * little difference.)
      *
      * Because TreeNodes are about twice the size of regular nodes, we
      * use them only when bins contain enough nodes to warrant use
      * (see TREEIFY_THRESHOLD). And when they become too small (due to
-     * remove() or resizing) they are converted back to plain bins.
-     * In usages with well-distributed user hashCodes, tree bins are
+     * removal or resizing) they are converted back to plain bins.  In
+     * usages with well-distributed user hashCodes, tree bins are
      * rarely used.  Ideally, under random hashCodes, the frequency of
      * nodes in bins follows a Poisson distribution
      * (http://en.wikipedia.org/wiki/Poisson_distribution) with a
@@ -202,7 +206,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * them to call each other without recomputing user hashCodes.
      * Most internal methods also accept a "tab" argument, that is
      * normally the current table, but may be a new or old one when
-     * resizing.
+     * resizing or converting.
      *
      * When bin lists are treeified, split, or untreeified, we keep
      * them in the same relative access/traversal order (i.e., field
@@ -383,7 +387,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * The table, initialized on first use, and resized as
      * necessary. When allocated, length is always a power of two.
-     * (We also tolerate length zero for some read-only operations.)
+     * (We also tolerate length zero in some operations to allow
+     * bootstrapping mechanics that are currently not needed.)
      */
     transient Node<K,V>[] table;
 

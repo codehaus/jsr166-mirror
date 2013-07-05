@@ -68,6 +68,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
+        assertFalse(f.isCompletedExceptionally());
         assertTrue(f.toString().contains("[Completed normally]"));
     }
 
@@ -121,6 +122,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (CancellationException success) {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
+        assertTrue(f.isCompletedExceptionally());
         assertTrue(f.isCancelled());
         assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
@@ -152,6 +154,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
+        assertTrue(f.isCompletedExceptionally());
         assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
 
@@ -3031,6 +3034,236 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         assertThrows(NullPointerException.class, throwingActions);
         assertEquals(0, exec.count.get());
+    }
+
+    /**
+     * toCompletableFuture returns this CompletableFuture.
+     */
+    public void testToCompletableFuture() {
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        assertSame(f, f.toCompletableFuture());
+    }
+
+    /**
+     * whenComplete action executes on normal completion, propagating
+     * source result.
+     */
+    public void testWhenComplete1() {
+        final AtomicInteger a = new AtomicInteger();
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenComplete((Integer x, Throwable t) -> a.getAndIncrement());
+        f.complete(three);
+        checkCompletedNormally(f, three);
+        checkCompletedNormally(g, three);
+        assertEquals(a.get(), 1);
+    }
+
+    /**
+     * whenComplete action executes on exceptional completion, propagating
+     * source result.
+     */
+    public void testWhenComplete2() {
+        final AtomicInteger a = new AtomicInteger();
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenComplete((Integer x, Throwable t) -> a.getAndIncrement());
+        f.completeExceptionally(new CFException());
+        assertTrue(f.isCompletedExceptionally());
+        assertTrue(g.isCompletedExceptionally());
+        assertEquals(a.get(), 1);
+    }
+
+    /**
+     * If a whenComplete action throws an exception when triggered by
+     * a normal completion, it completes exceptionally
+     */
+    public void testWhenComplete3() {
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenComplete((Integer x, Throwable t) ->
+                           { throw new CFException(); } );
+        f.complete(three);
+        checkCompletedNormally(f, three);
+        assertTrue(g.isCompletedExceptionally());
+        checkCompletedWithWrappedCFException(g);
+    }
+
+    /**
+     * whenCompleteAsync action executes on normal completion, propagating
+     * source result.
+     */
+    public void testWhenCompleteAsync1() {
+        final AtomicInteger a = new AtomicInteger();
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenCompleteAsync((Integer x, Throwable t) -> a.getAndIncrement());
+        f.complete(three);
+        checkCompletedNormally(f, three);
+        checkCompletedNormally(g, three);
+        assertEquals(a.get(), 1);
+    }
+
+    /**
+     * whenCompleteAsync action executes on exceptional completion, propagating
+     * source result.
+     */
+    public void testWhenCompleteAsync2() {
+        final AtomicInteger a = new AtomicInteger();
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenCompleteAsync((Integer x, Throwable t) -> a.getAndIncrement());
+        f.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(f);
+        checkCompletedWithWrappedCFException(g);
+    }
+
+    /**
+     * If a whenCompleteAsync action throws an exception when
+     * triggered by a normal completion, it completes exceptionally
+     */
+    public void testWhenCompleteAsync3() {
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenCompleteAsync((Integer x, Throwable t) ->
+                           { throw new CFException(); } );
+        f.complete(three);
+        checkCompletedNormally(f, three);
+        checkCompletedWithWrappedCFException(g);
+    }
+
+    /**
+     * whenCompleteAsync action executes on normal completion, propagating
+     * source result.
+     */
+    public void testWhenCompleteAsync1e() {
+        final AtomicInteger a = new AtomicInteger();
+        ThreadExecutor exec = new ThreadExecutor();
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenCompleteAsync((Integer x, Throwable t) -> a.getAndIncrement(),
+                                exec);
+        f.complete(three);
+        checkCompletedNormally(f, three);
+        checkCompletedNormally(g, three);
+        assertEquals(a.get(), 1);
+    }
+
+    /**
+     * whenCompleteAsync action executes on exceptional completion, propagating
+     * source result.
+     */
+    public void testWhenCompleteAsync2e() {
+        final AtomicInteger a = new AtomicInteger();
+        ThreadExecutor exec = new ThreadExecutor();
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenCompleteAsync((Integer x, Throwable t) -> a.getAndIncrement(),
+                                exec);
+        f.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(f);
+        checkCompletedWithWrappedCFException(g);
+    }
+
+    /**
+     * If a whenCompleteAsync action throws an exception when triggered
+     * by a normal completion, it completes exceptionally
+     */
+    public void testWhenCompleteAsync3e() {
+        ThreadExecutor exec = new ThreadExecutor();
+        CompletableFuture<Integer> f = new CompletableFuture<>();
+        CompletableFuture<Integer> g =
+            f.whenCompleteAsync((Integer x, Throwable t) ->
+                                { throw new CFException(); },
+                                exec);
+        f.complete(three);
+        checkCompletedNormally(f, three);
+        checkCompletedWithWrappedCFException(g);
+    }
+
+
+    /**
+     * handleAsync action action completes normally with function
+     * value on either normal or exceptional completion of source
+     */
+    public void testHandleAsync() {
+        CompletableFuture<Integer> f, g;
+        IntegerHandler r;
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(f);
+        checkCompletedNormally(g, three);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(f);
+        checkCompletedNormally(g, three);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.complete(one);
+        checkCompletedNormally(f, one);
+        checkCompletedNormally(g, two);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler());
+        assertFalse(r.ran);
+        f.complete(one);
+        checkCompletedNormally(f, one);
+        checkCompletedNormally(g, two);
+        assertTrue(r.ran);
+    }
+
+    /**
+     * handleAsync action with Executor completes normally with
+     * function value on either normal or exceptional completion of
+     * source
+     */
+    public void testHandleAsync2() {
+        CompletableFuture<Integer> f, g;
+        ThreadExecutor exec = new ThreadExecutor();
+        IntegerHandler r;
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler(), exec);
+        assertFalse(r.ran);
+        f.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(f);
+        checkCompletedNormally(g, three);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler(), exec);
+        assertFalse(r.ran);
+        f.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(f);
+        checkCompletedNormally(g, three);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler(), exec);
+        assertFalse(r.ran);
+        f.complete(one);
+        checkCompletedNormally(f, one);
+        checkCompletedNormally(g, two);
+        assertTrue(r.ran);
+
+        f = new CompletableFuture<>();
+        g = f.handleAsync(r = new IntegerHandler(), exec);
+        assertFalse(r.ran);
+        f.complete(one);
+        checkCompletedNormally(f, one);
+        checkCompletedNormally(g, two);
+        assertTrue(r.ran);
     }
 
 }

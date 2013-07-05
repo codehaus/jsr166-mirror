@@ -36,8 +36,9 @@ import java.util.concurrent.locks.LockSupport;
  * {@link #cancel cancel}
  * a CompletableFuture, only one of them succeeds.
  *
- * <p>CompletableFuture implements {@link CompletionStage} with the
- * following policies: <ul>
+ * <p>In addition to these and related methods for directly
+ * manipulating status and results, CompletableFuture implements
+ * interface {@link CompletionStage} with the following policies: <ul>
  *
  * <li>Actions supplied for dependent completions of
  * <em>non-async</em> methods may be performed by the thread that
@@ -54,7 +55,7 @@ import java.util.concurrent.locks.LockSupport;
  * other public methods, so the behavior of one method is not impacted
  * by overrides of others in subclasses.  </li> </ul>
  *
- * <p>CompletableFuture implements {@link Future} with the following
+ * <p>CompletableFuture also implements {@link Future} with the following
  * policies: <ul>
  *
  * <li>Since (unlike {@link FutureTask}) this class has no direct
@@ -578,6 +579,33 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 d.internalComplete(u, ex);
+            }
+            return true;
+        }
+        private static final long serialVersionUID = 5232453952276885070L;
+    }
+
+    static final class AsyncWhenComplete<T> extends Async {
+        final T arg1;
+        final Throwable arg2;
+        final BiConsumer<? super T,? super Throwable> fn;
+        final CompletableFuture<T> dst;
+        AsyncWhenComplete(T arg1, Throwable arg2,
+                          BiConsumer<? super T,? super Throwable> fn,
+                          CompletableFuture<T> dst) {
+            this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
+        }
+        public final boolean exec() {
+            CompletableFuture<T> d; 
+            if ((d = this.dst) != null && d.result == null) {
+                Throwable ex = arg2;
+                try {
+                    fn.accept(arg1, ex);
+                } catch (Throwable rex) {
+                    if (ex == null)
+                        ex = rex;
+                }
+                d.internalComplete(arg1, ex);
             }
             return true;
         }
@@ -1219,7 +1247,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 Throwable dx = null;
                 try {
                     if (e != null)
-                        e.execute(new AsyncAcceptBoth<T,Throwable>(t, ex, fn, dst));
+                        e.execute(new AsyncWhenComplete<T>(t, ex, fn, dst));
                     else
                         fn.accept(t, ex);
                 } catch (Throwable rex) {
@@ -1332,7 +1360,6 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 }
                 if (e == null || dx != null)
                     dst.internalComplete(u, dx);
-                dst.internalComplete(u, dx);
             }
         }
         private static final long serialVersionUID = 5232453952276885070L;
@@ -1970,7 +1997,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             Throwable dx = null;
             try {
                 if (e != null)
-                    e.execute(new AsyncAcceptBoth<T,Throwable>(t, ex, fn, dst));
+                    e.execute(new AsyncWhenComplete<T>(t, ex, fn, dst));
                 else
                     fn.accept(t, ex);
             } catch (Throwable rex) {
@@ -2026,7 +2053,6 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             }
             if (e == null || dx != null)
                 dst.internalComplete(u, dx);
-            dst.internalComplete(u, dx);
         }
         helpPostComplete();
         return dst;
@@ -2835,13 +2861,17 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /**
      * Returns {@code true} if this CompletableFuture completed
-     * exceptionally.
+     * exceptionally, in any way. Possible causes include
+     * cancellation, explicit invocation of {@code
+     * completeExceptionally}, and abrupt termination of a
+     * CompletionStage action.
      *
      * @return {@code true} if this CompletableFuture completed
      * exceptionally
      */
     public boolean isCompletedExceptionally() {
-        return (result instanceof AltResult);
+        Object r;
+        return ((r = result) instanceof AltResult) && r != NIL;
     }
 
     /**

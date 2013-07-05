@@ -131,7 +131,7 @@ import java.util.stream.Stream;
  * of supplied functions should not depend on any ordering, or on any
  * other objects or values that may transiently change while
  * computation is in progress; and except for forEach actions, should
- * ideally be side-effect-free. Bulk operations on {@link Map.Entry}
+ * ideally be side-effect-free. Bulk operations on {@link java.util.Map.Entry}
  * objects do not support method {@code setValue}.
  *
  * <ul>

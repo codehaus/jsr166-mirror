@@ -596,7 +596,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.arg1 = arg1; this.arg2 = arg2; this.fn = fn; this.dst = dst;
         }
         public final boolean exec() {
-            CompletableFuture<T> d; 
+            CompletableFuture<T> d;
             if ((d = this.dst) != null && d.result == null) {
                 Throwable ex = arg2;
                 try {

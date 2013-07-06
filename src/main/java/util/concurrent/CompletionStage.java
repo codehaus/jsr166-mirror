@@ -186,7 +186,7 @@ public interface CompletionStage<T> {
      * @return the new CompletionStage
      */
     public CompletionStage<Void> thenAcceptAsync(Consumer<? super T> action,
-                                            Executor executor);
+                                                 Executor executor);
     /**
      * Returns a new CompletionStage that, when this stage completes
      * normally, executes the given action.
@@ -504,6 +504,7 @@ public interface CompletionStage<T> {
      */
     public CompletionStage<Void> runAfterEither(CompletionStage<?> other,
                                                 Runnable action);
+
     /**
      * Returns a new CompletionStage that, when either this or the
      * other given stage complete normally, executes the given action
@@ -607,6 +608,7 @@ public interface CompletionStage<T> {
      * exception (or {@code null} if none) of this stage.
      *
      * @param action the action to perform
+     * @return the new CompletionStage
      */
     public CompletionStage<T> whenComplete
         (BiConsumer<? super T, ? super Throwable> action);
@@ -620,6 +622,7 @@ public interface CompletionStage<T> {
      * none) of this stage as arguments.
      *
      * @param action the action to perform
+     * @return the new CompletionStage
      */
     public CompletionStage<T> whenCompleteAsync
         (BiConsumer<? super T, ? super Throwable> action);
@@ -632,6 +635,8 @@ public interface CompletionStage<T> {
      * none) of this stage as arguments.
      *
      * @param action the action to perform
+     * @param executor the executor to use for asynchronous execution
+     * @return the new CompletionStage
      */
     public CompletionStage<T> whenCompleteAsync
         (BiConsumer<? super T, ? super Throwable> action,
@@ -679,6 +684,7 @@ public interface CompletionStage<T> {
      *
      * @param fn the function to use to compute the value of the
      * returned CompletionStage
+     * @param executor the executor to use for asynchronous execution
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> handleAsync
@@ -693,7 +699,7 @@ public interface CompletionStage<T> {
      * effect to {@code thenApply(x -> x)}, but returning an instance
      * of type {@code CompletableFuture}. A CompletionStage
      * implementation that does not choose to interoperate with others
-     * may throw {@code UnsupportOperationException}.
+     * may throw {@code UnsupportedOperationException}.
      *
      * @return the CompletableFuture
      */

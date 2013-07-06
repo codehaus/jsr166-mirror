@@ -504,6 +504,7 @@ public interface CompletionStage<T> {
      */
     public CompletionStage<Void> runAfterEither(CompletionStage<?> other,
                                                 Runnable action);
+
     /**
      * Returns a new CompletionStage that, when either this or the
      * other given stage complete normally, executes the given action

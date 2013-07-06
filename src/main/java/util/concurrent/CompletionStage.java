@@ -693,7 +693,7 @@ public interface CompletionStage<T> {
      * effect to {@code thenApply(x -> x)}, but returning an instance
      * of type {@code CompletableFuture}. A CompletionStage
      * implementation that does not choose to interoperate with others
-     * may throw {@code UnsupportOperationException}.
+     * may throw {@code UnsupportedOperationException}.
      *
      * @return the CompletableFuture
      */

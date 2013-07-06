@@ -608,6 +608,7 @@ public interface CompletionStage<T> {
      * exception (or {@code null} if none) of this stage.
      *
      * @param action the action to perform
+     * @return the new CompletionStage
      */
     public CompletionStage<T> whenComplete
         (BiConsumer<? super T, ? super Throwable> action);
@@ -621,6 +622,7 @@ public interface CompletionStage<T> {
      * none) of this stage as arguments.
      *
      * @param action the action to perform
+     * @return the new CompletionStage
      */
     public CompletionStage<T> whenCompleteAsync
         (BiConsumer<? super T, ? super Throwable> action);
@@ -633,6 +635,8 @@ public interface CompletionStage<T> {
      * none) of this stage as arguments.
      *
      * @param action the action to perform
+     * @param executor the executor to use for asynchronous execution
+     * @return the new CompletionStage
      */
     public CompletionStage<T> whenCompleteAsync
         (BiConsumer<? super T, ? super Throwable> action,
@@ -680,6 +684,7 @@ public interface CompletionStage<T> {
      *
      * @param fn the function to use to compute the value of the
      * returned CompletionStage
+     * @param executor the executor to use for asynchronous execution
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> handleAsync

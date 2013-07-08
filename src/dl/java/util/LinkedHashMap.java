@@ -159,7 +159,7 @@ public class LinkedHashMap<K,V>
      * HashMap now uses trees for some of its nodes, class
      * LinkedHashMap.Entry is now treated as intermediary node class
      * that can also be converted to tree form. The name of this
-     * class, LinkedHashMap.Entry is confusing in several ways in its
+     * class, LinkedHashMap.Entry, is confusing in several ways in its
      * current context, but cannot be changed.  Otherwise, even though
      * it is not exported outside this package, some existing source
      * code is known to have relied on a symbol resolution corner case

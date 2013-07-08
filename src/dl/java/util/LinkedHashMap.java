@@ -171,7 +171,7 @@ public class LinkedHashMap<K,V>
      * (head, tail) rather than a pointer to a header node to maintain
      * the doubly-linked before/after list. This class also
      * previously used a different style of callback methods upon
-     * access, insertion, and removal,
+     * access, insertion, and removal.
      */
 
     /**

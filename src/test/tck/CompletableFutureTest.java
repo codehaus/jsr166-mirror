@@ -3183,8 +3183,8 @@ public class CompletableFutureTest extends JSR166TestCase {
 
 
     /**
-     * handleAsync action action completes normally with function
-     * value on either normal or exceptional completion of source
+     * handleAsync action completes normally with function value on
+     * either normal or exceptional completion of source
      */
     public void testHandleAsync() {
         CompletableFuture<Integer> f, g;

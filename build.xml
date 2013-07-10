@@ -332,6 +332,12 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       <arg value="-XDignore.symbol.file=true"/>
       <arg value="-tag"/>
       <arg value="${javadoc.jls.option}"/>
+      <arg value="-tag"/>
+      <arg value="apiNote:a:&lt;em&gt;API Note:&lt;/em&gt;"/>
+      <arg value="-tag"/>
+      <arg value="implSpec:a:&lt;em&gt;Implementation Requirements:&lt;/em&gt;"/>
+      <arg value="-tag"/>
+      <arg value="implNote:a:&lt;em&gt;Implementation Note:&lt;/em&gt;"/> 
     </javadoc>
   </target>
 

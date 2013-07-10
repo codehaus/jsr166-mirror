@@ -74,6 +74,7 @@ import java.util.stream.DoubleStream;
  * </ul>
  *
  * @author  Guy Steele
+ * @author  Doug Lea
  * @since   1.8
  */
 public class SplittableRandom {
@@ -112,7 +113,7 @@ public class SplittableRandom {
      * The value of gamma differs for each instance across a series of
      * splits, and is generated using a slightly stripped-down variant
      * of the same algorithm, but operating across calls to split(),
-     * not calls to nextLong(): Each instance carries the state of
+     * not calls to nextSeed(): Each instance carries the state of
      * this generator as nextSplit, and uses mix64(nextSplit) as its
      * own gamma value. Computations of gammas themselves use a fixed
      * constant as the second argument to the addGammaModGeorge
@@ -752,7 +753,8 @@ public class SplittableRandom {
 
     /**
      * Returns a stream with the given {@code streamSize} number of
-     * pseudorandom {@code double} values.
+     * pseudorandom {@code double} values, each between {@code 0.0}
+     * (inclusive) and {@code 1.0} (exclusive).
      *
      * @param streamSize the number of values to generate
      * @return a stream of {@code double} values
@@ -770,7 +772,8 @@ public class SplittableRandom {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * double} values.
+     * double} values, each between {@code 0.0} (inclusive) and {@code
+     * 1.0} (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * doubles(Long.MAX_VALUE)}.

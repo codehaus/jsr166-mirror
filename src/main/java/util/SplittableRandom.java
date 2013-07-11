@@ -311,12 +311,16 @@ public class SplittableRandom {
          * evenly divisible by the range. The loop rejects candidates
          * computed from otherwise over-represented values.  The
          * expected number of iterations under an ideal generator
-         * varies from 1 to 2, depending on the bound.
+         * varies from 1 to 2, depending on the bound. The loop itself
+         * takes an unlovable form. Because the first candidate is
+         * already available, we need a break-in-the-middle
+         * construction, which is concisely but cryptically performed
+         * within the while-condition of a body-less for loop.
          *
          * 4. Otherwise, the range cannot be represented as a positive
-         * long.  Repeatedly generate unbounded longs until obtaining
-         * a candidate meeting constraints (with an expected number of
-         * iterations of less than two).
+         * long.  The loop repeatedly generates unbounded longs until
+         * obtaining a candidate meeting constraints (with an expected
+         * number of iterations of less than two).
          */
 
         long r = mix64(nextSeed());
@@ -869,8 +873,7 @@ public class SplittableRandom {
 
         public int characteristics() {
             return (Spliterator.SIZED | Spliterator.SUBSIZED |
-                    Spliterator.ORDERED | Spliterator.NONNULL |
-                    Spliterator.IMMUTABLE);
+                    Spliterator.NONNULL | Spliterator.IMMUTABLE);
         }
 
         public boolean tryAdvance(IntConsumer consumer) {
@@ -924,8 +927,7 @@ public class SplittableRandom {
 
         public int characteristics() {
             return (Spliterator.SIZED | Spliterator.SUBSIZED |
-                    Spliterator.ORDERED | Spliterator.NONNULL |
-                    Spliterator.IMMUTABLE);
+                    Spliterator.NONNULL | Spliterator.IMMUTABLE);
         }
 
         public boolean tryAdvance(LongConsumer consumer) {
@@ -980,8 +982,7 @@ public class SplittableRandom {
 
         public int characteristics() {
             return (Spliterator.SIZED | Spliterator.SUBSIZED |
-                    Spliterator.ORDERED | Spliterator.NONNULL |
-                    Spliterator.IMMUTABLE);
+                    Spliterator.NONNULL | Spliterator.IMMUTABLE);
         }
 
         public boolean tryAdvance(DoubleConsumer consumer) {

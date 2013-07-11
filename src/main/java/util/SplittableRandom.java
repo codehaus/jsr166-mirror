@@ -40,7 +40,7 @@ import java.util.stream.DoubleStream;
  * A generator of uniform pseudorandom values applicable for use in
  * (among other contexts) isolated parallel computations that may
  * generate subtasks. Class SplittableRandom supports methods for
- * producing pseudorandom nunmbers of type {@code int}, {@code long},
+ * producing pseudorandom numbers of type {@code int}, {@code long},
  * and {@code double} with similar usages as for class
  * {@link java.util.Random} but differs in the following ways: <ul>
  *

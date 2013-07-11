@@ -178,6 +178,12 @@ public class SplittableRandom {
     private static final long DEFAULT_SEED_GAMMA = 0xBD24B73A95FB84D9L;
 
     /**
+     * The least non-zero value returned by nextDouble(). This value
+     * is scaled by a random value of 53 bits to produce a result.
+     */
+    private static final double DOUBLE_UNIT = 1.0 / (1L << 53);
+
+    /**
      * The next seed for default constructors.
      */
     private static final AtomicLong defaultSeedGenerator =
@@ -380,8 +386,7 @@ public class SplittableRandom {
      * @return a pseudorandom value
      */
     final double internalNextDouble(double origin, double bound) {
-        long bits = (1023L << 52) | (nextLong() >>> 12);
-        double r = Double.longBitsToDouble(bits) - 1.0;
+        double r = (nextLong() >>> 11) * DOUBLE_UNIT;
         if (origin < bound) {
             r = r * (bound - origin) + origin;
             if (r == bound) // correct for rounding
@@ -545,8 +550,7 @@ public class SplittableRandom {
      * (inclusive) and {@code 1.0} (exclusive)
      */
     public double nextDouble() {
-        long bits = (1023L << 52) | (nextLong() >>> 12);
-        return Double.longBitsToDouble(bits) - 1.0;
+        return (nextLong() >>> 11) * DOUBLE_UNIT;
     }
 
     /**

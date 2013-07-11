@@ -368,6 +368,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         }
     }
 
+
     /**
      * Each of a parallel sized stream of bounded ints is within bounds
      */
@@ -421,5 +422,74 @@ public class SplittableRandomTest extends JSR166TestCase {
         }
         assertEquals(fails.get(), 0);
     }
+
+    /**
+     * A parallel unsized stream of ints generates at least 100 values
+     */
+    public void testUnsizedIntsCount() {
+        LongAdder counter = new LongAdder();
+        SplittableRandom r = new SplittableRandom();
+        long size = 100;
+        r.ints().limit(size).parallel().forEach(x -> {counter.increment();});
+        assertEquals(counter.sum(), size);
+    }
+
+    /**
+     * A parallel unsized stream of longs generates at least 100 values
+     */
+    public void testUnsizedLongsCount() {
+        LongAdder counter = new LongAdder();
+        SplittableRandom r = new SplittableRandom();
+        long size = 100;
+        r.longs().limit(size).parallel().forEach(x -> {counter.increment();});
+        assertEquals(counter.sum(), size);
+    }
+
+
+    /**
+     * A parallel unsized stream of doubles generates at least 100 values
+     */
+    public void testUnsizedDoublesCount() {
+        LongAdder counter = new LongAdder();
+        SplittableRandom r = new SplittableRandom();
+        long size = 100;
+        r.doubles().limit(size).parallel().forEach(x -> {counter.increment();});
+        assertEquals(counter.sum(), size);
+    }
+
+    /**
+     * A sequential unsized stream of ints generates at least 100 values
+     */
+    public void testUnsizedIntsCountSeq() {
+        LongAdder counter = new LongAdder();
+        SplittableRandom r = new SplittableRandom();
+        long size = 100;
+        r.ints().limit(size).forEach(x -> {counter.increment();});
+        assertEquals(counter.sum(), size);
+    }
+
+    /**
+     * A sequential unsized stream of longs generates at least 100 values
+     */
+    public void testUnsizedLongsCountSeq() {
+        LongAdder counter = new LongAdder();
+        SplittableRandom r = new SplittableRandom();
+        long size = 100;
+        r.longs().limit(size).forEach(x -> {counter.increment();});
+        assertEquals(counter.sum(), size);
+    }
+
+
+    /**
+     * A sequential unsized stream of doubles generates at least 100 values
+     */
+    public void testUnsizedDoublesCountSeq() {
+        LongAdder counter = new LongAdder();
+        SplittableRandom r = new SplittableRandom();
+        long size = 100;
+        r.doubles().limit(size).forEach(x -> {counter.increment();});
+        assertEquals(counter.sum(), size);
+    }
+
 
 }

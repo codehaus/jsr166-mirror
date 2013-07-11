@@ -179,7 +179,7 @@ public class SplittableRandom {
 
     /**
      * The least non-zero value returned by nextDouble(). This value
-     * is scaled by a random value of 53 bits to produce a result.
+     * is scaled by a random value of 52 bits to produce a result.
      */
     private static final double DOUBLE_UNIT = 1.0 / (1L << 53);
 

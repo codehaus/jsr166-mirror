@@ -91,7 +91,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         for (long seed = 2; seed < MAX_LONG_BOUND; seed += 15485863)  {
             SplittableRandom sr1 = new SplittableRandom(seed);
             SplittableRandom sr2 = new SplittableRandom(seed);
-            for (int i = 0; i < REPS; ++i) 
+            for (int i = 0; i < REPS; ++i)
                 assertEquals(sr1.nextLong(), sr2.nextLong());
         }
     }
@@ -380,7 +380,7 @@ public class SplittableRandomTest extends JSR166TestCase {
             for (int bound = least + 2; bound > least && bound < MAX_INT_BOUND; bound += 67867967) {
                 final int lo = least, hi = bound;
                 r.ints(size, lo, hi).parallel().
-                    forEach(x -> {if (x < lo || x >= hi) 
+                    forEach(x -> {if (x < lo || x >= hi)
                                 fails.getAndIncrement(); });
             }
         }
@@ -398,7 +398,7 @@ public class SplittableRandomTest extends JSR166TestCase {
             for (long bound = least + 2; bound > least && bound < MAX_LONG_BOUND; bound += Math.abs(bound * 7919)) {
                 final long lo = least, hi = bound;
                 r.longs(size, lo, hi).parallel().
-                    forEach(x -> {if (x < lo || x >= hi) 
+                    forEach(x -> {if (x < lo || x >= hi)
                                 fails.getAndIncrement(); });
             }
         }
@@ -416,7 +416,7 @@ public class SplittableRandomTest extends JSR166TestCase {
             for (double bound = least * 1.0011; bound < 1.0e20; bound *= 17) {
                 final double lo = least, hi = bound;
                 r.doubles(size, lo, hi).parallel().
-                    forEach(x -> {if (x < lo || x >= hi) 
+                    forEach(x -> {if (x < lo || x >= hi)
                                 fails.getAndIncrement(); });
             }
         }

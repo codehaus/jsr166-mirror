@@ -41,7 +41,9 @@ import java.util.stream.DoubleStream;
  * generate subtasks. Class SplittableRandom supports methods for
  * producing pseudorandom numbers of type {@code int}, {@code long},
  * and {@code double} with similar usages as for class
- * {@link java.util.Random} but differs in the following ways: <ul>
+ * {@link java.util.Random} but differs in the following ways:
+ *
+ * <ul>
  *
  * <li>Series of generated values pass the DieHarder suite testing
  * independence and uniformity properties of random number generators.

@@ -961,7 +961,7 @@ public class CopyOnWriteArrayList<E>
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public ListIterator<E> listIterator(final int index) {
+    public ListIterator<E> listIterator(int index) {
         Object[] elements = getArray();
         int len = elements.length;
         if (index < 0 || index > len)
@@ -1213,7 +1213,7 @@ public class CopyOnWriteArrayList<E>
             }
         }
 
-        public ListIterator<E> listIterator(final int index) {
+        public ListIterator<E> listIterator(int index) {
             final ReentrantLock lock = l.lock;
             lock.lock();
             try {

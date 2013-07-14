@@ -499,8 +499,9 @@ public class CountedCompleterTest extends JSR166TestCase {
     // Invocation tests use some interdependent task classes
     // to better test propagation etc
 
-
-    // Version of Fibonacci with different classes for left vs right forks
+    /**
+     * Version of Fibonacci with different classes for left vs right forks
+     */
     abstract class CCF extends CheckedCC {
         int number;
         int rnumber;

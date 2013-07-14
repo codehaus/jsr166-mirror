@@ -232,7 +232,6 @@ public class JSR166TestCase extends TestCase {
             RecursiveTaskTest.suite(),
             LinkedTransferQueueTest.suite(),
             PhaserTest.suite(),
-            SplittableRandomTest.suite(),
             ThreadLocalRandomTest.suite(),
             AbstractExecutorServiceTest.suite(),
             AbstractQueueTest.suite(),
@@ -303,6 +302,7 @@ public class JSR166TestCase extends TestCase {
                 "ForkJoinPool8Test",
                 "LongAccumulatorTest",
                 "LongAdderTest",
+                "SplittableRandomTest",
                 "StampedLockTest",
             };
             addNamedTestClasses(suite, java8TestClassNames);

@@ -523,6 +523,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
         <exclude name="LongAccumulatorTest.java"/>
         <exclude name="LongAdderTest.java"/>
         <exclude name="CompletableFutureTest.java"/>
+        <exclude name="SplittableRandomTest.java"/>
         <exclude name="StampedLockTest.java"/>
       </javac-elements>
     </run-tck-tests>

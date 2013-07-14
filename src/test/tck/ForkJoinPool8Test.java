@@ -340,7 +340,6 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         checkInvoke(a);
     }
 
-
     /**
      * get of a forked task returns when task completes
      */

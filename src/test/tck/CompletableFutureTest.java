@@ -259,7 +259,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertEquals(g.getNumberOfDependents(), 0);
     }
 
-
     /**
      * toString indicates current completion state
      */
@@ -373,7 +372,6 @@ public class CompletableFutureTest extends JSR166TestCase {
             return (t == null) ? two : three;
         }
     }
-
 
     /**
      * exceptionally action completes with function value on source
@@ -662,7 +660,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertTrue(f.cancel(true));
         checkCompletedWithWrappedCancellationException(g);
     }
-
 
     /**
      * thenCombine result completes normally after normal completion
@@ -1171,7 +1168,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCompletedWithWrappedCancellationException(g);
     }
 
-
     /**
      * runAfterEither result completes normally after normal completion
      * of either source
@@ -1319,7 +1315,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         g = f.thenCompose(r = new CompletableFutureInc());
         checkCompletedWithWrappedCancellationException(g);
     }
-
 
     // asyncs
 
@@ -2087,7 +2082,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         g = f.thenComposeAsync(r = new CompletableFutureInc());
         checkCompletedWithWrappedCancellationException(g);
     }
-
 
     // async with explicit executors
 
@@ -3180,7 +3174,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCompletedNormally(f, three);
         checkCompletedWithWrappedCFException(g);
     }
-
 
     /**
      * handleAsync action completes normally with function value on

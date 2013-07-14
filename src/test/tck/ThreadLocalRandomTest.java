@@ -27,13 +27,13 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
      * across multiples of primes.
      */
 
-    //
+    // max numbers of calls to detect getting stuck on one value
     static final int NCALLS = 10000;
 
     // max sampled int bound
     static final int MAX_INT_BOUND = (1 << 28);
 
-    // Max sampled long bound
+    // max sampled long bound
     static final long MAX_LONG_BOUND = (1L << 42);
 
     /**
@@ -47,7 +47,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * Repeated calls to nextInt produce at least one different result
+     * Repeated calls to nextInt produce at least two distinct results
      */
     public void testNextInt() {
         int f = ThreadLocalRandom.current().nextInt();
@@ -58,7 +58,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * Repeated calls to nextLong produce at least one different result
+     * Repeated calls to nextLong produce at least two distinct results
      */
     public void testNextLong() {
         long f = ThreadLocalRandom.current().nextLong();
@@ -69,7 +69,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * Repeated calls to nextBoolean produce at least one different result
+     * Repeated calls to nextBoolean produce at least two distinct results
      */
     public void testNextBoolean() {
         boolean f = ThreadLocalRandom.current().nextBoolean();
@@ -80,7 +80,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * Repeated calls to nextFloat produce at least one different result
+     * Repeated calls to nextFloat produce at least two distinct results
      */
     public void testNextFloat() {
         float f = ThreadLocalRandom.current().nextFloat();
@@ -91,18 +91,18 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * Repeated calls to nextDouble produce at least one different result
+     * Repeated calls to nextDouble produce at least two distinct results
      */
     public void testNextDouble() {
         double f = ThreadLocalRandom.current().nextDouble();
-        double i = 0;
+        int i = 0;
         while (i < NCALLS && ThreadLocalRandom.current().nextDouble() == f)
             ++i;
         assertTrue(i < NCALLS);
     }
 
     /**
-     * Repeated calls to nextGaussian produce at least one different result
+     * Repeated calls to nextGaussian produce at least two distinct results
      */
     public void testNextGaussian() {
         double f = ThreadLocalRandom.current().nextGaussian();
@@ -113,7 +113,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextInt(negative) throws IllegalArgumentException;
+     * nextInt(negative) throws IllegalArgumentException
      */
     public void testNextIntBoundedNeg() {
         try {
@@ -123,7 +123,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextInt(least >= bound) throws IllegalArgumentException;
+     * nextInt(least >= bound) throws IllegalArgumentException
      */
     public void testNextIntBadBounds() {
         try {
@@ -134,7 +134,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
 
     /**
      * nextInt(bound) returns 0 <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextIntBounded() {
         // sample bound space across prime number increments
@@ -154,7 +154,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
 
     /**
      * nextInt(least, bound) returns least <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextIntBounded2() {
         for (int least = -15485863; least < MAX_INT_BOUND; least += 524959) {
@@ -174,7 +174,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextLong(negative) throws IllegalArgumentException;
+     * nextLong(negative) throws IllegalArgumentException
      */
     public void testNextLongBoundedNeg() {
         try {
@@ -184,7 +184,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextLong(least >= bound) throws IllegalArgumentException;
+     * nextLong(least >= bound) throws IllegalArgumentException
      */
     public void testNextLongBadBounds() {
         try {
@@ -195,7 +195,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
 
     /**
      * nextLong(bound) returns 0 <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextLongBounded() {
         for (long bound = 2; bound < MAX_LONG_BOUND; bound += 15485863) {
@@ -214,7 +214,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
 
     /**
      * nextLong(least, bound) returns least <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextLongBounded2() {
         for (long least = -86028121; least < MAX_LONG_BOUND; least += 982451653L) {
@@ -235,7 +235,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
 
     /**
      * nextDouble(least, bound) returns least <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextDoubleBounded2() {
         for (double least = 0.0001; least < 1.0e20; least *= 8) {

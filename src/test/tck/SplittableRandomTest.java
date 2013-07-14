@@ -22,17 +22,17 @@ public class SplittableRandomTest extends JSR166TestCase {
     /*
      * Testing coverage notes:
      *
-     * 1. Many of the test methods are adapted from ThreadLocalRandomTest
+     * 1. Many of the test methods are adapted from ThreadLocalRandomTest.
      *
-     * 2. This set of tests do not check for random number generator
-     * quality. But we check for minimal API compliance by requiring
-     * that repeated calls to nextX methods, up to NCALLS tries,
-     * produce at least one different result. (In some possible
-     * universe, a "correct" implementation might fail, but the odds
-     * are vastly less than that of encountering a hardware failure
-     * while running the test.) For bounded nextX methods, we sample
-     * various intervals across multiples of primes. In other tests,
-     * we repeat under REPS different values.
+     * 2. These tests do not check for random number generator quality.
+     * But we check for minimal API compliance by requiring that
+     * repeated calls to nextX methods, up to NCALLS tries, produce at
+     * least two distinct results. (In some possible universe, a
+     * "correct" implementation might fail, but the odds are vastly
+     * less than that of encountering a hardware failure while running
+     * the test.) For bounded nextX methods, we sample various
+     * intervals across multiples of primes. In other tests, we repeat
+     * under REPS different values.
      */
 
     // max numbers of calls to detect getting stuck on one value
@@ -41,14 +41,14 @@ public class SplittableRandomTest extends JSR166TestCase {
     // max sampled int bound
     static final int MAX_INT_BOUND = (1 << 28);
 
-    // Max sampled long bound
+    // max sampled long bound
     static final long MAX_LONG_BOUND = (1L << 42);
 
     // Number of replications for other checks
     static final int REPS = 20;
 
     /**
-     * Repeated calls to nextInt produce at least one different result
+     * Repeated calls to nextInt produce at least two distinct results
      */
     public void testNextInt() {
         SplittableRandom sr = new SplittableRandom();
@@ -60,7 +60,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * Repeated calls to nextLong produce at least one different result
+     * Repeated calls to nextLong produce at least two distinct results
      */
     public void testNextLong() {
         SplittableRandom sr = new SplittableRandom();
@@ -72,12 +72,12 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * Repeated calls to nextDouble produce at least one different result
+     * Repeated calls to nextDouble produce at least two distinct results
      */
     public void testNextDouble() {
         SplittableRandom sr = new SplittableRandom();
         double f = sr.nextDouble();
-        double i = 0;
+        int i = 0;
         while (i < NCALLS && sr.nextDouble() == f)
             ++i;
         assertTrue(i < NCALLS);
@@ -127,7 +127,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextInt(negative) throws IllegalArgumentException;
+     * nextInt(negative) throws IllegalArgumentException
      */
     public void testNextIntBoundedNeg() {
         SplittableRandom sr = new SplittableRandom();
@@ -138,7 +138,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextInt(least >= bound) throws IllegalArgumentException;
+     * nextInt(least >= bound) throws IllegalArgumentException
      */
     public void testNextIntBadBounds() {
         SplittableRandom sr = new SplittableRandom();
@@ -150,7 +150,7 @@ public class SplittableRandomTest extends JSR166TestCase {
 
     /**
      * nextInt(bound) returns 0 <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextIntBounded() {
         SplittableRandom sr = new SplittableRandom();
@@ -171,7 +171,7 @@ public class SplittableRandomTest extends JSR166TestCase {
 
     /**
      * nextInt(least, bound) returns least <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextIntBounded2() {
         SplittableRandom sr = new SplittableRandom();
@@ -192,7 +192,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextLong(negative) throws IllegalArgumentException;
+     * nextLong(negative) throws IllegalArgumentException
      */
     public void testNextLongBoundedNeg() {
         SplittableRandom sr = new SplittableRandom();
@@ -203,7 +203,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextLong(least >= bound) throws IllegalArgumentException;
+     * nextLong(least >= bound) throws IllegalArgumentException
      */
     public void testNextLongBadBounds() {
         SplittableRandom sr = new SplittableRandom();
@@ -215,7 +215,7 @@ public class SplittableRandomTest extends JSR166TestCase {
 
     /**
      * nextLong(bound) returns 0 <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextLongBounded() {
         SplittableRandom sr = new SplittableRandom();
@@ -235,7 +235,7 @@ public class SplittableRandomTest extends JSR166TestCase {
 
     /**
      * nextLong(least, bound) returns least <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextLongBounded2() {
         SplittableRandom sr = new SplittableRandom();
@@ -257,7 +257,7 @@ public class SplittableRandomTest extends JSR166TestCase {
 
     /**
      * nextDouble(least, bound) returns least <= value < bound;
-     * repeated calls produce at least one different result
+     * repeated calls produce at least two distinct results
      */
     public void testNextDoubleBounded2() {
         SplittableRandom sr = new SplittableRandom();
@@ -286,18 +286,15 @@ public class SplittableRandomTest extends JSR166TestCase {
         try {
             java.util.stream.IntStream x = r.ints(-1L);
             shouldThrow();
-        } catch (IllegalArgumentException ok) {
-        }
+        } catch (IllegalArgumentException success) {}
         try {
             java.util.stream.LongStream x = r.longs(-1L);
             shouldThrow();
-        } catch (IllegalArgumentException ok) {
-        }
+        } catch (IllegalArgumentException success) {}
         try {
             java.util.stream.DoubleStream x = r.doubles(-1L);
             shouldThrow();
-        } catch (IllegalArgumentException ok) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -309,18 +306,15 @@ public class SplittableRandomTest extends JSR166TestCase {
         try {
             java.util.stream.IntStream x = r.ints(2, 1);
             shouldThrow();
-        } catch (IllegalArgumentException ok) {
-        }
+        } catch (IllegalArgumentException success) {}
         try {
             java.util.stream.LongStream x = r.longs(1, -2);
             shouldThrow();
-        } catch (IllegalArgumentException ok) {
-        }
+        } catch (IllegalArgumentException success) {}
         try {
             java.util.stream.DoubleStream x = r.doubles(0, 0);
             shouldThrow();
-        } catch (IllegalArgumentException ok) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -333,7 +327,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
             r.ints(size).parallel().forEach(x -> {counter.increment();});
-            assertEquals(counter.sum(), size);
+            assertEquals(size, counter.sum());
             size += 524959;
         }
     }
@@ -348,7 +342,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
             r.longs(size).parallel().forEach(x -> {counter.increment();});
-            assertEquals(counter.sum(), size);
+            assertEquals(size, counter.sum());
             size += 524959;
         }
     }
@@ -363,11 +357,10 @@ public class SplittableRandomTest extends JSR166TestCase {
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
             r.doubles(size).parallel().forEach(x -> {counter.increment();});
-            assertEquals(counter.sum(), size);
+            assertEquals(size, counter.sum());
             size += 524959;
         }
     }
-
 
     /**
      * Each of a parallel sized stream of bounded ints is within bounds
@@ -384,7 +377,7 @@ public class SplittableRandomTest extends JSR166TestCase {
                                 fails.getAndIncrement(); });
             }
         }
-        assertEquals(fails.get(), 0);
+        assertEquals(0, fails.get());
     }
 
     /**
@@ -402,7 +395,7 @@ public class SplittableRandomTest extends JSR166TestCase {
                                 fails.getAndIncrement(); });
             }
         }
-        assertEquals(fails.get(), 0);
+        assertEquals(0, fails.get());
     }
 
     /**
@@ -420,7 +413,7 @@ public class SplittableRandomTest extends JSR166TestCase {
                                 fails.getAndIncrement(); });
             }
         }
-        assertEquals(fails.get(), 0);
+        assertEquals(0, fails.get());
     }
 
     /**
@@ -431,7 +424,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         SplittableRandom r = new SplittableRandom();
         long size = 100;
         r.ints().limit(size).parallel().forEach(x -> {counter.increment();});
-        assertEquals(counter.sum(), size);
+        assertEquals(size, counter.sum());
     }
 
     /**
@@ -442,9 +435,8 @@ public class SplittableRandomTest extends JSR166TestCase {
         SplittableRandom r = new SplittableRandom();
         long size = 100;
         r.longs().limit(size).parallel().forEach(x -> {counter.increment();});
-        assertEquals(counter.sum(), size);
+        assertEquals(size, counter.sum());
     }
-
 
     /**
      * A parallel unsized stream of doubles generates at least 100 values
@@ -454,7 +446,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         SplittableRandom r = new SplittableRandom();
         long size = 100;
         r.doubles().limit(size).parallel().forEach(x -> {counter.increment();});
-        assertEquals(counter.sum(), size);
+        assertEquals(size, counter.sum());
     }
 
     /**
@@ -465,7 +457,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         SplittableRandom r = new SplittableRandom();
         long size = 100;
         r.ints().limit(size).forEach(x -> {counter.increment();});
-        assertEquals(counter.sum(), size);
+        assertEquals(size, counter.sum());
     }
 
     /**
@@ -476,9 +468,8 @@ public class SplittableRandomTest extends JSR166TestCase {
         SplittableRandom r = new SplittableRandom();
         long size = 100;
         r.longs().limit(size).forEach(x -> {counter.increment();});
-        assertEquals(counter.sum(), size);
+        assertEquals(size, counter.sum());
     }
-
 
     /**
      * A sequential unsized stream of doubles generates at least 100 values
@@ -488,8 +479,7 @@ public class SplittableRandomTest extends JSR166TestCase {
         SplittableRandom r = new SplittableRandom();
         long size = 100;
         r.doubles().limit(size).forEach(x -> {counter.increment();});
-        assertEquals(counter.sum(), size);
+        assertEquals(size, counter.sum());
     }
-
 
 }

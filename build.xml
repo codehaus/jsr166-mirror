@@ -337,7 +337,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       <arg value="-tag"/>
       <arg value="implSpec:a:&lt;em&gt;Implementation Requirements:&lt;/em&gt;"/>
       <arg value="-tag"/>
-      <arg value="implNote:a:&lt;em&gt;Implementation Note:&lt;/em&gt;"/> 
+      <arg value="implNote:a:&lt;em&gt;Implementation Note:&lt;/em&gt;"/>
     </javadoc>
   </target>
 
@@ -899,6 +899,9 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
   <!-- jsr166e -->
 
+  <property name="build.jsr166e.java.version" value="6"/>
+  <property name="build.jsr166e.javac" value="${javac6}"/>
+
   <target name="jsr166ecompile"
           depends="configure-compiler"
           description="Compiles jsr166e sources">
@@ -910,11 +913,11 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
            debug="${build.debug}"
            debuglevel="${build.debuglevel}"
            deprecation="${build.deprecation}"
-           source="7"
+           source="${build.jsr166e.java.version}"
            classpath=""
            includeAntRuntime="false"
            includeJavaRuntime="false"
-           executable="${javac7}"
+           executable="${build.jsr166e.javac}"
            fork="true">
 
       <include name="jsr166e/**/*.java"/>
@@ -947,8 +950,8 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
              packagenames="jsr166e.*"
              link="${jdkapidocs.url}"
              access="${build.javadoc.access}"
-             sourcepath="${topsrc.dir}:${jdk7src.dir}"
-             source="7"
+             sourcepath="${topsrc.dir}:${jdk6src.dir}"
+             source="${build.jsr166e.java.version}"
              executable="${javadoc7}">
       <arg value="-XDignore.symbol.file=true"/>
 
@@ -956,15 +959,39 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
 
-  <target name="jsr166e-test-tck"
+  <target name="jsr166e-test-tck-one-java-version"
 	  depends="jsr166ejar"
           description="Runs tck tests for jsr166e">
 
+    <echo message="Testing with jdk${build.jsr166e.java.version} ..."/>
+
     <run-tck-tests
       tck.src.dir="${test.src.dir}/tck-jsr166e"
-      target="7"
+      target="${build.jsr166e.java.version}"
       workdir="${build.jsr166e.dir}"
       classes="${jsr166e.jar}"/>
+  </target>
+
+  <target name="jsr166e-test-tck"
+          description="Runs tck tests for jsr166e for multiple java versions">
+
+<!--     <antcall target="clean"/> -->
+<!--     <antcall target="jsr166e-test-tck-one-java-version"> -->
+<!--       <param name="build.jsr166e.java.version" value="8"/> -->
+<!--       <param name="build.jsr166e.javac" value="${javac8}"/> -->
+<!--     </antcall> -->
+
+    <antcall target="clean"/>
+    <antcall target="jsr166e-test-tck-one-java-version">
+      <param name="build.jsr166e.java.version" value="7"/>
+      <param name="build.jsr166e.javac" value="${javac7}"/>
+    </antcall>
+
+    <antcall target="clean"/>
+    <antcall target="jsr166e-test-tck-one-java-version">
+      <param name="build.jsr166e.java.version" value="6"/>
+      <param name="build.jsr166e.javac" value="${javac6}"/>
+    </antcall>
   </target>
 
 

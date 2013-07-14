@@ -25,7 +25,7 @@ public class ListBash {
             fail("Class " + args[0] + " not found.");
         }
 
-        synch = (args.length>3);
+        synch = (args.length > 3);
         oneRun();
         oneRun();
         oneRun();
@@ -33,11 +33,11 @@ public class ListBash {
 
     static void oneRun() {
         long startTime = System.nanoTime();
-        for (int i=0; i<numItr; i++) {
+        for (int i = 0; i < numItr; i++) {
             elementLoop();
         }
         List<Integer> s = newList(cl, synch);
-        for (int i=0; i<listSize; i++)
+        for (int i = 0; i < listSize; i++)
             s.add(new Integer(i));
         if (s.size() != listSize)
             fail("Size of [0..n-1] != n");
@@ -67,10 +67,10 @@ public class ListBash {
         if (!(s1.equals(s2) && s2.equals(s1)))
             fail("addAll(int, Collection) doesn't work.");
         // Reverse List
-        for (int j=0, n=s1.size(); j<n; j++)
+        for (int j = 0, n = s1.size(); j < n; j++)
             s1.set(j, s1.set(n-j-1, s1.get(j)));
         // Reverse it again
-        for (int j=0, n=s1.size(); j<n; j++)
+        for (int j = 0, n = s1.size(); j < n; j++)
             s1.set(j, s1.set(n-j-1, s1.get(j)));
         if (!(s1.equals(s2) && s2.equals(s1)))
             fail("set(int, Object) doesn't work");
@@ -272,7 +272,7 @@ public class ListBash {
     }
 
     static void AddRandoms(List<Integer> s, int n) {
-        for (int i=0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             int r = rnd.nextInt() % n;
             Integer e = new Integer(r < 0 ? -r : r);
 

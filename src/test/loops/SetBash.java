@@ -19,9 +19,9 @@ public class SetBash {
             fail("Class " + args[0] + " not found.");
         }
 
-        boolean synch = (args.length>3);
+        boolean synch = (args.length > 3);
 
-        for (int i=0; i<numItr; i++) {
+        for (int i = 0; i < numItr; i++) {
             Set s1 = newSet(cl, synch);
             AddRandoms(s1, setSize);
 
@@ -105,7 +105,7 @@ public class SetBash {
     }
 
     static void AddRandoms(Set s, int n) {
-        for (int i=0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             int r = rnd.nextInt() % n;
             Integer e = new Integer(r < 0 ? -r : r);
 

@@ -1077,7 +1077,7 @@ public class CopyOnWriteArrayList<E>
     public ListIterator<E> listIterator(final int index) {
         Object[] elements = getArray();
         int len = elements.length;
-        if (index<0 || index>len)
+        if (index < 0 || index > len)
             throw new IndexOutOfBoundsException("Index: "+index);
 
         return new COWIterator<E>(elements, index);
@@ -1227,7 +1227,7 @@ public class CopyOnWriteArrayList<E>
 
         // only call this holding l's lock
         private void rangeCheck(int index) {
-            if (index<0 || index>=size)
+            if (index < 0 || index >= size)
                 throw new IndexOutOfBoundsException("Index: "+index+
                                                     ",Size: "+size);
         }
@@ -1274,7 +1274,7 @@ public class CopyOnWriteArrayList<E>
             lock.lock();
             try {
                 checkForComodification();
-                if (index<0 || index>size)
+                if (index < 0 || index > size)
                     throw new IndexOutOfBoundsException();
                 l.add(index+offset, element);
                 expectedArray = l.getArray();
@@ -1336,7 +1336,7 @@ public class CopyOnWriteArrayList<E>
             lock.lock();
             try {
                 checkForComodification();
-                if (index<0 || index>size)
+                if (index < 0 || index > size)
                     throw new IndexOutOfBoundsException("Index: "+index+
                                                         ", Size: "+size);
                 return new COWSubListIterator<E>(l, index, offset, size);
@@ -1350,7 +1350,7 @@ public class CopyOnWriteArrayList<E>
             lock.lock();
             try {
                 checkForComodification();
-                if (fromIndex<0 || toIndex>size)
+                if (fromIndex < 0 || toIndex > size)
                     throw new IndexOutOfBoundsException();
                 return new COWSubList<E>(l, fromIndex + offset,
                                          toIndex + offset);

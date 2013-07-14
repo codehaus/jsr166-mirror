@@ -455,7 +455,7 @@ public class SplittableRandom {
      * @param bound the bound on the random number to be returned.  Must be
      *        positive.
      * @return a pseudorandom {@code int} value between zero
-     *         (inclusive) and the bound (exclusive).
+     *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if the bound is less than zero
      */
     public int nextInt(int bound) {
@@ -482,7 +482,7 @@ public class SplittableRandom {
      * @param origin the least value returned
      * @param bound the upper bound (exclusive)
      * @return a pseudorandom {@code int} value between the origin
-     *         (inclusive) and the bound (exclusive).
+     *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code origin} is greater than
      *         or equal to {@code bound}
      */
@@ -508,7 +508,7 @@ public class SplittableRandom {
      * @param bound the bound on the random number to be returned.  Must be
      *        positive.
      * @return a pseudorandom {@code long} value between zero
-     *         (inclusive) and the bound (exclusive).
+     *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is less than zero
      */
     public long nextLong(long bound) {
@@ -535,7 +535,7 @@ public class SplittableRandom {
      * @param origin the least value returned
      * @param bound the upper bound (exclusive)
      * @return a pseudorandom {@code long} value between the origin
-     *         (inclusive) and the bound (exclusive).
+     *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code origin} is greater than
      *         or equal to {@code bound}
      */
@@ -563,7 +563,7 @@ public class SplittableRandom {
      * @param bound the bound on the random number to be returned.  Must be
      *        positive.
      * @return a pseudorandom {@code double} value between zero
-     *         (inclusive) and the bound (exclusive).
+     *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is less than zero
      */
     public double nextDouble(double bound) {
@@ -581,7 +581,7 @@ public class SplittableRandom {
      * @param origin the least value returned
      * @param bound the upper bound
      * @return a pseudorandom {@code double} value between the origin
-     *         (inclusive) and the bound (exclusive).
+     *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code origin} is greater than
      *         or equal to {@code bound}
      */
@@ -614,7 +614,7 @@ public class SplittableRandom {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code int}
-     * values
+     * values.
      *
      * @implNote This method is implemented to be equivalent to {@code
      * ints(Long.MAX_VALUE)}.
@@ -637,7 +637,7 @@ public class SplittableRandom {
      * @param randomNumberOrigin the origin of each random value
      * @param randomNumberBound the bound of each random value
      * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin and bound.
+     *         each with the given origin and bound
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero, or {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
@@ -664,7 +664,7 @@ public class SplittableRandom {
      * @param randomNumberOrigin the origin of each random value
      * @param randomNumberBound the bound of each random value
      * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin and bound.
+     *         each with the given origin and bound
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */
@@ -720,7 +720,7 @@ public class SplittableRandom {
      * @param randomNumberOrigin the origin of each random value
      * @param randomNumberBound the bound of each random value
      * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin and bound.
+     *         each with the given origin and bound
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero, or {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
@@ -747,7 +747,7 @@ public class SplittableRandom {
      * @param randomNumberOrigin the origin of each random value
      * @param randomNumberBound the bound of each random value
      * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin and bound.
+     *         each with the given origin and bound
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */
@@ -805,9 +805,9 @@ public class SplittableRandom {
      * @param randomNumberOrigin the origin of each random value
      * @param randomNumberBound the bound of each random value
      * @return a stream of pseudorandom {@code double} values,
-     * each with the given origin and bound.
+     * each with the given origin and bound
      * @throws IllegalArgumentException if {@code streamSize} is
-     * less than zero.
+     * less than zero
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */
@@ -833,7 +833,7 @@ public class SplittableRandom {
      * @param randomNumberOrigin the origin of each random value
      * @param randomNumberBound the bound of each random value
      * @return a stream of pseudorandom {@code double} values,
-     * each with the given origin and bound.
+     * each with the given origin and bound
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */

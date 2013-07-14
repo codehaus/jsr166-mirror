@@ -1150,7 +1150,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     /**
      * Reconstitutes this queue from a stream (that is, deserializes it).
      */
-    private void readObject(final java.io.ObjectInputStream s)
+    private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         if (waitingProducers instanceof FifoWaitQueue)

@@ -288,11 +288,23 @@ public class SplittableRandomTest extends JSR166TestCase {
             shouldThrow();
         } catch (IllegalArgumentException success) {}
         try {
+            java.util.stream.IntStream x = r.ints(-1L, 2, 3);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+        try {
             java.util.stream.LongStream x = r.longs(-1L);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
         try {
+            java.util.stream.LongStream x = r.longs(-1L, -1L, 1L);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+        try {
             java.util.stream.DoubleStream x = r.doubles(-1L);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+        try {
+            java.util.stream.DoubleStream x = r.doubles(-1L, .5, .6);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -308,11 +320,23 @@ public class SplittableRandomTest extends JSR166TestCase {
             shouldThrow();
         } catch (IllegalArgumentException success) {}
         try {
-            java.util.stream.LongStream x = r.longs(1, -2);
+            java.util.stream.IntStream x = r.ints(10, 42, 42);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
         try {
-            java.util.stream.DoubleStream x = r.doubles(0, 0);
+            java.util.stream.LongStream x = r.longs(-1L, -1L);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+        try {
+            java.util.stream.LongStream x = r.longs(10, 1L, -2L);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+        try {
+            java.util.stream.DoubleStream x = r.doubles(0.0, 0.0);
+            shouldThrow();
+        } catch (IllegalArgumentException success) {}
+        try {
+            java.util.stream.DoubleStream x = r.doubles(10, .5, .4);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }

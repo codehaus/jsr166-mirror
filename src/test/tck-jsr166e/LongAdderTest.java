@@ -4,90 +4,113 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import jsr166e.*;
 import junit.framework.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.DoubleAdder;
 
-public class DoubleAdderTest extends JSR166TestCase {
+public class LongAdderTest extends JSR166TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
     public static Test suite() {
-        return new TestSuite(DoubleAdderTest.class);
+        return new TestSuite(LongAdderTest.class);
     }
 
     /**
      * default constructed initializes to zero
      */
     public void testConstructor() {
-        DoubleAdder ai = new DoubleAdder();
-        assertEquals(0.0, ai.sum());
+        LongAdder ai = new LongAdder();
+        assertEquals(0, ai.sum());
     }
 
     /**
      * add adds given value to current, and sum returns current value
      */
     public void testAddAndSum() {
-        DoubleAdder ai = new DoubleAdder();
-        ai.add(2.0);
-        assertEquals(2.0, ai.sum());
-        ai.add(-4.0);
-        assertEquals(-2.0, ai.sum());
+        LongAdder ai = new LongAdder();
+        ai.add(2);
+        assertEquals(2, ai.sum());
+        ai.add(-4);
+        assertEquals(-2, ai.sum());
+    }
+
+    /**
+     * decrement decrements and sum returns current value
+     */
+    public void testDecrementAndsum() {
+        LongAdder ai = new LongAdder();
+        ai.decrement();
+        assertEquals(-1, ai.sum());
+        ai.decrement();
+        assertEquals(-2, ai.sum());
+    }
+
+    /**
+     * incrementAndGet increments and returns current value
+     */
+    public void testIncrementAndsum() {
+        LongAdder ai = new LongAdder();
+        ai.increment();
+        assertEquals(1, ai.sum());
+        ai.increment();
+        assertEquals(2, ai.sum());
     }
 
     /**
      * reset zeroes sum
      */
     public void testReset() {
-        DoubleAdder ai = new DoubleAdder();
-        ai.add(2.0);
-        assertEquals(2.0, ai.sum());
+        LongAdder ai = new LongAdder();
+        ai.add(2);
+        assertEquals(2, ai.sum());
         ai.reset();
-        assertEquals(0.0, ai.sum());
+        assertEquals(0, ai.sum());
     }
 
     /**
      * sumThenReset returns sum then zeros
      */
     public void testSumThenReset() {
-        DoubleAdder ai = new DoubleAdder();
-        ai.add(2.0);
-        assertEquals(2.0, ai.sum());
-        assertEquals(2.0, ai.sumThenReset());
-        assertEquals(0.0, ai.sum());
+        LongAdder ai = new LongAdder();
+        ai.add(2);
+        assertEquals(2, ai.sum());
+        assertEquals(2, ai.sumThenReset());
+        assertEquals(0, ai.sum());
     }
 
     /**
      * a deserialized serialized adder holds same value
      */
     public void testSerialization() throws Exception {
-        DoubleAdder x = new DoubleAdder();
-        DoubleAdder y = serialClone(x);
+        LongAdder x = new LongAdder();
+        LongAdder y = serialClone(x);
         assertNotSame(x, y);
-        x.add(-22.0);
-        DoubleAdder z = serialClone(x);
-        assertEquals(-22.0, x.sum());
-        assertEquals(0.0, y.sum());
-        assertEquals(-22.0, z.sum());
+        x.add(-22);
+        LongAdder z = serialClone(x);
+        assertNotSame(y, z);
+        assertEquals(-22, x.sum());
+        assertEquals(0, y.sum());
+        assertEquals(-22, z.sum());
     }
 
     /**
      * toString returns current value.
      */
     public void testToString() {
-        DoubleAdder ai = new DoubleAdder();
-        assertEquals(Double.toString(0.0), ai.toString());
-        ai.add(1.0);
-        assertEquals(Double.toString(1.0), ai.toString());
+        LongAdder ai = new LongAdder();
+        assertEquals("0", ai.toString());
+        ai.increment();
+        assertEquals(Long.toString(1), ai.toString());
     }
 
     /**
      * intValue returns current value.
      */
     public void testIntValue() {
-        DoubleAdder ai = new DoubleAdder();
+        LongAdder ai = new LongAdder();
         assertEquals(0, ai.intValue());
-        ai.add(1.0);
+        ai.increment();
         assertEquals(1, ai.intValue());
     }
 
@@ -95,9 +118,9 @@ public class DoubleAdderTest extends JSR166TestCase {
      * longValue returns current value.
      */
     public void testLongValue() {
-        DoubleAdder ai = new DoubleAdder();
+        LongAdder ai = new LongAdder();
         assertEquals(0, ai.longValue());
-        ai.add(1.0);
+        ai.increment();
         assertEquals(1, ai.longValue());
     }
 
@@ -105,9 +128,9 @@ public class DoubleAdderTest extends JSR166TestCase {
      * floatValue returns current value.
      */
     public void testFloatValue() {
-        DoubleAdder ai = new DoubleAdder();
+        LongAdder ai = new LongAdder();
         assertEquals(0.0f, ai.floatValue());
-        ai.add(1.0);
+        ai.increment();
         assertEquals(1.0f, ai.floatValue());
     }
 
@@ -115,9 +138,9 @@ public class DoubleAdderTest extends JSR166TestCase {
      * doubleValue returns current value.
      */
     public void testDoubleValue() {
-        DoubleAdder ai = new DoubleAdder();
+        LongAdder ai = new LongAdder();
         assertEquals(0.0, ai.doubleValue());
-        ai.add(1.0);
+        ai.increment();
         assertEquals(1.0, ai.doubleValue());
     }
 
@@ -128,24 +151,24 @@ public class DoubleAdderTest extends JSR166TestCase {
         final int incs = 1000000;
         final int nthreads = 4;
         final ExecutorService pool = Executors.newCachedThreadPool();
-        DoubleAdder a = new DoubleAdder();
+        LongAdder a = new LongAdder();
         CyclicBarrier barrier = new CyclicBarrier(nthreads + 1);
         for (int i = 0; i < nthreads; ++i)
             pool.execute(new AdderTask(a, barrier, incs));
         barrier.await();
         barrier.await();
-        double total = (long)nthreads * incs;
-        double sum = a.sum();
+        long total = (long)nthreads * incs;
+        long sum = a.sum();
         assertEquals(sum, total);
         pool.shutdown();
     }
 
     static final class AdderTask implements Runnable {
-        final DoubleAdder adder;
+        final LongAdder adder;
         final CyclicBarrier barrier;
         final int incs;
-        volatile double result;
-        AdderTask(DoubleAdder adder, CyclicBarrier barrier, int incs) {
+        volatile long result;
+        AdderTask(LongAdder adder, CyclicBarrier barrier, int incs) {
             this.adder = adder;
             this.barrier = barrier;
             this.incs = incs;
@@ -154,9 +177,9 @@ public class DoubleAdderTest extends JSR166TestCase {
         public void run() {
             try {
                 barrier.await();
-                DoubleAdder a = adder;
+                LongAdder a = adder;
                 for (int i = 0; i < incs; ++i)
-                    a.add(1.0);
+                    a.add(1L);
                 result = a.sum();
                 barrier.await();
             } catch (Throwable t) { throw new Error(t); }

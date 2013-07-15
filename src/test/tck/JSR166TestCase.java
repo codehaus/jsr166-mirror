@@ -302,6 +302,7 @@ public class JSR166TestCase extends TestCase {
                 "ForkJoinPool8Test",
                 "LongAccumulatorTest",
                 "LongAdderTest",
+                "SplittableRandomTest",
                 "StampedLockTest",
             };
             addNamedTestClasses(suite, java8TestClassNames);
@@ -310,12 +311,12 @@ public class JSR166TestCase extends TestCase {
         return suite;
     }
 
+    // Delays for timing-dependent tests, in milliseconds.
 
     public static long SHORT_DELAY_MS;
     public static long SMALL_DELAY_MS;
     public static long MEDIUM_DELAY_MS;
     public static long LONG_DELAY_MS;
-
 
     /**
      * Returns the shortest timed delay. This could
@@ -708,7 +709,6 @@ public class JSR166TestCase extends TestCase {
     public static final Integer m5  = new Integer(-5);
     public static final Integer m6  = new Integer(-6);
     public static final Integer m10 = new Integer(-10);
-
 
     /**
      * Runs Runnable r with a security policy that permits precisely

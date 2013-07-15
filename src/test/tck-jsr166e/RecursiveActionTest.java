@@ -4,70 +4,54 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import jsr166e.*;
 import junit.framework.*;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.concurrent.RecursiveAction;
-import java.util.concurrent.CountedCompleter;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.Arrays;
 import java.util.HashSet;
 
-public class ForkJoinPool8Test extends JSR166TestCase {
+public class RecursiveActionTest extends JSR166TestCase {
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
-        return new TestSuite(ForkJoinPool8Test.class);
+        return new TestSuite(RecursiveActionTest.class);
     }
 
-    /**
-     * Common pool exists and has expected parallelism.
-     */
-    public void testCommonPoolParallelism() {
-        assertEquals(ForkJoinPool.getCommonPoolParallelism(),
-                     ForkJoinPool.commonPool().getParallelism());
+    private static ForkJoinPool mainPool() {
+        return new ForkJoinPool();
     }
 
-    /**
-     * Common pool cannot be shut down
-     */
-    public void testCommonPoolShutDown() {
-        assertFalse(ForkJoinPool.commonPool().isShutdown());
-        assertFalse(ForkJoinPool.commonPool().isTerminating());
-        assertFalse(ForkJoinPool.commonPool().isTerminated());
-        ForkJoinPool.commonPool().shutdown();
-        assertFalse(ForkJoinPool.commonPool().isShutdown());
-        assertFalse(ForkJoinPool.commonPool().isTerminating());
-        assertFalse(ForkJoinPool.commonPool().isTerminated());
-        ForkJoinPool.commonPool().shutdownNow();
-        assertFalse(ForkJoinPool.commonPool().isShutdown());
-        assertFalse(ForkJoinPool.commonPool().isTerminating());
-        assertFalse(ForkJoinPool.commonPool().isTerminated());
+    private static ForkJoinPool singletonPool() {
+        return new ForkJoinPool(1);
     }
 
-    /*
-     * All of the following test methods are adaptations of those for
-     * RecursiveAction and CountedCompleter, but with all actions
-     * executed in the common pool, generally implicitly via
-     * checkInvoke.
-     */
-
-    private void checkInvoke(ForkJoinTask a) {
-        checkNotDone(a);
-        assertNull(a.invoke());
-        checkCompletedNormally(a);
+    private static ForkJoinPool asyncSingletonPool() {
+        return new ForkJoinPool(1,
+                                ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+                                null, true);
     }
 
-    void checkNotDone(ForkJoinTask a) {
+    private void testInvokeOnPool(ForkJoinPool pool, RecursiveAction a) {
+        try {
+            checkNotDone(a);
+
+            assertNull(pool.invoke(a));
+
+            checkCompletedNormally(a);
+        } finally {
+            joinPool(pool);
+        }
+    }
+
+    void checkNotDone(RecursiveAction a) {
         assertFalse(a.isDone());
         assertFalse(a.isCompletedNormally());
         assertFalse(a.isCompletedAbnormally());
@@ -98,7 +82,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    void checkCompletedNormally(ForkJoinTask a) {
+    void checkCompletedNormally(RecursiveAction a) {
         assertTrue(a.isDone());
         assertFalse(a.isCancelled());
         assertTrue(a.isCompletedNormally());
@@ -116,7 +100,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    void checkCancelled(ForkJoinTask a) {
+    void checkCancelled(RecursiveAction a) {
         assertTrue(a.isDone());
         assertTrue(a.isCancelled());
         assertFalse(a.isCompletedNormally());
@@ -143,7 +127,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    void checkCompletedAbnormally(ForkJoinTask a, Throwable t) {
+    void checkCompletedAbnormally(RecursiveAction a, Throwable t) {
         assertTrue(a.isDone());
         assertFalse(a.isCancelled());
         assertFalse(a.isCompletedNormally());
@@ -229,7 +213,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -245,7 +229,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -260,7 +244,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -335,9 +319,112 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 Thread.interrupted();
                 checkCompletedAbnormally(f, f.getException());
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
         a.reinitialize();
-        checkInvoke(a);
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * join/quietlyJoin of a forked task when not in ForkJoinPool
+     * succeeds in the presence of interrupts
+     */
+    public void testJoinIgnoresInterruptsOutsideForkJoinPool() {
+        final SynchronousQueue<FibAction[]> sq =
+            new SynchronousQueue<FibAction[]>();
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() throws InterruptedException {
+                FibAction[] fibActions = new FibAction[6];
+                for (int i = 0; i < fibActions.length; i++)
+                    fibActions[i] = new FibAction(8);
+
+                fibActions[1].cancel(false);
+                fibActions[2].completeExceptionally(new FJException());
+                fibActions[4].cancel(true);
+                fibActions[5].completeExceptionally(new FJException());
+
+                for (int i = 0; i < fibActions.length; i++)
+                    fibActions[i].fork();
+
+                sq.put(fibActions);
+
+                helpQuiesce();
+            }};
+
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                FibAction[] fibActions = sq.take();
+                FibAction f;
+                final Thread myself = Thread.currentThread();
+
+                // test join() ------------
+
+                f = fibActions[0];
+                assertFalse(ForkJoinTask.inForkJoinPool());
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
+                assertNull(f.join());
+                assertTrue(Thread.interrupted());
+                assertEquals(21, f.result);
+                checkCompletedNormally(f);
+
+                f = fibActions[1];
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (CancellationException success) {
+                    assertTrue(Thread.interrupted());
+                    checkCancelled(f);
+                }
+
+                f = fibActions[2];
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
+                try {
+                    f.join();
+                    shouldThrow();
+                } catch (FJException success) {
+                    assertTrue(Thread.interrupted());
+                    checkCompletedAbnormally(f, success);
+                }
+
+                // test quietlyJoin() ---------
+
+                f = fibActions[3];
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                assertEquals(21, f.result);
+                checkCompletedNormally(f);
+
+                f = fibActions[4];
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                checkCancelled(f);
+
+                f = fibActions[5];
+                myself.interrupt();
+                assertTrue(myself.isInterrupted());
+                f.quietlyJoin();
+                assertTrue(Thread.interrupted());
+                assertTrue(f.getException() instanceof FJException);
+                checkCompletedAbnormally(f, f.getException());
+            }};
+
+        Thread t;
+
+        t = newStartedThread(r);
+        testInvokeOnPool(mainPool(), a);
+        awaitTermination(t, LONG_DELAY_MS);
+
+        a.reinitialize();
+        t = newStartedThread(r);
+        testInvokeOnPool(singletonPool(), a);
+        awaitTermination(t, LONG_DELAY_MS);
     }
 
     /**
@@ -352,7 +439,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -367,7 +454,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -383,7 +470,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     shouldThrow();
                 } catch (NullPointerException success) {}
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -398,7 +485,24 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertEquals(21, f.result);
                 checkCompletedNormally(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
+    }
+
+    /**
+     * helpQuiesce returns when tasks are complete.
+     * getQueuedTaskCount returns 0 when quiescent
+     */
+    public void testForkHelpQuiesce() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                helpQuiesce();
+                assertEquals(21, f.result);
+                assertEquals(0, getQueuedTaskCount());
+                checkCompletedNormally(f);
+            }};
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -415,7 +519,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(f, success);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -429,7 +533,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertTrue(f.getException() instanceof FJException);
                 checkCompletedAbnormally(f, f.getException());
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -447,7 +551,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(f, success);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -467,7 +571,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(f, cause);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -487,7 +591,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(f, cause);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -502,7 +606,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertTrue(f.getException() instanceof FJException);
                 checkCompletedAbnormally(f, f.getException());
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -520,7 +624,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCancelled(f);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -539,7 +643,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCancelled(f);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -558,7 +662,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCancelled(f);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -577,7 +681,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCancelled(f);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -592,7 +696,41 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 f.quietlyJoin();
                 checkCancelled(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
+    }
+
+    /**
+     * getPool of executing task returns its pool
+     */
+    public void testGetPool() {
+        final ForkJoinPool mainPool = mainPool();
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                assertSame(mainPool, getPool());
+            }};
+        testInvokeOnPool(mainPool, a);
+    }
+
+    /**
+     * getPool of non-FJ task returns null
+     */
+    public void testGetPool2() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                assertNull(getPool());
+            }};
+        assertNull(a.invoke());
+    }
+
+    /**
+     * inForkJoinPool of executing task returns true
+     */
+    public void testInForkJoinPool() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                assertTrue(inForkJoinPool());
+            }};
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -602,6 +740,48 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         RecursiveAction a = new CheckedRecursiveAction() {
             protected void realCompute() {
                 assertFalse(inForkJoinPool());
+            }};
+        assertNull(a.invoke());
+    }
+
+    /**
+     * getPool of current thread in pool returns its pool
+     */
+    public void testWorkerGetPool() {
+        final ForkJoinPool mainPool = mainPool();
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                ForkJoinWorkerThread w =
+                    (ForkJoinWorkerThread) Thread.currentThread();
+                assertSame(mainPool, w.getPool());
+            }};
+        testInvokeOnPool(mainPool, a);
+    }
+
+    /**
+     * getPoolIndex of current thread in pool returns 0 <= value < poolSize
+     */
+    public void testWorkerGetPoolIndex() {
+        final ForkJoinPool mainPool = mainPool();
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                ForkJoinWorkerThread w =
+                    (ForkJoinWorkerThread) Thread.currentThread();
+                assertTrue(w.getPoolIndex() >= 0);
+                // pool size can shrink after assigning index, so cannot check
+                // assertTrue(w.getPoolIndex() < mainPool.getPoolSize());
+            }};
+        testInvokeOnPool(mainPool, a);
+    }
+
+    /**
+     * setRawResult(null) succeeds
+     */
+    public void testSetRawResult() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                setRawResult(null);
+                assertNull(getRawResult());
             }};
         assertNull(a.invoke());
     }
@@ -623,7 +803,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkNotDone(f);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -646,7 +826,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkNotDone(f);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -664,7 +844,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(f, success);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -679,7 +859,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 assertEquals(0, f.result);
                 checkCompletedNormally(f);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -696,7 +876,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 checkCompletedNormally(g);
                 assertEquals(34, g.result);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -710,7 +890,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 checkCompletedNormally(f);
                 assertEquals(21, f.result);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -733,7 +913,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 checkCompletedNormally(g);
                 assertEquals(13, h.result);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -760,7 +940,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 checkCompletedNormally(g);
                 assertEquals(13, h.result);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -777,7 +957,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     shouldThrow();
                 } catch (NullPointerException success) {}
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -795,7 +975,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(g, success);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -812,7 +992,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(g, success);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -831,7 +1011,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(g, success);
                 }
             }};
-        checkInvoke(a);
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
@@ -854,634 +1034,206 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     checkCompletedAbnormally(f, success);
                 }
             }};
-        checkInvoke(a);
-    }
-
-    // CountedCompleter versions
-
-    abstract static class CCF extends CountedCompleter {
-        int number;
-        int rnumber;
-
-        public CCF(CountedCompleter parent, int n) {
-            super(parent, 1);
-            this.number = n;
-        }
-
-        public final void compute() {
-            CountedCompleter p;
-            CCF f = this;
-            int n = number;
-            while (n >= 2) {
-                new RCCF(f, n - 2).fork();
-                f = new LCCF(f, --n);
-            }
-            f.number = n;
-            f.onCompletion(f);
-            if ((p = f.getCompleter()) != null)
-                p.tryComplete();
-            else
-                f.quietlyComplete();
-        }
-    }
-
-    static final class LCCF extends CCF {
-        public LCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            CCF p = (CCF)getCompleter();
-            int n = number + rnumber;
-            if (p != null)
-                p.number = n;
-            else
-                number = n;
-        }
-    }
-    static final class RCCF extends CCF {
-        public RCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            CCF p = (CCF)getCompleter();
-            int n = number + rnumber;
-            if (p != null)
-                p.rnumber = n;
-            else
-                number = n;
-        }
-    }
-
-    // Version of CCF with forced failure in left completions
-    abstract static class FailingCCF extends CountedCompleter {
-        int number;
-        int rnumber;
-
-        public FailingCCF(CountedCompleter parent, int n) {
-            super(parent, 1);
-            this.number = n;
-        }
-
-        public final void compute() {
-            CountedCompleter p;
-            FailingCCF f = this;
-            int n = number;
-            while (n >= 2) {
-                new RFCCF(f, n - 2).fork();
-                f = new LFCCF(f, --n);
-            }
-            f.number = n;
-            f.onCompletion(f);
-            if ((p = f.getCompleter()) != null)
-                p.tryComplete();
-            else
-                f.quietlyComplete();
-        }
-    }
-
-    static final class LFCCF extends FailingCCF {
-        public LFCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            FailingCCF p = (FailingCCF)getCompleter();
-            int n = number + rnumber;
-            if (p != null)
-                p.number = n;
-            else
-                number = n;
-        }
-    }
-    static final class RFCCF extends FailingCCF {
-        public RFCCF(CountedCompleter parent, int n) {
-            super(parent, n);
-        }
-        public final void onCompletion(CountedCompleter caller) {
-            completeExceptionally(new FJException());
-        }
+        testInvokeOnPool(mainPool(), a);
     }
 
     /**
-     * invoke returns when task completes normally.
-     * isCompletedAbnormally and isCancelled return false for normally
-     * completed tasks; getRawResult returns null.
+     * tryUnfork returns true for most recent unexecuted task,
+     * and suppresses execution
      */
-    public void testInvokeCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
+    public void testTryUnfork() {
+        RecursiveAction a = new CheckedRecursiveAction() {
             protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                assertNull(f.invoke());
-                assertEquals(21, f.number);
-                checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * quietlyInvoke task returns when task completes normally.
-     * isCompletedAbnormally and isCancelled return false for normally
-     * completed tasks
-     */
-    public void testQuietlyInvokeCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                f.quietlyInvoke();
-                assertEquals(21, f.number);
-                checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * join of a forked task returns when task completes
-     */
-    public void testForkJoinCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
                 assertSame(f, f.fork());
+                assertTrue(f.tryUnfork());
+                helpQuiesce();
+                checkNotDone(f);
+                checkCompletedNormally(g);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * getSurplusQueuedTaskCount returns > 0 when
+     * there are more tasks than threads
+     */
+    public void testGetSurplusQueuedTaskCount() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                FibAction h = new FibAction(7);
+                assertSame(h, h.fork());
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                assertTrue(getSurplusQueuedTaskCount() > 0);
+                helpQuiesce();
+                assertEquals(0, getSurplusQueuedTaskCount());
+                checkCompletedNormally(f);
+                checkCompletedNormally(g);
+                checkCompletedNormally(h);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * peekNextLocalTask returns most recent unexecuted task.
+     */
+    public void testPeekNextLocalTask() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                assertSame(f, peekNextLocalTask());
                 assertNull(f.join());
-                assertEquals(21, f.number);
                 checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * get of a forked task returns when task completes
-     */
-    public void testForkGetCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                CCF f = new LCCF(null, 8);
-                assertSame(f, f.fork());
-                assertNull(f.get());
-                assertEquals(21, f.number);
-                checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * timed get of a forked task returns when task completes
-     */
-    public void testForkTimedGetCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                CCF f = new LCCF(null, 8);
-                assertSame(f, f.fork());
-                assertNull(f.get(LONG_DELAY_MS, MILLISECONDS));
-                assertEquals(21, f.number);
-                checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * timed get with null time unit throws NPE
-     */
-    public void testForkTimedGetNPECC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                CCF f = new LCCF(null, 8);
-                assertSame(f, f.fork());
-                try {
-                    f.get(5L, null);
-                    shouldThrow();
-                } catch (NullPointerException success) {}
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * quietlyJoin of a forked task returns when task completes
-     */
-    public void testForkQuietlyJoinCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                assertSame(f, f.fork());
-                f.quietlyJoin();
-                assertEquals(21, f.number);
-                checkCompletedNormally(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * invoke task throws exception when task completes abnormally
-     */
-    public void testAbnormalInvokeCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                FailingCCF f = new LFCCF(null, 8);
-                try {
-                    f.invoke();
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(f, success);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * quietlyInvoke task returns when task completes abnormally
-     */
-    public void testAbnormalQuietlyInvokeCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                FailingCCF f = new LFCCF(null, 8);
-                f.quietlyInvoke();
-                assertTrue(f.getException() instanceof FJException);
-                checkCompletedAbnormally(f, f.getException());
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * join of a forked task throws exception when task completes abnormally
-     */
-    public void testAbnormalForkJoinCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                FailingCCF f = new LFCCF(null, 8);
-                assertSame(f, f.fork());
-                try {
-                    f.join();
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(f, success);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * get of a forked task throws exception when task completes abnormally
-     */
-    public void testAbnormalForkGetCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                FailingCCF f = new LFCCF(null, 8);
-                assertSame(f, f.fork());
-                try {
-                    f.get();
-                    shouldThrow();
-                } catch (ExecutionException success) {
-                    Throwable cause = success.getCause();
-                    assertTrue(cause instanceof FJException);
-                    checkCompletedAbnormally(f, cause);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * timed get of a forked task throws exception when task completes abnormally
-     */
-    public void testAbnormalForkTimedGetCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                FailingCCF f = new LFCCF(null, 8);
-                assertSame(f, f.fork());
-                try {
-                    f.get(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (ExecutionException success) {
-                    Throwable cause = success.getCause();
-                    assertTrue(cause instanceof FJException);
-                    checkCompletedAbnormally(f, cause);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * quietlyJoin of a forked task returns when task completes abnormally
-     */
-    public void testAbnormalForkQuietlyJoinCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                FailingCCF f = new LFCCF(null, 8);
-                assertSame(f, f.fork());
-                f.quietlyJoin();
-                assertTrue(f.getException() instanceof FJException);
-                checkCompletedAbnormally(f, f.getException());
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * invoke task throws exception when task cancelled
-     */
-    public void testCancelledInvokeCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                assertTrue(f.cancel(true));
-                try {
-                    f.invoke();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * join of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkJoinCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.join();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * get of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkGetCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                CCF f = new LCCF(null, 8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.get();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * timed get of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkTimedGetCC() throws Exception {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                CCF f = new LCCF(null, 8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.get(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * quietlyJoin of a forked task returns when task cancelled
-     */
-    public void testCancelledForkQuietlyJoinCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                f.quietlyJoin();
-                checkCancelled(f);
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * getPool of non-FJ task returns null
-     */
-    public void testGetPool2CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                assertNull(getPool());
-            }};
-        assertNull(a.invoke());
-    }
-
-    /**
-     * inForkJoinPool of non-FJ task returns false
-     */
-    public void testInForkJoinPool2CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                assertFalse(inForkJoinPool());
-            }};
-        assertNull(a.invoke());
-    }
-
-    /**
-     * setRawResult(null) succeeds
-     */
-    public void testSetRawResultCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                setRawResult(null);
-                assertNull(getRawResult());
-            }};
-        assertNull(a.invoke());
-    }
-
-    /**
-     * invoke task throws exception after invoking completeExceptionally
-     */
-    public void testCompleteExceptionally2CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                f.completeExceptionally(new FJException());
-                try {
-                    f.invoke();
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(f, success);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * invokeAll(t1, t2) invokes all task arguments
-     */
-    public void testInvokeAll2CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                CCF g = new LCCF(null, 9);
-                invokeAll(f, g);
-                assertEquals(21, f.number);
-                assertEquals(34, g.number);
+                helpQuiesce();
                 checkCompletedNormally(f);
                 checkCompletedNormally(g);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(singletonPool(), a);
     }
 
     /**
-     * invokeAll(tasks) with 1 argument invokes task
+     * pollNextLocalTask returns most recent unexecuted task
+     * without executing it
      */
-    public void testInvokeAll1CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
+    public void testPollNextLocalTask() {
+        RecursiveAction a = new CheckedRecursiveAction() {
             protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                invokeAll(f);
-                checkCompletedNormally(f);
-                assertEquals(21, f.number);
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                assertSame(f, pollNextLocalTask());
+                helpQuiesce();
+                checkNotDone(f);
+                checkCompletedNormally(g);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(singletonPool(), a);
     }
 
     /**
-     * invokeAll(tasks) with > 2 argument invokes tasks
+     * pollTask returns an unexecuted task without executing it
      */
-    public void testInvokeAll3CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
+    public void testPollTask() {
+        RecursiveAction a = new CheckedRecursiveAction() {
             protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                CCF g = new LCCF(null, 9);
-                CCF h = new LCCF(null, 7);
-                invokeAll(f, g, h);
-                assertEquals(21, f.number);
-                assertEquals(34, g.number);
-                assertEquals(13, h.number);
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                assertSame(f, pollTask());
+                helpQuiesce();
+                checkNotDone(f);
+                checkCompletedNormally(g);
+            }};
+        testInvokeOnPool(singletonPool(), a);
+    }
+
+    /**
+     * peekNextLocalTask returns least recent unexecuted task in async mode
+     */
+    public void testPeekNextLocalTaskAsync() {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                assertSame(g, peekNextLocalTask());
+                assertNull(f.join());
+                helpQuiesce();
                 checkCompletedNormally(f);
                 checkCompletedNormally(g);
-                checkCompletedNormally(h);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(asyncSingletonPool(), a);
     }
 
     /**
-     * invokeAll(collection) invokes all tasks in the collection
+     * pollNextLocalTask returns least recent unexecuted task without
+     * executing it, in async mode
      */
-    public void testInvokeAllCollectionCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
+    public void testPollNextLocalTaskAsync() {
+        RecursiveAction a = new CheckedRecursiveAction() {
             protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                CCF g = new LCCF(null, 9);
-                CCF h = new LCCF(null, 7);
-                HashSet set = new HashSet();
-                set.add(f);
-                set.add(g);
-                set.add(h);
-                invokeAll(set);
-                assertEquals(21, f.number);
-                assertEquals(34, g.number);
-                assertEquals(13, h.number);
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                assertSame(g, pollNextLocalTask());
+                helpQuiesce();
                 checkCompletedNormally(f);
-                checkCompletedNormally(g);
-                checkCompletedNormally(h);
+                checkNotDone(g);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(asyncSingletonPool(), a);
     }
 
     /**
-     * invokeAll(tasks) with any null task throws NPE
+     * pollTask returns an unexecuted task without executing it, in
+     * async mode
      */
-    public void testInvokeAllNPECC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
+    public void testPollTaskAsync() {
+        RecursiveAction a = new CheckedRecursiveAction() {
             protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                CCF g = new LCCF(null, 9);
-                CCF h = null;
-                try {
-                    invokeAll(f, g, h);
-                    shouldThrow();
-                } catch (NullPointerException success) {}
+                FibAction g = new FibAction(9);
+                assertSame(g, g.fork());
+                FibAction f = new FibAction(8);
+                assertSame(f, f.fork());
+                assertSame(g, pollTask());
+                helpQuiesce();
+                checkCompletedNormally(f);
+                checkNotDone(g);
             }};
-        checkInvoke(a);
+        testInvokeOnPool(asyncSingletonPool(), a);
+    }
+
+    /** Demo from RecursiveAction javadoc */
+    static class SortTask extends RecursiveAction {
+        final long[] array; final int lo, hi;
+        SortTask(long[] array, int lo, int hi) {
+            this.array = array; this.lo = lo; this.hi = hi;
+        }
+        SortTask(long[] array) { this(array, 0, array.length); }
+        protected void compute() {
+            if (hi - lo < THRESHOLD)
+                sortSequentially(lo, hi);
+            else {
+                int mid = (lo + hi) >>> 1;
+                invokeAll(new SortTask(array, lo, mid),
+                          new SortTask(array, mid, hi));
+                merge(lo, mid, hi);
+            }
+        }
+        // implementation details follow:
+        static final int THRESHOLD = 100;
+        void sortSequentially(int lo, int hi) {
+            Arrays.sort(array, lo, hi);
+        }
+        void merge(int lo, int mid, int hi) {
+            long[] buf = Arrays.copyOfRange(array, lo, mid);
+            for (int i = 0, j = lo, k = mid; i < buf.length; j++)
+                array[j] = (k == hi || buf[i] < array[k]) ?
+                    buf[i++] : array[k++];
+        }
     }
 
     /**
-     * invokeAll(t1, t2) throw exception if any task does
+     * SortTask demo works as advertised
      */
-    public void testAbnormalInvokeAll2CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                FailingCCF g = new LFCCF(null, 9);
-                try {
-                    invokeAll(f, g);
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(g, success);
-                }
-            }};
-        checkInvoke(a);
+    public void testSortTaskDemo() {
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+        long[] array = new long[1007];
+        for (int i = 0; i < array.length; i++)
+            array[i] = rnd.nextLong();
+        long[] arrayClone = array.clone();
+        testInvokeOnPool(mainPool(), new SortTask(array));
+        Arrays.sort(arrayClone);
+        assertTrue(Arrays.equals(array, arrayClone));
     }
-
-    /**
-     * invokeAll(tasks) with 1 argument throws exception if task does
-     */
-    public void testAbnormalInvokeAll1CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                FailingCCF g = new LFCCF(null, 9);
-                try {
-                    invokeAll(g);
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(g, success);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * invokeAll(tasks) with > 2 argument throws exception if any task does
-     */
-    public void testAbnormalInvokeAll3CC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                CCF f = new LCCF(null, 8);
-                FailingCCF g = new LFCCF(null, 9);
-                CCF h = new LCCF(null, 7);
-                try {
-                    invokeAll(f, g, h);
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(g, success);
-                }
-            }};
-        checkInvoke(a);
-    }
-
-    /**
-     * invokeAll(collection)  throws exception if any task does
-     */
-    public void testAbnormalInvokeAllCollectionCC() {
-        ForkJoinTask a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                FailingCCF f = new LFCCF(null, 8);
-                CCF g = new LCCF(null, 9);
-                CCF h = new LCCF(null, 7);
-                HashSet set = new HashSet();
-                set.add(f);
-                set.add(g);
-                set.add(h);
-                try {
-                    invokeAll(set);
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(f, success);
-                }
-            }};
-        checkInvoke(a);
-    }
-
 }

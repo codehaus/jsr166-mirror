@@ -439,7 +439,6 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(y, x);
     }
 
-
     static final int SIZE = 10000;
     static ConcurrentHashMap<Long, Long> longMap;
 
@@ -637,7 +636,6 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(adder.sum(), 3 * SIZE * (SIZE - 1) / 2);
     }
 
-
     /**
      * reduceKeysSequentially accumulates across all keys,
      */
@@ -657,7 +655,6 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         r = m.reduceKeys(Long.MAX_VALUE, (Long x, Long y) -> Long.valueOf(x.longValue() + y.longValue()));
         assertEquals((long)r, (long)SIZE * (SIZE - 1) / 2);
     }
-
 
     /**
      * reduceEntriesSequentially accumulates across all entries
@@ -760,7 +757,6 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
                                (Long x, Long y) -> Long.valueOf(x.longValue() + y.longValue()));
         assertEquals((long)r, (long)3 * SIZE * (SIZE - 1) / 2);
     }
-
 
     /**
      * reduceKeysToLongSequentially accumulates mapped keys

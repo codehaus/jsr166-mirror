@@ -271,7 +271,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Basic hash bin node, used for most entries.  (See below for
-     * LinkedNode and TreeNode subclasses.)
+     * TreeNode subclass, and in LinkedHashMap for its Entry subclass.)
      */
     static class Node<K,V> implements Map.Entry<K,V> {
         final int hash;
@@ -1698,16 +1698,6 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /* ------------------------------------------------------------ */
     // LinkedHashMap support
 
-    /**
-     * Entry for LinkedHashMap entries. Created only from
-     * LinkedHashMap, but must be defined here.
-     */
-    static class LinkedNode<K,V> extends Node<K,V> {
-        LinkedNode<K,V> before, after;
-        LinkedNode(int hash, K key, V value, Node<K,V> next) {
-            super(hash, key, value, next);
-        }
-    }
 
     /*
      * The following package-protected methods are designed to be
@@ -1772,10 +1762,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     // Tree bins
 
     /**
-     * Entry for Tree bins. Subclasses LinkedNode so can be used as
-     * extension of either regular or linked node.
+     * Entry for Tree bins. Extends LinkedHashMap.Entry (which in turn
+     * extends Node) so can be used as extension of either regular or
+     * linked node.
      */
-    static final class TreeNode<K,V> extends LinkedNode<K,V> {
+    static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
         TreeNode<K,V> parent;  // red-black tree links
         TreeNode<K,V> left;
         TreeNode<K,V> right;
@@ -1786,7 +1777,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns root of tree containing this node
+         * Returns root of tree containing this node.
          */
         final TreeNode<K,V> root() {
             for (TreeNode<K,V> r = this, p;;) {
@@ -1797,7 +1788,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Ensures that the given root is the first node of its bin
+         * Ensures that the given root is the first node of its bin.
          */
         static <K,V> void moveRootToFront(Node<K,V>[] tab, TreeNode<K,V> root) {
             int n;

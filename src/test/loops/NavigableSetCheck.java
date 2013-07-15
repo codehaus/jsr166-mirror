@@ -447,7 +447,7 @@ public class NavigableSetCheck {
 
     static void shuffle(Integer[] keys) {
         int size = keys.length;
-        for (int i=size; i>1; i--) {
+        for (int i = size; i > 1; i--) {
             int r = rng.nextInt(i);
             Integer t = keys[i-1];
             keys[i-1] = keys[r];

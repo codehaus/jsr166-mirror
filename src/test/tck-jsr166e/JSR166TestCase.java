@@ -6,6 +6,7 @@
  * Pat Fisher, Mike Judd.
  */
 
+import jsr166e.*;
 import junit.framework.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,7 +16,17 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.PropertyPermission;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -179,15 +190,26 @@ public class JSR166TestCase extends TestCase {
      */
     public static Test suite() {
         return newTestSuite(AtomicDoubleTest.suite(),
-                            AtomicDoubleArrayTest.suite());
+                            AtomicDoubleArrayTest.suite(),
+                            CompletableFutureTest.suite(),
+                            ConcurrentHashMapV8Test.suite(),
+                            CountedCompleterTest.suite(),
+                            DoubleAdderTest.suite(),
+                            ForkJoinPoolTest.suite(),
+                            ForkJoinTaskTest.suite(),
+                            LongAdderTest.suite(),
+                            RecursiveTaskTest.suite(),
+                            RecursiveActionTest.suite(),
+                            StampedLockTest.suite(),
+                            ThreadLocalRandomTest.suite());
     }
 
+    // Delays for timing-dependent tests, in milliseconds.
 
     public static long SHORT_DELAY_MS;
     public static long SMALL_DELAY_MS;
     public static long MEDIUM_DELAY_MS;
     public static long LONG_DELAY_MS;
-
 
     /**
      * Returns the shortest timed delay. This could
@@ -547,7 +569,6 @@ public class JSR166TestCase extends TestCase {
     public static final Integer m5  = new Integer(-5);
     public static final Integer m6  = new Integer(-6);
     public static final Integer m10 = new Integer(-10);
-
 
     /**
      * Runs Runnable r with a security policy that permits precisely

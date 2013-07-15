@@ -4,9 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import jsr166e.*;
 import junit.framework.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.DoubleAdder;
 
 public class DoubleAdderTest extends JSR166TestCase {
     public static void main(String[] args) {

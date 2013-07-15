@@ -669,7 +669,9 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
      * given number of other unprocessed tasks for which this task is
      * on the completion path, if any are known to exist.
      *
-     * @param maxTasks the maximum number of tasks to process.
+     * @param maxTasks the maximum number of tasks to process.  If
+     *                 less than or equal to zero, then no tasks are
+     *                 processed.
      */
     public final void helpComplete(int maxTasks) {
         Thread t; ForkJoinWorkerThread wt;

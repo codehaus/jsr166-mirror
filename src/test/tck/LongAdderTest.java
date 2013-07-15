@@ -147,16 +147,16 @@ public class LongAdderTest extends JSR166TestCase {
     /**
      * adds by multiple threads produce correct sum
      */
-    public void testAddAndSumMT() {
+    public void testAddAndSumMT() throws Throwable {
         final int incs = 1000000;
         final int nthreads = 4;
         final ExecutorService pool = Executors.newCachedThreadPool();
         LongAdder a = new LongAdder();
-        Phaser phaser = new Phaser(nthreads + 1);
+        CyclicBarrier barrier = new CyclicBarrier(nthreads + 1);
         for (int i = 0; i < nthreads; ++i)
-            pool.execute(new AdderTask(a, phaser, incs));
-        phaser.arriveAndAwaitAdvance();
-        phaser.arriveAndAwaitAdvance();
+            pool.execute(new AdderTask(a, barrier, incs));
+        barrier.await();
+        barrier.await();
         long total = (long)nthreads * incs;
         long sum = a.sum();
         assertEquals(sum, total);
@@ -165,22 +165,24 @@ public class LongAdderTest extends JSR166TestCase {
 
     static final class AdderTask implements Runnable {
         final LongAdder adder;
-        final Phaser phaser;
+        final CyclicBarrier barrier;
         final int incs;
         volatile long result;
-        AdderTask(LongAdder adder, Phaser phaser, int incs) {
+        AdderTask(LongAdder adder, CyclicBarrier barrier, int incs) {
             this.adder = adder;
-            this.phaser = phaser;
+            this.barrier = barrier;
             this.incs = incs;
         }
 
         public void run() {
-            phaser.arriveAndAwaitAdvance();
-            LongAdder a = adder;
-            for (int i = 0; i < incs; ++i)
-                a.add(1L);
-            result = a.sum();
-            phaser.arrive();
+            try {
+                barrier.await();
+                LongAdder a = adder;
+                for (int i = 0; i < incs; ++i)
+                    a.add(1L);
+                result = a.sum();
+                barrier.await();
+            } catch (Throwable t) { throw new Error(t); }
         }
     }
 

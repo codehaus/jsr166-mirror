@@ -1348,8 +1348,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         try {
             g.join();
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (CompletionException success) {}
         checkCompletedWithWrappedCFException(g);
     }
 
@@ -2115,8 +2114,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         try {
             g.join();
             shouldThrow();
-        } catch (Exception ok) {
-        }
+        } catch (CompletionException success) {}
         checkCompletedWithWrappedCFException(g);
     }
 

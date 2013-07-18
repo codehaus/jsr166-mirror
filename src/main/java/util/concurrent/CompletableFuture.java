@@ -2074,7 +2074,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      *
      * @param supplier a function returning the value to be used
      * to complete the returned CompletableFuture
-     * @param <U> the type of the returned future's value
+     * @param <U> the function's return type
      * @return the new CompletableFuture
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
@@ -2093,7 +2093,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @param supplier a function returning the value to be used
      * to complete the returned CompletableFuture
      * @param executor the executor to use for asynchronous execution
-     * @param <U> the type of the returned future's value
+     * @param <U> the function's return type
      * @return the new CompletableFuture
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier,
@@ -2146,7 +2146,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * the given value.
      *
      * @param value the value
-     * @param <U> the type of the returned future's value
+     * @param <U> the type of the value
      * @return the completed CompletableFuture
      */
     public static <U> CompletableFuture<U> completedFuture(U value) {

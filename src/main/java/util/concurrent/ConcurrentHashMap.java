@@ -2051,6 +2051,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * Creates a new {@link Set} backed by a ConcurrentHashMap
      * from the given type to {@code Boolean.TRUE}.
      *
+     * @param <K> the element type of the returned set
      * @return the new set
      * @since 1.8
      */
@@ -2065,6 +2066,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      *
      * @param initialCapacity The implementation performs internal
      * sizing to accommodate this many elements.
+     * @param <K> the element type of the returned set
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative
      * @return the new set
@@ -3517,6 +3519,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @param <U> the return type of the transformer
      * @since 1.8
      */
     public <U> void forEach(long parallelismThreshold,
@@ -3540,6 +3543,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
+     * @param <U> the return type of the search function
      * @return a non-null result from applying the given search
      * function on each (key, value), or null if none
      * @since 1.8
@@ -3563,6 +3567,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
      * @param reducer a commutative associative combining function
+     * @param <U> the return type of the transformer
      * @return the result of accumulating the given transformation
      * of all (key, value) pairs
      * @since 1.8
@@ -3681,6 +3686,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @param <U> the return type of the transformer
      * @since 1.8
      */
     public <U> void forEachKey(long parallelismThreshold,
@@ -3704,6 +3710,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
+     * @param <U> the return type of the search function
      * @return a non-null result from applying the given search
      * function on each key, or null if none
      * @since 1.8
@@ -3746,6 +3753,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
      * @param reducer a commutative associative combining function
+     * @param <U> the return type of the transformer
      * @return the result of accumulating the given transformation
      * of all keys
      * @since 1.8
@@ -3865,6 +3873,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @param <U> the return type of the transformer
      * @since 1.8
      */
     public <U> void forEachValue(long parallelismThreshold,
@@ -3888,6 +3897,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
+     * @param <U> the return type of the search function
      * @return a non-null result from applying the given search
      * function on each value, or null if none
      * @since 1.8
@@ -3929,6 +3939,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
      * @param reducer a commutative associative combining function
+     * @param <U> the return type of the transformer
      * @return the result of accumulating the given transformation
      * of all values
      * @since 1.8
@@ -4046,6 +4057,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case the action is not applied)
      * @param action the action
+     * @param <U> the return type of the transformer
      * @since 1.8
      */
     public <U> void forEachEntry(long parallelismThreshold,
@@ -4069,6 +4081,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * needed for this operation to be executed in parallel
      * @param searchFunction a function returning a non-null
      * result on success, else null
+     * @param <U> the return type of the search function
      * @return a non-null result from applying the given search
      * function on each entry, or null if none
      * @since 1.8
@@ -4110,6 +4123,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * for an element, or null if there is no transformation (in
      * which case it is not combined)
      * @param reducer a commutative associative combining function
+     * @param <U> the return type of the transformer
      * @return the result of accumulating the given transformation
      * of all entries
      * @since 1.8

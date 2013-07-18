@@ -293,6 +293,8 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       <compilerarg value="-Xprefer:source"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Xdoclint:all/protected"/>
+      <compilerarg line="-Xmaxerrs 1000 -Xmaxwarns 1000"/>
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -329,6 +331,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       <fileset dir="${src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
+      <arg line="-Xmaxerrs 1000 -Xmaxwarns 1000"/>
       <arg value="-XDignore.symbol.file=true"/>
       <arg value="-tag"/>
       <arg value="${javadoc.jls.option}"/>

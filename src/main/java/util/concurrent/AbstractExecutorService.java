@@ -47,6 +47,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
      *
      * @param runnable the runnable task being wrapped
      * @param value the default value for the returned future
+     * @param <T> the type of the returned future's value
      * @return a {@code RunnableFuture} which, when run, will run the
      * underlying runnable and which, as a {@code Future}, will yield
      * the given value as its result and provide for cancellation of

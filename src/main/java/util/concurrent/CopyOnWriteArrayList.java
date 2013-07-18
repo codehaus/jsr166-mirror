@@ -934,6 +934,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Saves this list to a stream (that is, serializes it).
      *
+     * @param s the stream
      * @serialData The length of the array backing the list is emitted
      *               (int), followed by all of its elements (each an Object)
      *               in the proper order.
@@ -954,6 +955,7 @@ public class CopyOnWriteArrayList<E>
 
     /**
      * Reconstitutes this list from a stream (that is, deserializes it).
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

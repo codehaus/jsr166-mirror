@@ -1387,6 +1387,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Saves this map to a stream (that is, serializes it).
      *
+     * @param s the stream
      * @serialData The key (Object) and value (Object) for each
      * key-value mapping represented by the map, followed by
      * {@code null}. The key-value mappings are emitted in key-order
@@ -1411,6 +1412,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Reconstitutes this map from a stream (that is, deserializes it).
+     * @param s the stream
      */
     @SuppressWarnings("unchecked")
     private void readObject(final java.io.ObjectInputStream s)

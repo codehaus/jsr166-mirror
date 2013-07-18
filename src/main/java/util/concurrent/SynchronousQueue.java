@@ -1138,6 +1138,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Saves this queue to a stream (that is, serializes it).
+     * @param s the stream
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
@@ -1157,6 +1158,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
     /**
      * Reconstitutes this queue from a stream (that is, deserializes it).
+     * @param s the stream
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

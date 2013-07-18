@@ -355,6 +355,7 @@ public class ThreadLocalRandom extends Random {
     /**
      * Saves the {@code ThreadLocalRandom} to a stream (that is, serializes it).
      * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {

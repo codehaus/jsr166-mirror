@@ -1388,6 +1388,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * Saves this map to a stream (that is, serializes it).
      *
      * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      * @serialData The key (Object) and value (Object) for each
      * key-value mapping represented by the map, followed by
      * {@code null}. The key-value mappings are emitted in key-order
@@ -1413,6 +1414,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Reconstitutes this map from a stream (that is, deserializes it).
      * @param s the stream
+     * @throws ClassNotFoundException if the class of a serialized object
+     *         could not be found
+     * @throws java.io.IOException if an I/O error occurs
      */
     @SuppressWarnings("unchecked")
     private void readObject(final java.io.ObjectInputStream s)

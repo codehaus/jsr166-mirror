@@ -811,6 +811,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Saves this deque to a stream (that is, serializes it).
      *
      * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      * @serialData The current size ({@code int}) of the deque,
      * followed by all of its elements (each an object reference) in
      * first-to-last order.
@@ -831,6 +832,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /**
      * Reconstitutes this deque from a stream (that is, deserializes it).
      * @param s the stream
+     * @throws ClassNotFoundException if the class of a serialized object
+     *         could not be found
+     * @throws java.io.IOException if an I/O error occurs
      */
     private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {

@@ -724,6 +724,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * Saves this queue to a stream (that is, serializes it).
      *
      * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
      */
@@ -747,6 +748,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * Reconstitutes this queue from a stream (that is, deserializes it).
      * @param s the stream
+     * @throws ClassNotFoundException if the class of a serialized object
+     *         could not be found
+     * @throws java.io.IOException if an I/O error occurs
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

@@ -1323,6 +1323,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * Saves the state of the {@code ConcurrentHashMap} instance to a
      * stream (i.e., serializes it).
      * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      * @serialData
      * the key (Object) and value (Object)
      * for each key-value mapping, followed by a null pair.
@@ -1365,6 +1366,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
     /**
      * Reconstitutes the instance from a stream (that is, deserializes it).
      * @param s the stream
+     * @throws ClassNotFoundException if the class of a serialized object
+     *         could not be found
+     * @throws java.io.IOException if an I/O error occurs
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

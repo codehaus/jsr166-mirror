@@ -354,18 +354,20 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Saves the {@code ThreadLocalRandom} to a stream (that is, serializes it).
+     * @param s the stream
      */
-    private void writeObject(java.io.ObjectOutputStream out)
+    private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
 
-        java.io.ObjectOutputStream.PutField fields = out.putFields();
+        java.io.ObjectOutputStream.PutField fields = s.putFields();
         fields.put("rnd", UNSAFE.getLong(Thread.currentThread(), SEED));
         fields.put("initialized", true);
-        out.writeFields();
+        s.writeFields();
     }
 
     /**
      * Returns the {@link #current() current} thread's {@code ThreadLocalRandom}.
+     * @return the {@link #current() current} thread's {@code ThreadLocalRandom}
      */
     private Object readResolve() {
         return current();

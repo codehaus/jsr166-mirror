@@ -106,6 +106,7 @@ public interface CompletionStage<T> {
      *
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> thenApply(Function<? super T,? extends U> fn);
@@ -121,6 +122,7 @@ public interface CompletionStage<T> {
      *
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> thenApplyAsync
@@ -137,6 +139,7 @@ public interface CompletionStage<T> {
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
      * @param executor the executor to use for asynchronous execution
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> thenApplyAsync
@@ -240,6 +243,8 @@ public interface CompletionStage<T> {
      * @param other the other CompletionStage
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
+     * @param <U> the type of the other CompletionStage's value
+     * @param <V> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U,V> CompletionStage<V> thenCombine
@@ -258,6 +263,8 @@ public interface CompletionStage<T> {
      * @param other the other CompletionStage
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
+     * @param <U> the type of the other CompletionStage's value
+     * @param <V> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U,V> CompletionStage<V> thenCombineAsync
@@ -277,6 +284,8 @@ public interface CompletionStage<T> {
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
      * @param executor the executor to use for asynchronous execution
+     * @param <U> the type of the other CompletionStage's value
+     * @param <V> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U,V> CompletionStage<V> thenCombineAsync
@@ -295,6 +304,7 @@ public interface CompletionStage<T> {
      * @param other the other CompletionStage
      * @param action the action to perform before completing the
      * returned CompletionStage
+     * @param <U> the type of the other CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<Void> thenAcceptBoth
@@ -310,6 +320,7 @@ public interface CompletionStage<T> {
      * @param other the other CompletionStage
      * @param action the action to perform before completing the
      * returned CompletionStage
+     * @param <U> the type of the other CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<Void> thenAcceptBothAsync
@@ -326,6 +337,7 @@ public interface CompletionStage<T> {
      * @param action the action to perform before completing the
      * returned CompletionStage
      * @param executor the executor to use for asynchronous execution
+     * @param <U> the type of the other CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<Void> thenAcceptBothAsync
@@ -391,6 +403,7 @@ public interface CompletionStage<T> {
      * @param other the other CompletionStage
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> applyToEither
@@ -409,6 +422,7 @@ public interface CompletionStage<T> {
      * @param other the other CompletionStage
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> applyToEitherAsync
@@ -428,6 +442,7 @@ public interface CompletionStage<T> {
      * @param fn the function to use to compute the value of
      * the returned CompletionStage
      * @param executor the executor to use for asynchronous execution
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> applyToEitherAsync
@@ -550,6 +565,7 @@ public interface CompletionStage<T> {
      * covering exceptional completion.
      *
      * @param fn the function returning a new CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the CompletionStage
      */
     public <U> CompletionStage<U> thenCompose
@@ -565,6 +581,7 @@ public interface CompletionStage<T> {
      * covering exceptional completion.
      *
      * @param fn the function returning a new CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the CompletionStage
      */
     public <U> CompletionStage<U> thenComposeAsync
@@ -580,6 +597,7 @@ public interface CompletionStage<T> {
      *
      * @param fn the function returning a new CompletionStage
      * @param executor the executor to use for asynchronous execution
+     * @param <U> the type of the returned CompletionStage's value
      * @return the CompletionStage
      */
     public <U> CompletionStage<U> thenComposeAsync
@@ -652,6 +670,7 @@ public interface CompletionStage<T> {
      *
      * @param fn the function to use to compute the value of the
      * returned CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> handle
@@ -668,6 +687,7 @@ public interface CompletionStage<T> {
      *
      * @param fn the function to use to compute the value of the
      * returned CompletionStage
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> handleAsync
@@ -685,6 +705,7 @@ public interface CompletionStage<T> {
      * @param fn the function to use to compute the value of the
      * returned CompletionStage
      * @param executor the executor to use for asynchronous execution
+     * @param <U> the type of the returned CompletionStage's value
      * @return the new CompletionStage
      */
     public <U> CompletionStage<U> handleAsync

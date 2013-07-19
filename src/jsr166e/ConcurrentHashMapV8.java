@@ -2101,9 +2101,9 @@ public class ConcurrentHashMapV8<K,V>
      *
      * @param initialCapacity The implementation performs internal
      * sizing to accommodate this many elements.
+     * @return the new set
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative
-     * @return the new set
      * @since 1.8
      */
     public static <K> KeySetView<K,Boolean> newKeySet(int initialCapacity) {

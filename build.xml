@@ -999,6 +999,11 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
 
+  <target name="jsr166e-test"
+	  depends="jsr166e-test-tck"
+          description="Runs all tests for jsr166e">
+  </target>
+
   <target name="jsr166edist"
           depends="jsr166edist-jar, jsr166edist-docs"
           description="Puts all distributable products in single hierarchy"/>

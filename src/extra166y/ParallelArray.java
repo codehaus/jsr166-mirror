@@ -133,7 +133,7 @@ import java.lang.reflect.Array;
  *     public boolean op(Student s) { return s.credits &gt; 90; }
  *   }
  *   static final IsSenior isSenior = new IsSenior();
- *   static final class GpaField implements ObjectToDouble&lt;Student&gt {
+ *   static final class GpaField implements ObjectToDouble&lt;Student&gt; {
  *     public double op(Student s) { return s.gpa; }
  *   }
  *   static final GpaField gpaField = new GpaField();

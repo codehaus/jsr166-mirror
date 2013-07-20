@@ -1443,6 +1443,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      * Creates a new {@link Set} backed by a ConcurrentHashMap
      * from the given type to {@code Boolean.TRUE}.
      *
+     * @param <K> the element type of the returned set
      * @return the new set
      * @since 1.8
      */
@@ -1457,6 +1458,7 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
      *
      * @param initialCapacity The implementation performs internal
      * sizing to accommodate this many elements.
+     * @param <K> the element type of the returned set
      * @return the new set
      * @throws IllegalArgumentException if the initial capacity of
      * elements is negative

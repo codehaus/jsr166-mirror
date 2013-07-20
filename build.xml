@@ -500,6 +500,35 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
     </javac>
   </target>
 
+  <target name="4jdk7doclint"
+          depends="configure-compiler"
+          description="Finds doclint warnings">
+
+    <mkdir dir="${build.4jdk7.classes.dir}"/>
+
+    <javac srcdir="${4jdk7src.dir}"
+           destdir="${build.4jdk7.classes.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="6"
+           classpath=""
+           bootclasspath="${bootclasspath7}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac8}"
+           fork="true">
+
+      <include name="**/*.java"/>
+      <compilerarg value="-Xprefer:source"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Xdoclint:all/protected"/>
+      <compilerarg line="${build.args}"/>
+
+    </javac>
+  </target>
+
 
   <target name="4jdk7jar"
           depends="4jdk7compile"

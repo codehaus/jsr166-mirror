@@ -82,6 +82,22 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         private static final long serialVersionUID = 0;
     }
 
+    static class CollidingObject {
+        final String value;
+        CollidingObject(final String value) { this.value = value; }
+        public int hashCode() { return this.value.hashCode() & 1; }
+        public boolean equals(final Object obj) {
+            return (obj instanceof CollidingObject) && ((CollidingObject)obj).value.equals(value);
+        }
+    }
+
+    static class ComparableCollidingObject extends CollidingObject implements Comparable<ComparableCollidingObject> {
+        ComparableCollidingObject(final String value) { super(value); }
+        public int compareTo(final ComparableCollidingObject o) {
+            return value.compareTo(o.value);
+        }
+    }
+
     /**
      * Inserted elements that are subclasses of the same Comparable
      * class are found.
@@ -136,6 +152,41 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         for (int i = 0; i < 1000; i++) {
             LexicographicList<BI> bis = new LexicographicList<BI>(new BI(i));
             assertTrue(m.containsKey(bis));
+        }
+    }
+
+    /**
+     * Mixtures of instances of comparable and non-comparable classes
+     * can be inserted and found.
+     */
+    public void testMixedComparable() {
+        int size = 10000; 
+        ConcurrentHashMap<Object, Object> map = 
+            new ConcurrentHashMap<Object, Object>();
+        Random rng = new Random(1370014958369218000L);
+        for(int i = 0; i < size; i++) {
+            Object x;
+            switch(rng.nextInt(4)) {
+            case 0:
+                x = new Object();
+                break;
+            case 1:
+                x = new CollidingObject(Integer.toString(i));
+                break;
+            default:
+                x = new ComparableCollidingObject(Integer.toString(i));
+            }
+            assertNull(map.put(x, x));
+        }
+        int count = 0;
+        for (Object k : map.keySet()) {
+            assertEquals(map.get(k), k);
+            ++count;
+        }
+        assertEquals(count, size);
+        assertEquals(map.size(), size);
+        for (Object k : map.keySet()) {
+            assertEquals(map.put(k, k), k);
         }
     }
 

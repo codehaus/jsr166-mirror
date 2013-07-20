@@ -44,24 +44,24 @@ package java.util;
  *  </tr>
  *  <tr>
  *    <td><b>Insert</b></td>
- *    <td>{@link #addFirst addFirst(e)}</td>
- *    <td>{@link #offerFirst offerFirst(e)}</td>
- *    <td>{@link #addLast addLast(e)}</td>
- *    <td>{@link #offerLast offerLast(e)}</td>
+ *    <td>{@link Deque#addFirst addFirst(e)}</td>
+ *    <td>{@link Deque#offerFirst offerFirst(e)}</td>
+ *    <td>{@link Deque#addLast addLast(e)}</td>
+ *    <td>{@link Deque#offerLast offerLast(e)}</td>
  *  </tr>
  *  <tr>
  *    <td><b>Remove</b></td>
- *    <td>{@link #removeFirst removeFirst()}</td>
- *    <td>{@link #pollFirst pollFirst()}</td>
- *    <td>{@link #removeLast removeLast()}</td>
- *    <td>{@link #pollLast pollLast()}</td>
+ *    <td>{@link Deque#removeFirst removeFirst()}</td>
+ *    <td>{@link Deque#pollFirst pollFirst()}</td>
+ *    <td>{@link Deque#removeLast removeLast()}</td>
+ *    <td>{@link Deque#pollLast pollLast()}</td>
  *  </tr>
  *  <tr>
  *    <td><b>Examine</b></td>
- *    <td>{@link #getFirst getFirst()}</td>
- *    <td>{@link #peekFirst peekFirst()}</td>
- *    <td>{@link #getLast getLast()}</td>
- *    <td>{@link #peekLast peekLast()}</td>
+ *    <td>{@link Deque#getFirst getFirst()}</td>
+ *    <td>{@link Deque#peekFirst peekFirst()}</td>
+ *    <td>{@link Deque#getLast getLast()}</td>
+ *    <td>{@link Deque#peekLast peekLast()}</td>
  *  </tr>
  * </table>
  *

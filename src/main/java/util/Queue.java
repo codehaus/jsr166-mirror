@@ -28,18 +28,18 @@ package java.util;
  *  </tr>
  *  <tr>
  *    <td><b>Insert</b></td>
- *    <td>{@link #add add(e)}</td>
- *    <td>{@link #offer offer(e)}</td>
+ *    <td>{@link Queue#add add(e)}</td>
+ *    <td>{@link Queue#offer offer(e)}</td>
  *  </tr>
  *  <tr>
  *    <td><b>Remove</b></td>
- *    <td>{@link #remove remove()}</td>
- *    <td>{@link #poll poll()}</td>
+ *    <td>{@link Queue#remove remove()}</td>
+ *    <td>{@link Queue#poll poll()}</td>
  *  </tr>
  *  <tr>
  *    <td><b>Examine</b></td>
- *    <td>{@link #element element()}</td>
- *    <td>{@link #peek peek()}</td>
+ *    <td>{@link Queue#element element()}</td>
+ *    <td>{@link Queue#peek peek()}</td>
  *  </tr>
  * </table>
  *

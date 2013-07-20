@@ -160,13 +160,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * can be inserted and found.
      */
     public void testMixedComparable() {
-        int size = 10000; 
-        ConcurrentHashMap<Object, Object> map = 
+        int size = 10000;
+        ConcurrentHashMap<Object, Object> map =
             new ConcurrentHashMap<Object, Object>();
         Random rng = new Random(1370014958369218000L);
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             Object x;
-            switch(rng.nextInt(4)) {
+            switch (rng.nextInt(4)) {
             case 0:
                 x = new Object();
                 break;

@@ -26,7 +26,8 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 ------------------------------------------------------------------------------
   </description>
 
-  <target name="usage" description="Display main targets by running 'ant -projecthelp'">
+  <!-- Display main targets by running 'ant -projecthelp' -->
+  <target name="usage">
     <java classname="org.apache.tools.ant.Main">
       <arg value="-projecthelp" />
     </java>
@@ -379,6 +380,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   <target name="dist-clean"
           description="Removes all build and distribution products">
 
+    <delete dir="${build.dir}"/>
     <delete dir="${dist.dir}"/>
 
   </target>
@@ -613,11 +615,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
 
-  <target name="4jdk7dist-clean"
-          description="Removes all build and distribution products">
-
-  </target>
-
   <target name="4jdk7dist-jar"
           depends="4jdk7clean, 4jdk7jar">
     <copy file="${4jdk7product.jar}" todir="${dist.dir}"/>
@@ -700,12 +697,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
           description="Removes all jsr166x build products">
 
     <delete dir="${build.jsr166x.dir}"/>
-
-  </target>
-
-
-  <target name="jsr166xdist-clean"
-          description="Removes all build and distribution products">
 
   </target>
 
@@ -795,11 +786,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
 
-  <target name="jsr166ydist-clean"
-          description="Removes all build and distribution products">
-
-  </target>
-
   <target name="jsr166ydist-jar"
           depends="jsr166yclean, jsr166yjar">
     <copy file="${jsr166y.jar}" todir="${dist.dir}"/>
@@ -886,11 +872,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   </target>
 
 
-  <target name="extra166ydist-clean"
-          description="Removes all build and distribution products">
-
-  </target>
-
   <target name="extra166ydist-jar"
           depends="extra166yclean, extra166yjar">
     <copy file="${extra166y.jar}" todir="${dist.dir}"/>
@@ -964,8 +945,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
 
   <target name="jsr166e-test-tck-one-java-version"
-	  depends="jsr166ejar"
-          description="Runs tck tests for jsr166e">
+	  depends="jsr166ejar">
 
     <echo message="Testing with jdk${build.jsr166e.java.version} ..."/>
 
@@ -1014,11 +994,6 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
     <delete dir="${build.jsr166e.dir}"/>
   </target>
 
-
-  <target name="jsr166edist-clean"
-          description="Removes all build and distribution products">
-
-  </target>
 
   <target name="jsr166edist-jar"
           depends="jsr166eclean, jsr166ejar">

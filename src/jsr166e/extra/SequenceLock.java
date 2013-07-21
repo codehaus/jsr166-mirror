@@ -508,7 +508,7 @@ public class SequenceLock implements Lock, java.io.Serializable {
      * Throws UnsupportedOperationException. SequenceLocks
      * do not support Condition objects.
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException always
      */
     public Condition newCondition() {
         throw new UnsupportedOperationException();

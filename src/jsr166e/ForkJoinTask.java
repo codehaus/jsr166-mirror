@@ -134,7 +134,7 @@ import java.lang.reflect.Constructor;
  * (DAG). Otherwise, executions may encounter a form of deadlock as
  * tasks cyclically wait for each other.  However, this framework
  * supports other methods and techniques (for example the use of
- * {@link Phaser}, {@link #helpQuiesce}, and {@link #complete}) that
+ * {@link java.util.concurrent.Phaser Phaser}, {@link #helpQuiesce}, and {@link #complete}) that
  * may be of use in constructing custom subclasses for problems that
  * are not statically structured as DAGs. To support such usages, a
  * ForkJoinTask may be atomically <em>tagged</em> with a {@code short}
@@ -782,6 +782,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * unprocessed.
      *
      * @param tasks the collection of tasks
+     * @param <T> the type of the values returned from the tasks
      * @return the tasks argument, to simplify usage
      * @throws NullPointerException if tasks or any element are null
      */
@@ -1444,6 +1445,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      *
      * @param runnable the runnable action
      * @param result the result upon completion
+     * @param <T> the type of the result
      * @return the task
      */
     public static <T> ForkJoinTask<T> adapt(Runnable runnable, T result) {
@@ -1457,6 +1459,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * encountered into {@code RuntimeException}.
      *
      * @param callable the callable action
+     * @param <T> the type of the callable's result
      * @return the task
      */
     public static <T> ForkJoinTask<T> adapt(Callable<? extends T> callable) {

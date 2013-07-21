@@ -25,6 +25,7 @@
 
 package java.util;
 
+import java.security.SecureRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Spliterator;
 import java.util.function.IntConsumer;
@@ -121,18 +122,10 @@ public class SplittableRandom {
      * this generator as nextSplit, and uses mix64(nextSplit) as its
      * own gamma value. Computations of gammas themselves use a fixed
      * constant as the second argument to the addGammaModGeorge
-     * function, GAMMA_GAMMA, a "genuinely random" number from a
-     * radioactive decay reading (obtained from
-     * http://www.fourmilab.ch/hotbits/) meeting the above range
-     * constraint. Using a fixed constant maintains the invariant that
-     * the value of gamma is the same for every instance that is at
-     * the same split-distance from their common root. (Note: there is
-     * nothing especially magic about obtaining this constant from a
-     * "truly random" physical source rather than just choosing one
-     * arbitrarily; using "hotbits" was merely an aesthetically pleasing
-     * choice.  In either case, good statistical behavior of the
-     * algorithm should be, and was, verified by using the DieHarder
-     * test suite.)
+     * function, GAMMA_GAMMA. The value of GAMMA_GAMMA is arbitrary
+     * (except must be at least 13), but because it serves as the base
+     * of split sequences, should be subject to validation of
+     * consequent random number quality metrics.
      *
      * The mix64 bit-mixing function called by nextLong and other
      * methods computes the same value as the "64-bit finalizer"
@@ -158,29 +151,25 @@ public class SplittableRandom {
      * SplittableRandom. Unlike other cases, this split must be
      * performed in a thread-safe manner. We use
      * AtomicLong.compareAndSet as the (typically) most efficient
-     * mechanism. To bootstrap, we start off using a function of the
-     * current System time as seed, and update using another
-     * "genuinely random" constant DEFAULT_SEED_GAMMA. The default
-     * constructor uses GAMMA_GAMMA, not 0, for its splitSeed argument
-     * (addGammaModGeorge(0, GAMMA_GAMMA) == GAMMA_GAMMA) to reflect
-     * that each is split from this root generator, even though the
-     * root is not explicitly represented as a SplittableRandom.  When
-     * establishing the initial seed, we use both
-     * System.currentTimeMillis and System.nanoTime(), to avoid
-     * regularities that may occur if using either alone.
+     * mechanism. To bootstrap, we start off using a SecureRandom
+     * initial default seed, and update using a fixed
+     * DEFAULT_SEED_GAMMA. The default constructor uses GAMMA_GAMMA,
+     * not 0, for its splitSeed argument (addGammaModGeorge(0,
+     * GAMMA_GAMMA) == GAMMA_GAMMA) to reflect that each is split from
+     * this root generator, even though the root is not explicitly
+     * represented as a SplittableRandom.
      */
 
     /**
-     * The "genuinely random" value for producing new gamma values.
-     * The value is arbitrary, subject to the requirement that it be
-     * greater or equal to 13.
+     * The value for producing new gamma values. Must be greater or
+     * equal to 13. Otherwise, the value is arbitrary subject to
+     * validation of the resulting statistical quality of splits.
      */
     private static final long GAMMA_GAMMA = 0xF2281E2DBA6606F3L;
 
     /**
-     * The "genuinely random" seed update value for default constructors.
-     * The value is arbitrary, subject to the requirement that it be
-     * greater or equal to 13.
+     * The seed update value for default constructors.  Must be
+     * greater or equal to 13. Otherwise, the value is arbitrary.
      */
     private static final long DEFAULT_SEED_GAMMA = 0xBD24B73A95FB84D9L;
 
@@ -200,8 +189,7 @@ public class SplittableRandom {
      * The next seed for default constructors.
      */
     private static final AtomicLong defaultSeedGenerator =
-        new AtomicLong(mix64(System.currentTimeMillis()) ^
-                       mix64(System.nanoTime()));
+        new AtomicLong(getInitialDefaultSeed());
 
     /**
      * The seed, updated only via method nextSeed.
@@ -300,6 +288,17 @@ public class SplittableRandom {
             newSeed = addGammaModGeorge(oldSeed, DEFAULT_SEED_GAMMA);
         } while (!defaultSeedGenerator.compareAndSet(oldSeed, newSeed));
         return mix64(newSeed);
+    }
+
+    /**
+     * Returns an initial default seed.
+     */
+    private static long getInitialDefaultSeed() {
+        byte[] seedBytes = java.security.SecureRandom.getSeed(8);
+        long s = (long)(seedBytes[0]) & 0xffL;
+        for (int i = 1; i < 8; ++i)
+            s = (s << 8) | ((long)(seedBytes[i]) & 0xffL);
+        return s;
     }
 
     /*

@@ -21,8 +21,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     /**
      * Returns a new map from Integers 1-5 to Strings "A"-"E".
      */
-    private static ConcurrentHashMap map5() {
-        ConcurrentHashMap map = new ConcurrentHashMap(5);
+    private static ConcurrentHashMap<Integer, String> map5() {
+        ConcurrentHashMap map = new ConcurrentHashMap<Integer, String>(5);
         assertTrue(map.isEmpty());
         map.put(one, "A");
         map.put(two, "B");
@@ -210,6 +210,18 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         map1.clear();
         assertFalse(map1.equals(map2));
         assertFalse(map2.equals(map1));
+    }
+
+ 
+    /**
+      * hashCode() equals sum of each key.hashCode ^ value.hashCode
+      */
+    public void testHashCode() {
+        ConcurrentHashMap<Integer,String> map = map5();
+        int sum = 0;
+        for (Map.Entry<Integer,String> e : map.entrySet())
+            sum += e.getKey().hashCode() ^ e.getValue().hashCode();
+        assertEquals(sum, map.hashCode());
     }
 
     /**
@@ -496,34 +508,75 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     // Exception tests
 
     /**
-     * Cannot create with negative capacity
-     */
-    public void testConstructor1() {
-        try {
-            new ConcurrentHashMap(-1,0,1);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
-     * Cannot create with negative concurrency level
-     */
-    public void testConstructor2() {
-        try {
-            new ConcurrentHashMap(1,0,-1);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
      * Cannot create with only negative capacity
      */
-    public void testConstructor3() {
+    public void testConstructor1() {
         try {
             new ConcurrentHashMap(-1);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
+
+    /**
+     * Constructor (initialCapacity, loadFactor) throws
+     * IllegalArgumentException if either argument is negative
+      */
+    public void testConstructor2() {
+        try {
+            new ConcurrentHashMap(-1, .75f);
+            shouldThrow();
+        } catch (IllegalArgumentException e) {}        
+        
+        try {
+            new ConcurrentHashMap(16, -1);
+            shouldThrow();
+        } catch (IllegalArgumentException e) {}        
+    }
+     
+     /**
+      * Constructor (initialCapacity, loadFactor, concurrencyLevel)
+      * throws IllegalArgumentException if any argument is negative
+      */
+    public void testConstructor3() {
+         try {
+             new ConcurrentHashMap(-1, .75f, 1);
+             shouldThrow();
+         } catch (IllegalArgumentException e) {}        
+ 
+         try {
+             new ConcurrentHashMap(16, -1, 1);
+             shouldThrow();
+         } catch (IllegalArgumentException e) {}
+         
+         try {
+             new ConcurrentHashMap(16, .75f, -1);
+             shouldThrow();
+         } catch (IllegalArgumentException e) {}
+     }
+
+    /**
+     * ConcurrentHashMap(map) throws NullPointerException if the given
+     * map is null
+     */
+    public void testConstructor4() {
+        try {
+            new ConcurrentHashMap(null);
+            shouldThrow();
+        } catch (NullPointerException e) {}
+    }
+
+    /**
+     * ConcurrentHashMap(map) creates a new map with the same mappings
+     * as the given map
+     */
+    public void testConstructor5() {
+        ConcurrentHashMap map1 = map5();
+        ConcurrentHashMap map2 = new ConcurrentHashMap(map5());
+        assertTrue(map2.equals(map1));
+        map2.put(one, "F");
+        assertFalse(map2.equals(map1));
+    }
+
 
     /**
      * get(null) throws NPE

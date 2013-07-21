@@ -17,14 +17,29 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import java.util.HashSet;
 import junit.framework.*;
 
-public class ForkJoinTaskTest extends JSR166TestCase {
+public class ForkJoinTask8Test extends JSR166TestCase {
+
+    /*
+     * Testing notes: This differs from ForkJoinTaskTest mainly by
+     * defining a version of BinaryAsyncAction that uses JDK8 task
+     * tags for control state, thereby testing getForkJoinTaskTag,
+     * setForkJoinTaskTag, and compareAndSetForkJoinTaskTag across
+     * various contexts. Most of the test methods using it are
+     * otherwise identical, but omitting retest of those dealing with
+     * cancellation, which is not represented in this tag scheme.
+     */
+
+    static final short INITIAL_STATE = -1;
+    static final short COMPLETE_STATE = 0;
+    static final short EXCEPTION_STATE = 1;
+        
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 
     public static Test suite() {
-        return new TestSuite(ForkJoinTaskTest.class);
+        return new TestSuite(ForkJoinTask8Test.class);
     }
 
     // Runs with "mainPool" use > 1 thread. singletonPool tests use 1
@@ -74,6 +89,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertFalse(a.isCancelled());
         assertNull(a.getException());
         assertNull(a.getRawResult());
+        if (a instanceof BinaryAsyncAction)
+            assertTrue(((BinaryAsyncAction)a).getForkJoinTaskTag() == INITIAL_STATE);
 
         try {
             a.get(0L, SECONDS);
@@ -93,6 +110,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertFalse(a.isCompletedAbnormally());
         assertNull(a.getException());
         assertSame(expected, a.getRawResult());
+        if (a instanceof BinaryAsyncAction)
+            assertTrue(((BinaryAsyncAction)a).getForkJoinTaskTag() == COMPLETE_STATE);
 
         {
             Thread.currentThread().interrupt();
@@ -120,43 +139,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    void checkCancelled(ForkJoinTask a) {
-        assertTrue(a.isDone());
-        assertTrue(a.isCancelled());
-        assertFalse(a.isCompletedNormally());
-        assertTrue(a.isCompletedAbnormally());
-        assertTrue(a.getException() instanceof CancellationException);
-        assertNull(a.getRawResult());
-        assertTrue(a.cancel(false));
-        assertTrue(a.cancel(true));
-
-        try {
-            Thread.currentThread().interrupt();
-            a.join();
-            shouldThrow();
-        } catch (CancellationException success) {
-        } catch (Throwable fail) { threadUnexpectedException(fail); }
-        Thread.interrupted();
-
-        {
-            long t0 = System.nanoTime();
-            a.quietlyJoin();        // should be no-op
-            assertTrue(millisElapsedSince(t0) < SMALL_DELAY_MS);
-        }
-
-        try {
-            a.get();
-            shouldThrow();
-        } catch (CancellationException success) {
-        } catch (Throwable fail) { threadUnexpectedException(fail); }
-
-        try {
-            a.get(5L, SECONDS);
-            shouldThrow();
-        } catch (CancellationException success) {
-        } catch (Throwable fail) { threadUnexpectedException(fail); }
-    }
-
     void checkCompletedAbnormally(ForkJoinTask a, Throwable t) {
         assertTrue(a.isDone());
         assertFalse(a.isCancelled());
@@ -166,6 +148,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         assertNull(a.getRawResult());
         assertFalse(a.cancel(false));
         assertFalse(a.cancel(true));
+        if (a instanceof BinaryAsyncAction)
+            assertTrue(((BinaryAsyncAction)a).getForkJoinTaskTag() != INITIAL_STATE);
 
         try {
             Thread.currentThread().interrupt();
@@ -197,30 +181,19 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-    /*
-     * Testing coverage notes:
-     *
-     * To test extension methods and overrides, most tests use
-     * BinaryAsyncAction extension class that processes joins
-     * differently than supplied Recursive forms.
-     */
 
     public static final class FJException extends RuntimeException {
         FJException() { super(); }
     }
 
     abstract static class BinaryAsyncAction extends ForkJoinTask<Void> {
-        private volatile int controlState;
-
-        static final AtomicIntegerFieldUpdater<BinaryAsyncAction> controlStateUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(BinaryAsyncAction.class,
-                                                 "controlState");
 
         private BinaryAsyncAction parent;
 
         private BinaryAsyncAction sibling;
 
         protected BinaryAsyncAction() {
+            setForkJoinTaskTag(INITIAL_STATE);
         }
 
         public final Void getRawResult() { return null; }
@@ -233,6 +206,11 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         }
 
         protected void onComplete(BinaryAsyncAction x, BinaryAsyncAction y) {
+            if (this.getForkJoinTaskTag() != COMPLETE_STATE || 
+                x.getForkJoinTaskTag() != COMPLETE_STATE || 
+                y.getForkJoinTaskTag() != COMPLETE_STATE) {
+                completeThisExceptionally(new FJException());
+            }
         }
 
         protected boolean onException() {
@@ -246,10 +224,12 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         }
 
         private void completeThis() {
+            setForkJoinTaskTag(COMPLETE_STATE);
             super.complete(null);
         }
 
         private void completeThisExceptionally(Throwable ex) {
+            setForkJoinTaskTag(EXCEPTION_STATE);
             super.completeExceptionally(ex);
         }
 
@@ -261,7 +241,8 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                 a.sibling = null;
                 a.parent = null;
                 a.completeThis();
-                if (p == null || p.compareAndSetControlState(0, 1))
+                if (p == null || 
+                    p.compareAndSetForkJoinTaskTag(INITIAL_STATE, COMPLETE_STATE))
                     break;
                 try {
                     p.onComplete(a, s);
@@ -298,26 +279,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
             super.reinitialize();
         }
 
-        protected final int getControlState() {
-            return controlState;
-        }
-
-        protected final boolean compareAndSetControlState(int expect,
-                                                          int update) {
-            return controlStateUpdater.compareAndSet(this, expect, update);
-        }
-
-        protected final void setControlState(int value) {
-            controlState = value;
-        }
-
-        protected final void incrementControlState() {
-            controlStateUpdater.incrementAndGet(this);
-        }
-
-        protected final void decrementControlState() {
-            controlStateUpdater.decrementAndGet(this);
-        }
 
     }
 
@@ -328,24 +289,30 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         }
 
         public final boolean exec() {
-            AsyncFib f = this;
-            int n = f.number;
-            if (n > 1) {
-                while (n > 1) {
-                    AsyncFib p = f;
-                    AsyncFib r = new AsyncFib(n - 2);
-                    f = new AsyncFib(--n);
-                    p.linkSubtasks(r, f);
-                    r.fork();
+            try {
+                AsyncFib f = this;
+                int n = f.number;
+                if (n > 1) {
+                    while (n > 1) {
+                        AsyncFib p = f;
+                        AsyncFib r = new AsyncFib(n - 2);
+                        f = new AsyncFib(--n);
+                        p.linkSubtasks(r, f);
+                        r.fork();
+                    }
+                    f.number = n;
                 }
-                f.number = n;
+                f.complete();
             }
-            f.complete();
+            catch(Throwable ex) {
+                compareAndSetForkJoinTaskTag(INITIAL_STATE, EXCEPTION_STATE);
+            }
             return false;
         }
 
         protected void onComplete(BinaryAsyncAction x, BinaryAsyncAction y) {
             number = ((AsyncFib)x).number + ((AsyncFib)y).number;
+            super.onComplete(x, y);
         }
     }
 
@@ -606,95 +573,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         testInvokeOnPool(mainPool(), a);
     }
 
-    /**
-     * invoke task throws exception when task cancelled
-     */
-    public void testCancelledInvoke() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                try {
-                    f.invoke();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(mainPool(), a);
-    }
-
-    /**
-     * join of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkJoin() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.join();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(mainPool(), a);
-    }
-
-    /**
-     * get of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkGet() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.get();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(mainPool(), a);
-    }
-
-    /**
-     * timed get of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkTimedGet() throws Exception {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.get(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(mainPool(), a);
-    }
-
-    /**
-     * quietlyJoin of a forked task returns when task cancelled
-     */
-    public void testCancelledForkQuietlyJoin() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                f.quietlyJoin();
-                checkCancelled(f);
-            }};
-        testInvokeOnPool(mainPool(), a);
-    }
 
     /**
      * getPool of executing task returns its pool
@@ -1331,96 +1209,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
     }
 
     /**
-     * invoke task throws exception when task cancelled
-     */
-    public void testCancelledInvokeSingleton() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                try {
-                    f.invoke();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(singletonPool(), a);
-    }
-
-    /**
-     * join of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkJoinSingleton() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.join();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(singletonPool(), a);
-    }
-
-    /**
-     * get of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkGetSingleton() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.get();
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(singletonPool(), a);
-    }
-
-    /**
-     * timed get of a forked task throws exception when task cancelled
-     */
-    public void testCancelledForkTimedGetSingleton() throws Exception {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() throws Exception {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                try {
-                    f.get(LONG_DELAY_MS, MILLISECONDS);
-                    shouldThrow();
-                } catch (CancellationException success) {
-                    checkCancelled(f);
-                }
-            }};
-        testInvokeOnPool(singletonPool(), a);
-    }
-
-    /**
-     * quietlyJoin of a forked task returns when task cancelled
-     */
-    public void testCancelledForkQuietlyJoinSingleton() {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                AsyncFib f = new AsyncFib(8);
-                assertTrue(f.cancel(true));
-                assertSame(f, f.fork());
-                f.quietlyJoin();
-                checkCancelled(f);
-            }};
-        testInvokeOnPool(singletonPool(), a);
-    }
-
-    /**
      * invoke task throws exception after invoking completeExceptionally
      */
     public void testCompleteExceptionallySingleton() {
@@ -1620,7 +1408,11 @@ public class ForkJoinTaskTest extends JSR166TestCase {
                     AsyncFib f = new AsyncFib(8);
                     f.quietlyComplete();
                     assertEquals(8, f.number);
-                    checkCompletedNormally(f);
+                    assertTrue(f.isDone());
+                    assertFalse(f.isCancelled());
+                    assertTrue(f.isCompletedNormally());
+                    assertFalse(f.isCompletedAbnormally());
+                    assertNull(f.getException());
                 }};
         testInvokeOnPool(mainPool(), a);
     }

@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
 public class ConcurrentHashMap8Test extends JSR166TestCase {
     public static void main(String[] args) {
@@ -165,6 +166,19 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         return a;
     }
 
+    /*
+     * replaceAll replaces all matching values.
+     */
+    public void testReplaceAll() {
+        ConcurrentHashMap<Integer, String> map = map5();
+        map.replaceAll((x, y) -> {return x > 3 ? "Z" : y;});
+        assertEquals("A", map.get(one));
+        assertEquals("B", map.get(two));
+        assertEquals("C", map.get(three));
+        assertEquals("Z", map.get(four));
+        assertEquals("Z", map.get(five));
+    }
+
     /**
      * Default-constructed set is empty
      */
@@ -172,6 +186,29 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         Set a = ConcurrentHashMap.newKeySet();
         assertTrue(a.isEmpty());
     }
+
+    /**
+     * keySet.add adds the key with the established value to the map;
+     * remove removes it.
+     */
+    public void testKeySetAddRemove() {
+        ConcurrentHashMap map = map5();
+        Set set1 = map.keySet();
+        Set set2 = map.keySet(true);
+        set2.add(six);
+        assertTrue(((KeySetView)set2).getMap() == map);
+        assertTrue(((KeySetView)set1).getMap() == map);
+        assertEquals(set2.size(), map.size());
+        assertEquals(set1.size(), map.size());
+        assertTrue((Boolean)map.get(six));
+        assertTrue(set1.contains(six));
+        assertTrue(set2.contains(six));
+        set2.remove(six);
+        assertNull(map.get(six));
+        assertFalse(set1.contains(six));
+        assertFalse(set2.contains(six));
+    }
+
 
     /**
      * keySet.addAll adds each element from the given collection
@@ -217,6 +254,69 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         full.add(three);
         assertTrue(full.contains(three));
     }
+
+
+      /**
+      * keySet.add throws UnsupportedOperationException if no default
+      * mapped value
+      */
+     public void testAdd4() {
+         Set full = map5().keySet();
+         try {
+             full.add(three);
+             shouldThrow();
+         } catch (UnsupportedOperationException e){}
+     }
+     
+     /**
+      * keySet.add throws NullPointerException if the specified key is
+      * null
+      */
+     public void testAdd5() {
+         Set full = populatedSet(3);
+         try {
+             full.add(null);
+             shouldThrow();
+         } catch (NullPointerException e){}
+     }
+     
+     /**
+      * KeySetView.getMappedValue returns the map's mapped value
+      */
+     public void testGetMappedValue() {
+         ConcurrentHashMap map = map5();
+         assertNull(map.keySet().getMappedValue());
+         try {
+             map.keySet(null);
+             shouldThrow();
+         } catch (NullPointerException e) {}
+         KeySetView set = map.keySet(one);
+         set.add(one);
+         set.add(six);
+         set.add(seven);
+         assertTrue(set.getMappedValue() == one);
+         assertTrue(map.get(one) != one);
+         assertTrue(map.get(six) == one);
+         assertTrue(map.get(seven) == one);
+     }
+     
+     /**
+      * KeySetView.spliterator returns spliterator over the elements in this set
+      */
+     public void testKeySetSpliterator() {
+         LongAdder adder = new LongAdder();
+         ConcurrentHashMap map = map5();
+         Set set = map.keySet();
+         Spliterator<Integer> sp = set.spliterator();
+         assertEquals(sp.estimateSize(), map.size());
+         Spliterator<Integer> sp2 = sp.trySplit();
+         sp.forEachRemaining((Integer x) -> adder.add(x.longValue()));
+         long v = adder.sumThenReset();
+         sp2.forEachRemaining((Integer x) -> adder.add(x.longValue()));
+         long v2 = adder.sum();
+         assertEquals(v + v2, 15);
+     }
+ 
 
     /**
      * keyset.clear removes all elements from the set

@@ -300,6 +300,7 @@ public class JSR166TestCase extends TestCase {
                 "DoubleAccumulatorTest",
                 "DoubleAdderTest",
                 "ForkJoinPool8Test",
+                "ForkJoinTask8Test",
                 "LongAccumulatorTest",
                 "LongAdderTest",
                 "SplittableRandomTest",

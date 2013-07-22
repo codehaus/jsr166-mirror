@@ -255,68 +255,66 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertTrue(full.contains(three));
     }
 
+    /**
+     * keySet.add throws UnsupportedOperationException if no default
+     * mapped value
+     */
+    public void testAdd4() {
+        Set full = map5().keySet();
+        try {
+            full.add(three);
+            shouldThrow();
+        } catch (UnsupportedOperationException e){}
+    }
 
-      /**
-      * keySet.add throws UnsupportedOperationException if no default
-      * mapped value
-      */
-     public void testAdd4() {
-         Set full = map5().keySet();
-         try {
-             full.add(three);
-             shouldThrow();
-         } catch (UnsupportedOperationException e){}
-     }
-     
-     /**
-      * keySet.add throws NullPointerException if the specified key is
-      * null
-      */
-     public void testAdd5() {
-         Set full = populatedSet(3);
-         try {
-             full.add(null);
-             shouldThrow();
-         } catch (NullPointerException e){}
-     }
-     
-     /**
-      * KeySetView.getMappedValue returns the map's mapped value
-      */
-     public void testGetMappedValue() {
-         ConcurrentHashMap map = map5();
-         assertNull(map.keySet().getMappedValue());
-         try {
-             map.keySet(null);
-             shouldThrow();
-         } catch (NullPointerException e) {}
-         KeySetView set = map.keySet(one);
-         set.add(one);
-         set.add(six);
-         set.add(seven);
-         assertTrue(set.getMappedValue() == one);
-         assertTrue(map.get(one) != one);
-         assertTrue(map.get(six) == one);
-         assertTrue(map.get(seven) == one);
-     }
-     
-     /**
-      * KeySetView.spliterator returns spliterator over the elements in this set
-      */
-     public void testKeySetSpliterator() {
-         LongAdder adder = new LongAdder();
-         ConcurrentHashMap map = map5();
-         Set set = map.keySet();
-         Spliterator<Integer> sp = set.spliterator();
-         assertEquals(sp.estimateSize(), map.size());
-         Spliterator<Integer> sp2 = sp.trySplit();
-         sp.forEachRemaining((Integer x) -> adder.add(x.longValue()));
-         long v = adder.sumThenReset();
-         sp2.forEachRemaining((Integer x) -> adder.add(x.longValue()));
-         long v2 = adder.sum();
-         assertEquals(v + v2, 15);
-     }
- 
+    /**
+     * keySet.add throws NullPointerException if the specified key is
+     * null
+     */
+    public void testAdd5() {
+        Set full = populatedSet(3);
+        try {
+            full.add(null);
+            shouldThrow();
+        } catch (NullPointerException e){}
+    }
+
+    /**
+     * KeySetView.getMappedValue returns the map's mapped value
+     */
+    public void testGetMappedValue() {
+        ConcurrentHashMap map = map5();
+        assertNull(map.keySet().getMappedValue());
+        try {
+            map.keySet(null);
+            shouldThrow();
+        } catch (NullPointerException e) {}
+        KeySetView set = map.keySet(one);
+        set.add(one);
+        set.add(six);
+        set.add(seven);
+        assertTrue(set.getMappedValue() == one);
+        assertTrue(map.get(one) != one);
+        assertTrue(map.get(six) == one);
+        assertTrue(map.get(seven) == one);
+    }
+
+    /**
+     * KeySetView.spliterator returns spliterator over the elements in this set
+     */
+    public void testKeySetSpliterator() {
+        LongAdder adder = new LongAdder();
+        ConcurrentHashMap map = map5();
+        Set set = map.keySet();
+        Spliterator<Integer> sp = set.spliterator();
+        assertEquals(sp.estimateSize(), map.size());
+        Spliterator<Integer> sp2 = sp.trySplit();
+        sp.forEachRemaining((Integer x) -> adder.add(x.longValue()));
+        long v = adder.sumThenReset();
+        sp2.forEachRemaining((Integer x) -> adder.add(x.longValue()));
+        long v2 = adder.sum();
+        assertEquals(v + v2, 15);
+    }
 
     /**
      * keyset.clear removes all elements from the set

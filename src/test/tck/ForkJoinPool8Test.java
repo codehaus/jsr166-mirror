@@ -1484,7 +1484,6 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         checkInvoke(a);
     }
 
-
     /**
      * awaitQuiescent by a worker is equivalent in effect to
      * ForkJoinTask.helpQuiesce()

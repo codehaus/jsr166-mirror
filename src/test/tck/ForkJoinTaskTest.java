@@ -1607,7 +1607,6 @@ public class ForkJoinTaskTest extends JSR166TestCase {
         testInvokeOnPool(singletonPool(), a);
     }
 
-
     /**
      * ForkJoinTask.quietlyComplete returns when task completes
      * normally without setting a value. The most recent value

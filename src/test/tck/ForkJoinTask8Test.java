@@ -278,7 +278,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
             super.reinitialize();
         }
 
-
     }
 
     static final class AsyncFib extends BinaryAsyncAction {
@@ -571,7 +570,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
             }};
         testInvokeOnPool(mainPool(), a);
     }
-
 
     /**
      * getPool of executing task returns its pool

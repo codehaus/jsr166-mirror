@@ -942,6 +942,32 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
     </javac>
   </target>
 
+  <!-- jsr166e: find doclint errors -->
+  <target name="jsr166edoclint">
+
+    <mkdir dir="${build.jsr166e.classes.dir}"/>
+
+    <javac srcdir="${topsrc.dir}"
+           destdir="${build.jsr166e.classes.dir}"
+           debug="${build.debug}"
+           debuglevel="${build.debuglevel}"
+           deprecation="${build.deprecation}"
+           source="${build.jsr166e.java.version}"
+           classpath=""
+           bootclasspath="${bootclasspath7}"
+           includeAntRuntime="false"
+           includeJavaRuntime="false"
+           executable="${javac8}"
+           fork="true">
+
+      <include name="jsr166e/**/*.java"/>
+      <compilerarg value="-XDignore.symbol.file=true"/>
+      <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Xdoclint:all/protected"/>
+
+    </javac>
+  </target>
+
 
   <target name="jsr166ejar"
           depends="jsr166ecompile"

@@ -212,7 +212,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * them in the same relative access/traversal order (i.e., field
      * Node.next) to better preserve locality, and to slightly
      * simplify handling of splits and traversals that invoke
-     * iterator.remove.
+     * iterator.remove. When using comparators on insertion, to keep a
+     * total ordering (or as close as is required here) across
+     * rebalancings, we compare classes and identityHashCodes as
+     * tie-breakers.
      *
      * The use and transitions among plain vs tree modes is
      * complicated by the existence of subclass LinkedHashMap. See
@@ -1828,17 +1831,18 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     p = pr;
                 else if ((pk = p.key) == k || (k != null && k.equals(pk)))
                     return p;
-                else if (pl == null && pr == null)
-                    break;
-                else if ((kc != null || (kc = comparableClassFor(k)) != null) &&
-                         (dir = compareComparables(kc, k, pk)) != 0)
-                    p = (dir < 0) ? pl : pr;
                 else if (pl == null)
                     p = pr;
-                else if (pr == null || (q = pr.find(h, k, kc)) == null)
+                else if (pr == null)
                     p = pl;
-                else
+                else if ((kc != null ||
+                          (kc = comparableClassFor(k)) != null) &&
+                         (dir = compareComparables(kc, k, pk)) != 0)
+                    p = (dir < 0) ? pl : pr;
+                else if ((q = pr.find(h, k, kc)) != null)
                     return q;
+                else
+                    p = pl;
             } while (p != null);
             return null;
         }
@@ -1848,6 +1852,23 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          */
         final TreeNode<K,V> getTreeNode(int h, Object k) {
             return ((parent != null) ? root() : this).find(h, k, null);
+        }
+
+        /**
+         * Tie-breaking utility for ordering insertions when equal
+         * hashCodes and non-comparable. We don't require a total
+         * order, just a consistent insertion rule to maintain
+         * equivalence across rebalancings. Tie-breaking further than
+         * necessary simplifies testing a bit.
+         */
+        static int tieBreakOrder(Object a, Object b) {
+            int d;
+            if (a == null || b == null ||
+                (d = a.getClass().getName().
+                 compareTo(b.getClass().getName())) == 0)
+                d = (System.identityHashCode(a) <= System.identityHashCode(b) ?
+                     -1 : 1);
+            return d;
         }
 
         /**
@@ -1870,15 +1891,16 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     Class<?> kc = null;
                     for (TreeNode<K,V> p = root;;) {
                         int dir, ph;
+                        K pk = p.key;
                         if ((ph = p.hash) > h)
                             dir = -1;
                         else if (ph < h)
                             dir = 1;
-                        else if ((kc != null ||
-                                  (kc = comparableClassFor(k)) != null))
-                            dir = compareComparables(kc, k, p.key);
-                        else
-                            dir = 0;
+                        else if ((kc == null &&
+                                  (kc = comparableClassFor(k)) == null) ||
+                                 (dir = compareComparables(kc, k, pk)) == 0)
+                            dir = tieBreakOrder(k, pk);
+
                         TreeNode<K,V> xp = p;
                         if ((p = (dir <= 0) ? p.left : p.right) == null) {
                             x.parent = xp;
@@ -1918,30 +1940,36 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                        int h, K k, V v) {
             Class<?> kc = null;
+            boolean searched = false;
             TreeNode<K,V> root = (parent != null) ? root() : this;
             for (TreeNode<K,V> p = root;;) {
-                int ph, dir; K pk; TreeNode<K,V> pr, q;
+                int dir, ph; K pk;
                 if ((ph = p.hash) > h)
                     dir = -1;
                 else if (ph < h)
                     dir = 1;
-                else if ((pk = p.key) == k || (k != null && k.equals(pk)))
+                else if ((pk = p.key) == k || (pk != null && k.equals(pk)))
                     return p;
-                else if ((kc == null && (kc = comparableClassFor(k)) == null) ||
+                else if ((kc == null &&
+                          (kc = comparableClassFor(k)) == null) ||
                          (dir = compareComparables(kc, k, pk)) == 0) {
-                    if (p.left == null)
-                        dir = 1;
-                    else if ((pr = p.right) == null ||
-                             (q = pr.find(h, k, kc)) == null)
-                        dir = -1;
-                    else
-                        return q;
+                    if (!searched) {
+                        TreeNode<K,V> q, ch;
+                        searched = true;
+                        if (((ch = p.left) != null &&
+                             (q = ch.find(h, k, kc)) != null) ||
+                            ((ch = p.right) != null &&
+                             (q = ch.find(h, k, kc)) != null))
+                            return q;
+                    }
+                    dir = tieBreakOrder(k, pk);
                 }
+
                 TreeNode<K,V> xp = p;
-                if ((p = (dir < 0) ? p.left : p.right) == null) {
+                if ((p = (dir <= 0) ? p.left : p.right) == null) {
                     Node<K,V> xpn = xp.next;
                     TreeNode<K,V> x = map.newTreeNode(h, k, v, xpn);
-                    if (dir < 0)
+                    if (dir <= 0)
                         xp.left = x;
                     else
                         xp.right = x;

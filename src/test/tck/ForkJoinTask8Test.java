@@ -793,7 +793,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -1370,7 +1370,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollectionSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {

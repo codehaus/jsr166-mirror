@@ -1462,7 +1462,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollectionCC() {
         ForkJoinTask a = new CheckedRecursiveAction() {

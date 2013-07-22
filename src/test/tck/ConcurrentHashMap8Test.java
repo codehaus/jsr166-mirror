@@ -54,7 +54,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     }
 
     /**
-     * computeIfAbsent does not replace  if the key is already present
+     * computeIfAbsent does not replace if the key is already present
      */
     public void testComputeIfAbsent2() {
         ConcurrentHashMap map = map5();
@@ -71,7 +71,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     }
 
     /**
-     * computeIfPresent does not replace  if the key is already present
+     * computeIfPresent does not replace if the key is already present
      */
     public void testComputeIfPresent() {
         ConcurrentHashMap map = map5();
@@ -88,7 +88,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     }
 
     /**
-     * compute does not replace  if the function returns null
+     * compute does not replace if the function returns null
      */
     public void testCompute() {
         ConcurrentHashMap map = map5();

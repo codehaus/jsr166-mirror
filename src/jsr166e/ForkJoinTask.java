@@ -1473,6 +1473,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     /**
      * Saves this task to a stream (that is, serializes it).
      *
+     * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      * @serialData the current run status and the exception thrown
      * during execution, or {@code null} if none
      */
@@ -1484,6 +1486,10 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
 
     /**
      * Reconstitutes this task from a stream (that is, deserializes it).
+     * @param s the stream
+     * @throws ClassNotFoundException if the class of a serialized object
+     *         could not be found
+     * @throws java.io.IOException if an I/O error occurs
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

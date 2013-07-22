@@ -483,6 +483,7 @@ public class Fences {
      * class documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
+     * @param <T> the type of the reference
      * @return the given ref, to simplify usage
      */
     public static <T> T orderReads(T ref) {
@@ -498,6 +499,7 @@ public class Fences {
      * details, see the class documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
+     * @param <T> the type of the reference
      * @return the given ref, to simplify usage
      */
     public static <T> T orderWrites(T ref) {
@@ -512,6 +514,7 @@ public class Fences {
      * documentation for this class.
      *
      * @param ref the reference. If null, this method has no effect.
+     * @param <T> the type of the reference
      * @return the given ref, to simplify usage
      */
     public static <T> T orderAccesses(T ref) {

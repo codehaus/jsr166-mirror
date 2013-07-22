@@ -16,9 +16,9 @@ package java.util.concurrent;
  * {@code scheduleWithFixedDelay} methods create and execute tasks
  * that run periodically until cancelled.
  *
- * <p>Commands submitted using the {@link Executor#execute} and
- * {@link ExecutorService} {@code submit} methods are scheduled with
- * a requested delay of zero. Zero and negative delays (but not
+ * <p>Commands submitted using the {@link Executor#execute(Runnable)}
+ * and {@link ExecutorService} {@code submit} methods are scheduled
+ * with a requested delay of zero. Zero and negative delays (but not
  * periods) are also allowed in {@code schedule} methods, and are
  * treated as requests for immediate execution.
  *
@@ -33,7 +33,7 @@ package java.util.concurrent;
  * which the task is enabled due to network time synchronization
  * protocols, clock drift, or other factors.
  *
- * The {@link Executors} class provides convenient factory methods for
+ * <p>The {@link Executors} class provides convenient factory methods for
  * the ScheduledExecutorService implementations provided in this package.
  *
  * <h3>Usage Example</h3>
@@ -88,6 +88,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @param callable the function to execute
      * @param delay the time from now to delay execution
      * @param unit the time unit of the delay parameter
+     * @param <V> the type of the callable's result
      * @return a ScheduledFuture that can be used to extract result or cancel
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution

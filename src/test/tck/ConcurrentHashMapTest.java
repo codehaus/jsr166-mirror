@@ -21,8 +21,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     /**
      * Returns a new map from Integers 1-5 to Strings "A"-"E".
      */
-    private static ConcurrentHashMap map5() {
-        ConcurrentHashMap map = new ConcurrentHashMap(5);
+    private static ConcurrentHashMap<Integer, String> map5() {
+        ConcurrentHashMap map = new ConcurrentHashMap<Integer, String>(5);
         assertTrue(map.isEmpty());
         map.put(one, "A");
         map.put(two, "B");
@@ -80,6 +80,22 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
             return r;
         }
         private static final long serialVersionUID = 0;
+    }
+
+    static class CollidingObject {
+        final String value;
+        CollidingObject(final String value) { this.value = value; }
+        public int hashCode() { return this.value.hashCode() & 1; }
+        public boolean equals(final Object obj) {
+            return (obj instanceof CollidingObject) && ((CollidingObject)obj).value.equals(value);
+        }
+    }
+
+    static class ComparableCollidingObject extends CollidingObject implements Comparable<ComparableCollidingObject> {
+        ComparableCollidingObject(final String value) { super(value); }
+        public int compareTo(final ComparableCollidingObject o) {
+            return value.compareTo(o.value);
+        }
     }
 
     /**
@@ -140,6 +156,41 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     }
 
     /**
+     * Mixtures of instances of comparable and non-comparable classes
+     * can be inserted and found.
+     */
+    public void testMixedComparable() {
+        int size = 10000;
+        ConcurrentHashMap<Object, Object> map =
+            new ConcurrentHashMap<Object, Object>();
+        Random rng = new Random(1370014958369218000L);
+        for (int i = 0; i < size; i++) {
+            Object x;
+            switch (rng.nextInt(4)) {
+            case 0:
+                x = new Object();
+                break;
+            case 1:
+                x = new CollidingObject(Integer.toString(i));
+                break;
+            default:
+                x = new ComparableCollidingObject(Integer.toString(i));
+            }
+            assertNull(map.put(x, x));
+        }
+        int count = 0;
+        for (Object k : map.keySet()) {
+            assertEquals(map.get(k), k);
+            ++count;
+        }
+        assertEquals(count, size);
+        assertEquals(map.size(), size);
+        for (Object k : map.keySet()) {
+            assertEquals(map.put(k, k), k);
+        }
+    }
+
+    /**
      * clear removes all pairs
      */
     public void testClear() {
@@ -159,6 +210,18 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         map1.clear();
         assertFalse(map1.equals(map2));
         assertFalse(map2.equals(map1));
+    }
+
+ 
+    /**
+      * hashCode() equals sum of each key.hashCode ^ value.hashCode
+      */
+    public void testHashCode() {
+        ConcurrentHashMap<Integer,String> map = map5();
+        int sum = 0;
+        for (Map.Entry<Integer,String> e : map.entrySet())
+            sum += e.getKey().hashCode() ^ e.getValue().hashCode();
+        assertEquals(sum, map.hashCode());
     }
 
     /**
@@ -445,34 +508,75 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
     // Exception tests
 
     /**
-     * Cannot create with negative capacity
-     */
-    public void testConstructor1() {
-        try {
-            new ConcurrentHashMap(-1,0,1);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
-     * Cannot create with negative concurrency level
-     */
-    public void testConstructor2() {
-        try {
-            new ConcurrentHashMap(1,0,-1);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-    }
-
-    /**
      * Cannot create with only negative capacity
      */
-    public void testConstructor3() {
+    public void testConstructor1() {
         try {
             new ConcurrentHashMap(-1);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
+
+    /**
+     * Constructor (initialCapacity, loadFactor) throws
+     * IllegalArgumentException if either argument is negative
+      */
+    public void testConstructor2() {
+        try {
+            new ConcurrentHashMap(-1, .75f);
+            shouldThrow();
+        } catch (IllegalArgumentException e) {}        
+        
+        try {
+            new ConcurrentHashMap(16, -1);
+            shouldThrow();
+        } catch (IllegalArgumentException e) {}        
+    }
+     
+     /**
+      * Constructor (initialCapacity, loadFactor, concurrencyLevel)
+      * throws IllegalArgumentException if any argument is negative
+      */
+    public void testConstructor3() {
+         try {
+             new ConcurrentHashMap(-1, .75f, 1);
+             shouldThrow();
+         } catch (IllegalArgumentException e) {}        
+ 
+         try {
+             new ConcurrentHashMap(16, -1, 1);
+             shouldThrow();
+         } catch (IllegalArgumentException e) {}
+         
+         try {
+             new ConcurrentHashMap(16, .75f, -1);
+             shouldThrow();
+         } catch (IllegalArgumentException e) {}
+     }
+
+    /**
+     * ConcurrentHashMap(map) throws NullPointerException if the given
+     * map is null
+     */
+    public void testConstructor4() {
+        try {
+            new ConcurrentHashMap(null);
+            shouldThrow();
+        } catch (NullPointerException e) {}
+    }
+
+    /**
+     * ConcurrentHashMap(map) creates a new map with the same mappings
+     * as the given map
+     */
+    public void testConstructor5() {
+        ConcurrentHashMap map1 = map5();
+        ConcurrentHashMap map2 = new ConcurrentHashMap(map5());
+        assertTrue(map2.equals(map1));
+        map2.put(one, "F");
+        assertFalse(map2.equals(map1));
+    }
+
 
     /**
      * get(null) throws NPE

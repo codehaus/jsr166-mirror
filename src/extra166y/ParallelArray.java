@@ -133,7 +133,7 @@ import java.lang.reflect.Array;
  *     public boolean op(Student s) { return s.credits &gt; 90; }
  *   }
  *   static final IsSenior isSenior = new IsSenior();
- *   static final class GpaField implements ObjectToDouble&lt;Student&gt {
+ *   static final class GpaField implements ObjectToDouble&lt;Student&gt; {
  *     public double op(Student s) { return s.gpa; }
  *   }
  *   static final GpaField gpaField = new GpaField();
@@ -551,8 +551,8 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
      * Sorts the array, assuming all elements are Comparable. Unlike
      * Arrays.sort, this sort does not guarantee that elements
      * with equal keys maintain their relative position in the array.
-     * @throws ClassCastException if any element is not Comparable
      * @return this (to simplify use in expressions)
+     * @throws ClassCastException if any element is not Comparable
      */
     public ParallelArray<T> sort() {
         super.sort();

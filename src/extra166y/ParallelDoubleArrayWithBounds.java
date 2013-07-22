@@ -114,8 +114,8 @@ public abstract class ParallelDoubleArrayWithBounds extends ParallelDoubleArrayW
      * Comparable. Unlike Arrays.sort, this sort does not
      * guarantee that elements with equal keys maintain their relative
      * position in the array.
-     * @throws ClassCastException if any element is not Comparable
      * @return this (to simplify use in expressions)
+     * @throws ClassCastException if any element is not Comparable
      */
     public abstract ParallelDoubleArrayWithBounds sort();
 }

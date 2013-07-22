@@ -25,6 +25,7 @@
 
 package java.util;
 
+import java.security.SecureRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Spliterator;
 import java.util.function.IntConsumer;
@@ -51,7 +52,9 @@ import java.util.stream.DoubleStream;
  * href="http://www.phy.duke.edu/~rgb/General/dieharder.php"> version
  * 3.31.1</a>.) These tests validate only the methods for certain
  * types and ranges, but similar properties are expected to hold, at
- * least approximately, for others as well.  </li>
+ * least approximately, for others as well. The <em>period</em>
+ * (length of any series of generated values before it repeats) is at
+ * least 2<sup>64</sup>. </li>
  *
  * <li> Method {@link #split} constructs and returns a new
  * SplittableRandom instance that shares no mutable state with the
@@ -119,18 +122,10 @@ public class SplittableRandom {
      * this generator as nextSplit, and uses mix64(nextSplit) as its
      * own gamma value. Computations of gammas themselves use a fixed
      * constant as the second argument to the addGammaModGeorge
-     * function, GAMMA_GAMMA, a "genuinely random" number from a
-     * radioactive decay reading (obtained from
-     * http://www.fourmilab.ch/hotbits/) meeting the above range
-     * constraint. Using a fixed constant maintains the invariant that
-     * the value of gamma is the same for every instance that is at
-     * the same split-distance from their common root. (Note: there is
-     * nothing especially magic about obtaining this constant from a
-     * "truly random" physical source rather than just choosing one
-     * arbitrarily; using "hotbits" was merely an aesthetically pleasing
-     * choice.  In either case, good statistical behavior of the
-     * algorithm should be, and was, verified by using the DieHarder
-     * test suite.)
+     * function, GAMMA_GAMMA. The value of GAMMA_GAMMA is arbitrary
+     * (except must be at least 13), but because it serves as the base
+     * of split sequences, should be subject to validation of
+     * consequent random number quality metrics.
      *
      * The mix64 bit-mixing function called by nextLong and other
      * methods computes the same value as the "64-bit finalizer"
@@ -156,8 +151,8 @@ public class SplittableRandom {
      * SplittableRandom. Unlike other cases, this split must be
      * performed in a thread-safe manner. We use
      * AtomicLong.compareAndSet as the (typically) most efficient
-     * mechanism. To bootstrap, we start off using System.nanotime(),
-     * and update using another "genuinely random" constant
+     * mechanism. To bootstrap, we start off using a SecureRandom
+     * initial default seed, and update using a fixed
      * DEFAULT_SEED_GAMMA. The default constructor uses GAMMA_GAMMA,
      * not 0, for its splitSeed argument (addGammaModGeorge(0,
      * GAMMA_GAMMA) == GAMMA_GAMMA) to reflect that each is split from
@@ -166,18 +161,23 @@ public class SplittableRandom {
      */
 
     /**
-     * The "genuinely random" value for producing new gamma values.
-     * The value is arbitrary, subject to the requirement that it be
-     * greater or equal to 13.
+     * The value for producing new gamma values. Must be greater or
+     * equal to 13. Otherwise, the value is arbitrary subject to
+     * validation of the resulting statistical quality of splits.
      */
     private static final long GAMMA_GAMMA = 0xF2281E2DBA6606F3L;
 
     /**
-     * The "genuinely random" seed update value for default constructors.
-     * The value is arbitrary, subject to the requirement that it be
-     * greater or equal to 13.
+     * The seed update value for default constructors.  Must be
+     * greater or equal to 13. Otherwise, the value is arbitrary.
      */
     private static final long DEFAULT_SEED_GAMMA = 0xBD24B73A95FB84D9L;
+
+    /**
+     * The value 13 with 64bit sign bit set. Used in the signed
+     * comparison in addGammaModGeorge.
+     */
+    private static final long BOTTOM13 = 0x800000000000000DL;
 
     /**
      * The least non-zero value returned by nextDouble(). This value
@@ -189,7 +189,7 @@ public class SplittableRandom {
      * The next seed for default constructors.
      */
     private static final AtomicLong defaultSeedGenerator =
-        new AtomicLong(System.nanoTime());
+        new AtomicLong(getInitialDefaultSeed());
 
     /**
      * The seed, updated only via method nextSeed.
@@ -217,15 +217,16 @@ public class SplittableRandom {
      * George < 2^64; thus we need only a conditional, not a loop,
      * to be sure of getting a representable value.
      *
-     * @param s a seed value
+     * Because Java comparison operators are signed, we implement this
+     * by conceptually offsetting seed values downwards by 2^63, so
+     * 0..13 is represented as Long.MIN_VALUE..BOTTOM13.
+     *
+     * @param s a seed value, viewed as a signed long
      * @param g a gamma value, 13 <= g (as unsigned)
      */
     private static long addGammaModGeorge(long s, long g) {
         long p = s + g;
-        if (Long.compareUnsigned(p, g) >= 0)
-            return p;
-        long q = p - 13L;
-        return (Long.compareUnsigned(p, 13L) >= 0) ? q : (q + g);
+        return (p >= s) ? p : ((p >= BOTTOM13) ? p  : p + g) - 13L;
     }
 
     /**
@@ -264,7 +265,7 @@ public class SplittableRandom {
         do { // ensure gamma >= 13, considered as an unsigned integer
             s = addGammaModGeorge(s, GAMMA_GAMMA);
             g = mix64(s);
-        } while (Long.compareUnsigned(g, 13L) < 0);
+        } while (g >= 0L && g < 13L);
         this.gamma = g;
         this.nextSplit = s;
     }
@@ -287,6 +288,17 @@ public class SplittableRandom {
             newSeed = addGammaModGeorge(oldSeed, DEFAULT_SEED_GAMMA);
         } while (!defaultSeedGenerator.compareAndSet(oldSeed, newSeed));
         return mix64(newSeed);
+    }
+
+    /**
+     * Returns an initial default seed.
+     */
+    private static long getInitialDefaultSeed() {
+        byte[] seedBytes = java.security.SecureRandom.getSeed(8);
+        long s = (long)(seedBytes[0]) & 0xffL;
+        for (int i = 1; i < 8; ++i)
+            s = (s << 8) | ((long)(seedBytes[i]) & 0xffL);
+        return s;
     }
 
     /*
@@ -403,7 +415,7 @@ public class SplittableRandom {
     /**
      * Creates a new SplittableRandom instance using the specified
      * initial seed. SplittableRandom instances created with the same
-     * seed generate identical sequences of values.
+     * seed in the same program generate identical sequences of values.
      *
      * @param seed the initial seed
      */
@@ -553,7 +565,7 @@ public class SplittableRandom {
      * (inclusive) and one (exclusive)
      */
     public double nextDouble() {
-        return (nextLong() >>> 11) * DOUBLE_UNIT;
+        return (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT;
     }
 
     /**
@@ -569,7 +581,7 @@ public class SplittableRandom {
     public double nextDouble(double bound) {
         if (!(bound > 0.0))
             throw new IllegalArgumentException("bound must be positive");
-        double result = nextDouble() * bound;
+        double result = (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT * bound;
         return (result < bound) ?  result : // correct for rounding
             Double.longBitsToDouble(Double.doubleToLongBits(bound) - 1);
     }
@@ -589,6 +601,15 @@ public class SplittableRandom {
         if (!(origin < bound))
             throw new IllegalArgumentException("bound must be greater than origin");
         return internalNextDouble(origin, bound);
+    }
+
+    /**
+     * Returns a pseudorandom {@code boolean} value.
+     *
+     * @return a pseudorandom {@code boolean} value
+     */
+    public boolean nextBoolean() {
+        return mix32(nextSeed()) < 0;
     }
 
     // stream methods, coded in a way intended to better isolate for
@@ -854,7 +875,7 @@ public class SplittableRandom {
      * approach. The long and double versions of this class are
      * identical except for types.
      */
-    static class RandomIntsSpliterator implements Spliterator.OfInt {
+    static final class RandomIntsSpliterator implements Spliterator.OfInt {
         final SplittableRandom rng;
         long index;
         final long fence;
@@ -908,7 +929,7 @@ public class SplittableRandom {
     /**
      * Spliterator for long streams.
      */
-    static class RandomLongsSpliterator implements Spliterator.OfLong {
+    static final class RandomLongsSpliterator implements Spliterator.OfLong {
         final SplittableRandom rng;
         long index;
         final long fence;
@@ -963,7 +984,7 @@ public class SplittableRandom {
     /**
      * Spliterator for double streams.
      */
-    static class RandomDoublesSpliterator implements Spliterator.OfDouble {
+    static final class RandomDoublesSpliterator implements Spliterator.OfDouble {
         final SplittableRandom rng;
         long index;
         final long fence;

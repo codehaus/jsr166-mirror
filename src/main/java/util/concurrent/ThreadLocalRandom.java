@@ -173,9 +173,9 @@ public class ThreadLocalRandom extends Random {
      *
      * @param least the least value returned
      * @param bound the upper bound (exclusive)
+     * @return the next value
      * @throws IllegalArgumentException if least greater than or equal
      * to bound
-     * @return the next value
      */
     public int nextInt(int least, int bound) {
         if (least >= bound)
@@ -354,18 +354,21 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Saves the {@code ThreadLocalRandom} to a stream (that is, serializes it).
+     * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      */
-    private void writeObject(java.io.ObjectOutputStream out)
+    private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
 
-        java.io.ObjectOutputStream.PutField fields = out.putFields();
+        java.io.ObjectOutputStream.PutField fields = s.putFields();
         fields.put("rnd", UNSAFE.getLong(Thread.currentThread(), SEED));
         fields.put("initialized", true);
-        out.writeFields();
+        s.writeFields();
     }
 
     /**
      * Returns the {@link #current() current} thread's {@code ThreadLocalRandom}.
+     * @return the {@link #current() current} thread's {@code ThreadLocalRandom}
      */
     private Object readResolve() {
         return current();

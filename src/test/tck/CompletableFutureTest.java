@@ -375,7 +375,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     /**
      * exceptionally action completes with function value on source
-     * exception;  otherwise with source value
+     * exception; otherwise with source value
      */
     public void testExceptionally() {
         CompletableFuture<Integer> f = new CompletableFuture<>();

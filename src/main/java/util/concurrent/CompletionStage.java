@@ -723,6 +723,8 @@ public interface CompletionStage<T> {
      * may throw {@code UnsupportedOperationException}.
      *
      * @return the CompletableFuture
+     * @throws UnsupportedOperationException if this implementation
+     * does not interoperate with CompletableFuture
      */
     public CompletableFuture<T> toCompletableFuture();
 

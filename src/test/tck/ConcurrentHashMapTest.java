@@ -212,10 +212,9 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         assertFalse(map2.equals(map1));
     }
 
- 
     /**
-      * hashCode() equals sum of each key.hashCode ^ value.hashCode
-      */
+     * hashCode() equals sum of each key.hashCode ^ value.hashCode
+     */
     public void testHashCode() {
         ConcurrentHashMap<Integer,String> map = map5();
         int sum = 0;
@@ -525,34 +524,34 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         try {
             new ConcurrentHashMap(-1, .75f);
             shouldThrow();
-        } catch (IllegalArgumentException e) {}        
-        
+        } catch (IllegalArgumentException e) {}
+
         try {
             new ConcurrentHashMap(16, -1);
             shouldThrow();
-        } catch (IllegalArgumentException e) {}        
+        } catch (IllegalArgumentException e) {}
     }
-     
-     /**
-      * Constructor (initialCapacity, loadFactor, concurrencyLevel)
-      * throws IllegalArgumentException if any argument is negative
-      */
+
+    /**
+     * Constructor (initialCapacity, loadFactor, concurrencyLevel)
+     * throws IllegalArgumentException if any argument is negative
+     */
     public void testConstructor3() {
-         try {
-             new ConcurrentHashMap(-1, .75f, 1);
-             shouldThrow();
-         } catch (IllegalArgumentException e) {}        
- 
-         try {
-             new ConcurrentHashMap(16, -1, 1);
-             shouldThrow();
-         } catch (IllegalArgumentException e) {}
-         
-         try {
-             new ConcurrentHashMap(16, .75f, -1);
-             shouldThrow();
-         } catch (IllegalArgumentException e) {}
-     }
+        try {
+            new ConcurrentHashMap(-1, .75f, 1);
+            shouldThrow();
+        } catch (IllegalArgumentException e) {}
+
+        try {
+            new ConcurrentHashMap(16, -1, 1);
+            shouldThrow();
+        } catch (IllegalArgumentException e) {}
+
+        try {
+            new ConcurrentHashMap(16, .75f, -1);
+            shouldThrow();
+        } catch (IllegalArgumentException e) {}
+    }
 
     /**
      * ConcurrentHashMap(map) throws NullPointerException if the given

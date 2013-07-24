@@ -32,7 +32,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     static final short INITIAL_STATE = -1;
     static final short COMPLETE_STATE = 0;
     static final short EXCEPTION_STATE = 1;
-        
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
@@ -206,8 +205,8 @@ public class ForkJoinTask8Test extends JSR166TestCase {
         }
 
         protected void onComplete(BinaryAsyncAction x, BinaryAsyncAction y) {
-            if (this.getForkJoinTaskTag() != COMPLETE_STATE || 
-                x.getForkJoinTaskTag() != COMPLETE_STATE || 
+            if (this.getForkJoinTaskTag() != COMPLETE_STATE ||
+                x.getForkJoinTaskTag() != COMPLETE_STATE ||
                 y.getForkJoinTaskTag() != COMPLETE_STATE) {
                 completeThisExceptionally(new FJException());
             }
@@ -241,7 +240,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
                 a.sibling = null;
                 a.parent = null;
                 a.completeThis();
-                if (p == null || 
+                if (p == null ||
                     p.compareAndSetForkJoinTaskTag(INITIAL_STATE, COMPLETE_STATE))
                     break;
                 try {
@@ -279,7 +278,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
             super.reinitialize();
         }
 
-
     }
 
     static final class AsyncFib extends BinaryAsyncAction {
@@ -304,7 +302,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
                 }
                 f.complete();
             }
-            catch(Throwable ex) {
+            catch (Throwable ex) {
                 compareAndSetForkJoinTaskTag(INITIAL_STATE, EXCEPTION_STATE);
             }
             return false;
@@ -573,7 +571,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
         testInvokeOnPool(mainPool(), a);
     }
 
-
     /**
      * getPool of executing task returns its pool
      */
@@ -796,7 +793,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -1373,7 +1370,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollectionSingleton() {
         RecursiveAction a = new CheckedRecursiveAction() {
@@ -1394,7 +1391,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
             }};
         testInvokeOnPool(singletonPool(), a);
     }
-
 
     /**
      * ForkJoinTask.quietlyComplete returns when task completes

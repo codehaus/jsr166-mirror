@@ -420,7 +420,7 @@ public class ParallelLongArray extends AbstractParallelAnyArray.LUPap {
      * 2, 3}, and the reducer operation adds numbers, then after
      * invocation of this method, the contents would be {@code 0, 1,
      * 3} (that is, {@code 0, 0+1, 0+1+2}, and the return value
-     * would be 6 (that is, {@code  1+2+3}).
+     * would be 6 (that is, {@code 1+2+3}).
      * @param reducer the reducer
      * @param base the result for an empty array
      * @return the total reduction

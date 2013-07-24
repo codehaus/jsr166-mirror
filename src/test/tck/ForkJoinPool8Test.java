@@ -1462,7 +1462,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollectionCC() {
         ForkJoinTask a = new CheckedRecursiveAction() {
@@ -1484,11 +1484,10 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         checkInvoke(a);
     }
 
-
     /**
      * awaitQuiescent by a worker is equivalent in effect to
      * ForkJoinTask.helpQuiesce()
-     */ 
+     */
     public void testAwaitQuiescent1() throws Exception {
         final ForkJoinPool p = new ForkJoinPool();
         try {
@@ -1513,8 +1512,8 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                         assertEquals(0, ForkJoinTask.getQueuedTaskCount());
                         try {
                             assertEquals(21, f.result);
-                        } catch (Throwable fail) { 
-                            threadFail(fail.getMessage()); 
+                        } catch (Throwable fail) {
+                            threadFail(fail.getMessage());
                         }
                     }
                 };
@@ -1541,11 +1540,11 @@ public class ForkJoinPool8Test extends JSR166TestCase {
             joinPool(p);
         }
     }
- 
+
     /**
      * awaitQuiescent returns when pool isQuiescent() or the indicated
      * timeout elapse
-     */   
+     */
     public void testAwaitQuiescent2() throws Exception {
         final ForkJoinPool p = new ForkJoinPool();
         try {
@@ -1597,5 +1596,4 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         }
     }
 
- 
 }

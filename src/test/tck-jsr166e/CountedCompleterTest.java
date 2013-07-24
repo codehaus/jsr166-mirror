@@ -1133,7 +1133,7 @@ public class CountedCompleterTest extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollection() {
         ForkJoinTask a = new CheckedRecursiveAction() {
@@ -1798,7 +1798,7 @@ public class CountedCompleterTest extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(collection)  throws exception if any task does
+     * invokeAll(collection) throws exception if any task does
      */
     public void testAbnormalInvokeAllCollectionSingleton() {
         ForkJoinTask a = new CheckedRecursiveAction() {

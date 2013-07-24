@@ -583,7 +583,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             this.thread = getThreadFactory().newThread(this);
         }
 
-        /** Delegates main run loop to outer runWorker  */
+        /** Delegates main run loop to outer runWorker. */
         public void run() {
             runWorker(this);
         }

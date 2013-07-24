@@ -29,7 +29,7 @@ import java.security.PrivilegedActionException;
  *   private static AtomicReferenceFieldUpdater<Node, Node> rightUpdater =
  *     AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "right");
  *
- *   Node getLeft() { return left;  }
+ *   Node getLeft() { return left; }
  *   boolean compareAndSetLeft(Node expect, Node update) {
  *     return leftUpdater.compareAndSet(this, expect, update);
  *   }

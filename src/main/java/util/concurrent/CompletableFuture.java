@@ -43,13 +43,15 @@ import java.util.concurrent.locks.LockSupport;
  * <li>Actions supplied for dependent completions of
  * <em>non-async</em> methods may be performed by the thread that
  * completes the current CompletableFuture, or by any other caller of
- * these methods.</li>
+ * a completion method.</li>
  *
  * <li>All <em>async</em> methods without an explicit Executor
- * argument are performed using the {@link
- * ForkJoinPool#commonPool()}. To simplify monitoring, debugging, and
- * tracking, all generated asynchronous tasks are instances of the
- * marker interface {@link AsynchronousCompletionTask}. </li>
+ * argument are performed using the {@link ForkJoinPool#commonPool()}
+ * (unless it does not support a parallelism level of at least two, in
+ * which case, a new Thread is used). To simplify monitoring,
+ * debugging, and tracking, all generated asynchronous tasks are
+ * instances of the marker interface {@link
+ * AsynchronousCompletionTask}. </li>
  *
  * <li>All CompletionStage methods are implemented independently of
  * other public methods, so the behavior of one method is not impacted
@@ -396,6 +398,19 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         public final void run() { exec(); }
     }
 
+    /**
+     * Starts the given async task using the given executor, unless
+     * the executor is ForkJoinPool.commonPool and it has been
+     * disabled, in which case starts a new thread.
+     */
+    static void execAsync(Executor e, Async r) {
+        if (e == ForkJoinPool.commonPool() &&
+            ForkJoinPool.getCommonPoolParallelism() <= 1)
+            new Thread(r).start();
+        else
+            e.execute(r);
+    }
+
     static final class AsyncRun extends Async {
         final Runnable fn;
         final CompletableFuture<Void> dst;
@@ -666,7 +681,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncApply<T,U>(t, fn, dst));
+                            execAsync(e, new AsyncApply<T,U>(t, fn, dst));
                         else
                             u = fn.apply(t);
                     } catch (Throwable rex) {
@@ -715,7 +730,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncAccept<T>(t, fn, dst));
+                            execAsync(e, new AsyncAccept<T>(t, fn, dst));
                         else
                             fn.accept(t);
                     } catch (Throwable rex) {
@@ -759,7 +774,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncRun(fn, dst));
+                            execAsync(e, new AsyncRun(fn, dst));
                         else
                             fn.run();
                     } catch (Throwable rex) {
@@ -825,7 +840,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncCombine<T,U,V>(t, u, fn, dst));
+                            execAsync(e, new AsyncCombine<T,U,V>(t, u, fn, dst));
                         else
                             v = fn.apply(t, u);
                     } catch (Throwable rex) {
@@ -890,7 +905,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncAcceptBoth<T,U>(t, u, fn, dst));
+                            execAsync(e, new AsyncAcceptBoth<T,U>(t, u, fn, dst));
                         else
                             fn.accept(t, u);
                     } catch (Throwable rex) {
@@ -942,7 +957,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncRun(fn, dst));
+                            execAsync(e, new AsyncRun(fn, dst));
                         else
                             fn.run();
                     } catch (Throwable rex) {
@@ -1028,7 +1043,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncApply<T,U>(t, fn, dst));
+                            execAsync(e, new AsyncApply<T,U>(t, fn, dst));
                         else
                             u = fn.apply(t);
                     } catch (Throwable rex) {
@@ -1081,7 +1096,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncAccept<T>(t, fn, dst));
+                            execAsync(e, new AsyncAccept<T>(t, fn, dst));
                         else
                             fn.accept(t);
                     } catch (Throwable rex) {
@@ -1129,7 +1144,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (ex == null) {
                     try {
                         if (e != null)
-                            e.execute(new AsyncRun(fn, dst));
+                            execAsync(e, new AsyncRun(fn, dst));
                         else
                             fn.run();
                     } catch (Throwable rex) {
@@ -1247,7 +1262,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 Throwable dx = null;
                 try {
                     if (e != null)
-                        e.execute(new AsyncWhenComplete<T>(t, ex, fn, dst));
+                        execAsync(e, new AsyncWhenComplete<T>(t, ex, fn, dst));
                     else
                         fn.accept(t, ex);
                 } catch (Throwable rex) {
@@ -1352,7 +1367,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 Throwable dx = null;
                 try {
                     if (e != null)
-                        e.execute(new AsyncCombine<T,Throwable,U>(t, ex, fn, dst));
+                        execAsync(e, new AsyncCombine<T,Throwable,U>(t, ex, fn, dst));
                     else
                         u = fn.apply(t, ex);
                 } catch (Throwable rex) {
@@ -1401,7 +1416,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 boolean complete = false;
                 if (ex == null) {
                     if ((e = executor) != null)
-                        e.execute(new AsyncCompose<T,U>(t, fn, dst));
+                        execAsync(e, new AsyncCompose<T,U>(t, fn, dst));
                     else {
                         try {
                             CompletionStage<U> cs = fn.apply(t);
@@ -1479,7 +1494,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncApply<T,U>(t, fn, dst));
+                        execAsync(e, new AsyncApply<T,U>(t, fn, dst));
                     else
                         u = fn.apply(t);
                 } catch (Throwable rex) {
@@ -1522,7 +1537,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncAccept<T>(t, fn, dst));
+                        execAsync(e, new AsyncAccept<T>(t, fn, dst));
                     else
                         fn.accept(t);
                 } catch (Throwable rex) {
@@ -1560,7 +1575,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncRun(action, dst));
+                        execAsync(e, new AsyncRun(action, dst));
                     else
                         action.run();
                 } catch (Throwable rex) {
@@ -1627,7 +1642,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncCombine<T,U,V>(t, u, fn, dst));
+                        execAsync(e, new AsyncCombine<T,U,V>(t, u, fn, dst));
                     else
                         v = fn.apply(t, u);
                 } catch (Throwable rex) {
@@ -1694,7 +1709,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncAcceptBoth<T,U>(t, u, fn, dst));
+                        execAsync(e, new AsyncAcceptBoth<T,U>(t, u, fn, dst));
                     else
                         fn.accept(t, u);
                 } catch (Throwable rex) {
@@ -1747,7 +1762,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncRun(action, dst));
+                        execAsync(e, new AsyncRun(action, dst));
                     else
                         action.run();
                 } catch (Throwable rex) {
@@ -1799,7 +1814,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncApply<T,U>(t, fn, dst));
+                        execAsync(e, new AsyncApply<T,U>(t, fn, dst));
                     else
                         u = fn.apply(t);
                 } catch (Throwable rex) {
@@ -1850,7 +1865,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncAccept<T>(t, fn, dst));
+                        execAsync(e, new AsyncAccept<T>(t, fn, dst));
                     else
                         fn.accept(t);
                 } catch (Throwable rex) {
@@ -1896,7 +1911,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (ex == null) {
                 try {
                     if (e != null)
-                        e.execute(new AsyncRun(action, dst));
+                        execAsync(e, new AsyncRun(action, dst));
                     else
                         action.run();
                 } catch (Throwable rex) {
@@ -1943,7 +1958,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (e != null) {
                     if (dst == null)
                         dst = new CompletableFuture<U>();
-                    e.execute(new AsyncCompose<T,U>(t, fn, dst));
+                    execAsync(e, new AsyncCompose<T,U>(t, fn, dst));
                 }
                 else {
                     try {
@@ -1997,7 +2012,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             Throwable dx = null;
             try {
                 if (e != null)
-                    e.execute(new AsyncWhenComplete<T>(t, ex, fn, dst));
+                    execAsync(e, new AsyncWhenComplete<T>(t, ex, fn, dst));
                 else
                     fn.accept(t, ex);
             } catch (Throwable rex) {
@@ -2042,7 +2057,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             Throwable dx = null;
             try {
                 if (e != null)
-                    e.execute(new AsyncCombine<T,Throwable,U>(t, ex, fn, dst));
+                    execAsync(e, new AsyncCombine<T,Throwable,U>(t, ex, fn, dst));
                 else {
                     u = fn.apply(t, ex);
                     dx = null;
@@ -2080,8 +2095,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
         if (supplier == null) throw new NullPointerException();
         CompletableFuture<U> f = new CompletableFuture<U>();
-        ForkJoinPool.commonPool().
-            execute((ForkJoinTask<?>)new AsyncSupply<U>(supplier, f));
+        execAsync(ForkJoinPool.commonPool(), new AsyncSupply<U>(supplier, f));
         return f;
     }
 
@@ -2101,7 +2115,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         if (executor == null || supplier == null)
             throw new NullPointerException();
         CompletableFuture<U> f = new CompletableFuture<U>();
-        executor.execute(new AsyncSupply<U>(supplier, f));
+        execAsync(executor, new AsyncSupply<U>(supplier, f));
         return f;
     }
 
@@ -2117,8 +2131,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     public static CompletableFuture<Void> runAsync(Runnable runnable) {
         if (runnable == null) throw new NullPointerException();
         CompletableFuture<Void> f = new CompletableFuture<Void>();
-        ForkJoinPool.commonPool().
-            execute((ForkJoinTask<?>)new AsyncRun(runnable, f));
+        execAsync(ForkJoinPool.commonPool(), new AsyncRun(runnable, f));
         return f;
     }
 
@@ -2137,7 +2150,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         if (executor == null || runnable == null)
             throw new NullPointerException();
         CompletableFuture<Void> f = new CompletableFuture<Void>();
-        executor.execute(new AsyncRun(runnable, f));
+        execAsync(executor, new AsyncRun(runnable, f));
         return f;
     }
 

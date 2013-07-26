@@ -108,7 +108,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
     static final class FibTask extends RecursiveTask<Integer> {
         final int number;
         FibTask(int n) { number = n; }
-        public Integer compute() {
+        protected Integer compute() {
             int n = number;
             if (n <= 1)
                 return n;
@@ -136,7 +136,7 @@ public class ForkJoinPoolTest extends JSR166TestCase {
             this.locker = locker;
             this.lock = lock;
         }
-        public Integer compute() {
+        protected Integer compute() {
             int n;
             LockingFibTask f1 = null;
             LockingFibTask f2 = null;

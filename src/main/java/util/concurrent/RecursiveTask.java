@@ -15,7 +15,7 @@ package java.util.concurrent;
  * class Fibonacci extends RecursiveTask<Integer> {
  *   final int n;
  *   Fibonacci(int n) { this.n = n; }
- *   Integer compute() {
+ *   protected Integer compute() {
  *     if (n <= 1)
  *       return n;
  *     Fibonacci f1 = new Fibonacci(n - 1);

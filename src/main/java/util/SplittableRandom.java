@@ -129,7 +129,7 @@ public class SplittableRandom {
      * calls to nextSeed(): Each instance carries the state of this
      * generator as nextSplit. Gammas are treated as 57bit values,
      * advancing by adding GAMMA_GAMMA mod GAMMA_PRIME, and bit-mixed
-     * with a 57-bit version of mix, using the "Mix01" multiplicative
+     * with a 57-bit version of mix, using the "Mix13" multiplicative
      * constants for MurmurHash3 described by David Stafford
      * (http://zimbry.blogspot.com/2011/09/better-bit-mixing-improving-on.html).
      * The value of GAMMA_GAMMA is arbitrary (except must be at least
@@ -262,13 +262,11 @@ public class SplittableRandom {
      * above for explanation.
      */
     private static long mix57(long z) {
-        z ^= (z >>> 33);
-        z *= 0x7fb5d329728ea185L;
+        z = (z ^ (z >>> 30)) * 0xbf58476d1ce4e5b9L;
         z &= 0x01FFFFFFFFFFFFFFL;
-        z ^= (z >>> 33);
-        z *= 0x81dadef4bc2dd44dL;
+        z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL;
         z &= 0x01FFFFFFFFFFFFFFL;
-        z ^= (z >>> 33);
+        z ^= (z >>> 31);
         return z;
     }
 

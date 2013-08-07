@@ -200,6 +200,20 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Creates a {@code PriorityBlockingQueue} with the default
+     * initial capacity that orders its elements according to the
+     * specified comparator.
+     *
+     * @param  comparator the comparator that will be used to order this
+     *         priority queue.  If {@code null}, the {@linkplain Comparable
+     *         natural ordering} of the elements will be used.
+     * @since 1.8
+     */
+    public PriorityBlockingQueue(Comparator<? super E> comparator) {
+        this(DEFAULT_INITIAL_CAPACITY, comparator);
+    }
+
+    /**
      * Creates a {@code PriorityBlockingQueue} containing the elements
      * in the specified collection.  If the specified collection is a
      * {@link SortedSet} or a {@link PriorityQueue}, this

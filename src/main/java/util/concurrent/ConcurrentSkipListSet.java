@@ -457,7 +457,7 @@ public class ConcurrentSkipListSet<E>
      *
      * <p>The {@code Spliterator} reports {@link Spliterator#CONCURRENT},
      * {@link Spliterator#NONNULL}, {@link Spliterator#DISTINCT},
-     * {@link Spliterator#SORTED}, and {@link Spliterator#ORDERED} with an
+     * {@link Spliterator#SORTED} and {@link Spliterator#ORDERED}, with an
      * encounter order that is ascending order.  Overriding implementations
      * should document the reporting of additional characteristic values.
      *

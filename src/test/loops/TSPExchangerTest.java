@@ -362,7 +362,7 @@ public class TSPExchangerTest {
     }
 
     /**
-     * A Subpop maintains a set of chromosomes..
+     * A Subpop maintains a set of chromosomes.
      */
     static final class Subpop {
         /** The chromosomes, kept in sorted order */

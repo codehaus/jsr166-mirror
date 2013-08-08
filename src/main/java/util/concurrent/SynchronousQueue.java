@@ -1052,6 +1052,13 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         public void remove() { throw new IllegalStateException(); }
     }
 
+    /**
+     * Returns an empty spliterator in which calls to
+     * {@link java.util.Spliterator#trySplit()} always return {@code null}.
+     *
+     * @return an empty spliterator
+     * @since 1.8
+     */
     public Spliterator<E> spliterator() {
         return Spliterators.emptySpliterator();
     }

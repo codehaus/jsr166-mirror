@@ -6,6 +6,7 @@
 
 import junit.framework.*;
 import java.util.*;
+import static java.util.Spliterator.*;
 import java.util.function.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.ConcurrentHashMap;
@@ -299,6 +300,12 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertTrue(map.get(seven) == one);
     }
 
+    void checkSpliteratorCharacteristics(Spliterator<?> sp,
+                                         int requiredCharacteristics) {
+        assertEquals(requiredCharacteristics,
+                     requiredCharacteristics & sp.characteristics());
+    }
+    
     /**
      * KeySetView.spliterator returns spliterator over the elements in this set
      */
@@ -307,6 +314,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         ConcurrentHashMap map = map5();
         Set set = map.keySet();
         Spliterator<Integer> sp = set.spliterator();
+        checkSpliteratorCharacteristics(sp, CONCURRENT | DISTINCT | NONNULL);
         assertEquals(sp.estimateSize(), map.size());
         Spliterator<Integer> sp2 = sp.trySplit();
         sp.forEachRemaining((Integer x) -> adder.add(x.longValue()));

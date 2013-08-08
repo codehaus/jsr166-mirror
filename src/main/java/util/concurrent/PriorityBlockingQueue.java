@@ -985,6 +985,18 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns a {@link Spliterator} over the elements in this queue.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#SIZED} and
+     * {@link Spliterator#NONNULL}.
+     *
+     * @implNote
+     * The {@code Spliterator} additionally reports {@link Spliterator#SUBSIZED}.
+     *
+     * @return a {@code Spliterator} over the elements in this queue
+     * @since 1.8
+     */
     public Spliterator<E> spliterator() {
         return new PBQSpliterator<E>(this, null, 0, -1);
     }

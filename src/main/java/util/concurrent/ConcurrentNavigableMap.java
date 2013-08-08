@@ -91,10 +91,10 @@ public interface ConcurrentNavigableMap<K,V>
      * operations.  It does not support the {@code add} or {@code addAll}
      * operations.
      *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
+     * <p>The view's iterators and spliterators are "weakly consistent":
+     * they will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}; are guaranteed to traverse elements
+     * as they existed upon construction; and may (but are not guaranteed to)
      * reflect any modifications subsequent to construction.
      *
      * @return a navigable set view of the keys in this map
@@ -112,10 +112,10 @@ public interface ConcurrentNavigableMap<K,V>
      * operations.  It does not support the {@code add} or {@code addAll}
      * operations.
      *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
+     * <p>The view's iterators and spliterators are "weakly consistent":
+     * they will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}; are guaranteed to traverse elements
+     * as they existed upon construction; and may (but are not guaranteed to)
      * reflect any modifications subsequent to construction.
      *
      * <p>This method is equivalent to method {@code navigableKeySet}.
@@ -135,10 +135,10 @@ public interface ConcurrentNavigableMap<K,V>
      * operations.  It does not support the {@code add} or {@code addAll}
      * operations.
      *
-     * <p>The view's {@code iterator} is a "weakly consistent" iterator
-     * that will never throw {@link ConcurrentModificationException},
-     * and guarantees to traverse elements as they existed upon
-     * construction of the iterator, and may (but is not guaranteed to)
+     * <p>The view's iterators and spliterators are "weakly consistent":
+     * they will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException}; are guaranteed to traverse elements
+     * as they existed upon construction; and may (but are not guaranteed to)
      * reflect any modifications subsequent to construction.
      *
      * @return a reverse order navigable set view of the keys in this map

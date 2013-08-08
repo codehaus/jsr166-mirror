@@ -1243,6 +1243,19 @@ public class LinkedBlockingDeque<E>
         }
     }
 
+    /**
+     * Returns a {@link Spliterator} over the elements in this deque.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#CONCURRENT},
+     * {@link Spliterator#ORDERED}, and {@link Spliterator#NONNULL}.
+     *
+     * @implNote
+     * The {@code Spliterator} implements {@code trySplit} to permit limited
+     * parallelism.
+     *
+     * @return a {@code Spliterator} over the elements in this deque
+     * @since 1.8
+     */
     public Spliterator<E> spliterator() {
         return new LBDSpliterator<E>(this);
     }

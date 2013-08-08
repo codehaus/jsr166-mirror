@@ -1089,6 +1089,21 @@ public class CopyOnWriteArrayList<E>
         return new COWIterator<E>(elements, index);
     }
 
+    /**
+     * Returns a {@link Spliterator} over the elements in this list.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#IMMUTABLE},
+     * {@link Spliterator#ORDERED}, {@link Spliterator#SIZED}, and
+     * {@link Spliterator#SUBSIZED}.
+     *
+     * <p>The spliterator provides a snapshot of the state of the list
+     * when the spliterator was constructed. No synchronization is needed while
+     * operating on the spliterator. The spliterator does <em>NOT</em> support
+     * the {@code remove}, {@code set} or {@code add} methods.
+     *
+     * @return a {@code Spliterator} over the elements in this list
+     * @since 1.8
+     */
     public Spliterator<E> spliterator() {
         return Spliterators.spliterator
             (getArray(), Spliterator.IMMUTABLE | Spliterator.ORDERED);

@@ -115,7 +115,8 @@ import java.util.concurrent.TimeUnit;
  * Upon any error in establishing these settings, default parameters
  * are used. It is possible to disable or limit the use of threads in
  * the common pool by setting the parallelism property to zero, and/or
- * using a factory that may return {@code null}.
+ * using a factory that may return {@code null}. However doing so may
+ * cause unjoined tasks to never be executed.
  *
  * <p><b>Implementation notes</b>: This implementation restricts the
  * maximum number of running threads to 32767. Attempts to create
@@ -1125,7 +1126,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Increment for seed generators. See class ThreadLocal for
      * explanation.
      */
-    private static final int SEED_INCREMENT = 0x61c88647;
+    private static final int SEED_INCREMENT = 0x9e3779b9;
 
     /*
      * Bits and masks for control variables
@@ -3274,8 +3275,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         if (parallelism < 0 && // default 1 less than #cores
-            (parallelism = Runtime.getRuntime().availableProcessors() - 1) < 0)
-            parallelism = 0;
+            (parallelism = Runtime.getRuntime().availableProcessors() - 1) <= 0)
+            parallelism = 1;
         if (parallelism > MAX_CAP)
             parallelism = MAX_CAP;
         return new ForkJoinPool(parallelism, factory, handler, LIFO_QUEUE,

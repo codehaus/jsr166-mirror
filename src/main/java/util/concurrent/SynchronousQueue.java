@@ -1037,21 +1037,17 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *
      * @return an empty iterator
      */
-    @SuppressWarnings("unchecked")
     public Iterator<E> iterator() {
-        return (Iterator<E>) EmptyIterator.EMPTY_ITERATOR;
+        return Collections.emptyIterator();
     }
 
-    // Replicated from a previous version of Collections
-    private static class EmptyIterator<E> implements Iterator<E> {
-        static final EmptyIterator<Object> EMPTY_ITERATOR
-            = new EmptyIterator<Object>();
-
-        public boolean hasNext() { return false; }
-        public E next() { throw new NoSuchElementException(); }
-        public void remove() { throw new IllegalStateException(); }
-    }
-
+    /**
+     * Returns an empty spliterator in which calls to
+     * {@link java.util.Spliterator#trySplit()} always return {@code null}.
+     *
+     * @return an empty spliterator
+     * @since 1.8
+     */
     public Spliterator<E> spliterator() {
         return Spliterators.emptySpliterator();
     }

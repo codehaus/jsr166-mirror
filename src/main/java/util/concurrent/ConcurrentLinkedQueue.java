@@ -861,6 +861,20 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns a {@link Spliterator} over the elements in this queue.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#CONCURRENT},
+     * {@link Spliterator#ORDERED}, and {@link Spliterator#NONNULL}.
+     *
+     * @implNote
+     * The {@code Spliterator} implements {@code trySplit} to permit limited
+     * parallelism.
+     *
+     * @return a {@code Spliterator} over the elements in this queue
+     * @since 1.8
+     */
+    @Override
     public Spliterator<E> spliterator() {
         return new CLQSpliterator<E>(this);
     }

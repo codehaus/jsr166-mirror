@@ -1037,19 +1037,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      *
      * @return an empty iterator
      */
-    @SuppressWarnings("unchecked")
     public Iterator<E> iterator() {
-        return (Iterator<E>) EmptyIterator.EMPTY_ITERATOR;
-    }
-
-    // Replicated from a previous version of Collections
-    private static class EmptyIterator<E> implements Iterator<E> {
-        static final EmptyIterator<Object> EMPTY_ITERATOR
-            = new EmptyIterator<Object>();
-
-        public boolean hasNext() { return false; }
-        public E next() { throw new NoSuchElementException(); }
-        public void remove() { throw new IllegalStateException(); }
+        return Collections.emptyIterator();
     }
 
     /**

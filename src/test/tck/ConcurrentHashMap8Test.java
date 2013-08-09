@@ -305,7 +305,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertEquals(requiredCharacteristics,
                      requiredCharacteristics & sp.characteristics());
     }
-    
+
     /**
      * KeySetView.spliterator returns spliterator over the elements in this set
      */

@@ -42,13 +42,13 @@ import java.util.function.Function;
  * {@code containsKey}, {@code get}, {@code put} and
  * {@code remove} operations and their variants.  Insertion, removal,
  * update, and access operations safely execute concurrently by
- * multiple threads.  Iterators and spliterators are <i>weakly consistent</i>,
- * returning elements reflecting the state of the map at some point at or
- * since the creation of the iterator.  They do <em>not</em> throw
- * {@link java.util.ConcurrentModificationException
- * ConcurrentModificationException}, and may proceed concurrently with other
- * operations.  Ascending key ordered views and their iterators are faster
- * than descending ones.
+ * multiple threads.
+ *
+ * <p>Iterators and spliterators are
+ * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
+ *
+ * <p>Ascending key ordered views and their iterators are faster than
+ * descending ones.
  *
  * <p>All {@code Map.Entry} pairs returned by methods in this class
  * and its views represent snapshots of mappings at the time they were
@@ -1795,11 +1795,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * operations.  It does not support the {@code add} or {@code addAll}
      * operations.
      *
-     * <p>The view's iterators and spliterators are "weakly consistent":
-     * they will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}; are guaranteed to traverse elements
-     * as they existed upon construction; and may (but are not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's iterators and spliterators are
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * <p>This method is equivalent to method {@code navigableKeySet}.
      *
@@ -1831,11 +1828,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * {@code retainAll} and {@code clear} operations.  It does not
      * support the {@code add} or {@code addAll} operations.
      *
-     * <p>The view's iterators and spliterators are "weakly consistent":
-     * they will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}; are guaranteed to traverse elements
-     * as they existed upon construction; and may (but are not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's iterators and spliterators are
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      */
     public Collection<V> values() {
         Values<V> vs = values;
@@ -1859,11 +1853,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * operations.  It does not support the {@code add} or
      * {@code addAll} operations.
      *
-     * <p>The view's iterators and spliterators are "weakly consistent":
-     * they will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}; are guaranteed to traverse elements
-     * as they existed upon construction; and may (but are not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's iterators and spliterators are
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * <p>The {@code Map.Entry} elements traversed by the {@code iterator}
      * or {@code spliterator} do <em>not</em> support the {@code setValue}

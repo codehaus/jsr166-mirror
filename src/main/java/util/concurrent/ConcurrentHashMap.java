@@ -1170,11 +1170,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * operations.  It does not support the {@code add} or
      * {@code addAll} operations.
      *
-     * <p>The view's iterators and spliterators are "weakly consistent":
-     * they will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}; are guaranteed to traverse elements
-     * as they existed upon construction; and may (but are not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's iterators and spliterators are
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * <p>The view's {@code spliterator} reports {@link Spliterator#CONCURRENT},
      * {@link Spliterator#DISTINCT}, and {@link Spliterator#NONNULL}.
@@ -1196,11 +1193,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * {@code retainAll}, and {@code clear} operations.  It does not
      * support the {@code add} or {@code addAll} operations.
      *
-     * <p>The view's iterators and spliterators are "weakly consistent":
-     * they will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}; are guaranteed to traverse elements
-     * as they existed upon construction; and may (but are not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's iterators and spliterators are
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * <p>The view's {@code spliterator} reports {@link Spliterator#CONCURRENT}
      * and {@link Spliterator#NONNULL}.
@@ -1221,11 +1215,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * {@code removeAll}, {@code retainAll}, and {@code clear}
      * operations.
      *
-     * <p>The view's iterators and spliterators are "weakly consistent":
-     * they will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}; are guaranteed to traverse elements
-     * as they existed upon construction; and may (but are not guaranteed to)
-     * reflect any modifications subsequent to construction.
+     * <p>The view's iterators and spliterators are
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * <p>The view's {@code spliterator} reports {@link Spliterator#CONCURRENT},
      * {@link Spliterator#DISTINCT}, and {@link Spliterator#NONNULL}.
@@ -4287,12 +4278,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         // implementations below rely on concrete classes supplying these
         // abstract methods
         /**
-         * Returns a "weakly consistent" iterator that will never throw
-         * {@link java.util.ConcurrentModificationException
-         * ConcurrentModificationException}, and guarantees to traverse
-         * elements as they existed upon construction of the iterator,
-         * and may (but is not guaranteed to) reflect any modifications
-         * subsequent to construction.
+         * Returns an iterator over the elements in this collection.
+         *
+         * <p>The returned iterator is
+         * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
+         *
+         * @return an iterator over the elements in this collection
          */
         public abstract Iterator<E> iterator();
         public abstract boolean contains(Object o);

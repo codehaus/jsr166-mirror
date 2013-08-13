@@ -197,7 +197,11 @@ public class StampedLock implements java.io.Serializable {
      * incoming reader arrives while read lock is held but there is a
      * queued writer, this incoming reader is queued.  (This rule is
      * responsible for some of the complexity of method acquireRead,
-     * but without it, the lock becomes highly unfair.)
+     * but without it, the lock becomes highly unfair.) Method release
+     * does not (and sometimes cannot) itself wake up cowaiters. This
+     * is done by the primary thread, but helped by any other threads
+     * with nothing better to do in methods acquireRead and
+     * acquireWrite.
      *
      * These rules apply to threads actually queued. All tryLock forms
      * opportunistically try to acquire locks regardless of preference
@@ -983,17 +987,8 @@ public class StampedLock implements java.io.Serializable {
                     if (t.status <= 0)
                         q = t;
             }
-            if (q != null) {
-                for (WNode r = q;;) {  // release co-waiters too
-                    if ((w = r.thread) != null) {
-                        r.thread = null;
-                        U.unpark(w);
-                    }
-                    if ((r = q.cowait) == null)
-                        break;
-                    U.compareAndSwapObject(q, WCOWAIT, r, r.cowait);
-                }
-            }
+            if (q != null && (w = q.thread) != null)
+                U.unpark(w);
         }
     }
 
@@ -1024,61 +1019,67 @@ public class StampedLock implements java.io.Serializable {
                     wtail = h;
             }
             else if (spins < 0)
-                spins = (p == whead) ? SPINS : 0;
+                spins = (whead == p && p.cowait == null) ? SPINS : 0;
             else if (node == null)
                 node = new WNode(WMODE, p);
             else if (node.prev != p)
                 node.prev = p;
             else if (U.compareAndSwapObject(this, WTAIL, p, node)) {
                 p.next = node;
-                break;
-            }
-        }
-
-        for (int spins = SPINS;;) {
-            WNode np, pp; int ps; long s, ns; Thread w;
-            while ((np = node.prev) != p && np != null)
-                (p = np).next = node;   // stale
-            if (whead == p) {
-                for (int k = spins;;) { // spin at head
-                    if (((s = state) & ABITS) == 0L) {
-                        if (U.compareAndSwapLong(this, STATE, s, ns = s+WBIT)) {
-                            whead = node;
-                            node.prev = null;
-                            return ns;
+                spins = SPINS;
+                for (;;) {
+                    WNode h, c, np, pp; int ps; Thread w;
+                    while ((np = node.prev) != p && np != null)
+                        (p = np).next = node;   // stale
+                    while ((h = whead) != p && h != null &&
+                           (c = h.cowait) != null) {
+                        if (U.compareAndSwapObject(h, WCOWAIT, c, c.cowait) &&
+                            (w = c.thread) != null)
+                            U.unpark(w);
+                    }
+                    if (h == p) {
+                        for (int k = spins;;) { // spin at head
+                            if (((s = state) & ABITS) == 0L) {
+                                if (U.compareAndSwapLong(this, STATE, s,
+                                                         ns = s + WBIT)) {
+                                    whead = node;
+                                    node.prev = null;
+                                    return ns;
+                                }
+                            }
+                            else if (LockSupport.nextSecondarySeed() >= 0 &&
+                                     --k <= 0)
+                                break;
+                        }
+                        if (spins < MAX_HEAD_SPINS)
+                            spins <<= 1;
+                    }
+                    if ((ps = p.status) == 0)
+                        U.compareAndSwapInt(p, WSTATUS, 0, WAITING);
+                    else if (ps == CANCELLED) {
+                        if ((pp = p.prev) != null) {
+                            node.prev = pp;
+                            pp.next = node;
                         }
                     }
-                    else if (LockSupport.nextSecondarySeed() >= 0 &&
-                             --k <= 0)
-                        break;
+                    else if (whead == h && node.prev == p) {
+                        long time; // 0 argument to park means no timeout
+                        if (deadline == 0L)
+                            time = 0L;
+                        else if ((time = deadline - System.nanoTime()) <= 0L)
+                            return cancelWaiter(node, node, false);
+                        Thread wt = Thread.currentThread();
+                        U.putObject(wt, PARKBLOCKER, this);
+                        node.thread = wt;
+                        if (p.status == WAITING &&
+                            (p != h || (state & ABITS) != 0L))
+                            U.park(false, time);  // emulate LockSupport.park
+                        node.thread = null;
+                        U.putObject(wt, PARKBLOCKER, null);
+                        if (interruptible && Thread.interrupted())
+                            return cancelWaiter(node, node, true);
+                    }
                 }
-                if (spins < MAX_HEAD_SPINS)
-                    spins <<= 1;
-            }
-            if ((ps = p.status) == 0)
-                U.compareAndSwapInt(p, WSTATUS, 0, WAITING);
-            else if (ps == CANCELLED) {
-                if ((pp = p.prev) != null) {
-                    node.prev = pp;
-                    pp.next = node;
-                }
-            }
-            else {
-                long time; // 0 argument to park means no timeout
-                if (deadline == 0L)
-                    time = 0L;
-                else if ((time = deadline - System.nanoTime()) <= 0L)
-                    return cancelWaiter(node, node, false);
-                Thread wt = Thread.currentThread();
-                U.putObject(wt, PARKBLOCKER, this); // emulate LockSupport.park
-                node.thread = wt;
-                if (node.prev == p && p.status == WAITING && // recheck
-                    (p != whead || (state & ABITS) != 0L))
-                    U.park(false, time);
-                node.thread = null;
-                U.putObject(wt, PARKBLOCKER, null);
-                if (interruptible && Thread.interrupted())
-                    return cancelWaiter(node, node, true);
             }
         }
     }
@@ -1093,29 +1094,17 @@ public class StampedLock implements java.io.Serializable {
      * @return next state, or INTERRUPTED
      */
     private long acquireRead(boolean interruptible, long deadline) {
-        WNode node = null, group = null, p;
+        WNode node = null, p;
         for (int spins = -1;;) {
             for (;;) {
-                long s, m, ns; WNode h, q; Thread w; // anti-barging guard
-                if (group == null && (h = whead) != null &&
-                    (q = h.next) != null && q.mode != RMODE)
+                long s, m, ns; WNode h, c, q; Thread w;
+                if ((h = whead) != null && (q = h.next) != null &&
+                    q.mode != RMODE)
                     break;
                 if ((m = (s = state) & ABITS) < RFULL ?
                     U.compareAndSwapLong(this, STATE, s, ns = s + RUNIT) :
-                    (m < WBIT && (ns = tryIncReaderOverflow(s)) != 0L)) {
-                    if (group != null) {  // help release others
-                        for (WNode r = group;;) {
-                            if ((w = r.thread) != null) {
-                                r.thread = null;
-                                U.unpark(w);
-                            }
-                            if ((r = group.cowait) == null)
-                                break;
-                            U.compareAndSwapObject(group, WCOWAIT, r, r.cowait);
-                        }
-                    }
+                    (m < WBIT && (ns = tryIncReaderOverflow(s)) != 0L))
                     return ns;
-                }
                 if (m >= WBIT)
                     break;
             }
@@ -1123,108 +1112,131 @@ public class StampedLock implements java.io.Serializable {
                 if (LockSupport.nextSecondarySeed() >= 0)
                     --spins;
             }
-            else if ((p = wtail) == null) {
+            else if ((p = wtail) == null) { // initialize queue
                 WNode h = new WNode(WMODE, null);
                 if (U.compareAndSwapObject(this, WHEAD, null, h))
                     wtail = h;
             }
-            else if (spins < 0)
-                spins = (p == whead) ? SPINS : 0;
+            else if (spins < 0) {
+                WNode h, c; Thread w;
+                if ((h = whead) != null && (c = h.cowait) != null) {
+                    if (U.compareAndSwapObject(h, WCOWAIT, c, c.cowait) &&
+                        (w = c.thread) != null)
+                        U.unpark(w);
+                }
+                else
+                    spins = (h == p) ? SPINS : 0;
+            }
             else if (node == null)
-                node = new WNode(WMODE, p);
-            else if (node.prev != p)
-                node.prev = p;
-            else if (p.mode == RMODE && p != whead) {
-                WNode pp = p.prev;  // become co-waiter with group p
-                if (pp != null && p == wtail &&
-                    U.compareAndSwapObject(p, WCOWAIT,
+                node = new WNode(RMODE, p);
+            else if (p.mode == RMODE && whead != p) {
+                if (U.compareAndSwapObject(p, WCOWAIT,
                                            node.cowait = p.cowait, node)) {
-                    node.thread = Thread.currentThread();
-                    for (long time;;) {
-                        if (deadline == 0L)
-                            time = 0L;
-                        else if ((time = deadline - System.nanoTime()) <= 0L)
-                            return cancelWaiter(node, p, false);
-                        if (node.thread == null)
-                            break;
-                        if (p.prev != pp || p.status == CANCELLED ||
-                            p == whead || p.prev != pp) {
-                            node.thread = null;
+                    for (;;) {
+                        WNode h, c, pp; long m, s, ns, time; Thread w;
+                        if ((h = whead) != null && (c = h.cowait) != null) {
+                            if (U.compareAndSwapObject(h, WCOWAIT,
+                                                       c, c.cowait) &&
+                                (w = c.thread) != null)
+                                U.unpark(w);
+                        }
+                        else if (((pp = p.prev) == h || h == p || pp == null) &&
+                                 (m = (s = state) & ABITS) != WBIT) {
+                            if (m < RFULL ?
+                                U.compareAndSwapLong(this, STATE, s,
+                                                     ns = s + RUNIT):
+                                (ns = tryIncReaderOverflow(s)) != 0L)
+                                return ns;
+                        }
+                        else if (p.status == CANCELLED) {
+                            node = null; // throw away
                             break;
                         }
-                        Thread wt = Thread.currentThread();
-                        U.putObject(wt, PARKBLOCKER, this);
-                        if (node.thread == null) // must recheck
-                            break;
-                        U.park(false, time);
-                        U.putObject(wt, PARKBLOCKER, null);
-                        if (interruptible && Thread.interrupted())
-                            return cancelWaiter(node, p, true);
-                    }
-                    group = p;
-                }
-                node = null; // throw away
-            }
-            else if (U.compareAndSwapObject(this, WTAIL, p, node)) {
-                p.next = node;
-                break;
-            }
-        }
-
-        for (int spins = SPINS;;) {
-            WNode np, pp, r; int ps; long m, s, ns; Thread w;
-            while ((np = node.prev) != p && np != null)
-                (p = np).next = node;
-            if (whead == p) {
-                for (int k = spins;;) {
-                    if ((m = (s = state) & ABITS) != WBIT) {
-                        if (m < RFULL ?
-                            U.compareAndSwapLong(this, STATE, s, ns = s + RUNIT):
-                            (ns = tryIncReaderOverflow(s)) != 0L) {
-                            whead = node;
-                            node.prev = null;
-                            while ((r = node.cowait) != null) {
-                                if (U.compareAndSwapObject(node, WCOWAIT,
-                                                           r, r.cowait) &&
-                                    (w = r.thread) != null) {
-                                    r.thread = null;
-                                    U.unpark(w); // release co-waiter
-                                }
+                        else if (whead == h && pp != null && p.prev == pp) {
+                            if (deadline == 0L)
+                                time = 0L;
+                            else if ((time = deadline - System.nanoTime()) <= 0L)
+                                return cancelWaiter(node, p, false);
+                            if (pp.status == WAITING) {
+                                Thread wt = Thread.currentThread();
+                                U.putObject(wt, PARKBLOCKER, this);
+                                node.thread = wt;
+                                if (pp.status == WAITING &&
+                                    (h != pp || (state & ABITS) == WBIT))
+                                    U.park(false, time);
+                                node.thread = null;
+                                U.putObject(wt, PARKBLOCKER, null);
                             }
-                            return ns;
+                            else if (h != pp || (state & ABITS) == WBIT)
+                                Thread.yield(); // cannot block yet
+                            if (interruptible && Thread.interrupted())
+                                return cancelWaiter(node, p, true);
                         }
                     }
-                    else if (LockSupport.nextSecondarySeed() >= 0 &&
-                             --k <= 0)
-                        break;
-                }
-                if (spins < MAX_HEAD_SPINS)
-                    spins <<= 1;
-            }
-            if ((ps = p.status) == 0)
-                U.compareAndSwapInt(p, WSTATUS, 0, WAITING);
-            else if (ps == CANCELLED) {
-                if ((pp = p.prev) != null) {
-                    node.prev = pp;
-                    pp.next = node;
                 }
             }
             else {
-                long time;
-                if (deadline == 0L)
-                    time = 0L;
-                else if ((time = deadline - System.nanoTime()) <= 0L)
-                    return cancelWaiter(node, node, false);
-                Thread wt = Thread.currentThread();
-                U.putObject(wt, PARKBLOCKER, this);
-                node.thread = wt;
-                if (node.prev == p && p.status == WAITING &&
-                    (p != whead || (state & ABITS) != WBIT))
-                    U.park(false, time);
-                node.thread = null;
-                U.putObject(wt, PARKBLOCKER, null);
-                if (interruptible && Thread.interrupted())
-                    return cancelWaiter(node, node, true);
+                if (node.prev != p)
+                    node.prev = p;
+                else if (U.compareAndSwapObject(this, WTAIL, p, node)) {
+                    p.next = node;
+                    spins = SPINS;
+                    for (;;) {
+                        WNode h, np, pp, r; int ps; long m, s, ns; Thread w;
+                        while ((np = node.prev) != p && np != null)
+                            (p = np).next = node;
+                        if ((h = whead) == p) {
+                            for (int k = spins;;) {
+                                if ((m = (s = state) & ABITS) != WBIT) {
+                                    if (m < RFULL ?
+                                        U.compareAndSwapLong(this, STATE, s,
+                                                             ns = s + RUNIT):
+                                        (ns = tryIncReaderOverflow(s)) != 0L) {
+                                        whead = node;
+                                        node.prev = null;
+                                        while ((r = node.cowait) != null) {
+                                            if (U.compareAndSwapObject
+                                                (node, WCOWAIT, r, r.cowait) &&
+                                                (w = r.thread) != null)
+                                                U.unpark(w);
+                                        }
+                                        return ns;
+                                    }
+                                }
+                                else if (LockSupport.nextSecondarySeed() >= 0 &&
+                                         --k <= 0)
+                                    break;
+                            }
+                            if (spins < MAX_HEAD_SPINS)
+                                spins <<= 1;
+                        }
+                        if ((ps = p.status) == 0)
+                            U.compareAndSwapInt(p, WSTATUS, 0, WAITING);
+                        else if (ps == CANCELLED) {
+                            if ((pp = p.prev) != null) {
+                                node.prev = pp;
+                                pp.next = node;
+                            }
+                        }
+                        else if (whead == h && node.prev == p) {
+                            long time;
+                            if (deadline == 0L)
+                                time = 0L;
+                            else if ((time = deadline - System.nanoTime()) <= 0L)
+                                return cancelWaiter(node, node, false);
+                            Thread wt = Thread.currentThread();
+                            U.putObject(wt, PARKBLOCKER, this);
+                            node.thread = wt;
+                            if (p.status == WAITING &&
+                                (p != h || (state & ABITS) == WBIT))
+                                U.park(false, time);
+                            node.thread = null;
+                            U.putObject(wt, PARKBLOCKER, null);
+                            if (interruptible && Thread.interrupted())
+                                return cancelWaiter(node, node, true);
+                        }
+                    }
+                }
             }
         }
     }
@@ -1249,22 +1261,19 @@ public class StampedLock implements java.io.Serializable {
         if (node != null && group != null) {
             Thread w;
             node.status = CANCELLED;
-            node.thread = null;
             // unsplice cancelled nodes from group
             for (WNode p = group, q; (q = p.cowait) != null;) {
-                if (q.status == CANCELLED)
-                    U.compareAndSwapObject(p, WNEXT, q, q.next);
+                if (q.status == CANCELLED) {
+                    U.compareAndSwapObject(p, WCOWAIT, q, q.cowait);
+                    p = group; // restart
+                }
                 else
                     p = q;
             }
             if (group == node) {
-                WNode r; // detach and wake up uncancelled co-waiters
-                while ((r = node.cowait) != null) {
-                    if (U.compareAndSwapObject(node, WCOWAIT, r, r.cowait) &&
-                        (w = r.thread) != null) {
-                        r.thread = null;
-                        U.unpark(w);
-                    }
+                for (WNode r = group.cowait; r != null; r = r.cowait) {
+                    if ((w = r.thread) != null)
+                        U.unpark(w);       // wake up uncancelled co-waiters
                 }
                 for (WNode pred = node.prev; pred != null; ) { // unsplice
                     WNode succ, pp;        // find valid successor

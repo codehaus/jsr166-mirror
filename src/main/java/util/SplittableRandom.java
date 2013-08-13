@@ -230,11 +230,11 @@ public class SplittableRandom {
      * Returns hash of local host IP address, if available; else 0.
      */
     private static int hashedHostAddress() {
-	try {
-	    return InetAddress.getLocalHost().hashCode();
-	} catch (Exception ex) {
-	    return 0;
-	}
+        try {
+            return InetAddress.getLocalHost().hashCode();
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 
     // IllegalArgumentException messages

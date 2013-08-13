@@ -410,7 +410,7 @@ public class SplittableRandom {
      *        positive.
      * @return a pseudorandom {@code int} value between zero
      *         (inclusive) and the bound (exclusive)
-     * @throws IllegalArgumentException if the bound is less than zero
+     * @throws IllegalArgumentException if {@code bound} is not positive
      */
     public int nextInt(int bound) {
         if (bound <= 0)
@@ -463,7 +463,7 @@ public class SplittableRandom {
      *        positive.
      * @return a pseudorandom {@code long} value between zero
      *         (inclusive) and the bound (exclusive)
-     * @throws IllegalArgumentException if {@code bound} is less than zero
+     * @throws IllegalArgumentException if {@code bound} is not positive
      */
     public long nextLong(long bound) {
         if (bound <= 0)
@@ -518,7 +518,7 @@ public class SplittableRandom {
      *        positive.
      * @return a pseudorandom {@code double} value between zero
      *         (inclusive) and the bound (exclusive)
-     * @throws IllegalArgumentException if {@code bound} is less than zero
+     * @throws IllegalArgumentException if {@code bound} is not positive
      */
     public double nextDouble(double bound) {
         if (!(bound > 0.0))
@@ -558,8 +558,9 @@ public class SplittableRandom {
     // maintenance purposes the small differences across forms.
 
     /**
-     * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code int} values.
+     * Returns a stream producing the given {@code streamSize} number
+     * of pseudorandom {@code int} values from this generator and/or
+     * one split from it.
      *
      * @param streamSize the number of values to generate
      * @return a stream of pseudorandom {@code int} values
@@ -577,7 +578,7 @@ public class SplittableRandom {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code int}
-     * values.
+     * values from this generator and/or one split from it.
      *
      * @implNote This method is implemented to be equivalent to {@code
      * ints(Long.MAX_VALUE)}.
@@ -592,9 +593,9 @@ public class SplittableRandom {
     }
 
     /**
-     * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code int} values, each conforming to the given
-     * origin and bound.
+     * Returns a stream producing the given {@code streamSize} number
+     * of pseudorandom {@code int} values, each conforming to the
+     * given origin and bound.
      *
      * @param streamSize the number of values to generate
      * @param randomNumberOrigin the origin of each random value
@@ -641,8 +642,9 @@ public class SplittableRandom {
     }
 
     /**
-     * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code long} values.
+     * Returns a stream producing the given {@code streamSize} number
+     * of pseudorandom {@code long} values from this generator and/or
+     * one split from it.
      *
      * @param streamSize the number of values to generate
      * @return a stream of pseudorandom {@code long} values
@@ -659,8 +661,8 @@ public class SplittableRandom {
     }
 
     /**
-     * Returns an effectively unlimited stream of pseudorandom {@code long}
-     * values.
+     * Returns an effectively unlimited stream of pseudorandom {@code
+     * long} values from this generator and/or one split from it.
      *
      * @implNote This method is implemented to be equivalent to {@code
      * longs(Long.MAX_VALUE)}.

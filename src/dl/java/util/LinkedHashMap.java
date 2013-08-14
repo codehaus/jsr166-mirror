@@ -170,7 +170,7 @@ public class LinkedHashMap<K,V>
      * The changes in node classes also require using two fields
      * (head, tail) rather than a pointer to a header node to maintain
      * the doubly-linked before/after list. This class also
-     * previously used a different style of callback methods upon
+     * previsously used a different style of callback methods upon
      * access, insertion, and removal.
      */
 
@@ -456,7 +456,7 @@ public class LinkedHashMap<K,V>
      *     private static final int MAX_ENTRIES = 100;
      *
      *     protected boolean removeEldestEntry(Map.Entry eldest) {
-     *        return size() > MAX_ENTRIES;
+     *        return size() &gt; MAX_ENTRIES;
      *     }
      * </pre>
      *

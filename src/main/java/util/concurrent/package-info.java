@@ -181,7 +181,7 @@
  * collections are unshared, or are accessible only when
  * holding other locks.
  *
- * <p id="WeaklyConsistent">Most concurrent Collection implementations
+ * <p id="Weakly">Most concurrent Collection implementations
  * (including most Queues) also differ from the usual {@code java.util}
  * conventions in that their {@linkplain java.util.Iterator Iterators}
  * and {@linkplain java.util.Spliterator Spliterators} provide

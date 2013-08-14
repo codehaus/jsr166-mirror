@@ -297,7 +297,7 @@ public class ThreadLocalRandom extends Random {
      *        positive.
      * @return a pseudorandom {@code int} value between zero
      *         (inclusive) and the bound (exclusive)
-     * @throws IllegalArgumentException if the bound is less than zero
+     * @throws IllegalArgumentException if {@code bound} is not positive
      */
     public int nextInt(int bound) {
         if (bound <= 0)
@@ -349,7 +349,7 @@ public class ThreadLocalRandom extends Random {
      *        positive.
      * @return a pseudorandom {@code long} value between zero
      *         (inclusive) and the bound (exclusive)
-     * @throws IllegalArgumentException if {@code bound} is less than zero
+     * @throws IllegalArgumentException if {@code bound} is not positive
      */
     public long nextLong(long bound) {
         if (bound <= 0)
@@ -403,7 +403,7 @@ public class ThreadLocalRandom extends Random {
      *        positive.
      * @return a pseudorandom {@code double} value between zero
      *         (inclusive) and the bound (exclusive)
-     * @throws IllegalArgumentException if {@code bound} is less than zero
+     * @throws IllegalArgumentException if {@code bound} is not positive
      */
     public double nextDouble(double bound) {
         if (!(bound > 0.0))

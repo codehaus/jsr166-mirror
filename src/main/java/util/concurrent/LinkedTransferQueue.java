@@ -189,7 +189,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * of costly-to-reclaim garbage caused by the sequential "next"
      * links of nodes starting at old forgotten head nodes: As first
      * described in detail by Boehm
-     * (http://portal.acm.org/citation.cfm?doid=503272.503282) if a GC
+     * (http://portal.acm.org/citation.cfm?doid=503272.503282), if a GC
      * delays noticing that any arbitrarily old node has become
      * garbage, all newer dead nodes will also be unreclaimed.
      * (Similar issues arise in non-GC environments.)  To cope with

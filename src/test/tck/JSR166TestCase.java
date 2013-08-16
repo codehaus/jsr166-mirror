@@ -305,6 +305,7 @@ public class JSR166TestCase extends TestCase {
                 "LongAdderTest",
                 "SplittableRandomTest",
                 "StampedLockTest",
+                "ThreadLocalRandom8Test",
             };
             addNamedTestClasses(suite, java8TestClassNames);
         }

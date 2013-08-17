@@ -170,7 +170,7 @@ public class LinkedHashMap<K,V>
      * The changes in node classes also require using two fields
      * (head, tail) rather than a pointer to a header node to maintain
      * the doubly-linked before/after list. This class also
-     * previsously used a different style of callback methods upon
+     * previously used a different style of callback methods upon
      * access, insertion, and removal.
      */
 

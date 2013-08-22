@@ -6,6 +6,8 @@
 
 package java.util.concurrent;
 
+import java.security.SecureRandom;
+import java.net.InetAddress;
 import java.io.ObjectStreamField;
 import java.util.Random;
 import java.util.Spliterator;
@@ -39,6 +41,13 @@ import java.util.stream.StreamSupport;
  *
  * <p>This class also provides additional commonly used bounded random
  * generation methods.
+ *
+ * <p>Instances of {@code ThreadLocalRandom} are not cryptographically
+ * secure.  Consider instead using {@link java.security.SecureRandom}
+ * in security-sensitive applications. Additionally, instances do not
+ * use a cryptographically random seed unless the {@linkplain
+ * System#getProperty system property} {@code
+ * java.util.secureRandomSeed} is set to {@code true}.
  *
  * @since 1.7
  * @author Doug Lea
@@ -96,9 +105,29 @@ public class ThreadLocalRandom extends Random {
     /**
      * The next seed for default constructors.
      */
-    private static final AtomicLong seedGenerator =
-        new AtomicLong(mix64(System.currentTimeMillis()) ^
-                       mix64(System.nanoTime()));
+    private static final AtomicLong seeder = new AtomicLong(initialSeed());
+
+    private static long initialSeed() { // same as SplittableRandom
+        try {  // ignore exceptions in accessing/parsing properties
+            String pp = System.getProperty
+                ("java.util.secureRandomSeed");
+            if (pp != null && pp.equalsIgnoreCase("true")) {
+                byte[] seedBytes = java.security.SecureRandom.getSeed(8);
+                long s = (long)(seedBytes[0]) & 0xffL;
+                for (int i = 1; i < 8; ++i)
+                    s = (s << 8) | ((long)(seedBytes[i]) & 0xffL);
+                return s;
+            }
+        } catch (Exception ignore) {
+        }
+        int hh = 0; // hashed host address
+        try {
+            hh = InetAddress.getLocalHost().hashCode();
+        } catch (Exception ignore) {
+        }
+        return (mix64((((long)hh) << 32) ^ System.currentTimeMillis()) ^
+                mix64(System.nanoTime()));
+    }
 
     /**
      * The seed increment
@@ -111,7 +140,7 @@ public class ThreadLocalRandom extends Random {
     private static final int PROBE_INCREMENT = 0x9e3779b9;
 
     /**
-     * The increment of seedGenerator per new instance
+     * The increment of seeder per new instance
      */
     private static final long SEEDER_INCREMENT = 0xbb67ae8584caa73bL;
 
@@ -158,7 +187,7 @@ public class ThreadLocalRandom extends Random {
     static final void localInit() {
         int p = probeGenerator.addAndGet(PROBE_INCREMENT);
         int probe = (p == 0) ? 1 : p; // skip 0
-        long seed = mix64(seedGenerator.getAndAdd(SEEDER_INCREMENT));
+        long seed = mix64(seeder.getAndAdd(SEEDER_INCREMENT));
         Thread t = Thread.currentThread();
         UNSAFE.putLong(t, SEED, seed);
         UNSAFE.putInt(t, PROBE, probe);
@@ -293,8 +322,7 @@ public class ThreadLocalRandom extends Random {
      * Returns a pseudorandom {@code int} value between zero (inclusive)
      * and the specified bound (exclusive).
      *
-     * @param bound the bound on the random number to be returned.  Must be
-     *        positive.
+     * @param bound the upper bound (exclusive).  Must be positive.
      * @return a pseudorandom {@code int} value between zero
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is not positive
@@ -345,8 +373,7 @@ public class ThreadLocalRandom extends Random {
      * Returns a pseudorandom {@code long} value between zero (inclusive)
      * and the specified bound (exclusive).
      *
-     * @param bound the bound on the random number to be returned.  Must be
-     *        positive.
+     * @param bound the upper bound (exclusive).  Must be positive.
      * @return a pseudorandom {@code long} value between zero
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is not positive
@@ -389,7 +416,7 @@ public class ThreadLocalRandom extends Random {
      * (inclusive) and one (exclusive).
      *
      * @return a pseudorandom {@code double} value between zero
-     * (inclusive) and one (exclusive)
+     *         (inclusive) and one (exclusive)
      */
     public double nextDouble() {
         return (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT;
@@ -399,8 +426,7 @@ public class ThreadLocalRandom extends Random {
      * Returns a pseudorandom {@code double} value between 0.0
      * (inclusive) and the specified bound (exclusive).
      *
-     * @param bound the bound on the random number to be returned.  Must be
-     *        positive.
+     * @param bound the upper bound (exclusive).  Must be positive.
      * @return a pseudorandom {@code double} value between zero
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is not positive
@@ -418,7 +444,7 @@ public class ThreadLocalRandom extends Random {
      * origin (inclusive) and bound (exclusive).
      *
      * @param origin the least value returned
-     * @param bound the upper bound
+     * @param bound the upper bound (exclusive)
      * @return a pseudorandom {@code double} value between the origin
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code origin} is greater than
@@ -444,7 +470,7 @@ public class ThreadLocalRandom extends Random {
      * (inclusive) and one (exclusive).
      *
      * @return a pseudorandom {@code float} value between zero
-     * (inclusive) and one (exclusive)
+     *         (inclusive) and one (exclusive)
      */
     public float nextFloat() {
         return (mix32(nextSeed()) >>> 8) * FLOAT_UNIT;
@@ -468,11 +494,6 @@ public class ThreadLocalRandom extends Random {
         return v1 * multiplier;
     }
 
-    @Override
-    public DoubleStream gaussians() {
-        return DoubleStream.generate(() -> current().nextGaussian());
-    }
-
     // stream methods, coded in a way intended to better isolate for
     // maintenance purposes the small differences across forms.
 
@@ -484,6 +505,7 @@ public class ThreadLocalRandom extends Random {
      * @return a stream of pseudorandom {@code int} values
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero
+     * @since 1.8
      */
     public IntStream ints(long streamSize) {
         if (streamSize < 0L)
@@ -502,6 +524,7 @@ public class ThreadLocalRandom extends Random {
      * ints(Long.MAX_VALUE)}.
      *
      * @return a stream of pseudorandom {@code int} values
+     * @since 1.8
      */
     public IntStream ints() {
         return StreamSupport.intStream
@@ -511,18 +534,19 @@ public class ThreadLocalRandom extends Random {
     }
 
     /**
-     * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code int} values, each conforming to the given
-     * origin and bound.
+     * Returns a stream producing the given {@code streamSize} number
+     * of pseudorandom {@code int} values, each conforming to the given
+     * origin (inclusive) and bound (exclusive).
      *
      * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero, or {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
+     * @since 1.8
      */
     public IntStream ints(long streamSize, int randomNumberOrigin,
                           int randomNumberBound) {
@@ -538,17 +562,19 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * int} values, each conforming to the given origin and bound.
+     * int} values, each conforming to the given origin (inclusive) and bound
+     * (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * ints(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
      *
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
+     * @since 1.8
      */
     public IntStream ints(int randomNumberOrigin, int randomNumberBound) {
         if (randomNumberOrigin >= randomNumberBound)
@@ -567,6 +593,7 @@ public class ThreadLocalRandom extends Random {
      * @return a stream of pseudorandom {@code long} values
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero
+     * @since 1.8
      */
     public LongStream longs(long streamSize) {
         if (streamSize < 0L)
@@ -585,6 +612,7 @@ public class ThreadLocalRandom extends Random {
      * longs(Long.MAX_VALUE)}.
      *
      * @return a stream of pseudorandom {@code long} values
+     * @since 1.8
      */
     public LongStream longs() {
         return StreamSupport.longStream
@@ -595,17 +623,18 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code long} values, each conforming to the
-     * given origin and bound.
+     * pseudorandom {@code long}, each conforming to the given origin
+     * (inclusive) and bound (exclusive).
      *
      * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero, or {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
+     * @since 1.8
      */
     public LongStream longs(long streamSize, long randomNumberOrigin,
                             long randomNumberBound) {
@@ -621,17 +650,19 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * long} values, each conforming to the given origin and bound.
+     * long} values, each conforming to the given origin (inclusive) and bound
+     * (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * longs(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
      *
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
+     * @since 1.8
      */
     public LongStream longs(long randomNumberOrigin, long randomNumberBound) {
         if (randomNumberOrigin >= randomNumberBound)
@@ -651,6 +682,7 @@ public class ThreadLocalRandom extends Random {
      * @return a stream of {@code double} values
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero
+     * @since 1.8
      */
     public DoubleStream doubles(long streamSize) {
         if (streamSize < 0L)
@@ -670,6 +702,7 @@ public class ThreadLocalRandom extends Random {
      * doubles(Long.MAX_VALUE)}.
      *
      * @return a stream of pseudorandom {@code double} values
+     * @since 1.8
      */
     public DoubleStream doubles() {
         return StreamSupport.doubleStream
@@ -680,18 +713,19 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code double} values, each conforming to the
-     * given origin and bound.
+     * pseudorandom {@code double} values, each conforming to the given origin
+     * (inclusive) and bound (exclusive).
      *
      * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code double} values,
-     * each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code streamSize} is
-     * less than zero
+     *         less than zero
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
+     * @since 1.8
      */
     public DoubleStream doubles(long streamSize, double randomNumberOrigin,
                                 double randomNumberBound) {
@@ -707,17 +741,19 @@ public class ThreadLocalRandom extends Random {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * double} values, each conforming to the given origin and bound.
+     * double} values, each conforming to the given origin (inclusive) and bound
+     * (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * doubles(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
      *
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code double} values,
-     * each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
+     * @since 1.8
      */
     public DoubleStream doubles(double randomNumberOrigin, double randomNumberBound) {
         if (!(randomNumberOrigin < randomNumberBound))

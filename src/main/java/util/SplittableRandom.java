@@ -25,9 +25,9 @@
 
 package java.util;
 
+import java.security.SecureRandom;
 import java.net.InetAddress;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.Spliterator;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
 import java.util.function.DoubleConsumer;
@@ -39,7 +39,7 @@ import java.util.stream.DoubleStream;
 /**
  * A generator of uniform pseudorandom values applicable for use in
  * (among other contexts) isolated parallel computations that may
- * generate subtasks. Class SplittableRandom supports methods for
+ * generate subtasks. Class {@code SplittableRandom} supports methods for
  * producing pseudorandom numbers of type {@code int}, {@code long},
  * and {@code double} with similar usages as for class
  * {@link java.util.Random} but differs in the following ways:
@@ -76,6 +76,14 @@ import java.util.stream.DoubleStream;
  * stream.parallel()} mode.</li>
  *
  * </ul>
+ *
+ * <p>Instances of {@code SplittableRandom} are not cryptographically
+ * secure.  Consider instead using {@link java.security.SecureRandom}
+ * in security-sensitive applications. Additionally,
+ * default-constructed instances do not use a cryptographically random
+ * seed unless the {@linkplain System#getProperty system property}
+ * {@code java.util.secureRandomSeed} is set to {@code true}.
+
  *
  * @author  Guy Steele
  * @author  Doug Lea
@@ -138,8 +146,9 @@ public class SplittableRandom {
      * cases, this split must be performed in a thread-safe manner, so
      * we use an AtomicLong to represent the seed rather than use an
      * explicit SplittableRandom. To bootstrap the seeder, we start
-     * off using a seed based on current time and host. This serves as
-     * a slimmed-down (and insecure) variant of SecureRandom that also
+     * off using a seed based on current time and host unless the
+     * SecureRandomSeed property is set. This serves as a
+     * slimmed-down (and insecure) variant of SecureRandom that also
      * avoids stalls that may occur when using /dev/random.
      *
      * It is a relatively simple matter to apply the basic design here
@@ -221,20 +230,28 @@ public class SplittableRandom {
     /**
      * The seed generator for default constructors.
      */
-    private static final AtomicLong seeder =
-        new AtomicLong(mix64((((long)hashedHostAddress()) << 32) ^
-                             System.currentTimeMillis()) ^
-                       mix64(System.nanoTime()));
+    private static final AtomicLong seeder = new AtomicLong(initialSeed());
 
-    /**
-     * Returns hash of local host IP address, if available; else 0.
-     */
-    private static int hashedHostAddress() {
-        try {
-            return InetAddress.getLocalHost().hashCode();
-        } catch (Exception ex) {
-            return 0;
+    private static long initialSeed() {
+        try {  // ignore exceptions in accessing/parsing properties
+            String pp = System.getProperty
+                ("java.util.secureRandomSeed");
+            if (pp != null && pp.equalsIgnoreCase("true")) {
+                byte[] seedBytes = java.security.SecureRandom.getSeed(8);
+                long s = (long)(seedBytes[0]) & 0xffL;
+                for (int i = 1; i < 8; ++i)
+                    s = (s << 8) | ((long)(seedBytes[i]) & 0xffL);
+                return s;
+            }
+        } catch (Exception ignore) {
         }
+        int hh = 0; // hashed host address
+        try {
+            hh = InetAddress.getLocalHost().hashCode();
+        } catch (Exception ignore) {
+        }
+        return (mix64((((long)hh) << 32) ^ System.currentTimeMillis()) ^
+                mix64(System.nanoTime()));
     }
 
     // IllegalArgumentException messages
@@ -406,8 +423,7 @@ public class SplittableRandom {
      * Returns a pseudorandom {@code int} value between zero (inclusive)
      * and the specified bound (exclusive).
      *
-     * @param bound the bound on the random number to be returned.  Must be
-     *        positive.
+     * @param bound the upper bound (exclusive).  Must be positive.
      * @return a pseudorandom {@code int} value between zero
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is not positive
@@ -459,8 +475,7 @@ public class SplittableRandom {
      * Returns a pseudorandom {@code long} value between zero (inclusive)
      * and the specified bound (exclusive).
      *
-     * @param bound the bound on the random number to be returned.  Must be
-     *        positive.
+     * @param bound the upper bound (exclusive).  Must be positive.
      * @return a pseudorandom {@code long} value between zero
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is not positive
@@ -504,7 +519,7 @@ public class SplittableRandom {
      * (inclusive) and one (exclusive).
      *
      * @return a pseudorandom {@code double} value between zero
-     * (inclusive) and one (exclusive)
+     *         (inclusive) and one (exclusive)
      */
     public double nextDouble() {
         return (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT;
@@ -514,8 +529,7 @@ public class SplittableRandom {
      * Returns a pseudorandom {@code double} value between 0.0
      * (inclusive) and the specified bound (exclusive).
      *
-     * @param bound the bound on the random number to be returned.  Must be
-     *        positive.
+     * @param bound the upper bound (exclusive).  Must be positive.
      * @return a pseudorandom {@code double} value between zero
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code bound} is not positive
@@ -533,7 +547,7 @@ public class SplittableRandom {
      * origin (inclusive) and bound (exclusive).
      *
      * @param origin the least value returned
-     * @param bound the upper bound
+     * @param bound the upper bound (exclusive)
      * @return a pseudorandom {@code double} value between the origin
      *         (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code origin} is greater than
@@ -594,14 +608,15 @@ public class SplittableRandom {
 
     /**
      * Returns a stream producing the given {@code streamSize} number
-     * of pseudorandom {@code int} values, each conforming to the
-     * given origin and bound.
+     * of pseudorandom {@code int} values from this generator and/or one split
+     * from it; each value conforms to the given origin (inclusive) and bound
+     * (exclusive).
      *
      * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero, or {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
@@ -620,15 +635,16 @@ public class SplittableRandom {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * int} values, each conforming to the given origin and bound.
+     * int} values from this generator and/or one split from it; each value
+     * conforms to the given origin (inclusive) and bound (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * ints(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
      *
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */
@@ -678,14 +694,15 @@ public class SplittableRandom {
 
     /**
      * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code long} values, each conforming to the
-     * given origin and bound.
+     * pseudorandom {@code long} values from this generator and/or one split
+     * from it; each value conforms to the given origin (inclusive) and bound
+     * (exclusive).
      *
      * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code streamSize} is
      *         less than zero, or {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
@@ -704,15 +721,16 @@ public class SplittableRandom {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * long} values, each conforming to the given origin and bound.
+     * long} values from this generator and/or one split from it; each value
+     * conforms to the given origin (inclusive) and bound (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * longs(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
      *
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */
@@ -727,8 +745,8 @@ public class SplittableRandom {
 
     /**
      * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code double} values, each between zero
-     * (inclusive) and one (exclusive).
+     * pseudorandom {@code double} values from this generator and/or one split
+     * from it; each value is between zero (inclusive) and one (exclusive).
      *
      * @param streamSize the number of values to generate
      * @return a stream of {@code double} values
@@ -746,8 +764,8 @@ public class SplittableRandom {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * double} values, each between zero (inclusive) and one
-     * (exclusive).
+     * double} values from this generator and/or one split from it; each value
+     * is between zero (inclusive) and one (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * doubles(Long.MAX_VALUE)}.
@@ -763,16 +781,17 @@ public class SplittableRandom {
 
     /**
      * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code double} values, each conforming to the
-     * given origin and bound.
+     * pseudorandom {@code double} values from this generator and/or one split
+     * from it; each value conforms to the given origin (inclusive) and bound
+     * (exclusive).
      *
      * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code double} values,
-     * each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code streamSize} is
-     * less than zero
+     *         less than zero
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */
@@ -790,15 +809,16 @@ public class SplittableRandom {
 
     /**
      * Returns an effectively unlimited stream of pseudorandom {@code
-     * double} values, each conforming to the given origin and bound.
+     * double} values from this generator and/or one split from it; each value
+     * conforms to the given origin (inclusive) and bound (exclusive).
      *
      * @implNote This method is implemented to be equivalent to {@code
      * doubles(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
      *
-     * @param randomNumberOrigin the origin of each random value
-     * @param randomNumberBound the bound of each random value
+     * @param randomNumberOrigin the origin (inclusive) of each random value
+     * @param randomNumberBound the bound (exclusive) of each random value
      * @return a stream of pseudorandom {@code double} values,
-     * each with the given origin and bound
+     *         each with the given origin (inclusive) and bound (exclusive)
      * @throws IllegalArgumentException if {@code randomNumberOrigin}
      *         is greater than or equal to {@code randomNumberBound}
      */

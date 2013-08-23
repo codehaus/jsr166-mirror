@@ -1268,8 +1268,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 int sz = (int)size;
                 n = tableSizeFor(sz + (sz >>> 1) + 1);
             }
-            @SuppressWarnings({"rawtypes","unchecked"})
-                Node<K,V>[] tab = (Node<K,V>[])new Node[n];
+            @SuppressWarnings("unchecked")
+                Node<K,V>[] tab = (Node<K,V>[])new Node<?,?>[n];
             int mask = n - 1;
             long added = 0L;
             while (p != null) {
@@ -1543,8 +1543,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 try {
                     if ((tab = table) == null || tab.length == 0) {
                         int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
-                        @SuppressWarnings({"rawtypes","unchecked"})
-                            Node<K,V>[] nt = (Node<K,V>[])new Node[n];
+                        @SuppressWarnings("unchecked")
+                            Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
                         table = tab = nt;
                         sc = n - (n >>> 2);
                     }
@@ -1635,8 +1635,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
                 if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
                     try {
                         if (table == tab) {
-                            @SuppressWarnings({"rawtypes","unchecked"})
-                                Node<K,V>[] nt = (Node<K,V>[])new Node[n];
+                            @SuppressWarnings("unchecked")
+                                Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
                             table = nt;
                             sc = n - (n >>> 2);
                         }
@@ -1663,8 +1663,8 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
             stride = MIN_TRANSFER_STRIDE; // subdivide range
         if (nextTab == null) {            // initiating
             try {
-                @SuppressWarnings({"rawtypes","unchecked"})
-                    Node<K,V>[] nt = (Node<K,V>[])new Node[n << 1];
+                @SuppressWarnings("unchecked")
+                    Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n << 1];
                 nextTab = nt;
             } catch (Throwable ex) {      // try to cope with OOME
                 sizeCtl = Integer.MAX_VALUE;

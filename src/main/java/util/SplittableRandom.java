@@ -83,7 +83,6 @@ import java.util.stream.DoubleStream;
  * default-constructed instances do not use a cryptographically random
  * seed unless the {@linkplain System#getProperty system property}
  * {@code java.util.secureRandomSeed} is set to {@code true}.
-
  *
  * @author  Guy Steele
  * @author  Doug Lea

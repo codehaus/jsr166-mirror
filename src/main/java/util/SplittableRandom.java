@@ -146,7 +146,7 @@ public class SplittableRandom {
      * we use an AtomicLong to represent the seed rather than use an
      * explicit SplittableRandom. To bootstrap the seeder, we start
      * off using a seed based on current time and host unless the
-     * SecureRandomSeed property is set. This serves as a
+     * java.util.secureRandomSeed property is set. This serves as a
      * slimmed-down (and insecure) variant of SecureRandom that also
      * avoids stalls that may occur when using /dev/random.
      *

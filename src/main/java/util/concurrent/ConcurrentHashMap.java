@@ -349,22 +349,21 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * proceed with insertions etc.  The use of TreeBins shields us
      * from the worst case effects of overfilling while resizes are in
      * progress.  Resizing proceeds by transferring bins, one by one,
-     * from the table to the next table. To enable concurrency, the
-     * next table must be (incrementally) prefilled with place-holders
-     * serving as reverse forwarders to the old table.  Because we are
-     * using power-of-two expansion, the elements from each bin must
-     * either stay at same index, or move with a power of two
-     * offset. We eliminate unnecessary node creation by catching
-     * cases where old nodes can be reused because their next fields
-     * won't change.  On average, only about one-sixth of them need
-     * cloning when a table doubles. The nodes they replace will be
-     * garbage collectable as soon as they are no longer referenced by
-     * any reader thread that may be in the midst of concurrently
-     * traversing table.  Upon transfer, the old table bin contains
-     * only a special forwarding node (with hash field "MOVED") that
-     * contains the next table as its key. On encountering a
-     * forwarding node, access and update operations restart, using
-     * the new table.
+     * from the table to the next table. However, threads claim small
+     * blocks of indices to transfer (via field transferIndex) before
+     * doing so, reducing contention.  Because we are using
+     * power-of-two expansion, the elements from each bin must either
+     * stay at same index, or move with a power of two offset. We
+     * eliminate unnecessary node creation by catching cases where old
+     * nodes can be reused because their next fields won't change.  On
+     * average, only about one-sixth of them need cloning when a table
+     * doubles. The nodes they replace will be garbage collectable as
+     * soon as they are no longer referenced by any reader thread that
+     * may be in the midst of concurrently traversing table.  Upon
+     * transfer, the old table bin contains only a special forwarding
+     * node (with hash field "MOVED") that contains the next table as
+     * its key. On encountering a forwarding node, access and update
+     * operations restart, using the new table.
      *
      * Each bin transfer requires its bin lock, which can stall
      * waiting for locks while resizing. However, because other
@@ -372,13 +371,19 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * locks, average aggregate waits become shorter as resizing
      * progresses.  The transfer operation must also ensure that all
      * accessible bins in both the old and new table are usable by any
-     * traversal.  This is arranged by proceeding from the last bin
-     * (table.length - 1) up towards the first.  Upon seeing a
-     * forwarding node, traversals (see class Traverser) arrange to
-     * move to the new table without revisiting nodes.  However, to
-     * ensure that no intervening nodes are skipped, bin splitting can
-     * only begin after the associated reverse-forwarders are in
-     * place.
+     * traversal.  This is arranged in part by proceeding from the
+     * last bin (table.length - 1) up towards the first.  Upon seeing
+     * a forwarding node, traversals (see class Traverser) arrange to
+     * move to the new table without revisiting nodes.  To ensure that
+     * no intervening nodes are skipped even when moved out of order,
+     * a stack (see class TableStack) is created on first encounter of
+     * a forwarding node during a traversal, to maintain its place if
+     * later processing the current table. The need for these
+     * save/restore mechanics is relatively rare, but when one
+     * forwwarding node is encountered, typically many more will be.
+     * So Traversers use a simple caching scheme to avoid creating so
+     * many new TableStack nodes. (Thanks to Peter Levart for
+     * suggesting use of a stack here.)
      *
      * The traversal scheme also applies to partial traversals of
      * ranges of bins (via an alternate Traverser constructor)
@@ -745,11 +750,6 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * The next table index (plus one) to split while resizing.
      */
     private transient volatile int transferIndex;
-
-    /**
-     * The least available table index to split while resizing.
-     */
-    private transient volatile int transferOrigin;
 
     /**
      * Spinlock (locked via CAS) used when resizing and/or creating CounterCells.
@@ -1347,7 +1347,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         }
         int segmentShift = 32 - sshift;
         int segmentMask = ssize - 1;
-        @SuppressWarnings("unchecked") Segment<K,V>[] segments = (Segment<K,V>[])
+        @SuppressWarnings("unchecked")
+        Segment<K,V>[] segments = (Segment<K,V>[])
             new Segment<?,?>[DEFAULT_CONCURRENCY_LEVEL];
         for (int i = 0; i < segments.length; ++i)
             segments[i] = new Segment<K,V>(LOAD_FACTOR);
@@ -1390,8 +1391,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         long size = 0L;
         Node<K,V> p = null;
         for (;;) {
-            @SuppressWarnings("unchecked") K k = (K) s.readObject();
-            @SuppressWarnings("unchecked") V v = (V) s.readObject();
+            @SuppressWarnings("unchecked")
+            K k = (K) s.readObject();
+            @SuppressWarnings("unchecked")
+            V v = (V) s.readObject();
             if (k != null && v != null) {
                 p = new Node<K,V>(spread(k.hashCode()), k, v, p);
                 ++size;
@@ -1410,7 +1413,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 n = tableSizeFor(sz + (sz >>> 1) + 1);
             }
             @SuppressWarnings("unchecked")
-                Node<K,V>[] tab = (Node<K,V>[])new Node<?,?>[n];
+            Node<K,V>[] tab = (Node<K,V>[])new Node<?,?>[n];
             int mask = n - 1;
             long added = 0L;
             while (p != null) {
@@ -2012,7 +2015,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *         {@code false} otherwise
      * @throws NullPointerException if the specified value is null
      */
-    @Deprecated public boolean contains(Object value) {
+    @Deprecated
+    public boolean contains(Object value) {
         return containsValue(value);
     }
 
@@ -2171,7 +2175,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     if ((tab = table) == null || tab.length == 0) {
                         int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
                         @SuppressWarnings("unchecked")
-                            Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
+                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
                         table = tab = nt;
                         sc = n - (n >>> 2);
                     }
@@ -2216,7 +2220,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             while (s >= (long)(sc = sizeCtl) && (tab = table) != null &&
                    tab.length < MAXIMUM_CAPACITY) {
                 if (sc < 0) {
-                    if (sc == -1 || transferIndex <= transferOrigin ||
+                    if (sc == -1 || transferIndex <= 0 ||
                         (nt = nextTable) == null)
                         break;
                     if (U.compareAndSwapInt(this, SIZECTL, sc, sc - 1))
@@ -2236,10 +2240,13 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         Node<K,V>[] nextTab; int sc;
         if ((f instanceof ForwardingNode) &&
             (nextTab = ((ForwardingNode<K,V>)f).nextTable) != null) {
-            if (nextTab == nextTable && tab == table &&
-                transferIndex > transferOrigin && (sc = sizeCtl) < -1 &&
-                U.compareAndSwapInt(this, SIZECTL, sc, sc - 1))
-                transfer(tab, nextTab);
+            while (transferIndex > 0 && nextTab == nextTable &&
+                   (sc = sizeCtl) < -1) {
+                if (U.compareAndSwapInt(this, SIZECTL, sc, sc - 1)) {
+                    transfer(tab, nextTab);
+                    break;
+                }
+            }
             return nextTab;
         }
         return table;
@@ -2262,7 +2269,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     try {
                         if (table == tab) {
                             @SuppressWarnings("unchecked")
-                                Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
+                            Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
                             table = nt;
                             sc = n - (n >>> 2);
                         }
@@ -2290,35 +2297,26 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         if (nextTab == null) {            // initiating
             try {
                 @SuppressWarnings("unchecked")
-                    Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n << 1];
+                Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n << 1];
                 nextTab = nt;
             } catch (Throwable ex) {      // try to cope with OOME
                 sizeCtl = Integer.MAX_VALUE;
                 return;
             }
             nextTable = nextTab;
-            transferOrigin = n;
             transferIndex = n;
-            ForwardingNode<K,V> rev = new ForwardingNode<K,V>(tab);
-            for (int k = n; k > 0;) {    // progressively reveal ready slots
-                int nextk = (k > stride) ? k - stride : 0;
-                for (int m = nextk; m < k; ++m)
-                    nextTab[m] = rev;
-                for (int m = n + nextk; m < n + k; ++m)
-                    nextTab[m] = rev;
-                U.putOrderedInt(this, TRANSFERORIGIN, k = nextk);
-            }
         }
         int nextn = nextTab.length;
         ForwardingNode<K,V> fwd = new ForwardingNode<K,V>(nextTab);
         boolean advance = true;
         boolean finishing = false; // to ensure sweep before committing nextTab
         for (int i = 0, bound = 0;;) {
-            int nextIndex, nextBound, fh; Node<K,V> f;
+            Node<K,V> f; int fh;
             while (advance) {
+                int nextIndex, nextBound;
                 if (--i >= bound || finishing)
                     advance = false;
-                else if ((nextIndex = transferIndex) <= transferOrigin) {
+                else if ((nextIndex = transferIndex) <= 0) {
                     i = -1;
                     advance = false;
                 }
@@ -2332,29 +2330,22 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 }
             }
             if (i < 0 || i >= n || i + n >= nextn) {
+                int sc;
                 if (finishing) {
                     nextTable = null;
                     table = nextTab;
                     sizeCtl = (n << 1) - (n >>> 1);
                     return;
                 }
-                for (int sc;;) {
-                    if (U.compareAndSwapInt(this, SIZECTL, sc = sizeCtl, ++sc)) {
-                        if (sc != -1)
-                            return;
-                        finishing = advance = true;
-                        i = n; // recheck before commit
-                        break;
-                    }
+                if (U.compareAndSwapInt(this, SIZECTL, sc = sizeCtl, ++sc)) {
+                    if (sc != -1)
+                        return;
+                    finishing = advance = true;
+                    i = n; // recheck before commit
                 }
             }
-            else if ((f = tabAt(tab, i)) == null) {
-                if (casTabAt(tab, i, null, fwd)) {
-                    setTabAt(nextTab, i, null);
-                    setTabAt(nextTab, i + n, null);
-                    advance = true;
-                }
-            }
+            else if ((f = tabAt(tab, i)) == null)
+                advance = casTabAt(tab, i, null, fwd);
             else if ((fh = f.hash) == MOVED)
                 advance = true; // already processed
             else {
@@ -3193,6 +3184,18 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /* ----------------Table Traversal -------------- */
 
+   /**
+    * Records the table, its length, and current traversal index for a
+    * traverser that must process a region of a forwarded table before
+    * proceeding with current table.
+    */
+    final static class TableStack<K,V> {
+        int length;
+        int index;
+        Node<K,V>[] tab;
+        TableStack<K, V> next;
+    }
+
     /**
      * Encapsulates traversal for methods such as containsValue; also
      * serves as a base class for other iterators and spliterators.
@@ -3217,6 +3220,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     static class Traverser<K,V> {
         Node<K,V>[] tab;        // current table; updated if resized
         Node<K,V> next;         // the next entry to use
+        TableStack<K,V> stack, spare; // to save/restore on ForwardingNodes
         int index;              // index of bin to use next
         int baseIndex;          // current index of initial table
         int baseLimit;          // index bound for initial table
@@ -3238,16 +3242,17 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             if ((e = next) != null)
                 e = e.next;
             for (;;) {
-                Node<K,V>[] t; int i, n; K ek;  // must use locals in checks
+                Node<K,V>[] t; int i, n;  // must use locals in checks
                 if (e != null)
                     return next = e;
                 if (baseIndex >= baseLimit || (t = tab) == null ||
                     (n = t.length) <= (i = index) || i < 0)
                     return next = null;
-                if ((e = tabAt(t, index)) != null && e.hash < 0) {
+                if ((e = tabAt(t, i)) != null && e.hash < 0) {
                     if (e instanceof ForwardingNode) {
                         tab = ((ForwardingNode<K,V>)e).nextTable;
                         e = null;
+                        pushState(t, i, n);
                         continue;
                     }
                     else if (e instanceof TreeBin)
@@ -3255,9 +3260,48 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     else
                         e = null;
                 }
-                if ((index += baseSize) >= n)
-                    index = ++baseIndex;    // visit upper slots if present
+                if (stack != null)
+                    recoverState(n);
+                else if ((index = i + baseSize) >= n)
+                    index = ++baseIndex; // visit upper slots if present
             }
+        }
+
+        /**
+         * Save traversal state upon encountering a forwarding node.
+         */
+        private void pushState(Node<K,V>[] t, int i, int n) {
+            TableStack<K,V> s = spare;  // reuse if possible
+            if (s != null)
+                spare = s.next;
+            else
+                s = new TableStack<K,V>();
+            s.tab = t;
+            s.length = n;
+            s.index = i;
+            s.next = stack;
+            stack = s;
+        }
+
+        /**
+         * Possibly pop traversal state
+         *
+         * @param n length of current table
+         */
+        private void recoverState(int n) {
+            TableStack<K,V> s; int len;
+            while ((s = stack) != null && (index += (len = s.length)) >= n) {
+                n = len;
+                index = s.index;
+                tab = s.tab;
+                s.tab = null;
+                TableStack<K,V> next = s.next;
+                s.next = spare; // save for reuse
+                stack = next;
+                spare = s;
+            }
+            if (s == null && (index += baseSize) >= n)
+                index = ++baseIndex;
         }
     }
 
@@ -4690,6 +4734,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     abstract static class BulkTask<K,V,R> extends CountedCompleter<R> {
         Node<K,V>[] tab;        // same as Traverser
         Node<K,V> next;
+        TableStack<K,V> stack, spare;
         int index;
         int baseIndex;
         int baseLimit;
@@ -4718,16 +4763,17 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             if ((e = next) != null)
                 e = e.next;
             for (;;) {
-                Node<K,V>[] t; int i, n; K ek;  // must use locals in checks
+                Node<K,V>[] t; int i, n;
                 if (e != null)
                     return next = e;
                 if (baseIndex >= baseLimit || (t = tab) == null ||
                     (n = t.length) <= (i = index) || i < 0)
                     return next = null;
-                if ((e = tabAt(t, index)) != null && e.hash < 0) {
+                if ((e = tabAt(t, i)) != null && e.hash < 0) {
                     if (e instanceof ForwardingNode) {
                         tab = ((ForwardingNode<K,V>)e).nextTable;
                         e = null;
+                        pushState(t, i, n);
                         continue;
                     }
                     else if (e instanceof TreeBin)
@@ -4735,9 +4781,40 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     else
                         e = null;
                 }
-                if ((index += baseSize) >= n)
-                    index = ++baseIndex;    // visit upper slots if present
+                if (stack != null)
+                    recoverState(n);
+                else if ((index = i + baseSize) >= n)
+                    index = ++baseIndex;
             }
+        }
+
+        private void pushState(Node<K,V>[] t, int i, int n) {
+            TableStack<K,V> s = spare;
+            if (s != null)
+                spare = s.next;
+            else
+                s = new TableStack<K,V>();
+            s.tab = t;
+            s.length = n;
+            s.index = i;
+            s.next = stack;
+            stack = s;
+        }
+
+        private void recoverState(int n) {
+            TableStack<K,V> s; int len;
+            while ((s = stack) != null && (index += (len = s.length)) >= n) {
+                n = len;
+                index = s.index;
+                tab = s.tab;
+                s.tab = null;
+                TableStack<K,V> next = s.next;
+                s.next = spare; // save for reuse
+                stack = next;
+                spare = s;
+            }
+            if (s == null && (index += baseSize) >= n)
+                index = ++baseIndex;
         }
     }
 
@@ -5197,7 +5274,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") ReduceKeysTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    ReduceKeysTask<K,V>
                         t = (ReduceKeysTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5244,7 +5322,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") ReduceValuesTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    ReduceValuesTask<K,V>
                         t = (ReduceValuesTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5289,7 +5368,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") ReduceEntriesTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    ReduceEntriesTask<K,V>
                         t = (ReduceEntriesTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5342,7 +5422,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceKeysTask<K,V,U>
+                    @SuppressWarnings("unchecked")
+                    MapReduceKeysTask<K,V,U>
                         t = (MapReduceKeysTask<K,V,U>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5395,7 +5476,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceValuesTask<K,V,U>
+                    @SuppressWarnings("unchecked")
+                    MapReduceValuesTask<K,V,U>
                         t = (MapReduceValuesTask<K,V,U>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5448,7 +5530,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceEntriesTask<K,V,U>
+                    @SuppressWarnings("unchecked")
+                    MapReduceEntriesTask<K,V,U>
                         t = (MapReduceEntriesTask<K,V,U>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5501,7 +5584,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceMappingsTask<K,V,U>
+                    @SuppressWarnings("unchecked")
+                    MapReduceMappingsTask<K,V,U>
                         t = (MapReduceMappingsTask<K,V,U>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5553,7 +5637,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceKeysToDoubleTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceKeysToDoubleTask<K,V>
                         t = (MapReduceKeysToDoubleTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5602,7 +5687,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceValuesToDoubleTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceValuesToDoubleTask<K,V>
                         t = (MapReduceValuesToDoubleTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5651,7 +5737,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceEntriesToDoubleTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceEntriesToDoubleTask<K,V>
                         t = (MapReduceEntriesToDoubleTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5700,7 +5787,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceMappingsToDoubleTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceMappingsToDoubleTask<K,V>
                         t = (MapReduceMappingsToDoubleTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5749,7 +5837,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceKeysToLongTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceKeysToLongTask<K,V>
                         t = (MapReduceKeysToLongTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5798,7 +5887,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceValuesToLongTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceValuesToLongTask<K,V>
                         t = (MapReduceValuesToLongTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5847,7 +5937,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceEntriesToLongTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceEntriesToLongTask<K,V>
                         t = (MapReduceEntriesToLongTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5896,7 +5987,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceMappingsToLongTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceMappingsToLongTask<K,V>
                         t = (MapReduceMappingsToLongTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5945,7 +6037,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceKeysToIntTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceKeysToIntTask<K,V>
                         t = (MapReduceKeysToIntTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -5994,7 +6087,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceValuesToIntTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceValuesToIntTask<K,V>
                         t = (MapReduceValuesToIntTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -6043,7 +6137,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceEntriesToIntTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceEntriesToIntTask<K,V>
                         t = (MapReduceEntriesToIntTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -6092,7 +6187,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 result = r;
                 CountedCompleter<?> c;
                 for (c = firstComplete(); c != null; c = c.nextComplete()) {
-                    @SuppressWarnings("unchecked") MapReduceMappingsToIntTask<K,V>
+                    @SuppressWarnings("unchecked")
+                    MapReduceMappingsToIntTask<K,V>
                         t = (MapReduceMappingsToIntTask<K,V>)c,
                         s = t.rights;
                     while (s != null) {
@@ -6108,7 +6204,6 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     private static final sun.misc.Unsafe U;
     private static final long SIZECTL;
     private static final long TRANSFERINDEX;
-    private static final long TRANSFERORIGIN;
     private static final long BASECOUNT;
     private static final long CELLSBUSY;
     private static final long CELLVALUE;
@@ -6123,8 +6218,6 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 (k.getDeclaredField("sizeCtl"));
             TRANSFERINDEX = U.objectFieldOffset
                 (k.getDeclaredField("transferIndex"));
-            TRANSFERORIGIN = U.objectFieldOffset
-                (k.getDeclaredField("transferOrigin"));
             BASECOUNT = U.objectFieldOffset
                 (k.getDeclaredField("baseCount"));
             CELLSBUSY = U.objectFieldOffset

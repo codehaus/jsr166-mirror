@@ -3184,16 +3184,16 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /* ----------------Table Traversal -------------- */
 
-   /**
-    * Records the table, its length, and current traversal index for a
-    * traverser that must process a region of a forwarded table before
-    * proceeding with current table.
-    */
-    final static class TableStack<K,V> {
+    /**
+     * Records the table, its length, and current traversal index for a
+     * traverser that must process a region of a forwarded table before
+     * proceeding with current table.
+     */
+    static final class TableStack<K,V> {
         int length;
         int index;
         Node<K,V>[] tab;
-        TableStack<K, V> next;
+        TableStack<K,V> next;
     }
 
     /**

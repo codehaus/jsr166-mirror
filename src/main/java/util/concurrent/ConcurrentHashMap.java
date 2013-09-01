@@ -344,10 +344,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * The table is resized when occupancy exceeds a percentage
      * threshold (nominally, 0.75, but see below).  Any thread
      * noticing an overfull bin may assist in resizing after the
-     * initiating thread allocates and sets up the replacement
-     * array. However, rather than stalling, these other threads may
-     * proceed with insertions etc.  The use of TreeBins shields us
-     * from the worst case effects of overfilling while resizes are in
+     * initiating thread allocates and sets up the replacement array.
+     * However, rather than stalling, these other threads may proceed
+     * with insertions etc.  The use of TreeBins shields us from the
+     * worst case effects of overfilling while resizes are in
      * progress.  Resizing proceeds by transferring bins, one by one,
      * from the table to the next table. However, threads claim small
      * blocks of indices to transfer (via field transferIndex) before
@@ -380,7 +380,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * a forwarding node during a traversal, to maintain its place if
      * later processing the current table. The need for these
      * save/restore mechanics is relatively rare, but when one
-     * forwwarding node is encountered, typically many more will be.
+     * forwarding node is encountered, typically many more will be.
      * So Traversers use a simple caching scheme to avoid creating so
      * many new TableStack nodes. (Thanks to Peter Levart for
      * suggesting use of a stack here.)

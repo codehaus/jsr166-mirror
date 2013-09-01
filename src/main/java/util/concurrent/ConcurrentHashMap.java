@@ -3268,7 +3268,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Save traversal state upon encountering a forwarding node.
+         * Saves traversal state upon encountering a forwarding node.
          */
         private void pushState(Node<K,V>[] t, int i, int n) {
             TableStack<K,V> s = spare;  // reuse if possible
@@ -3284,7 +3284,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Possibly pop traversal state
+         * Possibly pops traversal state.
          *
          * @param n length of current table
          */

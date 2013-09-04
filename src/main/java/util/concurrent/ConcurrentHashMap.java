@@ -4427,6 +4427,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         }
 
         public final boolean removeAll(Collection<?> c) {
+            if (c == null) throw new NullPointerException();
             boolean modified = false;
             for (Iterator<E> it = iterator(); it.hasNext();) {
                 if (c.contains(it.next())) {
@@ -4438,6 +4439,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         }
 
         public final boolean retainAll(Collection<?> c) {
+            if (c == null) throw new NullPointerException();
             boolean modified = false;
             for (Iterator<E> it = iterator(); it.hasNext();) {
                 if (!c.contains(it.next())) {

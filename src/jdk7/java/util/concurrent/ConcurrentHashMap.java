@@ -1381,7 +1381,9 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
 
     /**
      * Legacy method testing if some key maps into the specified value
-     * in this table.  This method is identical in functionality to
+     * in this table.
+     *
+     * @deprecated This method is identical in functionality to
      * {@link #containsValue(Object)}, and exists solely to ensure
      * full compatibility with class {@link java.util.Hashtable},
      * which supported this method prior to introduction of the

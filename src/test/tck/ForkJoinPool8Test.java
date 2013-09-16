@@ -1485,10 +1485,10 @@ public class ForkJoinPool8Test extends JSR166TestCase {
     }
 
     /**
-     * awaitQuiescent by a worker is equivalent in effect to
+     * awaitQuiescence by a worker is equivalent in effect to
      * ForkJoinTask.helpQuiesce()
      */
-    public void testAwaitQuiescent1() throws Exception {
+    public void testAwaitQuiescence1() throws Exception {
         final ForkJoinPool p = new ForkJoinPool();
         try {
             final long startTime = System.nanoTime();
@@ -1541,10 +1541,10 @@ public class ForkJoinPool8Test extends JSR166TestCase {
     }
 
     /**
-     * awaitQuiescent returns when pool isQuiescent() or the indicated
-     * timeout elapse
+     * awaitQuiescence returns when pool isQuiescent() or the indicated
+     * timeout elapsed
      */
-    public void testAwaitQuiescent2() throws Exception {
+    public void testAwaitQuiescence2() throws Exception {
         final ForkJoinPool p = new ForkJoinPool();
         try {
             assertTrue(p.isQuiescent());

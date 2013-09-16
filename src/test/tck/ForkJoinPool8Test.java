@@ -1551,25 +1551,24 @@ public class ForkJoinPool8Test extends JSR166TestCase {
             for (;;) {
                 final long startTime = System.nanoTime();
                 ForkJoinTask a = new CheckedRecursiveAction() {
-                        protected void realCompute() {
-                            FibAction f = new FibAction(8);
-                            assertSame(f, f.fork());
-                            ForkJoinTask.helpQuiesce();
-                            while (!f.isDone()) {
-                                if (millisElapsedSince(startTime) > LONG_DELAY_MS)
-                                    threadFail("timed out");
-                                assertFalse(p.getAsyncMode());
-                                assertFalse(p.isShutdown());
-                                assertFalse(p.isTerminating());
-                                assertFalse(p.isTerminated());
-                                Thread.yield();
-                            }
-                            assertEquals(0, ForkJoinTask.getQueuedTaskCount());
-                            try {
-                                assertEquals(21, f.result);
-                            } catch (Throwable fail) { System.out.println("fail " + fail.getMessage()); }
+                    protected void realCompute() {
+                        FibAction f = new FibAction(8);
+                        assertSame(f, f.fork());
+                        ForkJoinTask.helpQuiesce();
+                        while (!f.isDone()) {
+                            if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                                threadFail("timed out");
+                            assertFalse(p.getAsyncMode());
+                            assertFalse(p.isShutdown());
+                            assertFalse(p.isTerminating());
+                            assertFalse(p.isTerminated());
+                            Thread.yield();
                         }
-                    };
+                        assertEquals(0, ForkJoinTask.getQueuedTaskCount());
+                        try {
+                            assertEquals(21, f.result);
+                        } catch (Throwable fail) { System.out.println("fail " + fail.getMessage()); }
+                    }};
                 p.execute(a);
                 if (a.isDone() || p.isQuiescent())
                     continue; // Already done so cannot test; retry

@@ -1497,8 +1497,8 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 protected void realCompute() {
                     FibAction f = new FibAction(8);
                     assertSame(f, f.fork());
-                    boolean t = ForkJoinTask.getPool().awaitQuiescence(MEDIUM_DELAY_MS, TimeUnit.SECONDS);
-                    assertTrue(t);
+                    boolean quiescent = ForkJoinTask.getPool().awaitQuiescence(MEDIUM_DELAY_MS, TimeUnit.SECONDS);
+                    assertTrue(quiescent);
                     while (!f.isDone()) {
                         if (millisElapsedSince(startTime) > LONG_DELAY_MS)
                             threadFail("timed out");

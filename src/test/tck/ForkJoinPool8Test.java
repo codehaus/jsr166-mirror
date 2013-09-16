@@ -1494,29 +1494,28 @@ public class ForkJoinPool8Test extends JSR166TestCase {
             final long startTime = System.nanoTime();
             assertTrue(p.isQuiescent());
             ForkJoinTask a = new CheckedRecursiveAction() {
-                    protected void realCompute() {
-                        FibAction f = new FibAction(8);
-                        assertSame(f, f.fork());
-                        boolean t = ForkJoinTask.getPool().awaitQuiescence(MEDIUM_DELAY_MS, TimeUnit.SECONDS);
-                        assertTrue(t);
-                        while (!f.isDone()) {
-                            if (millisElapsedSince(startTime) > LONG_DELAY_MS)
-                                threadFail("timed out");
-                            assertFalse(p.getAsyncMode());
-                            assertFalse(p.isShutdown());
-                            assertFalse(p.isTerminating());
-                            assertFalse(p.isTerminated());
-                            Thread.yield();
-                        }
-                        assertFalse(p.isQuiescent());
-                        assertEquals(0, ForkJoinTask.getQueuedTaskCount());
-                        try {
-                            assertEquals(21, f.result);
-                        } catch (Throwable fail) {
-                            threadFail(fail.getMessage());
-                        }
+                protected void realCompute() {
+                    FibAction f = new FibAction(8);
+                    assertSame(f, f.fork());
+                    boolean t = ForkJoinTask.getPool().awaitQuiescence(MEDIUM_DELAY_MS, TimeUnit.SECONDS);
+                    assertTrue(t);
+                    while (!f.isDone()) {
+                        if (millisElapsedSince(startTime) > LONG_DELAY_MS)
+                            threadFail("timed out");
+                        assertFalse(p.getAsyncMode());
+                        assertFalse(p.isShutdown());
+                        assertFalse(p.isTerminating());
+                        assertFalse(p.isTerminated());
+                        Thread.yield();
                     }
-                };
+                    assertFalse(p.isQuiescent());
+                    assertEquals(0, ForkJoinTask.getQueuedTaskCount());
+                    try {
+                        assertEquals(21, f.result);
+                    } catch (Throwable fail) {
+                        threadFail(fail.getMessage());
+                    }
+                }};
             p.execute(a);
             while (!a.isDone() || !p.isQuiescent()) {
                 if (millisElapsedSince(startTime) > LONG_DELAY_MS)

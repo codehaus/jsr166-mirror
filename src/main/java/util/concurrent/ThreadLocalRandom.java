@@ -44,7 +44,10 @@ import java.util.stream.StreamSupport;
  *
  * <p>Instances of {@code ThreadLocalRandom} are not cryptographically
  * secure.  Consider instead using {@link java.security.SecureRandom}
- * in security-sensitive applications.
+ * in security-sensitive applications. Additionally,
+ * default-constructed instances do not use a cryptographically random
+ * seed unless the {@linkplain System#getProperty system property}
+ * {@code java.util.secureRandomSeed} is set to {@code true}.
  *
  * @since 1.7
  * @author Doug Lea
@@ -102,9 +105,28 @@ public class ThreadLocalRandom extends Random {
     /**
      * The next seed for default constructors.
      */
-    private static final AtomicLong seeder =
-        new AtomicLong(mix64(System.currentTimeMillis()) ^
-                       mix64(System.nanoTime()));
+    private static final AtomicLong seeder = new AtomicLong(initialSeed());
+
+    private static long initialSeed() {
+        String pp = java.security.AccessController.doPrivileged(
+                new sun.security.action.GetPropertyAction(
+                        "java.util.secureRandomSeed"));
+        if (pp != null && pp.equalsIgnoreCase("true")) {
+            byte[] seedBytes = java.security.SecureRandom.getSeed(8);
+            long s = (long)(seedBytes[0]) & 0xffL;
+            for (int i = 1; i < 8; ++i)
+                s = (s << 8) | ((long)(seedBytes[i]) & 0xffL);
+            return s;
+        }
+        int hh = 0; // hashed host address
+        try {
+            hh = InetAddress.getLocalHost().hashCode();
+        } catch (Exception ignore) {
+        }
+        return (mix64((((long)hh) << 32) ^ System.currentTimeMillis()) ^
+                mix64(System.nanoTime()));
+    }
+
     /**
      * The seed increment
      */

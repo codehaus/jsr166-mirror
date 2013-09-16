@@ -1510,11 +1510,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     }
                     assertFalse(p.isQuiescent());
                     assertEquals(0, ForkJoinTask.getQueuedTaskCount());
-                    try {
-                        assertEquals(21, f.result);
-                    } catch (Throwable fail) {
-                        threadFail(fail.getMessage());
-                    }
+                    assertEquals(21, f.result);
                 }};
             p.execute(a);
             while (!a.isDone() || !p.isQuiescent()) {
@@ -1565,9 +1561,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                             Thread.yield();
                         }
                         assertEquals(0, ForkJoinTask.getQueuedTaskCount());
-                        try {
-                            assertEquals(21, f.result);
-                        } catch (Throwable fail) { System.out.println("fail " + fail.getMessage()); }
+                        assertEquals(21, f.result);
                     }};
                 p.execute(a);
                 if (a.isDone() || p.isQuiescent())

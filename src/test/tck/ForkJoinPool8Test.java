@@ -1497,11 +1497,12 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 protected void realCompute() {
                     FibAction f = new FibAction(8);
                     assertSame(f, f.fork());
-                    boolean quiescent = ForkJoinTask.getPool().awaitQuiescence(MEDIUM_DELAY_MS, MILLISECONDS);
+                    assertSame(p, ForkJoinTask.getPool());
+                    boolean quiescent = p.awaitQuiescence(LONG_DELAY_MS, MILLISECONDS);
                     assertTrue(quiescent);
+                    assertFalse(p.isQuiescent());
                     while (!f.isDone()) {
-                        if (millisElapsedSince(startTime) > LONG_DELAY_MS)
-                            threadFail("timed out");
+                        assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
                         assertFalse(p.getAsyncMode());
                         assertFalse(p.isShutdown());
                         assertFalse(p.isTerminating());
@@ -1514,8 +1515,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 }};
             p.execute(a);
             while (!a.isDone() || !p.isQuiescent()) {
-                if (millisElapsedSince(startTime) > LONG_DELAY_MS)
-                    throw new AssertionFailedError("timed out");
+                assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
                 assertFalse(p.getAsyncMode());
                 assertFalse(p.isShutdown());
                 assertFalse(p.isTerminating());
@@ -1552,8 +1552,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                         assertSame(f, f.fork());
                         ForkJoinTask.helpQuiesce();
                         while (!f.isDone()) {
-                            if (millisElapsedSince(startTime) > LONG_DELAY_MS)
-                                threadFail("timed out");
+                            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
                             assertFalse(p.getAsyncMode());
                             assertFalse(p.isShutdown());
                             assertFalse(p.isTerminating());
@@ -1567,8 +1566,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 if (a.isDone() || p.isQuiescent())
                     continue; // Already done so cannot test; retry
                 while (!p.awaitQuiescence(LONG_DELAY_MS, MILLISECONDS)) {
-                    if (millisElapsedSince(startTime) > LONG_DELAY_MS)
-                        threadFail("timed out");
+                    assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
                     assertFalse(p.getAsyncMode());
                     assertFalse(p.isShutdown());
                     assertFalse(p.isTerminating());

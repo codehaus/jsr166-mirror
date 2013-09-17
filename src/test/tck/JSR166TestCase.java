@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import java.util.regex.Pattern;
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.PermissionCollection;
@@ -134,12 +135,27 @@ public class JSR166TestCase extends TestCase {
     private static final int runsPerTest =
         Integer.getInteger("jsr166.runsPerTest", 1);
 
+    /**
+     * A filter for tests to run, matching strings of the form
+     * methodName(className), e.g. "testInvokeAll5(ForkJoinPoolTest)"
+     * Usefully combined with jsr166.runsPerTest.
+     */
+    private static final Pattern methodFilter = methodFilter();
+
+    private static Pattern methodFilter() {
+        String regex = System.getProperty("jsr166.methodFilter");
+        return (regex == null) ? null : Pattern.compile(regex);
+    }
+
     protected void runTest() throws Throwable {
-        for (int i = 0; i < runsPerTest; i++) {
-            if (profileTests)
-                runTestProfiled();
-            else
-                super.runTest();
+        if (methodFilter == null
+            || methodFilter.matcher(toString()).find()) {
+            for (int i = 0; i < runsPerTest; i++) {
+                if (profileTests)
+                    runTestProfiled();
+                else
+                    super.runTest();
+            }
         }
     }
 

@@ -197,12 +197,6 @@ public class SplittableRandom {
         return z ^ (z >>> 32);
     }
 
-    private static long xmix64(long z) {
-        z *= 0xbf58476d1ce4e5b9L;
-        z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL;
-        return z ^ (z >>> 31);
-    }
-
     /**
      * Returns the 32 high bits of Stafford variant 4 mix64 function as int.
      */

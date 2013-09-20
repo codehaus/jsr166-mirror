@@ -25,9 +25,7 @@
 
 package java.util;
 
-import java.security.SecureRandom;
 import java.net.NetworkInterface;
-import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
@@ -89,7 +87,7 @@ import java.util.stream.DoubleStream;
  * @author  Doug Lea
  * @since   1.8
  */
-public class SplittableRandom {
+public final class SplittableRandom {
 
     /*
      * Implementation Overview.
@@ -242,7 +240,7 @@ public class SplittableRandom {
         long h = 0L;
         try {
             Enumeration<NetworkInterface> ifcs =
-                NetworkInterface.getNetworkInterfaces();
+                    NetworkInterface.getNetworkInterfaces();
             boolean retry = false; // retry once if getHardwareAddress is null
             while (ifcs.hasMoreElements()) {
                 NetworkInterface ifc = ifcs.nextElement();
@@ -404,7 +402,7 @@ public class SplittableRandom {
      * may, and typically does, vary across program invocations.
      */
     public SplittableRandom() { // emulate defaultGen.split()
-        long s = defaultGen.getAndAdd(2*GOLDEN_GAMMA);
+        long s = defaultGen.getAndAdd(2 * GOLDEN_GAMMA);
         this.seed = mix64(s);
         this.gamma = mixGamma(s + GOLDEN_GAMMA);
     }

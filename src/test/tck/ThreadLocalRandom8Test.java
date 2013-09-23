@@ -100,7 +100,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         long size = 0;
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
-            r.ints(size).parallel().forEach(x -> {counter.increment();});
+            r.ints(size).parallel().forEach(x -> counter.increment());
             assertEquals(size, counter.sum());
             size += 524959;
         }
@@ -115,7 +115,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         long size = 0;
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
-            r.longs(size).parallel().forEach(x -> {counter.increment();});
+            r.longs(size).parallel().forEach(x -> counter.increment());
             assertEquals(size, counter.sum());
             size += 524959;
         }
@@ -130,7 +130,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         long size = 0;
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
-            r.doubles(size).parallel().forEach(x -> {counter.increment();});
+            r.doubles(size).parallel().forEach(x -> counter.increment());
             assertEquals(size, counter.sum());
             size += 524959;
         }
@@ -197,7 +197,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.ints().limit(size).parallel().forEach(x -> {counter.increment();});
+        r.ints().limit(size).parallel().forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -208,7 +208,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.longs().limit(size).parallel().forEach(x -> {counter.increment();});
+        r.longs().limit(size).parallel().forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -219,7 +219,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.doubles().limit(size).parallel().forEach(x -> {counter.increment();});
+        r.doubles().limit(size).parallel().forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -230,7 +230,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.ints().limit(size).forEach(x -> {counter.increment();});
+        r.ints().limit(size).forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -241,7 +241,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.longs().limit(size).forEach(x -> {counter.increment();});
+        r.longs().limit(size).forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -252,7 +252,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.doubles().limit(size).forEach(x -> {counter.increment();});
+        r.doubles().limit(size).forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 

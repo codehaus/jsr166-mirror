@@ -25,7 +25,8 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
     static final long MAX_LONG_BOUND = (1L << 42);
 
     // Number of replications for other checks
-    static final int REPS = 20;
+    static final int REPS =
+        Integer.getInteger("ThreadLocalRandom8Test.reps", 4);
 
     /**
      * Invoking sized ints, long, doubles, with negative sizes throws

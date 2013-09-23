@@ -45,7 +45,8 @@ public class SplittableRandomTest extends JSR166TestCase {
     static final long MAX_LONG_BOUND = (1L << 42);
 
     // Number of replications for other checks
-    static final int REPS = 20;
+    static final int REPS =
+        Integer.getInteger("SplittableRandomTest.reps", 4);
 
     /**
      * Repeated calls to nextInt produce at least two distinct results

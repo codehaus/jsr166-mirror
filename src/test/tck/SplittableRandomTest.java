@@ -284,30 +284,15 @@ public class SplittableRandomTest extends JSR166TestCase {
      */
     public void testBadStreamSize() {
         SplittableRandom r = new SplittableRandom();
-        try {
-            java.util.stream.IntStream x = r.ints(-1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.IntStream x = r.ints(-1L, 2, 3);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(-1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(-1L, -1L, 1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(-1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(-1L, .5, .6);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> { java.util.stream.IntStream x = r.ints(-1L); },
+            () -> { java.util.stream.IntStream x = r.ints(-1L, 2, 3); },
+            () -> { java.util.stream.LongStream x = r.longs(-1L); },
+            () -> { java.util.stream.LongStream x = r.longs(-1L, -1L, 1L); },
+            () -> { java.util.stream.DoubleStream x = r.doubles(-1L); },
+            () -> { java.util.stream.DoubleStream x = r.doubles(-1L, .5, .6); },
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**
@@ -316,30 +301,15 @@ public class SplittableRandomTest extends JSR166TestCase {
      */
     public void testBadStreamBounds() {
         SplittableRandom r = new SplittableRandom();
-        try {
-            java.util.stream.IntStream x = r.ints(2, 1);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.IntStream x = r.ints(10, 42, 42);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(-1L, -1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(10, 1L, -2L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(0.0, 0.0);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(10, .5, .4);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> { java.util.stream.IntStream x = r.ints(2, 1); },
+            () -> { java.util.stream.IntStream x = r.ints(10, 42, 42); },
+            () -> { java.util.stream.LongStream x = r.longs(-1L, -1L); },
+            () -> { java.util.stream.LongStream x = r.longs(10, 1L, -2L); },
+            () -> { java.util.stream.DoubleStream x = r.doubles(0.0, 0.0); },
+            () -> { java.util.stream.DoubleStream x = r.doubles(10, .5, .4); },
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**

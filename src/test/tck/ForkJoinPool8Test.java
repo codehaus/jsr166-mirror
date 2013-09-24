@@ -1550,7 +1550,6 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                     protected void realCompute() {
                         FibAction f = new FibAction(8);
                         assertSame(f, f.fork());
-                        ForkJoinTask.helpQuiesce();
                         while (!f.isDone()) {
                             assertFalse(p.getAsyncMode());
                             assertFalse(p.isShutdown());
@@ -1563,8 +1562,6 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                         assertEquals(21, f.result);
                     }};
                 p.execute(a);
-                if (a.isDone() || p.isQuiescent())
-                    continue; // Already done so cannot test; retry
                 assertTrue(p.awaitQuiescence(LONG_DELAY_MS, MILLISECONDS));
                 assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
                 assertTrue(p.isQuiescent());

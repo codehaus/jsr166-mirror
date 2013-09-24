@@ -103,12 +103,13 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * class are found.
      */
     public void testComparableFamily() {
+        int size = 500;         // makes measured test run time -> 60ms
         ConcurrentHashMap<BI, Boolean> m =
             new ConcurrentHashMap<BI, Boolean>();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < size; i++) {
             assertTrue(m.put(new CI(i), true) == null);
         }
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < size; i++) {
             assertTrue(m.containsKey(new CI(i)));
             assertTrue(m.containsKey(new DI(i)));
         }
@@ -119,9 +120,10 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * on Comparable can be inserted and found.
      */
     public void testGenericComparable() {
+        int size = 120;         // makes measured test run time -> 60ms
         ConcurrentHashMap<Object, Boolean> m =
             new ConcurrentHashMap<Object, Boolean>();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < size; i++) {
             BI bi = new BI(i);
             BS bs = new BS(String.valueOf(i));
             LexicographicList<BI> bis = new LexicographicList<BI>(bi);
@@ -132,8 +134,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
                 assertTrue(m.containsKey(bss));
             assertTrue(m.containsKey(bis));
         }
-        for (int i = 0; i < 1000; i++) {
-            assertTrue(m.containsKey(new ArrayList(Collections.singleton(new BI(i)))));
+        for (int i = 0; i < size; i++) {
+            assertTrue(m.containsKey(Collections.singletonList(new BI(i))));
         }
     }
 
@@ -143,13 +145,14 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * inserted and found.
      */
     public void testGenericComparable2() {
+        int size = 500;         // makes measured test run time -> 60ms
         ConcurrentHashMap<Object, Boolean> m =
             new ConcurrentHashMap<Object, Boolean>();
-        for (int i = 0; i < 1000; i++) {
-            m.put(new ArrayList(Collections.singleton(new BI(i))), true);
+        for (int i = 0; i < size; i++) {
+            m.put(Collections.singletonList(new BI(i)), true);
         }
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < size; i++) {
             LexicographicList<BI> bis = new LexicographicList<BI>(new BI(i));
             assertTrue(m.containsKey(bis));
         }

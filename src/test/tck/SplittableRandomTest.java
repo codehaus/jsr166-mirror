@@ -128,14 +128,16 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextInt(negative) throws IllegalArgumentException
+     * nextInt(non-positive) throws IllegalArgumentException
      */
-    public void testNextIntBoundedNeg() {
+    public void testNextIntNonPositive() {
         SplittableRandom sr = new SplittableRandom();
-        try {
-            int f = sr.nextInt(-17);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> sr.nextInt(-17),
+            () -> sr.nextInt(0),
+            () -> sr.nextInt(Integer.MIN_VALUE),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**
@@ -193,14 +195,16 @@ public class SplittableRandomTest extends JSR166TestCase {
     }
 
     /**
-     * nextLong(negative) throws IllegalArgumentException
+     * nextLong(non-positive) throws IllegalArgumentException
      */
-    public void testNextLongBoundedNeg() {
+    public void testNextLongNonPositive() {
         SplittableRandom sr = new SplittableRandom();
-        try {
-            long f = sr.nextLong(-17);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> sr.nextLong(-17L),
+            () -> sr.nextLong(0L),
+            () -> sr.nextLong(Long.MIN_VALUE),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**
@@ -254,6 +258,21 @@ public class SplittableRandomTest extends JSR166TestCase {
                 assertTrue(i < NCALLS);
             }
         }
+    }
+
+    /**
+     * nextDouble(non-positive) throws IllegalArgumentException
+     */
+    public void testNextDoubleNonPositive() {
+        SplittableRandom sr = new SplittableRandom();
+        Runnable[] throwingActions = {
+            () -> sr.nextDouble(-17.0d),
+            () -> sr.nextDouble(0.0d),
+            () -> sr.nextDouble(-Double.MIN_VALUE),
+            () -> sr.nextDouble(Double.NEGATIVE_INFINITY),
+            () -> sr.nextDouble(Double.NaN),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**

@@ -1565,13 +1565,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 p.execute(a);
                 if (a.isDone() || p.isQuiescent())
                     continue; // Already done so cannot test; retry
-                while (!p.awaitQuiescence(LONG_DELAY_MS, MILLISECONDS)) {
-                    assertFalse(p.getAsyncMode());
-                    assertFalse(p.isShutdown());
-                    assertFalse(p.isTerminating());
-                    assertFalse(p.isTerminated());
-                    Thread.yield();
-                }
+                assertTrue(p.awaitQuiescence(LONG_DELAY_MS, MILLISECONDS));
                 assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
                 assertTrue(p.isQuiescent());
                 assertTrue(a.isDone());

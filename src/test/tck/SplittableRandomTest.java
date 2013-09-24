@@ -145,10 +145,12 @@ public class SplittableRandomTest extends JSR166TestCase {
      */
     public void testNextIntBadBounds() {
         SplittableRandom sr = new SplittableRandom();
-        try {
-            int f = sr.nextInt(17, 2);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> sr.nextInt(17, 2),
+            () -> sr.nextInt(-42, -42),
+            () -> sr.nextInt(Integer.MAX_VALUE, Integer.MIN_VALUE),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**
@@ -212,10 +214,12 @@ public class SplittableRandomTest extends JSR166TestCase {
      */
     public void testNextLongBadBounds() {
         SplittableRandom sr = new SplittableRandom();
-        try {
-            long f = sr.nextLong(17, 2);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> sr.nextLong(17L, 2L),
+            () -> sr.nextLong(-42L, -42L),
+            () -> sr.nextLong(Long.MAX_VALUE, Long.MIN_VALUE),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**
@@ -274,6 +278,25 @@ public class SplittableRandomTest extends JSR166TestCase {
         };
         assertThrows(IllegalArgumentException.class, throwingActions);
     }
+
+    /**
+     * nextDouble(! (least < bound)) throws IllegalArgumentException
+     */
+    public void testNextDoubleBadBounds() {
+        SplittableRandom sr = new SplittableRandom();
+        Runnable[] throwingActions = {
+            () -> sr.nextDouble(17.0d, 2.0d),
+            () -> sr.nextDouble(-42.0d, -42.0d),
+            () -> sr.nextDouble(Double.MAX_VALUE, Double.MIN_VALUE),
+            () -> sr.nextDouble(Double.NaN, 0.0d),
+            () -> sr.nextDouble(0.0d, Double.NaN),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
+    }
+
+    // TODO: Test infinite bounds!
+    //() -> sr.nextDouble(Double.NEGATIVE_INFINITY, 0.0d),
+    //() -> sr.nextDouble(0.0d, Double.POSITIVE_INFINITY),
 
     /**
      * nextDouble(least, bound) returns least <= value < bound;

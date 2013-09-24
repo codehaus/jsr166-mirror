@@ -39,7 +39,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     static final int NCALLS = 10000;
 
     // max sampled int bound
-    static final int MAX_INT_BOUND = (1 << 28);
+    static final int MAX_INT_BOUND = (1 << 26);
 
     // max sampled long bound
     static final long MAX_LONG_BOUND = (1L << 42);

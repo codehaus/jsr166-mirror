@@ -19,7 +19,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
     }
 
     // max sampled int bound
-    static final int MAX_INT_BOUND = (1 << 28);
+    static final int MAX_INT_BOUND = (1 << 26);
 
     // max sampled long bound
     static final long MAX_LONG_BOUND = (1L << 42);

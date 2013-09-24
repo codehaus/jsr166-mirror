@@ -272,8 +272,6 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         }
     }
 
-    static final int COUNTDOWN = 100000;
-
     class Counter extends CheckedRunnable {
         final AtomicIntegerArray aa;
         volatile int counts;
@@ -302,8 +300,9 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
      */
     public void testCountingInMultipleThreads() throws InterruptedException {
         final AtomicIntegerArray aa = new AtomicIntegerArray(SIZE);
+        int countdown = 10000;
         for (int i = 0; i < SIZE; i++)
-            aa.set(i, COUNTDOWN);
+            aa.set(i, countdown);
         Counter c1 = new Counter(aa);
         Counter c2 = new Counter(aa);
         Thread t1 = new Thread(c1);
@@ -312,7 +311,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         t2.start();
         t1.join();
         t2.join();
-        assertEquals(c1.counts+c2.counts, SIZE * COUNTDOWN);
+        assertEquals(c1.counts+c2.counts, SIZE * countdown);
     }
 
     /**

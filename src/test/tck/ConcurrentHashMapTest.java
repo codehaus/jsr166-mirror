@@ -160,10 +160,10 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * can be inserted and found.
      */
     public void testMixedComparable() {
-        int size = 10000;
+        int size = 1200;        // makes measured test run time -> 35ms
         ConcurrentHashMap<Object, Object> map =
             new ConcurrentHashMap<Object, Object>();
-        Random rng = new Random(1370014958369218000L);
+        Random rng = new Random();
         for (int i = 0; i < size; i++) {
             Object x;
             switch (rng.nextInt(4)) {

@@ -200,7 +200,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                 final CountDownLatch done = new CountDownLatch(cycles);
                 CheckedRunnable task = new CheckedRunnable() {
                     public void realRun() { done.countDown(); }};
-                
                 ScheduledFuture h =
                     p.scheduleAtFixedRate(task, 0, delay, MILLISECONDS);
                 done.await();
@@ -229,7 +228,6 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                 final CountDownLatch done = new CountDownLatch(cycles);
                 CheckedRunnable task = new CheckedRunnable() {
                     public void realRun() { done.countDown(); }};
-                
                 ScheduledFuture h =
                     p.scheduleWithFixedDelay(task, 0, delay, MILLISECONDS);
                 done.await();

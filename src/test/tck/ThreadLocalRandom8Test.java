@@ -19,13 +19,14 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
     }
 
     // max sampled int bound
-    static final int MAX_INT_BOUND = (1 << 28);
+    static final int MAX_INT_BOUND = (1 << 26);
 
     // max sampled long bound
     static final long MAX_LONG_BOUND = (1L << 42);
 
     // Number of replications for other checks
-    static final int REPS = 20;
+    static final int REPS =
+        Integer.getInteger("ThreadLocalRandom8Test.reps", 4);
 
     /**
      * Invoking sized ints, long, doubles, with negative sizes throws
@@ -100,7 +101,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         long size = 0;
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
-            r.ints(size).parallel().forEach(x -> {counter.increment();});
+            r.ints(size).parallel().forEach(x -> counter.increment());
             assertEquals(size, counter.sum());
             size += 524959;
         }
@@ -115,7 +116,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         long size = 0;
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
-            r.longs(size).parallel().forEach(x -> {counter.increment();});
+            r.longs(size).parallel().forEach(x -> counter.increment());
             assertEquals(size, counter.sum());
             size += 524959;
         }
@@ -130,7 +131,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         long size = 0;
         for (int reps = 0; reps < REPS; ++reps) {
             counter.reset();
-            r.doubles(size).parallel().forEach(x -> {counter.increment();});
+            r.doubles(size).parallel().forEach(x -> counter.increment());
             assertEquals(size, counter.sum());
             size += 524959;
         }
@@ -197,7 +198,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.ints().limit(size).parallel().forEach(x -> {counter.increment();});
+        r.ints().limit(size).parallel().forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -208,7 +209,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.longs().limit(size).parallel().forEach(x -> {counter.increment();});
+        r.longs().limit(size).parallel().forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -219,7 +220,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.doubles().limit(size).parallel().forEach(x -> {counter.increment();});
+        r.doubles().limit(size).parallel().forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -230,7 +231,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.ints().limit(size).forEach(x -> {counter.increment();});
+        r.ints().limit(size).forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -241,7 +242,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.longs().limit(size).forEach(x -> {counter.increment();});
+        r.longs().limit(size).forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 
@@ -252,7 +253,7 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
         LongAdder counter = new LongAdder();
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long size = 100;
-        r.doubles().limit(size).forEach(x -> {counter.increment();});
+        r.doubles().limit(size).forEach(x -> counter.increment());
         assertEquals(size, counter.sum());
     }
 

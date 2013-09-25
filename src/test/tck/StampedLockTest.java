@@ -270,9 +270,9 @@ public class StampedLockTest extends JSR166TestCase {
             assertTrue((s = lock.writeLock()) != 0L);
             assertTrue(lock.validate(s));
             assertFalse(lock.validate(lock.tryWriteLock()));
-            assertFalse(lock.validate(lock.tryWriteLock(100L, MILLISECONDS)));
+            assertFalse(lock.validate(lock.tryWriteLock(10L, MILLISECONDS)));
             assertFalse(lock.validate(lock.tryReadLock()));
-            assertFalse(lock.validate(lock.tryReadLock(100L, MILLISECONDS)));
+            assertFalse(lock.validate(lock.tryReadLock(10L, MILLISECONDS)));
             assertFalse(lock.validate(lock.tryOptimisticRead()));
             lock.unlockWrite(s);
         } catch (InterruptedException ie) {

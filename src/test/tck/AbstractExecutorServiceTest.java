@@ -46,11 +46,10 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
     public void testExecuteRunnable() throws Exception {
         ExecutorService e = new DirectExecutorService();
         final AtomicBoolean done = new AtomicBoolean(false);
-        CheckedRunnable task = new CheckedRunnable() {
+        Future<?> future = e.submit(new CheckedRunnable() {
             public void realRun() {
                 done.set(true);
-            }};
-        Future<?> future = e.submit(task);
+            }});
         assertNull(future.get());
         assertNull(future.get(0, MILLISECONDS));
         assertTrue(done.get());

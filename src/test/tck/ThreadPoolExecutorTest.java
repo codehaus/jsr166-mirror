@@ -1375,11 +1375,10 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         ExtendedTPE p = new ExtendedTPE();
         try {
             final CountDownLatch done = new CountDownLatch(1);
-            final CheckedRunnable task = new CheckedRunnable() {
+            p.execute(new CheckedRunnable() {
                 public void realRun() {
                     done.countDown();
-                }};
-            p.execute(task);
+                }});
             await(p.afterCalled);
             assertEquals(0, done.getCount());
             assertTrue(p.afterCalled());

@@ -198,7 +198,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                 long startTime = System.nanoTime();
                 int cycles = 10;
                 final CountDownLatch done = new CountDownLatch(cycles);
-                CheckedRunnable task = new CheckedRunnable() {
+                Runnable task = new CheckedRunnable() {
                     public void realRun() { done.countDown(); }};
                 ScheduledFuture h =
                     p.scheduleAtFixedRate(task, 0, delay, MILLISECONDS);
@@ -226,7 +226,7 @@ public class ScheduledExecutorSubclassTest extends JSR166TestCase {
                 long startTime = System.nanoTime();
                 int cycles = 10;
                 final CountDownLatch done = new CountDownLatch(cycles);
-                CheckedRunnable task = new CheckedRunnable() {
+                Runnable task = new CheckedRunnable() {
                     public void realRun() { done.countDown(); }};
                 ScheduledFuture h =
                     p.scheduleWithFixedDelay(task, 0, delay, MILLISECONDS);

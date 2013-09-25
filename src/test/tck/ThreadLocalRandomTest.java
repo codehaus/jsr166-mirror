@@ -270,7 +270,7 @@ public class ThreadLocalRandomTest extends JSR166TestCase {
         long firstRand = 0;
         ThreadLocalRandom firstThreadLocalRandom = null;
 
-        final CheckedRunnable getRandomState = new CheckedRunnable() {
+        Runnable getRandomState = new CheckedRunnable() {
             public void realRun() {
                 ThreadLocalRandom current = ThreadLocalRandom.current();
                 assertSame(current, ThreadLocalRandom.current());

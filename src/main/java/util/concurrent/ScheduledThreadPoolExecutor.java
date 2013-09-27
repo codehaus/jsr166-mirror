@@ -458,14 +458,14 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Returns the trigger time of a delayed action.
+     * Returns the nanoTime-based trigger time of a delayed action.
      */
     private long triggerTime(long delay, TimeUnit unit) {
         return triggerTime(unit.toNanos((delay < 0) ? 0 : delay));
     }
 
     /**
-     * Returns the trigger time of a delayed action.
+     * Returns the nanoTime-based trigger time of a delayed action.
      */
     long triggerTime(long delay) {
         return now() +

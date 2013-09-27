@@ -67,10 +67,11 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
      * or the field is inaccessible to the caller according to Java language
      * access control
      */
-    public static <U, W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass, Class<W> vclass, String fieldName) {
-        return new AtomicReferenceFieldUpdaterImpl<U,W>(tclass,
-                                                        vclass,
-                                                        fieldName);
+    public static <U,W> AtomicReferenceFieldUpdater<U,W> newUpdater(Class<U> tclass,
+                                                                    Class<W> vclass,
+                                                                    String fieldName) {
+        return new AtomicReferenceFieldUpdaterImpl<U,W>
+            (tclass, vclass, fieldName);
     }
 
     /**

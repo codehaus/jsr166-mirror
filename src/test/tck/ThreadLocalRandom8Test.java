@@ -34,30 +34,15 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
      */
     public void testBadStreamSize() {
         ThreadLocalRandom r = ThreadLocalRandom.current();
-        try {
-            java.util.stream.IntStream x = r.ints(-1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.IntStream x = r.ints(-1L, 2, 3);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(-1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(-1L, -1L, 1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(-1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(-1L, .5, .6);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> r.ints(-1L),
+            () -> r.ints(-1L, 2, 3),
+            () -> r.longs(-1L),
+            () -> r.longs(-1L, -1L, 1L),
+            () -> r.doubles(-1L),
+            () -> r.doubles(-1L, .5, .6),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**
@@ -66,30 +51,15 @@ public class ThreadLocalRandom8Test extends JSR166TestCase {
      */
     public void testBadStreamBounds() {
         ThreadLocalRandom r = ThreadLocalRandom.current();
-        try {
-            java.util.stream.IntStream x = r.ints(2, 1);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.IntStream x = r.ints(10, 42, 42);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(-1L, -1L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.LongStream x = r.longs(10, 1L, -2L);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(0.0, 0.0);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
-        try {
-            java.util.stream.DoubleStream x = r.doubles(10, .5, .4);
-            shouldThrow();
-        } catch (IllegalArgumentException success) {}
+        Runnable[] throwingActions = {
+            () -> r.ints(2, 1),
+            () -> r.ints(10, 42, 42),
+            () -> r.longs(-1L, -1L),
+            () -> r.longs(10, 1L, -2L),
+            () -> r.doubles(0.0, 0.0),
+            () -> r.doubles(10, .5, .4),
+        };
+        assertThrows(IllegalArgumentException.class, throwingActions);
     }
 
     /**

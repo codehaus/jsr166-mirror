@@ -2431,8 +2431,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     static final class Values<E> extends AbstractCollection<E> {
-        final ConcurrentNavigableMap<?, E> m;
-        Values(ConcurrentNavigableMap<?, E> map) {
+        final ConcurrentNavigableMap<?,E> m;
+        Values(ConcurrentNavigableMap<?,E> map) {
             m = map;
         }
         @SuppressWarnings("unchecked")

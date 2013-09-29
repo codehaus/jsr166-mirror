@@ -130,7 +130,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     /**
      * nextInt(non-positive) throws IllegalArgumentException
      */
-    public void testNextIntNonPositive() {
+    public void testNextIntBoundNonPositive() {
         SplittableRandom sr = new SplittableRandom();
         Runnable[] throwingActions = {
             () -> sr.nextInt(-17),
@@ -199,7 +199,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     /**
      * nextLong(non-positive) throws IllegalArgumentException
      */
-    public void testNextLongNonPositive() {
+    public void testNextLongBoundNonPositive() {
         SplittableRandom sr = new SplittableRandom();
         Runnable[] throwingActions = {
             () -> sr.nextLong(-17L),
@@ -267,7 +267,7 @@ public class SplittableRandomTest extends JSR166TestCase {
     /**
      * nextDouble(non-positive) throws IllegalArgumentException
      */
-    public void testNextDoubleNonPositive() {
+    public void testNextDoubleBoundNonPositive() {
         SplittableRandom sr = new SplittableRandom();
         Runnable[] throwingActions = {
             () -> sr.nextDouble(-17.0d),

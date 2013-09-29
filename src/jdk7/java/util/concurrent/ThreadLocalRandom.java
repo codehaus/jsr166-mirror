@@ -172,7 +172,7 @@ public class ThreadLocalRandom extends Random {
      * @throws IllegalArgumentException if n is not positive
      */
     public double nextDouble(double n) {
-        if (n <= 0)
+        if (!(n > 0))
             throw new IllegalArgumentException("n must be positive");
         return nextDouble() * n;
     }

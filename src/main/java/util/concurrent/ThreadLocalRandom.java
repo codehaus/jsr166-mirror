@@ -6,9 +6,8 @@
 
 package java.util.concurrent;
 
-import java.security.SecureRandom;
-import java.net.NetworkInterface;
 import java.io.ObjectStreamField;
+import java.net.NetworkInterface;
 import java.util.Enumeration;
 import java.util.Random;
 import java.util.Spliterator;
@@ -122,7 +121,7 @@ public class ThreadLocalRandom extends Random {
         long h = 0L;
         try {
             Enumeration<NetworkInterface> ifcs =
-                NetworkInterface.getNetworkInterfaces();
+                    NetworkInterface.getNetworkInterfaces();
             boolean retry = false; // retry once if getHardwareAddress is null
             while (ifcs.hasMoreElements()) {
                 NetworkInterface ifc = ifcs.nextElement();
@@ -166,8 +165,8 @@ public class ThreadLocalRandom extends Random {
     private static final long SEEDER_INCREMENT = 0xbb67ae8584caa73bL;
 
     // Constants from SplittableRandom
-    private static final double DOUBLE_UNIT = 1.0 / (1L << 53);
-    private static final float  FLOAT_UNIT  = 1.0f / (1 << 24);
+    private static final double DOUBLE_UNIT = 0x1.0p-53;  // 1.0  / (1L << 53)
+    private static final float  FLOAT_UNIT  = 0x1.0p-24f; // 1.0f / (1 << 24)
 
     /** Rarely-used holder for the second of a pair of Gaussians */
     private static final ThreadLocal<Double> nextLocalGaussian =

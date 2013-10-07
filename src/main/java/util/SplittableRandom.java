@@ -110,8 +110,8 @@ public final class SplittableRandom {
      * For nextLong, the mix64 function is based on David Stafford's
      * (http://zimbry.blogspot.com/2011/09/better-bit-mixing-improving-on.html)
      * "Mix13" variant of the "64-bit finalizer" function in Austin
-     * Appleby's MurmurHash3 algorithm See
-     * http://code.google.com/p/smhasher/wiki/MurmurHash3 . The mix32
+     * Appleby's MurmurHash3 algorithm (see
+     * http://code.google.com/p/smhasher/wiki/MurmurHash3). The mix32
      * function is based on Stafford's Mix04 mix function, but returns
      * the upper 32 bits cast as int.
      *
@@ -166,7 +166,7 @@ public final class SplittableRandom {
      * The least non-zero value returned by nextDouble(). This value
      * is scaled by a random value of 53 bits to produce a result.
      */
-    private static final double DOUBLE_ULP = 1.0 / (1L << 53);
+    private static final double DOUBLE_UNIT = 0x1.0p-53; // 1.0 / (1L << 53);
 
     /**
      * The seed. Updated only via method nextSeed.
@@ -190,16 +190,16 @@ public final class SplittableRandom {
      * Computes Stafford variant 13 of 64bit mix function.
      */
     private static long mix64(long z) {
-        z *= 0xbf58476d1ce4e5b9L;
-        z = (z ^ (z >>> 32)) * 0x94d049bb133111ebL;
-        return z ^ (z >>> 32);
+        z = (z ^ (z >>> 30)) * 0xbf58476d1ce4e5b9L;
+        z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL;
+        return z ^ (z >>> 31);
     }
 
     /**
      * Returns the 32 high bits of Stafford variant 4 mix64 function as int.
      */
     private static int mix32(long z) {
-        z *= 0x62a9d9ed799705f5L;
+        z = (z ^ (z >>> 33)) * 0x62a9d9ed799705f5L;
         return (int)(((z ^ (z >>> 28)) * 0xcb24d0a5c88c35b3L) >>> 32);
     }
 
@@ -207,7 +207,7 @@ public final class SplittableRandom {
      * Returns the gamma value to use for a new split instance.
      */
     private static long mixGamma(long z) {
-        z *= 0xff51afd7ed558ccdL;                   // MurmurHash3 mix constants
+        z = (z ^ (z >>> 33)) * 0xff51afd7ed558ccdL; // MurmurHash3 mix constants
         z = (z ^ (z >>> 33)) * 0xc4ceb9fe1a85ec53L;
         z = (z ^ (z >>> 33)) | 1L;                  // force to be odd
         int n = Long.bitCount(z ^ (z >>> 1));       // ensure enough transitions
@@ -373,7 +373,7 @@ public final class SplittableRandom {
      * @return a pseudorandom value
      */
     final double internalNextDouble(double origin, double bound) {
-        double r = (nextLong() >>> 11) * DOUBLE_ULP;
+        double r = (nextLong() >>> 11) * DOUBLE_UNIT;
         if (origin < bound) {
             r = r * (bound - origin) + origin;
             if (r >= bound) // correct for rounding
@@ -537,7 +537,7 @@ public final class SplittableRandom {
      *         (inclusive) and one (exclusive)
      */
     public double nextDouble() {
-        return (mix64(nextSeed()) >>> 11) * DOUBLE_ULP;
+        return (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT;
     }
 
     /**
@@ -552,7 +552,7 @@ public final class SplittableRandom {
     public double nextDouble(double bound) {
         if (!(bound > 0.0))
             throw new IllegalArgumentException(BadBound);
-        double result = (mix64(nextSeed()) >>> 11) * DOUBLE_ULP * bound;
+        double result = (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT * bound;
         return (result < bound) ?  result : // correct for rounding
             Double.longBitsToDouble(Double.doubleToLongBits(bound) - 1);
     }

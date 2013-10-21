@@ -47,6 +47,7 @@ import java.util.function.LongBinaryOperator;
  *
  * @since 1.8
  * @author Doug Lea
+ * @serial exclude
  */
 public class LongAccumulator extends Striped64 implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
@@ -192,18 +193,55 @@ public class LongAccumulator extends Striped64 implements Serializable {
         return (double)get();
     }
 
-    private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException {
-        s.defaultWriteObject();
-        s.writeLong(get());
+    /**
+     * Serialization proxy, used to avoid reference to the non-public
+     * Striped64 superclass in serialized forms.
+     * @serial include
+     */
+    private static class SerializationProxy implements Serializable {
+        private static final long serialVersionUID = 7249069246863182397L;
+
+        /**
+         * The current value returned by get().
+         * @serial
+         */
+        private final long value;
+        /**
+         * The function used for updates.
+         * @serial
+         */
+        private final LongBinaryOperator function;
+        /**
+         * The identity value
+         * @serial
+         */
+        private final long identity;
+
+        SerializationProxy(LongAccumulator a) {
+            function = a.function;
+            identity = a.identity;
+            value = a.get();
+        }
+
+        /**
+         * Returns a {@code LongAccumulator} object with initial state
+         * held by this proxy.
+         */
+        private Object readResolve() {
+            LongAccumulator a = new LongAccumulator(function, identity);
+            a.base = value;
+            return a;
+        }
+    }
+
+    private Object writeReplace() {
+        return new SerializationProxy(this);
     }
 
     private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        cellsBusy = 0;
-        cells = null;
-        base = s.readLong();
+        throws java.io.InvalidObjectException {
+        throw new java.io.InvalidObjectException("Proxy required");
     }
+
 
 }

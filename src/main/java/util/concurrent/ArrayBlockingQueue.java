@@ -919,7 +919,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Called whenever an interior remove (not at takeIndex) occured.
+         * Called whenever an interior remove (not at takeIndex) occurred.
          *
          * Notifies all iterators, and expunges any that are now stale.
          */
@@ -1278,7 +1278,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Called whenever an interior remove (not at takeIndex) occured.
+         * Called whenever an interior remove (not at takeIndex) occurred.
          *
          * @return true if this iterator should be unlinked from itrs
          */

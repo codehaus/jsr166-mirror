@@ -37,7 +37,6 @@ import java.io.Serializable;
  *
  * @since 1.8
  * @author Doug Lea
- * @serial exclude
  */
 public class LongAdder extends Striped64 implements Serializable {
     private static final long serialVersionUID = 7249069246863182397L;
@@ -202,7 +201,7 @@ public class LongAdder extends Striped64 implements Serializable {
         }
 
         /**
-         * Returns a {@code LongAdder} object with initial state
+         * @return a {@code LongAdder} object with initial state
          * held by this proxy.
          */
         private Object readResolve() {
@@ -212,10 +211,21 @@ public class LongAdder extends Striped64 implements Serializable {
         }
     }
 
+    /**
+     * Returns a {@link SerializationProxy} 
+     * representing the state of this instance.
+     *
+     * @return a {@link SerializationProxy} 
+     * representing the state of this instance
+     */ 
     private Object writeReplace() {
         return new SerializationProxy(this);
     }
-
+    
+    /**
+     * @param s the stream
+     * @throws java.io.InvalidObjectException always
+     */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.InvalidObjectException {
         throw new java.io.InvalidObjectException("Proxy required");

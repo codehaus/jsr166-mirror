@@ -234,12 +234,12 @@ public class LongAccumulator extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns a {@link SerializationProxy} 
+     * Returns a {@link SerializationProxy}
      * representing the state of this instance.
      *
-     * @return a {@link SerializationProxy} 
+     * @return a {@link SerializationProxy}
      * representing the state of this instance
-     */ 
+     */
     private Object writeReplace() {
         return new SerializationProxy(this);
     }

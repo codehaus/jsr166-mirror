@@ -212,8 +212,10 @@ public class LongAdder extends Striped64 implements Serializable {
     }
 
     /**
-     * Returns a {@link SerializationProxy}
-     * representing the state of this instance.
+     * Returns a
+     * <a href="../../../../serialized-form.html#java.util.concurrent.atomic.LongAdder.SerializationProxy">
+     * SerializationProxy</a>
+      * representing the state of this instance.
      *
      * @return a {@link SerializationProxy}
      * representing the state of this instance

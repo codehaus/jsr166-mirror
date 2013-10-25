@@ -230,7 +230,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
          * held by this proxy.
          */
         private Object readResolve() {
-            double d = Double.longBitsToDouble(identity); 
+            double d = Double.longBitsToDouble(identity);
             DoubleAccumulator a = new DoubleAccumulator(function, d);
             a.base = Double.doubleToRawLongBits(value);
             return a;

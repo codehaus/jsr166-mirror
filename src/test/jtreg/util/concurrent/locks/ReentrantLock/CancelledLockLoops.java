@@ -9,10 +9,10 @@
  * @bug 4486658
  * @compile -source 1.5 CancelledLockLoops.java
  * @run main/timeout=2800 CancelledLockLoops
- * @summary tests lockInterruptibly.
- * Checks for responsiveness of locks to interrupts. Runs under that
- * assumption that ITERS_VALUE computations require more than TIMEOUT
- * msecs to complete.
+ * @summary tests ReentrantLock.lockInterruptibly.
+ * Checks for responsiveness of locks to interrupts.  Runs under the
+ * assumption that ITERS computations require more than TIMEOUT msecs
+ * to complete.
  */
 
 import java.util.concurrent.*;

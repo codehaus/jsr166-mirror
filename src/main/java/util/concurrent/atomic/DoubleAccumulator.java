@@ -230,14 +230,17 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
          * held by this proxy.
          */
         private Object readResolve() {
-            DoubleAccumulator a = new DoubleAccumulator(function, identity);
+            double d = Double.longBitsToDouble(identity);
+            DoubleAccumulator a = new DoubleAccumulator(function, d);
             a.base = Double.doubleToRawLongBits(value);
             return a;
         }
     }
 
     /**
-     * Returns a {@link SerializationProxy}
+     * Returns a
+     * <a href="../../../../serialized-form.html#java.util.concurrent.atomic.DoubleAccumulator.SerializationProxy">
+     * SerializationProxy</a>
      * representing the state of this instance.
      *
      * @return a {@link SerializationProxy}

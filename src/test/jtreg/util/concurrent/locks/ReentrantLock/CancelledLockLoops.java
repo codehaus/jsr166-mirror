@@ -63,7 +63,7 @@ public final class CancelledLockLoops {
                 threads[i] = new Thread(this);
             for (int i = 0; i < threads.length; ++i)
                 threads[i].start();
-            Thread[] cancels = (Thread[]) (threads.clone());
+            Thread[] cancels = threads.clone();
             Collections.shuffle(Arrays.asList(cancels), rng);
             barrier.await();
             Thread.sleep(TIMEOUT);

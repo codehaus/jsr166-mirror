@@ -37,7 +37,7 @@ public class DequeBash {
         return (t & 0x7fffffff);
     }
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         Class<?> cls = Class.forName(args[0]);
         int n = 1000000;
 

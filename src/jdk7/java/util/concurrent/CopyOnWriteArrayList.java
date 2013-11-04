@@ -329,7 +329,7 @@ public class CopyOnWriteArrayList<E>
      * @throws NullPointerException if the specified array is null
      */
     @SuppressWarnings("unchecked")
-    public <T> T[] toArray(T a[]) {
+    public <T> T[] toArray(T[] a) {
         Object[] elements = getArray();
         int len = elements.length;
         if (a.length < len)

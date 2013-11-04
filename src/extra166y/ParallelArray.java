@@ -1352,7 +1352,7 @@ public class ParallelArray<T> extends AbstractParallelAnyArray.OUPap<T> implemen
             return a;
         }
 
-        public <V> V[] toArray(V a[]) {
+        public <V> V[] toArray(V[] a) {
             int len = fence;
             if (a.length < len) {
                 Class elementType = a.getClass().getComponentType();

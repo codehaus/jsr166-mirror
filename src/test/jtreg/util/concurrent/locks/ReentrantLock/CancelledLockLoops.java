@@ -26,9 +26,7 @@ public final class CancelledLockLoops {
     static final long TIMEOUT = 100;
 
     public static void main(String[] args) throws Exception {
-        int maxThreads = 5;
-        if (args.length > 0)
-            maxThreads = Integer.parseInt(args[0]);
+        int maxThreads = (args.length > 0) ? Integer.parseInt(args[0]) : 5;
 
         print = true;
 

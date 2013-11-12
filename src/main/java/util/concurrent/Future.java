@@ -23,7 +23,8 @@ package java.util.concurrent;
  *
  * <p>
  * <b>Sample Usage</b> (Note that the following classes are all
- * made-up.) <p>
+ * made-up.)
+ *
  *  <pre> {@code
  * interface ArchiveSearcher { String search(String target); }
  * class App {

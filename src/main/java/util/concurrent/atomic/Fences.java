@@ -328,7 +328,6 @@ package java.util.concurrent.atomic;
  *     such that <em>accesses(r, p)</em>.
  *
  *   </ul>
- *   <p>
  *   <dt><b>[Matching]</b>
  *   <dd>Given:
  *
@@ -368,7 +367,6 @@ package java.util.concurrent.atomic;
  *     happens-before w1</em>.
  *
  *   </ul>
- *   <p>
  *   <dt><b>[Initial Reads]</b>
  *   <dd>Given:
  *
@@ -402,7 +400,6 @@ package java.util.concurrent.atomic;
  *     <li> the effects of <em>b</em> are constrained
  *          by the relation <em>a happens-before b</em>.
  *   </ul>
- *  <p>
  *  <dt><b>[orderAccesses]</b>
  *  <dd>Given:
  *
@@ -422,7 +419,6 @@ package java.util.concurrent.atomic;
  *     <li> <em>f</em> is an element of the <em>synchronization order</em>.
  *
  *   </ul>
- *   <p>
  *   <dt><b>[Reachability]</b>
  *   <dd>Given:
  *

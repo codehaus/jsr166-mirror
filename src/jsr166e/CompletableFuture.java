@@ -2830,7 +2830,7 @@ public class CompletableFuture<T> implements Future<T> {
             }
             if (dst == null)
                 dst = new CompletableFuture<U>();
-            if (e == null || ex != null)
+            if (ex != null)
                 dst.internalComplete(null, ex);
         }
         helpPostComplete();

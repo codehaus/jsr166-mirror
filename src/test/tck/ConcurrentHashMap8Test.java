@@ -539,8 +539,6 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
 
         assertNotSame(x, y);
         assertEquals(x.size(), y.size());
-        assertEquals(x.toString(), y.toString());
-        assertTrue(Arrays.equals(x.toArray(), y.toArray()));
         assertEquals(x, y);
         assertEquals(y, x);
     }

@@ -2188,7 +2188,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Must be negative when shifted left by RESIZE_STAMP_SHIFT.
      */
     static final int resizeStamp(int n) {
-	return Integer.numberOfLeadingZeros(n) | (1 << (RESIZE_STAMP_BITS - 1));
+        return Integer.numberOfLeadingZeros(n) | (1 << (RESIZE_STAMP_BITS - 1));
     }
 
     /**
@@ -2251,14 +2251,14 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 int rs = resizeStamp(n);
                 if (sc < 0) {
                     if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
-			sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
-			transferIndex <= 0)
+                        sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
+                        transferIndex <= 0)
                         break;
                     if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1))
                         transfer(tab, nt);
                 }
                 else if (U.compareAndSwapInt(this, SIZECTL, sc,
-					     (rs << RESIZE_STAMP_SHIFT) + 2))
+                                             (rs << RESIZE_STAMP_SHIFT) + 2))
                     transfer(tab, null);
                 s = sumCount();
             }
@@ -2272,13 +2272,13 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         Node<K,V>[] nextTab; int sc;
         if (tab != null && (f instanceof ForwardingNode) &&
             (nextTab = ((ForwardingNode<K,V>)f).nextTable) != null) {
-	    int rs = resizeStamp(tab.length);
+            int rs = resizeStamp(tab.length);
             while (nextTab == nextTable && table == tab &&
-		   (sc = sizeCtl) < 0) {
-		if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
+                   (sc = sizeCtl) < 0) {
+                if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
                     sc == rs + MAX_RESIZERS || transferIndex <= 0)
-		    break;
-		if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1)) {
+                    break;
+                if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1)) {
                     transfer(tab, nextTab);
                     break;
                 }
@@ -2319,7 +2319,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             else if (tab == table) {
                 int rs = resizeStamp(n);
                 if (sc < 0) {
-		    Node<K,V>[] nt;
+                    Node<K,V>[] nt;
                     if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
                         sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
                         transferIndex <= 0)
@@ -2328,7 +2328,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                         transfer(tab, nt);
                 }
                 else if (U.compareAndSwapInt(this, SIZECTL, sc,
-					     (rs << RESIZE_STAMP_SHIFT) + 2))
+                                             (rs << RESIZE_STAMP_SHIFT) + 2))
                     transfer(tab, null);
             }
         }

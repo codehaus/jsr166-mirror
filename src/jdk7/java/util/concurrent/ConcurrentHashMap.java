@@ -2080,12 +2080,13 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
          */
         final Node<K,V> find(int h, Object k) {
             if (k != null) {
-                for (Node<K,V> e = first; e != null; e = e.next) {
+                for (Node<K,V> e = first; e != null; ) {
                     int s; K ek;
                     if (((s = lockState) & (WAITER|WRITER)) != 0) {
                         if (e.hash == h &&
                             ((ek = e.key) == k || (ek != null && k.equals(ek))))
                             return e;
+                        e = e.next;
                     }
                     else if (U.compareAndSwapInt(this, LOCKSTATE, s,
                                                  s + READER)) {

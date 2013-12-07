@@ -40,14 +40,14 @@ import java.util.function.Function;
  *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
- * Java Caollections Framework</a>.
+ * Java Collections Framework</a>.
  *
  * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public interface ConcurrentMap<K, V> extends Map<K, V> {
+public interface ConcurrentMap<K,V> extends Map<K,V> {
 
     /**
      * {@inheritDoc}
@@ -72,7 +72,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @implSpec The default implementation is equivalent to, for this
      * {@code map}:
      * <pre> {@code
-     * for ((Map.Entry<K, V> entry : map.entrySet())
+     * for ((Map.Entry<K,V> entry : map.entrySet())
      *     action.accept(entry.getKey(), entry.getValue());
      * }</pre>
      *
@@ -87,13 +87,13 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
     @Override
     default void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);
-        for (Map.Entry<K, V> entry : entrySet()) {
+        for (Map.Entry<K,V> entry : entrySet()) {
             K k;
             V v;
             try {
                 k = entry.getKey();
                 v = entry.getValue();
-            } catch(IllegalStateException ise) {
+            } catch (IllegalStateException ise) {
                 // this usually means the entry is no longer in the map.
                 continue;
             }
@@ -132,7 +132,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
      */
-     V putIfAbsent(K key, V value);
+    V putIfAbsent(K key, V value);
 
     /**
      * Removes the entry for a key only if currently mapped to a given value.
@@ -231,11 +231,11 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @implSpec
      * <p>The default implementation is equivalent to, for this {@code map}:
      * <pre> {@code
-     * for ((Map.Entry<K, V> entry : map.entrySet())
+     * for ((Map.Entry<K,V> entry : map.entrySet())
      *     do {
      *        K k = entry.getKey();
      *        V v = entry.getValue();
-     *     } while(!replace(k, v, function.apply(k, v)));
+     *     } while (!replace(k, v, function.apply(k, v)));
      * }</pre>
      *
      * The default implementation may retry these steps when multiple
@@ -252,7 +252,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
     default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         Objects.requireNonNull(function);
         forEach((k,v) -> {
-            while(!replace(k, v, function.apply(k, v))) {
+            while (!replace(k, v, function.apply(k, v))) {
                 // v changed or k is gone
                 if ( (v = get(k)) == null) {
                     // k is no longer in the map.
@@ -330,7 +330,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
             BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         V oldValue;
-        while((oldValue = get(key)) != null) {
+        while ((oldValue = get(key)) != null) {
             V newValue = remappingFunction.apply(key, oldValue);
             if (newValue != null) {
                 if (replace(key, oldValue, newValue))
@@ -379,7 +379,7 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
             BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         V oldValue = get(key);
-        for(;;) {
+        for (;;) {
             V newValue = remappingFunction.apply(key, oldValue);
             if (newValue == null) {
                 // delete mapping

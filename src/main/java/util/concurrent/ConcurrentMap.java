@@ -73,7 +73,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * {@code map}:
      * <pre> {@code
      * for ((Map.Entry<K,V> entry : map.entrySet())
-     *     action.accept(entry.getKey(), entry.getValue());
+     *   action.accept(entry.getKey(), entry.getValue());
      * }</pre>
      *
      * @implNote The default implementation assumes that {@code
@@ -106,10 +106,10 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * with a value, associates it with the given value.
      * This is equivalent to
      *  <pre> {@code
-     * if (!map.containsKey(key))
-     *   return map.put(key, value);
-     * else
+     * if (map.containsKey(key))
      *   return map.get(key);
+     * else
+     *   return map.put(key, value);
      * }</pre>
      *
      * except that the action is performed atomically.

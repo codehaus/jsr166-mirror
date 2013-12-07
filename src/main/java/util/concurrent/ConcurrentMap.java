@@ -72,7 +72,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @implSpec The default implementation is equivalent to, for this
      * {@code map}:
      * <pre> {@code
-     * for ((Map.Entry<K,V> entry : map.entrySet())
+     * for (Map.Entry<K,V> entry : map.entrySet())
      *   action.accept(entry.getKey(), entry.getValue());
      * }</pre>
      *
@@ -231,7 +231,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @implSpec
      * <p>The default implementation is equivalent to, for this {@code map}:
      * <pre> {@code
-     * for ((Map.Entry<K,V> entry : map.entrySet())
+     * for (Map.Entry<K,V> entry : map.entrySet())
      *     do {
      *        K k = entry.getKey();
      *        V v = entry.getValue();

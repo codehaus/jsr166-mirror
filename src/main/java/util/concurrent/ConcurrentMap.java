@@ -6,11 +6,30 @@
 
 package java.util.concurrent;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * A {@link java.util.Map} providing thread safety and atomicity
  * guarantees.
+ *
+ * <p>To support atomic usages, ConcurrentMaps are expected not to
+ * allow {@code null} as a legal value (and to throw exceptions upon
+ * attempted insertions). This enables a return value of {@code null}
+ * to unambiguously indicate the absence of a mapping. This interface
+ * does not strictly forbid implementations that may hold {@code null}
+ * values. However, in any that do so, a {@code null} value must bear
+ * the same interpretation as the absence of a mapping in order to
+ * conform to method atomicity requirements.  Further, any that do so
+ * must override all default method implementations.
+ *
+ * <p>Several methods (for example {@link #putIfAbsent}) inherited
+ * from {@link Map} do not have default implementations, and so must
+ * be provided by implementations of this interface, even though they
+ * have (non-atomic) default implementations in the {@link Map}
+ * interface.
  *
  * <p>Memory consistency effects: As with other concurrent
  * collections, actions in a thread prior to placing an object into a
@@ -21,22 +40,25 @@ import java.util.function.BiFunction;
  *
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
- * Java Collections Framework</a>.
+ * Java Caollections Framework</a>.
  *
  * @since 1.5
  * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public interface ConcurrentMap<K,V> extends Map<K,V> {
+public interface ConcurrentMap<K, V> extends Map<K, V> {
 
     /**
      * {@inheritDoc}
      *
-     * @implNote This implementation assumes that the ConcurrentMap cannot
-     * contain null values and get() returning null unambiguously means the key
-     * is absent. Implementations which support null values must override this
-     * default implementation.
+     * @implNote The default implementation returns the result of
+     * {@code get(key)} unless {@code null}, in which case it returns
+     * the given defaultValue.
+     *
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
      */
     @Override
     default V getOrDefault(Object key, V defaultValue) {
@@ -44,17 +66,55 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
         return ((v = get(key)) != null) ? v : defaultValue;
     }
 
+   /**
+     * {@inheritDoc}
+     *
+     * @implSpec The default implementation is equivalent to, for this
+     * {@code map}:
+     * <pre> {@code
+     * for ((Map.Entry<K, V> entry : map.entrySet())
+     *     action.accept(entry.getKey(), entry.getValue());
+     * }</pre>
+     *
+     * @implNote The default implementation assumes that {@code
+     * IllegalStateException} thrown by {@code getKey()} or {@code
+     * getValue()} indicates that the entry no longer exists.
+     * Operation continues for subsequent entries.
+     *
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    @Override
+    default void forEach(BiConsumer<? super K, ? super V> action) {
+        Objects.requireNonNull(action);
+        for (Map.Entry<K, V> entry : entrySet()) {
+            K k;
+            V v;
+            try {
+                k = entry.getKey();
+                v = entry.getValue();
+            } catch(IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                continue;
+            }
+            action.accept(k, v);
+        }
+    }
+
     /**
      * If the specified key is not already associated
-     * with a value, associate it with the given value.
+     * with a value, associates it with the given value.
      * This is equivalent to
      *  <pre> {@code
      * if (!map.containsKey(key))
      *   return map.put(key, value);
      * else
-     *   return map.get(key);}</pre>
+     *   return map.get(key);
+     * }</pre>
      *
      * except that the action is performed atomically.
+     *
+     * @implNote There is no default implementation.
      *
      * @param key key with which the specified value is to be associated
      * @param value value to be associated with the specified key
@@ -72,7 +132,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
      */
-    V putIfAbsent(K key, V value);
+     V putIfAbsent(K key, V value);
 
     /**
      * Removes the entry for a key only if currently mapped to a given value.
@@ -82,9 +142,12 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *   map.remove(key);
      *   return true;
      * } else
-     *   return false;}</pre>
+     *   return false;
+     * }</pre>
      *
      * except that the action is performed atomically.
+     *
+     * @implNote There is no default implementation.
      *
      * @param key key with which the specified value is associated
      * @param value value expected to be associated with the specified key
@@ -108,9 +171,12 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *   map.put(key, newValue);
      *   return true;
      * } else
-     *   return false;}</pre>
+     *   return false;
+     * }</pre>
      *
      * except that the action is performed atomically.
+     *
+     * @implNote There is no default implementation.
      *
      * @param key key with which the specified value is associated
      * @param oldValue value expected to be associated with the specified key
@@ -134,9 +200,12 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * if (map.containsKey(key)) {
      *   return map.put(key, value);
      * } else
-     *   return null;}</pre>
+     *   return null;
+     * }</pre>
      *
      * except that the action is performed atomically.
+     *
+     * @implNote There is no default implementation.
      *
      * @param key key with which the specified value is associated
      * @param value value to be associated with the specified key
@@ -159,28 +228,247 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
     /**
      * {@inheritDoc}
      *
-     * @implNote This implementation assumes that the ConcurrentMap cannot
-     * contain null values and get() returning null unambiguously means the key
-     * is absent. Implementations which support null values
-     * <strong>must</strong> override this default implementation.
+     * @implSpec
+     * <p>The default implementation is equivalent to, for this {@code map}:
+     * <pre> {@code
+     * for ((Map.Entry<K, V> entry : map.entrySet())
+     *     do {
+     *        K k = entry.getKey();
+     *        V v = entry.getValue();
+     *     } while(!replace(k, v, function.apply(k, v)));
+     * }</pre>
+     *
+     * The default implementation may retry these steps when multiple
+     * threads attempt updates, and may call the function multiple
+     * times.
+     *
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     * @throws ClassCastException {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     * @since 1.8
      */
     @Override
     default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
-        if (function == null) throw new NullPointerException();
-        for (Map.Entry<K,V> entry : entrySet()) {
-            K k; V v;
-            try {
-                k = entry.getKey();
-                v = entry.getValue();
-            } catch (IllegalStateException ise) {
-                continue; // skip if entry was removed
-            }
-
-            while (!replace(k, v, function.apply(k, v))) {
-                if ((v = get(k)) == null) // give up if k now removed
+        Objects.requireNonNull(function);
+        forEach((k,v) -> {
+            while(!replace(k, v, function.apply(k, v))) {
+                // v changed or k is gone
+                if ( (v = get(k)) == null) {
+                    // k is no longer in the map.
                     break;
+                }
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @implSpec
+     * The default implementation is equivalent to the following steps for this
+     * {@code map}, then returning the current value or {@code null} if now
+     * absent:
+     *
+     * <pre> {@code
+     * if (map.get(key) == null) {
+     *     V newValue = mappingFunction.apply(key);
+     *     if (newValue != null)
+     *         return map.putIfAbsent(key, newValue);
+     * }
+     * }</pre>
+     *
+     * The default implementation may retry these steps when multiple
+     * threads attempt updates, and may call the mapping function
+     * multiple times.
+     *
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    @Override
+    default V computeIfAbsent(K key,
+            Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        V v, newValue;
+        return ((v = get(key)) == null &&
+                (newValue = mappingFunction.apply(key)) != null &&
+                (v = putIfAbsent(key, newValue)) == null) ? newValue : v;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @implSpec
+     * The default implementation is equivalent to performing the following
+     * steps for this {@code map}, then returning the current value or
+     * {@code null} if now absent. :
+     *
+     * <pre> {@code
+     * if (map.get(key) != null) {
+     *     V oldValue = map.get(key);
+     *     V newValue = remappingFunction.apply(key, oldValue);
+     *     if (newValue != null)
+     *         map.replace(key, oldValue, newValue);
+     *     else
+     *         map.remove(key, oldValue);
+     * }
+     * }</pre>
+     *
+     * The default implementation may retry these steps when multiple
+     * threads attempt updates, and may call the remapping function
+     * multiple times.
+     *
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    @Override
+    default V computeIfPresent(K key,
+            BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        V oldValue;
+        while((oldValue = get(key)) != null) {
+            V newValue = remappingFunction.apply(key, oldValue);
+            if (newValue != null) {
+                if (replace(key, oldValue, newValue))
+                    return newValue;
+            } else if (remove(key, oldValue))
+               return null;
+        }
+        return oldValue;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @implSpec
+     * The default implementation is equivalent to performing the following
+     * steps for this {@code map}, then returning the current value or
+     * {@code null} if absent:
+     *
+     * <pre> {@code
+     * V oldValue = map.get(key);
+     * V newValue = remappingFunction.apply(key, oldValue);
+     * if (oldValue != null ) {
+     *    if (newValue != null)
+     *       map.replace(key, oldValue, newValue);
+     *    else
+     *       map.remove(key, oldValue);
+     * } else {
+     *    if (newValue != null)
+     *       map.putIfAbsent(key, newValue);
+     *    else
+     *       return null;
+     * }
+     * }</pre>
+     *
+     * The default implementation may retry these steps when multiple
+     * threads attempt updates, and may call the remapping function
+     * multiple times.
+     *
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    @Override
+    default V compute(K key,
+            BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        V oldValue = get(key);
+        for(;;) {
+            V newValue = remappingFunction.apply(key, oldValue);
+            if (newValue == null) {
+                // delete mapping
+                if (oldValue != null || containsKey(key)) {
+                    // something to remove
+                    if (remove(key, oldValue)) {
+                        // removed the old value as expected
+                        return null;
+                    }
+
+                    // some other value replaced old value. try again.
+                    oldValue = get(key);
+                } else {
+                    // nothing to do. Leave things as they were.
+                    return null;
+                }
+            } else {
+                // add or replace old mapping
+                if (oldValue != null) {
+                    // replace
+                    if (replace(key, oldValue, newValue)) {
+                        // replaced as expected.
+                        return newValue;
+                    }
+
+                    // some other value replaced old value. try again.
+                    oldValue = get(key);
+                } else {
+                    // add (replace if oldValue was null)
+                    if ((oldValue = putIfAbsent(key, newValue)) == null) {
+                        // replaced
+                        return newValue;
+                    }
+
+                    // some other value replaced old value. try again.
+                }
             }
         }
     }
 
+
+    /**
+     * {@inheritDoc}
+     *
+     * @implSpec
+     * The default implementation is equivalent to performing the following
+     * steps for this {@code map}, then returning the current value or
+     * {@code null} if absent:
+     *
+     * <pre> {@code
+     * V oldValue = map.get(key);
+     * V newValue = (oldValue == null) ? value :
+     *              remappingFunction.apply(oldValue, value);
+     * if (newValue == null)
+     *     map.remove(key);
+     * else
+     *     map.put(key, newValue);
+     * }</pre>
+     *
+     * The default implementation may retry these steps when multiple
+     * threads attempt updates, and may call the remapping function
+     * multiple times.
+     *
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    @Override
+    default V merge(K key, V value,
+            BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        Objects.requireNonNull(value);
+        V oldValue = get(key);
+        for (;;) {
+            if (oldValue != null) {
+                V newValue = remappingFunction.apply(oldValue, value);
+                if (newValue != null) {
+                    if (replace(key, oldValue, newValue))
+                        return newValue;
+                } else if (remove(key, oldValue)) {
+                    return null;
+                }
+                oldValue = get(key);
+            } else {
+                if ((oldValue = putIfAbsent(key, value)) == null) {
+                    return value;
+                }
+            }
+        }
+    }
 }

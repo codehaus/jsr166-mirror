@@ -231,11 +231,13 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @implSpec
      * <p>The default implementation is equivalent to, for this {@code map}:
      * <pre> {@code
-     * for (Map.Entry<K,V> entry : map.entrySet())
-     *     do {
-     *        K k = entry.getKey();
-     *        V v = entry.getValue();
-     *     } while (!replace(k, v, function.apply(k, v)));
+     * for (Map.Entry<K,V> entry : map.entrySet()) {
+     *   K k;
+     *   V v;
+     *   do {
+     *     k = entry.getKey();
+     *     v = entry.getValue();
+     *   } while (!map.replace(k, v, function.apply(k, v)));
      * }</pre>
      *
      * The default implementation may retry these steps when multiple

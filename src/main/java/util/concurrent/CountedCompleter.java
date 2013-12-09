@@ -139,7 +139,8 @@ package java.util.concurrent;
  * {@code tryComplete}) the pending count is set to one:
  *
  * <pre> {@code
- * class ForEach<E> ...
+ * class ForEach<E> ... {
+ *   ...
  *   public void compute() { // version 2
  *     if (hi - lo >= 2) {
  *       int mid = (lo + hi) >>> 1;
@@ -153,7 +154,7 @@ package java.util.concurrent;
  *       tryComplete();
  *     }
  *   }
- * }</pre>
+ * }}</pre>
  *
  * As a further improvement, notice that the left task need not even exist.
  * Instead of creating a new one, we can iterate using the original task,
@@ -162,9 +163,10 @@ package java.util.concurrent;
  * {@code tryComplete()} can be replaced with {@link #propagateCompletion}.
  *
  * <pre> {@code
- * class ForEach<E> ...
+ * class ForEach<E> ... {
+ *   ...
  *   public void compute() { // version 3
- *     int l = lo,  h = hi;
+ *     int l = lo, h = hi;
  *     while (h - l >= 2) {
  *       int mid = (l + h) >>> 1;
  *       addToPendingCount(1);
@@ -175,7 +177,7 @@ package java.util.concurrent;
  *       op.apply(array[l]);
  *     propagateCompletion();
  *   }
- * }</pre>
+ * }}</pre>
  *
  * Additional improvements of such classes might entail precomputing
  * pending counts so that they can be established in constructors,
@@ -373,8 +375,7 @@ package java.util.concurrent;
  * // sample use:
  * PacketSender p = new PacketSender();
  * new HeaderBuilder(p, ...).fork();
- * new BodyBuilder(p, ...).fork();
- * }</pre>
+ * new BodyBuilder(p, ...).fork();}</pre>
  *
  * @since 1.8
  * @author Doug Lea

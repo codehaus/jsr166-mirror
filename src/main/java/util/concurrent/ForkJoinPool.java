@@ -3149,8 +3149,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *  <pre> {@code
      * while (!blocker.isReleasable())
      *   if (blocker.block())
-     *     return;
-     * }</pre>
+     *     return;}</pre>
      *
      * If the caller is a {@code ForkJoinTask}, then the pool may
      * first be expanded to ensure parallelism, and later adjusted.

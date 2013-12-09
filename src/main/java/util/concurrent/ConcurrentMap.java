@@ -71,10 +71,9 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *
      * @implSpec The default implementation is equivalent to, for this
      * {@code map}:
-     *  <pre> {@code
+     * <pre> {@code
      * for (Map.Entry<K,V> entry : map.entrySet())
-     *   action.accept(entry.getKey(), entry.getValue());
-     * }</pre>
+     *   action.accept(entry.getKey(), entry.getValue());}</pre>
      *
      * @implNote The default implementation assumes that {@code
      * IllegalStateException} thrown by {@code getKey()} or {@code
@@ -105,12 +104,11 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * If the specified key is not already associated
      * with a value, associates it with the given value.
      * This is equivalent to, for this {@code map}:
-     *  <pre> {@code
+     * <pre> {@code
      * if (map.containsKey(key))
      *   return map.get(key);
      * else
-     *   return map.put(key, value);
-     * }</pre>
+     *   return map.put(key, value);}</pre>
      *
      * except that the action is performed atomically.
      *
@@ -137,13 +135,13 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
     /**
      * Removes the entry for a key only if currently mapped to a given value.
      * This is equivalent to, for this {@code map}:
-     *  <pre> {@code
-     * if (map.containsKey(key) && Objects.equals(map.get(key), value)) {
+     * <pre> {@code
+     * if (map.containsKey(key)
+     *     && Objects.equals(map.get(key), value)) {
      *   map.remove(key);
      *   return true;
      * } else
-     *   return false;
-     * }</pre>
+     *   return false;}</pre>
      *
      * except that the action is performed atomically.
      *
@@ -166,13 +164,13 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
     /**
      * Replaces the entry for a key only if currently mapped to a given value.
      * This is equivalent to, for this {@code map}:
-     *  <pre> {@code
-     * if (map.containsKey(key) && Objects.equals(map.get(key), oldValue)) {
+     * <pre> {@code
+     * if (map.containsKey(key)
+     *     && Objects.equals(map.get(key), oldValue)) {
      *   map.put(key, newValue);
      *   return true;
      * } else
-     *   return false;
-     * }</pre>
+     *   return false;}</pre>
      *
      * except that the action is performed atomically.
      *
@@ -196,12 +194,11 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
     /**
      * Replaces the entry for a key only if currently mapped to some value.
      * This is equivalent to, for this {@code map}:
-     *  <pre> {@code
+     * <pre> {@code
      * if (map.containsKey(key))
      *   return map.put(key, value);
      * else
-     *   return null;
-     * }</pre>
+     *   return null;}</pre>
      *
      * except that the action is performed atomically.
      *
@@ -230,7 +227,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *
      * @implSpec
      * <p>The default implementation is equivalent to, for this {@code map}:
-     *  <pre> {@code
+     * <pre> {@code
      * for (Map.Entry<K,V> entry : map.entrySet()) {
      *   K k;
      *   V v;
@@ -272,7 +269,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * {@code map}, then returning the current value or {@code null} if now
      * absent:
      *
-     *  <pre> {@code
+     * <pre> {@code
      * if (map.get(key) == null) {
      *   V newValue = mappingFunction.apply(key);
      *   if (newValue != null)
@@ -306,7 +303,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * steps for this {@code map}, then returning the current value or
      * {@code null} if now absent:
      *
-     *  <pre> {@code
+     * <pre> {@code
      * if (map.get(key) != null) {
      *   V oldValue = map.get(key);
      *   V newValue = remappingFunction.apply(key, oldValue);
@@ -349,7 +346,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * steps for this {@code map}, then returning the current value or
      * {@code null} if absent:
      *
-     *  <pre> {@code
+     * <pre> {@code
      * V oldValue = map.get(key);
      * V newValue = remappingFunction.apply(key, oldValue);
      * if (oldValue != null ) {
@@ -427,15 +424,14 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * steps for this {@code map}, then returning the current value or
      * {@code null} if absent:
      *
-     *  <pre> {@code
+     * <pre> {@code
      * V oldValue = map.get(key);
      * V newValue = (oldValue == null) ? value :
      *     remappingFunction.apply(oldValue, value);
      * if (newValue == null)
      *   map.remove(key);
      * else
-     *   map.put(key, newValue);
-     * }</pre>
+     *   map.put(key, newValue);}</pre>
      *
      * The default implementation may retry these steps when multiple
      * threads attempt updates, and may call the remapping function

@@ -34,14 +34,14 @@ public class NoNulls {
             }};
 
         final SortedSet<String> nullSortedSet
-            = new TreeSet<String>(nullTolerantComparator);
+            = new TreeSet<>(nullTolerantComparator);
         nullSortedSet.add(null);
 
         final PriorityQueue<String> nullPriorityQueue
             = new PriorityQueue<String>() {
             public Object[] toArray() { return new Object[] { null };}};
 
-        final Collection<String> nullCollection = new ArrayList<String>();
+        final Collection<String> nullCollection = new ArrayList<>();
         nullCollection.add(null);
 
         THROWS(NullPointerException.class,

@@ -2653,7 +2653,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         final TreeNode<K,V> findTreeNode(int h, Object k, Class<?> kc) {
             if (k != null) {
                 TreeNode<K,V> p = this;
-                do  {
+                do {
                     int ph, dir; K pk; TreeNode<K,V> q;
                     TreeNode<K,V> pl = p.left, pr = p.right;
                     if ((ph = p.hash) > h)
@@ -3099,7 +3099,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
         static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
                                                    TreeNode<K,V> x) {
-            for (TreeNode<K,V> xp, xpl, xpr;;)  {
+            for (TreeNode<K,V> xp, xpl, xpr;;) {
                 if (x == null || x == root)
                     return root;
                 else if ((xp = x.parent) == null) {

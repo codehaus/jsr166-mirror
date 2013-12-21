@@ -137,7 +137,7 @@ public class MapLoops {
         }
 
         int step() {
-            // random-walk around key positions,  bunching accesses
+            // random-walk around key positions, bunching accesses
             int r = rng.next();
             position += (r & 7) - 3;
             while (position >= key.length) position -= key.length;

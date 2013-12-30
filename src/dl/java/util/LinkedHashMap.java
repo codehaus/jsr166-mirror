@@ -519,7 +519,7 @@ public class LinkedHashMap<K,V>
         public final boolean remove(Object key) {
             return removeNode(hash(key), key, null, false, true) != null;
         }
-        public final Spliterator<K> spliterator()  {
+        public final Spliterator<K> spliterator() {
             return Spliterators.spliterator(this, Spliterator.SIZED |
                                             Spliterator.ORDERED |
                                             Spliterator.DISTINCT);

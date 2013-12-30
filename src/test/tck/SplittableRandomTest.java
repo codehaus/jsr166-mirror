@@ -89,7 +89,7 @@ public class SplittableRandomTest extends JSR166TestCase {
      * same values for nextLong.
      */
     public void testSeedConstructor() {
-        for (long seed = 2; seed < MAX_LONG_BOUND; seed += 15485863)  {
+        for (long seed = 2; seed < MAX_LONG_BOUND; seed += 15485863) {
             SplittableRandom sr1 = new SplittableRandom(seed);
             SplittableRandom sr2 = new SplittableRandom(seed);
             for (int i = 0; i < REPS; ++i)

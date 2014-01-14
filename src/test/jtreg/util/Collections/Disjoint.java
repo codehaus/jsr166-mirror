@@ -27,7 +27,6 @@
  * @summary Basic test for Collections.disjoint
  * @author  Josh Bloch
  *
- * @compile -source 1.5 Disjoint.java
  * @run main Disjoint
  */
 

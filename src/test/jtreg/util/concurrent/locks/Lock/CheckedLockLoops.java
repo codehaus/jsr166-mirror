@@ -7,7 +7,6 @@
 /*
  * @test
  * @bug 4486658
- * @compile -source 1.5 CheckedLockLoops.java
  * @run main/timeout=7200 CheckedLockLoops
  * @summary basic safety and liveness of ReentrantLocks, and other locks based on them
  */

@@ -27,7 +27,6 @@
  * @summary Test that toString on entrySet Iterator/Entry behaves reasonably
  * @author  Josh Bloch
  *
- * @compile -source 1.5 ToString.java
  * @run main ToString
  */
 

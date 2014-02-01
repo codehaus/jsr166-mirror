@@ -500,10 +500,10 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      * can not store the objects inside the list
      */
     public void testToArray_ArrayStoreException() {
+        CopyOnWriteArrayList c = new CopyOnWriteArrayList();
+        c.add("zfasdfsdf");
+        c.add("asdadasd");
         try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("zfasdfsdf");
-            c.add("asdadasd");
             c.toArray(new Long[5]);
             shouldThrow();
         } catch (ArrayStoreException success) {}
@@ -513,167 +513,196 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      * get throws an IndexOutOfBoundsException on a negative index
      */
     public void testGet1_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.get(-1);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.get(-1);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * get throws an IndexOutOfBoundsException on a too high index
      */
     public void testGet2_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("asdasd");
-            c.add("asdad");
-            c.get(100);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.get(list.size());
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * set throws an IndexOutOfBoundsException on a negative index
      */
     public void testSet1_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.set(-1,"qwerty");
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.set(-1, "qwerty");
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * set throws an IndexOutOfBoundsException on a too high index
      */
     public void testSet2() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("asdasd");
-            c.add("asdad");
-            c.set(100, "qwerty");
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.set(list.size(), "qwerty");
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * add throws an IndexOutOfBoundsException on a negative index
      */
     public void testAdd1_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add(-1,"qwerty");
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.add(-1, "qwerty");
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * add throws an IndexOutOfBoundsException on a too high index
      */
     public void testAdd2_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("asdasd");
-            c.add("asdasdasd");
-            c.add(100, "qwerty");
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.add(list.size() + 1, "qwerty");
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * remove throws an IndexOutOfBoundsException on a negative index
      */
     public void testRemove1_IndexOutOfBounds() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.remove(-1);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.remove(-1);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * remove throws an IndexOutOfBoundsException on a too high index
      */
     public void testRemove2_IndexOutOfBounds() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("asdasd");
-            c.add("adasdasd");
-            c.remove(100);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.remove(list.size());
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * addAll throws an IndexOutOfBoundsException on a negative index
      */
     public void testAddAll1_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.addAll(-1,new LinkedList());
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.addAll(-1, new LinkedList());
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * addAll throws an IndexOutOfBoundsException on a too high index
      */
     public void testAddAll2_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("asdasd");
-            c.add("asdasdasd");
-            c.addAll(100, new LinkedList());
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.addAll(list.size() + 1, new LinkedList());
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * listIterator throws an IndexOutOfBoundsException on a negative index
      */
     public void testListIterator1_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.listIterator(-1);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.listIterator(-1);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * listIterator throws an IndexOutOfBoundsException on a too high index
      */
     public void testListIterator2_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("adasd");
-            c.add("asdasdas");
-            c.listIterator(100);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.listIterator(list.size() + 1);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * subList throws an IndexOutOfBoundsException on a negative index
      */
     public void testSubList1_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.subList(-1,100);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.subList(-1, list.size());
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
      * subList throws an IndexOutOfBoundsException on a too high index
      */
     public void testSubList2_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.add("asdasd");
-            c.subList(1,100);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.subList(0, list.size() + 1);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**
@@ -681,11 +710,14 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      * is lower then the first
      */
     public void testSubList3_IndexOutOfBoundsException() {
-        try {
-            CopyOnWriteArrayList c = new CopyOnWriteArrayList();
-            c.subList(3,1);
-            shouldThrow();
-        } catch (IndexOutOfBoundsException success) {}
+        CopyOnWriteArrayList c = populatedArray(5);
+        List[] lists = { c, c.subList(1, c.size() - 1) };
+        for (List list : lists) {
+            try {
+                list.subList(list.size() - 1, 1);
+                shouldThrow();
+            } catch (IndexOutOfBoundsException success) {}
+        }
     }
 
     /**

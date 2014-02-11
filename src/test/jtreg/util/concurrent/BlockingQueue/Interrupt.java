@@ -25,7 +25,6 @@
  * @test
  * @bug 6384064
  * @summary Check proper handling of interrupts
- * @run main/othervm -XX:-UseVMInterruptibleIO Interrupt
  * @author Martin Buchholz
  */
 
@@ -49,7 +48,8 @@ public class Interrupt {
         }
     }
 
-    static void checkInterrupted(Iterable<Fun> fs) {
+    static void checkInterrupted(Iterable<Fun> fs)
+            throws InterruptedException {
         final Executor immediateExecutor = new Executor() {
                 public void execute(Runnable r) {
                     r.run(); }};
@@ -61,6 +61,7 @@ public class Interrupt {
         checkInterrupted0(fs, immediateExecutor);
         checkInterrupted0(fs, delayedExecutor);
         stpe.shutdown();
+        check(stpe.awaitTermination(10, SECONDS));
     }
 
     static void testQueue(final BlockingQueue<Object> q) {
@@ -109,8 +110,10 @@ public class Interrupt {
             }
             checkInterrupted(fs);
         } catch (Throwable t) {
-          System.out.printf("Failed: %s%n", q.getClass().getSimpleName());
-          unexpected(t);
+            System.out.printf("Failed: %s%n", q.getClass().getSimpleName());
+            unexpected(t);
+        } finally {
+            Thread.interrupted();       // clear interrupts, just in case
         }
     }
 

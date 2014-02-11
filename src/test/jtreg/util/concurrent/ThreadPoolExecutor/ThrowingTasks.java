@@ -25,7 +25,7 @@
  * @test
  * @bug 6450200 6450205 6450207 6450211
  * @summary Test proper handling of tasks that terminate abruptly
- * @run main/othervm -XX:-UseVMInterruptibleIO ThrowingTasks
+ * @run main/othervm ThrowingTasks
  * @author Martin Buchholz
  */
 

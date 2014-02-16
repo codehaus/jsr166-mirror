@@ -13,11 +13,11 @@ import java.util.*;
 
 /**
  * A {@link ThreadPoolExecutor} that can additionally schedule
- * commands to run after a given delay, or to execute
- * periodically. This class is preferable to {@link java.util.Timer}
- * when multiple worker threads are needed, or when the additional
- * flexibility or capabilities of {@link ThreadPoolExecutor} (which
- * this class extends) are required.
+ * commands to run after a given delay, or to execute periodically.
+ * This class is preferable to {@link java.util.Timer} when multiple
+ * worker threads are needed, or when the additional flexibility or
+ * capabilities of {@link ThreadPoolExecutor} (which this class
+ * extends) are required.
  *
  * <p>Delayed tasks execute no sooner than they are enabled, but
  * without any real-time guarantees about when, after they are
@@ -26,17 +26,16 @@ import java.util.*;
  * submission.
  *
  * <p>When a submitted task is cancelled before it is run, execution
- * is suppressed. By default, such a cancelled task is not
- * automatically removed from the work queue until its delay
- * elapses. While this enables further inspection and monitoring, it
- * may also cause unbounded retention of cancelled tasks. To avoid
- * this, set {@link #setRemoveOnCancelPolicy} to {@code true}, which
- * causes tasks to be immediately removed from the work queue at
- * time of cancellation.
+ * is suppressed.  By default, such a cancelled task is not
+ * automatically removed from the work queue until its delay elapses.
+ * While this enables further inspection and monitoring, it may also
+ * cause unbounded retention of cancelled tasks.  To avoid this, use
+ * {@link #setRemoveOnCancelPolicy} to cause tasks to be immediately
+ * removed from the work queue at time of cancellation.
  *
- * <p>Successive executions of a task scheduled via
- * {@code scheduleAtFixedRate} or
- * {@code scheduleWithFixedDelay} do not overlap. While different
+ * <p>Successive executions of a periodic task scheduled via
+ * {@link #scheduleAtFixedRate} or
+ * {@link #scheduleWithFixedDelay} do not overlap. While different
  * executions may be performed by different threads, the effects of
  * prior executions <a
  * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
@@ -131,7 +130,7 @@ public class ScheduledThreadPoolExecutor
     private volatile boolean executeExistingDelayedTasksAfterShutdown = true;
 
     /**
-     * True if ScheduledFutureTask.cancel should remove from queue
+     * True if ScheduledFutureTask.cancel should remove from queue.
      */
     private volatile boolean removeOnCancel = false;
 
@@ -158,10 +157,10 @@ public class ScheduledThreadPoolExecutor
         private long time;
 
         /**
-         * Period in nanoseconds for repeating tasks.  A positive
-         * value indicates fixed-rate execution.  A negative value
-         * indicates fixed-delay execution.  A value of 0 indicates a
-         * non-repeating task.
+         * Period in nanoseconds for repeating tasks.
+         * A positive value indicates fixed-rate execution.
+         * A negative value indicates fixed-delay execution.
+         * A value of 0 indicates a non-repeating (one-shot) task.
          */
         private final long period;
 
@@ -176,19 +175,21 @@ public class ScheduledThreadPoolExecutor
         /**
          * Creates a one-shot action with given nanoTime-based trigger time.
          */
-        ScheduledFutureTask(Runnable r, V result, long ns) {
+        ScheduledFutureTask(Runnable r, V result, long triggerTime) {
             super(r, result);
-            this.time = ns;
+            this.time = triggerTime;
             this.period = 0;
             this.sequenceNumber = sequencer.getAndIncrement();
         }
 
         /**
-         * Creates a periodic action with given nano time and period.
+         * Creates a periodic action with given nanoTime-based initial
+         * trigger time and period.
          */
-        ScheduledFutureTask(Runnable r, V result, long ns, long period) {
+        ScheduledFutureTask(Runnable r, V result, long triggerTime,
+                            long period) {
             super(r, result);
-            this.time = ns;
+            this.time = triggerTime;
             this.period = period;
             this.sequenceNumber = sequencer.getAndIncrement();
         }
@@ -196,9 +197,9 @@ public class ScheduledThreadPoolExecutor
         /**
          * Creates a one-shot action with given nanoTime-based trigger time.
          */
-        ScheduledFutureTask(Callable<V> callable, long ns) {
+        ScheduledFutureTask(Callable<V> callable, long triggerTime) {
             super(callable);
-            this.time = ns;
+            this.time = triggerTime;
             this.period = 0;
             this.sequenceNumber = sequencer.getAndIncrement();
         }

@@ -748,10 +748,12 @@ public class ScheduledThreadPoolExecutor
      * fails to respond to interrupts may never terminate.
      *
      * @return list of tasks that never commenced execution.
-     *         Each element of this list is a {@link ScheduledFuture},
-     *         including those tasks submitted using {@code execute},
-     *         which are for scheduling purposes used as the basis of a
-     *         zero-delay {@code ScheduledFuture}.
+     *         Each element of this list is a {@link ScheduledFuture}.
+     *         For tasks submitted via one of the {@code schedule}
+     *         methods, the element will be identical to the returned
+     *         {@code ScheduledFuture}.  For tasks submitted using
+     *         {@link #execute}, the element will be a zero-delay {@code
+     *         ScheduledFuture}.
      * @throws SecurityException {@inheritDoc}
      */
     public List<Runnable> shutdownNow() {
@@ -759,13 +761,15 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Returns the task queue used by this executor.  Each element of
-     * this queue is a {@link ScheduledFuture}, including those
-     * tasks submitted using {@code execute} which are for scheduling
-     * purposes used as the basis of a zero-delay
-     * {@code ScheduledFuture}.  Iteration over this queue is
-     * <em>not</em> guaranteed to traverse tasks in the order in
-     * which they will execute.
+     * Returns the task queue used by this executor.
+     * Each element of this list is a {@link ScheduledFuture}.
+     * For tasks submitted via one of the {@code schedule} methods, the
+     * element will be identical to the returned {@code ScheduledFuture}.
+     * For tasks submitted using {@link #execute}, the element will be a
+     * zero-delay {@code ScheduledFuture}.
+     *
+     * <p>Iteration over this queue is <em>not</em> guaranteed to traverse
+     * tasks in the order in which they will execute.
      *
      * @return the task queue
      */

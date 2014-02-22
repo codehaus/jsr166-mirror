@@ -16,13 +16,14 @@
   $HOME/jdk/jdk6
   $HOME/jdk/jdk7
   $HOME/jdk/jdk8
+  $HOME/jdk/jdk9
   where each of the above is a JDK or a symlink to same, and
   $HOME/jdk/src/jdk6
   $HOME/jdk/src/jdk7
   $HOME/jdk/src/jdk8
+  $HOME/jdk/src/jdk9
   where each of the above is a complete JDK source tree
   (e.g. mercurial forest) or a symlink to same.
-As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 ------------------------------------------------------------------------------
   </description>
 
@@ -115,6 +116,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   <defjdklocations v="6"/>
   <defjdklocations v="7"/>
   <defjdklocations v="8"/>
+  <defjdklocations v="9"/>
 
   <!-- Source locations -->
   <property name="src.dir"              location="${basedir}/src/main"/>
@@ -161,8 +163,12 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   <property name="jdkapi7docs.url"      value="http://docs.oracle.com/javase/7/docs/api/"/>
 
   <property name="jdkapi8docs.url"      value="http://download.java.net/jdk8/docs/api/"/>
-  <!-- The below does not yet exist as of 2013-01 -->
+  <!-- The expected canonical location does not yet exist as of 2014-02 -->
   <!-- <property name="jdkapi8docs.url" value="http://docs.oracle.com/javase/8/docs/api/"/> -->
+
+  <property name="jdkapi9docs.url"      value="${jdkapi8docs.url}"/>
+  <!-- No published jdk9 docs exist as of 2014-02 -->
+  <!-- <property name="jdkapi9docs.url" value="http://docs.oracle.com/javase/9/docs/api/"/> -->
 
   <!-- Default jdk api doc location (latest stable release seems best) -->
   <property name="jdkapidocs.url"       value="${jdkapi7docs.url}"/>
@@ -269,6 +275,9 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
   <!-- Main targets -->
 
+  <property name="build.main.java.version" value="9"/>
+  <property name="build.main.javac" value="${javac9}"/>
+
   <target name="dists"
           depends="dist, 4jdk7dist, jsr166edist, jsr166ydist, extra166ydist, jsr166xdist"
           description="Builds all public jars and docs"/>
@@ -287,7 +296,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
            classpath=""
            includeAntRuntime="false"
            includeJavaRuntime="false"
-           executable="${javac8}"
+           executable="${build.main.javac}"
            fork="true">
 
       <include name="**/*.java"/>
@@ -323,12 +332,12 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 
     <javadoc destdir="${docs.dir}"
              packagenames="none"
-             link="${jdkapi8docs.url}"
+             link="${jdkapi9docs.url}"
              overview="${src.dir}/intro.html"
              access="${build.javadoc.access}"
-             sourcepath="${src.dir}:${jdk8src.dir}"
+             sourcepath="${src.dir}:${jdk9src.dir}"
              classpath=""
-             executable="${javadoc8}">
+             executable="${javadoc9}">
       <fileset dir="${src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
@@ -402,7 +411,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
           description="Runs tck tests for main directly">
 
     <run-tck-tests
-      target="8"
+      target="${build.main.java.version}"
       workdir="${build.dir}"
       classes="${product.jar}"/>
   </target>
@@ -411,7 +420,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
 	  depends="jar"
           description="Runs jtreg tests for main using the jtreg ant task">
     <run-jtreg-tests
-       target="8"
+       target="${build.main.java.version}"
        workdir="${build.dir}"
        classes="${product.jar}"/>
   </target>
@@ -419,6 +428,23 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
   <target name="test"
           depends="test-tck, test-jtreg"
           description="Runs tck and jtreg tests for main">
+  </target>
+
+  <target name="test89"
+          description="Runs tck and jtreg tests for main for multiple java versions">
+
+    <antcall target="clean"/>
+    <antcall target="test">
+      <param name="build.main.java.version" value="8"/>
+      <param name="build.main.javac" value="${javac8}"/>
+    </antcall>
+
+    <antcall target="clean"/>
+    <antcall target="test">
+      <param name="build.main.java.version" value="9"/>
+      <param name="build.main.javac" value="${javac9}"/>
+    </antcall>
+
   </target>
 
 
@@ -552,6 +578,7 @@ As of 2013-02, the very latest lambda 8 jdk is needed for jdk8.
       <javac-elements>
         <!-- JDK8+ test classes -->
         <exclude name="*8Test.java"/>
+        <exclude name="*9Test.java"/>
         <exclude name="DoubleAccumulatorTest.java"/>
         <exclude name="DoubleAdderTest.java"/>
         <exclude name="LongAccumulatorTest.java"/>

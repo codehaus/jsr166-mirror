@@ -66,7 +66,7 @@ public class OfferRemoveLoops {
     }
 
     void testQueue(final Queue q) throws Throwable {
-        System.out.println(q.getClass().getSimpleName());
+        System.err.println(q.getClass().getSimpleName());
         final long testDurationNanos = testDurationMillis * 1000L * 1000L;
         final long quittingTimeNanos = System.nanoTime() + testDurationNanos;
         final long timeoutMillis = 10L * 1000L;

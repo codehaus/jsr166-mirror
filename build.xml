@@ -157,21 +157,26 @@
   <property name="extra166y.jar"    location="${build.extra166y.dir}/extra166y.jar"/>
   <property name="junit.jar"        location="${lib.dir}/junit.jar"/>
 
-  <!-- Canonical location of jdk API docs, to use with javadoc link attribute -->
-  <property name="jdkapi5docs.url"      value="http://docs.oracle.com/javase/1.5.0/docs/api/"/>
-  <property name="jdkapi6docs.url"      value="http://docs.oracle.com/javase/6/docs/api/"/>
-  <property name="jdkapi7docs.url"      value="http://docs.oracle.com/javase/7/docs/api/"/>
-
-  <property name="jdkapi8docs.url"      value="http://download.java.net/jdk8/docs/api/"/>
+  <!-- Canonical location of jdk docs root, to use with javadoc -Xdocrootparent flag -->
+  <property name="java5.docroot.url"      value="http://docs.oracle.com/javase/1.5.0/docs"/>
+  <property name="java6.docroot.url"      value="http://docs.oracle.com/javase/6/docs"/>
+  <property name="java7.docroot.url"      value="http://docs.oracle.com/javase/7/docs"/>
   <!-- The expected canonical location does not yet exist as of 2014-02 -->
-  <!-- <property name="jdkapi8docs.url" value="http://docs.oracle.com/javase/8/docs/api/"/> -->
-
-  <property name="jdkapi9docs.url"      value="${jdkapi8docs.url}"/>
+  <!-- <property name="java8.docroot.url" value="http://docs.oracle.com/javase/8/docs"/> -->
+  <property name="java8.docroot.url"      value="http://download.java.net/jdk8/docs"/>
   <!-- No published jdk9 docs exist as of 2014-02 -->
-  <!-- <property name="jdkapi9docs.url" value="http://docs.oracle.com/javase/9/docs/api/"/> -->
+  <!-- <property name="java9.docroot.url" value="http://docs.oracle.com/javase/9/docs"/> -->
+  <property name="java9.docroot.url"      value="${java8.docroot.url}"/>
+  <!-- Default jdk doc location (latest stable release seems best) -->
+  <property name="java.docroot.url"       value="${java7.docroot.url}"/>
 
-  <!-- Default jdk api doc location (latest stable release seems best) -->
-  <property name="jdkapidocs.url"       value="${jdkapi7docs.url}"/>
+  <!-- Canonical location of jdk API docs, to use with javadoc link attribute -->
+  <property name="java5.api.url"      value="${java5.docroot.url}/api/"/>
+  <property name="java6.api.url"      value="${java6.docroot.url}/api/"/>
+  <property name="java7.api.url"      value="${java7.docroot.url}/api/"/>
+  <property name="java8.api.url"      value="${java8.docroot.url}/api/"/>
+  <property name="java9.api.url"      value="${java9.docroot.url}/api/"/>
+  <property name="java.api.url"       value="${java.docroot.url}/api/"/>
 
   <!-- Define the "jtreg" task -->
   <!-- See the docs in "jtreg -onlineHelp" -->
@@ -332,7 +337,7 @@
 
     <javadoc destdir="${docs.dir}"
              packagenames="none"
-             link="${jdkapi9docs.url}"
+             link="${java9.api.url}"
              overview="${src.dir}/intro.html"
              access="${build.javadoc.access}"
              sourcepath="${src.dir}:${jdk9src.dir}"
@@ -341,6 +346,7 @@
       <fileset dir="${src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
+      <arg line="-Xdocrootparent ${java9.docroot.url}"/>
       <arg line="-Xmaxerrs 1000 -Xmaxwarns 1000"/>
       <arg value="-XDignore.symbol.file=true"/>
       <arg value="-tag"/>
@@ -644,7 +650,7 @@
 
     <javadoc destdir="${4jdk7docs.dir}"
              packagenames="none"
-             link="${jdkapi7docs.url}"
+             link="${java7.api.url}"
              overview="${4jdk7src.dir}/intro.html"
              access="${build.javadoc.access}"
              sourcepath="${4jdk7src.dir}:${jdk7src.dir}"
@@ -653,6 +659,7 @@
       <fileset dir="${4jdk7src.dir}" defaultexcludes="yes">
         <include name="**/*.java"/>
       </fileset>
+      <arg line="-Xdocrootparent ${java7.docroot.url}"/>
       <arg value="-XDignore.symbol.file=true"/>
     </javadoc>
   </target>
@@ -732,12 +739,13 @@
 
     <javadoc destdir="${jsr166xdocs.dir}"
              packagenames="jsr166x.*"
-             link="${jdkapidocs.url}"
+             link="${java.api.url}"
              access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              bootclasspath="${bootclasspath6}"
              source="5"
              executable="${javadoc7}">
+      <arg line="-Xdocrootparent ${java.docroot.url}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>
@@ -817,12 +825,13 @@
 
     <javadoc destdir="${jsr166ydocs.dir}"
              packagenames="jsr166y.*"
-             link="${jdkapidocs.url}"
+             link="${java.api.url}"
              access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              bootclasspath="${bootclasspath6}"
              source="6"
              executable="${javadoc7}">
+      <arg line="-Xdocrootparent ${java.docroot.url}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>
@@ -903,12 +912,13 @@
 
     <javadoc destdir="${extra166ydocs.dir}"
              packagenames="extra166y.*"
-             link="${jdkapidocs.url}"
+             link="${java.api.url}"
              access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              bootclasspath="${bootclasspath6}"
              source="6"
              executable="${javadoc7}">
+      <arg line="-Xdocrootparent ${java.docroot.url}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>
@@ -1015,11 +1025,12 @@
 
     <javadoc destdir="${jsr166edocs.dir}"
              packagenames="jsr166e.*"
-             link="${jdkapidocs.url}"
+             link="${java.api.url}"
              access="${build.javadoc.access}"
              sourcepath="${topsrc.dir}:${jdk6src.dir}"
              source="${build.jsr166e.java.version}"
              executable="${javadoc7}">
+      <arg line="-Xdocrootparent ${java.docroot.url}"/>
       <arg value="-XDignore.symbol.file=true"/>
 
     </javadoc>

@@ -444,7 +444,7 @@ public class MapMicroBenchmark {
 
         BufferedInputStream in = new BufferedInputStream(fr);
         int k = 0;
-        outer:while (k < n) {
+        outer: while (k < n) {
             StringBuffer sb = new StringBuffer();
             for (;;) {
                 int c = in.read();

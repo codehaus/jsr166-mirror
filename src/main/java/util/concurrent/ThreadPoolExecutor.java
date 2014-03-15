@@ -1881,11 +1881,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             mainLock.unlock();
         }
         int c = ctl.get();
-        String rs = (runStateLessThan(c, SHUTDOWN) ? "Running" :
-                     (runStateAtLeast(c, TERMINATED) ? "Terminated" :
-                      "Shutting down"));
+        String runState =
+            runStateLessThan(c, SHUTDOWN) ? "Running" :
+            runStateAtLeast(c, TERMINATED) ? "Terminated" :
+            "Shutting down";
         return super.toString() +
-            "[" + rs +
+            "[" + runState +
             ", pool size = " + nworkers +
             ", active threads = " + nactive +
             ", queued tasks = " + workQueue.size() +

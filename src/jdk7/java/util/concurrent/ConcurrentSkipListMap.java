@@ -2558,7 +2558,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns lowest absolute key (ignoring directonality).
+         * Returns lowest absolute key (ignoring directionality).
          */
         private K lowestKey() {
             ConcurrentSkipListMap.Node<K,V> n = loNode();
@@ -2569,7 +2569,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns highest absolute key (ignoring directonality).
+         * Returns highest absolute key (ignoring directionality).
          */
         private K highestKey() {
             ConcurrentSkipListMap.Node<K,V> n = hiNode();

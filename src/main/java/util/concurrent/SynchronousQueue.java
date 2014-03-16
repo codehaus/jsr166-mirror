@@ -1061,7 +1061,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Sets the zeroeth element of the specified array to {@code null}
+     * Sets the zeroth element of the specified array to {@code null}
      * (if the array has non-zero length) and returns it.
      *
      * @param a the array

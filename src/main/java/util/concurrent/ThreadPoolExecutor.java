@@ -1708,8 +1708,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *
      * <p>This method may be useful as one part of a cancellation
      * scheme.  It may fail to remove tasks that have been converted
-     * into other forms before being placed on the internal queue. For
-     * example, a task entered using {@code submit} might be
+     * into other forms before being placed on the internal queue.
+     * For example, a task entered using {@code submit} might be
      * converted into a form that maintains {@code Future} status.
      * However, in such cases, method {@link #purge} may be used to
      * remove those Futures that have been cancelled.
@@ -1881,11 +1881,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             mainLock.unlock();
         }
         int c = ctl.get();
-        String rs = (runStateLessThan(c, SHUTDOWN) ? "Running" :
-                     (runStateAtLeast(c, TERMINATED) ? "Terminated" :
-                      "Shutting down"));
+        String runState =
+            runStateLessThan(c, SHUTDOWN) ? "Running" :
+            runStateAtLeast(c, TERMINATED) ? "Terminated" :
+            "Shutting down";
         return super.toString() +
-            "[" + rs +
+            "[" + runState +
             ", pool size = " + nworkers +
             ", active threads = " + nactive +
             ", queued tasks = " + workQueue.size() +

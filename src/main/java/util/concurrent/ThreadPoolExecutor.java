@@ -97,7 +97,7 @@ import java.util.*;
  * TimeUnit)}.  Using a value of {@code Long.MAX_VALUE} {@link
  * TimeUnit#NANOSECONDS} effectively disables idle threads from ever
  * terminating prior to shut down. By default, the keep-alive policy
- * applies only when there are more than corePoolSize threads. But
+ * applies only when there are more than corePoolSize threads, but
  * method {@link #allowCoreThreadTimeOut(boolean)} can be used to
  * apply this time-out policy to core threads as well, so long as the
  * keepAliveTime value is non-zero. </dd>
@@ -1649,11 +1649,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
-     * Sets the time limit for which threads may remain idle before
-     * being terminated.  If there are more than the core number of
-     * threads currently in the pool, after waiting this amount of
-     * time without processing a task, excess threads will be
-     * terminated.  This overrides any value set in the constructor.
+     * Sets the thread keep-alive time, which is the amount of time
+     * that threads may remain idle before being terminated.
+     * Threads that wait this amount of time without processing a
+     * task will be terminated if there are more than the core
+     * number of threads currently in the pool, or if this pool
+     * {@linkplain #allowsCoreThreadTimeOut() allows core thread timeout}.
+     * This overrides any value set in the constructor.
      *
      * @param time the time to wait.  A time value of zero will cause
      *        excess threads to terminate immediately after executing tasks.
@@ -1676,8 +1678,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Returns the thread keep-alive time, which is the amount of time
-     * that threads in excess of the core pool size may remain
-     * idle before being terminated.
+     * that threads may remain idle before being terminated.
+     * Threads that wait this amount of time without processing a
+     * task will be terminated if there are more than the core
+     * number of threads currently in the pool, or if this pool
+     * {@linkplain #allowsCoreThreadTimeOut() allows core thread timeout}.
      *
      * @param unit the desired time unit of the result
      * @return the time limit

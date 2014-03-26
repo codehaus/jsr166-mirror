@@ -6,6 +6,7 @@
 
 package java.util.concurrent;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -391,6 +392,22 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
+     * The default keep-alive time for pool threads.
+     *
+     * Normally, this value is unused because all pool threads will be
+     * core threads, but if a user creates a pool with a corePoolSize
+     * of zero (against our advice), we keep a thread alive as long as
+     * there are queued tasks.  If the keep alive time is zero (the
+     * historic value), we end up hot-spinning in getTask, wasting a
+     * CPU.  But on the other hand, if we set the value too high, and
+     * users create a one-shot pool which they don't cleanly shutdown,
+     * the pool's non-daemon threads will prevent JVM termination.  A
+     * small but non-zero value (relative to a JVM's lifetime) seems
+     * best.
+     */
+    private static final long DEFAULT_KEEPALIVE_MILLIS = 10L;
+
+    /**
      * Creates a new {@code ScheduledThreadPoolExecutor} with the
      * given core pool size.
      *
@@ -399,7 +416,8 @@ public class ScheduledThreadPoolExecutor
      * @throws IllegalArgumentException if {@code corePoolSize < 0}
      */
     public ScheduledThreadPoolExecutor(int corePoolSize) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE,
+              DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
               new DelayedWorkQueue());
     }
 
@@ -416,7 +434,8 @@ public class ScheduledThreadPoolExecutor
      */
     public ScheduledThreadPoolExecutor(int corePoolSize,
                                        ThreadFactory threadFactory) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE,
+              DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
               new DelayedWorkQueue(), threadFactory);
     }
 
@@ -433,7 +452,8 @@ public class ScheduledThreadPoolExecutor
      */
     public ScheduledThreadPoolExecutor(int corePoolSize,
                                        RejectedExecutionHandler handler) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE,
+              DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
               new DelayedWorkQueue(), handler);
     }
 
@@ -454,7 +474,8 @@ public class ScheduledThreadPoolExecutor
     public ScheduledThreadPoolExecutor(int corePoolSize,
                                        ThreadFactory threadFactory,
                                        RejectedExecutionHandler handler) {
-        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+        super(corePoolSize, Integer.MAX_VALUE,
+              DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
               new DelayedWorkQueue(), threadFactory, handler);
     }
 

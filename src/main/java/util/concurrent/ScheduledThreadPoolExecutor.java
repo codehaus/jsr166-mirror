@@ -440,8 +440,8 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Creates a new ScheduledThreadPoolExecutor with the given
-     * initial parameters.
+     * Creates a new {@code ScheduledThreadPoolExecutor} with the
+     * given initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
      *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
@@ -458,8 +458,8 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Creates a new ScheduledThreadPoolExecutor with the given
-     * initial parameters.
+     * Creates a new {@code ScheduledThreadPoolExecutor} with the
+     * given initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
      *        if they are idle, unless {@code allowCoreThreadTimeOut} is set

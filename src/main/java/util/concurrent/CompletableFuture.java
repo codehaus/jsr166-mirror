@@ -109,7 +109,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * others -- see method postComplete).  Because post-processing
      * may race with direct calls, class Completion opportunistically
      * extends AtomicInteger so callers can claim the action via
-     * compareAndSet(0, 1).  The Completion.run methods are all
+     * compareAndSet(0, 1).  The Completion.trigger methods are all
      * written a boringly similar uniform way (that sometimes includes
      * unnecessary-looking checks, kept to maintain uniformity).
      * There are enough dimensions upon which they differ that
@@ -145,9 +145,24 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     // Basic utilities for triggering and processing completions
 
     /**
-     * Removes and signals all waiting threads and runs all completions.
+     * Triggers completion with the encoding of the given arguments:
+     * if the exception is non-null, encodes it as a wrapped
+     * CompletionException unless it is one already.  Otherwise uses
+     * the given result, boxed as NIL if null.
      */
-    final void postComplete() {
+    final void setInternalResult(T v, Throwable ex) {
+        if (result == null)
+            UNSAFE.compareAndSwapObject
+                (this, RESULT, null,
+                 (ex == null) ? (v == null) ? NIL : v :
+                 new AltResult((ex instanceof CompletionException) ? ex :
+                               new CompletionException(ex)));
+    }
+
+    /**
+     * Removes and signals all waiting threads
+     */
+    final void removeAndSignalWaiters() {
         WaitNode q; Thread t;
         while ((q = waiters) != null) {
             if (UNSAFE.compareAndSwapObject(this, WAITERS, q, q.next) &&
@@ -156,37 +171,60 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 LockSupport.unpark(t);
             }
         }
+    }
 
-        CompletionNode h; Completion c;
-        while ((h = completions) != null) {
-            if (UNSAFE.compareAndSwapObject(this, COMPLETIONS, h, h.next) &&
-                (c = h.completion) != null)
-                c.run();
+    /**
+     * Triggers all enabled completions reachable from b.  Loopifies
+     * the final recursive call for each stage to avoid potential
+     * StackOverflowErrors in cases of long linear chains.
+     *
+     * @param b if non-null, a completed CompletableFuture
+     */
+    static final void removeAndTriggerCompletions(CompletableFuture<?> b) {
+        CompletionNode h; Completion c; CompletableFuture<?> f;
+        while (b != null && (h = b.completions) != null) {
+            if (UNSAFE.compareAndSwapObject(b, COMPLETIONS, h, h.next) &&
+                (c = h.completion) != null &&
+                (f = c.trigger()) != null &&
+                f.result != null) {
+                f.removeAndSignalWaiters();
+                if (f.completions != null) {
+                    if (b.completions == null)
+                        b = f; // tail-recurse
+                    else
+                        removeAndTriggerCompletions(f);
+                }
+            }
         }
     }
 
     /**
-     * Triggers completion with the encoding of the given arguments:
-     * if the exception is non-null, encodes it as a wrapped
-     * CompletionException unless it is one already.  Otherwise uses
-     * the given result, boxed as NIL if null.
+     * Sets result, signals waiters, and triggers dependents
      */
     final void internalComplete(T v, Throwable ex) {
-        if (result == null)
-            UNSAFE.compareAndSwapObject
-                (this, RESULT, null,
-                 (ex == null) ? (v == null) ? NIL : v :
-                 new AltResult((ex instanceof CompletionException) ? ex :
-                               new CompletionException(ex)));
-        postComplete(); // help out even if not triggered
+        setInternalResult(v, ex);
+        removeAndSignalWaiters();
+        removeAndTriggerCompletions(this);
+    }
+
+
+    /**
+     * Signals waiters and triggers dependents. Call only if known to
+     * be completed.
+     */
+    final void postComplete() {
+        removeAndSignalWaiters();
+        removeAndTriggerCompletions(this);
     }
 
     /**
-     * If triggered, helps release and/or process completions.
+     * If completed, helps signal waiters and trigger dependents
      */
     final void helpPostComplete() {
-        if (result != null)
-            postComplete();
+        if (result != null) {
+            removeAndSignalWaiters();
+            removeAndTriggerCompletions(this);
+        }
     }
 
     /* ------------- waiting for completions -------------- */
@@ -644,7 +682,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     // Opportunistically subclass AtomicInteger to use compareAndSet to claim.
     @SuppressWarnings("serial")
-    abstract static class Completion extends AtomicInteger implements Runnable {
+    abstract static class Completion extends AtomicInteger {
+        /**
+         * Complete a dependent Completablefuture if enabled
+         * @return the dependent Completablefuture
+         */
+        public abstract CompletableFuture<?> trigger();
     }
 
     static final class ThenApply<T,U> extends Completion {
@@ -659,7 +702,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final Function<? super T,? extends U> fn;
             final CompletableFuture<U> dst;
@@ -691,8 +734,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(u, ex);
+                    dst.setInternalResult(u, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -709,7 +753,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final Consumer<? super T> fn;
             final CompletableFuture<?> dst;
@@ -740,8 +784,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(null, ex);
+                    dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -758,7 +803,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<?> a;
             final Runnable fn;
             final CompletableFuture<Void> dst;
@@ -784,8 +829,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(null, ex);
+                    dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -805,7 +851,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends U> b;
             final BiFunction<? super T,? super U,? extends V> fn;
@@ -850,8 +896,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(v, ex);
+                    dst.setInternalResult(v, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -871,7 +918,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends U> b;
             final BiConsumer<? super T,? super U> fn;
@@ -915,8 +962,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(null, ex);
+                    dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -936,7 +984,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<?> a;
             final CompletableFuture<?> b;
             final Runnable fn;
@@ -967,8 +1015,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(null, ex);
+                    dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -982,7 +1031,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                       CompletableFuture<Void> dst) {
             this.src = src; this.snd = snd; this.dst = dst;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<?> a;
             final CompletableFuture<?> b;
             final CompletableFuture<Void> dst;
@@ -999,8 +1048,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     ex = null;
                 if (ex == null && (s instanceof AltResult))
                     ex = ((AltResult)s).ex;
-                dst.internalComplete(null, ex);
+                dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1020,7 +1070,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends T> b;
             final Function<? super T,? extends U> fn;
@@ -1053,8 +1103,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(u, ex);
+                    dst.setInternalResult(u, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1074,7 +1125,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final CompletableFuture<? extends T> b;
             final Consumer<? super T> fn;
@@ -1106,8 +1157,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(null, ex);
+                    dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1127,7 +1179,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<?> a;
             final CompletableFuture<?> b;
             final Runnable fn;
@@ -1154,8 +1206,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (e == null || ex != null)
-                    dst.internalComplete(null, ex);
+                    dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1169,7 +1222,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                      CompletableFuture<Object> dst) {
             this.src = src; this.snd = snd; this.dst = dst;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<?> a;
             final CompletableFuture<?> b;
             final CompletableFuture<Object> dst;
@@ -1186,8 +1239,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     ex = null;
                     t = r;
                 }
-                dst.internalComplete(t, ex);
+                dst.setInternalResult(t, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1201,7 +1255,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                             CompletableFuture<T> dst) {
             this.src = src; this.fn = fn; this.dst = dst;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final Function<? super Throwable, ? extends T> fn;
             final CompletableFuture<T> dst;
@@ -1223,8 +1277,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     @SuppressWarnings("unchecked") T tr = (T) r;
                     t = tr;
                 }
-                dst.internalComplete(t, dx);
+                dst.setInternalResult(t, dx);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1241,7 +1296,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final BiConsumer<? super T, ? super Throwable> fn;
             final CompletableFuture<T> dst;
@@ -1271,8 +1326,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     dx = rex;
                 }
                 if (e == null || dx != null)
-                    dst.internalComplete(t, ex != null ? ex : dx);
+                    dst.setInternalResult(t, ex != null ? ex : dx);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1284,7 +1340,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                  CompletableFuture<T> dst) {
             this.src = src; this.dst = dst;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<?> a;
             final CompletableFuture<T> dst;
             Object r; T t; Throwable ex;
@@ -1301,8 +1357,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     @SuppressWarnings("unchecked") T tr = (T) r;
                     t = tr;
                 }
-                dst.internalComplete(t, ex);
+                dst.setInternalResult(t, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1315,7 +1372,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                       CompletableFuture<Void> dst) {
             this.src = src; this.dst = dst;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<?> a;
             final CompletableFuture<Void> dst;
             Object r; Throwable ex;
@@ -1327,8 +1384,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     ex = ((AltResult)r).ex;
                 else
                     ex = null;
-                dst.internalComplete(null, ex);
+                dst.setInternalResult(null, ex);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1345,7 +1403,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final BiFunction<? super T, Throwable, ? extends U> fn;
             final CompletableFuture<U> dst;
@@ -1376,8 +1434,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     dx = rex;
                 }
                 if (e == null || dx != null)
-                    dst.internalComplete(u, dx);
+                    dst.setInternalResult(u, dx);
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }
@@ -1394,7 +1453,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.src = src; this.fn = fn; this.dst = dst;
             this.executor = executor;
         }
-        public final void run() {
+        public final CompletableFuture<?> trigger() {
             final CompletableFuture<? extends T> a;
             final Function<? super T, ? extends CompletionStage<U>> fn;
             final CompletableFuture<U> dst;
@@ -1455,10 +1514,11 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                 }
                 if (complete || ex != null)
-                    dst.internalComplete(u, ex);
+                    dst.setInternalResult(u, ex);
                 if (c != null)
                     c.helpPostComplete();
             }
+            return dst;
         }
         private static final long serialVersionUID = 5232453952276885070L;
     }

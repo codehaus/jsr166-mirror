@@ -160,7 +160,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
-     * Removes and signals all waiting threads
+     * Removes and signals all waiting threads.
      */
     final void removeAndSignalWaiters() {
         WaitNode q; Thread t;
@@ -199,7 +199,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
-     * Sets result, signals waiters, and triggers dependents
+     * Sets result, signals waiters, and triggers dependents.
      */
     final void internalComplete(T v, Throwable ex) {
         setInternalResult(v, ex);
@@ -218,7 +218,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
-     * If completed, helps signal waiters and trigger dependents
+     * If completed, helps signal waiters and trigger dependents.
      */
     final void helpPostComplete() {
         if (result != null) {

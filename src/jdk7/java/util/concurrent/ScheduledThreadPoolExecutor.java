@@ -807,7 +807,7 @@ public class ScheduledThreadPoolExecutor
         private RunnableScheduledFuture<?>[] queue =
             new RunnableScheduledFuture<?>[INITIAL_CAPACITY];
         private final ReentrantLock lock = new ReentrantLock();
-        private int size = 0;
+        private int size;
 
         /**
          * Thread designated to wait for the task at the head of the
@@ -825,7 +825,7 @@ public class ScheduledThreadPoolExecutor
          * signalled.  So waiting threads must be prepared to acquire
          * and lose leadership while waiting.
          */
-        private Thread leader = null;
+        private Thread leader;
 
         /**
          * Condition signalled when a newer task becomes available at the

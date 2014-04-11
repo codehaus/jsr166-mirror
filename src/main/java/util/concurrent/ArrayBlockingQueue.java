@@ -805,13 +805,13 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
 
         /** Incremented whenever takeIndex wraps around to 0 */
-        int cycles = 0;
+        int cycles;
 
         /** Linked list of weak iterator references */
         private Node head;
 
         /** Used to expunge stale iterators */
-        private Node sweeper = null;
+        private Node sweeper;
 
         private static final int SHORT_SWEEP_PROBES = 4;
         private static final int LONG_SWEEP_PROBES = 16;

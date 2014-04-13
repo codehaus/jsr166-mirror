@@ -303,7 +303,7 @@ public class ReentrantReadWriteLock
          * <p>This allows tracking of read holds for uncontended read
          * locks to be very cheap.
          */
-        private transient Thread firstReader = null;
+        private transient Thread firstReader;
         private transient int firstReaderHoldCount;
 
         Sync() {

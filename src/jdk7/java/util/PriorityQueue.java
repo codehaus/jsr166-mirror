@@ -98,7 +98,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     /**
      * The number of elements in the priority queue.
      */
-    private int size = 0;
+    private int size;
 
     /**
      * The comparator, or null if priority queue uses elements'
@@ -110,7 +110,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * The number of times this priority queue has been
      * <i>structurally modified</i>.  See AbstractList for gory details.
      */
-    private transient int modCount = 0;
+    private transient int modCount;
 
     /**
      * Creates a {@code PriorityQueue} with the default initial
@@ -473,7 +473,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
          * Index (into queue array) of element to be returned by
          * subsequent call to next.
          */
-        private int cursor = 0;
+        private int cursor;
 
         /**
          * Index of element returned by most recent call to next,
@@ -493,13 +493,13 @@ public class PriorityQueue<E> extends AbstractQueue<E>
          * We expect that most iterations, even those involving removals,
          * will not need to store elements in this field.
          */
-        private ArrayDeque<E> forgetMeNot = null;
+        private ArrayDeque<E> forgetMeNot;
 
         /**
          * Element returned by the most recent call to next iff that
          * element was drawn from the forgetMeNot list.
          */
-        private E lastRetElt = null;
+        private E lastRetElt;
 
         /**
          * The modCount value that the iterator believes that the backing

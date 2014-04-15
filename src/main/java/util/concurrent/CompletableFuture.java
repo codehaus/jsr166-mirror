@@ -198,7 +198,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                                      h.next = src.completions, h));
                 }
                 else if ((c = h.completion) == null ||
-                         (d = c.tryComplete()) == null || 
+                         (d = c.tryComplete()) == null ||
                          d.result == null) {
                     dep = null;
                     f = src;
@@ -677,7 +677,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     @SuppressWarnings("serial")
     abstract static class Completion extends AtomicInteger {
         /**
-         * Completes a dependent Completablefuture if enabled
+         * Completes a dependent Completablefuture if enabled.
          * @return the dependent Completablefuture
          */
         public abstract CompletableFuture<?> tryComplete();

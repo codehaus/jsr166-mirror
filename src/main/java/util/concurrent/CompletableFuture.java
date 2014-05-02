@@ -313,13 +313,13 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
         /**
          * Performs completion action if enabled, returning a
-         * completed dependent Completablefuture, if one exists.
+         * completed dependent CompletableFuture, if one exists.
          */
         abstract CompletableFuture<?> tryAct();
     }
 
     /**
-     * Triggers all reaachble enabled dependents.  Call only when
+     * Triggers all reachable enabled dependents.  Call only when
      * known to be done.
      */
     final void postComplete() {

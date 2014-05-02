@@ -308,7 +308,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /* ------------- Completions -------------- */
 
-    static abstract class Completion<T> { // See above
+    abstract static class Completion<T> { // See above
         volatile Completion<?> next;      // Treiber stack link
 
         /**
@@ -353,7 +353,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * trigger. Fields can only be observed by other threads upon
      * successful push; and should be nulled out after claim.
      */
-    static abstract class UniCompletion<T> extends Completion<T> {
+    abstract static class UniCompletion<T> extends Completion<T> {
         Executor async;                    // executor to use (null if none)
         CompletableFuture<T> dep;          // the dependent to complete
         CompletableFuture<?> src;          // source of value for tryAct
@@ -935,7 +935,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /* ------------- Two-source Completions -------------- */
 
     /** A Completion with two sources */
-    static abstract class BiCompletion<T> extends UniCompletion<T> {
+    abstract static class BiCompletion<T> extends UniCompletion<T> {
         CompletableFuture<?> snd; // second source for tryAct
         BiCompletion(Executor async, CompletableFuture<T> dep,
                      CompletableFuture<?> src, CompletableFuture<?> snd) {
@@ -1709,7 +1709,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public T getNow(T valueIfAbsent) {
         Object r;
-        return (r = result) == null? valueIfAbsent : reportJoin(r);
+        return ((r = result) == null) ? valueIfAbsent : reportJoin(r);
     }
 
     /**

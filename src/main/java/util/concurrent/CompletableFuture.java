@@ -287,9 +287,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         CompletableFuture<T> dep; // the CompletableFuture to trigger
         Async(CompletableFuture<T> dep) { this.dep = dep; }
 
-	abstract void compute(); // call the associated "now" method
+        abstract void compute(); // call the associated "now" method
 
-	public final boolean exec() {
+        public final boolean exec() {
             CompletableFuture<T> d;
             if ((d = dep) != null) {
                 if (d.result == null) // suppress if cancelled
@@ -428,12 +428,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncApply<T,U> extends Async<U> {
-	T arg;  Function<? super T,? extends U> fn;
+        T arg;  Function<? super T,? extends U> fn;
         AsyncApply(CompletableFuture<U> dep, T arg,
                    Function<? super T,? extends U> fn) {
             super(dep); this.arg = arg; this.fn = fn;
         }
-	final void compute() { nowApply(null, dep, arg, fn); }
+        final void compute() { nowApply(null, dep, arg, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
@@ -498,12 +498,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncAccept<T,U> extends Async<U> {
-	T arg; Consumer<? super T> fn;
+        T arg; Consumer<? super T> fn;
         AsyncAccept(CompletableFuture<U> dep, T arg,
                     Consumer<? super T> fn) {
             super(dep); this.arg = arg; this.fn = fn;
         }
-	final void compute() { nowAccept(null, dep, arg, fn); }
+        final void compute() { nowAccept(null, dep, arg, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
@@ -559,16 +559,16 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncRun<T> extends Async<T> {
-	Runnable fn;
+        Runnable fn;
         AsyncRun(CompletableFuture<T> dep, Runnable fn) {
             super(dep); this.fn = fn;
         }
-	final void compute() { nowRun(null, dep, null, fn); }
+        final void compute() { nowRun(null, dep, null, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
     static final class DelayedRun extends UniCompletion<Void> {
-	Runnable fn;
+        Runnable fn;
         DelayedRun(Executor async, CompletableFuture<Void> dep,
                    CompletableFuture<?> src, Runnable fn) {
             super(async, dep, src); this.fn = fn;
@@ -613,11 +613,11 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncSupply<T> extends Async<T> {
-	Supplier<T> fn;
+        Supplier<T> fn;
         AsyncSupply(CompletableFuture<T> dep, Supplier<T> fn) {
             super(dep); this.fn = fn;
         }
-	final void compute() { nowSupply(dep, fn); }
+        final void compute() { nowSupply(dep, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
@@ -650,12 +650,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncWhen<T> extends Async<T> {
-	Object arg; BiConsumer<? super T,? super Throwable> fn;
+        Object arg; BiConsumer<? super T,? super Throwable> fn;
         AsyncWhen(CompletableFuture<T> dep, Object arg,
                   BiConsumer<? super T,? super Throwable> fn) {
             super(dep); this.arg = arg; this.fn = fn;
         }
-	final void compute() { nowWhen(null, dep, arg, fn); }
+        final void compute() { nowWhen(null, dep, arg, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
@@ -869,12 +869,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncCompose<T,U> extends Async<U> {
-	T arg; Function<? super T, ? extends CompletionStage<U>> fn;
+        T arg; Function<? super T, ? extends CompletionStage<U>> fn;
         AsyncCompose(CompletableFuture<U> dep, T arg,
                      Function<? super T, ? extends CompletionStage<U>> fn) {
             super(dep); this.arg = arg; this.fn = fn;
         }
-	final void compute() { nowCompose(null, dep, arg, fn); }
+        final void compute() { nowCompose(null, dep, arg, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
@@ -1022,12 +1022,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncCombine<T,U,V> extends Async<V> {
-	T arg1; U arg2; BiFunction<? super T,? super U,? extends V> fn;
+        T arg1; U arg2; BiFunction<? super T,? super U,? extends V> fn;
         AsyncCombine(CompletableFuture<V> dep, T arg1, U arg2,
                      BiFunction<? super T,? super U,? extends V> fn) {
             super(dep); this.arg1 = arg1; this.arg2 = arg2; this.fn = fn;
         }
-	final void compute() { nowCombine(null, dep, arg1, arg2, fn); }
+        final void compute() { nowCombine(null, dep, arg1, arg2, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
@@ -1104,12 +1104,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static final class AsyncAcceptBoth<T,U,V> extends Async<V> {
-	T arg1; U arg2; BiConsumer<? super T,? super U> fn;
+        T arg1; U arg2; BiConsumer<? super T,? super U> fn;
         AsyncAcceptBoth(CompletableFuture<V> dep, T arg1, U arg2,
                         BiConsumer<? super T,? super U> fn) {
             super(dep); this.arg1 = arg1; this.arg2 = arg2; this.fn = fn;
         }
-	final void compute() { nowAcceptBoth(null, dep, arg1, arg2, fn); }
+        final void compute() { nowAcceptBoth(null, dep, arg1, arg2, fn); }
         private static final long serialVersionUID = 5232453952276885070L;
     }
 
@@ -1654,7 +1654,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * while waiting
      */
     public T get() throws InterruptedException, ExecutionException {
-	Object r;
+        Object r;
         return reportGet((r = result) == null ?  waitingGet(true) : r);
     }
 
@@ -1673,7 +1673,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-	Object r;
+        Object r;
         long nanos = unit.toNanos(timeout);
         return reportGet((r = result) == null ?  timedGet(nanos) : r);
     }
@@ -1694,7 +1694,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public T join() {
         Object r;
-	return reportJoin((r = result) == null ? waitingGet(false) : r);
+        return reportJoin((r = result) == null ? waitingGet(false) : r);
     }
 
     /**
@@ -1709,7 +1709,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public T getNow(T valueIfAbsent) {
         Object r;
-	return (r = result) == null? valueIfAbsent : reportJoin(r);
+        return (r = result) == null? valueIfAbsent : reportJoin(r);
     }
 
     /**

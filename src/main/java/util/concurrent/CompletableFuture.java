@@ -209,7 +209,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
-     * Decodes outcome to return result or throw unchecked exception
+     * Decodes outcome to return result or throw unchecked exception.
      */
     private static <T> T reportJoin(Object r) {
         if (r instanceof AltResult) {
@@ -227,7 +227,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
-     * Reports result using Future.get conventions
+     * Reports result using Future.get conventions.
      */
     private static <T> T reportGet(Object r)
         throws InterruptedException, ExecutionException {
@@ -1941,7 +1941,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
-     * Returns this CompletableFuture
+     * Returns this CompletableFuture.
      *
      * @return this CompletableFuture
      */

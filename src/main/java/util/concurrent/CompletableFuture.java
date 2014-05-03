@@ -137,7 +137,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      *
      * Methods with two sources (for example thenCombine) must deal
      * with races across both while pushing actions.  The second
-     * completion is an CoCompletion pointing to the first, shared
+     * completion is a CoCompletion pointing to the first, shared
      * to ensure that at most one claims and performs the action.  The
      * multiple-arity method allOf does this pairwise to form a tree
      * of completions. (Method anyOf just uses a depth-one Or tree.)

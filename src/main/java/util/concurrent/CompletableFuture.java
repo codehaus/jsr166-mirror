@@ -137,8 +137,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      *
      * Methods with two sources (for example thenCombine) must deal
      * with races across both while pushing actions.  The second
-     * completion is a CoCompletion pointing to the first, shared
-     * to ensure that at most one claims and performs the action.  The
+     * completion is a CoCompletion pointing to the first, shared to
+     * ensure that at most one claims and performs the action.  The
      * multiple-arity method allOf does this pairwise to form a tree
      * of completions. (Method anyOf just uses a depth-one Or tree.)
      *
@@ -969,7 +969,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /* ------------- Two-source Anded -------------- */
 
-    /* Pushes c on to completions and o's completions unless both done. */
+    /** Pushes c on to completions and o's completions unless both done. */
     private void bipushAnded(CompletableFuture<?> o, Completion c) {
         if (c != null && o != null) {
             Object r; CompletableFuture<?> d;
@@ -1252,7 +1252,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /* ------------- Two-source Ored -------------- */
 
-    /* Pushes c on to completions and o's completions unless either done. */
+    /** Pushes c on to completions and o's completions unless either done. */
     private void bipushOred(CompletableFuture<?> o, Completion c) {
         if (c != null && o != null) {
             CompletableFuture<?> d;

@@ -117,7 +117,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * * Class AsyncX class (for example AsyncApply) that calls nowX
      *   from another task,
      * * Class DelayedX (for example DelayedApply) that holds
-     *   arguments and calls Xnow when ready.
+     *   arguments and calls nowX when ready.
      *
      * For each public CompletionStage method M* (for example
      * thenApply{Async}), there is a method doM (for example
@@ -251,19 +251,6 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /* ------------- Async Tasks -------------- */
 
     /**
-     * Default executor -- ForkJoinPool.commonPool() unless it cannot
-     * support parallelism.
-     */
-    static final Executor asyncPool =
-        (ForkJoinPool.getCommonPoolParallelism() > 1) ?
-        ForkJoinPool.commonPool() : new ThreadPerTaskExecutor();
-
-    /** Fallback if ForkJoinPool.commonPool() cannot support parallelism */
-    static final class ThreadPerTaskExecutor implements Executor {
-        public void execute(Runnable r) { new Thread(r).start(); }
-    }
-
-    /**
      * A marker interface identifying asynchronous tasks produced by
      * {@code async} methods. This may be useful for monitoring,
      * debugging, and tracking asynchronous activities.
@@ -304,6 +291,28 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         public final void setRawResult(Void v) { }
         public final void run() { exec(); }
         private static final long serialVersionUID = 5232453952276885070L;
+    }
+
+    /**
+     * Default executor -- ForkJoinPool.commonPool() unless it cannot
+     * support parallelism.
+     */
+    static final Executor asyncPool =
+        (ForkJoinPool.getCommonPoolParallelism() > 1) ?
+        ForkJoinPool.commonPool() : new ThreadPerTaskExecutor();
+
+    /** Fallback if ForkJoinPool.commonPool() cannot support parallelism */
+    static final class ThreadPerTaskExecutor implements Executor {
+        public void execute(Runnable r) { new Thread(r).start(); }
+    }
+
+    /**
+     * Null-checks user executor argument, and translates uses of
+     * commonPool to asyncPool in case parallelism disabled.
+     */
+    static Executor screenExecutor(Executor e) {
+        if (e == null) throw new NullPointerException();
+        return (e == ForkJoinPool.commonPool()) ? asyncPool : e;
     }
 
     /* ------------- Completions -------------- */
@@ -1577,10 +1586,10 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier,
                                                        Executor executor) {
-        if (executor == null || supplier == null)
-            throw new NullPointerException();
+        if (supplier == null) throw new NullPointerException();
+        Executor e = screenExecutor(executor);
         CompletableFuture<U> d = new CompletableFuture<U>();
-        executor.execute(new AsyncSupply<U>(d, supplier));
+        e.execute(new AsyncSupply<U>(d, supplier));
         return d;
     }
 
@@ -1612,10 +1621,10 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public static CompletableFuture<Void> runAsync(Runnable runnable,
                                                    Executor executor) {
-        if (executor == null || runnable == null)
-            throw new NullPointerException();
+        if (runnable == null) throw new NullPointerException();
+        Executor e = screenExecutor(executor);
         CompletableFuture<Void> d = new CompletableFuture<Void>();
-        executor.execute(new AsyncRun<Void>(d, runnable));
+        e.execute(new AsyncRun<Void>(d, runnable));
         return d;
     }
 
@@ -1753,8 +1762,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     public <U> CompletableFuture<U> thenApplyAsync(
         Function<? super T,? extends U> fn, Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doThenApply(fn, executor);
+        return doThenApply(fn, screenExecutor(executor));
     }
 
     public CompletableFuture<Void> thenAccept(Consumer<? super T> action) {
@@ -1767,8 +1775,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     public CompletableFuture<Void> thenAcceptAsync(
         Consumer<? super T> action, Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doThenAccept(action, executor);
+        return doThenAccept(action, screenExecutor(executor));
     }
 
     public CompletableFuture<Void> thenRun(Runnable action) {
@@ -1781,8 +1788,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     public CompletableFuture<Void> thenRunAsync(
         Runnable action, Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doThenRun(action, executor);
+        return doThenRun(action, screenExecutor(executor));
     }
 
     public <U,V> CompletableFuture<V> thenCombine(
@@ -1801,8 +1807,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         CompletionStage<? extends U> other,
         BiFunction<? super T,? super U,? extends V> fn,
         Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doThenCombine(other.toCompletableFuture(), fn, executor);
+        return doThenCombine(other.toCompletableFuture(), fn,
+                             screenExecutor(executor));
     }
 
     public <U> CompletableFuture<Void> thenAcceptBoth(
@@ -1821,8 +1827,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         CompletionStage<? extends U> other,
         BiConsumer<? super T, ? super U> action,
         Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doThenAcceptBoth(other.toCompletableFuture(), action, executor);
+        return doThenAcceptBoth(other.toCompletableFuture(), action,
+                                screenExecutor(executor));
     }
 
     public CompletableFuture<Void> runAfterBoth(
@@ -1837,8 +1843,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     public CompletableFuture<Void> runAfterBothAsync(
         CompletionStage<?> other, Runnable action, Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doRunAfterBoth(other.toCompletableFuture(), action, executor);
+        return doRunAfterBoth(other.toCompletableFuture(), action,
+                              screenExecutor(executor));
     }
 
     public <U> CompletableFuture<U> applyToEither(
@@ -1854,8 +1860,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     public <U> CompletableFuture<U> applyToEitherAsync
         (CompletionStage<? extends T> other, Function<? super T, U> fn,
          Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doApplyToEither(other.toCompletableFuture(), fn, executor);
+        return doApplyToEither(other.toCompletableFuture(), fn,
+                               screenExecutor(executor));
     }
 
     public CompletableFuture<Void> acceptEither(
@@ -1871,8 +1877,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     public CompletableFuture<Void> acceptEitherAsync(
         CompletionStage<? extends T> other, Consumer<? super T> action,
         Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doAcceptEither(other.toCompletableFuture(), action, executor);
+        return doAcceptEither(other.toCompletableFuture(), action,
+                              screenExecutor(executor));
     }
 
     public CompletableFuture<Void> runAfterEither(
@@ -1887,8 +1893,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     public CompletableFuture<Void> runAfterEitherAsync(
         CompletionStage<?> other, Runnable action, Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doRunAfterEither(other.toCompletableFuture(), action, executor);
+        return doRunAfterEither(other.toCompletableFuture(), action,
+                                screenExecutor(executor));
     }
 
     public <U> CompletableFuture<U> thenCompose
@@ -1904,8 +1910,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     public <U> CompletableFuture<U> thenComposeAsync(
         Function<? super T, ? extends CompletionStage<U>> fn,
         Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doThenCompose(fn, executor);
+        return doThenCompose(fn, screenExecutor(executor));
     }
 
     public CompletableFuture<T> whenComplete(
@@ -1920,8 +1925,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     public CompletableFuture<T> whenCompleteAsync(
         BiConsumer<? super T, ? super Throwable> action, Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doWhenComplete(action, executor);
+        return doWhenComplete(action, screenExecutor(executor));
     }
 
     public <U> CompletableFuture<U> handle(
@@ -1936,8 +1940,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     public <U> CompletableFuture<U> handleAsync(
         BiFunction<? super T, Throwable, ? extends U> fn, Executor executor) {
-        if (executor == null) throw new NullPointerException();
-        return doHandle(fn, executor);
+        return doHandle(fn, screenExecutor(executor));
     }
 
     /**

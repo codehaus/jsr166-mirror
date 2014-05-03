@@ -105,7 +105,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * Dependent actions are represented by Completion objects linked
      * as Treiber stacks headed by field completions. There are four
      * kinds of Completions: single-source (UniCompletion), two-source
-     * (BiCompletion), shared (CoBiCompletion, used by the second
+     * (BiCompletion), shared (CoCompletion, used by the second
      * source of a BiCompletion), and Signallers that unblock waiters.
      *
      * The same patterns of methods and classes are used for each form
@@ -137,7 +137,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      *
      * Methods with two sources (for example thenCombine) must deal
      * with races across both while pushing actions.  The second
-     * completion is an CoBiCompletion pointing to the first, shared
+     * completion is an CoCompletion pointing to the first, shared
      * to ensure that at most one claims and performs the action.  The
      * multiple-arity method allOf does this pairwise to form a tree
      * of completions. (Method anyOf just uses a depth-one Or tree.)
@@ -171,13 +171,13 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
 
     volatile Object result;             // Either the result or boxed AltResult
-    volatile Completion<?> completions; // Treiber stack of dependent actions
+    volatile Completion completions;    // Treiber stack of dependent actions
 
     final boolean internalComplete(Object r) { // CAS from null to r
         return UNSAFE.compareAndSwapObject(this, RESULT, null, r);
     }
 
-    final boolean casCompletions(Completion<?> cmp, Completion<?> val) {
+    final boolean casCompletions(Completion cmp, Completion val) {
         return UNSAFE.compareAndSwapObject(this, COMPLETIONS, cmp, val);
     }
 
@@ -317,8 +317,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /* ------------- Completions -------------- */
 
-    abstract static class Completion<T> { // See above
-        volatile Completion<?> next;      // Treiber stack link
+    abstract static class Completion { // See above
+        volatile Completion next;      // Treiber stack link
 
         /**
          * Performs completion action if enabled, returning a
@@ -337,10 +337,10 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
          * and run.  It is extended along only one path at a time,
          * pushing others to avoid StackOverflowErrors on recursion.
          */
-        CompletableFuture<?> f = this; Completion<?> h;
+        CompletableFuture<?> f = this; Completion h;
         while ((h = f.completions) != null ||
                (f != this && (h = (f = this).completions) != null)) {
-            CompletableFuture<?> d; Completion<?> t;
+            CompletableFuture<?> d; Completion t;
             if (f.casCompletions(h, t = h.next)) {
                 if (t != null) {
                     if (f != this) {  // push
@@ -362,7 +362,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * trigger. Fields can only be observed by other threads upon
      * successful push; and should be nulled out after claim.
      */
-    abstract static class UniCompletion<T> extends Completion<T> {
+    abstract static class UniCompletion<T> extends Completion {
         Executor async;                    // executor to use (null if none)
         CompletableFuture<T> dep;          // the dependent to complete
         CompletableFuture<?> src;          // source of value for tryAct
@@ -392,7 +392,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /** Pushes c on to completions, and triggers c if done. */
-    private void unipush(UniCompletion<?> c) {
+    private void unipush(Completion c) {
         if (c != null) {
             CompletableFuture<?> d;
             while (result == null && !casCompletions(c.next = completions, c))
@@ -952,29 +952,32 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         }
     }
 
-    /** A Completion delegating to a shared BiCompletion */
-    static final class CoBiCompletion<T> extends Completion<T> {
-        BiCompletion<T> completion;
-        CoBiCompletion(BiCompletion<T> completion) {
+    /** A Completion delegating to another Completion */
+    static final class CoCompletion extends Completion {
+        Completion completion;
+        CoCompletion(Completion completion) {
             this.completion = completion;
         }
         final CompletableFuture<?> tryAct() {
-            BiCompletion<T> c;
-            return (c = completion) == null ? null : c.tryAct();
+            Completion c; CompletableFuture<?> d;
+            if ((c = completion) == null || (d = c.tryAct()) == null)
+                return null;
+            completion = null; // detach
+            return d;
         }
     }
 
     /* ------------- Two-source Anded -------------- */
 
     /* Pushes c on to completions and o's completions unless both done. */
-    private <U> void bipushAnded(CompletableFuture<?> o, BiCompletion<U> c) {
+    private void bipushAnded(CompletableFuture<?> o, Completion c) {
         if (c != null && o != null) {
             Object r; CompletableFuture<?> d;
             while ((r = result) == null &&
                    !casCompletions(c.next = completions, c))
                 c.next = null;
             if (o.result == null) {
-                Completion<U> q = (r != null) ? c : new CoBiCompletion<U>(c);
+                Completion q = (r != null) ? c : new CoCompletion(c);
                 while (o.result == null &&
                        !o.casCompletions(q.next = o.completions, q))
                     q.next = null;
@@ -1250,12 +1253,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /* ------------- Two-source Ored -------------- */
 
     /* Pushes c on to completions and o's completions unless either done. */
-    private <U> void bipushOred(CompletableFuture<?> o, BiCompletion<U> c) {
+    private void bipushOred(CompletableFuture<?> o, Completion c) {
         if (c != null && o != null) {
             CompletableFuture<?> d;
             while (o.result == null && result == null) {
                 if (casCompletions(c.next = completions, c)) {
-                    CoBiCompletion<U> q = new CoBiCompletion<U>(c);
+                    CoCompletion q = new CoCompletion(c);
                     while (result == null && o.result == null &&
                            !o.casCompletions(q.next = o.completions, q))
                         q.next = null;
@@ -1392,7 +1395,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * avoid starvation when blocking actions pile up in
      * ForkJoinPools.
      */
-    static final class Signaller extends Completion<Void>
+    static final class Signaller extends Completion
         implements ForkJoinPool.ManagedBlocker {
         long nanos;          // wait time if timed
         final long deadline; // non-zero if timed
@@ -1527,8 +1530,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * in case of an apparent race.
      */
     private void removeCancelledSignallers() {
-        for (Completion<?> p = null, q = completions; q != null;) {
-            Completion<?> s = q.next;
+        for (Completion p = null, q = completions; q != null;) {
+            Completion s = q.next;
             if ((q instanceof Signaller) && ((Signaller)q).thread == null) {
                 if (p != null) {
                     p.next = s;
@@ -2124,7 +2127,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public int getNumberOfDependents() {
         int count = 0;
-        for (Completion<?> p = completions; p != null; p = p.next)
+        for (Completion p = completions; p != null; p = p.next)
             ++count;
         return count;
     }

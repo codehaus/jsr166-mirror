@@ -48,13 +48,13 @@ public class LongMaxUpdater extends Striped64 implements Serializable {
      * @param x the value to update
      */
     public void update(long x) {
-        Cell[] as; long b, v; HashCode hc; Cell a; int n;
+        Cell[] as; long b, v; int[] hc; Cell a; int n;
         if ((as = cells) != null ||
             (b = base) < x && !casBase(b, x)) {
             boolean uncontended = true;
-            int h = (hc = threadHashCode.get()).code;
-            if (as == null || (n = as.length) < 1 ||
-                (a = as[(n - 1) & h]) == null ||
+            if ((hc = threadHashCode.get()) == null || 
+                as == null || (n = as.length) < 1 ||
+                (a = as[(n - 1) & hc[0]]) == null ||
                 ((v = a.value) < x && !(uncontended = a.cas(v, x))))
                 retryUpdate(x, hc, uncontended);
         }

@@ -242,6 +242,7 @@
   </macrodef>
 
   <macrodef name="run-jtreg-tests">
+    <!-- ant -Djtreg.src.dir=src/test/jtreg/util/concurrent/CompletableFuture test-jtreg -->
     <attribute name="jtreg.src.dir" default="${jtreg.src.dir}"/>
     <attribute name="source" default="7"/>
     <attribute name="target"/>

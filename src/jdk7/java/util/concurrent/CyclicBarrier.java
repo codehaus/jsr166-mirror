@@ -125,7 +125,7 @@ public class CyclicBarrier {
     private final Condition trip = lock.newCondition();
     /** The number of parties */
     private final int parties;
-    /* The command to run when tripped */
+    /** The command to run when tripped */
     private final Runnable barrierCommand;
     /** The current generation */
     private Generation generation = new Generation();

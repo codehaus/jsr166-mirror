@@ -5,6 +5,10 @@
  */
 
 package jsr166e;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
@@ -176,14 +180,13 @@ public class DoubleMaxUpdater extends Striped64 implements Serializable {
         return (float)max();
     }
 
-    private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException {
+    private void writeObject(ObjectOutputStream s) throws IOException {
         s.defaultWriteObject();
         s.writeDouble(max());
     }
 
-    private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream s)
+            throws IOException, ClassNotFoundException {
         s.defaultReadObject();
         busy = 0;
         cells = null;

@@ -61,7 +61,7 @@ public class DoubleMaxUpdater extends Striped64 implements Serializable {
         if ((as = cells) != null ||
             (Double.longBitsToDouble(b = base) < x && !casBase(b, lx))) {
             boolean uncontended = true;
-            if ((hc = threadHashCode.get()) == null || 
+            if ((hc = threadHashCode.get()) == null ||
                 as == null || (n = as.length) < 1 ||
                 (a = as[(n - 1) & hc[0]]) == null ||
                 (Double.longBitsToDouble(v = a.value) < x &&

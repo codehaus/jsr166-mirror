@@ -37,7 +37,7 @@ public class ForkJoinWorkerThread extends Thread {
      * owning thread.
      *
      * Support for (non-public) subclass InnocuousForkJoinWorkerThread
-     * requires that we break quite a lot of encapulation (via Unsafe)
+     * requires that we break quite a lot of encapsulation (via Unsafe)
      * both here and in the subclass to access and set Thread fields.
      */
 
@@ -217,7 +217,7 @@ public class ForkJoinWorkerThread extends Thread {
 
         /**
          * Returns a new group with the system ThreadGroup (the
-         * topmost, parentless group) as parent.  Uses Unsafe to
+         * topmost, parent-less group) as parent.  Uses Unsafe to
          * traverse Thread group and ThreadGroup parent fields.
          */
         private static ThreadGroup createThreadGroup() {

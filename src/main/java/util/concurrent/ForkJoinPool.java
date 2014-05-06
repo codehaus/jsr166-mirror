@@ -487,7 +487,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * associated mechanics (mainly in ForkJoinWorkerThread) may be
      * JVM-dependent and must access particular Thread class fields to
      * achieve this effect.
-     * 
+     *
      * Style notes
      * ===========
      *

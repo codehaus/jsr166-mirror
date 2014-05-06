@@ -142,7 +142,7 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     /**
-     * Erases ThreadLocals by nulling out Thread maps
+     * Erases ThreadLocals by nulling out Thread maps.
      */
     final void eraseThreadLocals() {
         U.putObject(this, THREADLOCALS, null);

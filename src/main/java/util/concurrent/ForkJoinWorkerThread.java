@@ -218,7 +218,7 @@ public class ForkJoinWorkerThread extends Thread {
         /**
          * Returns a new group with the system ThreadGroup (the
          * topmost, parent-less group) as parent.  Uses Unsafe to
-         * traverse Thread group and ThreadGroup parent fields.
+         * traverse Thread.group and ThreadGroup.parent fields.
          */
         private static ThreadGroup createThreadGroup() {
             try {

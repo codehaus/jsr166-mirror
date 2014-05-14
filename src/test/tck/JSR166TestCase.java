@@ -221,12 +221,17 @@ public class JSR166TestCase extends TestCase {
     }
 
     public static final double JAVA_CLASS_VERSION;
+    public static final String JAVA_SPECIFICATION_VERSION;
     static {
         try {
             JAVA_CLASS_VERSION = java.security.AccessController.doPrivileged(
                 new java.security.PrivilegedAction<Double>() {
                 public Double run() {
                     return Double.valueOf(System.getProperty("java.class.version"));}});
+            JAVA_SPECIFICATION_VERSION = java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty("java.specification.version");}});
         } catch (Throwable t) {
             throw new Error(t);
         }
@@ -235,6 +240,10 @@ public class JSR166TestCase extends TestCase {
     public static boolean atLeastJava6() { return JAVA_CLASS_VERSION >= 50.0; }
     public static boolean atLeastJava7() { return JAVA_CLASS_VERSION >= 51.0; }
     public static boolean atLeastJava8() { return JAVA_CLASS_VERSION >= 52.0; }
+    public static boolean atLeastJava9() {
+        // As of 2014-05, java9 still uses 52.0 class file version
+        return JAVA_SPECIFICATION_VERSION.startsWith("1.9");
+    }
 
     /**
      * Collects all JSR166 unit tests as one suite.
@@ -325,6 +334,14 @@ public class JSR166TestCase extends TestCase {
                 "ThreadLocalRandom8Test",
             };
             addNamedTestClasses(suite, java8TestClassNames);
+        }
+
+        // Java9+ test classes
+        if (atLeastJava9()) {
+            String[] java9TestClassNames = {
+                "ThreadPoolExecutor9Test",
+            };
+            addNamedTestClasses(suite, java9TestClassNames);
         }
 
         return suite;

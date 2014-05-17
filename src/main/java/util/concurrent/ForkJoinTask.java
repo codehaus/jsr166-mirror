@@ -548,7 +548,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         Throwable ex;
         if (e == null || (ex = e.ex) == null)
             return null;
-        if (false && e.thrower != Thread.currentThread().getId()) {
+        if (e.thrower != Thread.currentThread().getId()) {
             Class<? extends Throwable> ec = ex.getClass();
             try {
                 Constructor<?> noArgCtor = null;

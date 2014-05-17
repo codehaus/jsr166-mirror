@@ -5,6 +5,10 @@
  */
 
 package jsr166e;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
@@ -59,15 +63,15 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * @param x the value to add
      */
     public void add(double x) {
-        Cell[] as; long b, v; HashCode hc; Cell a; int n;
+        Cell[] as; long b, v; int[] hc; Cell a; int n;
         if ((as = cells) != null ||
             !casBase(b = base,
                      Double.doubleToRawLongBits
                      (Double.longBitsToDouble(b) + x))) {
             boolean uncontended = true;
-            int h = (hc = threadHashCode.get()).code;
-            if (as == null || (n = as.length) < 1 ||
-                (a = as[(n - 1) & h]) == null ||
+            if ((hc = threadHashCode.get()) == null ||
+                as == null || (n = as.length) < 1 ||
+                (a = as[(n - 1) & hc[0]]) == null ||
                 !(uncontended = a.cas(v = a.value,
                                       Double.doubleToRawLongBits
                                       (Double.longBitsToDouble(v) + x))))
@@ -181,14 +185,13 @@ public class DoubleAdder extends Striped64 implements Serializable {
         return (float)sum();
     }
 
-    private void writeObject(java.io.ObjectOutputStream s)
-        throws java.io.IOException {
+    private void writeObject(ObjectOutputStream s) throws IOException {
         s.defaultWriteObject();
         s.writeDouble(sum());
     }
 
-    private void readObject(java.io.ObjectInputStream s)
-        throws java.io.IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream s)
+            throws IOException, ClassNotFoundException {
         s.defaultReadObject();
         busy = 0;
         cells = null;

@@ -43,7 +43,7 @@ import java.util.function.Consumer;
  *
  * class X {
  *   private final CopyOnWriteArraySet<Handler> handlers
- *     = new CopyOnWriteArraySet<Handler>();
+ *     = new CopyOnWriteArraySet<>();
  *   public void addHandler(Handler h) { handlers.add(h); }
  *
  *   private long internalState;

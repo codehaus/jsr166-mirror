@@ -49,7 +49,7 @@ package java.util.concurrent;
  * For example, the above construction with {@code submit} could be replaced by:
  *  <pre> {@code
  * FutureTask<String> future =
- *   new FutureTask<String>(new Callable<String>() {
+ *   new FutureTask<>(new Callable<String>() {
  *     public String call() {
  *       return searcher.search(target);
  *   }});

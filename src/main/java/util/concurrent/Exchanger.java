@@ -26,7 +26,7 @@ import java.util.concurrent.locks.LockSupport;
  * filled one to the thread emptying the buffer.
  *  <pre> {@code
  * class FillAndEmpty {
- *   Exchanger<DataBuffer> exchanger = new Exchanger<DataBuffer>();
+ *   Exchanger<DataBuffer> exchanger = new Exchanger<>();
  *   DataBuffer initialEmptyBuffer = ... a made-up type
  *   DataBuffer initialFullBuffer = ...
  *

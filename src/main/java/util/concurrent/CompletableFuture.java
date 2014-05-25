@@ -47,9 +47,9 @@ import java.util.concurrent.locks.LockSupport;
  * <li>All <em>async</em> methods without an explicit Executor
  * argument are performed using the {@link ForkJoinPool#commonPool()}
  * (unless it does not support a parallelism level of at least two, in
- * which case, a new Thread is used). To simplify monitoring,
- * debugging, and tracking, all generated asynchronous tasks are
- * instances of the marker interface {@link
+ * which case, a new Thread is created to run each task).  To simplify
+ * monitoring, debugging, and tracking, all generated asynchronous
+ * tasks are instances of the marker interface {@link
  * AsynchronousCompletionTask}. </li>
  *
  * <li>All CompletionStage methods are implemented independently of

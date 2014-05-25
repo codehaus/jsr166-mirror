@@ -61,7 +61,7 @@ package java.util.concurrent;
  *   }
  *
  *   public synchronized void execute(final Runnable r) {
- *     tasks.offer(new Runnable() {
+ *     tasks.add(new Runnable() {
  *       public void run() {
  *         try {
  *           r.run();

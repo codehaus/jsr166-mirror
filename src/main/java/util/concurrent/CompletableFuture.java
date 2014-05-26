@@ -2214,8 +2214,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * Forcibly causes subsequent invocations of method {@link #get()}
      * and related methods to throw the given exception, whether or
      * not already completed. This method is designed for use only in
-     * recovery actions, and even in such situations may result in
-     * ongoing dependent completions using established versus
+     * error recovery actions, and even in such situations may result
+     * in ongoing dependent completions using established versus
      * overwritten outcomes.
      *
      * @param ex the exception

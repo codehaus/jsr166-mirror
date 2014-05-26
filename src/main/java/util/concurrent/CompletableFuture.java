@@ -224,7 +224,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
-     * Returns the encoding of a copied outcome, If exceptional,
+     * Returns the encoding of a copied outcome; if exceptional,
      * rewraps as a CompletionException, else returns argument.
      */
     static Object encodeRelay(Object r) {

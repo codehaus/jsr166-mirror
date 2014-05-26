@@ -2219,6 +2219,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * overwritten outcomes.
      *
      * @param ex the exception
+     * @throws NullPointerException if the exception is null
      */
     public void obtrudeException(Throwable ex) {
         if (ex == null) throw new NullPointerException();

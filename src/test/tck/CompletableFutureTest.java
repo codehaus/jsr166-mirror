@@ -3022,6 +3022,8 @@ public class CompletableFutureTest extends JSR166TestCase {
             () -> CompletableFuture.anyOf((CompletableFuture<?>[])null),
             () -> CompletableFuture.anyOf(f, null),
             () -> CompletableFuture.anyOf(null, f),
+
+            () -> f.obtrudeException(null),
         };
 
         assertThrows(NullPointerException.class, throwingActions);

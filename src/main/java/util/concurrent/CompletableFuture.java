@@ -329,7 +329,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
          */
         abstract CompletableFuture<?> tryFire(int mode);
 
-        /** Return true if possibly still triggerable. Used by cleanStack. */
+        /** Returns true if possibly still triggerable. Used by cleanStack. */
         abstract boolean isLive();
 
         public final void run()                { tryFire(ASYNC); }

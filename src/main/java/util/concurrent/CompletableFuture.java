@@ -1793,7 +1793,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public T get() throws InterruptedException, ExecutionException {
         Object r;
-        return reportGet((r = result) == null ?  waitingGet(true) : r);
+        return reportGet((r = result) == null ? waitingGet(true) : r);
     }
 
     /**
@@ -1813,7 +1813,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         throws InterruptedException, ExecutionException, TimeoutException {
         Object r;
         long nanos = unit.toNanos(timeout);
-        return reportGet((r = result) == null ?  timedGet(nanos) : r);
+        return reportGet((r = result) == null ? timedGet(nanos) : r);
     }
 
     /**

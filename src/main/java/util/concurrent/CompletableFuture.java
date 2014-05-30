@@ -1211,7 +1211,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             CompletableFuture<?> a, b;
             int mid = (lo + hi) >>> 1;
             if ((a = (lo == mid ? cfs[lo] :
-                      andTree(cfs, lo,    mid))) == null ||
+                      andTree(cfs, lo, mid))) == null ||
                 (b = (lo == hi ? a : (hi == mid+1) ? cfs[hi] :
                       andTree(cfs, mid+1, hi)))  == null)
                 throw new NullPointerException();
@@ -1462,7 +1462,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             CompletableFuture<?> a, b;
             int mid = (lo + hi) >>> 1;
             if ((a = (lo == mid ? cfs[lo] :
-                      orTree(cfs, lo,    mid))) == null ||
+                      orTree(cfs, lo, mid))) == null ||
                 (b = (lo == hi ? a : (hi == mid+1) ? cfs[hi] :
                       orTree(cfs, mid+1, hi)))  == null)
                 throw new NullPointerException();

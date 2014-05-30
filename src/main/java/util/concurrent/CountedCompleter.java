@@ -206,7 +206,7 @@ package java.util.concurrent;
  *   }
  *   public E getRawResult() { return result.get(); }
  *   public void compute() { // similar to ForEach version 3
- *     int l = lo,  h = hi;
+ *     int l = lo, h = hi;
  *     while (result.get() == null && h >= l) {
  *       if (h - l >= 2) {
  *         int mid = (l + h) >>> 1;
@@ -336,7 +336,7 @@ package java.util.concurrent;
  *     this.next = next;
  *   }
  *   public void compute() {
- *     int l = lo,  h = hi;
+ *     int l = lo, h = hi;
  *     while (h - l >= 2) {
  *       int mid = (l + h) >>> 1;
  *       addToPendingCount(1);
@@ -347,7 +347,7 @@ package java.util.concurrent;
  *       result = mapper.apply(array[l]);
  *     // process completions by reducing along and advancing subtask links
  *     for (CountedCompleter<?> c = firstComplete(); c != null; c = c.nextComplete()) {
- *       for (MapReducer t = (MapReducer)c, s = t.forks;  s != null; s = t.forks = s.next)
+ *       for (MapReducer t = (MapReducer)c, s = t.forks; s != null; s = t.forks = s.next)
  *         t.result = reducer.apply(t.result, s.result);
  *     }
  *   }

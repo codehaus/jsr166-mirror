@@ -455,7 +455,7 @@ public class ThreadLocalRandom extends Random {
         if (!(bound > 0.0))
             throw new IllegalArgumentException(BadBound);
         double result = (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT * bound;
-        return (result < bound) ?  result : // correct for rounding
+        return (result < bound) ? result : // correct for rounding
             Double.longBitsToDouble(Double.doubleToLongBits(bound) - 1);
     }
 

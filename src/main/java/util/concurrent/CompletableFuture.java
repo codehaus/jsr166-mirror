@@ -275,7 +275,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         return t;
     }
 
-    /* ------------- Async task preliminaries  -------------- */
+    /* ------------- Async task preliminaries -------------- */
 
     /**
      * A marker interface identifying asynchronous tasks produced by
@@ -503,7 +503,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     private <U> CompletableFuture<U> uniApplyStage(
         Executor e, Function<? super T,? extends U> f) {
         if (f == null) throw new NullPointerException();
-        CompletableFuture<U> d =  new CompletableFuture<U>();
+        CompletableFuture<U> d = new CompletableFuture<U>();
         if (e != null || !d.uniApply(this, f, null)) {
             UniApply<T,U> c = new UniApply<T,U>(e, d, this, f);
             push(c);

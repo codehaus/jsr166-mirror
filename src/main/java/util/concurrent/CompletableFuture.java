@@ -473,7 +473,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     final <S> boolean uniApply(CompletableFuture<S> a,
                                Function<? super S,? extends T> f,
                                UniApply<S,T> c) {
-        Object r; T u; Throwable x;
+        Object r; T t; Throwable x;
         if (a == null || (r = a.result) == null || f == null)
             return false;
         if (result == null) {
@@ -485,18 +485,18 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 else
                     x = null;
                 if (x != null)
-                    u = null;
+                    t = null;
                 else if (c != null && !c.claim())
                     return false;
                 else {
-                    @SuppressWarnings("unchecked") S t = (S) r;
-                    u = f.apply(t);
+                    @SuppressWarnings("unchecked") S s = (S) r;
+                    t = f.apply(s);
                 }
             } catch (Throwable ex) {
                 x = ex;
-                u = null;
+                t = null;
             }
-            internalComplete(encodeOutcome(u, x));
+            internalComplete(encodeOutcome(t, x));
         }
         return true;
     }
@@ -547,8 +547,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     if (c != null && !c.claim())
                         return false;
                     else {
-                        @SuppressWarnings("unchecked") S t = (S) r;
-                        f.accept(t);
+                        @SuppressWarnings("unchecked") S s = (S) r;
+                        f.accept(s);
                     }
                 }
             } catch (Throwable ex) {
@@ -701,7 +701,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     final <S> boolean uniHandle(CompletableFuture<S> a,
                                 BiFunction<? super S, Throwable, ? extends T> f,
                                 UniHandle<S,T> c) {
-        Object r; T u; Throwable x, y;
+        Object r; T t; Throwable x, y;
         if (a == null || (r = a.result) == null || f == null)
             return false;
         if (result == null) {
@@ -715,15 +715,15 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 if (c != null && !c.claim())
                     return false;
                 else {
-                    @SuppressWarnings("unchecked") S t = (S) r;
-                    u = f.apply(t, x);
+                    @SuppressWarnings("unchecked") S s = (S) r;
+                    t = f.apply(s, x);
                     y = null;
                 }
             } catch (Throwable ex) {
                 y = ex;
-                u = null;
+                t = null;
             }
-            internalComplete(encodeOutcome(u, y));
+            internalComplete(encodeOutcome(t, y));
         }
         return true;
     }
@@ -861,9 +861,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     if (c != null && !c.claim())
                         return false;
                     else {
-                        @SuppressWarnings("unchecked") S t = (S) r;
+                        @SuppressWarnings("unchecked") S s = (S) r;
                         CompletableFuture<T> g =
-                            f.apply(t).toCompletableFuture();
+                            f.apply(s).toCompletableFuture();
                         if (g.result == null || !uniRelay(g)) {
                             UniRelay<T> copy = new UniRelay<T>(this, g);
                             g.push(copy);
@@ -995,7 +995,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                                 CompletableFuture<S> b,
                                 BiFunction<? super R,? super S,? extends T> f,
                                 BiApply<R,S,T> c) {
-        Object r, s; T v; Throwable x;
+        Object r, s; T t; Throwable x;
         if (a == null || (r = a.result) == null ||
             b == null || (s = b.result) == null || f == null)
             return false;
@@ -1012,19 +1012,19 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     s = null;
                 }
                 if (x != null)
-                    v = null;
+                    t = null;
                 else if (c != null && !c.claim())
                     return false;
                 else {
-                    @SuppressWarnings("unchecked") R t = (R) r;
-                    @SuppressWarnings("unchecked") S u = (S) s;
-                    v = f.apply(t, u);
+                    @SuppressWarnings("unchecked") R rr = (R) r;
+                    @SuppressWarnings("unchecked") S ss = (S) s;
+                    t = f.apply(rr, ss);
                 }
             } catch (Throwable ex) {
                 x = ex;
-                v = null;
+                t = null;
             }
-            internalComplete(encodeOutcome(v, x));
+            internalComplete(encodeOutcome(t, x));
         }
         return true;
     }
@@ -1088,9 +1088,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     if (c != null && !c.claim())
                         return false;
                     else {
-                        @SuppressWarnings("unchecked") R t = (R) r;
-                        @SuppressWarnings("unchecked") S u = (S) s;
-                        f.accept(t, u);
+                        @SuppressWarnings("unchecked") R rr = (R) r;
+                        @SuppressWarnings("unchecked") S ss = (S) s;
+                        f.accept(rr, ss);
                     }
                 }
             } catch (Throwable ex) {
@@ -1282,7 +1282,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                                           CompletableFuture<S> b,
                                           Function<? super R, ? extends T> f,
                                           OrApply<R,S,T> c) {
-        Object r; T u; Throwable x;
+        Object r; T t; Throwable x;
         if (a == null || b == null ||
             ((r = a.result) == null && (r = b.result) == null) || f == null)
             return false;
@@ -1295,18 +1295,18 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 else
                     x = null;
                 if (x != null)
-                    u = null;
+                    t = null;
                 else if (c != null && !c.claim())
                     return false;
                 else {
-                    @SuppressWarnings("unchecked") R t = (R) r;
-                    u = f.apply(t);
+                    @SuppressWarnings("unchecked") R rr = (R) r;
+                    t = f.apply(rr);
                 }
             } catch (Throwable ex) {
                 x = ex;
-                u = null;
+                t = null;
             }
-            internalComplete(encodeOutcome(u, x));
+            internalComplete(encodeOutcome(t, x));
         }
         return true;
     }
@@ -1367,8 +1367,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     if (c != null && !c.claim())
                         return false;
                     else {
-                        @SuppressWarnings("unchecked") R t = (R) r;
-                        f.accept(t);
+                        @SuppressWarnings("unchecked") R rr = (R) r;
+                        f.accept(rr);
                     }
                 }
             } catch (Throwable ex) {

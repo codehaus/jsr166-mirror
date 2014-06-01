@@ -318,26 +318,40 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     // Choose non-commutative actions for better coverage
 
+    // A non-commutative function that handles null values as well
+    public static int subtract(Integer x, Integer y) {
+        return ((x == null) ? 42 : x.intValue())
+            - ((y == null) ? 99 : y.intValue());
+    }
+
     static final Supplier<Integer> supplyOne =
         () -> Integer.valueOf(1);
     static final Function<Integer, Integer> inc =
         (Integer x) -> Integer.valueOf(x.intValue() + 1);
     static final BiFunction<Integer, Integer, Integer> subtract =
-        (Integer x, Integer y) -> Integer.valueOf(x.intValue() - y.intValue());
+        (Integer x, Integer y) -> subtract(x, y);
     static final class IncAction implements Consumer<Integer> {
         int value;
         public void accept(Integer x) { value = x.intValue() + 1; }
     }
     static final class SubtractAction implements BiConsumer<Integer, Integer> {
-        // Handle null values as well
-        public int subtract(Integer x, Integer y) {
-            return ((x == null) ? 42 : x.intValue())
-                - ((y == null) ? 99 : y.intValue());
-        }
+        volatile int invocationCount = 0;
         int value;
-        public boolean ran() { return value != 0; }
+        // Check this action was invoked exactly once when result is computed.
+        public boolean ran() { return invocationCount == 1; }
         public void accept(Integer x, Integer y) {
+            invocationCount++;
             value = subtract(x, y);
+        }
+    }
+    static final class SubtractFunction implements BiFunction<Integer, Integer, Integer> {
+        volatile int invocationCount = 0;
+        int value;
+        // Check this action was invoked exactly once when result is computed.
+        public boolean ran() { return invocationCount == 1; }
+        public Integer apply(Integer x, Integer y) {
+            invocationCount++;
+            return subtract(x, y);
         }
     }
     static final class Noop implements Runnable {
@@ -427,6 +441,12 @@ public class CompletableFutureTest extends JSR166TestCase {
                  BiConsumer<? super T,? super U> a) {
                 return f.thenAcceptBoth(g, a);
             }
+            public <T,U,V> CompletableFuture<V> thenCombine
+                (CompletableFuture<T> f,
+                 CompletionStage<? extends U> g,
+                 BiFunction<? super T,? super U,? extends V> a) {
+                return f.thenCombine(g, a);
+            }
         },
 
 //             /** Experimental way to do more testing */
@@ -454,6 +474,12 @@ public class CompletableFutureTest extends JSR166TestCase {
                  BiConsumer<? super T,? super U> a) {
                 return f.thenAcceptBothAsync(g, a);
             }
+            public <T,U,V> CompletableFuture<V> thenCombine
+                (CompletableFuture<T> f,
+                 CompletionStage<? extends U> g,
+                 BiFunction<? super T,? super U,? extends V> a) {
+                return f.thenCombineAsync(g, a);
+            }
         },
 
 //         REVERSE_DEFAULT_ASYNC {
@@ -480,6 +506,12 @@ public class CompletableFutureTest extends JSR166TestCase {
                  BiConsumer<? super T,? super U> a) {
                 return f.thenAcceptBothAsync(g, a, new ThreadExecutor());
             }
+            public <T,U,V> CompletableFuture<V> thenCombine
+                (CompletableFuture<T> f,
+                 CompletionStage<? extends U> g,
+                 BiFunction<? super T,? super U,? extends V> a) {
+                return f.thenCombineAsync(g, a, new ThreadExecutor());
+            }
         };
 
         public abstract <T,U> CompletableFuture<Void> runAfterBoth
@@ -488,6 +520,10 @@ public class CompletableFutureTest extends JSR166TestCase {
             (CompletableFuture<T> f,
              CompletionStage<? extends U> g,
              BiConsumer<? super T,? super U> a);
+        public abstract <T,U,V> CompletableFuture<V> thenCombine
+            (CompletableFuture<T> f,
+             CompletionStage<? extends U> g,
+             BiFunction<? super T,? super U,? extends V> a);
     }
 
     /**
@@ -782,115 +818,298 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenCombine result completes normally after normal completion
      * of sources
      */
-    public void testThenCombine() {
-        CompletableFuture<Integer> f, g, h;
+    public void testThenCombine_normalCompletion1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombine(g, subtract);
-        f.complete(3);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        f.complete(v1);
         checkIncomplete(h);
-        g.complete(1);
-        checkCompletedNormally(h, 2);
+        assertFalse(r.ran());
+        g.complete(v2);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombine(g, subtract);
-        g.complete(1);
+        checkCompletedNormally(h, subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenCombine_normalCompletion2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        g.complete(v2);
         checkIncomplete(h);
-        f.complete(3);
-        checkCompletedNormally(h, 2);
+        assertFalse(r.ran());
+        f.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.complete(1);
-        f.complete(3);
-        h = f.thenCombine(g, subtract);
-        checkCompletedNormally(h, 2);
+        checkCompletedNormally(h, subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenCombine_normalCompletion3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+
+        g.complete(v2);
+        f.complete(v1);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        checkCompletedNormally(h, subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenCombine_normalCompletion4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+
+        f.complete(v1);
+        g.complete(v2);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        checkCompletedNormally(h, subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
     }
 
     /**
      * thenCombine result completes exceptionally after exceptional
      * completion of either source
      */
-    public void testThenCombine2() {
-        CompletableFuture<Integer> f, g, h;
+    public void testThenCombine_exceptionalCompletion1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombine(g, subtract);
-        f.completeExceptionally(new CFException());
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+        final CFException ex = new CFException();
+
+        f.completeExceptionally(ex);
         checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
+        g.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombine(g, subtract);
-        g.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(f, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
+    }
+
+    public void testThenCombine_exceptionalCompletion2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, subtract);
+        final CFException ex = new CFException();
+
+        g.completeExceptionally(ex);
         checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCFException(h);
+        f.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        g.completeExceptionally(new CFException());
-        h = f.thenCombine(g, subtract);
-        checkCompletedWithWrappedCFException(h);
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(g, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.completeExceptionally(new CFException());
-        g.complete(3);
-        h = f.thenCombine(g, subtract);
-        checkCompletedWithWrappedCFException(h);
+    public void testThenCombine_exceptionalCompletion3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CFException ex = new CFException();
+
+        g.completeExceptionally(ex);
+        f.complete(v1);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(g, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testThenCombine_exceptionalCompletion4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CFException ex = new CFException();
+
+        f.completeExceptionally(ex);
+        g.complete(v1);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, subtract);
+
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(f, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
     }
 
     /**
      * thenCombine result completes exceptionally if action does
      */
-    public void testThenCombine3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        FailingBiFunction r = new FailingBiFunction();
-        CompletableFuture<Integer> g = f.thenCombine(f2, r);
-        f.complete(one);
-        checkIncomplete(g);
-        assertFalse(r.ran);
-        f2.complete(two);
-        checkCompletedWithWrappedCFException(g);
-        assertTrue(r.ran);
+    public void testThenCombine_actionFailed1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingBiFunction r = new FailingBiFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        f.complete(v1);
+        checkIncomplete(h);
+        g.complete(v2);
+
+        checkCompletedWithWrappedCFException(h);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenCombine_actionFailed2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingBiFunction r = new FailingBiFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        g.complete(v2);
+        checkIncomplete(h);
+        f.complete(v1);
+
+        checkCompletedWithWrappedCFException(h);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
     }
 
     /**
      * thenCombine result completes exceptionally if either source cancelled
      */
-    public void testThenCombine4() {
-        CompletableFuture<Integer> f, g, h;
+    public void testThenCombine_sourceCancelled1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombine(g, subtract);
-        assertTrue(f.cancel(true));
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        assertTrue(f.cancel(mayInterruptIfRunning));
         checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCancellationException(h);
+        g.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombine(g, subtract);
-        assertTrue(g.cancel(true));
+        checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(f);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
+    }
+
+    public void testThenCombine_sourceCancelled2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        assertTrue(g.cancel(mayInterruptIfRunning));
         checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCancellationException(h);
+        f.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        assertTrue(f.cancel(true));
-        assertTrue(g.cancel(true));
-        h = f.thenCombine(g, subtract);
         checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(g);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testThenCombine_sourceCancelled3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+
+        assertTrue(g.cancel(mayInterruptIfRunning));
+        f.complete(v1);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(g);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testThenCombine_sourceCancelled4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractFunction r = new SubtractFunction();
+
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        g.complete(v1);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(f);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
     }
 
     /**
@@ -913,7 +1132,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         g.complete(v2);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, r.subtract(v1, v2));
+        assertEquals(r.value, subtract(v1, v2));
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -935,7 +1154,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         f.complete(v1);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, r.subtract(v1, v2));
+        assertEquals(r.value, subtract(v1, v2));
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -955,7 +1174,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, r.subtract(v1, v2));
+        assertEquals(r.value, subtract(v1, v2));
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -975,7 +1194,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, r.subtract(v1, v2));
+        assertEquals(r.value, subtract(v1, v2));
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -1932,121 +2151,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * thenCombineAsync result completes normally after normal
-     * completion of sources
-     */
-    public void testThenCombineAsync() {
-        CompletableFuture<Integer> f, g, h;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract);
-        f.complete(3);
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedNormally(h, 2);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract);
-        g.complete(1);
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedNormally(h, 2);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.complete(1);
-        f.complete(3);
-        h = f.thenCombineAsync(g, subtract);
-        checkCompletedNormally(h, 2);
-    }
-
-    /**
-     * thenCombineAsync result completes exceptionally after exceptional
-     * completion of either source
-     */
-    public void testThenCombineAsync2() {
-        CompletableFuture<Integer> f, g, h;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract);
-        f.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract);
-        g.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.completeExceptionally(new CFException());
-        f.complete(3);
-        h = f.thenCombineAsync(g, subtract);
-        checkCompletedWithWrappedCFException(h);
-    }
-
-    /**
-     * thenCombineAsync result completes exceptionally if action does
-     */
-    public void testThenCombineAsync3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        FailingBiFunction r = new FailingBiFunction();
-        CompletableFuture<Integer> g = f.thenCombineAsync(f2, r);
-        f.complete(one);
-        checkIncomplete(g);
-        assertFalse(r.ran);
-        f2.complete(two);
-        checkCompletedWithWrappedCFException(g);
-        assertTrue(r.ran);
-    }
-
-    /**
-     * thenCombineAsync result completes exceptionally if either source cancelled
-     */
-    public void testThenCombineAsync4() {
-        CompletableFuture<Integer> f, g, h;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract);
-        assertTrue(f.cancel(true));
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract);
-        assertTrue(g.cancel(true));
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.complete(3);
-        assertTrue(f.cancel(true));
-        h = f.thenCombineAsync(g, subtract);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        assertTrue(g.cancel(true));
-        h = f.thenCombineAsync(g, subtract);
-        checkCompletedWithWrappedCancellationException(h);
-    }
-
-    /**
      * applyToEitherAsync result completes normally after normal
      * completion of sources
      */
@@ -2483,135 +2587,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Void> g = f.thenAcceptAsync(r, new ThreadExecutor());
         assertTrue(f.cancel(true));
         checkCompletedWithWrappedCancellationException(g);
-    }
-
-    /**
-     * thenCombineAsync result completes normally after normal
-     * completion of sources
-     */
-    public void testThenCombineAsyncE() {
-        CompletableFuture<Integer> f, g, h;
-        ThreadExecutor e = new ThreadExecutor();
-        int count = 0;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract, e);
-        f.complete(3);
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedNormally(h, 2);
-        assertEquals(++count, e.count.get());
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract, e);
-        g.complete(1);
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedNormally(h, 2);
-        assertEquals(++count, e.count.get());
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.complete(1);
-        f.complete(3);
-        h = f.thenCombineAsync(g, subtract, e);
-        checkCompletedNormally(h, 2);
-        assertEquals(++count, e.count.get());
-    }
-
-    /**
-     * thenCombineAsync result completes exceptionally after exceptional
-     * completion of either source
-     */
-    public void testThenCombineAsync2E() {
-        CompletableFuture<Integer> f, g, h;
-        ThreadExecutor e = new ThreadExecutor();
-        int count = 0;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract, e);
-        f.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract, e);
-        g.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.completeExceptionally(new CFException());
-        h = f.thenCombineAsync(g, subtract, e);
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCFException(h);
-
-        assertEquals(0, e.count.get());
-    }
-
-    /**
-     * thenCombineAsync result completes exceptionally if action does
-     */
-    public void testThenCombineAsync3E() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        FailingBiFunction r = new FailingBiFunction();
-        CompletableFuture<Integer> g = f.thenCombineAsync(f2, r, new ThreadExecutor());
-        f.complete(one);
-        checkIncomplete(g);
-        assertFalse(r.ran);
-        f2.complete(two);
-        checkCompletedWithWrappedCFException(g);
-        assertTrue(r.ran);
-    }
-
-    /**
-     * thenCombineAsync result completes exceptionally if either source cancelled
-     */
-    public void testThenCombineAsync4E() {
-        CompletableFuture<Integer> f, g, h;
-        ThreadExecutor e = new ThreadExecutor();
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract, e);
-        assertTrue(f.cancel(true));
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenCombineAsync(g, subtract, e);
-        assertTrue(g.cancel(true));
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        assertTrue(g.cancel(true));
-        h = f.thenCombineAsync(g, subtract, e);
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        assertTrue(f.cancel(true));
-        assertTrue(g.cancel(true));
-        h = f.thenCombineAsync(g, subtract, e);
-        checkCompletedWithWrappedCancellationException(h);
-
-        assertEquals(0, e.count.get());
     }
 
     /**

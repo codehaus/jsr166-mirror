@@ -318,9 +318,11 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     // Choose non-commutative actions for better coverage
 
-    // A non-commutative function that handles null values as well
-    public static int subtract(Integer x, Integer y) {
-        return ((x == null) ? 42 : x.intValue())
+    // A non-commutative function that handles null values as well,
+    // and produces null values occasionally.
+    public static Integer subtract(Integer x, Integer y) {
+        return (x == null && y == null) ? null :
+            ((x == null) ? 42 : x.intValue())
             - ((y == null) ? 99 : y.intValue());
     }
 
@@ -335,8 +337,8 @@ public class CompletableFutureTest extends JSR166TestCase {
         public void accept(Integer x) { value = x.intValue() + 1; }
     }
     static final class SubtractAction implements BiConsumer<Integer, Integer> {
-        volatile int invocationCount = 0;
-        int value;
+        int invocationCount = 0;
+        Integer value;
         // Check this action was invoked exactly once when result is computed.
         public boolean ran() { return invocationCount == 1; }
         public void accept(Integer x, Integer y) {
@@ -345,13 +347,13 @@ public class CompletableFutureTest extends JSR166TestCase {
         }
     }
     static final class SubtractFunction implements BiFunction<Integer, Integer, Integer> {
-        volatile int invocationCount = 0;
-        int value;
+        int invocationCount = 0;
+        Integer value;
         // Check this action was invoked exactly once when result is computed.
         public boolean ran() { return invocationCount == 1; }
         public Integer apply(Integer x, Integer y) {
             invocationCount++;
-            return subtract(x, y);
+            return value = subtract(x, y);
         }
     }
     static final class Noop implements Runnable {
@@ -930,7 +932,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final SubtractFunction r = new SubtractFunction();
-        final CompletableFuture<Integer> h = m.thenCombine(f, g, subtract);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
         final CFException ex = new CFException();
 
         g.completeExceptionally(ex);
@@ -975,7 +977,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         f.completeExceptionally(ex);
         g.complete(v1);
-        final CompletableFuture<Integer> h = m.thenCombine(f, g, subtract);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
 
         checkCompletedWithWrappedCFException(h, ex);
         checkCompletedWithWrappedCFException(f, ex);
@@ -1128,7 +1130,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         f.complete(v1);
         checkIncomplete(h);
-        assertEquals(r.value, 0);
+        assertFalse(r.ran());
         g.complete(v2);
 
         checkCompletedNormally(h, null);
@@ -1150,7 +1152,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         g.complete(v2);
         checkIncomplete(h);
-        assertEquals(r.value, 0);
+        assertFalse(r.ran());
         f.complete(v1);
 
         checkCompletedNormally(h, null);

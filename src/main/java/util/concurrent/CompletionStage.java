@@ -378,7 +378,7 @@ public interface CompletionStage<T> {
     /**
      * Returns a new CompletionStage that, when this and the other
      * given stage complete normally, executes the given action using
-     * the supplied executor
+     * the supplied executor.
      *
      * See the {@link CompletionStage} documentation for rules
      * covering exceptional completion.
@@ -540,7 +540,7 @@ public interface CompletionStage<T> {
     /**
      * Returns a new CompletionStage that, when either this or the
      * other given stage complete normally, executes the given action
-     * using supplied executor.
+     * using the supplied executor.
      *
      * See the {@link CompletionStage} documentation for rules
      * covering exceptional completion.

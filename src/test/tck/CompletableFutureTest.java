@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -328,9 +329,15 @@ public class CompletableFutureTest extends JSR166TestCase {
         public void accept(Integer x) { value = x.intValue() + 1; }
     }
     static final class SubtractAction implements BiConsumer<Integer, Integer> {
+        // Handle null values as well
+        public int subtract(Integer x, Integer y) {
+            return ((x == null) ? 42 : x.intValue())
+                - ((y == null) ? 99 : y.intValue());
+        }
         int value;
+        public boolean ran() { return value != 0; }
         public void accept(Integer x, Integer y) {
-            value = x.intValue() - y.intValue();
+            value = subtract(x, y);
         }
     }
     static final class Noop implements Runnable {
@@ -402,6 +409,85 @@ public class CompletableFutureTest extends JSR166TestCase {
             ran = true;
             return (t == null) ? two : three;
         }
+    }
+
+    /**
+     * Permits the testing of parallel code for the 3 different
+     * execution modes without repeating all the testing code.
+     */
+    enum ExecutionMode {
+        DEFAULT {
+            public <T,U> CompletableFuture<Void> runAfterBoth
+                (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
+                return f.runAfterBoth(g, a);
+            }
+            public <T,U> CompletableFuture<Void> thenAcceptBoth
+                (CompletableFuture<T> f,
+                 CompletionStage<? extends U> g,
+                 BiConsumer<? super T,? super U> a) {
+                return f.thenAcceptBoth(g, a);
+            }
+        },
+
+//             /** Experimental way to do more testing */
+//         REVERSE_DEFAULT {
+//             public <T,U> CompletableFuture<Void> runAfterBoth
+//                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
+//                 return g.runAfterBoth(f, a);
+//             }
+//             public <T,U> CompletableFuture<Void> thenAcceptBoth
+//                 (CompletableFuture<T> f,
+//                  CompletionStage<? extends U> g,
+//                  BiConsumer<? super T,? super U> a) {
+//                 return DEFAULT.thenAcceptBoth(f, g, a);
+//             }
+//         },
+
+        DEFAULT_ASYNC {
+            public <T,U> CompletableFuture<Void> runAfterBoth
+                (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
+                return f.runAfterBothAsync(g, a);
+            }
+            public <T,U> CompletableFuture<Void> thenAcceptBoth
+                (CompletableFuture<T> f,
+                 CompletionStage<? extends U> g,
+                 BiConsumer<? super T,? super U> a) {
+                return f.thenAcceptBothAsync(g, a);
+            }
+        },
+
+//         REVERSE_DEFAULT_ASYNC {
+//             public <T,U> CompletableFuture<Void> runAfterBoth
+//                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
+//                 return f.runAfterBothAsync(g, a);
+//             }
+//             public <T,U> CompletableFuture<Void> thenAcceptBoth
+//                 (CompletableFuture<T> f,
+//                  CompletionStage<? extends U> g,
+//                  BiConsumer<? super T,? super U> a) {
+//                 return DEFAULT_ASYNC.thenAcceptBoth(f, g, a);
+//             }
+//         },
+
+        EXECUTOR {
+            public <T,U> CompletableFuture<Void> runAfterBoth
+                (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
+                return f.runAfterBothAsync(g, a, new ThreadExecutor());
+            }
+            public <T,U> CompletableFuture<Void> thenAcceptBoth
+                (CompletableFuture<T> f,
+                 CompletionStage<? extends U> g,
+                 BiConsumer<? super T,? super U> a) {
+                return f.thenAcceptBothAsync(g, a, new ThreadExecutor());
+            }
+        };
+
+        public abstract <T,U> CompletableFuture<Void> runAfterBoth
+            (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a);
+        public abstract <T,U> CompletableFuture<Void> thenAcceptBoth
+            (CompletableFuture<T> f,
+             CompletionStage<? extends U> g,
+             BiConsumer<? super T,? super U> a);
     }
 
     /**
@@ -811,169 +897,302 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenAcceptBoth result completes normally after normal
      * completion of sources
      */
-    public void testThenAcceptBoth() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
+    public void testThenAcceptBoth_normalCompletion1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        f.complete(3);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        f.complete(v1);
         checkIncomplete(h);
-        g.complete(1);
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
+        assertEquals(r.value, 0);
+        g.complete(v2);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        g.complete(1);
+        checkCompletedNormally(h, null);
+        assertEquals(r.value, r.subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenAcceptBoth_normalCompletion2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        g.complete(v2);
         checkIncomplete(h);
-        f.complete(3);
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
+        assertEquals(r.value, 0);
+        f.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.complete(1);
-        f.complete(3);
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
         checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
+        assertEquals(r.value, r.subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenAcceptBoth_normalCompletion3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+
+        g.complete(v2);
+        f.complete(v1);
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        checkCompletedNormally(h, null);
+        assertEquals(r.value, r.subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenAcceptBoth_normalCompletion4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+
+        f.complete(v1);
+        g.complete(v2);
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        checkCompletedNormally(h, null);
+        assertEquals(r.value, r.subtract(v1, v2));
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
     }
 
     /**
      * thenAcceptBoth result completes exceptionally after exceptional
      * completion of either source
      */
-    public void testThenAcceptBoth2() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
+    public void testThenAcceptBoth_exceptionalCompletion1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        f.completeExceptionally(new CFException());
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+        final CFException ex = new CFException();
+
+        f.completeExceptionally(ex);
         checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
+        g.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        g.completeExceptionally(new CFException());
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(f, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
+    }
+
+    public void testThenAcceptBoth_exceptionalCompletion2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+        final CFException ex = new CFException();
+
+        g.completeExceptionally(ex);
         checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCFException(h);
+        f.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        g.completeExceptionally(new CFException());
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        checkCompletedWithWrappedCFException(h);
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(g, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.completeExceptionally(new CFException());
-        g.complete(3);
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        checkCompletedWithWrappedCFException(h);
+    public void testThenAcceptBoth_exceptionalCompletion3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CFException ex = new CFException();
+
+        g.completeExceptionally(ex);
+        f.complete(v1);
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(g, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testThenAcceptBoth_exceptionalCompletion4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CFException ex = new CFException();
+
+        f.completeExceptionally(ex);
+        g.complete(v1);
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedCFException(f, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
     }
 
     /**
      * thenAcceptBoth result completes exceptionally if action does
      */
-    public void testThenAcceptBoth3() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        FailingBiConsumer r;
+    public void testThenAcceptBoth_actionFailed1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBoth(g, r = new FailingBiConsumer());
-        f.complete(3);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingBiConsumer r = new FailingBiConsumer();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        f.complete(v1);
         checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
+        g.complete(v2);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        g.complete(1);
-        h = f.thenAcceptBoth(g, r = new FailingBiConsumer());
         checkCompletedWithWrappedCFException(h);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testThenAcceptBoth_actionFailed2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingBiConsumer r = new FailingBiConsumer();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        g.complete(v2);
+        checkIncomplete(h);
+        f.complete(v1);
+
+        checkCompletedWithWrappedCFException(h);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
     }
 
     /**
      * thenAcceptBoth result completes exceptionally if either source cancelled
      */
-    public void testThenAcceptBoth4() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
+    public void testThenAcceptBoth_sourceCancelled1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        assertTrue(f.cancel(true));
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        assertTrue(f.cancel(mayInterruptIfRunning));
         checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCancellationException(h);
+        g.complete(v1);
 
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        assertTrue(g.cancel(true));
-        checkIncomplete(h);
-        f.complete(3);
         checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        assertTrue(g.cancel(true));
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        assertTrue(f.cancel(true));
-        g.complete(3);
-        h = f.thenAcceptBoth(g, r = new SubtractAction());
-        checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(f);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
     }
 
-    /**
-     * Permits the testing of parallel code for the 3 different
-     * execution modes without repeating all the testing code.
-     */
-    enum ExecutionMode {
-        DEFAULT {
-            public <T,U> CompletableFuture<Void> runAfterBoth
-                (CompletableFuture<T> f, CompletableFuture<U> g, Runnable r) {
-                return f.runAfterBoth(g, r);
-            }
-        },
+    public void testThenAcceptBoth_sourceCancelled2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
 
-        DEFAULT_ASYNC {
-            public <T,U> CompletableFuture<Void> runAfterBoth
-                (CompletableFuture<T> f, CompletableFuture<U> g, Runnable r) {
-                return f.runAfterBothAsync(g, r);
-            }
-        },
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
 
-        EXECUTOR {
-            public <T,U> CompletableFuture<Void> runAfterBoth
-                (CompletableFuture<T> f, CompletableFuture<U> g, Runnable r) {
-                return f.runAfterBothAsync(g, r, new ThreadExecutor());
-            }
-        };
+        assertTrue(g.cancel(mayInterruptIfRunning));
+        checkIncomplete(h);
+        f.complete(v1);
 
-        public abstract <T,U> CompletableFuture<Void> runAfterBoth
-            (CompletableFuture<T> f, CompletableFuture<U> g, Runnable r);
+        checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(g);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testThenAcceptBoth_sourceCancelled3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+
+        assertTrue(g.cancel(mayInterruptIfRunning));
+        f.complete(v1);
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(g);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testThenAcceptBoth_sourceCancelled4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final SubtractAction r = new SubtractAction();
+
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        g.complete(v1);
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        checkCompletedWithWrappedCancellationException(h);
+        checkCancelled(f);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
     }
 
     /**
@@ -1828,145 +2047,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * thenAcceptBothAsync result completes normally after normal
-     * completion of sources
-     */
-    public void testThenAcceptBothAsync() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        f.complete(3);
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        g.complete(1);
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.complete(1);
-        f.complete(3);
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
-    }
-
-    /**
-     * thenAcceptBothAsync result completes exceptionally after exceptional
-     * completion of source
-     */
-    public void testThenAcceptBothAsync2() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        f.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        g.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        g.completeExceptionally(new CFException());
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.completeExceptionally(new CFException());
-        g.complete(3);
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        checkCompletedWithWrappedCFException(h);
-    }
-
-    /**
-     * thenAcceptBothAsync result completes exceptionally if action does
-     */
-    public void testThenAcceptBothAsync3() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        FailingBiConsumer r;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new FailingBiConsumer());
-        f.complete(3);
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        g.complete(1);
-        h = f.thenAcceptBothAsync(g, r = new FailingBiConsumer());
-        checkCompletedWithWrappedCFException(h);
-    }
-
-    /**
-     * thenAcceptBothAsync result completes exceptionally if either source cancelled
-     */
-    public void testThenAcceptBothAsync4() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        assertTrue(f.cancel(true));
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        assertTrue(g.cancel(true));
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        assertTrue(g.cancel(true));
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        assertTrue(f.cancel(true));
-        g.complete(3);
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction());
-        checkCompletedWithWrappedCancellationException(h);
-    }
-
-    /**
      * applyToEitherAsync result completes normally after normal
      * completion of sources
      */
@@ -2529,157 +2609,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertTrue(f.cancel(true));
         assertTrue(g.cancel(true));
         h = f.thenCombineAsync(g, subtract, e);
-        checkCompletedWithWrappedCancellationException(h);
-
-        assertEquals(0, e.count.get());
-    }
-
-    /**
-     * thenAcceptBothAsync result completes normally after normal
-     * completion of sources
-     */
-    public void testThenAcceptBothAsyncE() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
-        ThreadExecutor e = new ThreadExecutor();
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        f.complete(3);
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        g.complete(1);
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        g.complete(1);
-        f.complete(3);
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        checkCompletedNormally(h, null);
-        assertEquals(r.value, 2);
-
-        assertEquals(3, e.count.get());
-    }
-
-    /**
-     * thenAcceptBothAsync result completes exceptionally after exceptional
-     * completion of source
-     */
-    public void testThenAcceptBothAsync2E() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
-        ThreadExecutor e = new ThreadExecutor();
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        f.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        g.completeExceptionally(new CFException());
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        g.completeExceptionally(new CFException());
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.completeExceptionally(new CFException());
-        g.complete(3);
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        checkCompletedWithWrappedCFException(h);
-
-        assertEquals(0, e.count.get());
-    }
-
-    /**
-     * thenAcceptBothAsync result completes exceptionally if action does
-     */
-    public void testThenAcceptBothAsync3E() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        FailingBiConsumer r;
-        ThreadExecutor e = new ThreadExecutor();
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new FailingBiConsumer(), e);
-        f.complete(3);
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCFException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        g.complete(1);
-        h = f.thenAcceptBothAsync(g, r = new FailingBiConsumer(), e);
-        checkCompletedWithWrappedCFException(h);
-
-        assertEquals(2, e.count.get());
-    }
-
-    /**
-     * thenAcceptBothAsync result completes exceptionally if either source cancelled
-     */
-    public void testThenAcceptBothAsync4E() {
-        CompletableFuture<Integer> f, g;
-        CompletableFuture<Void> h;
-        SubtractAction r;
-        ThreadExecutor e = new ThreadExecutor();
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        assertTrue(f.cancel(true));
-        checkIncomplete(h);
-        g.complete(1);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        assertTrue(g.cancel(true));
-        checkIncomplete(h);
-        f.complete(3);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        f.complete(3);
-        assertTrue(g.cancel(true));
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
-        checkCompletedWithWrappedCancellationException(h);
-
-        f = new CompletableFuture<>();
-        g = new CompletableFuture<>();
-        assertTrue(f.cancel(true));
-        g.complete(3);
-        h = f.thenAcceptBothAsync(g, r = new SubtractAction(), e);
         checkCompletedWithWrappedCancellationException(h);
 
         assertEquals(0, e.count.get());

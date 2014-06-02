@@ -514,20 +514,6 @@ public class CompletableFutureTest extends JSR166TestCase {
             }
         },
 
-//             /** Experimental way to do more testing */
-//         REVERSE_DEFAULT {
-//             public <T,U> CompletableFuture<Void> runAfterBoth
-//                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
-//                 return g.runAfterBoth(f, a);
-//             }
-//             public <T,U> CompletableFuture<Void> thenAcceptBoth
-//                 (CompletableFuture<T> f,
-//                  CompletionStage<? extends U> g,
-//                  BiConsumer<? super T,? super U> a) {
-//                 return DEFAULT.thenAcceptBoth(f, g, a);
-//             }
-//         },
-
         DEFAULT_ASYNC {
             public <T,U> CompletableFuture<Void> runAfterBoth
                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
@@ -574,19 +560,6 @@ public class CompletableFutureTest extends JSR166TestCase {
                 return f.whenCompleteAsync(a);
             }
         },
-
-//         REVERSE_DEFAULT_ASYNC {
-//             public <T,U> CompletableFuture<Void> runAfterBoth
-//                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
-//                 return f.runAfterBothAsync(g, a);
-//             }
-//             public <T,U> CompletableFuture<Void> thenAcceptBoth
-//                 (CompletableFuture<T> f,
-//                  CompletionStage<? extends U> g,
-//                  BiConsumer<? super T,? super U> a) {
-//                 return DEFAULT_ASYNC.thenAcceptBoth(f, g, a);
-//             }
-//         },
 
         EXECUTOR {
             public <T,U> CompletableFuture<Void> runAfterBoth

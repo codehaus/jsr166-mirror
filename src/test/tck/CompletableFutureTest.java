@@ -334,12 +334,21 @@ public class CompletableFutureTest extends JSR166TestCase {
         return (x == null) ? null : x + 1;
     }
 
-    static final Supplier<Integer> supplyOne =
-        () -> Integer.valueOf(1);
-    static final Function<Integer, Integer> inc =
-        (Integer x) -> Integer.valueOf(x.intValue() + 1);
-    static final BiFunction<Integer, Integer, Integer> subtract =
-        (Integer x, Integer y) -> subtract(x, y);
+    static final class IntegerSupplier implements Supplier<Integer> {
+        final ExecutionMode m;
+        int invocationCount = 0;
+        final Integer value;
+        IntegerSupplier(ExecutionMode m, Integer value) {
+            this.m = m;
+            this.value = value;
+        }
+        public Integer get() {
+            m.checkExecutionMode();
+            invocationCount++;
+            return value;
+        }
+    }
+        
     static final class IncAction implements Consumer<Integer> {
         int invocationCount = 0;
         Integer value;
@@ -506,6 +515,9 @@ public class CompletableFutureTest extends JSR166TestCase {
             public CompletableFuture<Void> runAsync(Runnable a) {
                 throw new UnsupportedOperationException();
             }
+            public <U> CompletableFuture<U> supplyAsync(Supplier<U> a) {
+                throw new UnsupportedOperationException();
+            }
             public <T> CompletableFuture<Void> thenRun
                 (CompletableFuture<T> f, Runnable a) {
                 return f.thenRun(a);
@@ -577,6 +589,9 @@ public class CompletableFutureTest extends JSR166TestCase {
             public CompletableFuture<Void> runAsync(Runnable a) {
                 return CompletableFuture.runAsync(a);
             }
+            public <U> CompletableFuture<U> supplyAsync(Supplier<U> a) {
+                return CompletableFuture.supplyAsync(a);
+            }
             public <T> CompletableFuture<Void> thenRun
                 (CompletableFuture<T> f, Runnable a) {
                 return f.thenRunAsync(a);
@@ -647,6 +662,9 @@ public class CompletableFutureTest extends JSR166TestCase {
             public CompletableFuture<Void> runAsync(Runnable a) {
                 return CompletableFuture.runAsync(a, new ThreadExecutor());
             }
+            public <U> CompletableFuture<U> supplyAsync(Supplier<U> a) {
+                return CompletableFuture.supplyAsync(a, new ThreadExecutor());
+            }
             public <T> CompletableFuture<Void> thenRun
                 (CompletableFuture<T> f, Runnable a) {
                 return f.thenRunAsync(a, new ThreadExecutor());
@@ -712,6 +730,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         public abstract void checkExecutionMode();
         public abstract CompletableFuture<Void> runAsync(Runnable a);
+        public abstract <U> CompletableFuture<U> supplyAsync(Supplier<U> a);
         public abstract <T> CompletableFuture<Void> thenRun
             (CompletableFuture<T> f, Runnable a);
         public abstract <T> CompletableFuture<Void> thenAccept
@@ -998,32 +1017,36 @@ public class CompletableFutureTest extends JSR166TestCase {
     /**
      * supplyAsync completes with result of supplier
      */
-    public void testSupplyAsync() {
-        CompletableFuture<Integer> f;
-        f = CompletableFuture.supplyAsync(supplyOne);
-        assertEquals(f.join(), one);
-        checkCompletedNormally(f, one);
-    }
-
-    /**
-     * supplyAsync with executor completes with result of supplier
-     */
-    public void testSupplyAsync2() {
-        CompletableFuture<Integer> f;
-        f = CompletableFuture.supplyAsync(supplyOne, new ThreadExecutor());
-        assertEquals(f.join(), one);
-        checkCompletedNormally(f, one);
-    }
+    public void testSupplyAsync_normalCompletion() {
+        ExecutionMode[] executionModes = {
+            ExecutionMode.ASYNC,
+            ExecutionMode.EXECUTOR,
+        };
+        for (ExecutionMode m : executionModes)
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final IntegerSupplier r = new IntegerSupplier(m, v1);
+        final CompletableFuture<Integer> f = m.supplyAsync(r);
+        assertSame(v1, f.join());
+        checkCompletedNormally(f, v1);
+        assertEquals(1, r.invocationCount);
+    }}
 
     /**
      * Failing supplyAsync completes exceptionally
      */
-    public void testSupplyAsync3() {
-        FailingSupplier r = new FailingSupplier(ExecutionMode.ASYNC);
-        CompletableFuture<Integer> f = CompletableFuture.supplyAsync(r);
+    public void testSupplyAsync_exceptionalCompletion() {
+        ExecutionMode[] executionModes = {
+            ExecutionMode.ASYNC,
+            ExecutionMode.EXECUTOR,
+        };
+        for (ExecutionMode m : executionModes)
+    {
+        FailingSupplier r = new FailingSupplier(m);
+        CompletableFuture<Integer> f = m.supplyAsync(r);
         checkCompletedWithWrappedCFException(f);
         assertEquals(1, r.invocationCount);
-    }
+    }}
 
     // seq completion methods
 
@@ -2663,7 +2686,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         Runnable[] throwingActions = {
             () -> CompletableFuture.supplyAsync(null),
             () -> CompletableFuture.supplyAsync(null, exec),
-            () -> CompletableFuture.supplyAsync(supplyOne, null),
+            () -> CompletableFuture.supplyAsync(new IntegerSupplier(ExecutionMode.DEFAULT, 42), null),
 
             () -> CompletableFuture.runAsync(null),
             () -> CompletableFuture.runAsync(null, exec),

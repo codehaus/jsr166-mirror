@@ -1474,50 +1474,10 @@ public class CompletableFutureTest extends JSR166TestCase {
      * runAfterBoth result completes normally after normal
      * completion of sources
      */
-    public void testRunAfterBoth_normalCompletion1() {
+    public void testRunAfterBoth_normalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        f.complete(v1);
-        checkIncomplete(h);
-        assertEquals(0, r.invocationCount);
-        g.complete(v2);
-
-        checkCompletedNormally(h, null);
-        assertEquals(1, r.invocationCount);
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-    }}
-
-    public void testRunAfterBoth_normalCompletion2() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        g.complete(v2);
-        checkIncomplete(h);
-        assertEquals(0, r.invocationCount);
-        f.complete(v1);
-
-        checkCompletedNormally(h, null);
-        assertEquals(1, r.invocationCount);
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-    }}
-
-    public void testRunAfterBoth_normalCompletion3() {
-        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
         for (Integer v2 : new Integer[] { 2, null })
     {
@@ -1525,28 +1485,15 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final Noop r = new Noop();
 
-        g.complete(v2);
-        f.complete(v1);
+        if (fFirst) f.complete(v1); else g.complete(v2);
+        if (!createIncomplete)
+            if (!fFirst) f.complete(v1); else g.complete(v2);
         final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        checkCompletedNormally(h, null);
-        assertEquals(1, r.invocationCount);
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-    }}
-
-    public void testRunAfterBoth_normalCompletion4() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-
-        f.complete(v1);
-        g.complete(v2);
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
+        if (createIncomplete) {
+            checkIncomplete(h);
+            assertEquals(0, r.invocationCount);
+            if (!fFirst) f.complete(v1); else g.complete(v2);
+        }
 
         checkCompletedNormally(h, null);
         assertEquals(1, r.invocationCount);
@@ -1558,121 +1505,57 @@ public class CompletableFutureTest extends JSR166TestCase {
      * runAfterBoth result completes exceptionally after exceptional
      * completion of either source
      */
-    public void testRunAfterBoth_exceptionalCompletion1() {
+    public void testRunAfterBoth_exceptionalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
         final CFException ex = new CFException();
+        final Noop r = new Noop();
 
-        f.completeExceptionally(ex);
-        checkIncomplete(h);
-        g.complete(v1);
+        (fFirst ? f : g).complete(v1);
+        if (!createIncomplete)
+            (!fFirst ? f : g).completeExceptionally(ex);
+        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
+        if (createIncomplete) {
+            checkIncomplete(h);
+            (!fFirst ? f : g).completeExceptionally(ex);
+        }
 
         checkCompletedWithWrappedCFException(h, ex);
-        checkCompletedWithWrappedCFException(f, ex);
         assertEquals(0, r.invocationCount);
-        checkCompletedNormally(g, v1);
-    }}
-
-    public void testRunAfterBoth_exceptionalCompletion2() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-        final CFException ex = new CFException();
-
-        g.completeExceptionally(ex);
-        checkIncomplete(h);
-        f.complete(v1);
-
-        checkCompletedWithWrappedCFException(h, ex);
-        checkCompletedWithWrappedCFException(g, ex);
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(f, v1);
-    }}
-
-    public void testRunAfterBoth_exceptionalCompletion3() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CFException ex = new CFException();
-
-        g.completeExceptionally(ex);
-        f.complete(v1);
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        checkCompletedWithWrappedCFException(h, ex);
-        checkCompletedWithWrappedCFException(g, ex);
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(f, v1);
-    }}
-
-    public void testRunAfterBoth_exceptionalCompletion4() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CFException ex = new CFException();
-
-        f.completeExceptionally(ex);
-        g.complete(v1);
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        checkCompletedWithWrappedCFException(h, ex);
-        checkCompletedWithWrappedCFException(f, ex);
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(g, v1);
+        checkCompletedNormally(fFirst ? f : g, v1);
+        checkCompletedWithWrappedCFException(!fFirst ? f : g, ex);
     }}
 
     /**
      * runAfterBoth result completes exceptionally if action does
      */
-    public void testRunAfterBoth_actionFailed1() {
+    public void testRunAfterBoth_actionFailed() {
         for (ExecutionMode m : ExecutionMode.values())
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
         for (Integer v2 : new Integer[] { 2, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final FailingRunnable r = new FailingRunnable();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
 
-        f.complete(v1);
-        checkIncomplete(h);
-        g.complete(v2);
+        CompletableFuture<Void> h1 = m.runAfterBoth(f, g, r);
+        if (fFirst) {
+            f.complete(v1);
+            g.complete(v2);
+        } else {
+            g.complete(v2);
+            f.complete(v1);
+        }
+        CompletableFuture<Void> h2 = m.runAfterBoth(f, g, r);
 
-        checkCompletedWithWrappedCFException(h);
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-    }}
-
-    public void testRunAfterBoth_actionFailed2() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingRunnable r = new FailingRunnable();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        g.complete(v2);
-        checkIncomplete(h);
-        f.complete(v1);
-
-        checkCompletedWithWrappedCFException(h);
+        checkCompletedWithWrappedCFException(h1);
+        checkCompletedWithWrappedCFException(h2);
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
     }}
@@ -1680,128 +1563,67 @@ public class CompletableFutureTest extends JSR166TestCase {
     /**
      * runAfterBoth result completes exceptionally if either source cancelled
      */
-    public void testRunAfterBoth_sourceCancelled1() {
+    public void testRunAfterBoth_sourceCancelled() {
         for (ExecutionMode m : ExecutionMode.values())
         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        assertTrue(f.cancel(mayInterruptIfRunning));
-        checkIncomplete(h);
-        g.complete(v1);
-
-        checkCompletedWithWrappedCancellationException(h);
-        checkCancelled(f);
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(g, v1);
-    }}
-
-    public void testRunAfterBoth_sourceCancelled2() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        assertTrue(g.cancel(mayInterruptIfRunning));
-        checkIncomplete(h);
-        f.complete(v1);
-
-        checkCompletedWithWrappedCancellationException(h);
-        checkCancelled(g);
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(f, v1);
-    }}
-
-    public void testRunAfterBoth_sourceCancelled3() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final Noop r = new Noop();
 
-        assertTrue(g.cancel(mayInterruptIfRunning));
-        f.complete(v1);
+
+        (fFirst ? f : g).complete(v1);
+        if (!createIncomplete)
+            assertTrue((!fFirst ? f : g).cancel(mayInterruptIfRunning));
         final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
+        if (createIncomplete) {
+            checkIncomplete(h);
+            assertTrue((!fFirst ? f : g).cancel(mayInterruptIfRunning));
+        }
 
         checkCompletedWithWrappedCancellationException(h);
-        checkCancelled(g);
+        checkCancelled(!fFirst ? f : g);
         assertEquals(0, r.invocationCount);
-        checkCompletedNormally(f, v1);
-    }}
-
-    public void testRunAfterBoth_sourceCancelled4() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
-
-        assertTrue(f.cancel(mayInterruptIfRunning));
-        g.complete(v1);
-        final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
-
-        checkCompletedWithWrappedCancellationException(h);
-        checkCancelled(f);
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(g, v1);
+        checkCompletedNormally(fFirst ? f : g, v1);
     }}
 
     /**
      * applyToEither result completes normally after normal completion
      * of either source
      */
-    public void testApplyToEither_normalCompletion1() {
+    public void testApplyToEither_normalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
         for (Integer v2 : new Integer[] { 2, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final IncFunction r = new IncFunction();
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
 
-        f.complete(v1);
-        checkCompletedNormally(h, inc(v1));
-        g.complete(v2);
+        if (!createIncomplete)
+            if (fFirst) f.complete(v1); else g.complete(v2);
+        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
+        if (createIncomplete) {
+            checkIncomplete(h);
+            assertEquals(0, r.invocationCount);
+            if (fFirst) f.complete(v1); else g.complete(v2);
+        }
+        checkCompletedNormally(h, inc(fFirst ? v1 : v2));
+        if (!fFirst) f.complete(v1); else g.complete(v2);
 
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
-        checkCompletedNormally(h, inc(v1));
+        checkCompletedNormally(h, inc(fFirst ? v1 : v2));
     }}
 
-    public void testApplyToEither_normalCompletion2() {
+    public void testApplyToEither_normalCompletionBothAvailable() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
-
-        g.complete(v2);
-        checkCompletedNormally(h, inc(v2));
-        f.complete(v1);
-
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-        checkCompletedNormally(h, inc(v2));
-        }}
-
-    public void testApplyToEither_normalCompletion3() {
-        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
         for (Integer v2 : new Integer[] { 2, null })
     {
@@ -1809,8 +1631,14 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final IncFunction r = new IncFunction();
 
-        f.complete(v1);
-        g.complete(v2);
+        if (fFirst) {
+            f.complete(v1);
+            g.complete(v2);
+        } else {
+            g.complete(v2);
+            f.complete(v1);
+        }
+
         final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
 
         checkCompletedNormally(f, v1);
@@ -1828,96 +1656,74 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testApplyToEither_exceptionalCompletion1() {
         for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
         final CFException ex = new CFException();
+        final IncFunction r = new IncFunction();
 
-        f.completeExceptionally(ex);
+        if (!createIncomplete) (fFirst ? f : g).completeExceptionally(ex);
+        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
+        if (createIncomplete) {
+            checkIncomplete(h);
+            assertEquals(0, r.invocationCount);
+            (fFirst ? f : g).completeExceptionally(ex);
+        }
+
         checkCompletedWithWrappedCFException(h, ex);
-        g.complete(v1);
+        (!fFirst ? f : g).complete(v1);
 
         assertEquals(0, r.invocationCount);
-        checkCompletedNormally(g, v1);
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedNormally(!fFirst ? f : g, v1);
+        checkCompletedWithWrappedCFException(fFirst ? f : g, ex);
         checkCompletedWithWrappedCFException(h, ex);
     }}
 
     public void testApplyToEither_exceptionalCompletion2() {
         for (ExecutionMode m : ExecutionMode.values())
+        for (boolean reverseArgs : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
+        final IncFunction r1 = new IncFunction();
+        final IncFunction r2 = new IncFunction();
         final CFException ex = new CFException();
-
-        g.completeExceptionally(ex);
-        checkCompletedWithWrappedCFException(h, ex);
-        f.complete(v1);
-
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(f, v1);
-        checkCompletedWithWrappedCFException(g, ex);
-        checkCompletedWithWrappedCFException(h, ex);
-    }}
-
-    public void testApplyToEither_exceptionalCompletion3() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-        final CFException ex = new CFException();
-
-        g.completeExceptionally(ex);
-        f.complete(v1);
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
+        final CompletableFuture<Integer> j = (reverseArgs ? g : f);
+        final CompletableFuture<Integer> k = (reverseArgs ? f : g);
+        final CompletableFuture<Integer> h1 = m.applyToEither(j, k, r1);
+        if (fFirst) {
+            f.complete(v1);
+            g.completeExceptionally(ex);
+        } else {
+            g.completeExceptionally(ex);
+            f.complete(v1);
+        }
+        final CompletableFuture<Integer> h2 = m.applyToEither(j, k, r2);
 
         // unspecified behavior
-        Integer v;
         try {
-            assertEquals(inc(v1), h.join());
-            assertEquals(1, r.invocationCount);
+            assertEquals(inc(v1), h1.join());
+            assertEquals(1, r1.invocationCount);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h, ex);
-            assertEquals(0, r.invocationCount);
+            checkCompletedWithWrappedCFException(h1, ex);
+            assertEquals(0, r1.invocationCount);
+        }
+
+        try {
+            assertEquals(inc(v1), h2.join());
+            assertEquals(1, r2.invocationCount);
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCFException(h2, ex);
+            assertEquals(0, r2.invocationCount);
         }
 
         checkCompletedWithWrappedCFException(g, ex);
         checkCompletedNormally(f, v1);
-    }}
-
-    public void testApplyToEither_exceptionalCompletion4() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-        final CFException ex = new CFException();
-
-        f.completeExceptionally(ex);
-        g.complete(v1);
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
-
-        // unspecified behavior
-        Integer v;
-        try {
-            assertEquals(inc(v1), h.join());
-            assertEquals(1, r.invocationCount);
-        } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h, ex);
-            assertEquals(0, r.invocationCount);
-        }
-
-        checkCompletedWithWrappedCFException(f, ex);
-        checkCompletedNormally(g, v1);
     }}
 
     /**
@@ -1963,95 +1769,75 @@ public class CompletableFutureTest extends JSR166TestCase {
     public void testApplyToEither_sourceCancelled1() {
         for (ExecutionMode m : ExecutionMode.values())
         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final IncFunction r = new IncFunction();
+
+        if (!createIncomplete) assertTrue((fFirst ? f : g).cancel(mayInterruptIfRunning));
         final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
+        if (createIncomplete) {
+            checkIncomplete(h);
+            assertEquals(0, r.invocationCount);
+            assertTrue((fFirst ? f : g).cancel(mayInterruptIfRunning));
+        }
 
-        assertTrue(f.cancel(mayInterruptIfRunning));
         checkCompletedWithWrappedCancellationException(h);
-        g.complete(v1);
+        (!fFirst ? f : g).complete(v1);
 
-        checkCancelled(f);
         assertEquals(0, r.invocationCount);
-        checkCompletedNormally(g, v1);
+        checkCompletedNormally(!fFirst ? f : g, v1);
+        checkCancelled(fFirst ? f : g);
         checkCompletedWithWrappedCancellationException(h);
     }}
 
     public void testApplyToEither_sourceCancelled2() {
         for (ExecutionMode m : ExecutionMode.values())
         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (boolean reverseArgs : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
+        final IncFunction r1 = new IncFunction();
+        final IncFunction r2 = new IncFunction();
+        final CFException ex = new CFException();
+        final CompletableFuture<Integer> j = (reverseArgs ? g : f);
+        final CompletableFuture<Integer> k = (reverseArgs ? f : g);
 
-        assertTrue(g.cancel(mayInterruptIfRunning));
-        checkCompletedWithWrappedCancellationException(h);
-        f.complete(v1);
-
-        checkCancelled(g);
-        assertEquals(0, r.invocationCount);
-        checkCompletedNormally(f, v1);
-        checkCompletedWithWrappedCancellationException(h);
-    }}
-
-    public void testApplyToEither_sourceCancelled3() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-
-        assertTrue(g.cancel(mayInterruptIfRunning));
-        f.complete(v1);
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
+        final CompletableFuture<Integer> h1 = m.applyToEither(j, k, r1);
+        if (fFirst) {
+            f.complete(v1);
+            assertTrue(g.cancel(mayInterruptIfRunning));
+        } else {
+            assertTrue(g.cancel(mayInterruptIfRunning));
+            f.complete(v1);
+        }
+        final CompletableFuture<Integer> h2 = m.applyToEither(j, k, r2);
 
         // unspecified behavior
-        Integer v;
         try {
-            assertEquals(inc(v1), h.join());
-            assertEquals(1, r.invocationCount);
+            assertEquals(inc(v1), h1.join());
+            assertEquals(1, r1.invocationCount);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCancellationException(h);
-            assertEquals(0, r.invocationCount);
+            checkCompletedWithWrappedCancellationException(h1);
+            assertEquals(0, r1.invocationCount);
+        }
+
+        try {
+            assertEquals(inc(v1), h2.join());
+            assertEquals(1, r2.invocationCount);
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCancellationException(h2);
+            assertEquals(0, r2.invocationCount);
         }
 
         checkCancelled(g);
         checkCompletedNormally(f, v1);
-    }}
-
-    public void testApplyToEither_sourceCancelled4() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final IncFunction r = new IncFunction();
-
-        assertTrue(f.cancel(mayInterruptIfRunning));
-        g.complete(v1);
-        final CompletableFuture<Integer> h = m.applyToEither(f, g, r);
-
-        // unspecified behavior
-        Integer v;
-        try {
-            assertEquals(inc(v1), h.join());
-            assertEquals(1, r.invocationCount);
-        } catch (CompletionException ok) {
-            checkCompletedWithWrappedCancellationException(h);
-            assertEquals(0, r.invocationCount);
-        }
-
-        checkCancelled(f);
-        checkCompletedNormally(g, v1);
     }}
 
     /**

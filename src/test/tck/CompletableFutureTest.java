@@ -947,6 +947,8 @@ public class CompletableFutureTest extends JSR166TestCase {
      * of sources
      */
     public void testThenCombine_normalCompletion1() {
+        for (boolean createdIncomplete : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
         for (ExecutionMode m : ExecutionMode.values())
         for (Integer v1 : new Integer[] { 1, null })
         for (Integer v2 : new Integer[] { 2, null }) {
@@ -954,74 +956,20 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final SubtractFunction r = new SubtractFunction();
-        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+        CompletableFuture<Integer> h = null;
+        if (createdIncomplete) h = m.thenCombine(f, g, r);
 
-        f.complete(v1);
-        checkIncomplete(h);
+        if (fFirst)
+            f.complete(v1);
+        else
+            g.complete(v2);
+        if (createdIncomplete) checkIncomplete(h);
         assertEquals(r.invocationCount, 0);
-        g.complete(v2);
-
-        checkCompletedNormally(h, subtract(v1, v2));
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-        assertEquals(r.invocationCount, 1);
-        }
-    }
-
-    public void testThenCombine_normalCompletion2() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null }) {
-
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final SubtractFunction r = new SubtractFunction();
-        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
-
-        g.complete(v2);
-        checkIncomplete(h);
-        assertEquals(r.invocationCount, 0);
-        f.complete(v1);
-
-        checkCompletedNormally(h, subtract(v1, v2));
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-        assertEquals(r.invocationCount, 1);
-        }
-    }
-
-    public void testThenCombine_normalCompletion3() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null }) {
-
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final SubtractFunction r = new SubtractFunction();
-
-        g.complete(v2);
-        f.complete(v1);
-        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
-
-        checkCompletedNormally(h, subtract(v1, v2));
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-        assertEquals(r.invocationCount, 1);
-        }
-    }
-
-    public void testThenCombine_normalCompletion4() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null }) {
-
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final SubtractFunction r = new SubtractFunction();
-
-        f.complete(v1);
-        g.complete(v2);
-        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+        if (!fFirst)
+            f.complete(v1);
+        else
+            g.complete(v2);
+        if (!createdIncomplete) h = m.thenCombine(f, g, r);
 
         checkCompletedNormally(h, subtract(v1, v2));
         checkCompletedNormally(f, v1);

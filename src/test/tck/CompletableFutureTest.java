@@ -416,7 +416,7 @@ public class CompletableFutureTest extends JSR166TestCase {
             throw new CFException();
         }
     }
-    static final class FailingNoop implements Runnable {
+    static final class FailingRunnable implements Runnable {
         int invocationCount = 0;
         public void run() {
             invocationCount++;
@@ -933,7 +933,7 @@ public class CompletableFutureTest extends JSR166TestCase {
      * failing runAsync completes exceptionally after running Runnable
      */
     public void testRunAsync3() {
-        FailingNoop r = new FailingNoop();
+        FailingRunnable r = new FailingRunnable();
         CompletableFuture<Void> f = CompletableFuture.runAsync(r);
         checkCompletedWithWrappedCFException(f);
         assertEquals(1, r.invocationCount);
@@ -1038,7 +1038,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final FailingNoop r = new FailingNoop();
+        final FailingRunnable r = new FailingRunnable();
         if (!createIncomplete) f.complete(v1);
         final CompletableFuture<Void> g = f.thenRun(r);
         if (createIncomplete) f.complete(v1);
@@ -1129,49 +1129,82 @@ public class CompletableFutureTest extends JSR166TestCase {
     /**
      * thenAccept result completes normally after normal completion of source
      */
-    public void testThenAccept() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAccept(r);
-        f.complete(one);
+    public void testThenAccept_normalCompletion() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Void> g = m.thenAccept(f, r);
+        if (createIncomplete) f.complete(v1);
+
         checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
-    }
+        checkCompletedNormally(f, v1);
+        assertEquals(1, r.invocationCount);
+        assertEquals(inc(v1), r.value);
+    }}
 
     /**
      * thenAccept result completes exceptionally after exceptional
      * completion of source
      */
-    public void testThenAccept2() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAccept(r);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(g);
-    }
+    public void testThenAccept_exceptionalCompletion() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+    {
+        final CFException ex = new CFException();
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        if (!createIncomplete) f.completeExceptionally(ex);
+        final CompletableFuture<Void> g = m.thenAccept(f, r);
+        if (createIncomplete) f.completeExceptionally(ex);
+
+        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedWithWrappedCFException(f, ex);
+        assertEquals(0, r.invocationCount);
+    }}
 
     /**
      * thenAccept result completes exceptionally if action does
      */
-    public void testThenAccept3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        FailingConsumer r = new FailingConsumer();
-        CompletableFuture<Void> g = f.thenAccept(r);
-        f.complete(one);
+    public void testThenAccept_actionFailed() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final FailingConsumer r = new FailingConsumer();
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Void> g = f.thenAccept(r);
+        if (createIncomplete) f.complete(v1);
+
         checkCompletedWithWrappedCFException(g);
-        assertEquals(1, r.invocationCount);
-    }
+        checkCompletedNormally(f, v1);
+    }}
 
     /**
      * thenAccept result completes exceptionally if source cancelled
      */
-    public void testThenAccept4() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAccept(r);
-        assertTrue(f.cancel(true));
+    public void testThenAccept_sourceCancelled() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+        final CompletableFuture<Void> g = f.thenAccept(r);
+        if (createIncomplete) {
+            checkIncomplete(g);
+            assertTrue(f.cancel(mayInterruptIfRunning));
+        }
+
         checkCompletedWithWrappedCancellationException(g);
-    }
+        checkCancelled(f);
+        assertEquals(0, r.invocationCount);
+    }}
 
     /**
      * thenCombine result completes normally after normal completion
@@ -1876,7 +1909,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingNoop r = new FailingNoop();
+        final FailingRunnable r = new FailingRunnable();
         final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
 
         f.complete(v1);
@@ -1895,7 +1928,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingNoop r = new FailingNoop();
+        final FailingRunnable r = new FailingRunnable();
         final CompletableFuture<Void> h = m.runAfterBoth(f, g, r);
 
         g.complete(v2);
@@ -2759,7 +2792,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingNoop r = new FailingNoop();
+        final FailingRunnable r = new FailingRunnable();
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
 
         f.complete(v1);
@@ -2776,7 +2809,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingNoop r = new FailingNoop();
+        final FailingRunnable r = new FailingRunnable();
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
 
         g.complete(v2);
@@ -2953,109 +2986,14 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFutureInc r = new CompletableFutureInc();
         if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
         final CompletableFuture<Integer> g = f.thenCompose(r);
-        if (createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+        if (createIncomplete) {
+            checkIncomplete(g);
+            assertTrue(f.cancel(mayInterruptIfRunning));
+        }
 
         checkCompletedWithWrappedCancellationException(g);
         checkCancelled(f);
     }}
-
-    // asyncs
-
-    /**
-     * thenAcceptAsync result completes normally after normal
-     * completion of source
-     */
-    public void testThenAcceptAsync() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r);
-        f.complete(one);
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
-    }
-
-    /**
-     * thenAcceptAsync result completes exceptionally after exceptional
-     * completion of source
-     */
-    public void testThenAcceptAsync2() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * thenAcceptAsync result completes exceptionally if action does
-     */
-    public void testThenAcceptAsync3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        FailingConsumer r = new FailingConsumer();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r);
-        f.complete(null);
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * thenAcceptAsync result completes exceptionally if source cancelled
-     */
-    public void testThenAcceptAsync4() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r);
-        assertTrue(f.cancel(true));
-        checkCompletedWithWrappedCancellationException(g);
-    }
-
-    // async with explicit executors
-
-    /**
-     * thenAcceptAsync result completes normally after normal
-     * completion of source
-     */
-    public void testThenAcceptAsyncE() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r, new ThreadExecutor());
-        f.complete(one);
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
-    }
-
-    /**
-     * thenAcceptAsync result completes exceptionally after exceptional
-     * completion of source
-     */
-    public void testThenAcceptAsync2E() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r, new ThreadExecutor());
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * thenAcceptAsync result completes exceptionally if action does
-     */
-    public void testThenAcceptAsync3E() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        FailingConsumer r = new FailingConsumer();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r, new ThreadExecutor());
-        f.complete(null);
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * thenAcceptAsync result completes exceptionally if source cancelled
-     */
-    public void testThenAcceptAsync4E() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.thenAcceptAsync(r, new ThreadExecutor());
-        assertTrue(f.cancel(true));
-        checkCompletedWithWrappedCancellationException(g);
-    }
 
     // other static methods
 

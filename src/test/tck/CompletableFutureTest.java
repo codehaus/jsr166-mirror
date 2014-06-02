@@ -284,10 +284,10 @@ public class CompletableFutureTest extends JSR166TestCase {
     public void testGetNumberOfDependents() {
         CompletableFuture<Integer> f = new CompletableFuture<>();
         assertEquals(0, f.getNumberOfDependents());
-        CompletableFuture g = f.thenRun(new Noop());
+        CompletableFuture g = f.thenRun(new Noop(ExecutionMode.DEFAULT));
         assertEquals(1, f.getNumberOfDependents());
         assertEquals(0, g.getNumberOfDependents());
-        CompletableFuture h = f.thenRun(new Noop());
+        CompletableFuture h = f.thenRun(new Noop(ExecutionMode.DEFAULT));
         assertEquals(2, f.getNumberOfDependents());
         f.complete(1);
         checkCompletedNormally(g, null);
@@ -375,8 +375,11 @@ public class CompletableFutureTest extends JSR166TestCase {
         }
     }
     static final class Noop implements Runnable {
+        final ExecutionMode m;
         int invocationCount = 0;
+        Noop(ExecutionMode m) { this.m = m; }
         public void run() {
+            m.checkExecutionMode();
             invocationCount++;
         }
     }
@@ -909,7 +912,7 @@ public class CompletableFutureTest extends JSR166TestCase {
      * runAsync completes after running Runnable
      */
     public void testRunAsync() {
-        Noop r = new Noop();
+        Noop r = new Noop(ExecutionMode.ASYNC);
         CompletableFuture<Void> f = CompletableFuture.runAsync(r);
         assertNull(f.join());
         assertEquals(1, r.invocationCount);
@@ -920,7 +923,7 @@ public class CompletableFutureTest extends JSR166TestCase {
      * runAsync with executor completes after running Runnable
      */
     public void testRunAsync2() {
-        Noop r = new Noop();
+        Noop r = new Noop(ExecutionMode.EXECUTOR);
         ThreadExecutor exec = new ThreadExecutor();
         CompletableFuture<Void> f = CompletableFuture.runAsync(r, exec);
         assertNull(f.join());
@@ -980,7 +983,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         if (!createIncomplete) f.complete(v1);
         final CompletableFuture<Void> g = m.thenRun(f, r);
         if (createIncomplete) {
@@ -1003,7 +1006,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CFException ex = new CFException();
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         if (!createIncomplete) f.completeExceptionally(ex);
         final CompletableFuture<Void> g = m.thenRun(f, r);
         if (createIncomplete) {
@@ -1025,7 +1028,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
         final CompletableFuture<Void> g = f.thenRun(r);
         if (createIncomplete) {
@@ -1483,7 +1486,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
 
         if (fFirst) f.complete(v1); else g.complete(v2);
         if (!createIncomplete)
@@ -1514,7 +1517,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final CFException ex = new CFException();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
 
         (fFirst ? f : g).complete(v1);
         if (!createIncomplete)
@@ -1572,7 +1575,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
 
 
         (fFirst ? f : g).complete(v1);
@@ -2153,7 +2156,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
 
         f.complete(v1);
@@ -2174,7 +2177,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
 
         g.complete(v2);
@@ -2195,7 +2198,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
 
         f.complete(v1);
         g.complete(v2);
@@ -2217,7 +2220,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
         final CFException ex = new CFException();
 
@@ -2237,7 +2240,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
         final CFException ex = new CFException();
 
@@ -2257,7 +2260,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CFException ex = new CFException();
 
         g.completeExceptionally(ex);
@@ -2284,7 +2287,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CFException ex = new CFException();
 
         f.completeExceptionally(ex);
@@ -2352,7 +2355,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
 
         assertTrue(f.cancel(mayInterruptIfRunning));
@@ -2372,7 +2375,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
         final CompletableFuture<Void> h = m.runAfterEither(f, g, r);
 
         assertTrue(g.cancel(mayInterruptIfRunning));
@@ -2392,7 +2395,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
 
         assertTrue(g.cancel(mayInterruptIfRunning));
         f.complete(v1);
@@ -2419,7 +2422,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final Noop r = new Noop();
+        final Noop r = new Noop(m);
 
         assertTrue(f.cancel(mayInterruptIfRunning));
         g.complete(v1);

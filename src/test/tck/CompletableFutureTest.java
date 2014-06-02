@@ -503,6 +503,9 @@ public class CompletableFutureTest extends JSR166TestCase {
             public void checkExecutionMode() {
                 assertNull(ForkJoinTask.getPool());
             }
+            public CompletableFuture<Void> runAsync(Runnable a) {
+                throw new UnsupportedOperationException();
+            }
             public <T> CompletableFuture<Void> thenRun
                 (CompletableFuture<T> f, Runnable a) {
                 return f.thenRun(a);
@@ -571,6 +574,9 @@ public class CompletableFutureTest extends JSR166TestCase {
                 assertSame(ForkJoinPool.commonPool(),
                            ForkJoinTask.getPool());
             }
+            public CompletableFuture<Void> runAsync(Runnable a) {
+                return CompletableFuture.runAsync(a);
+            }
             public <T> CompletableFuture<Void> thenRun
                 (CompletableFuture<T> f, Runnable a) {
                 return f.thenRunAsync(a);
@@ -638,6 +644,9 @@ public class CompletableFutureTest extends JSR166TestCase {
             public void checkExecutionMode() {
                 assertTrue(ThreadExecutor.startedCurrentThread());
             }
+            public CompletableFuture<Void> runAsync(Runnable a) {
+                return CompletableFuture.runAsync(a, new ThreadExecutor());
+            }
             public <T> CompletableFuture<Void> thenRun
                 (CompletableFuture<T> f, Runnable a) {
                 return f.thenRunAsync(a, new ThreadExecutor());
@@ -702,6 +711,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         };
 
         public abstract void checkExecutionMode();
+        public abstract CompletableFuture<Void> runAsync(Runnable a);
         public abstract <T> CompletableFuture<Void> thenRun
             (CompletableFuture<T> f, Runnable a);
         public abstract <T> CompletableFuture<Void> thenAccept
@@ -780,6 +790,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (!createIncomplete) f.completeExceptionally(ex);
         final CompletableFuture<Integer> g = f.exceptionally
             ((Throwable t) -> {
+                ExecutionMode.DEFAULT.checkExecutionMode();
                 threadAssertSame(t, ex);
                 a.getAndIncrement();
                 return v1;
@@ -801,6 +812,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (!createIncomplete) f.completeExceptionally(ex1);
         final CompletableFuture<Integer> g = f.exceptionally
             ((Throwable t) -> {
+                ExecutionMode.DEFAULT.checkExecutionMode();
                 threadAssertSame(t, ex1);
                 a.getAndIncrement();
                 throw ex2;
@@ -826,6 +838,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.handle
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertSame(x, v1);
                 threadAssertNull(t);
                 a.getAndIncrement();
@@ -854,6 +867,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.handle
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertNull(x);
                 threadAssertSame(t, ex);
                 a.getAndIncrement();
@@ -882,6 +896,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.handle
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertNull(x);
                 threadAssertTrue(t instanceof CancellationException);
                 a.getAndIncrement();
@@ -909,6 +924,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.handle
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertNull(x);
                 threadAssertSame(ex1, t);
                 a.getAndIncrement();
@@ -933,6 +949,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.handle
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertSame(x, v1);
                 threadAssertNull(t);
                 a.getAndIncrement();
@@ -948,36 +965,35 @@ public class CompletableFutureTest extends JSR166TestCase {
     /**
      * runAsync completes after running Runnable
      */
-    public void testRunAsync() {
-        Noop r = new Noop(ExecutionMode.ASYNC);
-        CompletableFuture<Void> f = CompletableFuture.runAsync(r);
+    public void testRunAsync_normalCompletion() {
+        ExecutionMode[] executionModes = {
+            ExecutionMode.ASYNC,
+            ExecutionMode.EXECUTOR,
+        };
+        for (ExecutionMode m : executionModes)
+    {
+        final Noop r = new Noop(m);
+        final CompletableFuture<Void> f = m.runAsync(r);
         assertNull(f.join());
-        assertEquals(1, r.invocationCount);
         checkCompletedNormally(f, null);
-    }
-
-    /**
-     * runAsync with executor completes after running Runnable
-     */
-    public void testRunAsync2() {
-        Noop r = new Noop(ExecutionMode.EXECUTOR);
-        ThreadExecutor exec = new ThreadExecutor();
-        CompletableFuture<Void> f = CompletableFuture.runAsync(r, exec);
-        assertNull(f.join());
         assertEquals(1, r.invocationCount);
-        checkCompletedNormally(f, null);
-        assertEquals(1, exec.count.get());
-    }
+    }}
 
     /**
      * failing runAsync completes exceptionally after running Runnable
      */
-    public void testRunAsync3() {
-        FailingRunnable r = new FailingRunnable(ExecutionMode.ASYNC);
-        CompletableFuture<Void> f = CompletableFuture.runAsync(r);
+    public void testRunAsync_exceptionalCompletion() {
+        ExecutionMode[] executionModes = {
+            ExecutionMode.ASYNC,
+            ExecutionMode.EXECUTOR,
+        };
+        for (ExecutionMode m : executionModes)
+    {
+        final FailingRunnable r = new FailingRunnable(m);
+        final CompletableFuture<Void> f = m.runAsync(r);
         checkCompletedWithWrappedCFException(f);
         assertEquals(1, r.invocationCount);
-    }
+    }}
 
     /**
      * supplyAsync completes with result of supplier

@@ -247,6 +247,8 @@ public class CompletableFutureTest extends JSR166TestCase {
         f = new CompletableFuture<>();
         f.obtrudeValue(three);
         checkCompletedNormally(f, three);
+        f.obtrudeValue(null);
+        checkCompletedNormally(f, null);
         f = new CompletableFuture<>();
         f.completeExceptionally(new CFException());
         f.obtrudeValue(four);
@@ -279,16 +281,16 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testGetNumberOfDependents() {
         CompletableFuture<Integer> f = new CompletableFuture<>();
-        assertEquals(f.getNumberOfDependents(), 0);
+        assertEquals(0, f.getNumberOfDependents());
         CompletableFuture g = f.thenRun(new Noop());
-        assertEquals(f.getNumberOfDependents(), 1);
-        assertEquals(g.getNumberOfDependents(), 0);
+        assertEquals(1, f.getNumberOfDependents());
+        assertEquals(0, g.getNumberOfDependents());
         CompletableFuture h = f.thenRun(new Noop());
-        assertEquals(f.getNumberOfDependents(), 2);
+        assertEquals(2, f.getNumberOfDependents());
         f.complete(1);
         checkCompletedNormally(g, null);
-        assertEquals(f.getNumberOfDependents(), 0);
-        assertEquals(g.getNumberOfDependents(), 0);
+        assertEquals(0, f.getNumberOfDependents());
+        assertEquals(0, g.getNumberOfDependents());
     }
 
     /**
@@ -450,24 +452,39 @@ public class CompletableFutureTest extends JSR166TestCase {
         }
     }
 
-    static final class ExceptionToInteger implements Function<Throwable, Integer> {
-        public Integer apply(Throwable x) { return Integer.valueOf(3); }
-    }
-
-    static final class IntegerHandler implements BiFunction<Integer, Throwable, Integer> {
-        int invocationCount = 0;
-        public Integer apply(Integer x, Throwable t) {
-            invocationCount++;
-            return (t == null) ? two : three;
-        }
-    }
-
     /**
      * Permits the testing of parallel code for the 3 different
      * execution modes without repeating all the testing code.
      */
     enum ExecutionMode {
         DEFAULT {
+            public <T> CompletableFuture<Void> thenRun
+                (CompletableFuture<T> f, Runnable a) {
+                return f.thenRun(a);
+            }
+            public <T> CompletableFuture<Void> thenAccept
+                (CompletableFuture<T> f, Consumer<? super T> a) {
+                return f.thenAccept(a);
+            }
+            public <T,U> CompletableFuture<U> thenApply
+                (CompletableFuture<T> f, Function<? super T,U> a) {
+                return f.thenApply(a);
+            }
+            public <T,U> CompletableFuture<U> thenCompose
+                (CompletableFuture<T> f,
+                 Function<? super T,? extends CompletionStage<U>> a) {
+                return f.thenCompose(a);
+            }
+            public <T,U> CompletableFuture<U> handle
+                (CompletableFuture<T> f,
+                 BiFunction<? super T,Throwable,? extends U> a) {
+                return f.handle(a);
+            }
+            public <T> CompletableFuture<T> whenComplete
+                (CompletableFuture<T> f,
+                 BiConsumer<? super T,? super Throwable> a) {
+                return f.whenComplete(a);
+            }
             public <T,U> CompletableFuture<Void> runAfterBoth
                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
                 return f.runAfterBoth(g, a);
@@ -484,11 +501,11 @@ public class CompletableFutureTest extends JSR166TestCase {
                  BiFunction<? super T,? super U,? extends V> a) {
                 return f.thenCombine(g, a);
             }
-            public <T,U> CompletableFuture<U> applyToEither
+            public <T> CompletableFuture<Void> runAfterEither
                 (CompletableFuture<T> f,
-                 CompletionStage<? extends T> g,
-                 Function<? super T,U> a) {
-                return f.applyToEither(g, a);
+                 CompletionStage<?> g,
+                 java.lang.Runnable a) {
+                return f.runAfterEither(g, a);
             }
             public <T> CompletableFuture<Void> acceptEither
                 (CompletableFuture<T> f,
@@ -496,25 +513,42 @@ public class CompletableFutureTest extends JSR166TestCase {
                  Consumer<? super T> a) {
                 return f.acceptEither(g, a);
             }
-            public <T> CompletableFuture<Void> runAfterEither
+            public <T,U> CompletableFuture<U> applyToEither
                 (CompletableFuture<T> f,
-                 CompletionStage<?> g,
-                 java.lang.Runnable a) {
-                return f.runAfterEither(g, a);
-            }
-            public <T,U> CompletableFuture<U> thenCompose
-                (CompletableFuture<T> f,
-                 Function<? super T,? extends CompletionStage<U>> a) {
-                return f.thenCompose(a);
-            }
-            public <T> CompletableFuture<T> whenComplete
-                (CompletableFuture<T> f,
-                 BiConsumer<? super T,? super Throwable> a) {
-                return f.whenComplete(a);
+                 CompletionStage<? extends T> g,
+                 Function<? super T,U> a) {
+                return f.applyToEither(g, a);
             }
         },
 
         DEFAULT_ASYNC {
+            public <T> CompletableFuture<Void> thenRun
+                (CompletableFuture<T> f, Runnable a) {
+                return f.thenRunAsync(a);
+            }
+            public <T> CompletableFuture<Void> thenAccept
+                (CompletableFuture<T> f, Consumer<? super T> a) {
+                return f.thenAcceptAsync(a);
+            }
+            public <T,U> CompletableFuture<U> thenApply
+                (CompletableFuture<T> f, Function<? super T,U> a) {
+                return f.thenApplyAsync(a);
+            }
+            public <T,U> CompletableFuture<U> thenCompose
+                (CompletableFuture<T> f,
+                 Function<? super T,? extends CompletionStage<U>> a) {
+                return f.thenComposeAsync(a);
+            }
+            public <T,U> CompletableFuture<U> handle
+                (CompletableFuture<T> f,
+                 BiFunction<? super T,Throwable,? extends U> a) {
+                return f.handleAsync(a);
+            }
+            public <T> CompletableFuture<T> whenComplete
+                (CompletableFuture<T> f,
+                 BiConsumer<? super T,? super Throwable> a) {
+                return f.whenCompleteAsync(a);
+            }
             public <T,U> CompletableFuture<Void> runAfterBoth
                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
                 return f.runAfterBothAsync(g, a);
@@ -531,11 +565,11 @@ public class CompletableFutureTest extends JSR166TestCase {
                  BiFunction<? super T,? super U,? extends V> a) {
                 return f.thenCombineAsync(g, a);
             }
-            public <T,U> CompletableFuture<U> applyToEither
+            public <T> CompletableFuture<Void> runAfterEither
                 (CompletableFuture<T> f,
-                 CompletionStage<? extends T> g,
-                 Function<? super T,U> a) {
-                return f.applyToEitherAsync(g, a);
+                 CompletionStage<?> g,
+                 java.lang.Runnable a) {
+                return f.runAfterEitherAsync(g, a);
             }
             public <T> CompletableFuture<Void> acceptEither
                 (CompletableFuture<T> f,
@@ -543,25 +577,42 @@ public class CompletableFutureTest extends JSR166TestCase {
                  Consumer<? super T> a) {
                 return f.acceptEitherAsync(g, a);
             }
-            public <T> CompletableFuture<Void> runAfterEither
+            public <T,U> CompletableFuture<U> applyToEither
                 (CompletableFuture<T> f,
-                 CompletionStage<?> g,
-                 java.lang.Runnable a) {
-                return f.runAfterEitherAsync(g, a);
-            }
-            public <T,U> CompletableFuture<U> thenCompose
-                (CompletableFuture<T> f,
-                 Function<? super T,? extends CompletionStage<U>> a) {
-                return f.thenComposeAsync(a);
-            }
-            public <T> CompletableFuture<T> whenComplete
-                (CompletableFuture<T> f,
-                 BiConsumer<? super T,? super Throwable> a) {
-                return f.whenCompleteAsync(a);
+                 CompletionStage<? extends T> g,
+                 Function<? super T,U> a) {
+                return f.applyToEitherAsync(g, a);
             }
         },
 
         EXECUTOR {
+            public <T> CompletableFuture<Void> thenRun
+                (CompletableFuture<T> f, Runnable a) {
+                return f.thenRunAsync(a, new ThreadExecutor());
+            }
+            public <T> CompletableFuture<Void> thenAccept
+                (CompletableFuture<T> f, Consumer<? super T> a) {
+                return f.thenAcceptAsync(a, new ThreadExecutor());
+            }
+            public <T,U> CompletableFuture<U> thenApply
+                (CompletableFuture<T> f, Function<? super T,U> a) {
+                return f.thenApplyAsync(a, new ThreadExecutor());
+            }
+            public <T,U> CompletableFuture<U> thenCompose
+                (CompletableFuture<T> f,
+                 Function<? super T,? extends CompletionStage<U>> a) {
+                return f.thenComposeAsync(a, new ThreadExecutor());
+            }
+            public <T,U> CompletableFuture<U> handle
+                (CompletableFuture<T> f,
+                 BiFunction<? super T,Throwable,? extends U> a) {
+                return f.handleAsync(a, new ThreadExecutor());
+            }
+            public <T> CompletableFuture<T> whenComplete
+                (CompletableFuture<T> f,
+                 BiConsumer<? super T,? super Throwable> a) {
+                return f.whenCompleteAsync(a, new ThreadExecutor());
+            }
             public <T,U> CompletableFuture<Void> runAfterBoth
                 (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a) {
                 return f.runAfterBothAsync(g, a, new ThreadExecutor());
@@ -578,11 +629,11 @@ public class CompletableFutureTest extends JSR166TestCase {
                  BiFunction<? super T,? super U,? extends V> a) {
                 return f.thenCombineAsync(g, a, new ThreadExecutor());
             }
-            public <T,U> CompletableFuture<U> applyToEither
+            public <T> CompletableFuture<Void> runAfterEither
                 (CompletableFuture<T> f,
-                 CompletionStage<? extends T> g,
-                 Function<? super T,U> a) {
-                return f.applyToEitherAsync(g, a, new ThreadExecutor());
+                 CompletionStage<?> g,
+                 java.lang.Runnable a) {
+                return f.runAfterEitherAsync(g, a, new ThreadExecutor());
             }
             public <T> CompletableFuture<Void> acceptEither
                 (CompletableFuture<T> f,
@@ -590,24 +641,29 @@ public class CompletableFutureTest extends JSR166TestCase {
                  Consumer<? super T> a) {
                 return f.acceptEitherAsync(g, a, new ThreadExecutor());
             }
-            public <T> CompletableFuture<Void> runAfterEither
+            public <T,U> CompletableFuture<U> applyToEither
                 (CompletableFuture<T> f,
-                 CompletionStage<?> g,
-                 java.lang.Runnable a) {
-                return f.runAfterEitherAsync(g, a, new ThreadExecutor());
-            }
-            public <T,U> CompletableFuture<U> thenCompose
-                (CompletableFuture<T> f,
-                 Function<? super T,? extends CompletionStage<U>> a) {
-                return f.thenComposeAsync(a, new ThreadExecutor());
-            }
-            public <T> CompletableFuture<T> whenComplete
-                (CompletableFuture<T> f,
-                 BiConsumer<? super T,? super Throwable> a) {
-                return f.whenCompleteAsync(a, new ThreadExecutor());
+                 CompletionStage<? extends T> g,
+                 Function<? super T,U> a) {
+                return f.applyToEitherAsync(g, a, new ThreadExecutor());
             }
         };
 
+        public abstract <T> CompletableFuture<Void> thenRun
+            (CompletableFuture<T> f, Runnable a);
+        public abstract <T> CompletableFuture<Void> thenAccept
+            (CompletableFuture<T> f, Consumer<? super T> a);
+        public abstract <T,U> CompletableFuture<U> thenApply
+            (CompletableFuture<T> f, Function<? super T,U> a);
+        public abstract <T,U> CompletableFuture<U> thenCompose
+            (CompletableFuture<T> f,
+             Function<? super T,? extends CompletionStage<U>> a);
+        public abstract <T,U> CompletableFuture<U> handle
+            (CompletableFuture<T> f,
+             BiFunction<? super T,Throwable,? extends U> a);
+        public abstract <T> CompletableFuture<T> whenComplete
+            (CompletableFuture<T> f,
+             BiConsumer<? super T,? super Throwable> a);
         public abstract <T,U> CompletableFuture<Void> runAfterBoth
             (CompletableFuture<T> f, CompletableFuture<U> g, Runnable a);
         public abstract <T,U> CompletableFuture<Void> thenAcceptBoth
@@ -618,81 +674,223 @@ public class CompletableFutureTest extends JSR166TestCase {
             (CompletableFuture<T> f,
              CompletionStage<? extends U> g,
              BiFunction<? super T,? super U,? extends V> a);
-        public abstract <T,U> CompletableFuture<U> applyToEither
-            (CompletableFuture<T> f,
-             CompletionStage<? extends T> g,
-             Function<? super T,U> a);
-        public abstract <T> CompletableFuture<Void> acceptEither
-            (CompletableFuture<T> f,
-             CompletionStage<? extends T> g,
-             Consumer<? super T> a);
         public abstract <T> CompletableFuture<Void> runAfterEither
             (CompletableFuture<T> f,
              CompletionStage<?> g,
              java.lang.Runnable a);
-        public abstract <T,U> CompletableFuture<U> thenCompose
+        public abstract <T> CompletableFuture<Void> acceptEither
             (CompletableFuture<T> f,
-             Function<? super T,? extends CompletionStage<U>> a);
-        public abstract <T> CompletableFuture<T> whenComplete
+             CompletionStage<? extends T> g,
+             Consumer<? super T> a);
+        public abstract <T,U> CompletableFuture<U> applyToEither
             (CompletableFuture<T> f,
-             BiConsumer<? super T,? super Throwable> a);
-
-
+             CompletionStage<? extends T> g,
+             Function<? super T,U> a);
     }
+
+    /**
+     * exceptionally action is not invoked when source completes
+     * normally, and source result is propagated
+     */
+    public void testExceptionally_normalCompletion() {
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Integer> g = f.exceptionally
+            ((Throwable t) -> {
+                // Should not be called
+                a.getAndIncrement();
+                throw new AssertionError();
+            });
+        if (createIncomplete) f.complete(v1);
+
+        checkCompletedNormally(g, v1);
+        checkCompletedNormally(f, v1);
+        assertEquals(0, a.get());
+    }}
+
 
     /**
      * exceptionally action completes with function value on source
-     * exception; otherwise with source value
+     * exception
      */
-    public void testExceptionally() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        ExceptionToInteger r = new ExceptionToInteger();
-        CompletableFuture<Integer> g = f.exceptionally(r);
-        f.completeExceptionally(new CFException());
-        checkCompletedNormally(g, three);
+    public void testExceptionally_exceptionalCompletion() {
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex = new CFException();
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) f.completeExceptionally(ex);
+        final CompletableFuture<Integer> g = f.exceptionally
+            ((Throwable t) -> {
+                threadAssertSame(t, ex);
+                a.getAndIncrement();
+                return v1;
+            });
+        if (createIncomplete) f.completeExceptionally(ex);
 
-        f = new CompletableFuture<>();
-        r = new ExceptionToInteger();
-        g = f.exceptionally(r);
-        f.complete(one);
-        checkCompletedNormally(g, one);
-    }
+        checkCompletedNormally(g, v1);
+        assertEquals(1, a.get());
+    }}
+
+    public void testExceptionally_exceptionalCompletionActionFailed() {
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex1 = new CFException();
+        final CFException ex2 = new CFException();
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) f.completeExceptionally(ex1);
+        final CompletableFuture<Integer> g = f.exceptionally
+            ((Throwable t) -> {
+                threadAssertSame(t, ex1);
+                a.getAndIncrement();
+                throw ex2;
+            });
+        if (createIncomplete) f.completeExceptionally(ex1);
+
+        checkCompletedWithWrappedCFException(g, ex2);
+        assertEquals(1, a.get());
+    }}
 
     /**
-     * handle action completes normally with function value on either
-     * normal or exceptional completion of source
+     * handle action completes normally with function value on normal
+     * completion of source
      */
-    public void testHandle() {
-        CompletableFuture<Integer> f, g;
-        IntegerHandler r;
+    public void testHandle_normalCompletion() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final AtomicInteger a = new AtomicInteger(0);
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Integer> g = m.handle
+            (f,
+             (Integer x, Throwable t) -> {
+                threadAssertSame(x, v1);
+                threadAssertNull(t);
+                a.getAndIncrement();
+                return inc(v1);
+            });
+        if (createIncomplete) f.complete(v1);
 
-        f = new CompletableFuture<>();
-        f.completeExceptionally(new CFException());
-        g = f.handle(r = new IntegerHandler());
-        assertEquals(1, r.invocationCount);
-        assertEquals(1, r.invocationCount);
-        checkCompletedNormally(g, three);
+        checkCompletedNormally(g, inc(v1));
+        checkCompletedNormally(f, v1);
+        assertEquals(1, a.get());
+    }}
 
-        f = new CompletableFuture<>();
-        g = f.handle(r = new IntegerHandler());
-        assertEquals(0, r.invocationCount);
-        f.completeExceptionally(new CFException());
-        checkCompletedNormally(g, three);
-        assertEquals(1, r.invocationCount);
+    /**
+     * handle action completes normally with function value on
+     * exceptional completion of source
+     */
+    public void testHandle_exceptionalCompletion() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex = new CFException();
+        if (!createIncomplete) f.completeExceptionally(ex);
+        final CompletableFuture<Integer> g = m.handle
+            (f,
+             (Integer x, Throwable t) -> {
+                threadAssertNull(x);
+                threadAssertSame(t, ex);
+                a.getAndIncrement();
+                return v1;
+            });
+        if (createIncomplete) f.completeExceptionally(ex);
 
-        f = new CompletableFuture<>();
-        f.complete(one);
-        g = f.handle(r = new IntegerHandler());
-        assertEquals(1, r.invocationCount);
-        checkCompletedNormally(g, two);
+        checkCompletedNormally(g, v1);
+        checkCompletedWithWrappedCFException(f, ex);
+        assertEquals(1, a.get());
+    }}
 
-        f = new CompletableFuture<>();
-        g = f.handle(r = new IntegerHandler());
-        assertEquals(0, r.invocationCount);
-        f.complete(one);
-        assertEquals(1, r.invocationCount);
-        checkCompletedNormally(g, two);
-    }
+    /**
+     * handle action completes normally with function value on
+     * cancelled source
+     */
+    public void testHandle_sourceCancelled() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final AtomicInteger a = new AtomicInteger(0);
+        if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+        final CompletableFuture<Integer> g = m.handle
+            (f,
+             (Integer x, Throwable t) -> {
+                threadAssertNull(x);
+                threadAssertTrue(t instanceof CancellationException);
+                a.getAndIncrement();
+                return v1;
+            });
+        if (createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+
+        checkCompletedNormally(g, v1);
+        checkCancelled(f);
+        assertEquals(1, a.get());
+    }}
+
+    /**
+     * handle result completes exceptionally if action does
+     */
+    public void testHandle_sourceFailedActionFailed() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex1 = new CFException();
+        final CFException ex2 = new CFException();
+        if (!createIncomplete) f.completeExceptionally(ex1);
+        final CompletableFuture<Integer> g = m.handle
+            (f,
+             (Integer x, Throwable t) -> {
+                threadAssertNull(x);
+                threadAssertSame(ex1, t);
+                a.getAndIncrement();
+                throw ex2;
+            });
+        if (createIncomplete) f.completeExceptionally(ex1);
+
+        checkCompletedWithWrappedCFException(g, ex2);
+        checkCompletedWithWrappedCFException(f, ex1);
+        assertEquals(1, a.get());
+    }}
+
+    public void testHandle_sourceCompletedNormallyActionFailed() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex = new CFException();
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Integer> g = m.handle
+            (f,
+             (Integer x, Throwable t) -> {
+                threadAssertSame(x, v1);
+                threadAssertNull(t);
+                a.getAndIncrement();
+                throw ex;
+            });
+        if (createIncomplete) f.complete(v1);
+
+        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedNormally(f, v1);
+        assertEquals(1, a.get());
+    }}
 
     /**
      * runAsync completes after running Runnable
@@ -1199,7 +1397,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         g.complete(v2);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, subtract(v1, v2));
+        assertEquals(subtract(v1, v2), r.value);
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -1221,7 +1419,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         f.complete(v1);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, subtract(v1, v2));
+        assertEquals(subtract(v1, v2), r.value);
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -1241,7 +1439,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, subtract(v1, v2));
+        assertEquals(subtract(v1, v2), r.value);
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -1261,7 +1459,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
 
         checkCompletedNormally(h, null);
-        assertEquals(r.value, subtract(v1, v2));
+        assertEquals(subtract(v1, v2), r.value);
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
         }
@@ -1911,7 +2109,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), inc(v1));
+            assertEquals(inc(v1), h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCFException(h, ex);
@@ -1939,7 +2137,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), inc(v1));
+            assertEquals(inc(v1), h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCFException(h, ex);
@@ -2051,7 +2249,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), inc(v1));
+            assertEquals(inc(v1), h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCancellationException(h);
@@ -2079,7 +2277,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), inc(v1));
+            assertEquals(inc(v1), h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCancellationException(h);
@@ -2107,7 +2305,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         f.complete(v1);
         checkCompletedNormally(h, null);
-        assertEquals(r.value, inc(v1));
+        assertEquals(inc(v1), r.value);
         g.complete(v2);
 
         checkCompletedNormally(f, v1);
@@ -2128,7 +2326,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         g.complete(v2);
         checkCompletedNormally(h, null);
-        assertEquals(r.value, inc(v2));
+        assertEquals(inc(v2), r.value);
         f.complete(v1);
 
         checkCompletedNormally(f, v1);
@@ -2221,7 +2419,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
             assertEquals(inc(v1), r.value);
         } catch (CompletionException ok) {
@@ -2250,7 +2448,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
             assertEquals(inc(v1), r.value);
         } catch (CompletionException ok) {
@@ -2363,7 +2561,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
             assertEquals(inc(v1), r.value);
         } catch (CompletionException ok) {
@@ -2392,7 +2590,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
             assertEquals(inc(v1), r.value);
         } catch (CompletionException ok) {
@@ -2534,7 +2732,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCFException(h, ex);
@@ -2562,7 +2760,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCFException(h, ex);
@@ -2674,7 +2872,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCancellationException(h);
@@ -2702,7 +2900,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         // unspecified behavior
         Integer v;
         try {
-            assertEquals(h.join(), null);
+            assertNull(h.join());
             assertEquals(1, r.invocationCount);
         } catch (CompletionException ok) {
             checkCompletedWithWrappedCancellationException(h);
@@ -3328,37 +3526,37 @@ public class CompletableFutureTest extends JSR166TestCase {
      * source result.
      */
     public void testWhenComplete_normalCompletion1() {
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null }) {
-
-        final AtomicInteger a = new AtomicInteger();
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         if (!createIncomplete) f.complete(v1);
-        final CompletableFuture<Integer> g =
-            m.whenComplete(f,
-                           (Integer x, Throwable t) -> {
-                               threadAssertSame(x, v1);
-                               threadAssertNull(t);
-                               a.getAndIncrement();
-                           });
+        final CompletableFuture<Integer> g = m.whenComplete
+            (f,
+             (Integer x, Throwable t) -> {
+                threadAssertSame(x, v1);
+                threadAssertNull(t);
+                a.getAndIncrement();
+            });
         if (createIncomplete) f.complete(v1);
-        checkCompletedNormally(f, v1);
+
         checkCompletedNormally(g, v1);
-        assertEquals(a.get(), 1);
-        }
-    }
+        checkCompletedNormally(f, v1);
+        assertEquals(1, a.get());
+    }}
 
     /**
      * whenComplete action executes on exceptional completion, propagating
      * source result.
      */
     public void testWhenComplete_exceptionalCompletion() {
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null }) {
-
-        final AtomicInteger a = new AtomicInteger();
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
         final CFException ex = new CFException();
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         if (!createIncomplete) f.completeExceptionally(ex);
@@ -3372,9 +3570,35 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (createIncomplete) f.completeExceptionally(ex);
         checkCompletedWithWrappedCFException(f, ex);
         checkCompletedWithWrappedCFException(g, ex);
-        assertEquals(a.get(), 1);
-        }
-    }
+        assertEquals(1, a.get());
+    }}
+
+    /**
+     * whenComplete action executes on cancelled source, propagating
+     * CancellationException.
+     */
+    public void testWhenComplete_sourceCancelled() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (boolean createIncomplete : new boolean[] { true, false })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+        final CompletableFuture<Integer> g = m.whenComplete
+            (f,
+             (Integer x, Throwable t) -> {
+                threadAssertNull(x);
+                threadAssertTrue(t instanceof CancellationException);
+                a.getAndIncrement();
+            });
+        if (createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+
+        //try { g.join(); } catch (Throwable t) { throw new Error(t); }
+        checkCompletedWithWrappedCancellationException(g);
+        checkCancelled(f);
+        assertEquals(1, a.get());
+    }}
 
     /**
      * If a whenComplete action throws an exception when triggered by
@@ -3385,6 +3609,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         for (ExecutionMode m : ExecutionMode.values())
         for (Integer v1 : new Integer[] { 1, null }) {
 
+        final AtomicInteger a = new AtomicInteger(0);
         final CFException ex = new CFException();
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         if (!createIncomplete) f.complete(v1);
@@ -3393,11 +3618,13 @@ public class CompletableFutureTest extends JSR166TestCase {
              (Integer x, Throwable t) -> {
                 threadAssertSame(x, v1);
                 threadAssertNull(t);
+                a.getAndIncrement();
                 throw ex;
             });
         if (createIncomplete) f.complete(v1);
         checkCompletedNormally(f, v1);
         checkCompletedWithWrappedCFException(g, ex);
+        assertEquals(1, a.get());
         }
     }
 
@@ -3411,6 +3638,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         for (ExecutionMode m : ExecutionMode.values())
         for (Integer v1 : new Integer[] { 1, null }) {
 
+        final AtomicInteger a = new AtomicInteger(0);
         final CFException ex1 = new CFException();
         final CFException ex2 = new CFException();
         final CompletableFuture<Integer> f = new CompletableFuture<>();
@@ -3421,97 +3649,15 @@ public class CompletableFutureTest extends JSR166TestCase {
              (Integer x, Throwable t) -> {
                 threadAssertSame(t, ex1);
                 threadAssertNull(x);
+                a.getAndIncrement();
                 throw ex2;
             });
         if (createIncomplete) f.completeExceptionally(ex1);
 
         checkCompletedWithWrappedCFException(f, ex1);
         checkCompletedWithWrappedCFException(g, ex1);
+        assertEquals(1, a.get());
         }
-    }
-
-    /**
-     * handleAsync action completes normally with function value on
-     * either normal or exceptional completion of source
-     */
-    public void testHandleAsync() {
-        CompletableFuture<Integer> f, g;
-        IntegerHandler r;
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler());
-        assertEquals(0, r.invocationCount);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(f);
-        checkCompletedNormally(g, three);
-        assertEquals(1, r.invocationCount);
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler());
-        assertEquals(0, r.invocationCount);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(f);
-        checkCompletedNormally(g, three);
-        assertEquals(1, r.invocationCount);
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler());
-        assertEquals(0, r.invocationCount);
-        f.complete(one);
-        checkCompletedNormally(f, one);
-        checkCompletedNormally(g, two);
-        assertEquals(1, r.invocationCount);
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler());
-        assertEquals(0, r.invocationCount);
-        f.complete(one);
-        checkCompletedNormally(f, one);
-        checkCompletedNormally(g, two);
-        assertEquals(1, r.invocationCount);
-    }
-
-    /**
-     * handleAsync action with Executor completes normally with
-     * function value on either normal or exceptional completion of
-     * source
-     */
-    public void testHandleAsync2() {
-        CompletableFuture<Integer> f, g;
-        ThreadExecutor exec = new ThreadExecutor();
-        IntegerHandler r;
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler(), exec);
-        assertEquals(0, r.invocationCount);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(f);
-        checkCompletedNormally(g, three);
-        assertEquals(1, r.invocationCount);
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler(), exec);
-        assertEquals(0, r.invocationCount);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(f);
-        checkCompletedNormally(g, three);
-        assertEquals(1, r.invocationCount);
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler(), exec);
-        assertEquals(0, r.invocationCount);
-        f.complete(one);
-        checkCompletedNormally(f, one);
-        checkCompletedNormally(g, two);
-        assertEquals(1, r.invocationCount);
-
-        f = new CompletableFuture<>();
-        g = f.handleAsync(r = new IntegerHandler(), exec);
-        assertEquals(0, r.invocationCount);
-        f.complete(one);
-        checkCompletedNormally(f, one);
-        checkCompletedNormally(g, two);
-        assertEquals(1, r.invocationCount);
     }
 
 }

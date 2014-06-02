@@ -2152,73 +2152,315 @@ public class CompletableFutureTest extends JSR166TestCase {
      * acceptEither result completes normally after normal completion
      * of either source
      */
-    public void testAcceptEither() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEither(f2, r);
-        f.complete(one);
-        checkCompletedNormally(g, null);
-        f2.complete(one);
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
+    public void testAcceptEither_normalCompletion1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
 
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f.complete(one);
-        f2 = new CompletableFuture<>();
-        g = f.acceptEither(f2, r);
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        f.complete(v1);
+        checkCompletedNormally(h, null);
+        assertEquals(r.value, inc(v1));
+        g.complete(v2);
+
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        checkCompletedNormally(h, null);
+        }
+    }
+
+    public void testAcceptEither_normalCompletion2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        g.complete(v2);
+        checkCompletedNormally(h, null);
+        assertEquals(r.value, inc(v2));
+        f.complete(v1);
+
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        checkCompletedNormally(h, null);
+        }
+    }
+    public void testAcceptEither_normalCompletion3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+
+        f.complete(v1);
+        g.complete(v2);
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        checkCompletedNormally(h, null);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+
+        // unspecified behavior
+        assertTrue(Objects.equals(r.value, inc(v1)) ||
+                   Objects.equals(r.value, inc(v2)));
+        }
     }
 
     /**
      * acceptEither result completes exceptionally after exceptional
      * completion of either source
      */
-    public void testAcceptEither2() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEither(f2, r);
-        f.completeExceptionally(new CFException());
-        f2.complete(one);
-        checkCompletedWithWrappedCFException(g);
+    public void testAcceptEither_exceptionalCompletion1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
 
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f2 = new CompletableFuture<>();
-        f2.completeExceptionally(new CFException());
-        g = f.acceptEither(f2, r);
-        checkCompletedWithWrappedCFException(g);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+        final CFException ex = new CFException();
+
+        f.completeExceptionally(ex);
+        checkCompletedWithWrappedCFException(h, ex);
+        g.complete(v1);
+
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedWithWrappedCFException(h, ex);
+        }
+    }
+
+    public void testAcceptEither_exceptionalCompletion2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+        final CFException ex = new CFException();
+
+        g.completeExceptionally(ex);
+        checkCompletedWithWrappedCFException(h, ex);
+        f.complete(v1);
+
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedWithWrappedCFException(h, ex);
+        }
+    }
+
+    public void testAcceptEither_exceptionalCompletion3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CFException ex = new CFException();
+
+        g.completeExceptionally(ex);
+        f.complete(v1);
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        // unspecified behavior
+        Integer v;
+        try {
+            assertEquals(h.join(), null);
+            assertTrue(r.ran());
+            assertEquals(inc(v1), r.value);
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCFException(h, ex);
+            assertFalse(r.ran());
+        }
+
+        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testAcceptEither_exceptionalCompletion4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CFException ex = new CFException();
+
+        f.completeExceptionally(ex);
+        g.complete(v1);
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        // unspecified behavior
+        Integer v;
+        try {
+            assertEquals(h.join(), null);
+            assertTrue(r.ran());
+            assertEquals(inc(v1), r.value);
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCFException(h, ex);
+            assertFalse(r.ran());
+        }
+
+        checkCompletedWithWrappedCFException(f, ex);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        }
     }
 
     /**
      * acceptEither result completes exceptionally if action does
      */
-    public void testAcceptEither3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        FailingConsumer r = new FailingConsumer();
-        CompletableFuture<Void> g = f.acceptEither(f2, r);
-        f2.complete(two);
-        checkCompletedWithWrappedCFException(g);
+    public void testAcceptEither_actionFailed1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingConsumer r = new FailingConsumer();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        f.complete(v1);
+        checkCompletedWithWrappedCFException(h);
+        g.complete(v2);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
+    }
+
+    public void testAcceptEither_actionFailed2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingConsumer r = new FailingConsumer();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        g.complete(v2);
+        checkCompletedWithWrappedCFException(h);
+        f.complete(v1);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
+        }
     }
 
     /**
      * acceptEither result completes exceptionally if either source cancelled
      */
-    public void testAcceptEither4() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEither(f2, r);
-        assertTrue(f.cancel(true));
-        checkCompletedWithWrappedCancellationException(g);
-        f = new CompletableFuture<>();
-        f2 = new CompletableFuture<>();
-        assertTrue(f2.cancel(true));
-        checkCompletedWithWrappedCancellationException(g);
+    public void testAcceptEither_sourceCancelled1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        checkCompletedWithWrappedCancellationException(h);
+        g.complete(v1);
+
+        checkCancelled(f);
+        assertFalse(r.ran());
+        checkCompletedNormally(g, v1);
+        checkCompletedWithWrappedCancellationException(h);
+        }
+    }
+
+    public void testAcceptEither_sourceCancelled2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        assertTrue(g.cancel(mayInterruptIfRunning));
+        checkCompletedWithWrappedCancellationException(h);
+        f.complete(v1);
+
+        checkCancelled(g);
+        assertFalse(r.ran());
+        checkCompletedNormally(f, v1);
+        checkCompletedWithWrappedCancellationException(h);
+        }
+    }
+
+    public void testAcceptEither_sourceCancelled3() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+
+        assertTrue(g.cancel(mayInterruptIfRunning));
+        f.complete(v1);
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        // unspecified behavior
+        Integer v;
+        try {
+            assertEquals(h.join(), null);
+            assertTrue(r.ran());
+            assertEquals(inc(v1), r.value);
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCancellationException(h);
+            assertFalse(r.ran());
+        }
+
+        checkCancelled(g);
+        checkCompletedNormally(f, v1);
+        }
+    }
+
+    public void testAcceptEither_sourceCancelled4() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null }) {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncAction r = new IncAction();
+
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        g.complete(v1);
+        final CompletableFuture<Void> h = m.acceptEither(f, g, r);
+
+        // unspecified behavior
+        Integer v;
+        try {
+            assertEquals(h.join(), null);
+            assertTrue(r.ran());
+            assertEquals(inc(v1), r.value);
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCancellationException(h);
+            assertFalse(r.ran());
+        }
+
+        checkCancelled(f);
+        checkCompletedNormally(g, v1);
+        }
     }
 
     /**
@@ -2517,81 +2759,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     /**
-     * acceptEitherAsync result completes normally after normal
-     * completion of sources
-     */
-    public void testAcceptEitherAsync() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r);
-        f.complete(one);
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
-
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f.complete(one);
-        f2 = new CompletableFuture<>();
-        g = f.acceptEitherAsync(f2, r);
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
-    }
-
-    /**
-     * acceptEitherAsync result completes exceptionally after exceptional
-     * completion of source
-     */
-    public void testAcceptEitherAsync2() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(g);
-
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f2 = new CompletableFuture<>();
-        f2.completeExceptionally(new CFException());
-        g = f.acceptEitherAsync(f2, r);
-        f.complete(one);
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * acceptEitherAsync result completes exceptionally if action does
-     */
-    public void testAcceptEitherAsync3() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        FailingConsumer r = new FailingConsumer();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r);
-        f.complete(one);
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * acceptEitherAsync result completes exceptionally if either
-     * source cancelled
-     */
-    public void testAcceptEitherAsync4() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r);
-        assertTrue(f.cancel(true));
-        checkCompletedWithWrappedCancellationException(g);
-
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f2 = new CompletableFuture<>();
-        assertTrue(f2.cancel(true));
-        g = f.acceptEitherAsync(f2, r);
-        checkCompletedWithWrappedCancellationException(g);
-    }
-
-    /**
      * runAfterEitherAsync result completes normally after normal
      * completion of sources
      */
@@ -2886,81 +3053,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         IncAction r = new IncAction();
         CompletableFuture<Void> g = f.thenAcceptAsync(r, new ThreadExecutor());
         assertTrue(f.cancel(true));
-        checkCompletedWithWrappedCancellationException(g);
-    }
-
-    /**
-     * acceptEitherAsync result completes normally after normal
-     * completion of sources
-     */
-    public void testAcceptEitherAsyncE() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r, new ThreadExecutor());
-        f.complete(one);
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
-
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f.complete(one);
-        f2 = new CompletableFuture<>();
-        g = f.acceptEitherAsync(f2, r, new ThreadExecutor());
-        checkCompletedNormally(g, null);
-        assertEquals(r.value, (Integer) 2);
-    }
-
-    /**
-     * acceptEitherAsync result completes exceptionally after exceptional
-     * completion of source
-     */
-    public void testAcceptEitherAsync2E() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r, new ThreadExecutor());
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(g);
-
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f2 = new CompletableFuture<>();
-        f2.completeExceptionally(new CFException());
-        g = f.acceptEitherAsync(f2, r, new ThreadExecutor());
-        f.complete(one);
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * acceptEitherAsync result completes exceptionally if action does
-     */
-    public void testAcceptEitherAsync3E() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        FailingConsumer r = new FailingConsumer();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r, new ThreadExecutor());
-        f.complete(one);
-        checkCompletedWithWrappedCFException(g);
-    }
-
-    /**
-     * acceptEitherAsync result completes exceptionally if either
-     * source cancelled
-     */
-    public void testAcceptEitherAsync4E() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        IncAction r = new IncAction();
-        CompletableFuture<Void> g = f.acceptEitherAsync(f2, r, new ThreadExecutor());
-        assertTrue(f.cancel(true));
-        checkCompletedWithWrappedCancellationException(g);
-
-        r = new IncAction();
-        f = new CompletableFuture<>();
-        f2 = new CompletableFuture<>();
-        assertTrue(f2.cancel(true));
-        g = f.acceptEitherAsync(f2, r, new ThreadExecutor());
         checkCompletedWithWrappedCancellationException(g);
     }
 

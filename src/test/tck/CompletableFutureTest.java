@@ -2614,11 +2614,29 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testAllOf_normal() throws Exception {
         for (int k = 1; k < 20; ++k) {
-            CompletableFuture<Integer>[] fs = (CompletableFuture<Integer>[]) new CompletableFuture[k];
+            CompletableFuture<Integer>[] fs
+                = (CompletableFuture<Integer>[]) new CompletableFuture[k];
             for (int i = 0; i < k; ++i)
                 fs[i] = new CompletableFuture<>();
             CompletableFuture<Void> f = CompletableFuture.allOf(fs);
             for (int i = 0; i < k; ++i) {
+                checkIncomplete(f);
+                checkIncomplete(CompletableFuture.allOf(fs));
+                fs[i].complete(one);
+            }
+            checkCompletedNormally(f, null);
+            checkCompletedNormally(CompletableFuture.allOf(fs), null);
+        }
+    }
+
+    public void testAllOf_backwards() throws Exception {
+        for (int k = 1; k < 20; ++k) {
+            CompletableFuture<Integer>[] fs
+                = (CompletableFuture<Integer>[]) new CompletableFuture[k];
+            for (int i = 0; i < k; ++i)
+                fs[i] = new CompletableFuture<>();
+            CompletableFuture<Void> f = CompletableFuture.allOf(fs);
+            for (int i = k - 1; i >= 0; i--) {
                 checkIncomplete(f);
                 checkIncomplete(CompletableFuture.allOf(fs));
                 fs[i].complete(one);

@@ -623,7 +623,7 @@ public interface CompletionStage<T> {
      * Returns a new CompletionStage with the same result or exception
      * as this stage, and when this stage completes, executes the
      * given action with the result (or {@code null} if none) and the
-     * exception (or {@code null} if none) of this stage.
+     * exception (or {@code null} if none) of this stage as arguments.
      *
      * @param action the action to perform
      * @return the new CompletionStage

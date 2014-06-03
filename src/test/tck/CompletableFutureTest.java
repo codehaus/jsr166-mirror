@@ -320,20 +320,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCompletedNormally(f, "test");
     }
 
-    // Choose non-commutative actions for better coverage
-
-    // A non-commutative function that handles and produces null values as well.
-    static Integer subtract(Integer x, Integer y) {
-        return (x == null && y == null) ? null :
-            ((x == null) ? 42 : x.intValue())
-            - ((y == null) ? 99 : y.intValue());
-    }
-
-    // A function that handles and produces null values as well.
-    static Integer inc(Integer x) {
-        return (x == null) ? null : x + 1;
-    }
-
     static final class IntegerSupplier implements Supplier<Integer> {
         final ExecutionMode m;
         int invocationCount = 0;
@@ -348,7 +334,12 @@ public class CompletableFutureTest extends JSR166TestCase {
             return value;
         }
     }
-        
+
+    // A function that handles and produces null values as well.
+    static Integer inc(Integer x) {
+        return (x == null) ? null : x + 1;
+    }
+
     static final class IncAction implements Consumer<Integer> {
         int invocationCount = 0;
         Integer value;
@@ -368,6 +359,15 @@ public class CompletableFutureTest extends JSR166TestCase {
             return value = inc(x);
         }
     }
+
+    // Choose non-commutative actions for better coverage
+    // A non-commutative function that handles and produces null values as well.
+    static Integer subtract(Integer x, Integer y) {
+        return (x == null && y == null) ? null :
+            ((x == null) ? 42 : x.intValue())
+            - ((y == null) ? 99 : y.intValue());
+    }
+
     static final class SubtractAction implements BiConsumer<Integer, Integer> {
         final ExecutionMode m;
         int invocationCount = 0;
@@ -392,6 +392,7 @@ public class CompletableFutureTest extends JSR166TestCase {
             return value = subtract(x, y);
         }
     }
+
     static final class Noop implements Runnable {
         final ExecutionMode m;
         int invocationCount = 0;
@@ -505,11 +506,12 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     /**
      * Permits the testing of parallel code for the 3 different
-     * execution modes without repeating all the testing code.
+     * execution modes without copy/pasting all the test methods.
      */
     enum ExecutionMode {
         DEFAULT {
             public void checkExecutionMode() {
+                assertFalse(ThreadExecutor.startedCurrentThread());
                 assertNull(ForkJoinTask.getPool());
             }
             public CompletableFuture<Void> runAsync(Runnable a) {

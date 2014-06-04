@@ -1275,27 +1275,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     }}
 
     /**
-     * thenAccept result completes exceptionally if action does
-     */
-    public void testThenAccept_actionFailed() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final FailingConsumer r = new FailingConsumer(m);
-        if (!createIncomplete) f.complete(v1);
-        final CompletableFuture<Void> g = m.thenAccept(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            f.complete(v1);
-        }
-
-        checkCompletedWithWrappedCFException(g);
-        checkCompletedNormally(f, v1);
-    }}
-
-    /**
      * thenAccept result completes exceptionally if source cancelled
      */
     public void testThenAccept_sourceCancelled() {
@@ -1315,6 +1294,27 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCompletedWithWrappedCancellationException(g);
         checkCancelled(f);
         assertEquals(0, r.invocationCount);
+    }}
+
+    /**
+     * thenAccept result completes exceptionally if action does
+     */
+    public void testThenAccept_actionFailed() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final FailingConsumer r = new FailingConsumer(m);
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Void> g = m.thenAccept(f, r);
+        if (createIncomplete) {
+            checkIncomplete(g);
+            f.complete(v1);
+        }
+
+        checkCompletedWithWrappedCFException(g);
+        checkCompletedNormally(f, v1);
     }}
 
     /**
@@ -1379,33 +1379,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     }}
 
     /**
-     * thenCombine result completes exceptionally if action does
-     */
-    public void testThenCombine_actionFailed() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean fFirst : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingBiFunction r = new FailingBiFunction(m);
-        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
-
-        if (fFirst) {
-            f.complete(v1);
-            g.complete(v2);
-        } else {
-            g.complete(v2);
-            f.complete(v1);
-        }
-
-        checkCompletedWithWrappedCFException(h);
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-    }}
-
-    /**
      * thenCombine result completes exceptionally if either source cancelled
      */
     public void testThenCombine_sourceCancelled() {
@@ -1432,6 +1405,33 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCancelled(!fFirst ? f : g);
         assertEquals(0, r.invocationCount);
         checkCompletedNormally(fFirst ? f : g, v1);
+    }}
+
+    /**
+     * thenCombine result completes exceptionally if action does
+     */
+    public void testThenCombine_actionFailed() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean fFirst : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingBiFunction r = new FailingBiFunction(m);
+        final CompletableFuture<Integer> h = m.thenCombine(f, g, r);
+
+        if (fFirst) {
+            f.complete(v1);
+            g.complete(v2);
+        } else {
+            g.complete(v2);
+            f.complete(v1);
+        }
+
+        checkCompletedWithWrappedCFException(h);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
     }}
 
     /**
@@ -1496,33 +1496,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     }}
 
     /**
-     * thenAcceptBoth result completes exceptionally if action does
-     */
-    public void testThenAcceptBoth_actionFailed() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean fFirst : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingBiConsumer r = new FailingBiConsumer(m);
-        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
-
-        if (fFirst) {
-            f.complete(v1);
-            g.complete(v2);
-        } else {
-            g.complete(v2);
-            f.complete(v1);
-        }
-
-        checkCompletedWithWrappedCFException(h);
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-    }}
-
-    /**
      * thenAcceptBoth result completes exceptionally if either source cancelled
      */
     public void testThenAcceptBoth_sourceCancelled() {
@@ -1549,6 +1522,33 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCancelled(!fFirst ? f : g);
         assertEquals(0, r.invocationCount);
         checkCompletedNormally(fFirst ? f : g, v1);
+    }}
+
+    /**
+     * thenAcceptBoth result completes exceptionally if action does
+     */
+    public void testThenAcceptBoth_actionFailed() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean fFirst : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingBiConsumer r = new FailingBiConsumer(m);
+        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+
+        if (fFirst) {
+            f.complete(v1);
+            g.complete(v2);
+        } else {
+            g.complete(v2);
+            f.complete(v1);
+        }
+
+        checkCompletedWithWrappedCFException(h);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
     }}
 
     /**
@@ -1613,35 +1613,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     }}
 
     /**
-     * runAfterBoth result completes exceptionally if action does
-     */
-    public void testRunAfterBoth_actionFailed() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean fFirst : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-        for (Integer v2 : new Integer[] { 2, null })
-    {
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingRunnable r = new FailingRunnable(m);
-
-        CompletableFuture<Void> h1 = m.runAfterBoth(f, g, r);
-        if (fFirst) {
-            f.complete(v1);
-            g.complete(v2);
-        } else {
-            g.complete(v2);
-            f.complete(v1);
-        }
-        CompletableFuture<Void> h2 = m.runAfterBoth(f, g, r);
-
-        checkCompletedWithWrappedCFException(h1);
-        checkCompletedWithWrappedCFException(h2);
-        checkCompletedNormally(f, v1);
-        checkCompletedNormally(g, v2);
-    }}
-
-    /**
      * runAfterBoth result completes exceptionally if either source cancelled
      */
     public void testRunAfterBoth_sourceCancelled() {
@@ -1669,6 +1640,35 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCancelled(!fFirst ? f : g);
         assertEquals(0, r.invocationCount);
         checkCompletedNormally(fFirst ? f : g, v1);
+    }}
+
+    /**
+     * runAfterBoth result completes exceptionally if action does
+     */
+    public void testRunAfterBoth_actionFailed() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean fFirst : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+        for (Integer v2 : new Integer[] { 2, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final FailingRunnable r = new FailingRunnable(m);
+
+        CompletableFuture<Void> h1 = m.runAfterBoth(f, g, r);
+        if (fFirst) {
+            f.complete(v1);
+            g.complete(v2);
+        } else {
+            g.complete(v2);
+            f.complete(v1);
+        }
+        CompletableFuture<Void> h2 = m.runAfterBoth(f, g, r);
+
+        checkCompletedWithWrappedCFException(h1);
+        checkCompletedWithWrappedCFException(h2);
+        checkCompletedNormally(f, v1);
+        checkCompletedNormally(g, v2);
     }}
 
     /**

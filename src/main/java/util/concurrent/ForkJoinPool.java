@@ -2595,7 +2595,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         // In previous versions of this class, this method constructed
         // a task to run ForkJoinTask.invokeAll, but now external
         // invocation of multiple tasks is at least as efficient.
-        ArrayList<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
+        ArrayList<Future<T>> futures = new ArrayList<>(tasks.size());
 
         boolean done = false;
         try {

@@ -1303,7 +1303,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return the collection of threads
      */
     public final Collection<Thread> getQueuedThreads() {
-        ArrayList<Thread> list = new ArrayList<Thread>();
+        ArrayList<Thread> list = new ArrayList<>();
         for (Node p = tail; p != null; p = p.prev) {
             Thread t = p.thread;
             if (t != null)
@@ -1321,7 +1321,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return the collection of threads
      */
     public final Collection<Thread> getExclusiveQueuedThreads() {
-        ArrayList<Thread> list = new ArrayList<Thread>();
+        ArrayList<Thread> list = new ArrayList<>();
         for (Node p = tail; p != null; p = p.prev) {
             if (!p.isShared()) {
                 Thread t = p.thread;
@@ -1341,7 +1341,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return the collection of threads
      */
     public final Collection<Thread> getSharedQueuedThreads() {
-        ArrayList<Thread> list = new ArrayList<Thread>();
+        ArrayList<Thread> list = new ArrayList<>();
         for (Node p = tail; p != null; p = p.prev) {
             if (p.isShared()) {
                 Thread t = p.thread;
@@ -1987,7 +1987,7 @@ public abstract class AbstractQueuedLongSynchronizer
         protected final Collection<Thread> getWaitingThreads() {
             if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
-            ArrayList<Thread> list = new ArrayList<Thread>();
+            ArrayList<Thread> list = new ArrayList<>();
             for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
                 if (w.waitStatus == Node.CONDITION) {
                     Thread t = w.thread;

@@ -52,7 +52,7 @@ package java.util.concurrent;
  *
  *  <pre> {@code
  * class SerialExecutor implements Executor {
- *   final Queue<Runnable> tasks = new ArrayDeque<Runnable>();
+ *   final Queue<Runnable> tasks = new ArrayDeque<>();
  *   final Executor executor;
  *   Runnable active;
  *
@@ -61,7 +61,7 @@ package java.util.concurrent;
  *   }
  *
  *   public synchronized void execute(final Runnable r) {
- *     tasks.offer(new Runnable() {
+ *     tasks.add(new Runnable() {
  *       public void run() {
  *         try {
  *           r.run();

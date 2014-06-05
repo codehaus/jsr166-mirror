@@ -147,7 +147,7 @@ import java.util.Collection;
  *
  *  <pre> {@code
  * class RWDictionary {
- *   private final Map<String, Data> m = new TreeMap<String, Data>();
+ *   private final Map<String, Data> m = new TreeMap<>();
  *   private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
  *   private final Lock r = rwl.readLock();
  *   private final Lock w = rwl.writeLock();

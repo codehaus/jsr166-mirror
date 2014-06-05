@@ -170,7 +170,7 @@ public class ThreadLocalRandom extends Random {
 
     /** Rarely-used holder for the second of a pair of Gaussians */
     private static final ThreadLocal<Double> nextLocalGaussian =
-        new ThreadLocal<Double>();
+        new ThreadLocal<>();
 
     private static long mix64(long z) {
         z = (z ^ (z >>> 33)) * 0xff51afd7ed558ccdL;
@@ -455,7 +455,7 @@ public class ThreadLocalRandom extends Random {
         if (!(bound > 0.0))
             throw new IllegalArgumentException(BadBound);
         double result = (mix64(nextSeed()) >>> 11) * DOUBLE_UNIT * bound;
-        return (result < bound) ?  result : // correct for rounding
+        return (result < bound) ? result : // correct for rounding
             Double.longBitsToDouble(Double.doubleToLongBits(bound) - 1);
     }
 

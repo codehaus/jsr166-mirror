@@ -56,7 +56,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *       new Runnable() { public void run() { mergeRows(...); }};
  *     barrier = new CyclicBarrier(N, barrierAction);
  *
- *     List<Thread> threads = new ArrayList<Thread>(N);
+ *     List<Thread> threads = new ArrayList<>(N);
  *     for (int i = 0; i < N; i++) {
  *       Thread thread = new Thread(new Worker(i));
  *       threads.add(thread);

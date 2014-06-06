@@ -131,7 +131,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (ExecutionException success) {
             assertSame(ex, success.getCause());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
-                                                            
+
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
         assertTrue(f.toString().contains("[Completed exceptionally]"));

@@ -105,8 +105,8 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
 
-    void checkCompletedWithWrappedCFException(CompletableFuture<?> f,
-                                              CFException ex) {
+    <U> void checkCompletedExceptionallyWithRootCause(CompletableFuture<U> f,
+                                                      Throwable ex) {
         try {
             f.get(LONG_DELAY_MS, MILLISECONDS);
             shouldThrow();
@@ -131,9 +131,30 @@ public class CompletableFutureTest extends JSR166TestCase {
         } catch (ExecutionException success) {
             assertSame(ex, success.getCause());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
+                                                            
         assertTrue(f.isDone());
         assertFalse(f.isCancelled());
         assertTrue(f.toString().contains("[Completed exceptionally]"));
+    }
+
+    <U> void checkCompletedWithWrappedException(CompletableFuture<U> f,
+                                                Throwable ex) {
+        checkCompletedExceptionallyWithRootCause(f, ex);
+        try {
+            CompletableFuture<Throwable> spy = f.handle
+                ((U u, Throwable t) -> t);
+            assertTrue(spy.join() instanceof CompletionException);
+            assertSame(ex, spy.join().getCause());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+    }
+
+    <U> void checkCompletedExceptionally(CompletableFuture<U> f, Throwable ex) {
+        checkCompletedExceptionallyWithRootCause(f, ex);
+        try {
+            CompletableFuture<Throwable> spy = f.handle
+                ((U u, Throwable t) -> t);
+            assertSame(ex, spy.join());
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
     void checkCancelled(CompletableFuture<?> f) {
@@ -218,9 +239,10 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testCompleteExceptionally() {
         CompletableFuture<Integer> f = new CompletableFuture<>();
+        CFException ex = new CFException();
         checkIncomplete(f);
-        f.completeExceptionally(new CFException());
-        checkCompletedWithWrappedCFException(f);
+        f.completeExceptionally(ex);
+        checkCompletedExceptionally(f, ex);
     }
 
     /**
@@ -261,22 +283,35 @@ public class CompletableFutureTest extends JSR166TestCase {
      * obtrudeException forces completion with given exception
      */
     public void testObtrudeException() {
-        CompletableFuture<Integer> f = new CompletableFuture<>();
-        checkIncomplete(f);
-        f.complete(one);
-        checkCompletedNormally(f, one);
-        f.obtrudeException(new CFException());
-        checkCompletedWithWrappedCFException(f);
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        CFException ex;
+        CompletableFuture<Integer> f;
+
         f = new CompletableFuture<>();
-        f.obtrudeException(new CFException());
-        checkCompletedWithWrappedCFException(f);
+        f.complete(v1);
+        for (int i = 0; i < 2; i++) {
+            f.obtrudeException(ex = new CFException());
+            checkCompletedExceptionally(f, ex);
+        }
+
         f = new CompletableFuture<>();
+        for (int i = 0; i < 2; i++) {
+            f.obtrudeException(ex = new CFException());
+            checkCompletedExceptionally(f, ex);
+        }
+
+        f = new CompletableFuture<>();
+        f.completeExceptionally(ex = new CFException());
+        f.obtrudeValue(v1);
+        checkCompletedNormally(f, v1);
+        f.obtrudeException(ex = new CFException());
+        checkCompletedExceptionally(f, ex);
         f.completeExceptionally(new CFException());
-        f.obtrudeValue(four);
-        checkCompletedNormally(f, four);
-        f.obtrudeException(new CFException());
-        checkCompletedWithWrappedCFException(f);
-    }
+        checkCompletedExceptionally(f, ex);
+        f.complete(v1);
+        checkCompletedExceptionally(f, ex);
+    }}
 
     /**
      * getNumberOfDependents returns number of dependent tasks
@@ -852,7 +887,7 @@ public class CompletableFutureTest extends JSR166TestCase {
             });
         if (createIncomplete) f.completeExceptionally(ex1);
 
-        checkCompletedWithWrappedCFException(g, ex2);
+        checkCompletedWithWrappedException(g, ex2);
         assertEquals(1, a.get());
     }}
 
@@ -909,7 +944,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (createIncomplete) f.completeExceptionally(ex);
 
         checkCompletedNormally(g, v1);
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedExceptionally(f, ex);
         assertEquals(1, a.get());
     }}
 
@@ -965,8 +1000,8 @@ public class CompletableFutureTest extends JSR166TestCase {
             });
         if (createIncomplete) f.completeExceptionally(ex1);
 
-        checkCompletedWithWrappedCFException(g, ex2);
-        checkCompletedWithWrappedCFException(f, ex1);
+        checkCompletedWithWrappedException(g, ex2);
+        checkCompletedExceptionally(f, ex1);
         assertEquals(1, a.get());
     }}
 
@@ -990,7 +1025,7 @@ public class CompletableFutureTest extends JSR166TestCase {
             });
         if (createIncomplete) f.complete(v1);
 
-        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedWithWrappedException(g, ex);
         checkCompletedNormally(f, v1);
         assertEquals(1, a.get());
     }}
@@ -1104,8 +1139,8 @@ public class CompletableFutureTest extends JSR166TestCase {
             f.completeExceptionally(ex);
         }
 
-        checkCompletedWithWrappedCFException(g, ex);
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedWithWrappedException(g, ex);
+        checkCompletedExceptionally(f, ex);
         r.assertNotInvoked();
     }}
 
@@ -1192,8 +1227,8 @@ public class CompletableFutureTest extends JSR166TestCase {
             f.completeExceptionally(ex);
         }
 
-        checkCompletedWithWrappedCFException(g, ex);
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedWithWrappedException(g, ex);
+        checkCompletedExceptionally(f, ex);
         r.assertNotInvoked();
     }}
 
@@ -1280,8 +1315,8 @@ public class CompletableFutureTest extends JSR166TestCase {
             f.completeExceptionally(ex);
         }
 
-        checkCompletedWithWrappedCFException(g, ex);
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedWithWrappedException(g, ex);
+        checkCompletedExceptionally(f, ex);
         r.assertNotInvoked();
     }}
 
@@ -1383,10 +1418,10 @@ public class CompletableFutureTest extends JSR166TestCase {
             (!fFirst ? f : g).completeExceptionally(ex);
         }
 
-        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedException(h, ex);
         r.assertNotInvoked();
         checkCompletedNormally(fFirst ? f : g, v1);
-        checkCompletedWithWrappedCFException(!fFirst ? f : g, ex);
+        checkCompletedExceptionally(!fFirst ? f : g, ex);
     }}
 
     /**
@@ -1500,10 +1535,10 @@ public class CompletableFutureTest extends JSR166TestCase {
             (!fFirst ? f : g).completeExceptionally(ex);
         }
 
-        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedException(h, ex);
         r.assertNotInvoked();
         checkCompletedNormally(fFirst ? f : g, v1);
-        checkCompletedWithWrappedCFException(!fFirst ? f : g, ex);
+        checkCompletedExceptionally(!fFirst ? f : g, ex);
     }}
 
     /**
@@ -1617,10 +1652,10 @@ public class CompletableFutureTest extends JSR166TestCase {
             (!fFirst ? f : g).completeExceptionally(ex);
         }
 
-        checkCompletedWithWrappedCFException(h, ex);
+        checkCompletedWithWrappedException(h, ex);
         r.assertNotInvoked();
         checkCompletedNormally(fFirst ? f : g, v1);
-        checkCompletedWithWrappedCFException(!fFirst ? f : g, ex);
+        checkCompletedExceptionally(!fFirst ? f : g, ex);
     }}
 
     /**
@@ -1752,12 +1787,12 @@ public class CompletableFutureTest extends JSR166TestCase {
         rs[0].assertNotInvoked();
         rs[1].assertNotInvoked();
         f.completeExceptionally(ex);
-        checkCompletedWithWrappedCFException(h0, ex);
-        checkCompletedWithWrappedCFException(h1, ex);
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
         final CompletableFuture<Integer> h2 = m.applyToEither(f, g, rs[2]);
         final CompletableFuture<Integer> h3 = m.applyToEither(g, f, rs[3]);
-        checkCompletedWithWrappedCFException(h2, ex);
-        checkCompletedWithWrappedCFException(h3, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
         g.complete(v1);
 
         // unspecified behavior - both source completions available
@@ -1767,24 +1802,24 @@ public class CompletableFutureTest extends JSR166TestCase {
             assertEquals(inc(v1), h4.join());
             rs[4].assertValue(inc(v1));
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h4, ex);
+            checkCompletedWithWrappedException(h4, ex);
             rs[4].assertNotInvoked();
         }
         try {
             assertEquals(inc(v1), h5.join());
             rs[5].assertValue(inc(v1));
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h5, ex);
+            checkCompletedWithWrappedException(h5, ex);
             rs[5].assertNotInvoked();
         }
 
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedExceptionally(f, ex);
         checkCompletedNormally(g, v1);
-        checkCompletedWithWrappedCFException(h0, ex);
-        checkCompletedWithWrappedCFException(h1, ex);
-        checkCompletedWithWrappedCFException(h2, ex);
-        checkCompletedWithWrappedCFException(h3, ex);
-        checkCompletedWithWrappedCFException(h4, ex);
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
+        checkCompletedWithWrappedException(h4, ex);
         for (int i = 0; i < 4; i++) rs[i].assertNotInvoked();
     }}
 
@@ -1816,33 +1851,33 @@ public class CompletableFutureTest extends JSR166TestCase {
             assertEquals(inc(v1), h0.join());
             rs[0].assertValue(inc(v1));
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h0, ex);
+            checkCompletedWithWrappedException(h0, ex);
             rs[0].assertNotInvoked();
         }
         try {
             assertEquals(inc(v1), h1.join());
             rs[1].assertValue(inc(v1));
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h1, ex);
+            checkCompletedWithWrappedException(h1, ex);
             rs[1].assertNotInvoked();
         }
         try {
             assertEquals(inc(v1), h2.join());
             rs[2].assertValue(inc(v1));
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h2, ex);
+            checkCompletedWithWrappedException(h2, ex);
             rs[2].assertNotInvoked();
         }
         try {
             assertEquals(inc(v1), h3.join());
             rs[3].assertValue(inc(v1));
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h3, ex);
+            checkCompletedWithWrappedException(h3, ex);
             rs[3].assertNotInvoked();
         }
 
         checkCompletedNormally(f, v1);
-        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedExceptionally(g, ex);
     }}
 
     /**
@@ -2071,12 +2106,12 @@ public class CompletableFutureTest extends JSR166TestCase {
         rs[0].assertNotInvoked();
         rs[1].assertNotInvoked();
         f.completeExceptionally(ex);
-        checkCompletedWithWrappedCFException(h0, ex);
-        checkCompletedWithWrappedCFException(h1, ex);
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
         final CompletableFuture<Void> h2 = m.acceptEither(f, g, rs[2]);
         final CompletableFuture<Void> h3 = m.acceptEither(g, f, rs[3]);
-        checkCompletedWithWrappedCFException(h2, ex);
-        checkCompletedWithWrappedCFException(h3, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
 
         g.complete(v1);
 
@@ -2087,24 +2122,24 @@ public class CompletableFutureTest extends JSR166TestCase {
             assertNull(h4.join());
             rs[4].assertValue(v1);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h4, ex);
+            checkCompletedWithWrappedException(h4, ex);
             rs[4].assertNotInvoked();
         }
         try {
             assertNull(h5.join());
             rs[5].assertValue(v1);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h5, ex);
+            checkCompletedWithWrappedException(h5, ex);
             rs[5].assertNotInvoked();
         }
 
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedExceptionally(f, ex);
         checkCompletedNormally(g, v1);
-        checkCompletedWithWrappedCFException(h0, ex);
-        checkCompletedWithWrappedCFException(h1, ex);
-        checkCompletedWithWrappedCFException(h2, ex);
-        checkCompletedWithWrappedCFException(h3, ex);
-        checkCompletedWithWrappedCFException(h4, ex);
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
+        checkCompletedWithWrappedException(h4, ex);
         for (int i = 0; i < 4; i++) rs[i].assertNotInvoked();
     }}
 
@@ -2136,33 +2171,33 @@ public class CompletableFutureTest extends JSR166TestCase {
             assertEquals(null, h0.join());
             rs[0].assertValue(v1);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h0, ex);
+            checkCompletedWithWrappedException(h0, ex);
             rs[0].assertNotInvoked();
         }
         try {
             assertEquals(null, h1.join());
             rs[1].assertValue(v1);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h1, ex);
+            checkCompletedWithWrappedException(h1, ex);
             rs[1].assertNotInvoked();
         }
         try {
             assertEquals(null, h2.join());
             rs[2].assertValue(v1);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h2, ex);
+            checkCompletedWithWrappedException(h2, ex);
             rs[2].assertNotInvoked();
         }
         try {
             assertEquals(null, h3.join());
             rs[3].assertValue(v1);
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h3, ex);
+            checkCompletedWithWrappedException(h3, ex);
             rs[3].assertNotInvoked();
         }
 
         checkCompletedNormally(f, v1);
-        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedExceptionally(g, ex);
     }}
 
     /**
@@ -2331,12 +2366,12 @@ public class CompletableFutureTest extends JSR166TestCase {
         rs[0].assertNotInvoked();
         rs[1].assertNotInvoked();
         f.completeExceptionally(ex);
-        checkCompletedWithWrappedCFException(h0, ex);
-        checkCompletedWithWrappedCFException(h1, ex);
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
         final CompletableFuture<Void> h2 = m.runAfterEither(f, g, rs[2]);
         final CompletableFuture<Void> h3 = m.runAfterEither(g, f, rs[3]);
-        checkCompletedWithWrappedCFException(h2, ex);
-        checkCompletedWithWrappedCFException(h3, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
 
         g.complete(v1);
 
@@ -2347,24 +2382,24 @@ public class CompletableFutureTest extends JSR166TestCase {
             assertNull(h4.join());
             rs[4].assertInvoked();
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h4, ex);
+            checkCompletedWithWrappedException(h4, ex);
             rs[4].assertNotInvoked();
         }
         try {
             assertNull(h5.join());
             rs[5].assertInvoked();
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h5, ex);
+            checkCompletedWithWrappedException(h5, ex);
             rs[5].assertNotInvoked();
         }
 
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedExceptionally(f, ex);
         checkCompletedNormally(g, v1);
-        checkCompletedWithWrappedCFException(h0, ex);
-        checkCompletedWithWrappedCFException(h1, ex);
-        checkCompletedWithWrappedCFException(h2, ex);
-        checkCompletedWithWrappedCFException(h3, ex);
-        checkCompletedWithWrappedCFException(h4, ex);
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
+        checkCompletedWithWrappedException(h4, ex);
         for (int i = 0; i < 4; i++) rs[i].assertNotInvoked();
     }}
 
@@ -2396,33 +2431,33 @@ public class CompletableFutureTest extends JSR166TestCase {
             assertEquals(null, h0.join());
             rs[0].assertInvoked();
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h0, ex);
+            checkCompletedWithWrappedException(h0, ex);
             rs[0].assertNotInvoked();
         }
         try {
             assertEquals(null, h1.join());
             rs[1].assertInvoked();
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h1, ex);
+            checkCompletedWithWrappedException(h1, ex);
             rs[1].assertNotInvoked();
         }
         try {
             assertEquals(null, h2.join());
             rs[2].assertInvoked();
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h2, ex);
+            checkCompletedWithWrappedException(h2, ex);
             rs[2].assertNotInvoked();
         }
         try {
             assertEquals(null, h3.join());
             rs[3].assertInvoked();
         } catch (CompletionException ok) {
-            checkCompletedWithWrappedCFException(h3, ex);
+            checkCompletedWithWrappedException(h3, ex);
             rs[3].assertNotInvoked();
         }
 
         checkCompletedNormally(f, v1);
-        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedExceptionally(g, ex);
     }}
 
     /**
@@ -2549,8 +2584,8 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.thenCompose(f, r);
         if (createIncomplete) f.completeExceptionally(ex);
 
-        checkCompletedWithWrappedCFException(g, ex);
-        checkCompletedWithWrappedCFException(f, ex);
+        checkCompletedWithWrappedException(g, ex);
+        checkCompletedExceptionally(f, ex);
         r.assertNotInvoked();
     }}
 
@@ -2855,8 +2890,8 @@ public class CompletableFutureTest extends JSR166TestCase {
                 a.getAndIncrement();
             });
         if (createIncomplete) f.completeExceptionally(ex);
-        checkCompletedWithWrappedCFException(f, ex);
-        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedExceptionally(f, ex);
+        checkCompletedWithWrappedException(g, ex);
         assertEquals(1, a.get());
     }}
 
@@ -2911,7 +2946,7 @@ public class CompletableFutureTest extends JSR166TestCase {
             });
         if (createIncomplete) f.complete(v1);
         checkCompletedNormally(f, v1);
-        checkCompletedWithWrappedCFException(g, ex);
+        checkCompletedWithWrappedException(g, ex);
         assertEquals(1, a.get());
     }}
 
@@ -2942,8 +2977,8 @@ public class CompletableFutureTest extends JSR166TestCase {
             });
         if (createIncomplete) f.completeExceptionally(ex1);
 
-        checkCompletedWithWrappedCFException(f, ex1);
-        checkCompletedWithWrappedCFException(g, ex1);
+        checkCompletedExceptionally(f, ex1);
+        checkCompletedWithWrappedException(g, ex1);
         assertEquals(1, a.get());
     }}
 

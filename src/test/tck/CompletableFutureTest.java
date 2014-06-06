@@ -345,6 +345,14 @@ public class CompletableFutureTest extends JSR166TestCase {
         f = new CompletableFuture<String>();
         f.completeExceptionally(new IndexOutOfBoundsException());
         assertTrue(f.toString().contains("[Completed exceptionally]"));
+
+        f = new CompletableFuture<String>();
+        f.cancel(true);
+        assertTrue(f.toString().contains("[Completed exceptionally]"));
+
+        f = new CompletableFuture<String>();
+        f.cancel(false);
+        assertTrue(f.toString().contains("[Completed exceptionally]"));
     }
 
     /**

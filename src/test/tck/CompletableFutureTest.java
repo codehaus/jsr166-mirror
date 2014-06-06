@@ -1900,6 +1900,63 @@ public class CompletableFutureTest extends JSR166TestCase {
         for (int i = 0; i < 4; i++) rs[i].assertNotInvoked();
     }}
 
+    public void testApplyToEither_sourceCancelled2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (boolean fFirst : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final IncFunction[] rs = new IncFunction[6];
+        for (int i = 0; i < rs.length; i++) rs[i] = new IncFunction(m);
+
+        final CompletableFuture<Integer> h0 = m.applyToEither(f, g, rs[0]);
+        final CompletableFuture<Integer> h1 = m.applyToEither(g, f, rs[1]);
+        if (fFirst) {
+            f.complete(v1);
+            g.cancel(mayInterruptIfRunning);
+        } else {
+            g.cancel(mayInterruptIfRunning);
+            f.complete(v1);
+        }
+        final CompletableFuture<Integer> h2 = m.applyToEither(f, g, rs[2]);
+        final CompletableFuture<Integer> h3 = m.applyToEither(g, f, rs[3]);
+
+        // unspecified behavior - both source completions available
+        try {
+            assertEquals(inc(v1), h0.join());
+            rs[0].assertValue(inc(v1));
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCancellationException(h0);
+            rs[0].assertNotInvoked();
+        }
+        try {
+            assertEquals(inc(v1), h1.join());
+            rs[1].assertValue(inc(v1));
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCancellationException(h1);
+            rs[1].assertNotInvoked();
+        }
+        try {
+            assertEquals(inc(v1), h2.join());
+            rs[2].assertValue(inc(v1));
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCancellationException(h2);
+            rs[2].assertNotInvoked();
+        }
+        try {
+            assertEquals(inc(v1), h3.join());
+            rs[3].assertValue(inc(v1));
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCancellationException(h3);
+            rs[3].assertNotInvoked();
+        }
+
+        checkCompletedNormally(f, v1);
+        checkCancelled(g);
+    }}
+
     /**
      * applyToEither result completes exceptionally if action does
      */

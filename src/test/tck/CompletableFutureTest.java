@@ -2821,6 +2821,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.whenComplete
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertSame(x, v1);
                 threadAssertNull(t);
                 a.getAndIncrement();
@@ -2848,6 +2849,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.whenComplete
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertNull(x);
                 threadAssertSame(t, ex);
                 a.getAndIncrement();
@@ -2873,13 +2875,13 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.whenComplete
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertNull(x);
                 threadAssertTrue(t instanceof CancellationException);
                 a.getAndIncrement();
             });
         if (createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
 
-        //try { g.join(); } catch (Throwable t) { throw new Error(t); }
         checkCompletedWithWrappedCancellationException(g);
         checkCancelled(f);
         assertEquals(1, a.get());
@@ -2901,6 +2903,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.whenComplete
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertSame(x, v1);
                 threadAssertNull(t);
                 a.getAndIncrement();
@@ -2931,6 +2934,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> g = m.whenComplete
             (f,
              (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
                 threadAssertSame(t, ex1);
                 threadAssertNull(x);
                 a.getAndIncrement();

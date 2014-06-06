@@ -2368,6 +2368,63 @@ public class CompletableFutureTest extends JSR166TestCase {
         for (int i = 0; i < 4; i++) rs[i].assertNotInvoked();
     }}
 
+    public void testRunAfterEither_exceptionalCompletion2() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean fFirst : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final CFException ex = new CFException();
+        final Noop[] rs = new Noop[6];
+        for (int i = 0; i < rs.length; i++) rs[i] = new Noop(m);
+
+        final CompletableFuture<Void> h0 = m.runAfterEither(f, g, rs[0]);
+        final CompletableFuture<Void> h1 = m.runAfterEither(g, f, rs[1]);
+        if (fFirst) {
+            f.complete(v1);
+            g.completeExceptionally(ex);
+        } else {
+            g.completeExceptionally(ex);
+            f.complete(v1);
+        }
+        final CompletableFuture<Void> h2 = m.runAfterEither(f, g, rs[2]);
+        final CompletableFuture<Void> h3 = m.runAfterEither(g, f, rs[3]);
+
+        // unspecified behavior - both source completions available
+        try {
+            assertEquals(null, h0.join());
+            rs[0].assertInvoked();
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCFException(h0, ex);
+            rs[0].assertNotInvoked();
+        }
+        try {
+            assertEquals(null, h1.join());
+            rs[1].assertInvoked();
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCFException(h1, ex);
+            rs[1].assertNotInvoked();
+        }
+        try {
+            assertEquals(null, h2.join());
+            rs[2].assertInvoked();
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCFException(h2, ex);
+            rs[2].assertNotInvoked();
+        }
+        try {
+            assertEquals(null, h3.join());
+            rs[3].assertInvoked();
+        } catch (CompletionException ok) {
+            checkCompletedWithWrappedCFException(h3, ex);
+            rs[3].assertNotInvoked();
+        }
+
+        checkCompletedNormally(f, v1);
+        checkCompletedWithWrappedCFException(g, ex);
+    }}
+
     /**
      * runAfterEither result completes exceptionally if either source cancelled
      */

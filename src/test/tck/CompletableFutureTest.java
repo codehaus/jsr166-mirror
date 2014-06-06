@@ -1171,7 +1171,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         checkCompletedNormally(g, inc(v1));
         checkCompletedNormally(f, v1);
-        r.assertInvoked();
+        r.assertValue(inc(v1));
     }}
 
     /**
@@ -1356,7 +1356,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCompletedNormally(h, subtract(v1, v2));
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
-        r.assertInvoked();
+        r.assertValue(subtract(v1, v2));
     }}
 
     /**
@@ -2531,7 +2531,7 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         checkCompletedNormally(g, inc(v1));
         checkCompletedNormally(f, v1);
-        r.assertInvoked();
+        r.assertValue(v1);
     }}
 
     /**

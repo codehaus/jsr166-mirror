@@ -851,7 +851,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertEquals(0, a.get());
     }}
 
-
     /**
      * exceptionally action completes with function value on source
      * exception
@@ -896,6 +895,149 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (createIncomplete) f.completeExceptionally(ex1);
 
         checkCompletedWithWrappedException(g, ex2);
+        assertEquals(1, a.get());
+    }}
+
+    /**
+     * whenComplete action executes on normal completion, propagating
+     * source result.
+     */
+    public void testWhenComplete_normalCompletion1() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Integer> g = m.whenComplete
+            (f,
+             (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
+                threadAssertSame(x, v1);
+                threadAssertNull(t);
+                a.getAndIncrement();
+            });
+        if (createIncomplete) f.complete(v1);
+
+        checkCompletedNormally(g, v1);
+        checkCompletedNormally(f, v1);
+        assertEquals(1, a.get());
+    }}
+
+    /**
+     * whenComplete action executes on exceptional completion, propagating
+     * source result.
+     */
+    public void testWhenComplete_exceptionalCompletion() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex = new CFException();
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) f.completeExceptionally(ex);
+        final CompletableFuture<Integer> g = m.whenComplete
+            (f,
+             (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
+                threadAssertNull(x);
+                threadAssertSame(t, ex);
+                a.getAndIncrement();
+            });
+        if (createIncomplete) f.completeExceptionally(ex);
+
+        checkCompletedWithWrappedException(g, ex);
+        checkCompletedExceptionally(f, ex);
+        assertEquals(1, a.get());
+    }}
+
+    /**
+     * whenComplete action executes on cancelled source, propagating
+     * CancellationException.
+     */
+    public void testWhenComplete_sourceCancelled() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (boolean createIncomplete : new boolean[] { true, false })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+        final CompletableFuture<Integer> g = m.whenComplete
+            (f,
+             (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
+                threadAssertNull(x);
+                threadAssertTrue(t instanceof CancellationException);
+                a.getAndIncrement();
+            });
+        if (createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
+
+        checkCompletedWithWrappedCancellationException(g);
+        checkCancelled(f);
+        assertEquals(1, a.get());
+    }}
+
+    /**
+     * If a whenComplete action throws an exception when triggered by
+     * a normal completion, it completes exceptionally
+     */
+    public void testWhenComplete_actionFailed() {
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex = new CFException();
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        if (!createIncomplete) f.complete(v1);
+        final CompletableFuture<Integer> g = m.whenComplete
+            (f,
+             (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
+                threadAssertSame(x, v1);
+                threadAssertNull(t);
+                a.getAndIncrement();
+                throw ex;
+            });
+        if (createIncomplete) f.complete(v1);
+
+        checkCompletedWithWrappedException(g, ex);
+        checkCompletedNormally(f, v1);
+        assertEquals(1, a.get());
+    }}
+
+    /**
+     * If a whenComplete action throws an exception when triggered by
+     * a source completion that also throws an exception, the source
+     * exception takes precedence.
+     */
+    public void testWhenComplete_actionFailedSourceFailed() {
+        for (boolean createIncomplete : new boolean[] { true, false })
+        for (ExecutionMode m : ExecutionMode.values())
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final AtomicInteger a = new AtomicInteger(0);
+        final CFException ex1 = new CFException();
+        final CFException ex2 = new CFException();
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+
+        if (!createIncomplete) f.completeExceptionally(ex1);
+        final CompletableFuture<Integer> g = m.whenComplete
+            (f,
+             (Integer x, Throwable t) -> {
+                m.checkExecutionMode();
+                threadAssertSame(t, ex1);
+                threadAssertNull(x);
+                a.getAndIncrement();
+                throw ex2;
+            });
+        if (createIncomplete) f.completeExceptionally(ex1);
+
+        checkCompletedWithWrappedException(g, ex1);
+        checkCompletedExceptionally(f, ex1);
         assertEquals(1, a.get());
     }}
 
@@ -1679,7 +1821,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final Noop r = new Noop(m);
-
 
         (fFirst ? f : g).complete(v1);
         if (!createIncomplete)
@@ -2848,146 +2989,5 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Integer> f = new CompletableFuture<>();
         assertSame(f, f.toCompletableFuture());
     }
-
-    /**
-     * whenComplete action executes on normal completion, propagating
-     * source result.
-     */
-    public void testWhenComplete_normalCompletion1() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final AtomicInteger a = new AtomicInteger(0);
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        if (!createIncomplete) f.complete(v1);
-        final CompletableFuture<Integer> g = m.whenComplete
-            (f,
-             (Integer x, Throwable t) -> {
-                m.checkExecutionMode();
-                threadAssertSame(x, v1);
-                threadAssertNull(t);
-                a.getAndIncrement();
-            });
-        if (createIncomplete) f.complete(v1);
-
-        checkCompletedNormally(g, v1);
-        checkCompletedNormally(f, v1);
-        assertEquals(1, a.get());
-    }}
-
-    /**
-     * whenComplete action executes on exceptional completion, propagating
-     * source result.
-     */
-    public void testWhenComplete_exceptionalCompletion() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final AtomicInteger a = new AtomicInteger(0);
-        final CFException ex = new CFException();
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        if (!createIncomplete) f.completeExceptionally(ex);
-        final CompletableFuture<Integer> g = m.whenComplete
-            (f,
-             (Integer x, Throwable t) -> {
-                m.checkExecutionMode();
-                threadAssertNull(x);
-                threadAssertSame(t, ex);
-                a.getAndIncrement();
-            });
-        if (createIncomplete) f.completeExceptionally(ex);
-        checkCompletedExceptionally(f, ex);
-        checkCompletedWithWrappedException(g, ex);
-        assertEquals(1, a.get());
-    }}
-
-    /**
-     * whenComplete action executes on cancelled source, propagating
-     * CancellationException.
-     */
-    public void testWhenComplete_sourceCancelled() {
-        for (ExecutionMode m : ExecutionMode.values())
-        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-        for (boolean createIncomplete : new boolean[] { true, false })
-    {
-        final AtomicInteger a = new AtomicInteger(0);
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
-        final CompletableFuture<Integer> g = m.whenComplete
-            (f,
-             (Integer x, Throwable t) -> {
-                m.checkExecutionMode();
-                threadAssertNull(x);
-                threadAssertTrue(t instanceof CancellationException);
-                a.getAndIncrement();
-            });
-        if (createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
-
-        checkCompletedWithWrappedCancellationException(g);
-        checkCancelled(f);
-        assertEquals(1, a.get());
-    }}
-
-    /**
-     * If a whenComplete action throws an exception when triggered by
-     * a normal completion, it completes exceptionally
-     */
-    public void testWhenComplete_actionFailed() {
-        for (boolean createIncomplete : new boolean[] { true, false })
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final AtomicInteger a = new AtomicInteger(0);
-        final CFException ex = new CFException();
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-        if (!createIncomplete) f.complete(v1);
-        final CompletableFuture<Integer> g = m.whenComplete
-            (f,
-             (Integer x, Throwable t) -> {
-                m.checkExecutionMode();
-                threadAssertSame(x, v1);
-                threadAssertNull(t);
-                a.getAndIncrement();
-                throw ex;
-            });
-        if (createIncomplete) f.complete(v1);
-        checkCompletedNormally(f, v1);
-        checkCompletedWithWrappedException(g, ex);
-        assertEquals(1, a.get());
-    }}
-
-    /**
-     * If a whenComplete action throws an exception when triggered by
-     * a source completion that also throws an exception, the source
-     * exception takes precedence.
-     */
-    public void testWhenComplete_actionFailedSourceFailed() {
-        for (boolean createIncomplete : new boolean[] { true, false })
-        for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
-    {
-        final AtomicInteger a = new AtomicInteger(0);
-        final CFException ex1 = new CFException();
-        final CFException ex2 = new CFException();
-        final CompletableFuture<Integer> f = new CompletableFuture<>();
-
-        if (!createIncomplete) f.completeExceptionally(ex1);
-        final CompletableFuture<Integer> g = m.whenComplete
-            (f,
-             (Integer x, Throwable t) -> {
-                m.checkExecutionMode();
-                threadAssertSame(t, ex1);
-                threadAssertNull(x);
-                a.getAndIncrement();
-                throw ex2;
-            });
-        if (createIncomplete) f.completeExceptionally(ex1);
-
-        checkCompletedExceptionally(f, ex1);
-        checkCompletedWithWrappedException(g, ex1);
-        assertEquals(1, a.get());
-    }}
 
 }

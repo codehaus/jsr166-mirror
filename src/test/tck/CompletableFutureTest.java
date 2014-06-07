@@ -317,18 +317,23 @@ public class CompletableFutureTest extends JSR166TestCase {
      * getNumberOfDependents returns number of dependent tasks
      */
     public void testGetNumberOfDependents() {
+        for (ExecutionMode m : ExecutionMode.values())
+    {
         CompletableFuture<Integer> f = new CompletableFuture<>();
         assertEquals(0, f.getNumberOfDependents());
-        CompletableFuture g = f.thenRun(new Noop(ExecutionMode.DEFAULT));
+        final CompletableFuture<Void> g = m.thenRun(f, new Noop(m));
         assertEquals(1, f.getNumberOfDependents());
         assertEquals(0, g.getNumberOfDependents());
-        CompletableFuture h = f.thenRun(new Noop(ExecutionMode.DEFAULT));
+        final CompletableFuture<Void> h = m.thenRun(f, new Noop(m));
         assertEquals(2, f.getNumberOfDependents());
+        assertEquals(0, h.getNumberOfDependents());
         f.complete(1);
         checkCompletedNormally(g, null);
+        checkCompletedNormally(h, null);
         assertEquals(0, f.getNumberOfDependents());
         assertEquals(0, g.getNumberOfDependents());
-    }
+        assertEquals(0, h.getNumberOfDependents());
+    }}
 
     /**
      * toString indicates current completion state

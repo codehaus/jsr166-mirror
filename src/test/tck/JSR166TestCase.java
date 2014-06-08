@@ -160,12 +160,13 @@ public class JSR166TestCase extends TestCase {
     }
 
     protected void runTestProfiled() throws Throwable {
+        // Warmup run, notably to trigger all needed classloading.
+        super.runTest();
         long t0 = System.nanoTime();
         try {
             super.runTest();
         } finally {
-            long elapsedMillis =
-                (System.nanoTime() - t0) / (1000L * 1000L);
+            long elapsedMillis = millisElapsedSince(t0);
             if (elapsedMillis >= profileThreshold)
                 System.out.printf("%n%s: %d%n", toString(), elapsedMillis);
         }

@@ -144,7 +144,7 @@ public class ScheduledThreadPoolExecutor
     /**
      * Returns current nanosecond time.
      */
-    final long now() {
+    static final long now() {
         return System.nanoTime();
     }
 

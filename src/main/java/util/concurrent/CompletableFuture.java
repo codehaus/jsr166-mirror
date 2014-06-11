@@ -1197,7 +1197,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         }
     }
 
-    private boolean biRelay(CompletableFuture<?> a, CompletableFuture<?> b) {
+    boolean biRelay(CompletableFuture<?> a, CompletableFuture<?> b) {
         Object r, s; Throwable x;
         if (a == null || (r = a.result) == null ||
             b == null || (s = b.result) == null)

@@ -1690,27 +1690,37 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenAcceptBoth_normalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (boolean fFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
         for (Integer v2 : new Integer[] { 2, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final SubtractAction r = new SubtractAction(m);
+        final SubtractAction r1 = new SubtractAction(m);
+        final SubtractAction r2 = new SubtractAction(m);
+        final SubtractAction r3 = new SubtractAction(m);
 
-        assertTrue(fFirst ? f.complete(v1) : g.complete(v2));
-        if (!createIncomplete)
-            assertTrue(!fFirst ? f.complete(v1) : g.complete(v2));
-        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
-        if (createIncomplete) {
-            checkIncomplete(h);
-            r.assertNotInvoked();
-            assertTrue(!fFirst ? f.complete(v1) : g.complete(v2));
-        }
+        final CompletableFuture<Integer> fst =  fFirst ? f : g;
+        final CompletableFuture<Integer> snd = !fFirst ? f : g;
+        final Integer w1 =  fFirst ? v1 : v2;
+        final Integer w2 = !fFirst ? v1 : v2;
 
-        checkCompletedNormally(h, null);
-        r.assertValue(subtract(v1, v2));
+        final CompletableFuture<Void> h1 = m.thenAcceptBoth(f, g, r1);
+        assertTrue(fst.complete(w1));
+        final CompletableFuture<Void> h2 = m.thenAcceptBoth(f, g, r2);
+        checkIncomplete(h1);
+        checkIncomplete(h2);
+        r1.assertNotInvoked();
+        r2.assertNotInvoked();
+        assertTrue(snd.complete(w2));
+        final CompletableFuture<Void> h3 = m.thenAcceptBoth(f, g, r3);
+
+        checkCompletedNormally(h1, null);
+        checkCompletedNormally(h2, null);
+        checkCompletedNormally(h3, null);
+        r1.assertValue(subtract(v1, v2));
+        r2.assertValue(subtract(v1, v2));
+        r3.assertValue(subtract(v1, v2));
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
     }}
@@ -1719,59 +1729,87 @@ public class CompletableFutureTest extends JSR166TestCase {
      * thenAcceptBoth result completes exceptionally after exceptional
      * completion of either source
      */
-    public void testThenAcceptBoth_exceptionalCompletion() {
+    public void testThenAcceptBoth_exceptionalCompletion() throws Throwable {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (boolean fFirst : new boolean[] { true, false })
+        for (boolean failFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
         final CFException ex = new CFException();
-        final SubtractAction r = new SubtractAction(m);
+        final SubtractAction r1 = new SubtractAction(m);
+        final SubtractAction r2 = new SubtractAction(m);
+        final SubtractAction r3 = new SubtractAction(m);
 
-        assertTrue((fFirst ? f : g).complete(v1));
-        if (!createIncomplete)
-            assertTrue((!fFirst ? f : g).completeExceptionally(ex));
-        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
-        if (createIncomplete) {
-            checkIncomplete(h);
-            assertTrue((!fFirst ? f : g).completeExceptionally(ex));
-        }
+        final CompletableFuture<Integer> fst =  fFirst ? f : g;
+        final CompletableFuture<Integer> snd = !fFirst ? f : g;
+        final Callable<Boolean> complete1 = failFirst ?
+            () -> fst.completeExceptionally(ex) :
+            () -> fst.complete(v1);
+        final Callable<Boolean> complete2 = failFirst ?
+            () -> snd.complete(v1) :
+            () -> snd.completeExceptionally(ex);
 
-        checkCompletedWithWrappedException(h, ex);
-        r.assertNotInvoked();
-        checkCompletedNormally(fFirst ? f : g, v1);
-        checkCompletedExceptionally(!fFirst ? f : g, ex);
+        final CompletableFuture<Void> h1 = m.thenAcceptBoth(f, g, r1);
+        assertTrue(complete1.call());
+        final CompletableFuture<Void> h2 = m.thenAcceptBoth(f, g, r2);
+        checkIncomplete(h1);
+        checkIncomplete(h2);
+        assertTrue(complete2.call());
+        final CompletableFuture<Void> h3 = m.thenAcceptBoth(f, g, r3);
+
+        checkCompletedWithWrappedException(h1, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
+        r1.assertNotInvoked();
+        r2.assertNotInvoked();
+        r3.assertNotInvoked();
+        checkCompletedNormally(failFirst ? snd : fst, v1);
+        checkCompletedExceptionally(failFirst ? fst : snd, ex);
     }}
 
     /**
      * thenAcceptBoth result completes exceptionally if either source cancelled
      */
-    public void testThenAcceptBoth_sourceCancelled() {
+    public void testThenAcceptBoth_sourceCancelled() throws Throwable {
         for (ExecutionMode m : ExecutionMode.values())
         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (boolean fFirst : new boolean[] { true, false })
+        for (boolean failFirst : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final SubtractAction r = new SubtractAction(m);
+        final SubtractAction r1 = new SubtractAction(m);
+        final SubtractAction r2 = new SubtractAction(m);
+        final SubtractAction r3 = new SubtractAction(m);
 
-        assertTrue((fFirst ? f : g).complete(v1));
-        if (!createIncomplete)
-            assertTrue((!fFirst ? f : g).cancel(mayInterruptIfRunning));
-        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
-        if (createIncomplete) {
-            checkIncomplete(h);
-            assertTrue((!fFirst ? f : g).cancel(mayInterruptIfRunning));
-        }
+        final CompletableFuture<Integer> fst =  fFirst ? f : g;
+        final CompletableFuture<Integer> snd = !fFirst ? f : g;
+        final Callable<Boolean> complete1 = failFirst ?
+            () -> fst.cancel(mayInterruptIfRunning) :
+            () -> fst.complete(v1);
+        final Callable<Boolean> complete2 = failFirst ?
+            () -> snd.complete(v1) :
+            () -> snd.cancel(mayInterruptIfRunning);
 
-        checkCompletedWithWrappedCancellationException(h);
-        checkCancelled(!fFirst ? f : g);
-        r.assertNotInvoked();
-        checkCompletedNormally(fFirst ? f : g, v1);
+        final CompletableFuture<Void> h1 = m.thenAcceptBoth(f, g, r1);
+        assertTrue(complete1.call());
+        final CompletableFuture<Void> h2 = m.thenAcceptBoth(f, g, r2);
+        checkIncomplete(h1);
+        checkIncomplete(h2);
+        assertTrue(complete2.call());
+        final CompletableFuture<Void> h3 = m.thenAcceptBoth(f, g, r3);
+
+        checkCompletedWithWrappedCancellationException(h1);
+        checkCompletedWithWrappedCancellationException(h2);
+        checkCompletedWithWrappedCancellationException(h3);
+        r1.assertNotInvoked();
+        r2.assertNotInvoked();
+        r3.assertNotInvoked();
+        checkCompletedNormally(failFirst ? snd : fst, v1);
+        checkCancelled(failFirst ? fst : snd);
     }}
 
     /**
@@ -1785,13 +1823,24 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final FailingBiConsumer r = new FailingBiConsumer(m);
-        final CompletableFuture<Void> h = m.thenAcceptBoth(f, g, r);
+        final FailingBiConsumer r1 = new FailingBiConsumer(m);
+        final FailingBiConsumer r2 = new FailingBiConsumer(m);
+        final FailingBiConsumer r3 = new FailingBiConsumer(m);
 
-        assertTrue(fFirst ? f.complete(v1) : g.complete(v2));
-        assertTrue(!fFirst ? f.complete(v1) : g.complete(v2));
+        final CompletableFuture<Integer> fst =  fFirst ? f : g;
+        final CompletableFuture<Integer> snd = !fFirst ? f : g;
+        final Integer w1 =  fFirst ? v1 : v2;
+        final Integer w2 = !fFirst ? v1 : v2;
 
-        checkCompletedWithWrappedCFException(h);
+        final CompletableFuture<Void> h1 = m.thenAcceptBoth(f, g, r1);
+        assertTrue(fst.complete(w1));
+        final CompletableFuture<Void> h2 = m.thenAcceptBoth(f, g, r2);
+        assertTrue(snd.complete(w2));
+        final CompletableFuture<Void> h3 = m.thenAcceptBoth(f, g, r3);
+
+        checkCompletedWithWrappedCFException(h1);
+        checkCompletedWithWrappedCFException(h2);
+        checkCompletedWithWrappedCFException(h3);
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
     }}

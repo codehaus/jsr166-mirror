@@ -3009,13 +3009,34 @@ public class CompletableFutureTest extends JSR166TestCase {
     public void testAnyOf_exceptional() throws Exception {
         for (int k = 0; k < 10; k++) {
             CompletableFuture[] fs = new CompletableFuture[k];
-            for (int i = 0; i < k; i++)
+            CFException[] exs = new CFException[k];
+            for (int i = 0; i < k; i++) {
                 fs[i] = new CompletableFuture<>();
+                exs[i] = new CFException();
+            }
             CompletableFuture<Object> f = CompletableFuture.anyOf(fs);
             checkIncomplete(f);
             for (int i = 0; i < k; i++) {
-                fs[i].completeExceptionally(new CFException());
-                checkCompletedWithWrappedCFException(f);
+                fs[i].completeExceptionally(exs[i]);
+                checkCompletedWithWrappedException(f, exs[0]);
+                checkCompletedWithWrappedCFException(CompletableFuture.anyOf(fs));
+            }
+        }
+    }
+
+    public void testAnyOf_exceptional_backwards() throws Exception {
+        for (int k = 0; k < 10; k++) {
+            CompletableFuture[] fs = new CompletableFuture[k];
+            CFException[] exs = new CFException[k];
+            for (int i = 0; i < k; i++) {
+                fs[i] = new CompletableFuture<>();
+                exs[i] = new CFException();
+            }
+            CompletableFuture<Object> f = CompletableFuture.anyOf(fs);
+            checkIncomplete(f);
+            for (int i = k - 1; i >= 0; i--) {
+                fs[i].completeExceptionally(exs[i]);
+                checkCompletedWithWrappedException(f, exs[k - 1]);
                 checkCompletedWithWrappedCFException(CompletableFuture.anyOf(fs));
             }
         }

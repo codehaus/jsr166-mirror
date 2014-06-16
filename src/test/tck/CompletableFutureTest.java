@@ -3205,22 +3205,4 @@ public class CompletableFutureTest extends JSR166TestCase {
         }
     }}
 
-//     public void testRunAfterEither_resultDeterminedAtTimeOfCreation() {
-//         for (ExecutionMode m : ExecutionMode.values())
-//         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
-//         for (Integer v1 : new Integer[] { 1, null })
-//     {
-//         final CompletableFuture<Integer> f = new CompletableFuture<>();
-//         final CompletableFuture<Integer> g = new CompletableFuture<>();
-//         final Noop[] rs = new Noop[2];
-//         for (int i = 0; i < rs.length; i++) rs[i] = new Noop(m);
-//         f.complete(v1);
-//         final CompletableFuture<Void> h0 = m.runAfterEither(f, g, rs[0]);
-//         final CompletableFuture<Void> h1 = m.runAfterEither(g, f, rs[1]);
-//         assertTrue(g.cancel(mayInterruptIfRunning));
-//         checkCompletedNormally(h0, null);
-//         checkCompletedNormally(h1, null);
-//         for (Noop r : rs) r.assertInvoked();
-//     }}
-
 }

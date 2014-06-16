@@ -2922,7 +2922,7 @@ public class CompletableFutureTest extends JSR166TestCase {
      * when all components complete normally
      */
     public void testAllOf_normal() throws Exception {
-        for (int k = 1; k < 20; k++) {
+        for (int k = 1; k < 10; k++) {
             CompletableFuture<Integer>[] fs
                 = (CompletableFuture<Integer>[]) new CompletableFuture[k];
             for (int i = 0; i < k; i++)
@@ -2939,7 +2939,7 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     public void testAllOf_backwards() throws Exception {
-        for (int k = 1; k < 20; k++) {
+        for (int k = 1; k < 10; k++) {
             CompletableFuture<Integer>[] fs
                 = (CompletableFuture<Integer>[]) new CompletableFuture[k];
             for (int i = 0; i < k; i++)
@@ -2952,6 +2952,30 @@ public class CompletableFutureTest extends JSR166TestCase {
             }
             checkCompletedNormally(f, null);
             checkCompletedNormally(CompletableFuture.allOf(fs), null);
+        }
+    }
+
+    public void testAllOf_exceptional() throws Exception {
+        for (int k = 1; k < 10; k++) {
+            CompletableFuture<Integer>[] fs
+                = (CompletableFuture<Integer>[]) new CompletableFuture[k];
+            CFException ex = new CFException();
+            for (int i = 0; i < k; i++)
+                fs[i] = new CompletableFuture<>();
+            CompletableFuture<Void> f = CompletableFuture.allOf(fs);
+            for (int i = 0; i < k; i++) {
+                checkIncomplete(f);
+                checkIncomplete(CompletableFuture.allOf(fs));
+                if (i != k/2) {
+                    fs[i].complete(i);
+                    checkCompletedNormally(fs[i], i);
+                } else {
+                    fs[i].completeExceptionally(ex);
+                    checkCompletedExceptionally(fs[i], ex);
+                }
+            }
+            checkCompletedWithWrappedException(f, ex);
+            checkCompletedWithWrappedException(CompletableFuture.allOf(fs), ex);
         }
     }
 

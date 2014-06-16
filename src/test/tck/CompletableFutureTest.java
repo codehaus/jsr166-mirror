@@ -3118,6 +3118,31 @@ public class CompletableFutureTest extends JSR166TestCase {
         assertSame(f, f.toCompletableFuture());
     }
 
+    //--- tests of implementation details; not part of official tck ---
+
+    Object resultOf(CompletableFuture<?> f) {
+        try {
+            java.lang.reflect.Field resultField
+                = CompletableFuture.class.getDeclaredField("result");
+            resultField.setAccessible(true);
+            return resultField.get(f);
+        } catch (Throwable t) { throw new AssertionError(t); }
+    }
+
+    public void testExceptionPropagationReusesResultObject() {
+        if (!testImplementationDetails) return;
+        for (ExecutionMode m : ExecutionMode.values())
+    {
+        final CompletableFuture<Void> f = new CompletableFuture<>();
+        CFException ex = new CFException();
+        f.completeExceptionally(ex);
+        final CompletableFuture<Void> g = f.thenRun(new Noop(m));
+        checkCompletedWithWrappedException(g, ex);
+        final CompletableFuture<Void> h = g.thenRun(new Noop(m));
+        checkCompletedWithWrappedException(h, ex);
+        assertSame(resultOf(g), resultOf(h));
+    }}
+
 //     public void testRunAfterEither_resultDeterminedAtTimeOfCreation() {
 //         for (ExecutionMode m : ExecutionMode.values())
 //         for (boolean mayInterruptIfRunning : new boolean[] { true, false })

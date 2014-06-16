@@ -3133,14 +3133,76 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (!testImplementationDetails) return;
         for (ExecutionMode m : ExecutionMode.values())
     {
-        final CompletableFuture<Void> f = new CompletableFuture<>();
-        CFException ex = new CFException();
-        f.completeExceptionally(ex);
-        final CompletableFuture<Void> g = f.thenRun(new Noop(m));
-        checkCompletedWithWrappedException(g, ex);
-        final CompletableFuture<Void> h = g.thenRun(new Noop(m));
-        checkCompletedWithWrappedException(h, ex);
-        assertSame(resultOf(g), resultOf(h));
+        final CFException ex = new CFException();
+        final CompletableFuture<Integer> v42 = CompletableFuture.completedFuture(42);
+        final CompletableFuture<Integer> incomplete = new CompletableFuture<>();
+
+        List<Function<CompletableFuture<Integer>, CompletableFuture<?>>> dependentFactories
+            = new ArrayList<>();
+
+        dependentFactories.add((y) -> m.thenRun(y, new Noop(m)));
+        dependentFactories.add((y) -> m.thenAccept(y, new NoopConsumer(m)));
+        dependentFactories.add((y) -> m.thenApply(y, new IncFunction(m)));
+
+        dependentFactories.add((y) -> m.runAfterEither(y, incomplete, new Noop(m)));
+        dependentFactories.add((y) -> m.acceptEither(y, incomplete, new NoopConsumer(m)));
+        dependentFactories.add((y) -> m.applyToEither(y, incomplete, new IncFunction(m)));
+
+        dependentFactories.add((y) -> m.runAfterBoth(y, v42, new Noop(m)));
+        dependentFactories.add((y) -> m.thenAcceptBoth(y, v42, new SubtractAction(m)));
+        dependentFactories.add((y) -> m.thenCombine(y, v42, new SubtractFunction(m)));
+
+        dependentFactories.add((y) -> m.whenComplete(y, (Integer x, Throwable t) -> {}));
+
+        dependentFactories.add((y) -> m.thenCompose(y, new CompletableFutureInc(m)));
+
+        for (Function<CompletableFuture<Integer>, CompletableFuture<?>>
+                 dependentFactory : dependentFactories) {
+            CompletableFuture<Integer> f = new CompletableFuture<>();
+            f.completeExceptionally(ex);
+            CompletableFuture<Integer> src = m.thenApply(f, new IncFunction(m));
+            checkCompletedWithWrappedException(src, ex);
+            CompletableFuture<?> dep = dependentFactory.apply(src);
+            checkCompletedWithWrappedException(dep, ex);
+            assertSame(resultOf(src), resultOf(dep));
+        }
+
+        for (Function<CompletableFuture<Integer>, CompletableFuture<?>>
+                 dependentFactory : dependentFactories) {
+            CompletableFuture<Integer> f = new CompletableFuture<>();
+            CompletableFuture<Integer> src = m.thenApply(f, new IncFunction(m));
+            CompletableFuture<?> dep = dependentFactory.apply(src);
+            f.completeExceptionally(ex);
+            checkCompletedWithWrappedException(src, ex);
+            checkCompletedWithWrappedException(dep, ex);
+            assertSame(resultOf(src), resultOf(dep));
+        }
+
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Function<CompletableFuture<Integer>, CompletableFuture<?>>
+                 dependentFactory : dependentFactories) {
+            CompletableFuture<Integer> f = new CompletableFuture<>();
+            f.cancel(mayInterruptIfRunning);
+            checkCancelled(f);
+            CompletableFuture<Integer> src = m.thenApply(f, new IncFunction(m));
+            checkCompletedWithWrappedCancellationException(src);
+            CompletableFuture<?> dep = dependentFactory.apply(src);
+            checkCompletedWithWrappedCancellationException(dep);
+            assertSame(resultOf(src), resultOf(dep));
+        }
+
+        for (boolean mayInterruptIfRunning : new boolean[] { true, false })
+        for (Function<CompletableFuture<Integer>, CompletableFuture<?>>
+                 dependentFactory : dependentFactories) {
+            CompletableFuture<Integer> f = new CompletableFuture<>();
+            CompletableFuture<Integer> src = m.thenApply(f, new IncFunction(m));
+            CompletableFuture<?> dep = dependentFactory.apply(src);
+            f.cancel(mayInterruptIfRunning);
+            checkCancelled(f);
+            checkCompletedWithWrappedCancellationException(src);
+            checkCompletedWithWrappedCancellationException(dep);
+            assertSame(resultOf(src), resultOf(dep));
+        }
     }}
 
 //     public void testRunAfterEither_resultDeterminedAtTimeOfCreation() {

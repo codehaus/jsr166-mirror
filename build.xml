@@ -195,7 +195,7 @@
     <attribute name="compile-target" default="@{target}"/>
     <attribute name="workdir"/>
     <attribute name="classes"/>
-    <attribute name="jvmflags" default="-ea -esa"/>
+    <attribute name="jvmflags" default="-ea -esa -Djsr166.testImplementationDetails=true"/>
     <element name="javac-elements" optional="true"/>
     <sequential>
 

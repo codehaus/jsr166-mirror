@@ -115,6 +115,9 @@ public class JSR166TestCase extends TestCase {
     protected static final boolean expensiveTests =
         Boolean.getBoolean("jsr166.expensiveTests");
 
+    protected static final boolean testImplementationDetails =
+        Boolean.getBoolean("jsr166.testImplementationDetails");
+
     /**
      * If true, report on stdout all "slow" tests, that is, ones that
      * take more than profileThreshold milliseconds to execute.

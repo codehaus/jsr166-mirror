@@ -3156,6 +3156,9 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         dependentFactories.add((y) -> m.thenCompose(y, new CompletableFutureInc(m)));
 
+        dependentFactories.add((y) -> CompletableFuture.allOf(new CompletableFuture<?>[] {y, v42}));
+        dependentFactories.add((y) -> CompletableFuture.anyOf(new CompletableFuture<?>[] {y, incomplete}));
+
         for (Function<CompletableFuture<Integer>, CompletableFuture<?>>
                  dependentFactory : dependentFactories) {
             CompletableFuture<Integer> f = new CompletableFuture<>();

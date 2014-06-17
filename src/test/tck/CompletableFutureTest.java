@@ -1370,7 +1370,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         final CompletableFuture<Void> h0 = m.thenRun(f, rs[0]);
         final CompletableFuture<Void> h1 = m.runAfterBoth(f, f, rs[1]);
         final CompletableFuture<Void> h2 = m.runAfterEither(f, f, rs[2]);
-        final FailingRunnable r = new FailingRunnable(m);
         assertTrue(f.complete(v1));
         final CompletableFuture<Void> h3 = m.thenRun(f, rs[3]);
         final CompletableFuture<Void> h4 = m.runAfterBoth(f, f, rs[4]);
@@ -1390,21 +1389,26 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenApply_normalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final IncFunction r = new IncFunction(m);
-        if (!createIncomplete) assertTrue(f.complete(v1));
-        final CompletableFuture<Integer> g = m.thenApply(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            assertTrue(f.complete(v1));
-        }
+        final IncFunction[] rs = new IncFunction[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new IncFunction(m);
 
-        checkCompletedNormally(g, inc(v1));
+        final CompletableFuture<Integer> h0 = m.thenApply(f, rs[0]);
+        final CompletableFuture<Integer> h1 = m.applyToEither(f, f, rs[1]);
+        checkIncomplete(h0);
+        checkIncomplete(h1);
+        assertTrue(f.complete(v1));
+        final CompletableFuture<Integer> h2 = m.thenApply(f, rs[2]);
+        final CompletableFuture<Integer> h3 = m.applyToEither(f, f, rs[3]);
+
+        checkCompletedNormally(h0, inc(v1));
+        checkCompletedNormally(h1, inc(v1));
+        checkCompletedNormally(h2, inc(v1));
+        checkCompletedNormally(h3, inc(v1));
         checkCompletedNormally(f, v1);
-        r.assertValue(inc(v1));
+        for (IncFunction r : rs) r.assertValue(inc(v1));
     }}
 
     /**
@@ -1413,21 +1417,24 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenApply_exceptionalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
     {
         final CFException ex = new CFException();
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final IncFunction r = new IncFunction(m);
-        if (!createIncomplete) f.completeExceptionally(ex);
-        final CompletableFuture<Integer> g = m.thenApply(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            f.completeExceptionally(ex);
-        }
+        final IncFunction[] rs = new IncFunction[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new IncFunction(m);
 
-        checkCompletedWithWrappedException(g, ex);
+        final CompletableFuture<Integer> h0 = m.thenApply(f, rs[0]);
+        final CompletableFuture<Integer> h1 = m.applyToEither(f, f, rs[1]);
+        assertTrue(f.completeExceptionally(ex));
+        final CompletableFuture<Integer> h2 = m.thenApply(f, rs[2]);
+        final CompletableFuture<Integer> h3 = m.applyToEither(f, f, rs[3]);
+
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
         checkCompletedExceptionally(f, ex);
-        r.assertNotInvoked();
+        for (IncFunction r : rs) r.assertNotInvoked();
     }}
 
     /**
@@ -1435,21 +1442,24 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenApply_sourceCancelled() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final IncFunction r = new IncFunction(m);
-        if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
-        final CompletableFuture<Integer> g = m.thenApply(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            assertTrue(f.cancel(mayInterruptIfRunning));
-        }
+        final IncFunction[] rs = new IncFunction[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new IncFunction(m);
 
-        checkCompletedWithWrappedCancellationException(g);
+        final CompletableFuture<Integer> h0 = m.thenApply(f, rs[0]);
+        final CompletableFuture<Integer> h1 = m.applyToEither(f, f, rs[1]);
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        final CompletableFuture<Integer> h2 = m.thenApply(f, rs[2]);
+        final CompletableFuture<Integer> h3 = m.applyToEither(f, f, rs[3]);
+
+        checkCompletedWithWrappedCancellationException(h0);
+        checkCompletedWithWrappedCancellationException(h1);
+        checkCompletedWithWrappedCancellationException(h2);
+        checkCompletedWithWrappedCancellationException(h3);
         checkCancelled(f);
-        r.assertNotInvoked();
+        for (IncFunction r : rs) r.assertNotInvoked();
     }}
 
     /**
@@ -1457,19 +1467,22 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenApply_actionFailed() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final FailingFunction r = new FailingFunction(m);
-        if (!createIncomplete) assertTrue(f.complete(v1));
-        final CompletableFuture<Integer> g = m.thenApply(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            assertTrue(f.complete(v1));
-        }
+        final FailingFunction[] rs = new FailingFunction[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new FailingFunction(m);
 
-        checkCompletedWithWrappedCFException(g);
+        final CompletableFuture<Integer> h0 = m.thenApply(f, rs[0]);
+        final CompletableFuture<Integer> h1 = m.applyToEither(f, f, rs[1]);
+        assertTrue(f.complete(v1));
+        final CompletableFuture<Integer> h2 = m.thenApply(f, rs[2]);
+        final CompletableFuture<Integer> h3 = m.applyToEither(f, f, rs[3]);
+
+        checkCompletedWithWrappedCFException(h0);
+        checkCompletedWithWrappedCFException(h1);
+        checkCompletedWithWrappedCFException(h2);
+        checkCompletedWithWrappedCFException(h3);
         checkCompletedNormally(f, v1);
     }}
 

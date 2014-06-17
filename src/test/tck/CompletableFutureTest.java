@@ -1491,21 +1491,26 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenAccept_normalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final NoopConsumer r = new NoopConsumer(m);
-        if (!createIncomplete) assertTrue(f.complete(v1));
-        final CompletableFuture<Void> g = m.thenAccept(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            assertTrue(f.complete(v1));
-        }
+        final NoopConsumer[] rs = new NoopConsumer[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new NoopConsumer(m);
 
-        checkCompletedNormally(g, null);
-        r.assertValue(v1);
+        final CompletableFuture<Void> h0 = m.thenAccept(f, rs[0]);
+        final CompletableFuture<Void> h1 = m.acceptEither(f, f, rs[1]);
+        checkIncomplete(h0);
+        checkIncomplete(h1);
+        assertTrue(f.complete(v1));
+        final CompletableFuture<Void> h2 = m.thenAccept(f, rs[2]);
+        final CompletableFuture<Void> h3 = m.acceptEither(f, f, rs[3]);
+
+        checkCompletedNormally(h0, null);
+        checkCompletedNormally(h1, null);
+        checkCompletedNormally(h2, null);
+        checkCompletedNormally(h3, null);
         checkCompletedNormally(f, v1);
+        for (NoopConsumer r : rs) r.assertValue(v1);
     }}
 
     /**
@@ -1514,21 +1519,24 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenAccept_exceptionalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
     {
         final CFException ex = new CFException();
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final NoopConsumer r = new NoopConsumer(m);
-        if (!createIncomplete) f.completeExceptionally(ex);
-        final CompletableFuture<Void> g = m.thenAccept(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            f.completeExceptionally(ex);
-        }
+        final NoopConsumer[] rs = new NoopConsumer[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new NoopConsumer(m);
 
-        checkCompletedWithWrappedException(g, ex);
+        final CompletableFuture<Void> h0 = m.thenAccept(f, rs[0]);
+        final CompletableFuture<Void> h1 = m.acceptEither(f, f, rs[1]);
+        assertTrue(f.completeExceptionally(ex));
+        final CompletableFuture<Void> h2 = m.thenAccept(f, rs[2]);
+        final CompletableFuture<Void> h3 = m.acceptEither(f, f, rs[3]);
+
+        checkCompletedWithWrappedException(h0, ex);
+        checkCompletedWithWrappedException(h1, ex);
+        checkCompletedWithWrappedException(h2, ex);
+        checkCompletedWithWrappedException(h3, ex);
         checkCompletedExceptionally(f, ex);
-        r.assertNotInvoked();
+        for (NoopConsumer r : rs) r.assertNotInvoked();
     }}
 
     /**
@@ -1536,21 +1544,24 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenAccept_sourceCancelled() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (boolean mayInterruptIfRunning : new boolean[] { true, false })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final NoopConsumer r = new NoopConsumer(m);
-        if (!createIncomplete) assertTrue(f.cancel(mayInterruptIfRunning));
-        final CompletableFuture<Void> g = m.thenAccept(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            assertTrue(f.cancel(mayInterruptIfRunning));
-        }
+        final NoopConsumer[] rs = new NoopConsumer[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new NoopConsumer(m);
 
-        checkCompletedWithWrappedCancellationException(g);
+        final CompletableFuture<Void> h0 = m.thenAccept(f, rs[0]);
+        final CompletableFuture<Void> h1 = m.acceptEither(f, f, rs[1]);
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        final CompletableFuture<Void> h2 = m.thenAccept(f, rs[2]);
+        final CompletableFuture<Void> h3 = m.acceptEither(f, f, rs[3]);
+
+        checkCompletedWithWrappedCancellationException(h0);
+        checkCompletedWithWrappedCancellationException(h1);
+        checkCompletedWithWrappedCancellationException(h2);
+        checkCompletedWithWrappedCancellationException(h3);
         checkCancelled(f);
-        r.assertNotInvoked();
+        for (NoopConsumer r : rs) r.assertNotInvoked();
     }}
 
     /**
@@ -1558,19 +1569,22 @@ public class CompletableFutureTest extends JSR166TestCase {
      */
     public void testThenAccept_actionFailed() {
         for (ExecutionMode m : ExecutionMode.values())
-        for (boolean createIncomplete : new boolean[] { true, false })
         for (Integer v1 : new Integer[] { 1, null })
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
-        final FailingConsumer r = new FailingConsumer(m);
-        if (!createIncomplete) f.complete(v1);
-        final CompletableFuture<Void> g = m.thenAccept(f, r);
-        if (createIncomplete) {
-            checkIncomplete(g);
-            f.complete(v1);
-        }
+        final FailingConsumer[] rs = new FailingConsumer[4];
+        for (int i = 0; i < rs.length; i++) rs[i] = new FailingConsumer(m);
 
-        checkCompletedWithWrappedCFException(g);
+        final CompletableFuture<Void> h0 = m.thenAccept(f, rs[0]);
+        final CompletableFuture<Void> h1 = m.acceptEither(f, f, rs[1]);
+        assertTrue(f.complete(v1));
+        final CompletableFuture<Void> h2 = m.thenAccept(f, rs[2]);
+        final CompletableFuture<Void> h3 = m.acceptEither(f, f, rs[3]);
+
+        checkCompletedWithWrappedCFException(h0);
+        checkCompletedWithWrappedCFException(h1);
+        checkCompletedWithWrappedCFException(h2);
+        checkCompletedWithWrappedCFException(h3);
         checkCompletedNormally(f, v1);
     }}
 

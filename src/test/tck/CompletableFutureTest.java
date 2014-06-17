@@ -1600,31 +1600,35 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         final CompletableFuture<Integer> f = new CompletableFuture<>();
         final CompletableFuture<Integer> g = new CompletableFuture<>();
-        final SubtractFunction r1 = new SubtractFunction(m);
-        final SubtractFunction r2 = new SubtractFunction(m);
-        final SubtractFunction r3 = new SubtractFunction(m);
+        final SubtractFunction[] rs = new SubtractFunction[6];
+        for (int i = 0; i < rs.length; i++) rs[i] = new SubtractFunction(m);
 
         final CompletableFuture<Integer> fst =  fFirst ? f : g;
         final CompletableFuture<Integer> snd = !fFirst ? f : g;
         final Integer w1 =  fFirst ? v1 : v2;
         final Integer w2 = !fFirst ? v1 : v2;
 
-        final CompletableFuture<Integer> h1 = m.thenCombine(f, g, r1);
+        final CompletableFuture<Integer> h0 = m.thenCombine(f, g, rs[0]);
+        final CompletableFuture<Integer> h1 = m.thenCombine(fst, fst, rs[1]);
         assertTrue(fst.complete(w1));
-        final CompletableFuture<Integer> h2 = m.thenCombine(f, g, r2);
-        checkIncomplete(h1);
-        checkIncomplete(h2);
-        r1.assertNotInvoked();
-        r2.assertNotInvoked();
+        final CompletableFuture<Integer> h2 = m.thenCombine(f, g, rs[2]);
+        final CompletableFuture<Integer> h3 = m.thenCombine(fst, fst, rs[3]);
+        checkIncomplete(h0); rs[0].assertNotInvoked();
+        checkIncomplete(h2); rs[2].assertNotInvoked();
+        checkCompletedNormally(h1, subtract(w1, w1));
+        checkCompletedNormally(h3, subtract(w1, w1));
+        rs[1].assertValue(subtract(w1, w1));
+        rs[3].assertValue(subtract(w1, w1));
         assertTrue(snd.complete(w2));
-        final CompletableFuture<Integer> h3 = m.thenCombine(f, g, r3);
+        final CompletableFuture<Integer> h4 = m.thenCombine(f, g, rs[4]);
 
-        checkCompletedNormally(h1, subtract(v1, v2));
+        checkCompletedNormally(h0, subtract(v1, v2));
         checkCompletedNormally(h2, subtract(v1, v2));
-        checkCompletedNormally(h3, subtract(v1, v2));
-        r1.assertValue(subtract(v1, v2));
-        r2.assertValue(subtract(v1, v2));
-        r3.assertValue(subtract(v1, v2));
+        checkCompletedNormally(h4, subtract(v1, v2));
+        rs[0].assertValue(subtract(v1, v2));
+        rs[2].assertValue(subtract(v1, v2));
+        rs[4].assertValue(subtract(v1, v2));
+       
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
     }}

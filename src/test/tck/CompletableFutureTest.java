@@ -1628,7 +1628,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         rs[0].assertValue(subtract(v1, v2));
         rs[2].assertValue(subtract(v1, v2));
         rs[4].assertValue(subtract(v1, v2));
-       
+
         checkCompletedNormally(f, v1);
         checkCompletedNormally(g, v2);
     }}

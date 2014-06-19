@@ -1005,7 +1005,7 @@ public class ThreadLocalRandom extends Random {
             r ^= r << 5;
         }
         else if ((r = mix32(seeder.getAndAdd(SEEDER_INCREMENT))) == 0)
-            r = 1; // avoid zero 
+            r = 1; // avoid zero
         UNSAFE.putInt(t, SECONDARY, r);
         return r;
     }

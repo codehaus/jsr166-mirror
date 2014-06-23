@@ -134,8 +134,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      *
      * * Completion method tryFire(int mode) invokes the associated x
      *   method with its held arguments, and on success cleans up.
-     *   The mode argument allows exec to be called twice (SYNC, then
-     *   ASYNC); the first to screen and trap exceptions while
+     *   The mode argument allows tryFire to be called twice (SYNC,
+     *   then ASYNC); the first to screen and trap exceptions while
      *   arranging to execute, and the second when called from a
      *   task. (A few classes are not used async so take slightly
      *   different forms.)  The claim() callback suppresses function
@@ -162,9 +162,10 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * is guaranteed not to be observable (i.e., not yet returned or
      * linked). Multiple threads can call postComplete, which
      * atomically pops each dependent action, and tries to trigger it
-     * via method exec. Triggering can propagate recursively, so exec
-     * in NESTED mode returns its completed dependent (if one exists)
-     * for further processing by its caller (see method postFire).
+     * via method tryFire, in NESTED mode.  Triggering can propagate
+     * recursively, so NESTED mode returns its completed dependent (if
+     * one exists) for further processing by its caller (see method
+     * postFire).
      *
      * Blocking methods get() and join() rely on Signaller Completions
      * that wake up waiting threads.  The mechanics are similar to
@@ -386,7 +387,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         return e;
     }
 
-    // Modes for Completion.exec. Signedness matters.
+    // Modes for Completion.tryFire. Signedness matters.
     static final int SYNC   =  0;
     static final int ASYNC  =  1;
     static final int NESTED = -1;

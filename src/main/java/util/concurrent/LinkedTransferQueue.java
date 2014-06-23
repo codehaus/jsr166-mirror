@@ -562,12 +562,6 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private static final int SYNC  = 2; // for transfer, take
     private static final int TIMED = 3; // for timed poll, tryTransfer
 
-    @SuppressWarnings("unchecked")
-    static <E> E cast(Object item) {
-        // assert item == null || item.getClass() != Node.class;
-        return (E) item;
-    }
-
     /**
      * Implements all queuing methods. See above for explanation.
      *
@@ -604,7 +598,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                                 break;        // unless slack < 2
                         }
                         LockSupport.unpark(p.waiter);
-                        return LinkedTransferQueue.<E>cast(item);
+                        @SuppressWarnings("unchecked") E itemE = (E) item;
+                        return itemE;
                     }
                 }
                 Node n = p.next;
@@ -682,7 +677,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (item != e) {                  // matched
                 // assert item != s;
                 s.forgetContents();           // avoid garbage
-                return LinkedTransferQueue.<E>cast(item);
+                @SuppressWarnings("unchecked") E itemE = (E) item;
+                return itemE;
             }
             if ((w.isInterrupted() || (timed && nanos <= 0)) &&
                     s.casItem(e, s)) {        // cancel
@@ -779,8 +775,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         for (Node p = head; p != null; p = succ(p)) {
             Object item = p.item;
             if (p.isData) {
-                if (item != null && item != p)
-                    return LinkedTransferQueue.<E>cast(item);
+                if (item != null && item != p) {
+                    @SuppressWarnings("unchecked") E itemE = (E) item;
+                    return itemE;
+                }
             }
             else if (item == null)
                 return null;
@@ -858,7 +856,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 Object item = s.item;
                 if (s.isData) {
                     if (item != null && item != s) {
-                        nextItem = LinkedTransferQueue.<E>cast(item);
+                        @SuppressWarnings("unchecked") E itemE = (E) item;
+                        nextItem = itemE;
                         nextNode = s;
                         return;
                     }

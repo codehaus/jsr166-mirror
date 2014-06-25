@@ -57,9 +57,8 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     <T> void checkCompletedNormally(CompletableFuture<T> f, T value) {
-        try {
-            assertEquals(value, f.get(LONG_DELAY_MS, MILLISECONDS));
-        } catch (Throwable fail) { threadUnexpectedException(fail); }
+        checkTimedGet(f, value);
+
         try {
             assertEquals(value, f.join());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
@@ -76,12 +75,16 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     void checkCompletedWithWrappedCFException(CompletableFuture<?> f) {
+        long startTime = System.nanoTime();
+        long timeoutMillis = LONG_DELAY_MS;
         try {
-            f.get(LONG_DELAY_MS, MILLISECONDS);
+            f.get(timeoutMillis, MILLISECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof CFException);
         } catch (Throwable fail) { threadUnexpectedException(fail); }
+        assertTrue(millisElapsedSince(startTime) < timeoutMillis/2);
+
         try {
             f.join();
             shouldThrow();
@@ -107,12 +110,16 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     <U> void checkCompletedExceptionallyWithRootCause(CompletableFuture<U> f,
                                                       Throwable ex) {
+        long startTime = System.nanoTime();
+        long timeoutMillis = LONG_DELAY_MS;
         try {
-            f.get(LONG_DELAY_MS, MILLISECONDS);
+            f.get(timeoutMillis, MILLISECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
             assertSame(ex, success.getCause());
         } catch (Throwable fail) { threadUnexpectedException(fail); }
+        assertTrue(millisElapsedSince(startTime) < timeoutMillis/2);
+
         try {
             f.join();
             shouldThrow();
@@ -158,11 +165,15 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     void checkCancelled(CompletableFuture<?> f) {
+        long startTime = System.nanoTime();
+        long timeoutMillis = LONG_DELAY_MS;
         try {
-            f.get(LONG_DELAY_MS, MILLISECONDS);
+            f.get(timeoutMillis, MILLISECONDS);
             shouldThrow();
         } catch (CancellationException success) {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
+        assertTrue(millisElapsedSince(startTime) < timeoutMillis/2);
+
         try {
             f.join();
             shouldThrow();
@@ -183,12 +194,16 @@ public class CompletableFutureTest extends JSR166TestCase {
     }
 
     void checkCompletedWithWrappedCancellationException(CompletableFuture<?> f) {
+        long startTime = System.nanoTime();
+        long timeoutMillis = LONG_DELAY_MS;
         try {
-            f.get(LONG_DELAY_MS, MILLISECONDS);
+            f.get(timeoutMillis, MILLISECONDS);
             shouldThrow();
         } catch (ExecutionException success) {
             assertTrue(success.getCause() instanceof CancellationException);
         } catch (Throwable fail) { threadUnexpectedException(fail); }
+        assertTrue(millisElapsedSince(startTime) < timeoutMillis/2);
+
         try {
             f.join();
             shouldThrow();
@@ -574,7 +589,7 @@ public class CompletableFutureTest extends JSR166TestCase {
      * execution modes without copy/pasting all the test methods.
      */
     enum ExecutionMode {
-        DEFAULT {
+        SYNC {
             public void checkExecutionMode() {
                 assertFalse(ThreadExecutor.startedCurrentThread());
                 assertNull(ForkJoinTask.getPool());
@@ -875,7 +890,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (!createIncomplete) f.completeExceptionally(ex);
         final CompletableFuture<Integer> g = f.exceptionally
             ((Throwable t) -> {
-                ExecutionMode.DEFAULT.checkExecutionMode();
+                ExecutionMode.SYNC.checkExecutionMode();
                 threadAssertSame(t, ex);
                 a.getAndIncrement();
                 return v1;
@@ -897,7 +912,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         if (!createIncomplete) f.completeExceptionally(ex1);
         final CompletableFuture<Integer> g = f.exceptionally
             ((Throwable t) -> {
-                ExecutionMode.DEFAULT.checkExecutionMode();
+                ExecutionMode.SYNC.checkExecutionMode();
                 threadAssertSame(t, ex1);
                 a.getAndIncrement();
                 throw ex2;
@@ -3148,7 +3163,7 @@ public class CompletableFutureTest extends JSR166TestCase {
         Runnable[] throwingActions = {
             () -> CompletableFuture.supplyAsync(null),
             () -> CompletableFuture.supplyAsync(null, exec),
-            () -> CompletableFuture.supplyAsync(new IntegerSupplier(ExecutionMode.DEFAULT, 42), null),
+            () -> CompletableFuture.supplyAsync(new IntegerSupplier(ExecutionMode.SYNC, 42), null),
 
             () -> CompletableFuture.runAsync(null),
             () -> CompletableFuture.runAsync(null, exec),

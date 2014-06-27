@@ -116,6 +116,13 @@ public class JSR166TestCase extends TestCase {
         Boolean.getBoolean("jsr166.expensiveTests");
 
     /**
+     * If true, also run tests that are not part of the official tck
+     * because they test unspecified implementation details.
+     */
+    protected static final boolean testImplementationDetails =
+        Boolean.getBoolean("jsr166.testImplementationDetails");
+
+    /**
      * If true, report on stdout all "slow" tests, that is, ones that
      * take more than profileThreshold milliseconds to execute.
      */
@@ -904,6 +911,36 @@ public class JSR166TestCase extends TestCase {
      */
     static long millisElapsedSince(long startNanoTime) {
         return NANOSECONDS.toMillis(System.nanoTime() - startNanoTime);
+    }
+
+//     void assertTerminatesPromptly(long timeoutMillis, Runnable r) {
+//         long startTime = System.nanoTime();
+//         try {
+//             r.run();
+//         } catch (Throwable fail) { threadUnexpectedException(fail); }
+//         if (millisElapsedSince(startTime) > timeoutMillis/2)
+//             throw new AssertionFailedError("did not return promptly");
+//     }
+
+//     void assertTerminatesPromptly(Runnable r) {
+//         assertTerminatesPromptly(LONG_DELAY_MS/2, r);
+//     }
+
+    /**
+     * Checks that timed f.get() returns the expected value, and does not
+     * wait for the timeout to elapse before returning.
+     */
+    <T> void checkTimedGet(Future<T> f, T expectedValue, long timeoutMillis) {
+        long startTime = System.nanoTime();
+        try {
+            assertEquals(expectedValue, f.get(timeoutMillis, MILLISECONDS));
+        } catch (Throwable fail) { threadUnexpectedException(fail); }
+        if (millisElapsedSince(startTime) > timeoutMillis/2)
+            throw new AssertionFailedError("timed get did not return promptly");
+    }
+
+    <T> void checkTimedGet(Future<T> f, T expectedValue) {
+        checkTimedGet(f, expectedValue, LONG_DELAY_MS);
     }
 
     /**

@@ -187,7 +187,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * workers to start scanning -- see below.)  Both a successful pop
      * and poll mainly entail a CAS of a slot from non-null to null.
      *
-     * The pop operation (always performed by owener) is:
+     * The pop operation (always performed by owner) is:
      *   if ((base != top) and
      *        (the task at top slot is not null) and
      *        (CAS slot to null))
@@ -393,12 +393,12 @@ public class ForkJoinPool extends AbstractExecutorService {
      * power-of-two hash table, expanding as needed. The seedIndex
      * increment ensures no collisions until a resize is needed or a
      * worker is deregistered and replaced, and thereafter keeps
-     * probablility of collision low. We cannot use
+     * probability of collision low. We cannot use
      * ThreadLocalRandom.getProbe() for similar purposes here because
      * the thread has not started yet, but do so for creating
      * submission queues for existing external threads.
      *
-     * Deactivation and waiting. Queuing enounters several intrinsic
+     * Deactivation and waiting. Queuing encounters several intrinsic
      * races; most notably that a task-producing thread can miss
      * seeing (and signalling) another thread that gave up looking for
      * work but has not yet entered the wait queue.  When a worker
@@ -411,7 +411,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * scanning process after successful enqueuing until again stable.
      * In this state, the worker cannot take/run a task it sees until
      * it is released from the queue, so the worker itself eventually
-     * tries to release itself or any succcessor (see tryRelease).
+     * tries to release itself or any successor (see tryRelease).
      * Otherwise, upon an empty scan, a deactivated worker uses an
      * adaptive local spin construction (see awaitWork) before
      * blocking (via park). Note the unusual conventions about
@@ -516,10 +516,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * Helping actions for CountedCompleters do not require tracking
      * currentJoins: Method helpComplete takes and executes any task
-     * with the same root as the task being waited on (prefering local
-     * pops to non-local polls). However, this still entails some
-     * traversal of completer chains, so is less efficient than using
-     * CountedCompleters without explicit joins.
+     * with the same root as the task being waited on (preferring
+     * local pops to non-local polls). However, this still entails
+     * some traversal of completer chains, so is less efficient than
+     * using CountedCompleters without explicit joins.
      *
      * Compensation does not aim to keep exactly the target
      * parallelism number of unblocked threads running at any given
@@ -703,7 +703,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Queues supporting work-stealing as well as external task
-     * submission. See above for dewscriptions and algorithms
+     * submission. See above for descriptions and algorithms.
      * Performance on most platforms is very sensitive to placement of
      * instances of both WorkQueues and their arrays -- we absolutely
      * do not want multiple WorkQueue instances or multiple queue
@@ -1418,7 +1418,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param c incoming ctl value, with total count negative and no
      * idle workers.  On CAS failure, c is refreshed and retried if
-     * this holds (otherwise, a new worker is not neeeded).
+     * this holds (otherwise, a new worker is not needed).
      */
     private void tryAddWorker(long c) {
         boolean add = false;
@@ -1609,7 +1609,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     /**
      * Scans for and tries to steal a top-level task. Scans start at a
-     * random location, randomly moving on apparentl contention,
+     * random location, randomly moving on apparent contention,
      * otherwise continuing linearly until reaching two consecutive
      * empty passes over all queues with the same checksum (summing
      * each base index of each queue, that moves on each steal), at
@@ -1707,7 +1707,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         (j = pred & SMASK) < ws.length &&
                         (v = ws[j]) != null &&        // see if pred parking
                         (v.parker == null || v.scanState >= 0))
-                        spins = SPINS;                // continue spinnning
+                        spins = SPINS;                // continue spinning
                     else if ((s = w.nsteals) != 0) {
                         w.nsteals = 0;                // collect steals
                         U.getAndAddLong(this, STEALCOUNT, s);
@@ -1765,7 +1765,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * values).
      *
      * @param w caller
-     * @param maxTasks if non-sero, the maximum number of other tasks to run
+     * @param maxTasks if non-zero, the maximum number of other tasks to run
      * @return task status on exit
      */
     final int helpComplete(WorkQueue w, CountedCompleter<?> task,

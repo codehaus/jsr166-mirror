@@ -2137,10 +2137,20 @@ public class ForkJoinPool extends AbstractExecutorService {
             rs = lockRunState();
             unlockRunState(rs, (rs & ~RSLOCK) | SHUTDOWN);
         }
-        if ((rs & STOP) == 0) {                   // enter STOP phase
+        if ((rs & STOP) == 0) {                   
             if (!now && (int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
                 return false;
-            rs = lockRunState();
+            WorkQueue[] ws; WorkQueue w;          // validate no submissions
+            if ((ws = workQueues) != null) {
+                for (int i = 0; i < ws.length; ++i) {
+                    if ((w = ws[i]) != null &&
+                        (!w.isEmpty() || ((i & 1) != 0 && w.scanState >= 0))) {
+                        signalWork(ws, w);
+                        return false;
+                    }
+                }
+            }
+            rs = lockRunState();                 // enter STOP phase
             unlockRunState(rs, (rs & ~RSLOCK) | STOP);
         }
         for (int pass = 0; pass < 3; ++pass) {    // clobber other workers

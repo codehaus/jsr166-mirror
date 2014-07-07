@@ -996,7 +996,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             throw new InterruptedException();
         if ((s = status) >= 0 && nanos > 0L) {
             long d = System.nanoTime() + nanos;
-            long deadline = (d == 0L)? 1L : d; // avoid 0
+            long deadline = (d == 0L) ? 1L : d; // avoid 0
             Thread t = Thread.currentThread();
             if (t instanceof ForkJoinWorkerThread) {
                 ForkJoinWorkerThread wt = (ForkJoinWorkerThread)t;

@@ -2401,7 +2401,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         this(checkParallelism(parallelism),
              checkFactory(factory),
              handler,
-             asyncMode? FIFO_QUEUE : LIFO_QUEUE,
+             asyncMode ? FIFO_QUEUE : LIFO_QUEUE,
              "ForkJoinPool-" + nextPoolId() + "-worker-");
         checkPermission();
     }

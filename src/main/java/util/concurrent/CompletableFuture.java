@@ -1726,6 +1726,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         Signaller q = new Signaller(true, nanos, d == 0L ? 1L : d); // avoid 0
         boolean queued = false;
         Object r;
+        // We intentionally don't spin here (as waitingGet does) because
+        // the call to nanoTime() above acts much like a spin.
         while ((r = result) == null) {
             if (!queued)
                 queued = tryPushStack(q);

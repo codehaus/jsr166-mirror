@@ -1547,15 +1547,14 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /* ------------- Zero-input Async forms -------------- */
 
-    @SuppressWarnings("serial")
-    static final class AsyncSupply<T> extends Completion {
+    static final class AsyncSupply<T>
+            implements Runnable, AsynchronousCompletionTask {
         CompletableFuture<T> dep; Supplier<T> fn;
         AsyncSupply(CompletableFuture<T> dep, Supplier<T> fn) {
             this.dep = dep; this.fn = fn;
         }
 
-        final CompletableFuture<T> tryFire(int alwaysAsync) {
-            // assert alwaysAsync == ASYNC;
+        public void run() {
             CompletableFuture<T> d; Supplier<T> f;
             if ((d = dep) != null && (f = fn) != null) {
                 dep = null; fn = null;
@@ -1568,9 +1567,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 }
                 d.postComplete();
             }
-            return d;
         }
-        final boolean isLive() { return dep != null; }
     }
 
     static <U> CompletableFuture<U> asyncSupplyStage(Executor e,
@@ -1581,15 +1578,14 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         return d;
     }
 
-    @SuppressWarnings("serial")
-    static final class AsyncRun extends Completion {
+    static final class AsyncRun
+            implements Runnable, AsynchronousCompletionTask {
         CompletableFuture<Void> dep; Runnable fn;
         AsyncRun(CompletableFuture<Void> dep, Runnable fn) {
             this.dep = dep; this.fn = fn;
         }
 
-        final CompletableFuture<Void> tryFire(int alwaysAsync) {
-            // assert alwaysAsync == ASYNC;
+        public void run() {
             CompletableFuture<Void> d; Runnable f;
             if ((d = dep) != null && (f = fn) != null) {
                 dep = null; fn = null;
@@ -1603,9 +1599,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 }
                 d.postComplete();
             }
-            return d;
         }
-        final boolean isLive() { return dep != null; }
     }
 
     static CompletableFuture<Void> asyncRunStage(Executor e, Runnable f) {

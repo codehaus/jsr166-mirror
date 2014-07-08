@@ -2137,7 +2137,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             rs = lockRunState();
             unlockRunState(rs, (rs & ~RSLOCK) | SHUTDOWN);
         }
-        if ((rs & STOP) == 0) {                   
+        if ((rs & STOP) == 0) {
             if (!now && (int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
                 return false;
             WorkQueue[] ws; WorkQueue w;          // validate no submissions

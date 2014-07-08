@@ -1520,7 +1520,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
         if (!tryTerminate(false, false) && w != null && w.array != null) {
             WorkQueue[] ws; int m, sp;
-            while ((ws = workQueues) != null && (m = ws.length - 1) >= 0) {
+            while ((runState & STOP) == 0 &&
+                   (ws = workQueues) != null && (m = ws.length - 1) >= 0) {
                 if ((sp = (int)(c = ctl)) != 0) {     // wake up replacement
                     if (tryRelease(c, ws[sp & m], AC_UNIT))
                         break;
@@ -2154,18 +2155,20 @@ public class ForkJoinPool extends AbstractExecutorService {
             unlockRunState(rs, (rs & ~RSLOCK) | SHUTDOWN);
         }
         if ((rs & STOP) == 0) {
-            if (!now && (int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
-                return false;
-            WorkQueue[] ws; WorkQueue w;          // check external submissions
-            if ((ws = workQueues) != null) {
-                for (int i = 0; i < ws.length; ++i) {
-                    if ((w = ws[i]) != null &&
-                        (w.base != w.top ||
-                         ((i & 1) != 0 && w.scanState >= 0))) {
-                        signalWork(ws, w);
-                        return false;
+            if (!now) {
+                if ((int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
+                    return false;
+                WorkQueue[] ws; WorkQueue w;      // check external submissions
+                if ((ws = workQueues) != null) {
+                    for (int i = 0; i < ws.length; ++i) {
+                        if ((w = ws[i]) != null && !w.isEmpty()) {
+                            signalWork(ws, w);
+                            return false;
+                        }
                     }
                 }
+                if ((int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
+                    return false;                 // recheck
             }
             rs = lockRunState();                  // enter STOP phase
             unlockRunState(rs, (rs & ~RSLOCK) | STOP);

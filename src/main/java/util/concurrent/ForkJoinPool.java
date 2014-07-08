@@ -2161,7 +2161,9 @@ public class ForkJoinPool extends AbstractExecutorService {
                 WorkQueue[] ws; WorkQueue w;      // check external submissions
                 if ((ws = workQueues) != null) {
                     for (int i = 0; i < ws.length; ++i) {
-                        if ((w = ws[i]) != null && !w.isEmpty()) {
+                        if ((w = ws[i]) != null &&
+                            (!w.isEmpty() ||
+                             ((i & 1) != 0 && w.scanState >= 0))) {
                             signalWork(ws, w);
                             return false;
                         }

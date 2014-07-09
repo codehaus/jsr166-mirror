@@ -630,8 +630,9 @@ public class JSR166TestCase extends TestCase {
     void joinPool(ExecutorService exec) {
         try {
             exec.shutdown();
-            assertTrue("ExecutorService did not terminate in a timely manner",
-                       exec.awaitTermination(2 * LONG_DELAY_MS, MILLISECONDS));
+            if (!exec.awaitTermination(2 * LONG_DELAY_MS, MILLISECONDS))
+                fail("ExecutorService " + exec +
+                     " did not terminate in a timely manner");
         } catch (SecurityException ok) {
             // Allowed in case test doesn't have privs
         } catch (InterruptedException ie) {

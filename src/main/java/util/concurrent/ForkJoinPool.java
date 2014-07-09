@@ -113,6 +113,11 @@ import java.security.Permissions;
  * - the class name of a {@link ForkJoinWorkerThreadFactory}
  * <li>{@code java.util.concurrent.ForkJoinPool.common.exceptionHandler}
  * - the class name of a {@link UncaughtExceptionHandler}
+ * <!--
+ * <li>{@code java.util.concurrent.ForkJoinPool.common.maximumSpares}
+ * - the maximum number of alloed extra threads to maintain target
+ * parallelism (default 256).
+ * -->
  * </ul>
  * If a {@link SecurityManager} is present and no factory is
  * specified, then the default pool uses a factory supplying
@@ -152,7 +157,11 @@ public class ForkJoinPool extends AbstractExecutorService {
      * tasks in other queues.  This framework began as vehicle for
      * supporting tree-structured parallelism using work-stealing.
      * Over time, its scalability advantages led to extensions and
-     * changes to better support more diverse usage contexts.
+     * changes to better support more diverse usage contexts.  Because
+     * most internal methods and nested classes are interrelated,
+     * their main rationale and descriptions are presented here;
+     * individual methods and nested classes contain only brief
+     * comments about details.
      *
      * WorkQueues
      * ==========
@@ -443,10 +452,12 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * Trimming workers. To release resources after periods of lack of
      * use, a worker starting to wait when the pool is quiescent will
-     * time out and terminate if the pool has remained quiescent for a
-     * given period -- a short period if there are more threads than
-     * parallelism, longer as the number of threads decreases. This
-     * eventually terminates all workers after periods of non-use.
+     * time out and terminate (see awaitWork) if the pool has remained
+     * quiescent for period IDLE_TIMEOUT, increasing the period as the
+     * number of threads decreases, eventually removing all workers.
+     * Also, when more than two spare threads exist, excess threads
+     * are immediately terminated at the next quiescent point.
+     * (Padding by two avoids hysteresis).
      *
      * Shutdown and Termination. A call to shutdownNow atomically sets
      * a runState bit and then (non-atomically) sets each worker's
@@ -455,9 +466,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      * termination should commence after a non-abrupt shutdown() call
      * relies on the active count bits of "ctl" maintaining consensus
      * about quiescence. However, external submitters do not take part
-     * in this consensus.  So, tryTerminate sweeps through submission
-     * queues to ensure lack of in-flight submissions before
-     * triggering the "STOP" phase of termination.
+     * in this consensus.  So, tryTerminate sweeps through queues to
+     * ensure lack of in-flight submissions before triggering the
+     * "STOP" phase of termination.
      *
      * Joining Tasks
      * =============
@@ -540,20 +551,17 @@ public class ForkJoinPool extends AbstractExecutorService {
      * threads) in the most common case in which it is rarely
      * beneficial: when a worker with an empty queue (thus no
      * continuation tasks) blocks on a join and there still remain
-     * enough threads to ensure liveness. Also, whenever more than two
-     * spare threads are generated, they are killed (see awaitWork) at
-     * the next quiescent point (padding by two avoids hysteresis).
+     * enough threads to ensure liveness.
      *
-     * Bounds. The compensation mechanism is bounded (see MAX_SPARES),
-     * to better enable JVMs to cope with programming errors and abuse
-     * before running out of resources to do so, and may be further
-     * bounded via factories that limit thread construction. The
-     * effects of bounding in this pool (like all others) is
-     * imprecise.  Total worker counts are decremented when threads
-     * deregister, not when they exit and resources are reclaimed by
-     * the JVM and OS. So the number of simultaneously live threads
-     * may transiently exceed bounds.
-     *
+     * Bounds. The compensation mechanism may be bounded.  Bounds for
+     * the commonPool (see commonMaxSpares) better enable JVMs to cope
+     * with programming errors and abuse before running out of
+     * resources to do so. In other cases, users may supply factories
+     * that limit thread construction. The effects of bounding in this
+     * pool (like all others) is imprecise.  Total worker counts are
+     * decremented when threads deregister, not when they exit and
+     * resources are reclaimed by the JVM and OS. So the number of
+     * simultaneously live threads may transiently exceed bounds.
      *
      * Common Pool
      * ===========
@@ -622,7 +630,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * that help some methods perform reasonably even when interpreted
      * (not compiled).
      *
-     * The order of declarations in this file is:
+     * The order of declarations in this file is (with a few exceptions):
      * (1) Static utility functions
      * (2) Nested (static) classes
      * (3) Static fields
@@ -1215,6 +1223,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     static final int commonParallelism;
 
     /**
+     * Limit on spare thread construction in tryCompensate.
+     */
+    private static int commonMaxSpares;
+
+    /**
      * Sequence number for creating workerNamePrefix.
      */
     private static int poolNumberSequence;
@@ -1237,21 +1250,23 @@ public class ForkJoinPool extends AbstractExecutorService {
      * aggressive shrinkage during most transient stalls (long GCs
      * etc).
      */
-    private static final long IDLE_TIMEOUT      = 2000L * 1000L * 1000L; // 2sec
+    private static final long IDLE_TIMEOUT = 2000L * 1000L * 1000L; // 2sec
 
     /**
      * Tolerance for idle timeouts, to cope with timer undershoots
      */
-    private static final long TIMEOUT_SLOP      = 20L * 1000L * 1000L;  // 20ms
+    private static final long TIMEOUT_SLOP = 20L * 1000L * 1000L;  // 20ms
 
     /**
-     * Limit on spare thread construction in tryCompensate.  The
-     * current value is far in excess of normal requirements, but also
+     * The initial value for commonMaxSpares during static
+     * initialization unless overridden using System property
+     * "java.util.concurrent.ForkJoinPool.common.maximumSpares".  The
+     * default value is far in excess of normal requirements, but also
      * far short of MAX_CAP and typical OS thread limits, so allows
      * JVMs to catch misuse/abuse before running out of resources
      * needed to do so.
      */
-    private static int MAX_SPARES = 256;
+    private static final int DEFAULT_COMMON_MAX_SPARES = 256;
 
     /**
      * Number of times to spin-wait before blocking. The spins (in
@@ -1738,7 +1753,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     prevctl = (UC_MASK & (c + AC_UNIT)) | (SP_MASK & pred);
                     int t = (short)(c >>> TC_SHIFT);  // shrink excess spares
                     if (t > 2 && U.compareAndSwapLong(this, CTL, c, prevctl))
-                        return false;
+                        return false;                 // else use timed wait
                     parkTime = IDLE_TIMEOUT * ((t >= 0) ? 1 : 1 - t);
                     deadline = System.nanoTime() + parkTime - TIMEOUT_SLOP;
                 }
@@ -1901,7 +1916,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Tries to decrement active count (sometimes implicitly) and
      * possibly release or create a compensating worker in preparation
      * for blocking. Returns false (retryable by caller), on
-     * contention, detected staleness, instability or termination.
+     * contention, detected staleness, instability, or termination.
      *
      * @param w caller
      */
@@ -1933,7 +1948,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                            (~AC_MASK & c));       // uncompensated
                 canBlock = U.compareAndSwapLong(this, CTL, c, nc);
             }
-            else if (tc >= MAX_CAP || tc >= pc + MAX_SPARES)
+            else if (tc >= MAX_CAP ||
+                     (this == common && tc >= pc + commonMaxSpares))
                 throw new RejectedExecutionException(
                     "Thread limit exceeded replacing blocked worker");
             else {                                // similar to tryAddWorker
@@ -3280,6 +3296,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             throw new Error(e);
         }
 
+        commonMaxSpares = DEFAULT_COMMON_MAX_SPARES;
         defaultForkJoinWorkerThreadFactory =
             new DefaultForkJoinWorkerThreadFactory();
         modifyThreadPermission = new RuntimePermission("modifyThread");
@@ -3306,6 +3323,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                 ("java.util.concurrent.ForkJoinPool.common.threadFactory");
             String hp = System.getProperty
                 ("java.util.concurrent.ForkJoinPool.common.exceptionHandler");
+            String mp = System.getProperty
+                ("java.util.concurrent.ForkJoinPool.common.maximumSpares");
             if (pp != null)
                 parallelism = Integer.parseInt(pp);
             if (fp != null)
@@ -3314,6 +3333,8 @@ public class ForkJoinPool extends AbstractExecutorService {
             if (hp != null)
                 handler = ((UncaughtExceptionHandler)ClassLoader.
                            getSystemClassLoader().loadClass(hp).newInstance());
+            if (mp != null)
+                commonMaxSpares = Integer.parseInt(mp);
         } catch (Exception ignore) {
         }
         if (factory == null) {

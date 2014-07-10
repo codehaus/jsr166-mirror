@@ -467,8 +467,9 @@ public class ForkJoinPool extends AbstractExecutorService {
      * relies on the active count bits of "ctl" maintaining consensus
      * about quiescence. However, external submitters do not take part
      * in this consensus.  So, tryTerminate sweeps through queues to
-     * ensure lack of in-flight submissions before triggering the
-     * "STOP" phase of termination.
+     * ensure lack of in-flight submissions and workers about to
+     * process them before triggering the "STOP" phase of
+     * termination.
      *
      * Joining Tasks
      * =============
@@ -1083,7 +1084,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                                         U.putOrderedInt(this, QLOCK, 0);
                                         return t;
                                     }
-                                    qlock = 0;
+                                    U.compareAndSwapInt(this, QLOCK, 1, 0);
                                 }
                             }
                             else if (U.compareAndSwapObject(a, j, t, null)) {
@@ -1533,21 +1534,22 @@ public class ForkJoinPool extends AbstractExecutorService {
             w.cancelAll();                            // cancel remaining tasks
             U.getAndAddLong(this, STEALCOUNT, w.nsteals); // collect steals
         }
-        if (!tryTerminate(false, false) && w != null && w.array != null) {
+        for (;;) {                                    // possibly replace
             WorkQueue[] ws; int m, sp;
-            while ((runState & STOP) == 0 &&
-                   (ws = workQueues) != null && (m = ws.length - 1) >= 0) {
-                if ((sp = (int)(c = ctl)) != 0) {     // wake up replacement
-                    if (tryRelease(c, ws[sp & m], AC_UNIT))
-                        break;
-                }
-                else if (ex != null && (c & ADD_WORKER) != 0L) {
-                    tryAddWorker(c);                  // create replacement
-                    break;
-                }
-                else
+            if (tryTerminate(false, false) || w == null || w.array == null ||
+                (runState & STOP) != 0 || (ws = workQueues) == null ||
+                (m = ws.length - 1) < 0)              // already terminating
+                break;
+            if ((sp = (int)(c = ctl)) != 0) {         // wake up replacement
+                if (tryRelease(c, ws[sp & m], AC_UNIT))
                     break;
             }
+            else if (ex != null && (c & ADD_WORKER) != 0L) {
+                tryAddWorker(c);                      // create replacement
+                break;
+            }
+            else                                      // don't need replacement
+                break;
         }
         if (ex == null)                               // help clean on way out
             ForkJoinTask.helpExpungeStaleExceptions();
@@ -2172,24 +2174,36 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
         if ((rs & STOP) == 0) {
             if (!now) {
-                if ((int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
-                    return false;
-                WorkQueue[] ws; WorkQueue w;      // check external submissions
-                if ((ws = workQueues) != null) {
-                    for (int i = 0; i < ws.length; ++i) {
-                        if ((w = ws[i]) != null &&
-                            (!w.isEmpty() ||
-                             ((i & 1) != 0 && w.scanState >= 0))) {
-                            signalWork(ws, w);
-                            return false;
+                for (int oldSum = 0, checkSum = 0;;) {
+                    WorkQueue[] ws; WorkQueue w; int m, b;
+                    if ((int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
+                        return false;             // not quiescent
+                    if ((ws = workQueues) == null || (m = ws.length - 1) <= 0)
+                        break;                    // scan for submissions
+                    for (int i = 0; i <= m; ++i) {
+                        if ((w = ws[i]) != null) {
+                            if ((i & 1) == 0)
+                                w.qlock = -1;     // disable external queue
+                            else if (w.scanState >= 0)
+                                return false;     // still active
+                            if ((b = w.base) != w.top )
+                                return false;
+                            checkSum += b;
                         }
                     }
+                    if (oldSum == (oldSum = checkSum))
+                        break;                    // continue until stable
+                    checkSum = 0;
                 }
-                if ((int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
-                    return false;                 // recheck
             }
             rs = lockRunState();                  // enter STOP phase
-            unlockRunState(rs, (rs & ~RSLOCK) | STOP);
+            int ns = rs & STOP;
+            if (ns != 0 || !now ||
+                (int)(ctl >> AC_SHIFT) + (config & SMASK) <= 0)
+                ns = STOP;                        // recheck under lock
+            unlockRunState(rs, (rs & ~RSLOCK) | ns);
+            if (ns == 0)
+                return false;
         }
         for (int pass = 0; pass < 3; ++pass) {    // clobber other workers
             WorkQueue[] ws; int n;
@@ -2277,7 +2291,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                             submitted = true;
                         }
                     } finally {
-                        q.qlock = 0;
+                        U.compareAndSwapInt(q, QLOCK, 1, 0);
                     }
                     if (submitted) {
                         signalWork(ws, q);
@@ -2291,7 +2305,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                 q.hint = r;
                 q.config = k | SHARED_QUEUE;
                 rs = lockRunState();           // publish index
-                if ((ws = workQueues) != null && k < ws.length && ws[k] == null)
+                if (rs > 0 &&  (ws = workQueues) != null &&
+                    k < ws.length && ws[k] == null)
                     ws[k] = q;                 // else terminated
                 unlockRunState(rs, rs & ~RSLOCK);
             }
@@ -2328,7 +2343,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     signalWork(ws, q);
                 return;
             }
-            q.qlock = 0;
+            U.compareAndSwapInt(q, QLOCK, 1, 0);
         }
         externalSubmit(task);
     }
@@ -2365,7 +2380,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     U.putOrderedInt(w, QLOCK, 0);
                     return true;
                 }
-                w.qlock = 0;
+                U.compareAndSwapInt(w, QLOCK, 1, 0);
             }
         }
         return false;

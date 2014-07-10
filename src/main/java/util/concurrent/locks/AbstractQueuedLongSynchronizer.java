@@ -296,7 +296,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * @param newState the new state value
      */
     protected final void setState(long newState) {
-        state = newState;
+        unsafe.putLongVolatile(this, stateOffset, newState);
     }
 
     /**

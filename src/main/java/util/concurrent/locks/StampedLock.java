@@ -1090,7 +1090,7 @@ public class StampedLock implements java.io.Serializable {
                         U.park(false, time);  // emulate LockSupport.park
                     node.thread = null;
                     U.putObject(wt, PARKBLOCKER, null);
-                    if (interruptible && Thread.interrupted())
+                    if (Thread.interrupted() && interruptible)
                         return cancelWaiter(node, node, true);
                 }
             }
@@ -1186,7 +1186,7 @@ public class StampedLock implements java.io.Serializable {
                             U.park(false, time);
                         node.thread = null;
                         U.putObject(wt, PARKBLOCKER, null);
-                        if (interruptible && Thread.interrupted())
+                        if (Thread.interrupted() && interruptible)
                             return cancelWaiter(node, p, true);
                     }
                 }
@@ -1257,7 +1257,7 @@ public class StampedLock implements java.io.Serializable {
                         U.park(false, time);
                     node.thread = null;
                     U.putObject(wt, PARKBLOCKER, null);
-                    if (interruptible && Thread.interrupted())
+                    if (Thread.interrupted() && interruptible)
                         return cancelWaiter(node, node, true);
                 }
             }

@@ -459,16 +459,19 @@ public class ForkJoinPool extends AbstractExecutorService {
      * are immediately terminated at the next quiescent point.
      * (Padding by two avoids hysteresis).
      *
-     * Shutdown and Termination. A call to shutdownNow atomically sets
-     * a runState bit and then (non-atomically) sets each worker's
-     * qlock status, cancels all unprocessed tasks, and wakes up all
-     * waiting workers (see tryTerminate).  Detecting whether
-     * termination should commence after a non-abrupt shutdown() call
-     * relies on the active count bits of "ctl" maintaining consensus
-     * about quiescence. However, external submitters do not take part
-     * in this consensus.  So, tryTerminate sweeps through queues to
-     * ensure lack of in-flight submissions and workers about to
-     * process them before triggering the "STOP" phase of
+     * Shutdown and Termination. A call to shutdownNow invokes
+     * tryTerminate to atomically set a runState bit. The calling
+     * thread, as well as every other worker thereafter terminating,
+     * helps terminate others by setting their (qlock) status,
+     * cancelling their unprocessed tasks, and waking them up, doing
+     * so repeatedly until stable (but with a loop bounded by the
+     * number of workers).  Calls to non-abrupt shutdown() preface
+     * this by checking whether termination should commence. This
+     * relies primarily on the active count bits of "ctl" maintaining
+     * consensus about quiescence. However, external submitters do not
+     * take part in this consensus.  So, tryTerminate sweeps through
+     * queues to ensure lack of in-flight submissions and workers
+     * about to process them before triggering the "STOP" phase of
      * termination.
      *
      * Joining Tasks
@@ -1363,10 +1366,18 @@ public class ForkJoinPool extends AbstractExecutorService {
      * conservative alternative to a pure spinlock.
      */
     private int awaitRunStateLock() {
-        for (int spins = SPINS, r = 0, rs, nrs;;) {
+        boolean wasInterrupted = false;
+        for (int spins = SPINS, r = 0, rs, ns;;) {
             if (((rs = runState) & RSLOCK) == 0) {
-                if (U.compareAndSwapInt(this, RUNSTATE, rs, nrs = rs | RSLOCK))
-                    return nrs;
+                if (U.compareAndSwapInt(this, RUNSTATE, rs, ns = rs | RSLOCK)) {
+                    if (wasInterrupted) {
+                        try {
+                            Thread.currentThread().interrupt();
+                        } catch (SecurityException ignore) {
+                        }
+                    }
+                    return ns;
+                }
             }
             else if (r == 0)
                 r = ThreadLocalRandom.nextSecondarySeed();
@@ -1381,10 +1392,9 @@ public class ForkJoinPool extends AbstractExecutorService {
                         try {
                             wait();
                         } catch (InterruptedException ie) {
-                            try {
-                                Thread.currentThread().interrupt();
-                            } catch (SecurityException ignore) {
-                            }
+                            if (!(Thread.currentThread() instanceof
+                                  ForkJoinWorkerThread))
+                                wasInterrupted = true;
                         }
                     }
                     else
@@ -1689,7 +1699,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if ((k = (k + 1) & m) == origin) {    // continue until stable
                     if ((ss >= 0 || (ss == (ss = w.scanState))) &&
                         oldSum == (oldSum = checkSum)) {
-                        if (ss < 0)                   // already inactive
+                        if (ss < 0 || w.qlock < 0)    // already inactive
                             break;
                         int ns = ss | INACTIVE;       // try to inactivate
                         long nc = ((SP_MASK & ns) |
@@ -1746,10 +1756,9 @@ public class ForkJoinPool extends AbstractExecutorService {
                 return false;
             else if (!Thread.interrupted()) {
                 long c, prevctl, parkTime, deadline;
-                if ((runState & STOP) != 0)           // pool terminating
-                    return false;
                 int ac = (int)((c = ctl) >> AC_SHIFT) + (config & SMASK);
-                if (ac <= 0 && tryTerminate(false, false))
+                if ((ac <= 0 && tryTerminate(false, false)) ||
+                    (runState & STOP) != 0)           // pool terminating
                     return false;
                 if (ac <= 0 && ss == (int)c) {        // is last waiter
                     prevctl = (UC_MASK & (c + AC_UNIT)) | (SP_MASK & pred);
@@ -1768,6 +1777,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                     U.park(false, parkTime);
                 U.putOrderedObject(w, QPARKER, null);
                 U.putObject(wt, PARKBLOCKER, null);
+                if (w.qlock < 0)                      // terminated while parked
+                    return false;
                 if (w.scanState >= 0)
                     break;
                 if (parkTime != 0L && ctl == c &&
@@ -2149,13 +2160,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     //  Termination
 
     /**
-     * Possibly initiates and/or completes termination.  When
-     * terminating (STOP phase), runs three passes through workQueues:
-     * (0) Setting termination status (which also stops external
-     * submitters by locking queues), (1) cancelling all tasks; (2)
-     * interrupting lagging threads (likely in external tasks, but
-     * possibly also blocked in joins).  Each pass repeats previous
-     * steps because of potential lagging thread creation.
+     * Possibly initiates and/or completes termination.
      *
      * @param now if true, unconditionally terminate, else only
      * if no work and no active workers
@@ -2166,73 +2171,88 @@ public class ForkJoinPool extends AbstractExecutorService {
         int rs;
         if (this == common)                       // cannot shut down
             return false;
-        if ((rs = runState) >= 0) {               // else already shutdown
+        if ((rs = runState) >= 0) {
             if (!enable)
                 return false;
-            rs = lockRunState();                  // enable
+            rs = lockRunState();                  // enter SHUTDOWN phase
             unlockRunState(rs, (rs & ~RSLOCK) | SHUTDOWN);
         }
+
         if ((rs & STOP) == 0) {
-            if (!now) {
-                for (int oldSum = 0, checkSum = 0;;) {
-                    WorkQueue[] ws; WorkQueue w; int m, b;
-                    if ((int)(ctl >> AC_SHIFT) + (config & SMASK) > 0)
-                        return false;             // not quiescent
+            if (!now) {                           // check quiescence
+                outer: for (long oldSum = 0L;;) { // repeat until stable
+                    WorkQueue[] ws; WorkQueue w; int m, b; long c;
+                    long checkSum = ctl;
+                    if ((int)(checkSum >> AC_SHIFT) + (config & SMASK) > 0)
+                        return false;             // still active workers
                     if ((ws = workQueues) == null || (m = ws.length - 1) <= 0)
-                        break;                    // scan for submissions
+                        break;                    // check queues
                     for (int i = 0; i <= m; ++i) {
                         if ((w = ws[i]) != null) {
-                            if ((i & 1) == 0)
-                                w.qlock = -1;     // disable external queue
-                            else if (w.scanState >= 0)
-                                return false;     // still active
-                            if ((b = w.base) != w.top )
-                                return false;
+                            if ((b = w.base) != w.top || w.scanState >= 0 ||
+                                w.currentSteal != null) {
+                                if ((runState & STOP) != 0)
+                                    break outer;  // already stopping
+                                tryRelease(c = ctl, ws[m & (int)c], AC_UNIT);
+                                return false;     // ensure recheck
+                            }
                             checkSum += b;
+                            if ((i & 1) == 0)
+                                w.qlock = -1;     // try to disable external
                         }
                     }
                     if (oldSum == (oldSum = checkSum))
-                        break;                    // continue until stable
-                    checkSum = 0;
+                        break;
                 }
             }
-            rs = lockRunState();                  // enter STOP phase
-            int ns = rs & STOP;
-            if (ns != 0 || !now ||
-                (int)(ctl >> AC_SHIFT) + (config & SMASK) <= 0)
-                ns = STOP;                        // recheck under lock
-            unlockRunState(rs, (rs & ~RSLOCK) | ns);
-            if (ns == 0)
-                return false;
+            if ((runState & STOP) == 0) {
+                rs = lockRunState();              // enter STOP phase
+                unlockRunState(rs, (rs & ~RSLOCK) | STOP);
+            }
         }
-        for (int pass = 0; pass < 3; ++pass) {    // clobber other workers
-            WorkQueue[] ws; int n;
-            if ((ws = workQueues) != null && (n = ws.length) > 0) {
-                WorkQueue w; Thread wt;
-                for (int i = 0; i < n; ++i) {
-                    if ((w = ws[i]) != null) {
-                        w.qlock = -1;
-                        if (pass > 0) {
-                            w.cancelAll();       // clear queue
-                            if (pass > 1 && (wt = w.owner) != null) {
-                                if (!wt.isInterrupted()) {
-                                    try {
-                                        wt.interrupt();
-                                    } catch (Throwable ignore) {
-                                    }
+
+        int pass = 0;                             // 3 passes to help terminate
+        for (long oldSum = 0L;;) {                // or until done or stable
+            WorkQueue[] ws; WorkQueue w; ForkJoinWorkerThread wt; int m;
+            long checkSum = ctl;
+            if ((short)(checkSum >>> TC_SHIFT) + (config & SMASK) <= 0 ||
+                (ws = workQueues) == null || (m = ws.length - 1) <= 0) {
+                if ((runState & TERMINATED) == 0) {
+                    rs = lockRunState();          // done
+                    unlockRunState(rs, (rs & ~RSLOCK) | TERMINATED);
+                    synchronized (this) { notifyAll(); } // for awaitTermination
+                }
+                break;
+            }
+            for (int i = 0; i <= m; ++i) {
+                if ((w = ws[i]) != null) {
+                    checkSum += w.base;
+                    w.qlock = -1;                 // try to disable
+                    if (pass > 0) {
+                        w.cancelAll();            // clear queue
+                        if (pass > 1 && (wt = w.owner) != null) {
+                            if (!wt.isInterrupted()) {
+                                try {             // unblock join
+                                    wt.interrupt();
+                                } catch (Throwable ignore) {
                                 }
-                                U.unpark(wt);    // wake up
                             }
+                            if (w.scanState < 0)
+                                U.unpark(wt);     // wake up
                         }
                     }
                 }
             }
-        }
-        if ((short)(ctl >>> TC_SHIFT) + (config & SMASK) <= 0) {
-            rs = lockRunState();                  // done -- no more workers
-            unlockRunState(rs, (rs & ~RSLOCK) | TERMINATED);
-            synchronized (this) {                 // release awaitTermination
-                notifyAll();
+            if (checkSum != oldSum) {             // unstable
+                oldSum = checkSum;
+                pass = 0;
+            }
+            else if (pass > 3 && pass > m)        // can't further help
+                break;
+            else if (++pass > 1) {                // try to dequeue
+                long c; int j = 0, sp;            // bound attempts
+                while (j++ <= m && (sp = (int)(c = ctl)) != 0)
+                    tryRelease(c, ws[sp & m], AC_UNIT);
             }
         }
         return true;
@@ -2258,8 +2278,10 @@ public class ForkJoinPool extends AbstractExecutorService {
         for (;;) {
             WorkQueue[] ws; WorkQueue q; int rs, m, k;
             boolean move = false;
-            if ((rs = runState) < 0)
+            if ((rs = runState) < 0) {
+                tryTerminate(false, false);     // help terminate
                 throw new RejectedExecutionException();
+            }
             else if ((rs & STARTED) == 0 ||     // initialize workQueues array
                      ((ws = workQueues) == null || (m = ws.length - 1) < 0)) {
                 int ns = 0;
@@ -2304,6 +2326,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 q = new WorkQueue(this, null);
                 q.hint = r;
                 q.config = k | SHARED_QUEUE;
+                q.scanState = INACTIVE;
                 rs = lockRunState();           // publish index
                 if (rs > 0 &&  (ws = workQueues) != null &&
                     k < ws.length && ws[k] == null)

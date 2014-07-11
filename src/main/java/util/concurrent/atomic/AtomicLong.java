@@ -82,7 +82,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * @param newValue the new value
      */
     public final void set(long newValue) {
-        value = newValue;
+        unsafe.putLongVolatile(this, valueOffset, newValue);
     }
 
     /**

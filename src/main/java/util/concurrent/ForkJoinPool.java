@@ -418,7 +418,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * often, the lack of tasks is transient due to GC or OS
      * scheduling. To reduce false-alarm deactivation, scanners
      * compute checksums of queue states during sweeps.  (The
-     * stability checks used here and elsewhere are probablistic
+     * stability checks used here and elsewhere are probabilistic
      * variants of snapshot techniques -- see Herlihy & Shavit.)
      * Workers give up and try to deactivate only after the sum is
      * stable across scans. Further, to avoid missed signals, they
@@ -471,14 +471,14 @@ public class ForkJoinPool extends AbstractExecutorService {
      * number of workers).  Calls to non-abrupt shutdown() preface
      * this by checking whether termination should commence. This
      * relies primarily on the active count bits of "ctl" maintaining
-     * consensus -- tryterminate is called from awaitWork whenever
+     * consensus -- tryTerminate is called from awaitWork whenever
      * quiescent. However, external submitters do not take part in
      * this consensus.  So, tryTerminate sweeps through queues (until
      * stable) to ensure lack of in-flight submissions and workers
      * about to process them before triggering the "STOP" phase of
      * termination. (Note: there is an intrinsic conflict if
      * helpQuiescePool is called when shutdown is enabled. Both wait
-     * for quiesence, but tryTerminate is biased to not trigger until
+     * for quiescence, but tryTerminate is biased to not trigger until
      * helpQuiescePool completes.)
      *
      *

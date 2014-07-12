@@ -1011,7 +1011,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Executes the given task and any remaining local tasks
+         * Executes the given task and any remaining local tasks.
          */
         final void runTask(ForkJoinTask<?> task) {
             if (task != null) {
@@ -1029,9 +1029,9 @@ public class ForkJoinPool extends AbstractExecutorService {
 
         /**
          * If present, removes from queue and executes the given task,
-         * or any other cancelled task. Used only by awaitJoin
+         * or any other cancelled task. Used only by awaitJoin.
          *
-         * Returns true if queue empty and task not known to be done
+         * @return true if queue empty and task not known to be done
          */
         final boolean tryRemoveAndExec(ForkJoinTask<?> task) {
             ForkJoinTask<?>[] a; int m, s, b, n;
@@ -1353,7 +1353,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     final String workerNamePrefix;       // to create worker name string
 
     /**
-     * Acquires the runState lock; returns current (locked) runState
+     * Acquires the runState lock; returns current (locked) runState.
      */
     private int lockRunState() {
         int rs;
@@ -2375,7 +2375,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Returns common pool queue for an external thread
+     * Returns common pool queue for an external thread.
      */
     static WorkQueue commonSubmitterQueue() {
         ForkJoinPool p = common;
@@ -2413,7 +2413,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Performs helpComplete for an external submitter
+     * Performs helpComplete for an external submitter.
      */
     final int externalHelpComplete(CountedCompleter<?> task, int maxTasks) {
         WorkQueue[] ws; int n;

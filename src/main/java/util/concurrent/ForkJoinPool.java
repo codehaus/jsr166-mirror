@@ -51,9 +51,9 @@ import java.security.Permissions;
  *
  * <p>For applications that require separate or custom pools, a {@code
  * ForkJoinPool} may be constructed with a given target parallelism
- * level; by default, equal to the number of available processors. The
- * pool attempts to maintain enough active (or available) threads by
- * dynamically adding, suspending, or resuming internal worker
+ * level; by default, equal to the number of available processors.
+ * The pool attempts to maintain enough active (or available) threads
+ * by dynamically adding, suspending, or resuming internal worker
  * threads, even if some tasks are stalled waiting to join others.
  * However, no such adjustments are guaranteed in the face of blocked
  * I/O or other unmanaged synchronization. The nested {@link

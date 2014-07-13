@@ -20,6 +20,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.security.AccessControlContext;
 import java.security.ProtectionDomain;
 import java.security.Permissions;
@@ -279,7 +280,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * often maintaining atomicity without blocking or locking.
      * Nearly all essentially atomic control state is held in two
      * volatile variables that are by far most often read (not
-     * written) as status and consistency checks.
+     * written) as status and consistency checks. (Also, field
+     * "config" holds unchanging configuration state.)
      *
      * Field "ctl" contains 64 bits holding information needed to
      * atomically decide to add, inactivate, enqueue (on an event
@@ -287,18 +289,27 @@ public class ForkJoinPool extends AbstractExecutorService {
      * packing, we restrict maximum parallelism to (1<<15)-1 (which is
      * far in excess of normal operating range) to allow ids, counts,
      * and their negations (used for thresholding) to fit into 16bit
-     * subfields.  Field "runState" holds lockable state bits
-     * (STARTED, STOP, etc) also protecting updates to the workQueues
-     * array.  When used as a lock, it is normally held only for a few
-     * instructions (the only exceptions are one-time array
-     * initialization and uncommon resizing), so is nearly always
-     * available after at most a brief spin. But to be extra-cautious,
-     * we use a monitor-based backup strategy to block when needed
-     * (see awaitRunStateLock).  Usages of "runState" vs "ctl"
-     * interact in only one case: deciding to add a worker thread (see
-     * tryAddWorker), in which case the ctl CAS is performed while the
-     * lock is held.  Field "config" holds unchanging configuration
-     * state.
+     * subfields.
+     *
+     * Field "runState" holds lockable state bits (STARTED, STOP, etc)
+     * also protecting updates to the workQueues array.  When used as
+     * a lock, it is normally held only for a few instructions (the
+     * only exceptions are one-time array initialization and uncommon
+     * resizing), so is nearly always available after at most a brief
+     * spin. But to be extra-cautious, after spinning, method
+     * awaitRunStateLock (called only if an initial CAS fails), uses a
+     * wait/notify mechanics on a builtin monitor to block when
+     * (rarely) needed. This would be a terrible idea for a highly
+     * contended lock, but most pools run without the lock ever
+     * contending after the spin limit, so this works fine as a more
+     * conservative alternative. Because we don't otherwise have an
+     * internal Object to use as a monitor, the "stealCounter" (an
+     * AtomicLong) is used when available (it too must be lazily
+     * initialized; see externalSubmit).
+
+     * Usages of "runState" vs "ctl" interact in only one case:
+     * deciding to add a worker thread (see tryAddWorker), in which
+     * case the ctl CAS is performed while the lock is held.
      *
      * Recording WorkQueues.  WorkQueues are recorded in the
      * "workQueues" array. The array is created upon first use (see
@@ -1020,10 +1031,23 @@ public class ForkJoinPool extends AbstractExecutorService {
                 U.putOrderedObject(this, QCURRENTSTEAL, null); // release for GC
                 execLocalTasks();
                 ForkJoinWorkerThread thread = owner;
-                ++nsteals;
+                if (++nsteals < 0)      // collect on overflow
+                    transferStealCount(pool);
                 scanState |= SCANNING;
                 if (thread != null)
                     thread.afterTopLevelExec();
+            }
+        }
+
+        /**
+         * Adds steal count to pool stealCounter if it exists, and resets.
+         */
+        final void transferStealCount(ForkJoinPool p) {
+            AtomicLong sc;
+            if (p != null && (sc = p.stealCounter) != null) {
+                int s = nsteals;
+                nsteals = 0;            // if negative, correct for overflow
+                sc.getAndAdd((long)(s < 0 ? Integer.MAX_VALUE : s));
             }
         }
 
@@ -1342,7 +1366,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final int  SHUTDOWN   = 1 << 31;
 
     // Instance fields
-    volatile long stealCount;            // collects worker counts
     volatile long ctl;                   // main pool control
     volatile int runState;               // lockable status
     final int config;                    // parallelism, mode
@@ -1351,6 +1374,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     final ForkJoinWorkerThreadFactory factory;
     final UncaughtExceptionHandler ueh;  // per-worker UEH
     final String workerNamePrefix;       // to create worker name string
+    volatile AtomicLong stealCounter;    // also used as sync monitor
 
     /**
      * Acquires the runState lock; returns current (locked) runState.
@@ -1363,15 +1387,11 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Spins and/or blocks until runstate lock is available.  This
-     * method is called only if an initial CAS fails. This acts as a
-     * spinlock for normal cases, but falls back to builtin monitor to
-     * block when (rarely) needed. This would be a terrible idea for a
-     * highly contended lock, but most pools run without the lock ever
-     * contending after the spin limit, so this works fine as a more
-     * conservative alternative to a pure spinlock.
+     * Spins and/or blocks until runstate lock is available.  See
+     * above for explanation.
      */
     private int awaitRunStateLock() {
+        Object lock;
         boolean wasInterrupted = false;
         for (int spins = SPINS, r = 0, rs, ns;;) {
             if (((rs = runState) & RSLOCK) == 0) {
@@ -1392,11 +1412,13 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if (r >= 0)
                     --spins;
             }
+            else if ((rs & STARTED) == 0 || (lock = stealCounter) == null)
+                Thread.yield();   // initialization race
             else if (U.compareAndSwapInt(this, RUNSTATE, rs, rs | RSIGNAL)) {
-                synchronized (this) {
+                synchronized (lock) {
                     if ((runState & RSIGNAL) != 0) {
                         try {
-                            wait();
+                            lock.wait();
                         } catch (InterruptedException ie) {
                             if (!(Thread.currentThread() instanceof
                                   ForkJoinWorkerThread))
@@ -1404,7 +1426,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                         }
                     }
                     else
-                        notifyAll();
+                        lock.notifyAll();
                 }
             }
         }
@@ -1418,8 +1440,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     private void unlockRunState(int oldRunState, int newRunState) {
         if (!U.compareAndSwapInt(this, RUNSTATE, oldRunState, newRunState)) {
+            Object lock = stealCounter;
             runState = newRunState;              // clears RSIGNAL bit
-            synchronized (this) { notifyAll(); }
+            if (lock != null)
+                synchronized (lock) { lock.notifyAll(); }
         }
     }
 
@@ -1547,8 +1571,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                                            (SP_MASK & c))));
         if (w != null) {
             w.qlock = -1;                             // ensure set
+            w.transferStealCount(this);
             w.cancelAll();                            // cancel remaining tasks
-            U.getAndAddLong(this, STEALCOUNT, w.nsteals); // collect steals
         }
         for (;;) {                                    // possibly replace
             WorkQueue[] ws; int m, sp;
@@ -1746,16 +1770,12 @@ public class ForkJoinPool extends AbstractExecutorService {
             else if (spins > 0) {
                 r ^= r << 6; r ^= r >>> 21; r ^= r << 7;
                 if (r >= 0 && --spins == 0) {         // randomize spins
-                    WorkQueue v; WorkQueue[] ws; int s, j;
+                    WorkQueue v; WorkQueue[] ws; int s, j; AtomicLong sc;
                     if (pred != 0 && (ws = workQueues) != null &&
                         (j = pred & SMASK) < ws.length &&
                         (v = ws[j]) != null &&        // see if pred parking
                         (v.parker == null || v.scanState >= 0))
                         spins = SPINS;                // continue spinning
-                    else if ((s = w.nsteals) != 0) {
-                        w.nsteals = 0;                // collect steals
-                        U.getAndAddLong(this, STEALCOUNT, s);
-                    }
                 }
             }
             else if (w.qlock < 0)                     // recheck after spins
@@ -2070,7 +2090,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if ((b = q.base) - q.top < 0 && (t = q.pollAt(b)) != null) {
                     U.putOrderedObject(w, QCURRENTSTEAL, t);
                     t.doExec();
-                    ++w.nsteals;
+                    if (++w.nsteals < 0)
+                        w.transferStealCount(this);
                 }
             }
             else if (active) {      // decrement active count without queuing
@@ -2285,12 +2306,15 @@ public class ForkJoinPool extends AbstractExecutorService {
                 tryTerminate(false, false);     // help terminate
                 throw new RejectedExecutionException();
             }
-            else if ((rs & STARTED) == 0 ||     // initialize workQueues array
+            else if ((rs & STARTED) == 0 ||     // initialize
                      ((ws = workQueues) == null || (m = ws.length - 1) < 0)) {
                 int ns = 0;
                 rs = lockRunState();
                 try {
-                    if ((rs & STARTED) == 0) {  // find power of two table size
+                    if ((rs & STARTED) == 0) {
+                        U.compareAndSwapObject(this, STEALCOUNTER, null,
+                                               new AtomicLong());
+                        // create workQueues array with size a power of two
                         int p = config & SMASK; // ensure at least 2 slots
                         int n = (p > 1) ? p - 1 : 1;
                         n |= n >>> 1; n |= n >>> 2;  n |= n >>> 4;
@@ -2807,7 +2831,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @return the number of steals
      */
     public long getStealCount() {
-        long count = stealCount;
+        AtomicLong sc = stealCounter;
+        long count = (sc == null) ? 0L : sc.get();
         WorkQueue[] ws; WorkQueue w;
         if ((ws = workQueues) != null) {
             for (int i = 1; i < ws.length; i += 2) {
@@ -2937,7 +2962,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     public String toString() {
         // Use a single pass through workQueues to collect counts
         long qt = 0L, qs = 0L; int rc = 0;
-        long st = stealCount;
+        AtomicLong sc = stealCounter;
+        long st = (sc == null) ? 0L : sc.get();
         long c = ctl;
         WorkQueue[] ws; WorkQueue w;
         if ((ws = workQueues) != null) {
@@ -3288,7 +3314,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final int  ASHIFT;
     private static final long CTL;
     private static final long RUNSTATE;
-    private static final long STEALCOUNT;
+    private static final long STEALCOUNTER;
     private static final long PARKBLOCKER;
     private static final long QBASE;      // these must be same as in WorkQueue
     private static final long QTOP;
@@ -3307,8 +3333,8 @@ public class ForkJoinPool extends AbstractExecutorService {
                 (k.getDeclaredField("ctl"));
             RUNSTATE = U.objectFieldOffset
                 (k.getDeclaredField("runState"));
-            STEALCOUNT = U.objectFieldOffset
-                (k.getDeclaredField("stealCount"));
+            STEALCOUNTER = U.objectFieldOffset
+                (k.getDeclaredField("stealCounter"));
             Class<?> tk = Thread.class;
             PARKBLOCKER = U.objectFieldOffset
                 (tk.getDeclaredField("parkBlocker"));

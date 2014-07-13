@@ -306,7 +306,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * internal Object to use as a monitor, the "stealCounter" (an
      * AtomicLong) is used when available (it too must be lazily
      * initialized; see externalSubmit).
-
+     *
      * Usages of "runState" vs "ctl" interact in only one case:
      * deciding to add a worker thread (see tryAddWorker), in which
      * case the ctl CAS is performed while the lock is held.

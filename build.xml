@@ -47,17 +47,14 @@
   <property name="build.javadoc.access" value="protected"/>
 
   <!-- Tck options; see JSR166TestCase.java
-   Profiling a tck test class:
+   To profile a single tck test class:
    ant -Djsr166.profileTests=true -Djsr166.profileThreshold=100 -Djsr166.tckTestClass=CompletableFutureTest test-tck
-   Stress test a tck test class:
+   To stress test a single tck test class:
    ant -Djsr166.tckTestClass=CountedCompleterTest -Djsr166.runsPerTest=100 test-tck
   -->
   <property name="jsr166.profileTests"     value="false"/>
   <property name="jsr166.profileThreshold" value="100"/>
   <property name="jsr166.runsPerTest"      value="1"/>
-  <!-- Stress test an individual tck test class:
-  ant -Djsr166.tckTestClass=CountedCompleterTest -Djsr166.runsPerTest=100 test-tck
-  -->
   <property name="jsr166.tckTestClass"     value="JSR166TestCase"/>
 
   <!-- Build locations -->

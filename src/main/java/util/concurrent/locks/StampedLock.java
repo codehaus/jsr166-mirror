@@ -681,7 +681,7 @@ public class StampedLock implements java.io.Serializable {
             else if (m == WBIT) {
                 if (a != m)
                     break;
-                U.putLongVolatile(this, STATE, 
+                U.putLongVolatile(this, STATE,
                                   next = (s += WBIT) == 0L ? ORIGIN : s);
                 if ((h = whead) != null && h.status != 0)
                     release(h);

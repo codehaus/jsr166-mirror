@@ -134,7 +134,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (!(state == NEW &&
-              UNSAFE.compareAndSwapInt(this, stateOffset, NEW,
+              U.compareAndSwapInt(this, STATE, NEW,
                   mayInterruptIfRunning ? INTERRUPTING : CANCELLED)))
             return false;
         try {    // in case call to interrupt throws exception
@@ -144,7 +144,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     if (t != null)
                         t.interrupt();
                 } finally { // final state
-                    UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
+                    U.putOrderedInt(this, STATE, INTERRUPTED);
                 }
             }
         } finally {
@@ -198,9 +198,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param v the value
      */
     protected void set(V v) {
-        if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+        if (U.compareAndSwapInt(this, STATE, NEW, COMPLETING)) {
             outcome = v;
-            UNSAFE.putOrderedInt(this, stateOffset, NORMAL); // final state
+            U.putOrderedInt(this, STATE, NORMAL); // final state
             finishCompletion();
         }
     }
@@ -216,17 +216,16 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param t the cause of failure
      */
     protected void setException(Throwable t) {
-        if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+        if (U.compareAndSwapInt(this, STATE, NEW, COMPLETING)) {
             outcome = t;
-            UNSAFE.putOrderedInt(this, stateOffset, EXCEPTIONAL); // final state
+            U.putOrderedInt(this, STATE, EXCEPTIONAL); // final state
             finishCompletion();
         }
     }
 
     public void run() {
         if (state != NEW ||
-            !UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                         null, Thread.currentThread()))
+            !U.compareAndSwapObject(this, RUNNER, null, Thread.currentThread()))
             return;
         try {
             Callable<V> c = callable;
@@ -267,8 +266,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     protected boolean runAndReset() {
         if (state != NEW ||
-            !UNSAFE.compareAndSwapObject(this, runnerOffset,
-                                         null, Thread.currentThread()))
+            !U.compareAndSwapObject(this, RUNNER, null, Thread.currentThread()))
             return false;
         boolean ran = false;
         int s = state;
@@ -335,7 +333,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private void finishCompletion() {
         // assert state > COMPLETING;
         for (WaitNode q; (q = waiters) != null;) {
-            if (UNSAFE.compareAndSwapObject(this, waitersOffset, q, null)) {
+            if (U.compareAndSwapObject(this, WAITERS, q, null)) {
                 for (;;) {
                     Thread t = q.thread;
                     if (t != null) {
@@ -386,8 +384,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
             else if (q == null)
                 q = new WaitNode();
             else if (!queued)
-                queued = UNSAFE.compareAndSwapObject(this, waitersOffset,
-                                                     q.next = waiters, q);
+                queued = U.compareAndSwapObject(this, WAITERS,
+                                                q.next = waiters, q);
             else if (timed) {
                 nanos = deadline - System.nanoTime();
                 if (nanos <= 0L) {
@@ -425,8 +423,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
                         if (pred.thread == null) // check for race
                             continue retry;
                     }
-                    else if (!UNSAFE.compareAndSwapObject(this, waitersOffset,
-                                                          q, s))
+                    else if (!U.compareAndSwapObject(this, WAITERS, q, s))
                         continue retry;
                 }
                 break;
@@ -435,20 +432,17 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long stateOffset;
-    private static final long runnerOffset;
-    private static final long waitersOffset;
+    private static final sun.misc.Unsafe U;
+    private static final long STATE;
+    private static final long RUNNER;
+    private static final long WAITERS;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            U = sun.misc.Unsafe.getUnsafe();
             Class<?> k = FutureTask.class;
-            stateOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("state"));
-            runnerOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("runner"));
-            waitersOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("waiters"));
+            STATE   = U.objectFieldOffset(k.getDeclaredField("state"));
+            RUNNER  = U.objectFieldOffset(k.getDeclaredField("runner"));
+            WAITERS = U.objectFieldOffset(k.getDeclaredField("waiters"));
         } catch (Exception e) {
             throw new Error(e);
         }

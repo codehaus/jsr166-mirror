@@ -1036,7 +1036,7 @@ public class Phaser {
             else {
                 try {
                     ForkJoinPool.managedBlock(node);
-                } catch (InterruptedException ie) {
+                } catch (InterruptedException cantHappen) {
                     node.wasInterrupted = true;
                 }
             }
@@ -1105,13 +1105,13 @@ public class Phaser {
         }
 
         public boolean block() {
-            if (isReleasable())
-                return true;
-            else if (!timed)
-                LockSupport.park(this);
-            else if (nanos > 0L)
-                LockSupport.parkNanos(this, nanos);
-            return isReleasable();
+            while (!isReleasable()) {
+                if (!timed)
+                    LockSupport.park(this);
+                else
+                    LockSupport.parkNanos(this, nanos);
+            }
+            return true;
         }
     }
 

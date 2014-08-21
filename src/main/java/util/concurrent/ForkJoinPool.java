@@ -3182,8 +3182,8 @@ public class ForkJoinPool extends AbstractExecutorService {
      * in {@link ForkJoinPool}s.
      *
      * <p>A {@code ManagedBlocker} provides two methods.  Method
-     * {@code isReleasable} must return {@code true} if blocking is
-     * not necessary. Method {@code block} blocks the current thread
+     * {@link #isReleasable} must return {@code true} if blocking is
+     * not necessary. Method {@link #block} blocks the current thread
      * if necessary (perhaps internally invoking {@code isReleasable}
      * before actually blocking). These actions are performed by any
      * thread invoking {@link ForkJoinPool#managedBlock(ManagedBlocker)}.

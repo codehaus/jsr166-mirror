@@ -360,7 +360,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      *
      * @param timed true if use timed waits
      * @param nanos time to wait, if timed
-     * @return state upon completion
+     * @return state upon completion or at timeout
      */
     private int awaitDone(boolean timed, long nanos)
         throws InterruptedException {

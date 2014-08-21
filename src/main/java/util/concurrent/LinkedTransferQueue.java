@@ -680,13 +680,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 @SuppressWarnings("unchecked") E itemE = (E) item;
                 return itemE;
             }
-            if ((w.isInterrupted() || (timed && nanos <= 0)) &&
-                    s.casItem(e, s)) {        // cancel
-                unsplice(pred, s);
-                return e;
+            else if (w.isInterrupted() || (timed && nanos <= 0)) {
+                 unsplice(pred, s);           // try to unlink and cancel
+                 if (s.casItem(e, s))         // return normally if lost CAS
+                     return e;
             }
-
-            if (spins < 0) {                  // establish spins at/near front
+            else if (spins < 0) {            // establish spins at/near front
                 if ((spins = spinsFor(pred, s.isData)) > 0)
                     randomYields = ThreadLocalRandom.current();
             }
@@ -1023,7 +1022,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @param s the node to be unspliced
      */
     final void unsplice(Node pred, Node s) {
-        s.forgetContents(); // forget unneeded fields
+        s.waiter = null; // disable signals
         /*
          * See above for rationale. Briefly: if pred still points to
          * s, try to unlink s.  If s cannot be unlinked, because it is

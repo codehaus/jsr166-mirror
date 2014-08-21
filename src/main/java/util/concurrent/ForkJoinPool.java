@@ -3252,23 +3252,30 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Blocks in accord with the given blocker.  If the current thread
-     * is a {@link ForkJoinWorkerThread}, this method possibly
-     * arranges for a spare thread to be activated if necessary to
-     * ensure sufficient parallelism while the current thread is blocked.
+     * Runs the given possibly blocking task.  When {@linkplain
+     * ForkJoinTask#inForkJoinPool() running in a ForkJoinPool}, this
+     * method possibly arranges for a spare thread to be activated if
+     * necessary to ensure sufficient parallelism while the current
+     * thread is blocked in {@link ManagedBlocker#block blocker.block()}.
      *
-     * <p>If the caller is not a {@link ForkJoinTask}, this method is
+     * <p>This method repeatedly calls {@code blocker.isReleasable()} and
+     * {@code blocker.block()} until either method returns {@code true}.
+     * Every call to {@code blocker.block()} is preceded by a call to
+     * {@code blocker.isReleasable()} that returned {@code false}.
+     *
+     * <p>If not running in a ForkJoinPool, this method is
      * behaviorally equivalent to
      *  <pre> {@code
      * while (!blocker.isReleasable())
      *   if (blocker.block())
-     *     return;}</pre>
+     *     break;}</pre>
      *
-     * If the caller is a {@code ForkJoinTask}, then the pool may
-     * first be expanded to ensure parallelism, and later adjusted.
+     * If running in a ForkJoinPool, the pool may first be expanded to
+     * ensure sufficient parallelism available during the call to
+     * {@code blocker.block()}.
      *
-     * @param blocker the blocker
-     * @throws InterruptedException if blocker.block did so
+     * @param blocker the blocker task
+     * @throws InterruptedException if {@code blocker.block()} did so
      */
     public static void managedBlock(ManagedBlocker blocker)
         throws InterruptedException {

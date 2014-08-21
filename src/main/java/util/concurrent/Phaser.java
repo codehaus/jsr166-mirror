@@ -1106,10 +1106,10 @@ public class Phaser {
 
         public boolean block() {
             while (!isReleasable()) {
-                if (!timed)
-                    LockSupport.park(this);
-                else
+                if (timed)
                     LockSupport.parkNanos(this, nanos);
+                else
+                    LockSupport.park(this);
             }
             return true;
         }

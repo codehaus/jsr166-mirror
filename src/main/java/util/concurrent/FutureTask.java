@@ -364,7 +364,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     private int awaitDone(boolean timed, long nanos)
         throws InterruptedException {
-        final long deadline = timed ? System.nanoTime() + nanos : 0L;
+        // The code below is very delicate, to achieve these goals:
+        // - call nanoTime exactly once for each call to park
+        // - if nanos <= 0, return promptly without allocation or nanoTime
+        // - if nanos == Long.MIN_VALUE, don't underflow
+        // - if nanos == Long.MAX_VALUE, and nanoTime is non-monotonic
+        //   and we suffer a spurious wakeup, we will do no worse than
+        //   to park-spin for a while
+        long startTime = 0L;    // Special value 0L means not yet parked
         WaitNode q = null;
         boolean queued = false;
         for (;;) {
@@ -381,18 +388,30 @@ public class FutureTask<V> implements RunnableFuture<V> {
             }
             else if (s == COMPLETING) // cannot time out yet
                 Thread.yield();
-            else if (q == null)
+            else if (q == null) {
+                if (timed && nanos <= 0L)
+                    return s;
                 q = new WaitNode();
+            }
             else if (!queued)
                 queued = U.compareAndSwapObject(this, WAITERS,
                                                 q.next = waiters, q);
             else if (timed) {
-                nanos = deadline - System.nanoTime();
-                if (nanos <= 0L) {
-                    removeWaiter(q);
-                    return state;
+                final long parkNanos;
+                if (startTime == 0L) { // first time
+                    startTime = System.nanoTime();
+                    if (startTime == 0L)
+                        startTime = 1L;
+                    parkNanos = nanos;
+                } else {
+                    long elapsed = System.nanoTime() - startTime;
+                    if (elapsed >= nanos) {
+                        removeWaiter(q);
+                        return state;
+                    }
+                    parkNanos = nanos - elapsed;
                 }
-                LockSupport.parkNanos(this, nanos);
+                LockSupport.parkNanos(this, parkNanos);
             }
             else
                 LockSupport.park(this);

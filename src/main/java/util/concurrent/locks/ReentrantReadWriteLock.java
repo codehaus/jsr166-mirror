@@ -846,7 +846,12 @@ public class ReentrantReadWriteLock
          * Attempts to release this lock.
          *
          * <p>If the number of readers is now zero then the lock
-         * is made available for write lock attempts.
+         * is made available for write lock attempts. If the current
+         * thread does not hold this lock then {@link
+         * IllegalMonitorStateException} is thrown.
+         *
+         * @throws IllegalMonitorStateException if the current thread
+         * does not hold this lock
          */
         public void unlock() {
             sync.releaseShared(1);

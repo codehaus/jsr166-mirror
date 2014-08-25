@@ -850,7 +850,7 @@ public class ReentrantReadWriteLock
          * thread does not hold this lock then {@link
          * IllegalMonitorStateException} is thrown.
          *
-         * @throws IllegalMonitorStateException If the current thread
+         * @throws IllegalMonitorStateException if the current thread
          * does not hold this lock
          */
         public void unlock() {

@@ -10,13 +10,14 @@ import junit.framework.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 import java.util.*;
 
 public class FutureTaskTest extends JSR166TestCase {
@@ -798,6 +799,33 @@ public class FutureTaskTest extends JSR166TestCase {
                 task.get(timeout, null);
                 shouldThrow();
             } catch (NullPointerException success) {}
+        }
+    }
+
+    /**
+     * timed get with most negative timeout works correctly (i.e. no
+     * underflow bug)
+     */
+    public void testGet_NegativeInfinityTimeout() throws Exception {
+        final ExecutorService pool = Executors.newFixedThreadPool(10);
+        final Runnable nop = new Runnable() { public void run() {}};
+        final FutureTask<Void> task = new FutureTask<>(nop, null);
+        final List<Future<?>> futures = new ArrayList<>();
+        Runnable r = new Runnable() { public void run() {
+            for (long timeout : new long[] { 0L, -1L, Long.MIN_VALUE }) {
+                try {
+                    task.get(timeout, NANOSECONDS);
+                    shouldThrow();
+                } catch (TimeoutException success) {
+                } catch (Throwable fail) {threadUnexpectedException(fail);}}}};
+        for (int i = 0; i < 10; i++)
+            futures.add(pool.submit(r));
+        try {
+            joinPool(pool);
+            for (Future<?> future : futures)
+                checkCompletedNormally(future, null);
+        } finally {
+            task.run();         // last resort to help terminate
         }
     }
 

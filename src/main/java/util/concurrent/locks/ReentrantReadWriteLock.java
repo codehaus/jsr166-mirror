@@ -849,6 +849,9 @@ public class ReentrantReadWriteLock
          * is made available for write lock attempts. If the current
          * thread does not hold this lock then {@link
          * IllegalMonitorStateException} is thrown.
+         *
+         * @throws IllegalMonitorStateException If the current thread
+         * does not hold this lock
          */
         public void unlock() {
             sync.releaseShared(1);

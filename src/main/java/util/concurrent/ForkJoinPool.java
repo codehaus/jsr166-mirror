@@ -1194,24 +1194,18 @@ public class ForkJoinPool extends AbstractExecutorService {
         private static final sun.misc.Unsafe U;
         private static final int  ABASE;
         private static final int  ASHIFT;
-        private static final long QBASE;
         private static final long QTOP;
         private static final long QLOCK;
-        private static final long QSCANSTATE;
         private static final long QCURRENTSTEAL;
         static {
             try {
                 U = sun.misc.Unsafe.getUnsafe();
                 Class<?> wk = WorkQueue.class;
                 Class<?> ak = ForkJoinTask[].class;
-                QBASE = U.objectFieldOffset
-                    (wk.getDeclaredField("base"));
                 QTOP = U.objectFieldOffset
                     (wk.getDeclaredField("top"));
                 QLOCK = U.objectFieldOffset
                     (wk.getDeclaredField("qlock"));
-                QSCANSTATE = U.objectFieldOffset
-                    (wk.getDeclaredField("scanState"));
                 QCURRENTSTEAL = U.objectFieldOffset
                     (wk.getDeclaredField("currentSteal"));
                 ABASE = U.arrayBaseOffset(ak);
@@ -2007,7 +2001,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param w caller
      * @param task the task
-     * @param if nonzero, deadline for timed waits
+     * @param deadline for timed waits, if nonzero
      * @return task status on exit
      */
     final int awaitJoin(WorkQueue w, ForkJoinTask<?> task, long deadline) {
@@ -3323,7 +3317,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final long RUNSTATE;
     private static final long STEALCOUNTER;
     private static final long PARKBLOCKER;
-    private static final long QBASE;      // these must be same as in WorkQueue
     private static final long QTOP;
     private static final long QLOCK;
     private static final long QSCANSTATE;
@@ -3346,8 +3339,6 @@ public class ForkJoinPool extends AbstractExecutorService {
             PARKBLOCKER = U.objectFieldOffset
                 (tk.getDeclaredField("parkBlocker"));
             Class<?> wk = WorkQueue.class;
-            QBASE = U.objectFieldOffset
-                (wk.getDeclaredField("base"));
             QTOP = U.objectFieldOffset
                 (wk.getDeclaredField("top"));
             QLOCK = U.objectFieldOffset

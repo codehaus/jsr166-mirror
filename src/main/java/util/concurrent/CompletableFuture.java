@@ -2334,13 +2334,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     private static final long NEXT;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            final sun.misc.Unsafe u;
+            UNSAFE = u = sun.misc.Unsafe.getUnsafe();
             Class<?> k = CompletableFuture.class;
-            RESULT = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("result"));
-            STACK = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("stack"));
-            NEXT = UNSAFE.objectFieldOffset
+            RESULT = u.objectFieldOffset(k.getDeclaredField("result"));
+            STACK = u.objectFieldOffset(k.getDeclaredField("stack"));
+            NEXT = u.objectFieldOffset
                 (Completion.class.getDeclaredField("next"));
         } catch (Exception x) {
             throw new Error(x);

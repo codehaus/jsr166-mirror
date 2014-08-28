@@ -200,7 +200,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /** Returns true if successfully pushed c onto stack. */
     final boolean tryPushStack(Completion c) {
         Completion h = stack;
-        c.lazySetNext(h);
+        lazySetNext(c, h);
         return UNSAFE.compareAndSwapObject(this, STACK, h, c);
     }
 
@@ -414,25 +414,10 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         public final boolean exec()            { tryFire(ASYNC); return true; }
         public final Void getRawResult()       { return null; }
         public final void setRawResult(Void v) {}
+    }
 
-        void lazySetNext(Completion val) {
-            UNSAFE.putOrderedObject(this, NEXT, val);
-        }
-
-        // Unsafe mechanics
-
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long NEXT;
-
-        static {
-            try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                NEXT = UNSAFE.objectFieldOffset
-                    (Completion.class.getDeclaredField("next"));
-            } catch (Exception e) {
-                throw new Error(e);
-            }
-        }
+    static void lazySetNext(Completion c, Completion next) {
+        UNSAFE.putOrderedObject(c, NEXT, next);
     }
 
     /**
@@ -524,7 +509,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     final void push(UniCompletion<?,?> c) {
         if (c != null) {
             while (result == null && !tryPushStack(c))
-                c.lazySetNext(null); // clear on failure
+                lazySetNext(c, null); // clear on failure
         }
     }
 
@@ -1011,11 +996,11 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         if (c != null) {
             Object r;
             while ((r = result) == null && !tryPushStack(c))
-                c.lazySetNext(null); // clear on failure
+                lazySetNext(c, null); // clear on failure
             if (b != null && b != this && b.result == null) {
                 Completion q = (r != null) ? c : new CoCompletion(c);
                 while (b.result == null && !b.tryPushStack(q))
-                    q.lazySetNext(null); // clear on failure
+                    lazySetNext(q, null); // clear on failure
             }
         }
     }
@@ -1302,11 +1287,11 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                         Completion q = new CoCompletion(c);
                         while (result == null && b.result == null &&
                                !b.tryPushStack(q))
-                            q.lazySetNext(null); // clear on failure
+                            lazySetNext(q, null); // clear on failure
                     }
                     break;
                 }
-                c.lazySetNext(null); // clear on failure
+                lazySetNext(c, null); // clear on failure
             }
         }
     }
@@ -2346,6 +2331,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     private static final sun.misc.Unsafe UNSAFE;
     private static final long RESULT;
     private static final long STACK;
+    private static final long NEXT;
     static {
         try {
             UNSAFE = sun.misc.Unsafe.getUnsafe();
@@ -2354,6 +2340,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 (k.getDeclaredField("result"));
             STACK = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("stack"));
+            NEXT = UNSAFE.objectFieldOffset
+                (Completion.class.getDeclaredField("next"));
         } catch (Exception x) {
             throw new Error(x);
         }

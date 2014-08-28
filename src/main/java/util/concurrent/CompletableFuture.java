@@ -1547,12 +1547,17 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /* ------------- Zero-input Async forms -------------- */
 
-    static final class AsyncSupply<T>
+    @SuppressWarnings("serial")
+    static final class AsyncSupply<T> extends ForkJoinTask<Void>
             implements Runnable, AsynchronousCompletionTask {
         CompletableFuture<T> dep; Supplier<T> fn;
         AsyncSupply(CompletableFuture<T> dep, Supplier<T> fn) {
             this.dep = dep; this.fn = fn;
         }
+
+        public final Void getRawResult() { return null; }
+        public final void setRawResult(Void v) {}
+        public final boolean exec() { run(); return true; }
 
         public void run() {
             CompletableFuture<T> d; Supplier<T> f;
@@ -1578,12 +1583,17 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         return d;
     }
 
-    static final class AsyncRun
+    @SuppressWarnings("serial")
+    static final class AsyncRun extends ForkJoinTask<Void>
             implements Runnable, AsynchronousCompletionTask {
         CompletableFuture<Void> dep; Runnable fn;
         AsyncRun(CompletableFuture<Void> dep, Runnable fn) {
             this.dep = dep; this.fn = fn;
         }
+
+        public final Void getRawResult() { return null; }
+        public final void setRawResult(Void v) {}
+        public final boolean exec() { run(); return true; }
 
         public void run() {
             CompletableFuture<Void> d; Runnable f;

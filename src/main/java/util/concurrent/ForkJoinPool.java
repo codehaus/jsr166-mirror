@@ -1752,7 +1752,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * another worker to possibly repeat this process.
      *
      * @param w the calling worker
-     * param r a random seed (for spins)
+     * @param r a random seed (for spins)
      * @return false if the worker should terminate
      */
     private boolean awaitWork(WorkQueue w, int r) {

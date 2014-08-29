@@ -115,7 +115,7 @@ import java.security.Permissions;
  * <li>{@code java.util.concurrent.ForkJoinPool.common.exceptionHandler}
  * - the class name of a {@link UncaughtExceptionHandler}
  * <li>{@code java.util.concurrent.ForkJoinPool.common.maximumSpares}
- * - the maximum number of alloed extra threads to maintain target
+ * - the maximum number of allowed extra threads to maintain target
  * parallelism (default 256).
  * </ul>
  * If a {@link SecurityManager} is present and no factory is

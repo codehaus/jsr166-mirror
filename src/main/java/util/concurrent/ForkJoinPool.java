@@ -2122,7 +2122,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns a cheap heuristic guide for task partitioning when
      * programmers, frameworks, tools, or languages have little or no
-     * idea about task granularity.  In essence by offering this
+     * idea about task granularity.  In essence, by offering this
      * method, we ask users only about tradeoffs in overhead vs
      * expected throughput and its variance, rather than how finely to
      * partition tasks.

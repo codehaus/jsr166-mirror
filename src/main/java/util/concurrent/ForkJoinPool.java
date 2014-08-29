@@ -795,7 +795,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Returns an exportable index (used by ForkJoinWorkerThread)
+         * Returns an exportable index (used by ForkJoinWorkerThread).
          */
         final int getPoolIndex() {
             return (config & 0xffff) >>> 1; // ignore odd/even tag bit

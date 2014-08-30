@@ -115,7 +115,7 @@ import java.security.Permissions;
  * <li>{@code java.util.concurrent.ForkJoinPool.common.exceptionHandler}
  * - the class name of a {@link UncaughtExceptionHandler}
  * <li>{@code java.util.concurrent.ForkJoinPool.common.maximumSpares}
- * - the maximum number of alloed extra threads to maintain target
+ * - the maximum number of allowed extra threads to maintain target
  * parallelism (default 256).
  * </ul>
  * If a {@link SecurityManager} is present and no factory is
@@ -795,7 +795,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         /**
-         * Returns an exportable index (used by ForkJoinWorkerThread)
+         * Returns an exportable index (used by ForkJoinWorkerThread).
          */
         final int getPoolIndex() {
             return (config & 0xffff) >>> 1; // ignore odd/even tag bit
@@ -1194,24 +1194,18 @@ public class ForkJoinPool extends AbstractExecutorService {
         private static final sun.misc.Unsafe U;
         private static final int  ABASE;
         private static final int  ASHIFT;
-        private static final long QBASE;
         private static final long QTOP;
         private static final long QLOCK;
-        private static final long QSCANSTATE;
         private static final long QCURRENTSTEAL;
         static {
             try {
                 U = sun.misc.Unsafe.getUnsafe();
                 Class<?> wk = WorkQueue.class;
                 Class<?> ak = ForkJoinTask[].class;
-                QBASE = U.objectFieldOffset
-                    (wk.getDeclaredField("base"));
                 QTOP = U.objectFieldOffset
                     (wk.getDeclaredField("top"));
                 QLOCK = U.objectFieldOffset
                     (wk.getDeclaredField("qlock"));
-                QSCANSTATE = U.objectFieldOffset
-                    (wk.getDeclaredField("scanState"));
                 QCURRENTSTEAL = U.objectFieldOffset
                     (wk.getDeclaredField("currentSteal"));
                 ABASE = U.arrayBaseOffset(ak);
@@ -1758,7 +1752,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * another worker to possibly repeat this process.
      *
      * @param w the calling worker
-     * param r a random seed (for spins)
+     * @param r a random seed (for spins)
      * @return false if the worker should terminate
      */
     private boolean awaitWork(WorkQueue w, int r) {
@@ -2007,7 +2001,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @param w caller
      * @param task the task
-     * @param if nonzero, deadline for timed waits
+     * @param deadline for timed waits, if nonzero
      * @return task status on exit
      */
     final int awaitJoin(WorkQueue w, ForkJoinTask<?> task, long deadline) {
@@ -2128,7 +2122,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns a cheap heuristic guide for task partitioning when
      * programmers, frameworks, tools, or languages have little or no
-     * idea about task granularity.  In essence by offering this
+     * idea about task granularity.  In essence, by offering this
      * method, we ask users only about tradeoffs in overhead vs
      * expected throughput and its variance, rather than how finely to
      * partition tasks.
@@ -3323,7 +3317,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final long RUNSTATE;
     private static final long STEALCOUNTER;
     private static final long PARKBLOCKER;
-    private static final long QBASE;      // these must be same as in WorkQueue
     private static final long QTOP;
     private static final long QLOCK;
     private static final long QSCANSTATE;
@@ -3346,8 +3339,6 @@ public class ForkJoinPool extends AbstractExecutorService {
             PARKBLOCKER = U.objectFieldOffset
                 (tk.getDeclaredField("parkBlocker"));
             Class<?> wk = WorkQueue.class;
-            QBASE = U.objectFieldOffset
-                (wk.getDeclaredField("base"));
             QTOP = U.objectFieldOffset
                 (wk.getDeclaredField("top"));
             QLOCK = U.objectFieldOffset

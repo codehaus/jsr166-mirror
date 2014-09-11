@@ -1949,11 +1949,11 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *       try {
      *         Object result = ((Future<?>) r).get();
      *       } catch (CancellationException ce) {
-     *           t = ce;
+     *         t = ce;
      *       } catch (ExecutionException ee) {
-     *           t = ee.getCause();
+     *         t = ee.getCause();
      *       } catch (InterruptedException ie) {
-     *           Thread.currentThread().interrupt(); // ignore/reset
+     *         Thread.currentThread().interrupt(); // ignore/reset
      *       }
      *     }
      *     if (t != null)

@@ -26,12 +26,12 @@ public abstract class CCFib extends CountedCompleter {
             new RCCFib(f, n - 2).fork();
             f = new LCCFib(f, --n);
         }
-        f.number = n <= 1? n : seqFib(n);
+        f.number = (n <= 1) ? n : seqFib(n);
         f.onCompletion(f);
         if ((p = f.getCompleter()) != null)
             p.tryComplete();
-        else 
-            f.quietlyComplete(); 
+        else
+            f.quietlyComplete();
     }
 
     static final class LCCFib extends CCFib {
@@ -47,7 +47,7 @@ public abstract class CCFib extends CountedCompleter {
                 number = n;
         }
     }
-        
+
     static final class RCCFib extends CCFib {
         public RCCFib(CountedCompleter parent, int n) {
             super(parent, n);
@@ -61,7 +61,7 @@ public abstract class CCFib extends CountedCompleter {
                 number = n;
         }
     }
-    
+
     static long lastStealCount;
 
     public static void main(String[] args) throws Exception {
@@ -120,5 +120,3 @@ public abstract class CCFib extends CountedCompleter {
     }
 
 }
-
-

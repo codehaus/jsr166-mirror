@@ -24,6 +24,10 @@
   $HOME/jdk/src/jdk9
   where each of the above is a complete JDK source tree
   (e.g. mercurial forest) or a symlink to same.
+
+  Alternatively, define ant variables thus:
+  ant -Djdk$N.home=...
+  for $N in 6 7 8 9 ...
 ------------------------------------------------------------------------------
   </description>
 

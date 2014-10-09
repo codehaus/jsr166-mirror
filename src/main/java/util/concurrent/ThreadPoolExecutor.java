@@ -639,6 +639,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *        (but not TIDYING or TERMINATED -- use tryTerminate for that)
      */
     private void advanceRunState(int targetState) {
+        // assert targetState == SHUTDOWN || targetState == STOP;
         for (;;) {
             int c = ctl.get();
             if (runStateAtLeast(c, targetState) ||

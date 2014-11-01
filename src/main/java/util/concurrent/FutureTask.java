@@ -411,7 +411,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
                     }
                     parkNanos = nanos - elapsed;
                 }
-                LockSupport.parkNanos(this, parkNanos);
+                // nanoTime may be slow; recheck before parking
+                if (state < COMPLETING)
+                    LockSupport.parkNanos(this, parkNanos);
             }
             else
                 LockSupport.park(this);

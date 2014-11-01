@@ -1544,39 +1544,37 @@ public class ForkJoinPool8Test extends JSR166TestCase {
         final ForkJoinPool p = new ForkJoinPool();
         try {
             assertTrue(p.isQuiescent());
-            for (;;) {
-                final long startTime = System.nanoTime();
-                ForkJoinTask a = new CheckedRecursiveAction() {
-                    protected void realCompute() {
-                        FibAction f = new FibAction(8);
-                        assertSame(f, f.fork());
-                        while (!f.isDone()) {
-                            assertFalse(p.getAsyncMode());
-                            assertFalse(p.isShutdown());
-                            assertFalse(p.isTerminating());
-                            assertFalse(p.isTerminated());
-                            Thread.yield();
-                        }
-                        assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
-                        assertEquals(0, ForkJoinTask.getQueuedTaskCount());
-                        assertEquals(21, f.result);
-                    }};
-                p.execute(a);
-                assertTrue(p.awaitQuiescence(LONG_DELAY_MS, MILLISECONDS));
-                assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
-                assertTrue(p.isQuiescent());
-                assertTrue(a.isDone());
-                assertEquals(0, p.getQueuedTaskCount());
-                assertFalse(p.getAsyncMode());
-                assertEquals(0, p.getActiveThreadCount());
-                assertEquals(0, p.getQueuedTaskCount());
-                assertEquals(0, p.getQueuedSubmissionCount());
-                assertFalse(p.hasQueuedSubmissions());
-                assertFalse(p.isShutdown());
-                assertFalse(p.isTerminating());
-                assertFalse(p.isTerminated());
-                break;
-            }
+            final long startTime = System.nanoTime();
+            ForkJoinTask a = new CheckedRecursiveAction() {
+                protected void realCompute() {
+                    FibAction f = new FibAction(8);
+                    assertSame(f, f.fork());
+                    while (!f.isDone()
+                           && millisElapsedSince(startTime) < LONG_DELAY_MS) {
+                        assertFalse(p.getAsyncMode());
+                        assertFalse(p.isShutdown());
+                        assertFalse(p.isTerminating());
+                        assertFalse(p.isTerminated());
+                        Thread.yield();
+                    }
+                    assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
+                    assertEquals(0, ForkJoinTask.getQueuedTaskCount());
+                    assertEquals(21, f.result);
+                }};
+            p.execute(a);
+            assertTrue(p.awaitQuiescence(LONG_DELAY_MS, MILLISECONDS));
+            assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
+            assertTrue(p.isQuiescent());
+            assertTrue(a.isDone());
+            assertEquals(0, p.getQueuedTaskCount());
+            assertFalse(p.getAsyncMode());
+            assertEquals(0, p.getActiveThreadCount());
+            assertEquals(0, p.getQueuedTaskCount());
+            assertEquals(0, p.getQueuedSubmissionCount());
+            assertFalse(p.hasQueuedSubmissions());
+            assertFalse(p.isShutdown());
+            assertFalse(p.isTerminating());
+            assertFalse(p.isTerminated());
         } finally {
             joinPool(p);
         }

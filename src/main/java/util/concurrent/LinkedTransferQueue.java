@@ -790,23 +790,22 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Used by methods size and getWaitingConsumerCount.
      */
     private int countOfMode(boolean data) {
-        int count = 0;
-        for (Node p = head; p != null; ) {
-            if (!p.isMatched()) {
-                if (p.isData != data)
-                    return 0;
-                if (++count == Integer.MAX_VALUE) // saturated
-                    break;
+        restartFromHead: for (;;) {
+            int count = 0;
+            for (Node p = head; p != null;) {
+                if (!p.isMatched()) {
+                    if (p.isData != data)
+                        return 0;
+                    if (++count == Integer.MAX_VALUE)
+                        break;  // @see Collection.size()
+                }
+                Node next = p.next;
+                if (p == next)
+                    continue restartFromHead;
+                p = next;
             }
-            Node n = p.next;
-            if (n != p)
-                p = n;
-            else {
-                count = 0;
-                p = head;
-            }
+            return count;
         }
-        return count;
     }
 
     final class Itr implements Iterator<E> {

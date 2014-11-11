@@ -427,7 +427,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                     if (++count == Integer.MAX_VALUE)
                         break;  // @see Collection.size()
                 Node<E> next = p.next;
-                if (next == p)
+                if (p == next)
                     continue restartFromHead;
                 p = next;
             }

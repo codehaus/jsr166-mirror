@@ -82,7 +82,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      *
      * A FIFO dual queue may be implemented using a variation of the
      * Michael & Scott (M&S) lock-free queue algorithm
-     * (http://www.cs.rochester.edu/u/scott/papers/1996_PODC_queues.pdf).
+     * (http://www.cs.rochester.edu/~scott/papers/1996_PODC_queues.pdf).
      * It maintains two pointer fields, "head", pointing to a
      * (matched) node that in turn points to the first actual
      * (unmatched) queue node (or null if empty); and "tail" that
@@ -790,23 +790,22 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Used by methods size and getWaitingConsumerCount.
      */
     private int countOfMode(boolean data) {
-        int count = 0;
-        for (Node p = head; p != null; ) {
-            if (!p.isMatched()) {
-                if (p.isData != data)
-                    return 0;
-                if (++count == Integer.MAX_VALUE) // saturated
-                    break;
+        restartFromHead: for (;;) {
+            int count = 0;
+            for (Node p = head; p != null;) {
+                if (!p.isMatched()) {
+                    if (p.isData != data)
+                        return 0;
+                    if (++count == Integer.MAX_VALUE)
+                        break;  // @see Collection.size()
+                }
+                Node next = p.next;
+                if (p == next)
+                    continue restartFromHead;
+                p = next;
             }
-            Node n = p.next;
-            if (n != p)
-                p = n;
-            else {
-                count = 0;
-                p = head;
-            }
+            return count;
         }
-        return count;
     }
 
     final class Itr implements Iterator<E> {

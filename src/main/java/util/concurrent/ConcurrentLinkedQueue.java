@@ -34,9 +34,9 @@ import java.util.function.Consumer;
  * does not permit the use of {@code null} elements.
  *
  * <p>This implementation employs an efficient <em>non-blocking</em>
- * algorithm based on one described in <a
- * href="http://www.cs.rochester.edu/u/michael/PODC96.html"> Simple,
- * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
+ * algorithm based on one described in
+ * <a href="http://www.cs.rochester.edu/~scott/papers/1996_PODC_queues.pdf">
+ * Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.
  *
  * <p>Iterators are <i>weakly consistent</i>, returning elements
@@ -154,45 +154,28 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     private static class Node<E> {
         volatile E item;
         volatile Node<E> next;
+    }
 
-        /**
-         * Constructs a new node.  Uses relaxed write because item can
-         * only be seen after publication via casNext.
-         */
-        Node(E item) {
-            UNSAFE.putObject(this, itemOffset, item);
-        }
+    /**
+     * Returns a new node holding item.  Uses relaxed write because item
+     * can only be seen after piggy-backing publication via casNext.
+     */
+    static <E> Node<E> newNode(E item) {
+        Node<E> node = new Node<E>();
+        U.putObject(node, ITEM, item);
+        return node;
+    }
 
-        boolean casItem(E cmp, E val) {
-            return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
-        }
+    static <E> boolean casItem(Node<E> node, E cmp, E val) {
+        return U.compareAndSwapObject(node, ITEM, cmp, val);
+    }
 
-        void lazySetNext(Node<E> val) {
-            UNSAFE.putOrderedObject(this, nextOffset, val);
-        }
+    static <E> void lazySetNext(Node<E> node, Node<E> val) {
+        U.putOrderedObject(node, NEXT, val);
+    }
 
-        boolean casNext(Node<E> cmp, Node<E> val) {
-            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
-        }
-
-        // Unsafe mechanics
-
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long itemOffset;
-        private static final long nextOffset;
-
-        static {
-            try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = Node.class;
-                itemOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("item"));
-                nextOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("next"));
-            } catch (Exception e) {
-                throw new Error(e);
-            }
-        }
+    static <E> boolean casNext(Node<E> node, Node<E> cmp, Node<E> val) {
+        return U.compareAndSwapObject(node, NEXT, cmp, val);
     }
 
     /**
@@ -227,7 +210,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * Creates a {@code ConcurrentLinkedQueue} that is initially empty.
      */
     public ConcurrentLinkedQueue() {
-        head = tail = new Node<E>(null);
+        head = tail = newNode(null);
     }
 
     /**
@@ -243,16 +226,16 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node<E> h = null, t = null;
         for (E e : c) {
             checkNotNull(e);
-            Node<E> newNode = new Node<E>(e);
+            Node<E> newNode = newNode(e);
             if (h == null)
                 h = t = newNode;
             else {
-                t.lazySetNext(newNode);
+                lazySetNext(t, newNode);
                 t = newNode;
             }
         }
         if (h == null)
-            h = t = new Node<E>(null);
+            h = t = newNode(null);
         head = h;
         tail = t;
     }
@@ -277,7 +260,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     final void updateHead(Node<E> h, Node<E> p) {
         if (h != p && casHead(h, p))
-            h.lazySetNext(h);
+            lazySetNext(h, h);
     }
 
     /**
@@ -299,13 +282,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public boolean offer(E e) {
         checkNotNull(e);
-        final Node<E> newNode = new Node<E>(e);
+        final Node<E> newNode = newNode(e);
 
         for (Node<E> t = tail, p = t;;) {
             Node<E> q = p.next;
             if (q == null) {
                 // p is last node
-                if (p.casNext(null, newNode)) {
+                if (casNext(p, null, newNode)) {
                     // Successful CAS is the linearization point
                     // for e to become an element of this queue,
                     // and for newNode to become "live".
@@ -333,7 +316,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             for (Node<E> h = head, p = h, q;;) {
                 E item = p.item;
 
-                if (item != null && p.casItem(item, null)) {
+                if (item != null && casItem(p, item, null)) {
                     // Successful CAS is the linearization point
                     // for item to be removed from this queue.
                     if (p != h) // hop two nodes at a time
@@ -420,13 +403,19 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @return the number of elements in this queue
      */
     public int size() {
-        int count = 0;
-        for (Node<E> p = first(); p != null; p = succ(p))
-            if (p.item != null)
-                // Collection.size() spec says to max out
-                if (++count == Integer.MAX_VALUE)
-                    break;
-        return count;
+        restartFromHead: for (;;) {
+            int count = 0;
+            for (Node<E> p = first(); p != null;) {
+                if (p.item != null)
+                    if (++count == Integer.MAX_VALUE)
+                        break;  // @see Collection.size()
+                Node<E> next = p.next;
+                if (p == next)
+                    continue restartFromHead;
+                p = next;
+            }
+            return count;
+        }
     }
 
     /**
@@ -465,10 +454,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             E item = p.item;
             if (item != null &&
                 o.equals(item) &&
-                p.casItem(item, null)) {
+                casItem(p, item, null)) {
                 Node<E> next = succ(p);
                 if (pred != null && next != null)
-                    pred.casNext(p, next);
+                    casNext(pred, p, next);
                 return true;
             }
             pred = p;
@@ -497,11 +486,11 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node<E> beginningOfTheEnd = null, last = null;
         for (E e : c) {
             checkNotNull(e);
-            Node<E> newNode = new Node<E>(e);
+            Node<E> newNode = newNode(e);
             if (beginningOfTheEnd == null)
                 beginningOfTheEnd = last = newNode;
             else {
-                last.lazySetNext(newNode);
+                lazySetNext(last, newNode);
                 last = newNode;
             }
         }
@@ -513,7 +502,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             Node<E> q = p.next;
             if (q == null) {
                 // p is last node
-                if (p.casNext(null, beginningOfTheEnd)) {
+                if (casNext(p, null, beginningOfTheEnd)) {
                     // Successful CAS is the linearization point
                     // for all elements to be added to this queue.
                     if (!casTail(t, last)) {
@@ -692,7 +681,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                     // skip over nulls
                     Node<E> next = succ(p);
                     if (pred != null && next != null)
-                        pred.casNext(p, next);
+                        casNext(pred, p, next);
                     p = next;
                 }
             }
@@ -757,16 +746,16 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Object item;
         while ((item = s.readObject()) != null) {
             @SuppressWarnings("unchecked")
-            Node<E> newNode = new Node<E>((E) item);
+            Node<E> newNode = newNode((E) item);
             if (h == null)
                 h = t = newNode;
             else {
-                t.lazySetNext(newNode);
+                lazySetNext(t, newNode);
                 t = newNode;
             }
         }
         if (h == null)
-            h = t = new Node<E>(null);
+            h = t = newNode(null);
         head = h;
         tail = t;
     }
@@ -889,26 +878,29 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     private boolean casTail(Node<E> cmp, Node<E> val) {
-        return UNSAFE.compareAndSwapObject(this, tailOffset, cmp, val);
+        return U.compareAndSwapObject(this, TAIL, cmp, val);
     }
 
     private boolean casHead(Node<E> cmp, Node<E> val) {
-        return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
+        return U.compareAndSwapObject(this, HEAD, cmp, val);
     }
 
     // Unsafe mechanics
 
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long headOffset;
-    private static final long tailOffset;
+    private static final sun.misc.Unsafe U;
+    private static final long HEAD;
+    private static final long TAIL;
+    private static final long ITEM;
+    private static final long NEXT;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            U = sun.misc.Unsafe.getUnsafe();
             Class<?> k = ConcurrentLinkedQueue.class;
-            headOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("head"));
-            tailOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("tail"));
+            HEAD = U.objectFieldOffset(k.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset(k.getDeclaredField("tail"));
+            k = Node.class;
+            ITEM = U.objectFieldOffset(k.getDeclaredField("item"));
+            NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
         } catch (Exception e) {
             throw new Error(e);
         }

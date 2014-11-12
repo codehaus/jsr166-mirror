@@ -233,6 +233,12 @@
           fork="true">
 	<jvmarg value="-Xbootclasspath/p:@{classes}"/>
 	<jvmarg line="@{jvmflags}"/>
+
+        <!-- ant -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 test-tck -->
+	<syspropertyset id="java.util.concurrent.ForkJoinPool-properties">
+	  <propertyref prefix="java.util.concurrent.ForkJoinPool"/>
+	</syspropertyset>
+
         <sysproperty key="jsr166.profileTests"     value="${jsr166.profileTests}"/>
         <sysproperty key="jsr166.profileThreshold" value="${jsr166.profileThreshold}"/>
         <sysproperty key="jsr166.runsPerTest"      value="${jsr166.runsPerTest}"/>
@@ -427,6 +433,20 @@
       classes="${product.jar}"/>
   </target>
 
+  <target name="test-tck-parallelism-1"
+          description="Runs test-tck with given common pool parallelism">
+    <antcall target="test-tck">
+      <param name="java.util.concurrent.ForkJoinPool.common.parallelism" value="1"/>
+    </antcall>
+  </target>
+
+  <target name="test-tck-parallelism-0"
+          description="Runs test-tck with given common pool parallelism">
+    <antcall target="test-tck">
+      <param name="java.util.concurrent.ForkJoinPool.common.parallelism" value="0"/>
+    </antcall>
+  </target>
+
   <target name="test-jtreg"
 	  depends="jar"
           description="Runs jtreg tests for main using the jtreg ant task">
@@ -437,7 +457,7 @@
   </target>
 
   <target name="test"
-          depends="test-tck, test-jtreg"
+          depends="test-tck, test-tck-parallelism-1, test-jtreg"
           description="Runs tck and jtreg tests for main">
   </target>
 

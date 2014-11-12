@@ -584,6 +584,9 @@ public class CompletableFutureTest extends JSR166TestCase {
         }
     }
 
+    static final boolean defaultExecutorIsCommonPool
+        = ForkJoinPool.getCommonPoolParallelism() > 1;
+
     /**
      * Permits the testing of parallel code for the 3 different
      * execution modes without copy/pasting all the test methods.
@@ -665,8 +668,8 @@ public class CompletableFutureTest extends JSR166TestCase {
 
         ASYNC {
             public void checkExecutionMode() {
-                assertSame(ForkJoinPool.commonPool(),
-                           ForkJoinTask.getPool());
+                assertEquals(defaultExecutorIsCommonPool,
+                             (ForkJoinPool.commonPool() == ForkJoinTask.getPool()));
             }
             public CompletableFuture<Void> runAsync(Runnable a) {
                 return CompletableFuture.runAsync(a);

@@ -427,11 +427,12 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @return {@code true} if this queue contains the specified element
      */
     public boolean contains(Object o) {
-        if (o == null) return false;
-        for (Node<E> p = first(); p != null; p = succ(p)) {
-            E item = p.item;
-            if (item != null && o.equals(item))
-                return true;
+        if (o != null) {
+            for (Node<E> p = first(); p != null; p = succ(p)) {
+                E item = p.item;
+                if (item != null && o.equals(item))
+                    return true;
+            }
         }
         return false;
     }
@@ -448,19 +449,20 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @return {@code true} if this queue changed as a result of the call
      */
     public boolean remove(Object o) {
-        if (o == null) return false;
-        Node<E> pred = null;
-        for (Node<E> p = first(); p != null; p = succ(p)) {
-            E item = p.item;
-            if (item != null &&
-                o.equals(item) &&
-                casItem(p, item, null)) {
-                Node<E> next = succ(p);
-                if (pred != null && next != null)
-                    casNext(pred, p, next);
-                return true;
+        if (o != null) {
+            Node<E> pred = null;
+            for (Node<E> p = first(); p != null; p = succ(p)) {
+                E item = p.item;
+                if (item != null &&
+                    o.equals(item) &&
+                    casItem(p, item, null)) {
+                    Node<E> next = succ(p);
+                    if (pred != null && next != null)
+                        casNext(pred, p, next);
+                    return true;
+                }
+                pred = p;
             }
-            pred = p;
         }
         return false;
     }

@@ -1068,11 +1068,12 @@ public class ConcurrentLinkedDeque<E>
      * @return {@code true} if this deque contains the specified element
      */
     public boolean contains(Object o) {
-        if (o == null) return false;
-        for (Node<E> p = first(); p != null; p = succ(p)) {
-            E item = p.item;
-            if (item != null && o.equals(item))
-                return true;
+        if (o != null) {
+            for (Node<E> p = first(); p != null; p = succ(p)) {
+                E item = p.item;
+                if (item != null && o.equals(item))
+                    return true;
+            }
         }
         return false;
     }

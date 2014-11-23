@@ -1363,15 +1363,16 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * @return {@code true} if this queue contains the specified element
      */
     public boolean contains(Object o) {
-        if (o == null) return false;
-        for (Node p = head; p != null; p = succ(p)) {
-            Object item = p.item;
-            if (p.isData) {
-                if (item != null && item != p && o.equals(item))
-                    return true;
+        if (o != null) {
+            for (Node p = head; p != null; p = succ(p)) {
+                Object item = p.item;
+                if (p.isData) {
+                    if (item != null && item != p && o.equals(item))
+                        return true;
+                }
+                else if (item == null)
+                    break;
             }
-            else if (item == null)
-                break;
         }
         return false;
     }

@@ -890,4 +890,21 @@ public class ArrayDequeTest extends JSR166TestCase {
         assertTrue(y.isEmpty());
     }
 
+    /**
+     * remove(null), contains(null) always return false
+     */
+    public void testNeverContainsNull() {
+        Deque<?>[] qs = {
+            new ArrayDeque<Object>(),
+            populatedDeque(2),
+        };
+
+        for (Deque<?> q : qs) {
+            assertFalse(q.contains(null));
+            assertFalse(q.remove(null));
+            assertFalse(q.removeFirstOccurrence(null));
+            assertFalse(q.removeLastOccurrence(null));
+        }
+    }
+
 }

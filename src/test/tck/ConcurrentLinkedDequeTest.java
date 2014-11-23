@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -861,4 +862,30 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
         assertTrue(y.isEmpty());
     }
 
+    /**
+     * contains(null) always return false.
+     * remove(null) always throws NullPointerException.
+     */
+    public void testNeverContainsNull() {
+        Deque<?>[] qs = {
+            new ConcurrentLinkedDeque<Object>(),
+            populatedDeque(2),
+        };
+
+        for (Deque<?> q : qs) {
+            assertFalse(q.contains(null));
+            try {
+                assertFalse(q.remove(null));
+                shouldThrow();
+            } catch (NullPointerException success) {}
+            try {
+                assertFalse(q.removeFirstOccurrence(null));
+                shouldThrow();
+            } catch (NullPointerException success) {}
+            try {
+                assertFalse(q.removeLastOccurrence(null));
+                shouldThrow();
+            } catch (NullPointerException success) {}
+        }
+    }
 }

@@ -329,7 +329,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * number of elements and for every element {@code e1} returned by
      * the iterator over the specified set, there is an element
      * {@code e2} returned by the iterator over this set such that
-     * {@code (e1==null ? e2==null : e1.equals(e2))}.
+     * {@code Objects.equals(e1, e2)}.
      *
      * @param o object to be compared for equality with this set
      * @return {@code true} if the specified object is equal to this set

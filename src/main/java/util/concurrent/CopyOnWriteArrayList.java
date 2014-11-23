@@ -1001,7 +1001,7 @@ public class CopyOnWriteArrayList<E>
      * be the same if they have the same length and corresponding
      * elements at the same position in the sequence are <em>equal</em>.
      * Two elements {@code e1} and {@code e2} are considered
-     * <em>equal</em> if {@code (e1==null ? e2==null : e1.equals(e2))}.
+     * <em>equal</em> if {@code Objects.equals(e1, e2)}.
      *
      * @param o the object to be compared for equality with this list
      * @return {@code true} if the specified object is equal to this list

@@ -745,8 +745,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
         // Read in elements until trailing null sentinel found
         Node<E> h = null, t = null;
-        Object item;
-        while ((item = s.readObject()) != null) {
+        for (Object item; (item = s.readObject()) != null; ) {
             @SuppressWarnings("unchecked")
             Node<E> newNode = newNode((E) item);
             if (h == null)

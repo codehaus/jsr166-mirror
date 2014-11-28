@@ -514,4 +514,18 @@ public class ConcurrentLinkedQueueTest extends JSR166TestCase {
         assertTrue(y.isEmpty());
     }
 
+    /**
+     * remove(null), contains(null) always return false
+     */
+    public void testNeverContainsNull() {
+        Collection<?>[] qs = {
+            new ConcurrentLinkedQueue<Object>(),
+            populatedQueue(2),
+        };
+
+        for (Collection<?> q : qs) {
+            assertFalse(q.contains(null));
+            assertFalse(q.remove(null));
+        }
+    }
 }

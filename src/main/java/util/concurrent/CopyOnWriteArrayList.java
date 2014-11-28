@@ -205,8 +205,7 @@ public class CopyOnWriteArrayList<E>
     /**
      * Returns {@code true} if this list contains the specified element.
      * More formally, returns {@code true} if and only if this list contains
-     * at least one element {@code e} such that
-     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     * at least one element {@code e} such that {@code Objects.equals(o, e)}.
      *
      * @param o element whose presence in this list is to be tested
      * @return {@code true} if this list contains the specified element
@@ -494,8 +493,7 @@ public class CopyOnWriteArrayList<E>
      * Removes the first occurrence of the specified element from this list,
      * if it is present.  If this list does not contain the element, it is
      * unchanged.  More formally, removes the element with the lowest index
-     * {@code i} such that
-     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>
+     * {@code i} such that {@code Objects.equals(o, get(i))}
      * (if such an element exists).  Returns {@code true} if this list
      * contained the specified element (or equivalently, if this list
      * changed as a result of the call).
@@ -1003,7 +1001,7 @@ public class CopyOnWriteArrayList<E>
      * be the same if they have the same length and corresponding
      * elements at the same position in the sequence are <em>equal</em>.
      * Two elements {@code e1} and {@code e2} are considered
-     * <em>equal</em> if {@code (e1==null ? e2==null : e1.equals(e2))}.
+     * <em>equal</em> if {@code Objects.equals(e1, e2)}.
      *
      * @param o the object to be compared for equality with this list
      * @return {@code true} if the specified object is equal to this list

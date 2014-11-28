@@ -315,8 +315,7 @@ public interface Deque<E> extends Queue<E> {
      * Removes the first occurrence of the specified element from this deque.
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the first element {@code e} such that
-     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>
-     * (if such an element exists).
+     * {@code Objects.equals(o, e)} (if such an element exists).
      * Returns {@code true} if this deque contained the specified element
      * (or equivalently, if this deque changed as a result of the call).
      *
@@ -334,8 +333,7 @@ public interface Deque<E> extends Queue<E> {
      * Removes the last occurrence of the specified element from this deque.
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the last element {@code e} such that
-     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>
-     * (if such an element exists).
+     * {@code Objects.equals(o, e)} (if such an element exists).
      * Returns {@code true} if this deque contained the specified element
      * (or equivalently, if this deque changed as a result of the call).
      *
@@ -490,8 +488,7 @@ public interface Deque<E> extends Queue<E> {
      * Removes the first occurrence of the specified element from this deque.
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the first element {@code e} such that
-     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>
-     * (if such an element exists).
+     * {@code Objects.equals(o, e)} (if such an element exists).
      * Returns {@code true} if this deque contained the specified element
      * (or equivalently, if this deque changed as a result of the call).
      *
@@ -510,8 +507,7 @@ public interface Deque<E> extends Queue<E> {
     /**
      * Returns {@code true} if this deque contains the specified element.
      * More formally, returns {@code true} if and only if this deque contains
-     * at least one element {@code e} such that
-     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     * at least one element {@code e} such that {@code Objects.equals(o, e)}.
      *
      * @param o element whose presence in this deque is to be tested
      * @return {@code true} if this deque contains the specified element

@@ -896,4 +896,18 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * remove(null), contains(null) always return false
+     */
+    public void testNeverContainsNull() {
+        Collection<?>[] qs = {
+            new ArrayBlockingQueue<Object>(10),
+            populatedQueue(2),
+        };
+
+        for (Collection<?> q : qs) {
+            assertFalse(q.contains(null));
+            assertFalse(q.remove(null));
+        }
+    }
 }

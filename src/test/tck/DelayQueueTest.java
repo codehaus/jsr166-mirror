@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingQueue;
@@ -771,4 +772,12 @@ public class DelayQueueTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * remove(null), contains(null) always return false
+     */
+    public void testNeverContainsNull() {
+        Collection<?> q = populatedQueue(SIZE);
+        assertFalse(q.contains(null));
+        assertFalse(q.remove(null));
+    }
 }

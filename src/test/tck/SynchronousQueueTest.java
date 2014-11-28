@@ -606,4 +606,13 @@ public class SynchronousQueueTest extends JSR166TestCase {
         awaitTermination(t2);
     }
 
+    /**
+     * remove(null), contains(null) always return false
+     */
+    public void testNeverContainsNull() {
+        Collection<?> q = new SynchronousQueue();
+        assertFalse(q.contains(null));
+        assertFalse(q.remove(null));
+    }
+
 }

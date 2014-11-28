@@ -315,17 +315,15 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return {@code true} if the deque contained the specified element
      */
     public boolean removeFirstOccurrence(Object o) {
-        if (o == null)
-            return false;
-        int mask = elements.length - 1;
-        int i = head;
-        Object x;
-        while ( (x = elements[i]) != null) {
-            if (o.equals(x)) {
-                delete(i);
-                return true;
+        if (o != null) {
+            int mask = elements.length - 1;
+            int i = head;
+            for (Object x; (x = elements[i]) != null; i = (i + 1) & mask) {
+                if (o.equals(x)) {
+                    delete(i);
+                    return true;
+                }
             }
-            i = (i + 1) & mask;
         }
         return false;
     }
@@ -343,17 +341,15 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return {@code true} if the deque contained the specified element
      */
     public boolean removeLastOccurrence(Object o) {
-        if (o == null)
-            return false;
-        int mask = elements.length - 1;
-        int i = (tail - 1) & mask;
-        Object x;
-        while ( (x = elements[i]) != null) {
-            if (o.equals(x)) {
-                delete(i);
-                return true;
+        if (o != null) {
+            int mask = elements.length - 1;
+            int i = (tail - 1) & mask;
+            for (Object x; (x = elements[i]) != null; i = (i - 1) & mask) {
+                if (o.equals(x)) {
+                    delete(i);
+                    return true;
+                }
             }
-            i = (i - 1) & mask;
         }
         return false;
     }
@@ -658,15 +654,13 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return {@code true} if this deque contains the specified element
      */
     public boolean contains(Object o) {
-        if (o == null)
-            return false;
-        int mask = elements.length - 1;
-        int i = head;
-        Object x;
-        while ( (x = elements[i]) != null) {
-            if (o.equals(x))
-                return true;
-            i = (i + 1) & mask;
+        if (o != null) {
+            int mask = elements.length - 1;
+            int i = head;
+            for (Object x; (x = elements[i]) != null; i = (i + 1) & mask) {
+                if (o.equals(x))
+                    return true;
+            }
         }
         return false;
     }

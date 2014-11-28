@@ -8,6 +8,7 @@ import junit.framework.*;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -1771,6 +1772,23 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
             while (q.poll() != null) ;
+        }
+    }
+
+    /**
+     * remove(null), contains(null) always return false
+     */
+    public void testNeverContainsNull() {
+        Deque<?>[] qs = {
+            new LinkedBlockingDeque<Object>(),
+            populatedDeque(2),
+        };
+
+        for (Deque<?> q : qs) {
+            assertFalse(q.contains(null));
+            assertFalse(q.remove(null));
+            assertFalse(q.removeFirstOccurrence(null));
+            assertFalse(q.removeLastOccurrence(null));
         }
     }
 

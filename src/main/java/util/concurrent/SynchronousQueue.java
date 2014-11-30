@@ -408,8 +408,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              */
             final long deadline = timed ? System.nanoTime() + nanos : 0L;
             Thread w = Thread.currentThread();
-            int spins = (shouldSpin(s) ?
-                         (timed ? maxTimedSpins : maxUntimedSpins) : 0);
+            int spins = shouldSpin(s)
+                ? (timed ? maxTimedSpins : maxUntimedSpins)
+                : 0;
             for (;;) {
                 if (w.isInterrupted())
                     s.tryCancel();
@@ -712,8 +713,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             /* Same idea as TransferStack.awaitFulfill */
             final long deadline = timed ? System.nanoTime() + nanos : 0L;
             Thread w = Thread.currentThread();
-            int spins = ((head.next == s) ?
-                         (timed ? maxTimedSpins : maxUntimedSpins) : 0);
+            int spins = (head.next == s)
+                ? (timed ? maxTimedSpins : maxUntimedSpins)
+                : 0;
             for (;;) {
                 if (w.isInterrupted())
                     s.tryCancel(e);

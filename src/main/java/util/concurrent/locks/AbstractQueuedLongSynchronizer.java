@@ -1812,10 +1812,10 @@ public abstract class AbstractQueuedLongSynchronizer
                 throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
+            final long deadline = System.nanoTime() + nanosTimeout;
             long initialNanos = nanosTimeout;
             Node node = addConditionWaiter();
             long savedState = fullyRelease(node);
-            final long deadline = System.nanoTime() + nanosTimeout;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
@@ -1898,9 +1898,9 @@ public abstract class AbstractQueuedLongSynchronizer
             long nanosTimeout = unit.toNanos(time);
             if (Thread.interrupted())
                 throw new InterruptedException();
+            final long deadline = System.nanoTime() + nanosTimeout;
             Node node = addConditionWaiter();
             long savedState = fullyRelease(node);
-            final long deadline = System.nanoTime() + nanosTimeout;
             boolean timedout = false;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {

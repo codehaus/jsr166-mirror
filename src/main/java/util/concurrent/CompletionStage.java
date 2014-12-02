@@ -558,7 +558,7 @@ public interface CompletionStage<T> {
 
     /**
      * Returns a new CompletionStage that, when this stage completes
-     * normally, is executed with this stage as the argument
+     * normally, is executed with this stage's result as the argument
      * to the supplied function.
      *
      * See the {@link CompletionStage} documentation for rules
@@ -574,7 +574,7 @@ public interface CompletionStage<T> {
     /**
      * Returns a new CompletionStage that, when this stage completes
      * normally, is executed using this stage's default asynchronous
-     * execution facility, with this stage as the argument to the
+     * execution facility, with this stage's result as the argument to the
      * supplied function.
      *
      * See the {@link CompletionStage} documentation for rules

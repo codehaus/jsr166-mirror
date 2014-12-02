@@ -1688,18 +1688,14 @@ public abstract class AbstractQueuedSynchronizer
      * @return previous sync state
      */
     final int fullyRelease(Node node) {
-        boolean failed = true;
         try {
             int savedState = getState();
-            if (release(savedState)) {
-                failed = false;
+            if (release(savedState))
                 return savedState;
-            } else {
-                throw new IllegalMonitorStateException();
-            }
-        } finally {
-            if (failed)
-                node.waitStatus = Node.CANCELLED;
+            throw new IllegalMonitorStateException();
+        } catch (Throwable t) {
+            node.waitStatus = Node.CANCELLED;
+            throw t;
         }
     }
 

@@ -63,7 +63,7 @@ import java.util.function.Consumer;
  * @see CopyOnWriteArrayList
  * @since 1.5
  * @author Doug Lea
- * @param <E> the type of elements held in this collection
+ * @param <E> the type of elements held in this set
  */
 public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         implements java.io.Serializable {

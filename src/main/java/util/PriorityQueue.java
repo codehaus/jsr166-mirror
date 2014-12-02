@@ -77,7 +77,7 @@ import java.util.stream.Stream;
  *
  * @since 1.5
  * @author Josh Bloch, Doug Lea
- * @param <E> the type of elements held in this collection
+ * @param <E> the type of elements held in this queue
  */
 public class PriorityQueue<E> extends AbstractQueue<E>
     implements java.io.Serializable {

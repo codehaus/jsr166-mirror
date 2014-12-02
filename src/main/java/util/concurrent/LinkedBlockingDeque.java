@@ -45,7 +45,7 @@ import java.util.function.Consumer;
  *
  * @since 1.6
  * @author  Doug Lea
- * @param <E> the type of elements held in this collection
+ * @param <E> the type of elements held in this deque
  */
 public class LinkedBlockingDeque<E>
     extends AbstractQueue<E>

@@ -2730,7 +2730,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         // invocation of multiple tasks is at least as efficient.
         ArrayList<Future<T>> futures = new ArrayList<>(tasks.size());
 
-        boolean done = false;
         try {
             for (Callable<T> t : tasks) {
                 ForkJoinTask<T> f = new ForkJoinTask.AdaptedCallable<T>(t);
@@ -2739,12 +2738,11 @@ public class ForkJoinPool extends AbstractExecutorService {
             }
             for (int i = 0, size = futures.size(); i < size; i++)
                 ((ForkJoinTask<?>)futures.get(i)).quietlyJoin();
-            done = true;
             return futures;
-        } finally {
-            if (!done)
-                for (int i = 0, size = futures.size(); i < size; i++)
-                    futures.get(i).cancel(false);
+        } catch (Throwable t) {
+            for (int i = 0, size = futures.size(); i < size; i++)
+                futures.get(i).cancel(false);
+            throw t;
         }
     }
 

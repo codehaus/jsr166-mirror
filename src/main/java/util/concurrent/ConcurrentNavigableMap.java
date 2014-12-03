@@ -5,7 +5,9 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
+
+import java.util.NavigableMap;
+import java.util.NavigableSet;
 
 /**
  * A {@link ConcurrentMap} supporting {@link NavigableMap} operations,
@@ -72,7 +74,7 @@ public interface ConcurrentNavigableMap<K,V>
      * reflected in the descending map, and vice-versa.
      *
      * <p>The returned map has an ordering equivalent to
-     * {@link Collections#reverseOrder(Comparator) Collections.reverseOrder}{@code (comparator())}.
+     * {@link java.util.Collections#reverseOrder(Comparator) Collections.reverseOrder}{@code (comparator())}.
      * The expression {@code m.descendingMap().descendingMap()} returns a
      * view of {@code m} essentially equivalent to {@code m}.
      *

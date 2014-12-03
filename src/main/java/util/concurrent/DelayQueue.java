@@ -5,10 +5,15 @@
  */
 
 package java.util.concurrent;
+
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.*;
+import java.util.AbstractQueue;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.PriorityQueue;
 
 /**
  * An unbounded {@linkplain BlockingQueue blocking queue} of

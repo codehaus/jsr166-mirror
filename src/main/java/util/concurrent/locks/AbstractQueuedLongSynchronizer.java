@@ -296,7 +296,9 @@ public abstract class AbstractQueuedLongSynchronizer
      * @param newState the new state value
      */
     protected final void setState(long newState) {
-        state = newState;
+        // Use putLongVolatile instead of ordinary volatile store when
+        // using compareAndSwapLong, for sake of some 32bit systems.
+        U.putLongVolatile(this, STATE, newState);
     }
 
     /**

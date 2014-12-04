@@ -296,7 +296,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * @param newState the new state value
      */
     protected final void setState(long newState) {
-        unsafe.putLongVolatile(this, stateOffset, newState);
+        U.putLongVolatile(this, STATE, newState);
     }
 
     /**
@@ -312,7 +312,7 @@ public abstract class AbstractQueuedLongSynchronizer
      */
     protected final boolean compareAndSetState(long expect, long update) {
         // See below for intrinsics setup to support this
-        return unsafe.compareAndSwapLong(this, stateOffset, expect, update);
+        return U.compareAndSwapLong(this, STATE, expect, update);
     }
 
     // Queuing utilities
@@ -1998,26 +1998,22 @@ public abstract class AbstractQueuedLongSynchronizer
      * are at it, we do the same for other CASable fields (which could
      * otherwise be done with atomic field updaters).
      */
-    private static final Unsafe unsafe = Unsafe.getUnsafe();
-    private static final long stateOffset;
-    private static final long headOffset;
-    private static final long tailOffset;
-    private static final long waitStatusOffset;
-    private static final long nextOffset;
+    private static final Unsafe U = Unsafe.getUnsafe();
+    private static final long STATE;
+    private static final long HEAD;
+    private static final long TAIL;
+    private static final long WAITSTATUS;
+    private static final long NEXT;
 
     static {
         try {
-            stateOffset = unsafe.objectFieldOffset
-                (AbstractQueuedLongSynchronizer.class.getDeclaredField("state"));
-            headOffset = unsafe.objectFieldOffset
-                (AbstractQueuedLongSynchronizer.class.getDeclaredField("head"));
-            tailOffset = unsafe.objectFieldOffset
-                (AbstractQueuedLongSynchronizer.class.getDeclaredField("tail"));
-            waitStatusOffset = unsafe.objectFieldOffset
-                (Node.class.getDeclaredField("waitStatus"));
-            nextOffset = unsafe.objectFieldOffset
-                (Node.class.getDeclaredField("next"));
-
+            Class<?> k = AbstractQueuedLongSynchronizer.class;
+            STATE = U.objectFieldOffset(k.getDeclaredField("state"));
+            HEAD = U.objectFieldOffset(k.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset(k.getDeclaredField("tail"));
+            k = Node.class;
+            WAITSTATUS = U.objectFieldOffset(k.getDeclaredField("waitStatus"));
+            NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
         } catch (Exception ex) { throw new Error(ex); }
     }
 
@@ -2025,14 +2021,14 @@ public abstract class AbstractQueuedLongSynchronizer
      * CAS head field. Used only by enq.
      */
     private final boolean compareAndSetHead(Node update) {
-        return unsafe.compareAndSwapObject(this, headOffset, null, update);
+        return U.compareAndSwapObject(this, HEAD, null, update);
     }
 
     /**
      * CAS tail field. Used only by enq.
      */
     private final boolean compareAndSetTail(Node expect, Node update) {
-        return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+        return U.compareAndSwapObject(this, TAIL, expect, update);
     }
 
     /**
@@ -2041,8 +2037,7 @@ public abstract class AbstractQueuedLongSynchronizer
     private static final boolean compareAndSetWaitStatus(Node node,
                                                          int expect,
                                                          int update) {
-        return unsafe.compareAndSwapInt(node, waitStatusOffset,
-                                        expect, update);
+        return U.compareAndSwapInt(node, WAITSTATUS, expect, update);
     }
 
     /**
@@ -2051,6 +2046,6 @@ public abstract class AbstractQueuedLongSynchronizer
     private static final boolean compareAndSetNext(Node node,
                                                    Node expect,
                                                    Node update) {
-        return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+        return U.compareAndSwapObject(node, NEXT, expect, update);
     }
 }

@@ -5,7 +5,10 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
+
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * A {@link Deque} that additionally supports blocking operations that wait
@@ -166,7 +169,7 @@ import java.util.*;
  *
  * @since 1.6
  * @author Doug Lea
- * @param <E> the type of elements held in this collection
+ * @param <E> the type of elements held in this deque
  */
 public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
     /*

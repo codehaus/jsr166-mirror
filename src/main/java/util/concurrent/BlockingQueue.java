@@ -146,7 +146,7 @@ import java.util.Queue;
  *
  * @since 1.5
  * @author Doug Lea
- * @param <E> the type of elements held in this collection
+ * @param <E> the type of elements held in this queue
  */
 public interface BlockingQueue<E> extends Queue<E> {
     /**

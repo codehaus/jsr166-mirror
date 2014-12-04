@@ -60,7 +60,7 @@ import java.util.function.Consumer;
  * @since 1.7
  * @author Doug Lea
  * @author Martin Buchholz
- * @param <E> the type of elements held in this collection
+ * @param <E> the type of elements held in this deque
  */
 public class ConcurrentLinkedDeque<E>
     extends AbstractCollection<E>

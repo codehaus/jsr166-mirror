@@ -296,7 +296,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * @param newState the new state value
      */
     protected final void setState(long newState) {
-        unsafe.putLongVolatile(this, stateOffset, newState);
+        state = newState;
     }
 
     /**
@@ -311,8 +311,7 @@ public abstract class AbstractQueuedLongSynchronizer
      *         value was not equal to the expected value.
      */
     protected final boolean compareAndSetState(long expect, long update) {
-        // See below for intrinsics setup to support this
-        return unsafe.compareAndSwapLong(this, stateOffset, expect, update);
+        return U.compareAndSwapLong(this, STATE, expect, update);
     }
 
     // Queuing utilities
@@ -604,7 +603,6 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return {@code true} if interrupted while waiting
      */
     final boolean acquireQueued(final Node node, long arg) {
-        boolean failed = true;
         try {
             boolean interrupted = false;
             for (;;) {
@@ -612,16 +610,15 @@ public abstract class AbstractQueuedLongSynchronizer
                 if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
-                    failed = false;
                     return interrupted;
                 }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     interrupted = true;
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -632,23 +629,21 @@ public abstract class AbstractQueuedLongSynchronizer
     private void doAcquireInterruptibly(long arg)
         throws InterruptedException {
         final Node node = addWaiter(Node.EXCLUSIVE);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
                 if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
-                    failed = false;
                     return;
                 }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -665,28 +660,28 @@ public abstract class AbstractQueuedLongSynchronizer
             return false;
         final long deadline = System.nanoTime() + nanosTimeout;
         final Node node = addWaiter(Node.EXCLUSIVE);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
                 if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
-                    failed = false;
                     return true;
                 }
                 nanosTimeout = deadline - System.nanoTime();
-                if (nanosTimeout <= 0L)
+                if (nanosTimeout <= 0L) {
+                    cancelAcquire(node);
                     return false;
+                }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -696,7 +691,6 @@ public abstract class AbstractQueuedLongSynchronizer
      */
     private void doAcquireShared(long arg) {
         final Node node = addWaiter(Node.SHARED);
-        boolean failed = true;
         try {
             boolean interrupted = false;
             for (;;) {
@@ -708,7 +702,6 @@ public abstract class AbstractQueuedLongSynchronizer
                         p.next = null; // help GC
                         if (interrupted)
                             selfInterrupt();
-                        failed = false;
                         return;
                     }
                 }
@@ -716,9 +709,9 @@ public abstract class AbstractQueuedLongSynchronizer
                     parkAndCheckInterrupt())
                     interrupted = true;
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -729,7 +722,6 @@ public abstract class AbstractQueuedLongSynchronizer
     private void doAcquireSharedInterruptibly(long arg)
         throws InterruptedException {
         final Node node = addWaiter(Node.SHARED);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
@@ -738,7 +730,6 @@ public abstract class AbstractQueuedLongSynchronizer
                     if (r >= 0) {
                         setHeadAndPropagate(node, r);
                         p.next = null; // help GC
-                        failed = false;
                         return;
                     }
                 }
@@ -746,9 +737,9 @@ public abstract class AbstractQueuedLongSynchronizer
                     parkAndCheckInterrupt())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -765,7 +756,6 @@ public abstract class AbstractQueuedLongSynchronizer
             return false;
         final long deadline = System.nanoTime() + nanosTimeout;
         final Node node = addWaiter(Node.SHARED);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
@@ -774,22 +764,23 @@ public abstract class AbstractQueuedLongSynchronizer
                     if (r >= 0) {
                         setHeadAndPropagate(node, r);
                         p.next = null; // help GC
-                        failed = false;
                         return true;
                     }
                 }
                 nanosTimeout = deadline - System.nanoTime();
-                if (nanosTimeout <= 0L)
+                if (nanosTimeout <= 0L) {
+                    cancelAcquire(node);
                     return false;
+                }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -1466,18 +1457,14 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return previous sync state
      */
     final long fullyRelease(Node node) {
-        boolean failed = true;
         try {
             long savedState = getState();
-            if (release(savedState)) {
-                failed = false;
+            if (release(savedState))
                 return savedState;
-            } else {
-                throw new IllegalMonitorStateException();
-            }
-        } finally {
-            if (failed)
-                node.waitStatus = Node.CANCELLED;
+            throw new IllegalMonitorStateException();
+        } catch (Throwable t) {
+            node.waitStatus = Node.CANCELLED;
+            throw t;
         }
     }
 
@@ -1816,9 +1803,10 @@ public abstract class AbstractQueuedLongSynchronizer
                 throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
+            final long deadline = System.nanoTime() + nanosTimeout;
+            long initialNanos = nanosTimeout;
             Node node = addConditionWaiter();
             long savedState = fullyRelease(node);
-            final long deadline = System.nanoTime() + nanosTimeout;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
@@ -1837,7 +1825,8 @@ public abstract class AbstractQueuedLongSynchronizer
                 unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
-            return deadline - System.nanoTime();
+            long remaining = deadline - System.nanoTime(); // avoid overflow
+            return (remaining < initialNanos) ? remaining : Long.MIN_VALUE;
         }
 
         /**
@@ -1900,9 +1889,9 @@ public abstract class AbstractQueuedLongSynchronizer
             long nanosTimeout = unit.toNanos(time);
             if (Thread.interrupted())
                 throw new InterruptedException();
+            final long deadline = System.nanoTime() + nanosTimeout;
             Node node = addConditionWaiter();
             long savedState = fullyRelease(node);
-            final long deadline = System.nanoTime() + nanosTimeout;
             boolean timedout = false;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
@@ -2008,26 +1997,22 @@ public abstract class AbstractQueuedLongSynchronizer
      * are at it, we do the same for other CASable fields (which could
      * otherwise be done with atomic field updaters).
      */
-    private static final Unsafe unsafe = Unsafe.getUnsafe();
-    private static final long stateOffset;
-    private static final long headOffset;
-    private static final long tailOffset;
-    private static final long waitStatusOffset;
-    private static final long nextOffset;
+    private static final Unsafe U = Unsafe.getUnsafe();
+    private static final long STATE;
+    private static final long HEAD;
+    private static final long TAIL;
+    private static final long WAITSTATUS;
+    private static final long NEXT;
 
     static {
         try {
-            stateOffset = unsafe.objectFieldOffset
-                (AbstractQueuedLongSynchronizer.class.getDeclaredField("state"));
-            headOffset = unsafe.objectFieldOffset
-                (AbstractQueuedLongSynchronizer.class.getDeclaredField("head"));
-            tailOffset = unsafe.objectFieldOffset
-                (AbstractQueuedLongSynchronizer.class.getDeclaredField("tail"));
-            waitStatusOffset = unsafe.objectFieldOffset
-                (Node.class.getDeclaredField("waitStatus"));
-            nextOffset = unsafe.objectFieldOffset
-                (Node.class.getDeclaredField("next"));
-
+            Class<?> k = AbstractQueuedLongSynchronizer.class;
+            STATE = U.objectFieldOffset(k.getDeclaredField("state"));
+            HEAD = U.objectFieldOffset(k.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset(k.getDeclaredField("tail"));
+            k = Node.class;
+            WAITSTATUS = U.objectFieldOffset(k.getDeclaredField("waitStatus"));
+            NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
         } catch (Exception ex) { throw new Error(ex); }
     }
 
@@ -2035,14 +2020,14 @@ public abstract class AbstractQueuedLongSynchronizer
      * CAS head field. Used only by enq.
      */
     private final boolean compareAndSetHead(Node update) {
-        return unsafe.compareAndSwapObject(this, headOffset, null, update);
+        return U.compareAndSwapObject(this, HEAD, null, update);
     }
 
     /**
      * CAS tail field. Used only by enq.
      */
     private final boolean compareAndSetTail(Node expect, Node update) {
-        return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+        return U.compareAndSwapObject(this, TAIL, expect, update);
     }
 
     /**
@@ -2051,8 +2036,7 @@ public abstract class AbstractQueuedLongSynchronizer
     private static final boolean compareAndSetWaitStatus(Node node,
                                                          int expect,
                                                          int update) {
-        return unsafe.compareAndSwapInt(node, waitStatusOffset,
-                                        expect, update);
+        return U.compareAndSwapInt(node, WAITSTATUS, expect, update);
     }
 
     /**
@@ -2061,6 +2045,6 @@ public abstract class AbstractQueuedLongSynchronizer
     private static final boolean compareAndSetNext(Node node,
                                                    Node expect,
                                                    Node update) {
-        return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+        return U.compareAndSwapObject(node, NEXT, expect, update);
     }
 }

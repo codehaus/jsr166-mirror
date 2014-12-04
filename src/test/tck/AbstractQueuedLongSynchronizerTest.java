@@ -9,6 +9,7 @@
 import junit.framework.*;
 import java.util.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer.ConditionObject;
 
@@ -1208,6 +1209,30 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         assertFalse(l.isSignalled());
         awaitTermination(t);
         assertFalse(l.isSignalled());
+    }
+
+    /**
+     * awaitNanos/timed await with 0 wait times out immediately
+     */
+    public void testAwait_Zero() throws InterruptedException {
+        final Mutex sync = new Mutex();
+        final ConditionObject c = sync.newCondition();
+        sync.acquire();
+        assertTrue(c.awaitNanos(0L) <= 0);
+        assertFalse(c.await(0L, NANOSECONDS));
+        sync.release();
+    }
+
+    /**
+     * awaitNanos/timed await with maximum negative wait times does not underflow
+     */
+    public void testAwait_NegativeInfinity() throws InterruptedException {
+        final Mutex sync = new Mutex();
+        final ConditionObject c = sync.newCondition();
+        sync.acquire();
+        assertTrue(c.awaitNanos(Long.MIN_VALUE) <= 0);
+        assertFalse(c.await(Long.MIN_VALUE, NANOSECONDS));
+        sync.release();
     }
 
 }

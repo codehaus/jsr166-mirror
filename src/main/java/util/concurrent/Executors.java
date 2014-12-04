@@ -5,8 +5,10 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
+
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Collection;
+import java.util.List;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;

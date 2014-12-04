@@ -159,7 +159,7 @@ package java.util;
  * @author Doug Lea
  * @author Josh Bloch
  * @since  1.6
- * @param <E> the type of elements held in this collection
+ * @param <E> the type of elements held in this deque
  */
 public interface Deque<E> extends Queue<E> {
     /**

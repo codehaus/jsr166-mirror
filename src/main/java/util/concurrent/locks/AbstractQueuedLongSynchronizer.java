@@ -311,7 +311,6 @@ public abstract class AbstractQueuedLongSynchronizer
      *         value was not equal to the expected value.
      */
     protected final boolean compareAndSetState(long expect, long update) {
-        // See below for intrinsics setup to support this
         return U.compareAndSwapLong(this, STATE, expect, update);
     }
 

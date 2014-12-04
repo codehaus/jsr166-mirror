@@ -533,7 +533,6 @@ public abstract class AbstractQueuedSynchronizer
      *         value was not equal to the expected value.
      */
     protected final boolean compareAndSetState(int expect, int update) {
-        // See below for intrinsics setup to support this
         return U.compareAndSwapInt(this, STATE, expect, update);
     }
 

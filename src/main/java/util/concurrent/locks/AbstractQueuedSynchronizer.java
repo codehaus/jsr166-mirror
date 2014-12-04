@@ -826,7 +826,6 @@ public abstract class AbstractQueuedSynchronizer
      * @return {@code true} if interrupted while waiting
      */
     final boolean acquireQueued(final Node node, int arg) {
-        boolean failed = true;
         try {
             boolean interrupted = false;
             for (;;) {
@@ -834,16 +833,15 @@ public abstract class AbstractQueuedSynchronizer
                 if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
-                    failed = false;
                     return interrupted;
                 }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     interrupted = true;
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -854,23 +852,21 @@ public abstract class AbstractQueuedSynchronizer
     private void doAcquireInterruptibly(int arg)
         throws InterruptedException {
         final Node node = addWaiter(Node.EXCLUSIVE);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
                 if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
-                    failed = false;
                     return;
                 }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -887,28 +883,28 @@ public abstract class AbstractQueuedSynchronizer
             return false;
         final long deadline = System.nanoTime() + nanosTimeout;
         final Node node = addWaiter(Node.EXCLUSIVE);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
                 if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null; // help GC
-                    failed = false;
                     return true;
                 }
                 nanosTimeout = deadline - System.nanoTime();
-                if (nanosTimeout <= 0L)
+                if (nanosTimeout <= 0L) {
+                    cancelAcquire(node);
                     return false;
+                }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -918,7 +914,6 @@ public abstract class AbstractQueuedSynchronizer
      */
     private void doAcquireShared(int arg) {
         final Node node = addWaiter(Node.SHARED);
-        boolean failed = true;
         try {
             boolean interrupted = false;
             for (;;) {
@@ -930,7 +925,6 @@ public abstract class AbstractQueuedSynchronizer
                         p.next = null; // help GC
                         if (interrupted)
                             selfInterrupt();
-                        failed = false;
                         return;
                     }
                 }
@@ -938,9 +932,9 @@ public abstract class AbstractQueuedSynchronizer
                     parkAndCheckInterrupt())
                     interrupted = true;
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -951,7 +945,6 @@ public abstract class AbstractQueuedSynchronizer
     private void doAcquireSharedInterruptibly(int arg)
         throws InterruptedException {
         final Node node = addWaiter(Node.SHARED);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
@@ -960,7 +953,6 @@ public abstract class AbstractQueuedSynchronizer
                     if (r >= 0) {
                         setHeadAndPropagate(node, r);
                         p.next = null; // help GC
-                        failed = false;
                         return;
                     }
                 }
@@ -968,9 +960,9 @@ public abstract class AbstractQueuedSynchronizer
                     parkAndCheckInterrupt())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 
@@ -987,7 +979,6 @@ public abstract class AbstractQueuedSynchronizer
             return false;
         final long deadline = System.nanoTime() + nanosTimeout;
         final Node node = addWaiter(Node.SHARED);
-        boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
@@ -996,22 +987,23 @@ public abstract class AbstractQueuedSynchronizer
                     if (r >= 0) {
                         setHeadAndPropagate(node, r);
                         p.next = null; // help GC
-                        failed = false;
                         return true;
                     }
                 }
                 nanosTimeout = deadline - System.nanoTime();
-                if (nanosTimeout <= 0L)
+                if (nanosTimeout <= 0L) {
+                    cancelAcquire(node);
                     return false;
+                }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanosTimeout);
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
-        } finally {
-            if (failed)
-                cancelAcquire(node);
+        } catch (Throwable t) {
+            cancelAcquire(node);
+            throw t;
         }
     }
 

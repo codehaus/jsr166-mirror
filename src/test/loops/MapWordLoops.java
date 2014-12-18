@@ -25,7 +25,7 @@ public class MapWordLoops {
     static final int numTests = 3;
 
     public static void main(String[] args) {
-        Class mapClass = null;
+        Class<?> mapClass = null;
         try {
             mapClass = Class.forName(args[0]);
         } catch (ClassNotFoundException e) {
@@ -42,7 +42,7 @@ public class MapWordLoops {
 
     }
 
-    static void tests(Class mapClass, int numTests, int sizeIndex) {
+    static void tests(Class<?> mapClass, int numTests, int sizeIndex) {
         try {
             String[] key = readWords(sizeIndex);
             int size = key.length;
@@ -66,7 +66,7 @@ public class MapWordLoops {
     }
 
 
-    static Map<String,String> newMap(Class cl) {
+    static Map<String,String> newMap(Class<?> cl) {
         try {
             Map m = (Map<String,String>)cl.newInstance();
             return m;

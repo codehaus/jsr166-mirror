@@ -25,7 +25,7 @@ public class NavigableMapCheck {
     }
 
     public static void main(String[] args) throws Exception {
-        Class mapClass = null;
+        Class<?> mapClass = null;
         int numTests = 50;
         int size = 50000;
 
@@ -68,7 +68,7 @@ public class NavigableMapCheck {
 
     }
 
-    static NavigableMap newMap(Class cl) {
+    static NavigableMap newMap(Class<?> cl) {
         try {
             NavigableMap m = (NavigableMap) cl.newInstance();
             return m;

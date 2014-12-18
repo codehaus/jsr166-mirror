@@ -18,7 +18,7 @@ public class ConcurrentDequeLoops {
         int maxStages = 8;
         int items = 1000000;
 
-        Class klass = null;
+        Class<?> klass = null;
         if (args.length > 0) {
             try {
                 klass = Class.forName(args[0]);
@@ -116,7 +116,7 @@ public class ConcurrentDequeLoops {
         }
     }
 
-    static void oneRun(Class klass, int n, int items) throws Exception {
+    static void oneRun(Class<?> klass, int n, int items) throws Exception {
         Deque<Integer> q = (Deque<Integer>) klass.newInstance();
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);

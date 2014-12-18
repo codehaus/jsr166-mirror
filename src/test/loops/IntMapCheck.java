@@ -22,7 +22,7 @@ public class IntMapCheck {
     }
 
     public static void main(String[] args) throws Exception {
-        Class mapClass = java.util.concurrent.ConcurrentHashMap.class;
+        Class<?> mapClass = java.util.concurrent.ConcurrentHashMap.class;
         int numTests = 50;
         int size = 75000;
 
@@ -73,7 +73,7 @@ public class IntMapCheck {
             stest(newMap(mapClass), size);
     }
 
-    static Map<Integer,Integer> newMap(Class cl) {
+    static Map<Integer,Integer> newMap(Class<?> cl) {
         try {
             Map m = (Map<Integer,Integer>)cl.newInstance();
             return m;

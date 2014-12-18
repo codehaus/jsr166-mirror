@@ -61,7 +61,7 @@ public class CyclicBarrierLoops {
                     actions[i] = new CyclicBarrierAction(i, barrier, size);
                 }
 
-                Future[] futures = new Future[k];
+                Future<?>[] futures = new Future<?>[k];
                 for (int i = 0; i < k; ++i) {
                     futures[i] = pool.submit(actions[i]);
                 }

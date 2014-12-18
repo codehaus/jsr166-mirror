@@ -103,9 +103,9 @@ public class DenseMapMicroBenchmark {
 
     static final class Hasher extends Job {
         final Object[] elts;
-        final Class mapClass;
+        final Class<?> mapClass;
         volatile int matches;
-        Hasher(String name, Object[] elts, Class mapClass) {
+        Hasher(String name, Object[] elts, Class<?> mapClass) {
             super(name);
             this.elts = elts;
             this.mapClass = mapClass;
@@ -151,7 +151,7 @@ public class DenseMapMicroBenchmark {
     }
 
     public static void main(String[] args) throws Throwable {
-        Class mc = java.util.HashMap.class;
+        Class<?> mc = java.util.HashMap.class;
         if (args.length > 0)
             mc = Class.forName(args[0]);
         if (args.length > 1)

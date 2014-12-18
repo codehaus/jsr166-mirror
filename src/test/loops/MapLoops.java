@@ -20,7 +20,7 @@ public class MapLoops {
 
     public static void main(String[] args) throws Exception {
 
-        Class mapClass = null;
+        Class<?> mapClass = null;
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
@@ -96,7 +96,7 @@ public class MapLoops {
         }
     }
 
-    static void test(int i, int nkeys, Class mapClass) throws Exception {
+    static void test(int i, int nkeys, Class<?> mapClass) throws Exception {
         System.out.print("Threads: " + i + "\t:");
         Map<Integer, Integer> map = (Map<Integer,Integer>)mapClass.newInstance();
         Integer[] key = makeKeys(nkeys);

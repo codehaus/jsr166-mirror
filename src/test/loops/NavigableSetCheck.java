@@ -25,7 +25,7 @@ public class NavigableSetCheck {
     }
 
     public static void main(String[] args) throws Exception {
-        Class setClass = null;
+        Class<?> setClass = null;
         int numTests = 50;
         int size = 50000;
 
@@ -68,7 +68,7 @@ public class NavigableSetCheck {
 
     }
 
-    static NavigableSet newSet(Class cl) {
+    static NavigableSet newSet(Class<?> cl) {
         try {
             NavigableSet m = (NavigableSet) cl.newInstance();
             return m;

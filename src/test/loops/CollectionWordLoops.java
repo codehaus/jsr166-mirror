@@ -23,7 +23,7 @@ public class CollectionWordLoops {
     static final int numTests  = 2;
 
     public static void main(String[] args) {
-        Class collectionClass = null;
+        Class<?> collectionClass = null;
         try {
             collectionClass = Class.forName(args[0]);
         } catch (ClassNotFoundException e) {
@@ -40,7 +40,7 @@ public class CollectionWordLoops {
 
     }
 
-    static void tests(Class collectionClass, int numTests, int sizeIndex) {
+    static void tests(Class<?> collectionClass, int numTests, int sizeIndex) {
         try {
             String[] key = readWords(sizeIndex);
             int size = key.length;
@@ -64,7 +64,7 @@ public class CollectionWordLoops {
     }
 
 
-    static Collection<String> newCollection(Class cl) {
+    static Collection<String> newCollection(Class<?> cl) {
         try {
             Collection m = (Collection<String>) cl.newInstance();
             return m;

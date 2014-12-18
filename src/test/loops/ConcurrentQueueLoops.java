@@ -21,7 +21,7 @@ public class ConcurrentQueueLoops {
     public static void main(String[] args) throws Exception {
         int maxStages = 100;
         int work = 1024;
-        Class klass = null;
+        Class<?> klass = null;
         if (args.length > 0) {
             try {
                 klass = Class.forName(args[0]);
@@ -116,7 +116,7 @@ public class ConcurrentQueueLoops {
         }
     }
 
-    static void oneRun(Class klass, int n) throws Exception {
+    static void oneRun(Class<?> klass, int n) throws Exception {
         Queue<Integer> q = (Queue<Integer>) klass.newInstance();
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);

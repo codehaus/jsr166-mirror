@@ -23,7 +23,7 @@ public class CollectionLoops {
         int nkeys       = 10000;
         int nops        = 100000;
 
-        Class collectionClass = null;
+        Class<?> collectionClass = null;
         if (args.length > 0) {
             try {
                 collectionClass = Class.forName(args[0]);
@@ -103,7 +103,7 @@ public class CollectionLoops {
         }
     }
 
-    static void test(int i, int nk, int nops, Class collectionClass) throws Exception {
+    static void test(int i, int nk, int nops, Class<?> collectionClass) throws Exception {
         if (print)
             System.out.print("Threads: " + i + "\t:");
         Collection<Integer> collection = (Collection<Integer>)collectionClass.newInstance();

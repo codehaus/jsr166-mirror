@@ -69,7 +69,7 @@ public class TieredPhaserLoops {
 
                 Runnable[] actions = new Runnable [k];
                 build(actions, size, 0, k, new Phaser());
-                Future[] futures = new Future[k];
+                Future<?>[] futures = new Future<?>[k];
                 for (int i = 0; i < k; ++i) {
                     futures[i] = pool.submit(actions[i]);
                 }

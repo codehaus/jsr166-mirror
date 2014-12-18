@@ -11,7 +11,7 @@ public class SetBash {
     public static void main(String[] args) {
         int numItr = Integer.parseInt(args[1]);
         int setSize = Integer.parseInt(args[2]);
-        Class cl = null;
+        Class<?> cl = null;
 
         try {
             cl = Class.forName(args[0]);
@@ -78,7 +78,7 @@ public class SetBash {
     }
 
     // Done inefficiently so as to exercise toArray
-    static Set clone(Set s, Class cl, boolean synch) {
+    static Set clone(Set s, Class<?> cl, boolean synch) {
         Set clone = newSet(cl, synch);
         clone.addAll(Arrays.asList(s.toArray()));
         if (!s.equals(clone))
@@ -90,7 +90,7 @@ public class SetBash {
         return clone;
     }
 
-    static Set newSet(Class cl, boolean synch) {
+    static Set newSet(Class<?> cl, boolean synch) {
         try {
             Set s = (Set) cl.newInstance();
             if (synch)

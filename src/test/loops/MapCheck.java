@@ -18,8 +18,8 @@ import java.io.*;
 public class MapCheck {
     static final Object MISSING = new Object();
     static TestTimer timer = new TestTimer();
-    static Class eclass;
-    static Class mapClass = java.util.concurrent.ConcurrentHashMap.class;
+    static Class<?> eclass;
+    static Class<?> mapClass = java.util.concurrent.ConcurrentHashMap.class;
 
     static final LoopHelpers.SimpleRandom srng = new LoopHelpers.SimpleRandom();
     static final Random rng = new Random(3152688);

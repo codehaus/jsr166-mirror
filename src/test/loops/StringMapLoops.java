@@ -20,7 +20,7 @@ public class StringMapLoops {
 
     public static void main(String[] args) throws Exception {
 
-        Class mapClass = null;
+        Class<?> mapClass = null;
         if (args.length > 0) {
             try {
                 mapClass = Class.forName(args[0]);
@@ -118,7 +118,7 @@ public class StringMapLoops {
         }
     }
 
-    static void test(int i, int nkeys, String[] key, Class mapClass) throws Exception {
+    static void test(int i, int nkeys, String[] key, Class<?> mapClass) throws Exception {
         System.out.print("Threads: " + i + "\t:");
         Map<String, String> map = (Map<String,String>)mapClass.newInstance();
         // Uncomment to start with a non-empty table

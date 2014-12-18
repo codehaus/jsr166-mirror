@@ -71,9 +71,9 @@ public class SpinningTieredPhaserLoops {
             for (int size = FIRST_SIZE; size <= LAST_SIZE; size *= 10) {
                 long startTime = System.nanoTime();
 
-                Runnable[] actions = new Runnable [k];
+                Runnable[] actions = new Runnable[k];
                 build(actions, size, 0, k, new Phaser());
-                Future[] futures = new Future[k];
+                Future<?>[] futures = new Future<?>[k];
                 for (int i = 0; i < k; ++i) {
                     futures[i] = pool.submit(actions[i]);
                 }

@@ -37,8 +37,8 @@ public class CancelledProducerConsumerLoops {
     static void oneRun(BlockingQueue<Integer> q, int npairs, int iters) throws Exception {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(npairs * 2 + 1, timer);
-        Future[] prods = new Future[npairs];
-        Future[] cons = new Future[npairs];
+        Future<?>[] prods = new Future<?>[npairs];
+        Future<?>[] cons = new Future<?>[npairs];
 
         for (int i = 0; i < npairs; ++i) {
             prods[i] = pool.submit(new Producer(q, barrier, iters));

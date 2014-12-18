@@ -23,8 +23,7 @@ public final class SimpleFairReentrantLockLoops {
         new ReentrantLockLoop(1).test();
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             System.out.print("Threads: " + i);
             new ReentrantLockLoop(i).test();
             Thread.sleep(100);

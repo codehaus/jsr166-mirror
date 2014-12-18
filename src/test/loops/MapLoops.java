@@ -58,9 +58,8 @@ public class MapLoops {
         System.out.print(" ops: " + nops);
         System.out.println();
 
-        int k = 1;
         int warmups = 2;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             Thread.sleep(100);
             test(i, nkeys, mapClass);
             if (warmups > 0)

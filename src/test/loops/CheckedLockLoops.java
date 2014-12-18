@@ -31,8 +31,7 @@ public final class CheckedLockLoops {
 
     static void runTest(int maxThreads, int iters) throws Exception {
         print = true;
-        int k = 1;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             System.out.println("Threads:" + i);
             oneTest(i, iters / i);
             if (i == k) {

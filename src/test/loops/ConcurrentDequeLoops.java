@@ -43,8 +43,7 @@ public class ConcurrentDequeLoops {
         Thread.sleep(100);
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxStages;) {
+        for (int k = 1, i = 1; i <= maxStages;) {
             oneRun(klass, i, items);
             if (i == k) {
                 k = i << 1;

@@ -54,8 +54,7 @@ public class OfferPollLoops {
 
         warmup();
         print = true;
-        int k = 1;
-        for (int i = 1; i <= maxN;) {
+        for (int k = 1, i = 1; i <= maxN;) {
             System.out.println("Pairs:" + i);
             oneTest(i, ITERS);
             if (i == k) {

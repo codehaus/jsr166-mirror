@@ -20,8 +20,7 @@ public final class SimpleLoops {
 
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             System.out.print("Threads: " + 1);
             new Loop(1).test();
             Thread.sleep(100);

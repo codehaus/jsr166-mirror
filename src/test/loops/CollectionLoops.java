@@ -65,9 +65,8 @@ public class CollectionLoops {
         test(4, 100, 100, collectionClass);
         print = true;
 
-        int k = 1;
         int warmups = 2;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             Thread.sleep(100);
             test(i, nkeys, nops, collectionClass);
             if (warmups > 0)

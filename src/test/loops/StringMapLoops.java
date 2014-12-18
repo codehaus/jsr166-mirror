@@ -60,9 +60,8 @@ public class StringMapLoops {
 
         String[] key = makeKeys(nkeys);
 
-        int k = 1;
         int warmups = 2;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             Thread.sleep(100);
             test(i, nkeys, key, mapClass);
             shuffleKeys(key);

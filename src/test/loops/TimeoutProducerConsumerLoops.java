@@ -51,8 +51,7 @@ public class TimeoutProducerConsumerLoops {
             maxPairs = Integer.parseInt(args[0]);
 
         print = true;
-        int k = 1;
-        for (int i = 1; i <= maxPairs;) {
+        for (int k = 1, i = 1; i <= maxPairs;) {
             System.out.println("Pairs:" + i);
             oneTest(i, iters);
             Thread.sleep(100);

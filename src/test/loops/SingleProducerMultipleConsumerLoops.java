@@ -36,8 +36,7 @@ public class SingleProducerMultipleConsumerLoops {
         warmup();
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxn;) {
+        for (int k = 1, i = 1; i <= maxn;) {
             System.out.println("Consumers:" + i);
             oneTest(i, ITERS);
             if (i == k) {

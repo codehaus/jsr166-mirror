@@ -55,8 +55,7 @@ public class UnboundedQueueFillEmptyLoops {
                     m = 0;
                 q.offer(numbers[m++]);
             }
-            Integer p;
-            while ((p = q.poll()) != null)
+            for (Integer p; (p = q.poll()) != null; )
                 sum += p.intValue();
         }
         total += sum;

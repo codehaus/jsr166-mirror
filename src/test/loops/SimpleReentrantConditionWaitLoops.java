@@ -15,7 +15,7 @@ import java.util.*;
 public final class SimpleReentrantConditionWaitLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
     static final LoopHelpers.SimpleRandom rng = new LoopHelpers.SimpleRandom();
-    static final int ITERS = Integer.getInteger("iters", 2000000);;
+    static final int ITERS = Integer.getInteger("iters", 2000000);
     static final int MAX_THREADS = Integer.getInteger("maxThreads", 1);
     static boolean print = false;
 

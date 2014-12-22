@@ -1027,6 +1027,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                     p.val = value;
                             }
                         }
+                        else if (f instanceof ReservationNode)
+                            throw new IllegalStateException("Recursive update");
                     }
                 }
                 if (binCount != 0) {
@@ -1129,6 +1131,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                 }
                             }
                         }
+                        else if (f instanceof ReservationNode)
+                            throw new IllegalStateException("Recursive update");
                     }
                 }
                 if (validated) {
@@ -1657,6 +1661,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                 Node<K,V> pred = e;
                                 if ((e = e.next) == null) {
                                     if ((val = mappingFunction.apply(key)) != null) {
+                                        if (pred.next != null)
+                                            throw new IllegalStateException("Recursive update");
                                         added = true;
                                         pred.next = new Node<K,V>(h, key, val, null);
                                     }
@@ -1676,6 +1682,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                 t.putTreeVal(h, key, val);
                             }
                         }
+                        else if (f instanceof ReservationNode)
+                            throw new IllegalStateException("Recursive update");
                     }
                 }
                 if (binCount != 0) {
@@ -1771,6 +1779,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                 }
                             }
                         }
+                        else if (f instanceof ReservationNode)
+                            throw new IllegalStateException("Recursive update");
                     }
                 }
                 if (binCount != 0)
@@ -1862,6 +1872,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                 if ((e = e.next) == null) {
                                     val = remappingFunction.apply(key, null);
                                     if (val != null) {
+                                        if (pred.next != null)
+                                            throw new IllegalStateException("Recursive update");
                                         delta = 1;
                                         pred.next =
                                             new Node<K,V>(h, key, val, null);
@@ -1894,6 +1906,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                     setTabAt(tab, i, untreeify(t.first));
                             }
                         }
+                        else if (f instanceof ReservationNode)
+                            throw new IllegalStateException("Recursive update");
                     }
                 }
                 if (binCount != 0) {
@@ -2003,6 +2017,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                     setTabAt(tab, i, untreeify(t.first));
                             }
                         }
+                        else if (f instanceof ReservationNode)
+                            throw new IllegalStateException("Recursive update");
                     }
                 }
                 if (binCount != 0) {

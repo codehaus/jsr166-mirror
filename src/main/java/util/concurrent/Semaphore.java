@@ -114,10 +114,10 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  * #acquire(int) acquire} and {@link #release(int) release} multiple
  * permits at a time. These methods are generally more efficient and
  * effective than loops. However, they do not establish any preference
- * order. For example, if thread A invokes @code{s.acquire(3}) and
- * thread B invokes @code{s.acquire(2)}, and two permits become
+ * order. For example, if thread A invokes {@code s.acquire(3}) and
+ * thread B invokes {@code s.acquire(2)}, and two permits become
  * available, then there is no guarantee that thread B will obtain
- * them unless its acquire came first and Semaphore @code{s} is in
+ * them unless its acquire came first and Semaphore {@code s} is in
  * fair mode.
  *
  * <p>Memory consistency effects: Actions in a thread prior to calling
@@ -410,7 +410,7 @@ public class Semaphore implements java.io.Serializable {
      * <p>Acquires the given number of permits, if they are available,
      * and returns immediately, reducing the number of available permits
      * by the given amount. This method has the same effect as the
-     * loop @code{for (int i = 0; i < permits; ++i) acquire();} except
+     * loop {@code for (int i = 0; i < permits; ++i) acquire();} except
      * that it atomically acquires the permits all at once:
      *
      * <p>If insufficient permits are available then the current thread becomes
@@ -452,7 +452,7 @@ public class Semaphore implements java.io.Serializable {
      * <p>Acquires the given number of permits, if they are available,
      * and returns immediately, reducing the number of available permits
      * by the given amount.This method has the same effect as the
-     * loop @code{for (int i = 0; i < permits; ++i) acquireUninterruptibly();}
+     * loop {@code for (int i = 0; i < permits; ++i) acquireUninterruptibly();}
      * except that it atomically acquires the permits all at once:
      *
      * <p>If insufficient permits are available then the current thread becomes

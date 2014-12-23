@@ -409,7 +409,9 @@ public class Semaphore implements java.io.Serializable {
      *
      * <p>Acquires the given number of permits, if they are available,
      * and returns immediately, reducing the number of available permits
-     * by the given amount.
+     * by the given amount. This method has the same effect as the
+     * loop @code{for (int i = 0; i < permits; ++i) acquire();} except
+     * that it atomically acquires the permits all at once:
      *
      * <p>If insufficient permits are available then the current thread becomes
      * disabled for thread scheduling purposes and lies dormant until
@@ -449,7 +451,9 @@ public class Semaphore implements java.io.Serializable {
      *
      * <p>Acquires the given number of permits, if they are available,
      * and returns immediately, reducing the number of available permits
-     * by the given amount.
+     * by the given amount.This method has the same effect as the
+     * loop @code{for (int i = 0; i < permits; ++i) acquireUninterruptibly();}
+     * except that it atomically acquires the permits all at once:
      *
      * <p>If insufficient permits are available then the current thread becomes
      * disabled for thread scheduling purposes and lies dormant until

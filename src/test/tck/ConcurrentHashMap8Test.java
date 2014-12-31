@@ -1003,9 +1003,11 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
     public void testSearchValuesSequentially() {
         ConcurrentHashMap<Long, Long> m = longMap();
         Long r;
-        r = m.searchValues(Long.MAX_VALUE, (Long x) -> x.longValue() == (long)(SIZE/2)? x : null);
+        r = m.searchValues(Long.MAX_VALUE,
+            (Long x) -> (x.longValue() == (long)(SIZE/2)) ? x : null);
         assertEquals((long)r, (long)(SIZE/2));
-        r = m.searchValues(Long.MAX_VALUE, (Long x) -> x.longValue() < 0L ? x : null);
+        r = m.searchValues(Long.MAX_VALUE,
+            (Long x) -> (x.longValue() < 0L) ? x : null);
         assertNull(r);
     }
 

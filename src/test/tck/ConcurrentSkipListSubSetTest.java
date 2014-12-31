@@ -6,14 +6,9 @@
 
 import junit.framework.*;
 import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NavigableSet;
-import java.util.NoSuchElementException;
-import java.util.Random;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 

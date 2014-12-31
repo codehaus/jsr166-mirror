@@ -19,7 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedTransferQueue;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class LinkedTransferQueueTest extends JSR166TestCase {

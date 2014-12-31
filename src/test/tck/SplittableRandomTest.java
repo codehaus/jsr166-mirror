@@ -7,7 +7,6 @@ import junit.framework.*;
 import java.util.*;
 import java.util.SplittableRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 public class SplittableRandomTest extends JSR166TestCase {

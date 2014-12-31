@@ -8,7 +8,6 @@
 import junit.framework.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.util.*;
 
 public class ThreadPoolExecutor9Test extends JSR166TestCase {

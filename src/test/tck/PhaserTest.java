@@ -12,8 +12,6 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PhaserTest extends JSR166TestCase {

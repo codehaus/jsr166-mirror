@@ -6,7 +6,6 @@
  */
 
 import junit.framework.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.StampedLock;
 import java.util.concurrent.CountDownLatch;

@@ -4,8 +4,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import java.util.concurrent.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 class BoxedLongSort {
     static final long NPS = (1000L * 1000 * 1000);

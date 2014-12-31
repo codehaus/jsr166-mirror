@@ -6,9 +6,19 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ConcurrentHashMapTest extends JSR166TestCase {
     public static void main(String[] args) {

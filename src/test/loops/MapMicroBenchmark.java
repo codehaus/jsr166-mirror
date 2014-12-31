@@ -4,9 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import java.util.*;
 import java.io.*;
 import java.math.*;
+import java.util.*;
 
 /**
  * A micro-benchmark with key types and operation mixes roughly
@@ -38,7 +38,7 @@ import java.math.*;
 public class MapMicroBenchmark {
     static final String wordFile = "testwords.txt";
 
-    static Class mapClass;
+    static Class<?> mapClass;
     static boolean randomSearches = true;
 
     // Nanoseconds per run
@@ -213,13 +213,13 @@ public class MapMicroBenchmark {
 
     static final class Job {
         final String name;
-        final Class elementClass;
+        final Class<?> elementClass;
         long[] nanos = new long[nsizes];
         final Object[] items;
         Object[] searches;
         volatile long checkSum;
         volatile int lastSum;
-        Job(String name, Object[] items, Class elementClass) {
+        Job(String name, Object[] items, Class<?> elementClass) {
             this.name = name;
             this.items = items;
             this.elementClass = elementClass;

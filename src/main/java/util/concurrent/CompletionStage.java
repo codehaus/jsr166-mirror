@@ -5,12 +5,11 @@
  */
 
 package java.util.concurrent;
-import java.util.function.Supplier;
-import java.util.function.Consumer;
+
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.BiFunction;
-import java.util.concurrent.Executor;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * A stage of a possibly asynchronous computation, that performs an
@@ -623,12 +622,14 @@ public interface CompletionStage<T> {
      * Returns a new CompletionStage with the same result or exception as
      * this stage, that executes the given action when this stage completes.
      *
-     * <p>When this stage is complete, the given action is invoked with the
-     * result (or {@code null} if none) and the exception (or {@code null}
-     * if none) of this stage as arguments.  The returned stage is completed
-     * when the action returns.  If the supplied action itself encounters an
-     * exception, then the returned stage exceptionally completes with this
-     * exception unless this stage also completed exceptionally.
+     * <p>When this stage is complete, the given action is invoked
+     * with the result (or {@code null} if none) and the exception (or
+     * {@code null} if none) of this stage as arguments.  The returned
+     * stage is completed when the action returns.  If the supplied
+     * action itself encounters an exception, then the returned stage
+     * exceptionally completes with this exception unless this stage
+     * also completed exceptionally (in which case, the returned stage
+     * exceptionally completes with the original exception).
      *
      * @param action the action to perform
      * @return the new CompletionStage

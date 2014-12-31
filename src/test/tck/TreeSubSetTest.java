@@ -4,14 +4,16 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NavigableSet;
-import java.util.SortedSet;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class TreeSubSetTest extends JSR166TestCase {
     public static void main(String[] args) {

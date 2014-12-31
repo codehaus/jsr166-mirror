@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,7 +17,6 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.Spliterator;
-import java.util.stream.Stream;
 
 /**
  * A scalable concurrent {@link NavigableSet} implementation based on

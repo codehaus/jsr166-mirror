@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
@@ -15,6 +14,9 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedDeque;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ConcurrentLinkedDequeTest extends JSR166TestCase {
 

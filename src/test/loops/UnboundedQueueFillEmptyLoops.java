@@ -6,8 +6,8 @@
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 public class UnboundedQueueFillEmptyLoops {
     static int maxSize = 10000;
@@ -16,7 +16,7 @@ public class UnboundedQueueFillEmptyLoops {
     static Integer[] numbers;
 
     public static void main(String[] args) throws Exception {
-        Class klass = null;
+        Class<?> klass = null;
         if (args.length > 0) {
             try {
                 klass = Class.forName(args[0]);
@@ -44,7 +44,7 @@ public class UnboundedQueueFillEmptyLoops {
         if (total == 0) System.out.print(" ");
     }
 
-    static void oneRun(Class klass, int n) throws Exception {
+    static void oneRun(Class<?> klass, int n) throws Exception {
         Queue<Integer> q = (Queue<Integer>) klass.newInstance();
         int sum = total;
         int m = rng.nextInt(numbers.length);
@@ -55,8 +55,7 @@ public class UnboundedQueueFillEmptyLoops {
                     m = 0;
                 q.offer(numbers[m++]);
             }
-            Integer p;
-            while ((p = q.poll()) != null)
+            for (Integer p; (p = q.poll()) != null; )
                 sum += p.intValue();
         }
         total += sum;

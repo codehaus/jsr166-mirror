@@ -6,11 +6,15 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
-import java.util.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class SemaphoreTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -612,7 +616,7 @@ public class SemaphoreTest extends JSR166TestCase {
         assertTrue(t2.isAlive());
         s.release();
         awaitTermination(t2);
-   }
+    }
 
     /**
      * toString indicates current number of permits

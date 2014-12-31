@@ -6,7 +6,8 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ThreadTest extends JSR166TestCase {
     public static void main(String[] args) {

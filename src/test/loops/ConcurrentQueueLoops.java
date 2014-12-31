@@ -6,8 +6,8 @@
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 public class ConcurrentQueueLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -21,7 +21,7 @@ public class ConcurrentQueueLoops {
     public static void main(String[] args) throws Exception {
         int maxStages = 100;
         int work = 1024;
-        Class klass = null;
+        Class<?> klass = null;
         if (args.length > 0) {
             try {
                 klass = Class.forName(args[0]);
@@ -50,8 +50,7 @@ public class ConcurrentQueueLoops {
         Thread.sleep(100);
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxStages;) {
+        for (int k = 1, i = 1; i <= maxStages;) {
             oneRun(klass, i);
             if (i == k) {
                 k = i << 1;
@@ -117,7 +116,7 @@ public class ConcurrentQueueLoops {
         }
     }
 
-    static void oneRun(Class klass, int n) throws Exception {
+    static void oneRun(Class<?> klass, int n) throws Exception {
         Queue<Integer> q = (Queue<Integer>) klass.newInstance();
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier barrier = new CyclicBarrier(n + 1, timer);

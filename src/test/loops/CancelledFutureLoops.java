@@ -18,9 +18,9 @@
  * redistribute this code in any way without acknowledgement.
  */
 
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
-import java.util.*;
 
 public final class CancelledFutureLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -56,7 +56,7 @@ public final class CancelledFutureLoops {
         }
 
         final void test() throws Exception {
-            Future[] futures = new Future[nthreads];
+            Future<?>[] futures = new Future<?>[nthreads];
             for (int i = 0; i < nthreads; ++i)
                 futures[i] = pool.submit(this);
 

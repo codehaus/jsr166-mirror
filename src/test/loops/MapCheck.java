@@ -12,14 +12,14 @@
  * can create one from a real dictionary (1 line per word) and then run
  * linux "shuf" to randomize entries.
  */
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 public class MapCheck {
     static final Object MISSING = new Object();
     static TestTimer timer = new TestTimer();
-    static Class eclass;
-    static Class mapClass = java.util.concurrent.ConcurrentHashMap.class;
+    static Class<?> eclass;
+    static Class<?> mapClass = java.util.concurrent.ConcurrentHashMap.class;
 
     static final LoopHelpers.SimpleRandom srng = new LoopHelpers.SimpleRandom();
     static final Random rng = new Random(3152688);

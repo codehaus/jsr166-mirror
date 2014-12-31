@@ -11,9 +11,9 @@
  * decade.
  */
 
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
-import java.util.*;
 
 public final class TimeoutMutexLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();

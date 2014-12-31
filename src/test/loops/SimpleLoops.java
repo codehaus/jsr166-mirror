@@ -3,9 +3,9 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
-import java.util.*;
 
 public final class SimpleLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -20,8 +20,7 @@ public final class SimpleLoops {
 
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             System.out.print("Threads: " + 1);
             new Loop(1).test();
             Thread.sleep(100);

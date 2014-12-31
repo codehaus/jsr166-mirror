@@ -6,12 +6,18 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
-import java.util.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -199,7 +205,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
                      new HashSet<Thread>(Arrays.asList(threads)));
     }
 
-    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil };
+    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil }
 
     /**
      * Awaits condition using the specified AwaitMethod.

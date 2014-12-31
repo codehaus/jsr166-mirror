@@ -6,8 +6,10 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     volatile int x = 0;
@@ -131,10 +133,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;
         a = updaterFor("x");
         x = 1;
-        while (!a.weakCompareAndSet(this, 1, 2));
-        while (!a.weakCompareAndSet(this, 2, -4));
+        do {} while (!a.weakCompareAndSet(this, 1, 2));
+        do {} while (!a.weakCompareAndSet(this, 2, -4));
         assertEquals(-4, a.get(this));
-        while (!a.weakCompareAndSet(this, -4, 7));
+        do {} while (!a.weakCompareAndSet(this, -4, 7));
         assertEquals(7, a.get(this));
     }
 

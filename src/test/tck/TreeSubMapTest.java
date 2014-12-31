@@ -4,8 +4,18 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class TreeSubMapTest extends JSR166TestCase {
     public static void main(String[] args) {

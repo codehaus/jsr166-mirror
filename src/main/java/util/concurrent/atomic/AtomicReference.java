@@ -5,8 +5,9 @@
  */
 
 package java.util.concurrent.atomic;
-import java.util.function.UnaryOperator;
+
 import java.util.function.BinaryOperator;
+import java.util.function.UnaryOperator;
 import sun.misc.Unsafe;
 
 /**

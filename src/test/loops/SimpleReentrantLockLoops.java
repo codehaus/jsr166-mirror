@@ -4,9 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
-import java.util.*;
 
 public final class SimpleReentrantLockLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -23,8 +23,7 @@ public final class SimpleReentrantLockLoops {
         new ReentrantLockLoop(1).test();
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             System.out.print("Threads: " + i);
             new ReentrantLockLoop(i).test();
             Thread.sleep(100);

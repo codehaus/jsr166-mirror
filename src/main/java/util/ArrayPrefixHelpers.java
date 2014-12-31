@@ -5,12 +5,13 @@
  */
 
 package java.util;
-import java.util.concurrent.ForkJoinPool;
+
 import java.util.concurrent.CountedCompleter;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.BinaryOperator;
+import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntBinaryOperator;
 import java.util.function.LongBinaryOperator;
-import java.util.function.DoubleBinaryOperator;
 
 /**
  * ForkJoin tasks to perform Arrays.parallelPrefix operations.
@@ -19,7 +20,7 @@ import java.util.function.DoubleBinaryOperator;
  * @since 1.8
  */
 class ArrayPrefixHelpers {
-    private ArrayPrefixHelpers() {}; // non-instantiable
+    private ArrayPrefixHelpers() {} // non-instantiable
 
     /*
      * Parallel prefix (aka cumulate, scan) task classes

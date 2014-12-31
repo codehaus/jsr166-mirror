@@ -6,9 +6,9 @@
 
 // A set wrapper over CHM for testing
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.io.*;
 
 public class ConcurrentHashSet<E> extends AbstractSet<E>
     implements Set<E>, Serializable {

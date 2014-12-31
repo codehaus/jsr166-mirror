@@ -7,16 +7,14 @@
 
 package java.util.concurrent;
 
-import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.function.Consumer;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A {@linkplain BlockingQueue blocking queue} in which each insert
@@ -429,7 +427,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     }
                 }
                 if (spins > 0)
-                    spins = shouldSpin(s) ? (spins-1) : 0;
+                    spins = shouldSpin(s) ? (spins - 1) : 0;
                 else if (s.waiter == null)
                     s.waiter = w; // establish waiter so can park next iter
                 else if (!timed)

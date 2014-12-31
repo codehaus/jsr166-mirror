@@ -6,8 +6,10 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicIntegerTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -100,10 +102,10 @@ public class AtomicIntegerTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet() {
         AtomicInteger ai = new AtomicInteger(1);
-        while (!ai.weakCompareAndSet(1, 2));
-        while (!ai.weakCompareAndSet(2, -4));
+        do {} while (!ai.weakCompareAndSet(1, 2));
+        do {} while (!ai.weakCompareAndSet(2, -4));
         assertEquals(-4, ai.get());
-        while (!ai.weakCompareAndSet(-4, 7));
+        do {} while (!ai.weakCompareAndSet(-4, 7));
         assertEquals(7, ai.get());
     }
 

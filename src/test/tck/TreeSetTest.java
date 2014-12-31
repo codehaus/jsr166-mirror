@@ -4,7 +4,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -16,6 +15,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class TreeSetTest extends JSR166TestCase {
     public static void main(String[] args) {

@@ -7,17 +7,13 @@
 package java.util.concurrent;
 
 import java.util.AbstractQueue;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Stream;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
 /**
@@ -681,11 +677,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 return itemE;
             }
             else if (w.isInterrupted() || (timed && nanos <= 0)) {
-                 unsplice(pred, s);           // try to unlink and cancel
-                 if (s.casItem(e, s))         // return normally if lost CAS
-                     return e;
+                unsplice(pred, s);            // try to unlink and cancel
+                if (s.casItem(e, s))          // return normally if lost CAS
+                    return e;
             }
-            else if (spins < 0) {            // establish spins at/near front
+            else if (spins < 0) {             // establish spins at/near front
                 if ((spins = spinsFor(pred, s.isData)) > 0)
                     randomYields = ThreadLocalRandom.current();
             }

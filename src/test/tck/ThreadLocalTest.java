@@ -6,8 +6,8 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
-import java.util.concurrent.Semaphore;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ThreadLocalTest extends JSR166TestCase {
     public static void main(String[] args) {

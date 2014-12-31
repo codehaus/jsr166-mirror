@@ -7,14 +7,17 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Contains "contract" tests applicable to all BlockingQueue implementations.

@@ -7,16 +7,13 @@
 package java.util.concurrent;
 
 import java.util.AbstractQueue;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Stream;
 import java.util.function.Consumer;
 
 /**

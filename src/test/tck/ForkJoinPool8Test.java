@@ -4,21 +4,20 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.util.HashSet;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CountedCompleter;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveAction;
-import java.util.concurrent.CountedCompleter;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.util.Arrays;
-import java.util.HashSet;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ForkJoinPool8Test extends JSR166TestCase {
     public static void main(String[] args) {
@@ -479,7 +478,7 @@ public class ForkJoinPool8Test extends JSR166TestCase {
                 FailingFibAction f = new FailingFibAction(8);
                 assertSame(f, f.fork());
                 try {
-                    f.get(5L, TimeUnit.SECONDS);
+                    f.get(5L, SECONDS);
                     shouldThrow();
                 } catch (ExecutionException success) {
                     Throwable cause = success.getCause();

@@ -6,14 +6,16 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
-import java.util.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class CyclicBarrierTest extends JSR166TestCase {
     public static void main(String[] args) {

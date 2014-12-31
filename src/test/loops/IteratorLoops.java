@@ -22,7 +22,7 @@ public final class IteratorLoops {
     static int randomSeed = 3122688;
 
     public static void main(String[] args) throws Exception {
-        Class klass = Class.forName(args[0]);
+        Class<?> klass = Class.forName(args[0]);
         int n = (args.length <= 1) ? DEFAULT_SIZE : Integer.parseInt(args[1]);
         int t = (args.length <= 2) ? DEFAULT_TRIALS : Integer.parseInt(args[2]);
 

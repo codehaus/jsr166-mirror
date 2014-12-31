@@ -6,8 +6,10 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.concurrent.atomic.AtomicReference;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicReferenceTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -96,10 +98,10 @@ public class AtomicReferenceTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet() {
         AtomicReference ai = new AtomicReference(one);
-        while (!ai.weakCompareAndSet(one, two));
-        while (!ai.weakCompareAndSet(two, m4));
+        do {} while (!ai.weakCompareAndSet(one, two));
+        do {} while (!ai.weakCompareAndSet(two, m4));
         assertSame(m4, ai.get());
-        while (!ai.weakCompareAndSet(m4, seven));
+        do {} while (!ai.weakCompareAndSet(m4, seven));
         assertSame(seven, ai.get());
     }
 

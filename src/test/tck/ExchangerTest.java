@@ -6,12 +6,14 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
-import java.util.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeoutException;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ExchangerTest extends JSR166TestCase {
 

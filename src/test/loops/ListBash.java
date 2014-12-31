@@ -12,7 +12,7 @@ public class ListBash {
     static int numItr;
     static int listSize;
     static boolean synch;
-    static Class cl;
+    static Class<?> cl;
 
     public static void main(String[] args) {
         numItr = Integer.parseInt(args[1]);
@@ -240,7 +240,7 @@ public class ListBash {
     }
 
     // Done inefficiently so as to exercise toArray
-    static List<Integer> clone(List s, Class cl, boolean synch) {
+    static List<Integer> clone(List s, Class<?> cl, boolean synch) {
         List a = Arrays.asList(s.toArray());
         if (s.hashCode() != a.hashCode())
             fail("Incorrect hashCode computation.");
@@ -257,7 +257,7 @@ public class ListBash {
         return (List<Integer>) clone;
     }
 
-    static List<Integer> newList(Class cl, boolean synch) {
+    static List<Integer> newList(Class<?> cl, boolean synch) {
         try {
             List<Integer> s = (List<Integer>) cl.newInstance();
             if (synch)

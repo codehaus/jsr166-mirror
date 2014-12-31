@@ -6,9 +6,11 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicIntegerArrayTest extends JSR166TestCase {
 
@@ -162,10 +164,10 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
         AtomicIntegerArray aa = new AtomicIntegerArray(SIZE);
         for (int i = 0; i < SIZE; i++) {
             aa.set(i, 1);
-            while (!aa.weakCompareAndSet(i, 1, 2));
-            while (!aa.weakCompareAndSet(i, 2, -4));
+            do {} while (!aa.weakCompareAndSet(i, 1, 2));
+            do {} while (!aa.weakCompareAndSet(i, 2, -4));
             assertEquals(-4, aa.get(i));
-            while (!aa.weakCompareAndSet(i, -4, 7));
+            do {} while (!aa.weakCompareAndSet(i, -4, 7));
             assertEquals(7, aa.get(i));
         }
     }

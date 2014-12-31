@@ -992,8 +992,8 @@ public class ThreadLocalRandom extends Random {
      *              always true
      */
     private static final ObjectStreamField[] serialPersistentFields = {
-            new ObjectStreamField("rnd", long.class),
-            new ObjectStreamField("initialized", boolean.class),
+        new ObjectStreamField("rnd", long.class),
+        new ObjectStreamField("initialized", boolean.class),
     };
 
     /**

@@ -8,7 +8,6 @@
 // adapted from bug reports
 
 import java.util.*;
-import java.lang.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 

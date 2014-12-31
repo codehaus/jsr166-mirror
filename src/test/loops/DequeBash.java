@@ -3,8 +3,8 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/.
  */
 
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 /**
  * Interface-based Deque tester.  This test currently makes three

@@ -4,7 +4,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 import java.util.concurrent.*;
-import java.util.Random;
 
 public class TimeUnitLoops {
 

@@ -9,14 +9,12 @@ package java.util.concurrent;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.Spliterators;
 import java.util.Spliterator;
-import java.util.stream.Stream;
+import java.util.Spliterators;
 import java.util.function.Consumer;
 
 /**
@@ -1338,7 +1336,7 @@ public class ConcurrentLinkedDeque<E>
             Node<E> p = (nextNode == null) ? startNode() : nextNode(nextNode);
             for (;; p = nextNode(p)) {
                 if (p == null) {
-                    // p might be active end or TERMINATOR node; both are OK
+                    // might be at active end or TERMINATOR node; both are OK
                     nextNode = null;
                     nextItem = null;
                     break;

@@ -5,11 +5,11 @@
  */
 
 import java.awt.*;
-import javax.swing.*;
-import java.util.*;
 import java.awt.event.*;
-import javax.swing.event.*;
+import java.util.*;
 import java.util.concurrent.*;
+import javax.swing.*;
+import javax.swing.event.*;
 
 
 /**

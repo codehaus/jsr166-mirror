@@ -5,9 +5,9 @@
  */
 
 import java.util.*;
-import java.util.function.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 public class IntegerSum {
     static final int SIZE = 1000000;

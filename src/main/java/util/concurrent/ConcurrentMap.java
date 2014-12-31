@@ -5,6 +5,7 @@
  */
 
 package java.util.concurrent;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -333,7 +334,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
                 if (replace(key, oldValue, newValue))
                     return newValue;
             } else if (remove(key, oldValue))
-               return null;
+                return null;
         }
         return oldValue;
     }

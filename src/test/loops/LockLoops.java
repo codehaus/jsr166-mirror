@@ -7,9 +7,9 @@
  * A simple test program. Feel free to play.
  */
 
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
-import java.util.*;
 
 public final class LockLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();

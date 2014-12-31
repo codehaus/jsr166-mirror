@@ -4,10 +4,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.*;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 public final class NoopSpinLockLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -24,8 +24,7 @@ public final class NoopSpinLockLoops {
         new ReentrantLockLoop(1).test();
         print = true;
 
-        int k = 1;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             System.out.print("Threads: " + i);
             new ReentrantLockLoop(i).test();
             Thread.sleep(100);
@@ -78,7 +77,7 @@ public final class NoopSpinLockLoops {
                 int x = sum + 1;
                 int n = iters;
                 while (n-- > 0) {
-                    while (!lock.compareAndSet(0, 1)) ;
+                    do {} while (!lock.compareAndSet(0, 1));
                     x = LoopHelpers.compute4(x);
                     lock.set(0);
                     if ((x += readBarrier) == 0)

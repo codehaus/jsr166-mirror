@@ -20,8 +20,7 @@ public class CachedThreadPoolLoops {
 
         System.out.print("Warmup:");
         for (int j = 0; j < 1; ++j) {
-            int k = 1;
-            for (int i = 1; i <= maxThreads;) {
+            for (int k = 1, i = 1; i <= maxThreads;) {
                 System.out.print(" " + i);
                 oneTest(i, 10000, false);
                 Thread.sleep(100);
@@ -35,8 +34,7 @@ public class CachedThreadPoolLoops {
         }
         System.out.println();
 
-        int k = 1;
-        for (int i = 1; i <= maxThreads;) {
+        for (int k = 1, i = 1; i <= maxThreads;) {
             System.out.println("Threads:" + i);
             oneTest(i, maxIters, true);
             Thread.sleep(100);

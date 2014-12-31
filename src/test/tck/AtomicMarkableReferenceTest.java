@@ -6,8 +6,10 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.concurrent.atomic.AtomicMarkableReference;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicMarkableReferenceTest extends JSR166TestCase {
     public static void main(String[] args) {
@@ -139,11 +141,11 @@ public class AtomicMarkableReferenceTest extends JSR166TestCase {
         assertFalse(ai.isMarked());
         assertFalse(mark[0]);
 
-        while (!ai.weakCompareAndSet(one, two, false, false));
+        do {} while (!ai.weakCompareAndSet(one, two, false, false));
         assertSame(two, ai.get(mark));
         assertFalse(mark[0]);
 
-        while (!ai.weakCompareAndSet(two, m3, false, true));
+        do {} while (!ai.weakCompareAndSet(two, m3, false, true));
         assertSame(m3, ai.get(mark));
         assertTrue(mark[0]);
     }

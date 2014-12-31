@@ -98,7 +98,7 @@ public interface ConcurrentNavigableMap<K,V>
      *
      * @return a navigable set view of the keys in this map
      */
-    public NavigableSet<K> navigableKeySet();
+    NavigableSet<K> navigableKeySet();
 
     /**
      * Returns a {@link NavigableSet} view of the keys contained in this map.
@@ -136,5 +136,5 @@ public interface ConcurrentNavigableMap<K,V>
      *
      * @return a reverse order navigable set view of the keys in this map
      */
-    public NavigableSet<K> descendingKeySet();
+    NavigableSet<K> descendingKeySet();
 }

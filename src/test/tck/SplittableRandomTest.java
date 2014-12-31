@@ -410,9 +410,10 @@ public class SplittableRandomTest extends JSR166TestCase {
         for (int least = -15485867; least < MAX_INT_BOUND; least += 524959) {
             for (int bound = least + 2; bound > least && bound < MAX_INT_BOUND; bound += 67867967) {
                 final int lo = least, hi = bound;
-                r.ints(size, lo, hi).parallel().
-                    forEach(x -> {if (x < lo || x >= hi)
-                                fails.getAndIncrement(); });
+                r.ints(size, lo, hi).parallel().forEach(
+                    x -> {
+                        if (x < lo || x >= hi)
+                            fails.getAndIncrement(); });
             }
         }
         assertEquals(0, fails.get());
@@ -428,9 +429,10 @@ public class SplittableRandomTest extends JSR166TestCase {
         for (long least = -86028121; least < MAX_LONG_BOUND; least += 1982451653L) {
             for (long bound = least + 2; bound > least && bound < MAX_LONG_BOUND; bound += Math.abs(bound * 7919)) {
                 final long lo = least, hi = bound;
-                r.longs(size, lo, hi).parallel().
-                    forEach(x -> {if (x < lo || x >= hi)
-                                fails.getAndIncrement(); });
+                r.longs(size, lo, hi).parallel().forEach(
+                    x -> {
+                        if (x < lo || x >= hi)
+                            fails.getAndIncrement(); });
             }
         }
         assertEquals(0, fails.get());
@@ -446,9 +448,10 @@ public class SplittableRandomTest extends JSR166TestCase {
         for (double least = 0.00011; least < 1.0e20; least *= 9) {
             for (double bound = least * 1.0011; bound < 1.0e20; bound *= 17) {
                 final double lo = least, hi = bound;
-                r.doubles(size, lo, hi).parallel().
-                    forEach(x -> {if (x < lo || x >= hi)
-                                fails.getAndIncrement(); });
+                r.doubles(size, lo, hi).parallel().forEach(
+                    x -> {
+                        if (x < lo || x >= hi)
+                            fails.getAndIncrement(); });
             }
         }
         assertEquals(0, fails.get());

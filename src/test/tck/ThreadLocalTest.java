@@ -90,7 +90,7 @@ public class ThreadLocalTest extends JSR166TestCase {
      */
     public void testGenericITL() throws InterruptedException {
         final int threadCount = 10;
-        final int x[] = new int[threadCount];
+        final int[] x = new int[threadCount];
         Thread progenitor = new ITLThread(x);
         progenitor.start();
         progenitor.join();

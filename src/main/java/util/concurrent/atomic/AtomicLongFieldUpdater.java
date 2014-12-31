@@ -361,7 +361,7 @@ public abstract class AtomicLongFieldUpdater<T> {
                 ClassLoader ccl = caller.getClassLoader();
                 if ((ccl != null) && (ccl != cl) &&
                     ((cl == null) || !isAncestor(cl, ccl))) {
-                  sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
+                    sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
                 }
             } catch (PrivilegedActionException pae) {
                 throw new RuntimeException(pae.getException());
@@ -437,7 +437,7 @@ public abstract class AtomicLongFieldUpdater<T> {
         }
 
         public long decrementAndGet(T obj) {
-             return getAndAdd(obj, -1) - 1;
+            return getAndAdd(obj, -1) - 1;
         }
 
         public long addAndGet(T obj, long delta) {
@@ -485,7 +485,7 @@ public abstract class AtomicLongFieldUpdater<T> {
                 ClassLoader ccl = caller.getClassLoader();
                 if ((ccl != null) && (ccl != cl) &&
                     ((cl == null) || !isAncestor(cl, ccl))) {
-                  sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
+                    sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
                 }
             } catch (PrivilegedActionException pae) {
                 throw new RuntimeException(pae.getException());

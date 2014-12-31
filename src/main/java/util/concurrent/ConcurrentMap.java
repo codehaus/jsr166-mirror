@@ -334,7 +334,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
                 if (replace(key, oldValue, newValue))
                     return newValue;
             } else if (remove(key, oldValue))
-               return null;
+                return null;
         }
         return oldValue;
     }

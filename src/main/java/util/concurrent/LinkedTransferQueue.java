@@ -680,11 +680,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 return itemE;
             }
             else if (w.isInterrupted() || (timed && nanos <= 0)) {
-                 unsplice(pred, s);           // try to unlink and cancel
-                 if (s.casItem(e, s))         // return normally if lost CAS
-                     return e;
+                unsplice(pred, s);            // try to unlink and cancel
+                if (s.casItem(e, s))          // return normally if lost CAS
+                    return e;
             }
-            else if (spins < 0) {            // establish spins at/near front
+            else if (spins < 0) {             // establish spins at/near front
                 if ((spins = spinsFor(pred, s.isData)) > 0)
                     randomYields = ThreadLocalRandom.current();
             }

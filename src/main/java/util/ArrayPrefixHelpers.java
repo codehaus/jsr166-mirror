@@ -19,7 +19,7 @@ import java.util.function.DoubleBinaryOperator;
  * @since 1.8
  */
 class ArrayPrefixHelpers {
-    private ArrayPrefixHelpers() {}; // non-instantiable
+    private ArrayPrefixHelpers() {} // non-instantiable
 
     /*
      * Parallel prefix (aka cumulate, scan) task classes

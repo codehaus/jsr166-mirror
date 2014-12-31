@@ -1773,7 +1773,7 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
             assertEquals(SIZE-k, q.size());
             for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
-            while (q.poll() != null) ;
+            do {} while (q.poll() != null);
         }
     }
 

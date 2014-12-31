@@ -145,10 +145,10 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
         a = updaterFor("x");
         x = one;
-        while (!a.weakCompareAndSet(this, one, two));
-        while (!a.weakCompareAndSet(this, two, m4));
+        do {} while (!a.weakCompareAndSet(this, one, two));
+        do {} while (!a.weakCompareAndSet(this, two, m4));
         assertSame(m4, a.get(this));
-        while (!a.weakCompareAndSet(this, m4, seven));
+        do {} while (!a.weakCompareAndSet(this, m4, seven));
         assertSame(seven, a.get(this));
     }
 

@@ -141,11 +141,11 @@ public class AtomicStampedReferenceTest extends JSR166TestCase {
         assertEquals(0, ai.getStamp());
         assertEquals(0, mark[0]);
 
-        while (!ai.weakCompareAndSet(one, two, 0, 0));
+        do {} while (!ai.weakCompareAndSet(one, two, 0, 0));
         assertSame(two, ai.get(mark));
         assertEquals(0, mark[0]);
 
-        while (!ai.weakCompareAndSet(two, m3, 0, 1));
+        do {} while (!ai.weakCompareAndSet(two, m3, 0, 1));
         assertSame(m3, ai.get(mark));
         assertEquals(1, mark[0]);
     }

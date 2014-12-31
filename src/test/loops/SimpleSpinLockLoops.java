@@ -77,7 +77,7 @@ public final class SimpleSpinLockLoops {
                 int x = 0;
                 int n = iters;
                 while (n-- > 0) {
-                    while (!lock.compareAndSet(0, 1)) ;
+                    do {} while (!lock.compareAndSet(0, 1));
                     int k = (sum & 3);
                     if (k > 0) {
                         x = v;

@@ -171,10 +171,10 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
         AtomicReferenceArray aa = new AtomicReferenceArray(SIZE);
         for (int i = 0; i < SIZE; i++) {
             aa.set(i, one);
-            while (!aa.weakCompareAndSet(i, one, two));
-            while (!aa.weakCompareAndSet(i, two, m4));
+            do {} while (!aa.weakCompareAndSet(i, one, two));
+            do {} while (!aa.weakCompareAndSet(i, two, m4));
             assertSame(m4, aa.get(i));
-            while (!aa.weakCompareAndSet(i, m4, seven));
+            do {} while (!aa.weakCompareAndSet(i, m4, seven));
             assertSame(seven, aa.get(i));
         }
     }

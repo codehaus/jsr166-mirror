@@ -77,7 +77,7 @@ public final class NoopSpinLockLoops {
                 int x = sum + 1;
                 int n = iters;
                 while (n-- > 0) {
-                    while (!lock.compareAndSet(0, 1)) ;
+                    do {} while (!lock.compareAndSet(0, 1));
                     x = LoopHelpers.compute4(x);
                     lock.set(0);
                     if ((x += readBarrier) == 0)

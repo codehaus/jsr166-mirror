@@ -97,11 +97,11 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testWeakCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
-        while (!ai.weakCompareAndSet(true, false));
+        do {} while (!ai.weakCompareAndSet(true, false));
         assertFalse(ai.get());
-        while (!ai.weakCompareAndSet(false, false));
+        do {} while (!ai.weakCompareAndSet(false, false));
         assertFalse(ai.get());
-        while (!ai.weakCompareAndSet(false, true));
+        do {} while (!ai.weakCompareAndSet(false, true));
         assertTrue(ai.get());
     }
 

@@ -163,10 +163,10 @@ public class AtomicLongArrayTest extends JSR166TestCase {
         AtomicLongArray aa = new AtomicLongArray(SIZE);
         for (int i = 0; i < SIZE; i++) {
             aa.set(i, 1);
-            while (!aa.weakCompareAndSet(i, 1, 2));
-            while (!aa.weakCompareAndSet(i, 2, -4));
+            do {} while (!aa.weakCompareAndSet(i, 1, 2));
+            do {} while (!aa.weakCompareAndSet(i, 2, -4));
             assertEquals(-4, aa.get(i));
-            while (!aa.weakCompareAndSet(i, -4, 7));
+            do {} while (!aa.weakCompareAndSet(i, -4, 7));
             assertEquals(7, aa.get(i));
         }
     }

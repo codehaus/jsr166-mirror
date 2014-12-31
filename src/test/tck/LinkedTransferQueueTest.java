@@ -697,8 +697,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
             assertEquals(SIZE - k, q.size());
             for (int j = 0; j < k; ++j)
                 assertEquals(j, l.get(j));
-            while (q.poll() != null)
-                ;
+            do {} while (q.poll() != null);
         }
     }
 

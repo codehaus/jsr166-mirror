@@ -126,9 +126,9 @@ public class DelayQueueTest extends JSR166TestCase {
     private DelayQueue<PDelay> populatedQueue(int n) {
         DelayQueue<PDelay> q = new DelayQueue<PDelay>();
         assertTrue(q.isEmpty());
-        for (int i = n-1; i >= 0; i-=2)
+        for (int i = n-1; i >= 0; i -= 2)
             assertTrue(q.offer(new PDelay(i)));
-        for (int i = (n & 1); i < n; i+=2)
+        for (int i = (n & 1); i < n; i += 2)
             assertTrue(q.offer(new PDelay(i)));
         assertFalse(q.isEmpty());
         assertEquals(NOCAP, q.remainingCapacity());

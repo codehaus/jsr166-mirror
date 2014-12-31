@@ -64,9 +64,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         PriorityBlockingQueue<Integer> q =
             new PriorityBlockingQueue<Integer>(n);
         assertTrue(q.isEmpty());
-        for (int i = n-1; i >= 0; i-=2)
+        for (int i = n-1; i >= 0; i -= 2)
             assertTrue(q.offer(new Integer(i)));
-        for (int i = (n & 1); i < n; i+=2)
+        for (int i = (n & 1); i < n; i += 2)
             assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
         assertEquals(NOCAP, q.remainingCapacity());

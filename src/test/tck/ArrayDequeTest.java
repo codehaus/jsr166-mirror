@@ -393,13 +393,13 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testRemoveElement() {
         ArrayDeque q = populatedDeque(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
+        for (int i = 1; i < SIZE; i += 2) {
             assertTrue(q.contains(i));
             assertTrue(q.remove(i));
             assertFalse(q.contains(i));
             assertTrue(q.contains(i-1));
         }
-        for (int i = 0; i < SIZE; i+=2) {
+        for (int i = 0; i < SIZE; i += 2) {
             assertTrue(q.contains(i));
             assertTrue(q.remove(i));
             assertFalse(q.contains(i));
@@ -532,10 +532,10 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testRemoveFirstOccurrence() {
         ArrayDeque q = populatedDeque(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
+        for (int i = 1; i < SIZE; i += 2) {
             assertTrue(q.removeFirstOccurrence(new Integer(i)));
         }
-        for (int i = 0; i < SIZE; i+=2) {
+        for (int i = 0; i < SIZE; i += 2) {
             assertTrue(q.removeFirstOccurrence(new Integer(i)));
             assertFalse(q.removeFirstOccurrence(new Integer(i+1)));
         }
@@ -547,10 +547,10 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testRemoveLastOccurrence() {
         ArrayDeque q = populatedDeque(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
+        for (int i = 1; i < SIZE; i += 2) {
             assertTrue(q.removeLastOccurrence(new Integer(i)));
         }
-        for (int i = 0; i < SIZE; i+=2) {
+        for (int i = 0; i < SIZE; i += 2) {
             assertTrue(q.removeLastOccurrence(new Integer(i)));
             assertFalse(q.removeLastOccurrence(new Integer(i+1)));
         }

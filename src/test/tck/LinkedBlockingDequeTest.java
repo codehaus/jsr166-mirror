@@ -276,10 +276,10 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testRemoveFirstOccurrence() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
+        for (int i = 1; i < SIZE; i += 2) {
             assertTrue(q.removeFirstOccurrence(new Integer(i)));
         }
-        for (int i = 0; i < SIZE; i+=2) {
+        for (int i = 0; i < SIZE; i += 2) {
             assertTrue(q.removeFirstOccurrence(new Integer(i)));
             assertFalse(q.removeFirstOccurrence(new Integer(i+1)));
         }
@@ -291,10 +291,10 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      */
     public void testRemoveLastOccurrence() {
         LinkedBlockingDeque q = populatedDeque(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
+        for (int i = 1; i < SIZE; i += 2) {
             assertTrue(q.removeLastOccurrence(new Integer(i)));
         }
-        for (int i = 0; i < SIZE; i+=2) {
+        for (int i = 0; i < SIZE; i += 2) {
             assertTrue(q.removeLastOccurrence(new Integer(i)));
             assertFalse(q.removeLastOccurrence(new Integer(i+1)));
         }

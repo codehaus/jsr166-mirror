@@ -38,9 +38,9 @@ public class PriorityQueueTest extends JSR166TestCase {
     private PriorityQueue<Integer> populatedQueue(int n) {
         PriorityQueue<Integer> q = new PriorityQueue<Integer>(n);
         assertTrue(q.isEmpty());
-        for (int i = n-1; i >= 0; i-=2)
+        for (int i = n-1; i >= 0; i -= 2)
             assertTrue(q.offer(new Integer(i)));
-        for (int i = (n & 1); i < n; i+=2)
+        for (int i = (n & 1); i < n; i += 2)
             assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
         assertEquals(n, q.size());
@@ -321,13 +321,13 @@ public class PriorityQueueTest extends JSR166TestCase {
      */
     public void testRemoveElement() {
         PriorityQueue q = populatedQueue(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
+        for (int i = 1; i < SIZE; i += 2) {
             assertTrue(q.contains(i));
             assertTrue(q.remove(i));
             assertFalse(q.contains(i));
             assertTrue(q.contains(i-1));
         }
-        for (int i = 0; i < SIZE; i+=2) {
+        for (int i = 0; i < SIZE; i += 2) {
             assertTrue(q.contains(i));
             assertTrue(q.remove(i));
             assertFalse(q.contains(i));

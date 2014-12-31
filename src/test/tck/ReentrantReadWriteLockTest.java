@@ -146,7 +146,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
         lock.writeLock().unlock();
     }
 
-    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil };
+    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil }
 
     /**
      * Awaits condition using the specified AwaitMethod.

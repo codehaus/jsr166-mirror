@@ -199,7 +199,7 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
                      new HashSet<Thread>(Arrays.asList(threads)));
     }
 
-    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil };
+    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil }
 
     /**
      * Awaits condition using the specified AwaitMethod.

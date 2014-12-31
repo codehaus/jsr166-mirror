@@ -137,7 +137,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         lock.unlock();
     }
 
-    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil };
+    enum AwaitMethod { await, awaitTimed, awaitNanos, awaitUntil }
 
     /**
      * Awaits condition using the specified AwaitMethod.

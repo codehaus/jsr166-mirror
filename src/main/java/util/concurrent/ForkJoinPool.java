@@ -3482,9 +3482,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         public final ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-            return (ForkJoinWorkerThread.InnocuousForkJoinWorkerThread)
-                java.security.AccessController.doPrivileged(
-                    new java.security.PrivilegedAction<ForkJoinWorkerThread>() {
+            return java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedAction<ForkJoinWorkerThread>() {
                     public ForkJoinWorkerThread run() {
                         return new ForkJoinWorkerThread.
                             InnocuousForkJoinWorkerThread(pool);

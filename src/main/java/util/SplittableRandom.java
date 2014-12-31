@@ -26,13 +26,13 @@
 package java.util;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
-import java.util.function.DoubleConsumer;
-import java.util.stream.StreamSupport;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
-import java.util.stream.DoubleStream;
+import java.util.stream.StreamSupport;
 
 /**
  * A generator of uniform pseudorandom values applicable for use in

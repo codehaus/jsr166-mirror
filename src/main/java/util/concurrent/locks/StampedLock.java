@@ -7,10 +7,10 @@
 package java.util.concurrent.locks;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * A capability-based lock with three modes for controlling read/write

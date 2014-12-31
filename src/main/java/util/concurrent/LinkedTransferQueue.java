@@ -13,12 +13,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Stream;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * An unbounded {@link TransferQueue} based on linked nodes.

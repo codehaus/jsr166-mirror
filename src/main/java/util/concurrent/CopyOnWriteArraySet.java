@@ -5,15 +5,16 @@
  */
 
 package java.util.concurrent;
+
+import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
-import java.util.AbstractSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.function.Predicate;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * A {@link java.util.Set} that uses an internal {@link CopyOnWriteArrayList}

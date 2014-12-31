@@ -14,10 +14,10 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.Spliterators;
 import java.util.Spliterator;
-import java.util.stream.Stream;
+import java.util.Spliterators;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * An unbounded concurrent {@linkplain Deque deque} based on linked nodes.

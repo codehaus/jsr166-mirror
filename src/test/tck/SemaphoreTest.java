@@ -616,7 +616,7 @@ public class SemaphoreTest extends JSR166TestCase {
         assertTrue(t2.isAlive());
         s.release();
         awaitTermination(t2);
-   }
+    }
 
     /**
      * toString indicates current number of permits

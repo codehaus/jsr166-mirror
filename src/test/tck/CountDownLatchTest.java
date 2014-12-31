@@ -6,10 +6,12 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import java.util.concurrent.CountDownLatch;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class CountDownLatchTest extends JSR166TestCase {
     public static void main(String[] args) {

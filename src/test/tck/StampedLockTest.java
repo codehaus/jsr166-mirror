@@ -5,13 +5,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.StampedLock;
-import java.util.concurrent.CountDownLatch;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.util.*;
-import java.util.concurrent.*;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class StampedLockTest extends JSR166TestCase {
     public static void main(String[] args) {

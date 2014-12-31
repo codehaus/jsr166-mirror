@@ -5,14 +5,17 @@
  * Other contributors include John Vint
  */
 
-import junit.framework.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class PhaserTest extends JSR166TestCase {
 

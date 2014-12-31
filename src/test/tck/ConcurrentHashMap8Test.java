@@ -4,13 +4,26 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
-import java.util.*;
-import static java.util.Spliterator.*;
-import java.util.function.*;
-import java.util.concurrent.atomic.LongAdder;
+import static java.util.Spliterator.CONCURRENT;
+import static java.util.Spliterator.DISTINCT;
+import static java.util.Spliterator.NONNULL;
+
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.BiFunction;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ConcurrentHashMap8Test extends JSR166TestCase {
     public static void main(String[] args) {
@@ -197,8 +210,8 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         Set set1 = map.keySet();
         Set set2 = map.keySet(true);
         set2.add(six);
-        assertTrue(((KeySetView)set2).getMap() == map);
-        assertTrue(((KeySetView)set1).getMap() == map);
+        assertTrue(((ConcurrentHashMap.KeySetView)set2).getMap() == map);
+        assertTrue(((ConcurrentHashMap.KeySetView)set1).getMap() == map);
         assertEquals(set2.size(), map.size());
         assertEquals(set1.size(), map.size());
         assertTrue((Boolean)map.get(six));
@@ -290,7 +303,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
             map.keySet(null);
             shouldThrow();
         } catch (NullPointerException e) {}
-        KeySetView set = map.keySet(one);
+        ConcurrentHashMap.KeySetView set = map.keySet(one);
         set.add(one);
         set.add(six);
         set.add(seven);

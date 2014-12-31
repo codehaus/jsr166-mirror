@@ -6,11 +6,13 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AbstractQueueTest extends JSR166TestCase {
     public static void main(String[] args) {

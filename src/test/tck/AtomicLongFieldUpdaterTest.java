@@ -6,8 +6,10 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
     volatile long x = 0;

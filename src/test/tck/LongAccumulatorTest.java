@@ -4,9 +4,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.LongAccumulator;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class LongAccumulatorTest extends JSR166TestCase {
     public static void main(String[] args) {

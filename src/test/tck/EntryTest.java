@@ -4,8 +4,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Map;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class EntryTest extends JSR166TestCase {
     public static void main(String[] args) {

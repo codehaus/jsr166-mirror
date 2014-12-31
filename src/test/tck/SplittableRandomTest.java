@@ -3,11 +3,13 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-import junit.framework.*;
-import java.util.*;
+
 import java.util.SplittableRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class SplittableRandomTest extends JSR166TestCase {
 

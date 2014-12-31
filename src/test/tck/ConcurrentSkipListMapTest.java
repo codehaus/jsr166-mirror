@@ -4,9 +4,21 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.NoSuchElementException;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ConcurrentSkipListMapTest extends JSR166TestCase {
     public static void main(String[] args) {

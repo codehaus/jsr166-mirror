@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -14,6 +13,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Queue;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class PriorityQueueTest extends JSR166TestCase {
     public static void main(String[] args) {

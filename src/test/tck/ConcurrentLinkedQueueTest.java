@@ -6,13 +6,15 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ConcurrentLinkedQueueTest extends JSR166TestCase {
 

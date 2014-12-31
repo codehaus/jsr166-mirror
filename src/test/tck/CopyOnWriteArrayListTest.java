@@ -6,7 +6,6 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,6 +17,9 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class CopyOnWriteArrayListTest extends JSR166TestCase {
 

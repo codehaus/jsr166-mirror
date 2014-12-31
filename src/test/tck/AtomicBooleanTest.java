@@ -6,8 +6,10 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicBooleanTest extends JSR166TestCase {
     public static void main(String[] args) {

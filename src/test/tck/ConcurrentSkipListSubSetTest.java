@@ -4,13 +4,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.concurrent.ConcurrentSkipListSet;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public static void main(String[] args) {

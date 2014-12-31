@@ -4,15 +4,18 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.util.HashSet;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeoutException;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import java.util.HashSet;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class RecursiveTaskTest extends JSR166TestCase {
 

@@ -6,9 +6,11 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicIntegerArrayTest extends JSR166TestCase {
 

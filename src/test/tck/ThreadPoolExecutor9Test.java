@@ -5,10 +5,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import junit.framework.*;
-import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import java.util.*;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class ThreadPoolExecutor9Test extends JSR166TestCase {
     public static void main(String[] args) {

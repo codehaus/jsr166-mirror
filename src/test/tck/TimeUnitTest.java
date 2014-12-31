@@ -6,10 +6,19 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import static java.util.concurrent.TimeUnit.*;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class TimeUnitTest extends JSR166TestCase {
     public static void main(String[] args) {

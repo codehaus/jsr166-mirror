@@ -6,8 +6,10 @@
  * Pat Fisher, Mike Judd.
  */
 
-import junit.framework.*;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     volatile int x = 0;

@@ -732,7 +732,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         // Add entries till we're back to original size
         while (set.size() < size) {
             int element = min + rnd.nextInt(rangeSize);
-            assertTrue(element >= min && element<= max);
+            assertTrue(element >= min && element <= max);
             put(set, element, bs);
         }
     }
@@ -758,7 +758,7 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
         // Add entries till we're back to original size
         while (set.size() < size) {
             int element = min - 5 + rnd.nextInt(rangeSize + 10);
-            if (element >= min && element<= max) {
+            if (element >= min && element <= max) {
                 put(set, element, bs);
             } else {
                 try {

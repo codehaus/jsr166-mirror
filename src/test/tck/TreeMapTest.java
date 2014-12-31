@@ -835,7 +835,7 @@ public class TreeMapTest extends JSR166TestCase {
         // Add entries till we're back to original size
         while (map.size() < size) {
             int key = min + rnd.nextInt(rangeSize);
-            assertTrue(key >= min && key<= max);
+            assertTrue(key >= min && key <= max);
             put(map, key);
         }
     }
@@ -860,7 +860,7 @@ public class TreeMapTest extends JSR166TestCase {
         // Add entries till we're back to original size
         while (map.size() < size) {
             int key = min - 5 + rnd.nextInt(rangeSize + 10);
-            if (key >= min && key<= max) {
+            if (key >= min && key <= max) {
                 put(map, key);
             } else {
                 try {

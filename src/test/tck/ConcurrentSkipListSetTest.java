@@ -369,8 +369,8 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
             assertTrue(q.removeAll(p));
             assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
-                Integer I = (Integer)(p.pollFirst());
-                assertFalse(q.contains(I));
+                Integer x = (Integer)(p.pollFirst());
+                assertFalse(q.contains(x));
             }
         }
     }

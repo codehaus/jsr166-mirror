@@ -289,9 +289,9 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testPut() {
         DelayQueue q = new DelayQueue();
         for (int i = 0; i < SIZE; ++i) {
-            PDelay I = new PDelay(i);
-            q.put(I);
-            assertTrue(q.contains(I));
+            PDelay x = new PDelay(i);
+            q.put(x);
+            assertTrue(q.contains(x));
         }
         assertEquals(SIZE, q.size());
     }
@@ -561,8 +561,8 @@ public class DelayQueueTest extends JSR166TestCase {
             assertTrue(q.removeAll(p));
             assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
-                PDelay I = (PDelay)(p.remove());
-                assertFalse(q.contains(I));
+                PDelay x = (PDelay)(p.remove());
+                assertFalse(q.contains(x));
             }
         }
     }

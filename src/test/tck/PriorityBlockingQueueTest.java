@@ -266,9 +266,9 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testPut() {
         PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            Integer I = new Integer(i);
-            q.put(I);
-            assertTrue(q.contains(I));
+            Integer x = new Integer(i);
+            q.put(x);
+            assertTrue(q.contains(x));
         }
         assertEquals(SIZE, q.size());
     }
@@ -530,8 +530,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             assertTrue(q.removeAll(p));
             assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
-                Integer I = (Integer)(p.remove());
-                assertFalse(q.contains(I));
+                Integer x = (Integer)(p.remove());
+                assertFalse(q.contains(x));
             }
         }
     }

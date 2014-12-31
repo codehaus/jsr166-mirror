@@ -429,7 +429,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     }
                 }
                 if (spins > 0)
-                    spins = shouldSpin(s) ? (spins-1) : 0;
+                    spins = shouldSpin(s) ? (spins - 1) : 0;
                 else if (s.waiter == null)
                     s.waiter = w; // establish waiter so can park next iter
                 else if (!timed)

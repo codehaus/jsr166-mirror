@@ -15,8 +15,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * A bounded {@linkplain BlockingQueue blocking queue} backed by an

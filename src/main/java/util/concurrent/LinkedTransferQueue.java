@@ -7,9 +7,7 @@
 package java.util.concurrent;
 
 import java.util.AbstractQueue;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -17,7 +15,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * An unbounded {@link TransferQueue} based on linked nodes.

@@ -6,8 +6,6 @@
 
 package java.util.concurrent.locks;
 
-import sun.misc.Unsafe;
-
 /**
  * Basic thread blocking primitives for creating locks and other
  * synchronization classes.

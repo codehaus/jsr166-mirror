@@ -3,8 +3,8 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 public class MapWordLoops {
 

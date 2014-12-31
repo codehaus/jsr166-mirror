@@ -4,9 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
-import java.util.*;
 
 public final class CancelledLockLoops {
     static final Random rng = new Random();

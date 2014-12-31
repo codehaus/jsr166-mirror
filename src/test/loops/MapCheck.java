@@ -12,8 +12,8 @@
  * can create one from a real dictionary (1 line per word) and then run
  * linux "shuf" to randomize entries.
  */
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 public class MapCheck {
     static final Object MISSING = new Object();

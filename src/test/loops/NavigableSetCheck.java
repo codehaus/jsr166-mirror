@@ -7,8 +7,8 @@
  * @test
  * @synopsis Times and checks basic set operations
  */
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 public class NavigableSetCheck {
 

@@ -6,8 +6,8 @@
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 public class ConcurrentQueueLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();

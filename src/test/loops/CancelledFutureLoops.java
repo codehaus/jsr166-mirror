@@ -18,9 +18,9 @@
  * redistribute this code in any way without acknowledgement.
  */
 
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
-import java.util.*;
 
 public final class CancelledFutureLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();

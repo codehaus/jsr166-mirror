@@ -3,17 +3,17 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-import java.util.concurrent.ExecutionException;
+import java.util.HashSet;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CountedCompleter;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.CountedCompleter;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import java.util.HashSet;
 import junit.framework.*;
 
 public class CountedCompleterTest extends JSR166TestCase {

@@ -5,8 +5,8 @@
  */
 
 // Stand-alone version of java.util.Collections.synchronizedCollection
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 public final class SynchronizedCollection<E> implements Collection<E>, Serializable {
     final Collection<E> c;      // Backing Collection

@@ -3,6 +3,7 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+import java.util.HashSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -10,7 +11,6 @@ import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import java.util.HashSet;
 import junit.framework.*;
 
 public class ForkJoinTask8Test extends JSR166TestCase {

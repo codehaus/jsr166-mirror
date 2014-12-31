@@ -4,10 +4,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.*;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 public final class NoopSpinLockLoops {
     static final ExecutorService pool = Executors.newCachedThreadPool();

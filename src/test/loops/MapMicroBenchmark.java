@@ -4,9 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import java.util.*;
 import java.io.*;
 import java.math.*;
+import java.util.*;
 
 /**
  * A micro-benchmark with key types and operation mixes roughly

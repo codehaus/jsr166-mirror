@@ -174,6 +174,8 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             java.util.Date d = new java.util.Date();
             assertTrue(c.awaitUntil(new java.util.Date(d.getTime() + 2 * LONG_DELAY_MS)));
             break;
+        default:
+            throw new AssertionError();
         }
     }
 

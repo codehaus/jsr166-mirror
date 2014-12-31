@@ -228,6 +228,8 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
         case awaitUntil:
             assertTrue(c.awaitUntil(delayedDate(timeoutMillis)));
             break;
+        default:
+            throw new AssertionError();
         }
     }
 

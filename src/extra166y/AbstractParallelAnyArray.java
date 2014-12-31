@@ -6820,7 +6820,7 @@ public abstract class AbstractParallelAnyArray {
         int cursor;
         FilteredAsDoubleIterator() {
             cursor = origin;
-            advance() ;
+            advance();
         }
         private void advance() {
             while (cursor < fence) {
@@ -6873,7 +6873,7 @@ public abstract class AbstractParallelAnyArray {
         int cursor;
         FilteredAsLongIterator() {
             cursor = origin;
-            advance() ;
+            advance();
         }
         private void advance() {
             while (cursor < fence) {
@@ -6926,7 +6926,7 @@ public abstract class AbstractParallelAnyArray {
         int cursor;
         FilteredIterator() {
             cursor = origin;
-            advance() ;
+            advance();
         }
         private void advance() {
             while (cursor < fence) {

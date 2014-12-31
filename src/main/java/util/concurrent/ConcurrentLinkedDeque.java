@@ -1338,7 +1338,7 @@ public class ConcurrentLinkedDeque<E>
             Node<E> p = (nextNode == null) ? startNode() : nextNode(nextNode);
             for (;; p = nextNode(p)) {
                 if (p == null) {
-                    // p might be active end or TERMINATOR node; both are OK
+                    // might be at active end or TERMINATOR node; both are OK
                     nextNode = null;
                     nextItem = null;
                     break;

@@ -45,9 +45,9 @@ public class TreeSetTest extends JSR166TestCase {
     private TreeSet<Integer> populatedSet(int n) {
         TreeSet<Integer> q = new TreeSet<Integer>();
         assertTrue(q.isEmpty());
-        for (int i = n-1; i >= 0; i-=2)
+        for (int i = n-1; i >= 0; i -= 2)
             assertTrue(q.add(new Integer(i)));
-        for (int i = (n & 1); i < n; i+=2)
+        for (int i = (n & 1); i < n; i += 2)
             assertTrue(q.add(new Integer(i)));
         assertFalse(q.isEmpty());
         assertEquals(n, q.size());
@@ -288,13 +288,13 @@ public class TreeSetTest extends JSR166TestCase {
      */
     public void testRemoveElement() {
         TreeSet q = populatedSet(SIZE);
-        for (int i = 1; i < SIZE; i+=2) {
+        for (int i = 1; i < SIZE; i += 2) {
             assertTrue(q.contains(i));
             assertTrue(q.remove(i));
             assertFalse(q.contains(i));
             assertTrue(q.contains(i-1));
         }
-        for (int i = 0; i < SIZE; i+=2) {
+        for (int i = 0; i < SIZE; i += 2) {
             assertTrue(q.contains(i));
             assertTrue(q.remove(i));
             assertFalse(q.contains(i));
@@ -373,8 +373,8 @@ public class TreeSetTest extends JSR166TestCase {
             assertTrue(q.removeAll(p));
             assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
-                Integer I = (Integer)(p.pollFirst());
-                assertFalse(q.contains(I));
+                Integer x = (Integer)(p.pollFirst());
+                assertFalse(q.contains(x));
             }
         }
     }
@@ -738,7 +738,7 @@ public class TreeSetTest extends JSR166TestCase {
         // Add entries till we're back to original size
         while (set.size() < size) {
             int element = min + rnd.nextInt(rangeSize);
-            assertTrue(element >= min && element<= max);
+            assertTrue(element >= min && element <= max);
             put(set, element);
         }
     }
@@ -763,7 +763,7 @@ public class TreeSetTest extends JSR166TestCase {
         // Add entries till we're back to original size
         while (set.size() < size) {
             int element = min - 5 + rnd.nextInt(rangeSize + 10);
-            if (element >= min && element<= max) {
+            if (element >= min && element <= max) {
                 put(set, element);
             } else {
                 try {

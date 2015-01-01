@@ -924,7 +924,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * Returns the number of milliseconds since time given by
      * startNanoTime, which must have been previously returned from a
-     * call to {@link System.nanoTime()}.
+     * call to {@link System#nanoTime()}.
      */
     static long millisElapsedSince(long startNanoTime) {
         return NANOSECONDS.toMillis(System.nanoTime() - startNanoTime);

@@ -293,7 +293,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @throws NullPointerException if the specified element is null
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
      */
-    public boolean contains(Object o);
+    boolean contains(Object o);
 
     /**
      * Removes all available elements from this queue and adds them

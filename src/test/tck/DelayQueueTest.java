@@ -126,9 +126,9 @@ public class DelayQueueTest extends JSR166TestCase {
     private DelayQueue<PDelay> populatedQueue(int n) {
         DelayQueue<PDelay> q = new DelayQueue<PDelay>();
         assertTrue(q.isEmpty());
-        for (int i = n-1; i >= 0; i-=2)
+        for (int i = n-1; i >= 0; i -= 2)
             assertTrue(q.offer(new PDelay(i)));
-        for (int i = (n & 1); i < n; i+=2)
+        for (int i = (n & 1); i < n; i += 2)
             assertTrue(q.offer(new PDelay(i)));
         assertFalse(q.isEmpty());
         assertEquals(NOCAP, q.remainingCapacity());
@@ -289,9 +289,9 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testPut() {
         DelayQueue q = new DelayQueue();
         for (int i = 0; i < SIZE; ++i) {
-            PDelay I = new PDelay(i);
-            q.put(I);
-            assertTrue(q.contains(I));
+            PDelay x = new PDelay(i);
+            q.put(x);
+            assertTrue(q.contains(x));
         }
         assertEquals(SIZE, q.size());
     }
@@ -561,8 +561,8 @@ public class DelayQueueTest extends JSR166TestCase {
             assertTrue(q.removeAll(p));
             assertEquals(SIZE-i, q.size());
             for (int j = 0; j < i; ++j) {
-                PDelay I = (PDelay)(p.remove());
-                assertFalse(q.contains(I));
+                PDelay x = (PDelay)(p.remove());
+                assertFalse(q.contains(x));
             }
         }
     }

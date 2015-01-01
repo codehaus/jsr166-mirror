@@ -343,7 +343,7 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
         checkEmpty(q);
         for (int i = 0; i < size; i++)
             q.add(elts[i] = makeElement(i));
-        for (int i = 1; i < size; i+=2) {
+        for (int i = 1; i < size; i += 2) {
             for (int pass = 0; pass < 2; pass++) {
                 assertEquals((pass == 0), q.contains(elts[i]));
                 assertEquals((pass == 0), q.remove(elts[i]));
@@ -355,7 +355,7 @@ public abstract class BlockingQueueTest extends JSR166TestCase {
         }
         if (size > 0)
             assertTrue(q.contains(elts[0]));
-        for (int i = size-2; i >= 0; i-=2) {
+        for (int i = size-2; i >= 0; i -= 2) {
             assertTrue(q.contains(elts[i]));
             assertFalse(q.contains(elts[i+1]));
             assertTrue(q.remove(elts[i]));

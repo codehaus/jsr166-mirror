@@ -551,18 +551,17 @@ public abstract class AbstractQueuedSynchronizer
      * @param node the node to insert
      * @return node's predecessor
      */
-    private Node enq(final Node node) {
+    private Node enq(Node node) {
         for (;;) {
-            Node t = tail;
-            if (t == null) { // Must initialize
-                if (compareAndSetHead(new Node()))
-                    tail = head;
-            } else {
-                node.prev = t;
-                if (compareAndSetTail(t, node)) {
-                    t.next = node;
-                    return t;
+            Node oldTail = tail;
+            if (oldTail != null) {
+                node.prev = oldTail;
+                if (compareAndSetTail(oldTail, node)) {
+                    oldTail.next = node;
+                    return oldTail;
                 }
+            } else {
+                initializeSyncQueue();
             }
         }
     }
@@ -2238,10 +2237,11 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * CAS head field. Used only by enq.
+     * Initializes head and tail fields on first contention.
      */
-    private final boolean compareAndSetHead(Node update) {
-        return U.compareAndSwapObject(this, HEAD, null, update);
+    private final void initializeSyncQueue() {
+        if (U.compareAndSwapObject(this, HEAD, null, new Node()))
+            tail = head;
     }
 
     /**

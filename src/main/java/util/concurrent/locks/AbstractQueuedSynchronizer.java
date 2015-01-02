@@ -574,17 +574,18 @@ public abstract class AbstractQueuedSynchronizer
      */
     private Node addWaiter(Node mode) {
         Node node = new Node(Thread.currentThread(), mode);
-        // Try the fast path of enq; backup to full enq on failure
-        Node pred = tail;
-        if (pred != null) {
-            node.prev = pred;
-            if (compareAndSetTail(pred, node)) {
-                pred.next = node;
-                return node;
+        for (;;) {
+            Node oldTail = tail;
+            if (oldTail != null) {
+                node.prev = oldTail;
+                if (compareAndSetTail(oldTail, node)) {
+                    oldTail.next = node;
+                    return node;
+                }
+            } else {
+                initializeSyncQueue();
             }
         }
-        enq(node);
-        return node;
     }
 
     /**

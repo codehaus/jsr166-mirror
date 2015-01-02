@@ -2192,7 +2192,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     static int getSurplusQueuedTaskCount() {
         Thread t; ForkJoinWorkerThread wt; ForkJoinPool pool; WorkQueue q;
-        if (((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)) {
+        if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) {
             int p = (pool = (wt = (ForkJoinWorkerThread)t).pool).
                 config & SMASK;
             int n = (q = wt.workQueue).top - q.base;

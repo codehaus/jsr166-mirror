@@ -2027,14 +2027,14 @@ public abstract class AbstractQueuedLongSynchronizer
     }
 
     /**
-     * CAS tail field. Used only by enq.
+     * CASes tail field. Used only by enq.
      */
     private final boolean compareAndSetTail(Node expect, Node update) {
         return U.compareAndSwapObject(this, TAIL, expect, update);
     }
 
     /**
-     * CAS waitStatus field of a node.
+     * CASes waitStatus field of a node.
      */
     private static final boolean compareAndSetWaitStatus(Node node,
                                                          int expect,
@@ -2043,7 +2043,7 @@ public abstract class AbstractQueuedLongSynchronizer
     }
 
     /**
-     * CAS next field of a node.
+     * CASes next field of a node.
      */
     private static final boolean compareAndSetNext(Node node,
                                                    Node expect,

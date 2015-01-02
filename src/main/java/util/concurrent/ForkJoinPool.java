@@ -1334,7 +1334,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * small fraction of typical context-switch times, well worthwhile
      * given the typical likelihoods that blocking is not necessary.
      */
-    private static final int SPINS  = 1 << 11;
+    private static final int SPINS = 1 << 11;
 
     /**
      * Increment for seed generators. See class ThreadLocal for

@@ -39,7 +39,7 @@ public class TSPExchangerTest {
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
 
     /** Runs start with two threads, increasing by two through max */
-    static final int DEFAULT_MAX_THREADS  = Math.max(4, NCPUS + NCPUS/2);
+    static final int DEFAULT_MAX_THREADS = Math.max(4, NCPUS + NCPUS/2);
 
     /** The number of replication runs per thread value */
     static final int DEFAULT_REPLICATIONS = 3;

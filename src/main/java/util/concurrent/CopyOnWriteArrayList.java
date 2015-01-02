@@ -1012,7 +1012,7 @@ public class CopyOnWriteArrayList<E>
         if (!(o instanceof List))
             return false;
 
-        List<?> list = (List<?>)(o);
+        List<?> list = (List<?>)o;
         Iterator<?> it = list.iterator();
         Object[] elements = getArray();
         int len = elements.length;

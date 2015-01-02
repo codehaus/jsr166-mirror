@@ -403,9 +403,9 @@ public abstract class AbstractQueuedLongSynchronizer
         Node s = node.next;
         if (s == null || s.waitStatus > 0) {
             s = null;
-            for (Node t = tail; t != null && t != node; t = t.prev)
-                if (t.waitStatus <= 0)
-                    s = t;
+            for (Node p = tail; p != null && p != node; p = p.prev)
+                if (p.waitStatus <= 0)
+                    s = p;
         }
         if (s != null)
             LockSupport.unpark(s.thread);
@@ -1397,13 +1397,13 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return true if present
      */
     private boolean findNodeFromTail(Node node) {
-        Node t = tail;
+        Node p = tail;
         for (;;) {
-            if (t == node)
+            if (p == node)
                 return true;
-            if (t == null)
+            if (p == null)
                 return false;
-            t = t.prev;
+            p = p.prev;
         }
     }
 

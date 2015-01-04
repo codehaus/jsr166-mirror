@@ -470,8 +470,8 @@ public abstract class AbstractQueuedSynchronizer
                 return p;
         }
 
-        Node() {    // Used to establish initial head or SHARED marker
-        }
+        /** Establishes initial head or SHARED marker. */
+        Node() {}
 
         Node(Thread thread, Node mode) {     // Used by addWaiter
             this.nextWaiter = mode;

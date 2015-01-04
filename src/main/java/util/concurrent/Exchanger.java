@@ -603,7 +603,6 @@ public class Exchanger<V> {
     private static final long BLOCKER;
     private static final int ABASE;
     static {
-        int s;
         try {
             U = sun.misc.Unsafe.getUnsafe();
             Class<?> ek = Exchanger.class;
@@ -618,15 +617,14 @@ public class Exchanger<V> {
                 (nk.getDeclaredField("match"));
             BLOCKER = U.objectFieldOffset
                 (tk.getDeclaredField("parkBlocker"));
-            s = U.arrayIndexScale(ak);
+            int scale = U.arrayIndexScale(ak);
+            if ((scale & (scale - 1)) != 0 || scale > (1 << ASHIFT))
+                throw new Error("Unsupported array scale");
             // ABASE absorbs padding in front of element 0
             ABASE = U.arrayBaseOffset(ak) + (1 << ASHIFT);
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
-
-        if ((s & (s-1)) != 0 || s > (1 << ASHIFT))
-            throw new Error("Unsupported array scale");
     }
 
 }

@@ -1240,7 +1240,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 ABASE = U.arrayBaseOffset(ak);
                 int scale = U.arrayIndexScale(ak);
                 if ((scale & (scale - 1)) != 0)
-                    throw new Error("data type scale not a power of two");
+                    throw new Error("array index scale not a power of two");
                 ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
             } catch (ReflectiveOperationException e) {
                 throw new Error(e);
@@ -3388,7 +3388,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             ABASE = U.arrayBaseOffset(ak);
             int scale = U.arrayIndexScale(ak);
             if ((scale & (scale - 1)) != 0)
-                throw new Error("data type scale not a power of two");
+                throw new Error("array index scale not a power of two");
             ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
         } catch (ReflectiveOperationException e) {
             throw new Error(e);

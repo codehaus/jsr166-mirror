@@ -251,14 +251,8 @@ public abstract class AbstractQueuedLongSynchronizer
         /** Establishes initial head or SHARED marker. */
         Node() {}
 
-        Node(Thread thread, Node mode) {     // Used by addWaiter
-            this.nextWaiter = mode;
-            this.thread = thread;
-        }
-
-        Node(Thread thread, int waitStatus) { // Used by Condition
-            this.waitStatus = waitStatus;
-            this.thread = thread;
+        Node(Node nextWaiter) { // Used by addWaiter
+            this.nextWaiter = nextWaiter;
         }
     }
 
@@ -334,7 +328,7 @@ public abstract class AbstractQueuedLongSynchronizer
         for (;;) {
             Node oldTail = tail;
             if (oldTail != null) {
-                node.prev = oldTail;
+                U.putObject(node, PREV, oldTail);
                 if (compareAndSetTail(oldTail, node)) {
                     oldTail.next = node;
                     return oldTail;
@@ -352,11 +346,13 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return the new node
      */
     private Node addWaiter(Node mode) {
-        Node node = new Node(Thread.currentThread(), mode);
+        Node node = new Node(mode);
+        U.putObject(node, THREAD, Thread.currentThread());
+
         for (;;) {
             Node oldTail = tail;
             if (oldTail != null) {
-                node.prev = oldTail;
+                U.putObject(node, PREV, oldTail);
                 if (compareAndSetTail(oldTail, node)) {
                     oldTail.next = node;
                     return node;
@@ -404,9 +400,9 @@ public abstract class AbstractQueuedLongSynchronizer
         Node s = node.next;
         if (s == null || s.waitStatus > 0) {
             s = null;
-            for (Node t = tail; t != null && t != node; t = t.prev)
-                if (t.waitStatus <= 0)
-                    s = t;
+            for (Node p = tail; p != null && p != node; p = p.prev)
+                if (p.waitStatus <= 0)
+                    s = p;
         }
         if (s != null)
             LockSupport.unpark(s.thread);
@@ -1391,13 +1387,13 @@ public abstract class AbstractQueuedLongSynchronizer
      * @return true if present
      */
     private boolean findNodeFromTail(Node node) {
-        Node t = tail;
+        Node p = tail;
         for (;;) {
-            if (t == node)
+            if (p == node)
                 return true;
-            if (t == null)
+            if (p == null)
                 return false;
-            t = t.prev;
+            p = p.prev;
         }
     }
 
@@ -1591,7 +1587,11 @@ public abstract class AbstractQueuedLongSynchronizer
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
-            Node node = new Node(Thread.currentThread(), Node.CONDITION);
+
+            Node node = new Node();
+            U.putInt(node, WAITSTATUS, Node.CONDITION);
+            U.putObject(node, THREAD, Thread.currentThread());
+
             if (t == null)
                 firstWaiter = node;
             else
@@ -2003,7 +2003,9 @@ public abstract class AbstractQueuedLongSynchronizer
     private static final long HEAD;
     private static final long TAIL;
     private static final long WAITSTATUS;
+    private static final long PREV;
     private static final long NEXT;
+    private static final long THREAD;
 
     static {
         try {
@@ -2013,10 +2015,15 @@ public abstract class AbstractQueuedLongSynchronizer
                 (AbstractQueuedLongSynchronizer.class.getDeclaredField("head"));
             TAIL = U.objectFieldOffset
                 (AbstractQueuedLongSynchronizer.class.getDeclaredField("tail"));
+
             WAITSTATUS = U.objectFieldOffset
                 (Node.class.getDeclaredField("waitStatus"));
+            PREV = U.objectFieldOffset
+                (Node.class.getDeclaredField("prev"));
             NEXT = U.objectFieldOffset
                 (Node.class.getDeclaredField("next"));
+            THREAD = U.objectFieldOffset
+                (Node.class.getDeclaredField("thread"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

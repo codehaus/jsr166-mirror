@@ -10,7 +10,6 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
-import sun.misc.Unsafe;
 
 /**
  * An array of object references in which elements may be updated
@@ -24,22 +23,21 @@ import sun.misc.Unsafe;
 public class AtomicReferenceArray<E> implements java.io.Serializable {
     private static final long serialVersionUID = -6209656149925076980L;
 
-    private static final Unsafe unsafe;
-    private static final int base;
-    private static final int shift;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final int ABASE;
+    private static final int ASHIFT;
     private static final long arrayFieldOffset;
     private final Object[] array; // must have exact type Object[]
 
     static {
         try {
-            unsafe = Unsafe.getUnsafe();
-            arrayFieldOffset = unsafe.objectFieldOffset
+            arrayFieldOffset = U.objectFieldOffset
                 (AtomicReferenceArray.class.getDeclaredField("array"));
-            base = unsafe.arrayBaseOffset(Object[].class);
-            int scale = unsafe.arrayIndexScale(Object[].class);
+            ABASE = U.arrayBaseOffset(Object[].class);
+            int scale = U.arrayIndexScale(Object[].class);
             if ((scale & (scale - 1)) != 0)
                 throw new Error("array index scale not a power of two");
-            shift = 31 - Integer.numberOfLeadingZeros(scale);
+            ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
@@ -53,7 +51,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     private static long byteOffset(int i) {
-        return ((long) i << shift) + base;
+        return ((long) i << ASHIFT) + ABASE;
     }
 
     /**
@@ -99,7 +97,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
 
     @SuppressWarnings("unchecked")
     private E getRaw(long offset) {
-        return (E) unsafe.getObjectVolatile(array, offset);
+        return (E) U.getObjectVolatile(array, offset);
     }
 
     /**
@@ -109,7 +107,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @param newValue the new value
      */
     public final void set(int i, E newValue) {
-        unsafe.putObjectVolatile(array, checkedByteOffset(i), newValue);
+        U.putObjectVolatile(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -120,7 +118,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @since 1.6
      */
     public final void lazySet(int i, E newValue) {
-        unsafe.putOrderedObject(array, checkedByteOffset(i), newValue);
+        U.putOrderedObject(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -133,7 +131,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      */
     @SuppressWarnings("unchecked")
     public final E getAndSet(int i, E newValue) {
-        return (E)unsafe.getAndSetObject(array, checkedByteOffset(i), newValue);
+        return (E)U.getAndSetObject(array, checkedByteOffset(i), newValue);
     }
 
     /**
@@ -151,7 +149,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     private boolean compareAndSetRaw(long offset, E expect, E update) {
-        return unsafe.compareAndSwapObject(array, offset, expect, update);
+        return U.compareAndSwapObject(array, offset, expect, update);
     }
 
     /**
@@ -299,7 +297,7 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
             throw new java.io.InvalidObjectException("Not array type");
         if (a.getClass() != Object[].class)
             a = Arrays.copyOf((Object[])a, Array.getLength(a), Object[].class);
-        unsafe.putObjectVolatile(this, arrayFieldOffset, a);
+        U.putObjectVolatile(this, arrayFieldOffset, a);
     }
 
 }

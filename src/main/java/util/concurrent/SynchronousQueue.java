@@ -220,7 +220,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
             boolean casNext(SNode cmp, SNode val) {
                 return cmp == next &&
-                    UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+                    U.compareAndSwapObject(this, NEXT, cmp, val);
             }
 
             /**
@@ -233,7 +233,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              */
             boolean tryMatch(SNode s) {
                 if (match == null &&
-                    UNSAFE.compareAndSwapObject(this, matchOffset, null, s)) {
+                    U.compareAndSwapObject(this, MATCH, null, s)) {
                     Thread w = waiter;
                     if (w != null) {    // waiters need at most one unpark
                         waiter = null;
@@ -248,7 +248,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
              * Tries to cancel a wait by matching node to itself.
              */
             void tryCancel() {
-                UNSAFE.compareAndSwapObject(this, matchOffset, null, this);
+                U.compareAndSwapObject(this, MATCH, null, this);
             }
 
             boolean isCancelled() {
@@ -256,18 +256,16 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             // Unsafe mechanics
-            private static final sun.misc.Unsafe UNSAFE;
-            private static final long matchOffset;
-            private static final long nextOffset;
+            private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+            private static final long MATCH;
+            private static final long NEXT;
 
             static {
                 try {
-                    UNSAFE = sun.misc.Unsafe.getUnsafe();
-                    Class<?> k = SNode.class;
-                    matchOffset = UNSAFE.objectFieldOffset
-                        (k.getDeclaredField("match"));
-                    nextOffset = UNSAFE.objectFieldOffset
-                        (k.getDeclaredField("next"));
+                    MATCH = U.objectFieldOffset
+                        (SNode.class.getDeclaredField("match"));
+                    NEXT = U.objectFieldOffset
+                        (SNode.class.getDeclaredField("next"));
                 } catch (ReflectiveOperationException e) {
                     throw new Error(e);
                 }
@@ -279,7 +277,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
         boolean casHead(SNode h, SNode nh) {
             return h == head &&
-                UNSAFE.compareAndSwapObject(this, headOffset, h, nh);
+                U.compareAndSwapObject(this, HEAD, h, nh);
         }
 
         /**
@@ -484,14 +482,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         }
 
         // Unsafe mechanics
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long headOffset;
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+        private static final long HEAD;
         static {
             try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = TransferStack.class;
-                headOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("head"));
+                HEAD = U.objectFieldOffset
+                    (TransferStack.class.getDeclaredField("head"));
             } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
@@ -523,19 +519,19 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
 
             boolean casNext(QNode cmp, QNode val) {
                 return next == cmp &&
-                    UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+                    U.compareAndSwapObject(this, NEXT, cmp, val);
             }
 
             boolean casItem(Object cmp, Object val) {
                 return item == cmp &&
-                    UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
+                    U.compareAndSwapObject(this, ITEM, cmp, val);
             }
 
             /**
              * Tries to cancel by CAS'ing ref to this as item.
              */
             void tryCancel(Object cmp) {
-                UNSAFE.compareAndSwapObject(this, itemOffset, cmp, this);
+                U.compareAndSwapObject(this, ITEM, cmp, this);
             }
 
             boolean isCancelled() {
@@ -552,19 +548,17 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
 
             // Unsafe mechanics
-            private static final sun.misc.Unsafe UNSAFE;
-            private static final long itemOffset;
-            private static final long nextOffset;
+            private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+            private static final long ITEM;
+            private static final long NEXT;
 
             static {
                 try {
-                    UNSAFE = sun.misc.Unsafe.getUnsafe();
-                    Class<?> k = QNode.class;
-                    itemOffset = UNSAFE.objectFieldOffset
-                        (k.getDeclaredField("item"));
-                    nextOffset = UNSAFE.objectFieldOffset
-                        (k.getDeclaredField("next"));
-                } catch (Exception e) {
+                    ITEM = U.objectFieldOffset
+                        (QNode.class.getDeclaredField("item"));
+                    NEXT = U.objectFieldOffset
+                        (QNode.class.getDeclaredField("next"));
+                } catch (ReflectiveOperationException e) {
                     throw new Error(e);
                 }
             }
@@ -593,7 +587,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         void advanceHead(QNode h, QNode nh) {
             if (h == head &&
-                UNSAFE.compareAndSwapObject(this, headOffset, h, nh))
+                U.compareAndSwapObject(this, HEAD, h, nh))
                 h.next = h; // forget old next
         }
 
@@ -602,7 +596,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         void advanceTail(QNode t, QNode nt) {
             if (tail == t)
-                UNSAFE.compareAndSwapObject(this, tailOffset, t, nt);
+                U.compareAndSwapObject(this, TAIL, t, nt);
         }
 
         /**
@@ -610,7 +604,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         boolean casCleanMe(QNode cmp, QNode val) {
             return cleanMe == cmp &&
-                UNSAFE.compareAndSwapObject(this, cleanMeOffset, cmp, val);
+                U.compareAndSwapObject(this, CLEANME, cmp, val);
         }
 
         /**
@@ -796,20 +790,18 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             }
         }
 
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long headOffset;
-        private static final long tailOffset;
-        private static final long cleanMeOffset;
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+        private static final long HEAD;
+        private static final long TAIL;
+        private static final long CLEANME;
         static {
             try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = TransferQueue.class;
-                headOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("head"));
-                tailOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("tail"));
-                cleanMeOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("cleanMe"));
+                HEAD = U.objectFieldOffset
+                    (TransferQueue.class.getDeclaredField("head"));
+                TAIL = U.objectFieldOffset
+                    (TransferQueue.class.getDeclaredField("tail"));
+                CLEANME = U.objectFieldOffset
+                    (TransferQueue.class.getDeclaredField("cleanMe"));
             } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }

@@ -180,8 +180,8 @@ public class ThreadLocalRandom extends Random {
         int probe = (p == 0) ? 1 : p; // skip 0
         long seed = mix64(seeder.getAndAdd(SEEDER_INCREMENT));
         Thread t = Thread.currentThread();
-        UNSAFE.putLong(t, SEED, seed);
-        UNSAFE.putInt(t, PROBE, probe);
+        U.putLong(t, SEED, seed);
+        U.putInt(t, PROBE, probe);
     }
 
     /**
@@ -190,7 +190,7 @@ public class ThreadLocalRandom extends Random {
      * @return the current thread's {@code ThreadLocalRandom}
      */
     public static ThreadLocalRandom current() {
-        if (UNSAFE.getInt(Thread.currentThread(), PROBE) == 0)
+        if (U.getInt(Thread.currentThread(), PROBE) == 0)
             localInit();
         return instance;
     }
@@ -209,8 +209,8 @@ public class ThreadLocalRandom extends Random {
 
     final long nextSeed() {
         Thread t; long r; // read and update per-thread seed
-        UNSAFE.putLong(t = Thread.currentThread(), SEED,
-                       r = UNSAFE.getLong(t, SEED) + GAMMA);
+        U.putLong(t = Thread.currentThread(), SEED,
+                       r = U.getLong(t, SEED) + GAMMA);
         return r;
     }
 
@@ -949,7 +949,7 @@ public class ThreadLocalRandom extends Random {
      * can be used to force initialization on zero return.
      */
     static final int getProbe() {
-        return UNSAFE.getInt(Thread.currentThread(), PROBE);
+        return U.getInt(Thread.currentThread(), PROBE);
     }
 
     /**
@@ -960,7 +960,7 @@ public class ThreadLocalRandom extends Random {
         probe ^= probe << 13;   // xorshift
         probe ^= probe >>> 17;
         probe ^= probe << 5;
-        UNSAFE.putInt(Thread.currentThread(), PROBE, probe);
+        U.putInt(Thread.currentThread(), PROBE, probe);
         return probe;
     }
 
@@ -970,14 +970,14 @@ public class ThreadLocalRandom extends Random {
     static final int nextSecondarySeed() {
         int r;
         Thread t = Thread.currentThread();
-        if ((r = UNSAFE.getInt(t, SECONDARY)) != 0) {
+        if ((r = U.getInt(t, SECONDARY)) != 0) {
             r ^= r << 13;   // xorshift
             r ^= r >>> 17;
             r ^= r << 5;
         }
         else if ((r = mix32(seeder.getAndAdd(SEEDER_INCREMENT))) == 0)
             r = 1; // avoid zero
-        UNSAFE.putInt(t, SECONDARY, r);
+        U.putInt(t, SECONDARY, r);
         return r;
     }
 
@@ -1005,7 +1005,7 @@ public class ThreadLocalRandom extends Random {
         throws java.io.IOException {
 
         java.io.ObjectOutputStream.PutField fields = s.putFields();
-        fields.put("rnd", UNSAFE.getLong(Thread.currentThread(), SEED));
+        fields.put("rnd", U.getLong(Thread.currentThread(), SEED));
         fields.put("initialized", true);
         s.writeFields();
     }
@@ -1019,20 +1019,18 @@ public class ThreadLocalRandom extends Random {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe UNSAFE;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long SEED;
     private static final long PROBE;
     private static final long SECONDARY;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> tk = Thread.class;
-            SEED = UNSAFE.objectFieldOffset
-                (tk.getDeclaredField("threadLocalRandomSeed"));
-            PROBE = UNSAFE.objectFieldOffset
-                (tk.getDeclaredField("threadLocalRandomProbe"));
-            SECONDARY = UNSAFE.objectFieldOffset
-                (tk.getDeclaredField("threadLocalRandomSecondarySeed"));
+            SEED = U.objectFieldOffset
+                (Thread.class.getDeclaredField("threadLocalRandomSeed"));
+            PROBE = U.objectFieldOffset
+                (Thread.class.getDeclaredField("threadLocalRandomProbe"));
+            SECONDARY = U.objectFieldOffset
+                (Thread.class.getDeclaredField("threadLocalRandomSecondarySeed"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

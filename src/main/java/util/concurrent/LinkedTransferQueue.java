@@ -426,12 +426,12 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
         // CAS methods for fields
         final boolean casNext(Node cmp, Node val) {
-            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+            return U.compareAndSwapObject(this, NEXT, cmp, val);
         }
 
         final boolean casItem(Object cmp, Object val) {
             // assert cmp == null || cmp.getClass() != Node.class;
-            return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
+            return U.compareAndSwapObject(this, ITEM, cmp, val);
         }
 
         /**
@@ -439,7 +439,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * only be seen after publication via casNext.
          */
         Node(Object item, boolean isData) {
-            UNSAFE.putObject(this, itemOffset, item); // relaxed write
+            U.putObject(this, ITEM, item); // relaxed write
             this.isData = isData;
         }
 
@@ -448,7 +448,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * only after CASing head field, so uses relaxed write.
          */
         final void forgetNext() {
-            UNSAFE.putObject(this, nextOffset, this);
+            U.putObject(this, NEXT, this);
         }
 
         /**
@@ -461,8 +461,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
          * else we don't care).
          */
         final void forgetContents() {
-            UNSAFE.putObject(this, itemOffset, this);
-            UNSAFE.putObject(this, waiterOffset, null);
+            U.putObject(this, ITEM, this);
+            U.putObject(this, WAITER, null);
         }
 
         /**
@@ -508,20 +508,18 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         private static final long serialVersionUID = -3375979862319811754L;
 
         // Unsafe mechanics
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long itemOffset;
-        private static final long nextOffset;
-        private static final long waiterOffset;
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+        private static final long ITEM;
+        private static final long NEXT;
+        private static final long WAITER;
         static {
             try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = Node.class;
-                itemOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("item"));
-                nextOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("next"));
-                waiterOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("waiter"));
+                ITEM = U.objectFieldOffset
+                    (Node.class.getDeclaredField("item"));
+                NEXT = U.objectFieldOffset
+                    (Node.class.getDeclaredField("next"));
+                WAITER = U.objectFieldOffset
+                    (Node.class.getDeclaredField("waiter"));
             } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
@@ -539,15 +537,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     // CAS methods for fields
     private boolean casTail(Node cmp, Node val) {
-        return UNSAFE.compareAndSwapObject(this, tailOffset, cmp, val);
+        return U.compareAndSwapObject(this, TAIL, cmp, val);
     }
 
     private boolean casHead(Node cmp, Node val) {
-        return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
+        return U.compareAndSwapObject(this, HEAD, cmp, val);
     }
 
     private boolean casSweepVotes(int cmp, int val) {
-        return UNSAFE.compareAndSwapInt(this, sweepVotesOffset, cmp, val);
+        return U.compareAndSwapInt(this, SWEEPVOTES, cmp, val);
     }
 
     /*
@@ -1424,20 +1422,18 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     // Unsafe mechanics
 
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long headOffset;
-    private static final long tailOffset;
-    private static final long sweepVotesOffset;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long HEAD;
+    private static final long TAIL;
+    private static final long SWEEPVOTES;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = LinkedTransferQueue.class;
-            headOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("head"));
-            tailOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("tail"));
-            sweepVotesOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("sweepVotes"));
+            HEAD = U.objectFieldOffset
+                (LinkedTransferQueue.class.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset
+                (LinkedTransferQueue.class.getDeclaredField("tail"));
+            SWEEPVOTES = U.objectFieldOffset
+                (LinkedTransferQueue.class.getDeclaredField("sweepVotes"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

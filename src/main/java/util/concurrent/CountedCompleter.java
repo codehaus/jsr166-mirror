@@ -725,11 +725,10 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     protected void setRawResult(T t) { }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long PENDING;
     static {
         try {
-            U = sun.misc.Unsafe.getUnsafe();
             PENDING = U.objectFieldOffset
                 (CountedCompleter.class.getDeclaredField("pending"));
         } catch (ReflectiveOperationException e) {

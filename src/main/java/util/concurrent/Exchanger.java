@@ -596,7 +596,7 @@ public class Exchanger<V> {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long BOUND;
     private static final long SLOT;
     private static final long MATCH;
@@ -604,24 +604,22 @@ public class Exchanger<V> {
     private static final int ABASE;
     static {
         try {
-            U = sun.misc.Unsafe.getUnsafe();
-            Class<?> ek = Exchanger.class;
-            Class<?> nk = Node.class;
-            Class<?> ak = Node[].class;
-            Class<?> tk = Thread.class;
             BOUND = U.objectFieldOffset
-                (ek.getDeclaredField("bound"));
+                (Exchanger.class.getDeclaredField("bound"));
             SLOT = U.objectFieldOffset
-                (ek.getDeclaredField("slot"));
+                (Exchanger.class.getDeclaredField("slot"));
+
             MATCH = U.objectFieldOffset
-                (nk.getDeclaredField("match"));
+                (Node.class.getDeclaredField("match"));
+
             BLOCKER = U.objectFieldOffset
-                (tk.getDeclaredField("parkBlocker"));
-            int scale = U.arrayIndexScale(ak);
+                (Thread.class.getDeclaredField("parkBlocker"));
+
+            int scale = U.arrayIndexScale(Node[].class);
             if ((scale & (scale - 1)) != 0 || scale > (1 << ASHIFT))
                 throw new Error("Unsupported array scale");
             // ABASE absorbs padding in front of element 0
-            ABASE = U.arrayBaseOffset(ak) + (1 << ASHIFT);
+            ABASE = U.arrayBaseOffset(Node[].class) + (1 << ASHIFT);
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

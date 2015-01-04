@@ -371,7 +371,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * compareAndSet head node
      */
     private boolean casHead(HeadIndex<K,V> cmp, HeadIndex<K,V> val) {
-        return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
+        return U.compareAndSwapObject(this, HEAD, cmp, val);
     }
 
     /* ---------------- Nodes -------------- */
@@ -414,14 +414,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * compareAndSet value field
          */
         boolean casValue(Object cmp, Object val) {
-            return UNSAFE.compareAndSwapObject(this, valueOffset, cmp, val);
+            return U.compareAndSwapObject(this, VALUE, cmp, val);
         }
 
         /**
          * compareAndSet next field
          */
         boolean casNext(Node<K,V> cmp, Node<K,V> val) {
-            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+            return U.compareAndSwapObject(this, NEXT, cmp, val);
         }
 
         /**
@@ -502,20 +502,18 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return new AbstractMap.SimpleImmutableEntry<K,V>(key, vv);
         }
 
-        // UNSAFE mechanics
+        // Unsafe mechanics
 
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long valueOffset;
-        private static final long nextOffset;
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+        private static final long VALUE;
+        private static final long NEXT;
 
         static {
             try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = Node.class;
-                valueOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("value"));
-                nextOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("next"));
+                VALUE = U.objectFieldOffset
+                    (Node.class.getDeclaredField("value"));
+                NEXT = U.objectFieldOffset
+                    (Node.class.getDeclaredField("next"));
             } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
@@ -549,7 +547,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          * compareAndSet right field
          */
         final boolean casRight(Index<K,V> cmp, Index<K,V> val) {
-            return UNSAFE.compareAndSwapObject(this, rightOffset, cmp, val);
+            return U.compareAndSwapObject(this, RIGHT, cmp, val);
         }
 
         /**
@@ -586,14 +584,12 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         // Unsafe mechanics
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long rightOffset;
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+        private static final long RIGHT;
         static {
             try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = Index.class;
-                rightOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("right"));
+                RIGHT = U.objectFieldOffset
+                    (Index.class.getDeclaredField("right"));
             } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
@@ -3547,18 +3543,16 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long headOffset;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long HEAD;
     private static final long SECONDARY;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = ConcurrentSkipListMap.class;
-            headOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("head"));
-            Class<?> tk = Thread.class;
-            SECONDARY = UNSAFE.objectFieldOffset
-                (tk.getDeclaredField("threadLocalRandomSecondarySeed"));
+            HEAD = U.objectFieldOffset
+                (ConcurrentSkipListMap.class.getDeclaredField("head"));
+
+            SECONDARY = U.objectFieldOffset
+                (Thread.class.getDeclaredField("threadLocalRandomSecondarySeed"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

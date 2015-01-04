@@ -180,18 +180,18 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     volatile Completion stack;    // Top of Treiber stack of dependent actions
 
     final boolean internalComplete(Object r) { // CAS from null to r
-        return UNSAFE.compareAndSwapObject(this, RESULT, null, r);
+        return U.compareAndSwapObject(this, RESULT, null, r);
     }
 
     final boolean casStack(Completion cmp, Completion val) {
-        return UNSAFE.compareAndSwapObject(this, STACK, cmp, val);
+        return U.compareAndSwapObject(this, STACK, cmp, val);
     }
 
     /** Returns true if successfully pushed c onto stack. */
     final boolean tryPushStack(Completion c) {
         Completion h = stack;
         lazySetNext(c, h);
-        return UNSAFE.compareAndSwapObject(this, STACK, h, c);
+        return U.compareAndSwapObject(this, STACK, h, c);
     }
 
     /** Unconditionally pushes c onto stack, retrying if necessary. */
@@ -211,7 +211,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /** Completes with the null value, unless already completed. */
     final boolean completeNull() {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
+        return U.compareAndSwapObject(this, RESULT, null,
                                            NIL);
     }
 
@@ -222,7 +222,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /** Completes with a non-exceptional result, unless already completed. */
     final boolean completeValue(T t) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
+        return U.compareAndSwapObject(this, RESULT, null,
                                            (t == null) ? NIL : t);
     }
 
@@ -237,7 +237,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /** Completes with an exceptional result, unless already completed. */
     final boolean completeThrowable(Throwable x) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
+        return U.compareAndSwapObject(this, RESULT, null,
                                            encodeThrowable(x));
     }
 
@@ -265,7 +265,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * existing CompletionException.
      */
     final boolean completeThrowable(Throwable x, Object r) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
+        return U.compareAndSwapObject(this, RESULT, null,
                                            encodeThrowable(x, r));
     }
 
@@ -295,7 +295,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * If exceptional, r is first coerced to a CompletionException.
      */
     final boolean completeRelay(Object r) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
+        return U.compareAndSwapObject(this, RESULT, null,
                                            encodeRelay(r));
     }
 
@@ -407,7 +407,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static void lazySetNext(Completion c, Completion next) {
-        UNSAFE.putOrderedObject(c, NEXT, next);
+        U.putOrderedObject(c, NEXT, next);
     }
 
     /**
@@ -2318,18 +2318,17 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe UNSAFE;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long RESULT;
     private static final long STACK;
     private static final long NEXT;
     static {
         try {
-            final sun.misc.Unsafe u;
-            UNSAFE = u = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = CompletableFuture.class;
-            RESULT = u.objectFieldOffset(k.getDeclaredField("result"));
-            STACK = u.objectFieldOffset(k.getDeclaredField("stack"));
-            NEXT = u.objectFieldOffset
+            RESULT = U.objectFieldOffset
+                (CompletableFuture.class.getDeclaredField("result"));
+            STACK = U.objectFieldOffset
+                (CompletableFuture.class.getDeclaredField("stack"));
+            NEXT = U.objectFieldOffset
                 (Completion.class.getDeclaredField("next"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);

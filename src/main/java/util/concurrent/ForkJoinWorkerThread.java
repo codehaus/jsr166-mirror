@@ -156,20 +156,18 @@ public class ForkJoinWorkerThread extends Thread {
     }
 
     // Set up to allow setting thread fields in constructor
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long THREADLOCALS;
     private static final long INHERITABLETHREADLOCALS;
     private static final long INHERITEDACCESSCONTROLCONTEXT;
     static {
         try {
-            U = sun.misc.Unsafe.getUnsafe();
-            Class<?> tk = Thread.class;
             THREADLOCALS = U.objectFieldOffset
-                (tk.getDeclaredField("threadLocals"));
+                (Thread.class.getDeclaredField("threadLocals"));
             INHERITABLETHREADLOCALS = U.objectFieldOffset
-                (tk.getDeclaredField("inheritableThreadLocals"));
+                (Thread.class.getDeclaredField("inheritableThreadLocals"));
             INHERITEDACCESSCONTROLCONTEXT = U.objectFieldOffset
-                (tk.getDeclaredField("inheritedAccessControlContext"));
+                (Thread.class.getDeclaredField("inheritedAccessControlContext"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
@@ -222,10 +220,10 @@ public class ForkJoinWorkerThread extends Thread {
         private static ThreadGroup createThreadGroup() {
             try {
                 sun.misc.Unsafe u = sun.misc.Unsafe.getUnsafe();
-                Class<?> tk = Thread.class;
-                Class<?> gk = ThreadGroup.class;
-                long tg = u.objectFieldOffset(tk.getDeclaredField("group"));
-                long gp = u.objectFieldOffset(gk.getDeclaredField("parent"));
+                long tg = u.objectFieldOffset
+                    (Thread.class.getDeclaredField("group"));
+                long gp = u.objectFieldOffset
+                    (ThreadGroup.class.getDeclaredField("parent"));
                 ThreadGroup group = (ThreadGroup)
                     u.getObject(Thread.currentThread(), tg);
                 while (group != null) {

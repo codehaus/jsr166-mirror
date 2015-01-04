@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import sun.misc.Unsafe;
 
 /**
  * A version of {@link AbstractQueuedSynchronizer} in
@@ -2000,7 +1999,7 @@ public abstract class AbstractQueuedLongSynchronizer
      * are at it, we do the same for other CASable fields (which could
      * otherwise be done with atomic field updaters).
      */
-    private static final Unsafe U = Unsafe.getUnsafe();
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long STATE;
     private static final long HEAD;
     private static final long TAIL;
@@ -2009,13 +2008,16 @@ public abstract class AbstractQueuedLongSynchronizer
 
     static {
         try {
-            Class<?> k = AbstractQueuedLongSynchronizer.class;
-            STATE = U.objectFieldOffset(k.getDeclaredField("state"));
-            HEAD = U.objectFieldOffset(k.getDeclaredField("head"));
-            TAIL = U.objectFieldOffset(k.getDeclaredField("tail"));
-            k = Node.class;
-            WAITSTATUS = U.objectFieldOffset(k.getDeclaredField("waitStatus"));
-            NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
+            STATE = U.objectFieldOffset
+                (AbstractQueuedLongSynchronizer.class.getDeclaredField("state"));
+            HEAD = U.objectFieldOffset
+                (AbstractQueuedLongSynchronizer.class.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset
+                (AbstractQueuedLongSynchronizer.class.getDeclaredField("tail"));
+            WAITSTATUS = U.objectFieldOffset
+                (Node.class.getDeclaredField("waitStatus"));
+            NEXT = U.objectFieldOffset
+                (Node.class.getDeclaredField("next"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

@@ -1220,7 +1220,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         // Unsafe mechanics. Note that some are (and must be) the same as in FJP
-        private static final sun.misc.Unsafe U;
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
         private static final int  ABASE;
         private static final int  ASHIFT;
         private static final long QTOP;
@@ -1228,17 +1228,15 @@ public class ForkJoinPool extends AbstractExecutorService {
         private static final long QCURRENTSTEAL;
         static {
             try {
-                U = sun.misc.Unsafe.getUnsafe();
-                Class<?> wk = WorkQueue.class;
-                Class<?> ak = ForkJoinTask[].class;
                 QTOP = U.objectFieldOffset
-                    (wk.getDeclaredField("top"));
+                    (WorkQueue.class.getDeclaredField("top"));
                 QLOCK = U.objectFieldOffset
-                    (wk.getDeclaredField("qlock"));
+                    (WorkQueue.class.getDeclaredField("qlock"));
                 QCURRENTSTEAL = U.objectFieldOffset
-                    (wk.getDeclaredField("currentSteal"));
-                ABASE = U.arrayBaseOffset(ak);
-                int scale = U.arrayIndexScale(ak);
+                    (WorkQueue.class.getDeclaredField("currentSteal"));
+
+                ABASE = U.arrayBaseOffset(ForkJoinTask[].class);
+                int scale = U.arrayIndexScale(ForkJoinTask[].class);
                 if ((scale & (scale - 1)) != 0)
                     throw new Error("array index scale not a power of two");
                 ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
@@ -3343,7 +3341,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final int  ABASE;
     private static final int  ASHIFT;
     private static final long CTL;
@@ -3360,33 +3358,31 @@ public class ForkJoinPool extends AbstractExecutorService {
     static {
         // initialize field offsets for CAS etc
         try {
-            U = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = ForkJoinPool.class;
             CTL = U.objectFieldOffset
-                (k.getDeclaredField("ctl"));
+                (ForkJoinPool.class.getDeclaredField("ctl"));
             RUNSTATE = U.objectFieldOffset
-                (k.getDeclaredField("runState"));
+                (ForkJoinPool.class.getDeclaredField("runState"));
             STEALCOUNTER = U.objectFieldOffset
-                (k.getDeclaredField("stealCounter"));
-            Class<?> tk = Thread.class;
+                (ForkJoinPool.class.getDeclaredField("stealCounter"));
+
             PARKBLOCKER = U.objectFieldOffset
-                (tk.getDeclaredField("parkBlocker"));
-            Class<?> wk = WorkQueue.class;
+                (Thread.class.getDeclaredField("parkBlocker"));
+
             QTOP = U.objectFieldOffset
-                (wk.getDeclaredField("top"));
+                (WorkQueue.class.getDeclaredField("top"));
             QLOCK = U.objectFieldOffset
-                (wk.getDeclaredField("qlock"));
+                (WorkQueue.class.getDeclaredField("qlock"));
             QSCANSTATE = U.objectFieldOffset
-                (wk.getDeclaredField("scanState"));
+                (WorkQueue.class.getDeclaredField("scanState"));
             QPARKER = U.objectFieldOffset
-                (wk.getDeclaredField("parker"));
+                (WorkQueue.class.getDeclaredField("parker"));
             QCURRENTSTEAL = U.objectFieldOffset
-                (wk.getDeclaredField("currentSteal"));
+                (WorkQueue.class.getDeclaredField("currentSteal"));
             QCURRENTJOIN = U.objectFieldOffset
-                (wk.getDeclaredField("currentJoin"));
-            Class<?> ak = ForkJoinTask[].class;
-            ABASE = U.arrayBaseOffset(ak);
-            int scale = U.arrayIndexScale(ak);
+                (WorkQueue.class.getDeclaredField("currentJoin"));
+
+            ABASE = U.arrayBaseOffset(ForkJoinTask[].class);
+            int scale = U.arrayIndexScale(ForkJoinTask[].class);
             if ((scale & (scale - 1)) != 0)
                 throw new Error("array index scale not a power of two");
             ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);

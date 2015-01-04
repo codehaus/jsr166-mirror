@@ -480,17 +480,15 @@ public class ConcurrentSkipListSet<E>
 
     // Support for resetting map in clone
     private void setMap(ConcurrentNavigableMap<E,Object> map) {
-        UNSAFE.putObjectVolatile(this, mapOffset, map);
+        U.putObjectVolatile(this, MAP, map);
     }
 
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long mapOffset;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long MAP;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = ConcurrentSkipListSet.class;
-            mapOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("m"));
+            MAP = U.objectFieldOffset
+                (ConcurrentSkipListSet.class.getDeclaredField("m"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

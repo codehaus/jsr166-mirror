@@ -260,8 +260,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         lock.unlock(); // must release and then re-acquire main lock
         Object[] newArray = null;
         if (allocationSpinLock == 0 &&
-            UNSAFE.compareAndSwapInt(this, allocationSpinLockOffset,
-                                     0, 1)) {
+            U.compareAndSwapInt(this, ALLOCATIONSPINLOCK, 0, 1)) {
             try {
                 int newCap = oldCap + ((oldCap < 64) ?
                                        (oldCap + 2) : // grow faster if small
@@ -999,14 +998,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long allocationSpinLockOffset;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long ALLOCATIONSPINLOCK;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = PriorityBlockingQueue.class;
-            allocationSpinLockOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("allocationSpinLock"));
+            ALLOCATIONSPINLOCK = U.objectFieldOffset
+                (PriorityBlockingQueue.class.getDeclaredField("allocationSpinLock"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

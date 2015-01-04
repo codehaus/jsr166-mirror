@@ -271,46 +271,44 @@ public class ConcurrentLinkedDeque<E>
          * only be seen after publication via casNext or casPrev.
          */
         Node(E item) {
-            UNSAFE.putObject(this, itemOffset, item);
+            U.putObject(this, ITEM, item);
         }
 
         boolean casItem(E cmp, E val) {
-            return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
+            return U.compareAndSwapObject(this, ITEM, cmp, val);
         }
 
         void lazySetNext(Node<E> val) {
-            UNSAFE.putOrderedObject(this, nextOffset, val);
+            U.putOrderedObject(this, NEXT, val);
         }
 
         boolean casNext(Node<E> cmp, Node<E> val) {
-            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+            return U.compareAndSwapObject(this, NEXT, cmp, val);
         }
 
         void lazySetPrev(Node<E> val) {
-            UNSAFE.putOrderedObject(this, prevOffset, val);
+            U.putOrderedObject(this, PREV, val);
         }
 
         boolean casPrev(Node<E> cmp, Node<E> val) {
-            return UNSAFE.compareAndSwapObject(this, prevOffset, cmp, val);
+            return U.compareAndSwapObject(this, PREV, cmp, val);
         }
 
         // Unsafe mechanics
 
-        private static final sun.misc.Unsafe UNSAFE;
-        private static final long prevOffset;
-        private static final long itemOffset;
-        private static final long nextOffset;
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+        private static final long PREV;
+        private static final long ITEM;
+        private static final long NEXT;
 
         static {
             try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = Node.class;
-                prevOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("prev"));
-                itemOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("item"));
-                nextOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("next"));
+                PREV = U.objectFieldOffset
+                    (Node.class.getDeclaredField("prev"));
+                ITEM = U.objectFieldOffset
+                    (Node.class.getDeclaredField("item"));
+                NEXT = U.objectFieldOffset
+                    (Node.class.getDeclaredField("next"));
             } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
@@ -1544,30 +1542,28 @@ public class ConcurrentLinkedDeque<E>
     }
 
     private boolean casHead(Node<E> cmp, Node<E> val) {
-        return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
+        return U.compareAndSwapObject(this, HEAD, cmp, val);
     }
 
     private boolean casTail(Node<E> cmp, Node<E> val) {
-        return UNSAFE.compareAndSwapObject(this, tailOffset, cmp, val);
+        return U.compareAndSwapObject(this, TAIL, cmp, val);
     }
 
     // Unsafe mechanics
 
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long headOffset;
-    private static final long tailOffset;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long HEAD;
+    private static final long TAIL;
     static {
         PREV_TERMINATOR = new Node<Object>();
         PREV_TERMINATOR.next = PREV_TERMINATOR;
         NEXT_TERMINATOR = new Node<Object>();
         NEXT_TERMINATOR.prev = NEXT_TERMINATOR;
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = ConcurrentLinkedDeque.class;
-            headOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("head"));
-            tailOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("tail"));
+            HEAD = U.objectFieldOffset
+                (ConcurrentLinkedDeque.class.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset
+                (ConcurrentLinkedDeque.class.getDeclaredField("tail"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

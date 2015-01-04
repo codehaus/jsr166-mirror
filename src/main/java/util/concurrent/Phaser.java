@@ -358,7 +358,7 @@ public class Phaser {
             int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
             if (unarrived <= 0)
                 throw new IllegalStateException(badArrive(s));
-            if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adjust)) {
+            if (U.compareAndSwapLong(this, STATE, s, s-=adjust)) {
                 if (unarrived == 1) {
                     long n = s & PARTIES_MASK;  // base of next state
                     int nextUnarrived = (int)n >>> PARTIES_SHIFT;
@@ -371,13 +371,12 @@ public class Phaser {
                             n |= nextUnarrived;
                         int nextPhase = (phase + 1) & MAX_PHASE;
                         n |= (long)nextPhase << PHASE_SHIFT;
-                        UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
+                        U.compareAndSwapLong(this, STATE, s, n);
                         releaseWaiters(phase);
                     }
                     else if (nextUnarrived == 0) { // propagate deregistration
                         phase = parent.doArrive(ONE_DEREGISTER);
-                        UNSAFE.compareAndSwapLong(this, stateOffset,
-                                                  s, s | EMPTY);
+                        U.compareAndSwapLong(this, STATE, s, s | EMPTY);
                     }
                     else
                         phase = parent.doArrive(ONE_ARRIVAL);
@@ -412,14 +411,13 @@ public class Phaser {
                 if (parent == null || reconcileState() == s) {
                     if (unarrived == 0)             // wait out advance
                         root.internalAwaitAdvance(phase, null);
-                    else if (UNSAFE.compareAndSwapLong(this, stateOffset,
-                                                       s, s + adjust))
+                    else if (U.compareAndSwapLong(this, STATE, s, s + adjust))
                         break;
                 }
             }
             else if (parent == null) {              // 1st root registration
                 long next = ((long)phase << PHASE_SHIFT) | adjust;
-                if (UNSAFE.compareAndSwapLong(this, stateOffset, s, next))
+                if (U.compareAndSwapLong(this, STATE, s, next))
                     break;
             }
             else {
@@ -431,8 +429,8 @@ public class Phaser {
                         // finish registration whenever parent registration
                         // succeeded, even when racing with termination,
                         // since these are part of the same "transaction".
-                        while (!UNSAFE.compareAndSwapLong
-                               (this, stateOffset, s,
+                        while (!U.compareAndSwapLong
+                               (this, STATE, s,
                                 ((long)phase << PHASE_SHIFT) | adjust)) {
                             s = state;
                             phase = (int)(root.state >>> PHASE_SHIFT);
@@ -463,8 +461,8 @@ public class Phaser {
             // CAS to root phase with current parties, tripping unarrived
             while ((phase = (int)(root.state >>> PHASE_SHIFT)) !=
                    (int)(s >>> PHASE_SHIFT) &&
-                   !UNSAFE.compareAndSwapLong
-                   (this, stateOffset, s,
+                   !U.compareAndSwapLong
+                   (this, STATE, s,
                     s = (((long)phase << PHASE_SHIFT) |
                          ((phase < 0) ? (s & COUNTS_MASK) :
                           (((p = (int)s >>> PARTIES_SHIFT) == 0) ? EMPTY :
@@ -653,8 +651,7 @@ public class Phaser {
             int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
             if (unarrived <= 0)
                 throw new IllegalStateException(badArrive(s));
-            if (UNSAFE.compareAndSwapLong(this, stateOffset, s,
-                                          s -= ONE_ARRIVAL)) {
+            if (U.compareAndSwapLong(this, STATE, s, s -= ONE_ARRIVAL)) {
                 if (unarrived > 1)
                     return root.internalAwaitAdvance(phase, null);
                 if (root != this)
@@ -669,7 +666,7 @@ public class Phaser {
                     n |= nextUnarrived;
                 int nextPhase = (phase + 1) & MAX_PHASE;
                 n |= (long)nextPhase << PHASE_SHIFT;
-                if (!UNSAFE.compareAndSwapLong(this, stateOffset, s, n))
+                if (!U.compareAndSwapLong(this, STATE, s, n))
                     return (int)(state >>> PHASE_SHIFT); // terminated
                 releaseWaiters(phase);
                 return nextPhase;
@@ -785,8 +782,7 @@ public class Phaser {
         final Phaser root = this.root;
         long s;
         while ((s = root.state) >= 0) {
-            if (UNSAFE.compareAndSwapLong(root, stateOffset,
-                                          s, s | TERMINATION_BIT)) {
+            if (U.compareAndSwapLong(root, STATE, s, s | TERMINATION_BIT)) {
                 // signal all threads
                 releaseWaiters(0); // Waiters on evenQ
                 releaseWaiters(1); // Waiters on oddQ
@@ -1115,14 +1111,12 @@ public class Phaser {
 
     // Unsafe mechanics
 
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long stateOffset;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long STATE;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = Phaser.class;
-            stateOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("state"));
+            STATE = U.objectFieldOffset
+                (Phaser.class.getDeclaredField("state"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

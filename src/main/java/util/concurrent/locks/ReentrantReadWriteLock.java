@@ -1467,18 +1467,16 @@ public class ReentrantReadWriteLock
      * ways that do not preserve unique mappings.
      */
     static final long getThreadId(Thread thread) {
-        return UNSAFE.getLongVolatile(thread, TID_OFFSET);
+        return U.getLongVolatile(thread, TID);
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long TID_OFFSET;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long TID;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> tk = Thread.class;
-            TID_OFFSET = UNSAFE.objectFieldOffset
-                (tk.getDeclaredField("tid"));
+            TID = U.objectFieldOffset
+                (Thread.class.getDeclaredField("tid"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

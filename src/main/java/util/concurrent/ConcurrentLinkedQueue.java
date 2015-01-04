@@ -885,20 +885,21 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     // Unsafe mechanics
 
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long HEAD;
     private static final long TAIL;
     private static final long ITEM;
     private static final long NEXT;
     static {
         try {
-            U = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = ConcurrentLinkedQueue.class;
-            HEAD = U.objectFieldOffset(k.getDeclaredField("head"));
-            TAIL = U.objectFieldOffset(k.getDeclaredField("tail"));
-            k = Node.class;
-            ITEM = U.objectFieldOffset(k.getDeclaredField("item"));
-            NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
+            HEAD = U.objectFieldOffset
+                (ConcurrentLinkedQueue.class.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset
+                (ConcurrentLinkedQueue.class.getDeclaredField("tail"));
+            ITEM = U.objectFieldOffset
+                (Node.class.getDeclaredField("item"));
+            NEXT = U.objectFieldOffset
+                (Node.class.getDeclaredField("next"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

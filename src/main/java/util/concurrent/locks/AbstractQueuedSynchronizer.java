@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import sun.misc.Unsafe;
 
 /**
  * Provides a framework for implementing blocking locks and related
@@ -2218,7 +2217,7 @@ public abstract class AbstractQueuedSynchronizer
      * are at it, we do the same for other CASable fields (which could
      * otherwise be done with atomic field updaters).
      */
-    private static final Unsafe U = Unsafe.getUnsafe();
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long STATE;
     private static final long HEAD;
     private static final long TAIL;
@@ -2227,13 +2226,16 @@ public abstract class AbstractQueuedSynchronizer
 
     static {
         try {
-            Class<?> k = AbstractQueuedSynchronizer.class;
-            STATE = U.objectFieldOffset(k.getDeclaredField("state"));
-            HEAD = U.objectFieldOffset(k.getDeclaredField("head"));
-            TAIL = U.objectFieldOffset(k.getDeclaredField("tail"));
-            k = Node.class;
-            WAITSTATUS = U.objectFieldOffset(k.getDeclaredField("waitStatus"));
-            NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
+            STATE = U.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("state"));
+            HEAD = U.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+            WAITSTATUS = U.objectFieldOffset
+                (Node.class.getDeclaredField("waitStatus"));
+            NEXT = U.objectFieldOffset
+                (Node.class.getDeclaredField("next"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

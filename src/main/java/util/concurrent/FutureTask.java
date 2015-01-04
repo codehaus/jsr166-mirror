@@ -454,17 +454,18 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long STATE;
     private static final long RUNNER;
     private static final long WAITERS;
     static {
         try {
-            U = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = FutureTask.class;
-            STATE   = U.objectFieldOffset(k.getDeclaredField("state"));
-            RUNNER  = U.objectFieldOffset(k.getDeclaredField("runner"));
-            WAITERS = U.objectFieldOffset(k.getDeclaredField("waiters"));
+            STATE = U.objectFieldOffset
+                (FutureTask.class.getDeclaredField("state"));
+            RUNNER = U.objectFieldOffset
+                (FutureTask.class.getDeclaredField("runner"));
+            WAITERS = U.objectFieldOffset
+                (FutureTask.class.getDeclaredField("waiters"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

@@ -192,7 +192,7 @@ public abstract class AbstractQueuedLongSynchronizer
         Node s = node.next;
         if (s == null || s.waitStatus > 0) {
             s = null;
-            for (Node p = tail; p != null && p != node; p = p.prev)
+            for (Node p = tail; p != node && p != null; p = p.prev)
                 if (p.waitStatus <= 0)
                     s = p;
         }

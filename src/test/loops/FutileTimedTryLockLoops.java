@@ -59,6 +59,10 @@ public final class FutileTimedTryLockLoops {
         lock.lock();
 
         for (int i = minThreads; i <= maxThreads; i += (i+1) >>> 1) {
+            // warmup
+            if (i == minThreads)
+                pool.invokeAll(Collections.nCopies(i, task));
+
             long startTime = System.nanoTime();
             pool.invokeAll(Collections.nCopies(i, task));
             long elapsed = System.nanoTime() - startTime;

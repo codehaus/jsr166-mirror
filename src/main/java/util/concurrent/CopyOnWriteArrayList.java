@@ -1638,7 +1638,7 @@ public class CopyOnWriteArrayList<E>
             Class<?> k = CopyOnWriteArrayList.class;
             lockOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("lock"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

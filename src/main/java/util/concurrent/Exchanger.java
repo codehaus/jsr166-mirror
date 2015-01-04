@@ -621,10 +621,10 @@ public class Exchanger<V> {
             s = U.arrayIndexScale(ak);
             // ABASE absorbs padding in front of element 0
             ABASE = U.arrayBaseOffset(ak) + (1 << ASHIFT);
-
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
+
         if ((s & (s-1)) != 0 || s > (1 << ASHIFT))
             throw new Error("Unsupported array scale");
     }

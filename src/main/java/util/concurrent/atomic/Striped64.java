@@ -105,7 +105,7 @@ abstract class Striped64 extends Number {
                 Class<?> ak = Cell.class;
                 valueOffset = UNSAFE.objectFieldOffset
                     (ak.getDeclaredField("value"));
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }
@@ -377,7 +377,7 @@ abstract class Striped64 extends Number {
             Class<?> tk = Thread.class;
             PROBE = UNSAFE.objectFieldOffset
                 (tk.getDeclaredField("threadLocalRandomProbe"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

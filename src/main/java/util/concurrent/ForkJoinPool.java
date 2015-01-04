@@ -1242,7 +1242,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 if ((scale & (scale - 1)) != 0)
                     throw new Error("data type scale not a power of two");
                 ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }
@@ -3390,7 +3390,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             if ((scale & (scale - 1)) != 0)
                 throw new Error("data type scale not a power of two");
             ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
 

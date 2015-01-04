@@ -522,7 +522,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     (k.getDeclaredField("next"));
                 waiterOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("waiter"));
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }
@@ -1438,7 +1438,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 (k.getDeclaredField("tail"));
             sweepVotesOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("sweepVotes"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

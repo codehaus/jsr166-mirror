@@ -268,7 +268,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                         (k.getDeclaredField("match"));
                     nextOffset = UNSAFE.objectFieldOffset
                         (k.getDeclaredField("next"));
-                } catch (Exception e) {
+                } catch (ReflectiveOperationException e) {
                     throw new Error(e);
                 }
             }
@@ -492,7 +492,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 Class<?> k = TransferStack.class;
                 headOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("head"));
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }
@@ -810,7 +810,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     (k.getDeclaredField("tail"));
                 cleanMeOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("cleanMe"));
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }

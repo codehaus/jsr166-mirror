@@ -170,8 +170,7 @@ public class ForkJoinWorkerThread extends Thread {
                 (tk.getDeclaredField("inheritableThreadLocals"));
             INHERITEDACCESSCONTROLCONTEXT = U.objectFieldOffset
                 (tk.getDeclaredField("inheritedAccessControlContext"));
-
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }
@@ -236,7 +235,7 @@ public class ForkJoinWorkerThread extends Thread {
                                                "InnocuousForkJoinWorkerThreadGroup");
                     group = parent;
                 }
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
             // fall through if null as cannot-happen safeguard

@@ -48,7 +48,9 @@ public class AtomicLong extends Number implements java.io.Serializable {
         try {
             valueOffset = unsafe.objectFieldOffset
                 (AtomicLong.class.getDeclaredField("value"));
-        } catch (Exception ex) { throw new Error(ex); }
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
+        }
     }
 
     private volatile long value;

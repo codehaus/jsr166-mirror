@@ -465,7 +465,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
             STATE   = U.objectFieldOffset(k.getDeclaredField("state"));
             RUNNER  = U.objectFieldOffset(k.getDeclaredField("runner"));
             WAITERS = U.objectFieldOffset(k.getDeclaredField("waiters"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

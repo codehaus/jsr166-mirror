@@ -2331,8 +2331,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             STACK = u.objectFieldOffset(k.getDeclaredField("stack"));
             NEXT = u.objectFieldOffset
                 (Completion.class.getDeclaredField("next"));
-        } catch (Exception x) {
-            throw new Error(x);
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
         }
     }
 }

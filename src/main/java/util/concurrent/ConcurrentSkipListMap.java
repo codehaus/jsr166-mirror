@@ -516,7 +516,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     (k.getDeclaredField("value"));
                 nextOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("next"));
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }
@@ -594,7 +594,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 Class<?> k = Index.class;
                 rightOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("right"));
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }
@@ -3559,8 +3559,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             Class<?> tk = Thread.class;
             SECONDARY = UNSAFE.objectFieldOffset
                 (tk.getDeclaredField("threadLocalRandomSecondarySeed"));
-
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

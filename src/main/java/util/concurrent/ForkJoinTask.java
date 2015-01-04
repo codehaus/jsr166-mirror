@@ -1484,7 +1484,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             Class<?> k = ForkJoinTask.class;
             STATUS = U.objectFieldOffset
                 (k.getDeclaredField("status"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

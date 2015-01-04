@@ -311,7 +311,7 @@ public class ConcurrentLinkedDeque<E>
                     (k.getDeclaredField("item"));
                 nextOffset = UNSAFE.objectFieldOffset
                     (k.getDeclaredField("next"));
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }
@@ -1568,7 +1568,7 @@ public class ConcurrentLinkedDeque<E>
                 (k.getDeclaredField("head"));
             tailOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("tail"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

@@ -899,7 +899,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             k = Node.class;
             ITEM = U.objectFieldOffset(k.getDeclaredField("item"));
             NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

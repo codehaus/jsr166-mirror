@@ -29,7 +29,9 @@ public class AtomicBoolean implements java.io.Serializable {
         try {
             valueOffset = unsafe.objectFieldOffset
                 (AtomicBoolean.class.getDeclaredField("value"));
-        } catch (Exception ex) { throw new Error(ex); }
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
+        }
     }
 
     private volatile int value;

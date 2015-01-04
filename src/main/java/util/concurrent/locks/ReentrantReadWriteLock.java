@@ -1479,7 +1479,7 @@ public class ReentrantReadWriteLock
             Class<?> tk = Thread.class;
             TID_OFFSET = UNSAFE.objectFieldOffset
                 (tk.getDeclaredField("tid"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

@@ -378,7 +378,9 @@ public class LockSupport {
                 (tk.getDeclaredField("threadLocalRandomProbe"));
             SECONDARY = UNSAFE.objectFieldOffset
                 (tk.getDeclaredField("threadLocalRandomSecondarySeed"));
-        } catch (Exception ex) { throw new Error(ex); }
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
+        }
     }
 
 }

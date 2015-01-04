@@ -491,7 +491,7 @@ public class ConcurrentSkipListSet<E>
             Class<?> k = ConcurrentSkipListSet.class;
             mapOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("m"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

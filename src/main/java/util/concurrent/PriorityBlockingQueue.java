@@ -1007,7 +1007,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             Class<?> k = PriorityBlockingQueue.class;
             allocationSpinLockOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("allocationSpinLock"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

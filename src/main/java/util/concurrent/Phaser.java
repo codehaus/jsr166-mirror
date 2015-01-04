@@ -1123,7 +1123,7 @@ public class Phaser {
             Class<?> k = Phaser.class;
             stateOffset = UNSAFE.objectFieldOffset
                 (k.getDeclaredField("state"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

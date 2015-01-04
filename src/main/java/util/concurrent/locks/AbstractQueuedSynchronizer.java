@@ -2234,7 +2234,9 @@ public abstract class AbstractQueuedSynchronizer
             k = Node.class;
             WAITSTATUS = U.objectFieldOffset(k.getDeclaredField("waitStatus"));
             NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
-        } catch (Exception ex) { throw new Error(ex); }
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
+        }
     }
 
     /**

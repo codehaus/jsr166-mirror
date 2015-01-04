@@ -1033,7 +1033,7 @@ public class ThreadLocalRandom extends Random {
                 (tk.getDeclaredField("threadLocalRandomProbe"));
             SECONDARY = UNSAFE.objectFieldOffset
                 (tk.getDeclaredField("threadLocalRandomSecondarySeed"));
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

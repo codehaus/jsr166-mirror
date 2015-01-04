@@ -1607,8 +1607,10 @@ public abstract class AbstractQueuedSynchronizer
      * @return true if present
      */
     private boolean findNodeFromTail(Node node) {
-        Node p = tail;
-        for (;;) {
+        // We check for node first, since it's likely to be at or near tail.
+        // tail is known to be non-null, so we could re-order to "save"
+        // one null check, but we leave it this way to help the VM.
+        for (Node p = tail;;) {
             if (p == node)
                 return true;
             if (p == null)

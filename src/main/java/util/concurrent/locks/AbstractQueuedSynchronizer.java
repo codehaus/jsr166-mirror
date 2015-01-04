@@ -1490,8 +1490,7 @@ public abstract class AbstractQueuedSynchronizer
      * acquire.  The value is only an estimate because the number of
      * threads may change dynamically while this method traverses
      * internal data structures.  This method is designed for use in
-     * monitoring system state, not for synchronization
-     * control.
+     * monitoring system state, not for synchronization control.
      *
      * @return the estimated number of threads waiting to acquire
      */
@@ -1731,8 +1730,8 @@ public abstract class AbstractQueuedSynchronizer
      * given condition associated with this synchronizer. Note that
      * because timeouts and interrupts may occur at any time, the
      * estimate serves only as an upper bound on the actual number of
-     * waiters.  This method is designed for use in monitoring of the
-     * system state, not for synchronization control.
+     * waiters.  This method is designed for use in monitoring system
+     * state, not for synchronization control.
      *
      * @param condition the condition
      * @return the estimated number of waiting threads

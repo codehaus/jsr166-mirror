@@ -210,7 +210,7 @@ public class ThreadLocalRandom extends Random {
     final long nextSeed() {
         Thread t; long r; // read and update per-thread seed
         U.putLong(t = Thread.currentThread(), SEED,
-                       r = U.getLong(t, SEED) + GAMMA);
+                  r = U.getLong(t, SEED) + GAMMA);
         return r;
     }
 

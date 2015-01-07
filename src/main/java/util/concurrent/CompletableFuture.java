@@ -212,7 +212,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /** Completes with the null value, unless already completed. */
     final boolean completeNull() {
         return U.compareAndSwapObject(this, RESULT, null,
-                                           NIL);
+                                      NIL);
     }
 
     /** Returns the encoding of the given non-exceptional value. */
@@ -223,7 +223,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /** Completes with a non-exceptional result, unless already completed. */
     final boolean completeValue(T t) {
         return U.compareAndSwapObject(this, RESULT, null,
-                                           (t == null) ? NIL : t);
+                                      (t == null) ? NIL : t);
     }
 
     /**
@@ -238,7 +238,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /** Completes with an exceptional result, unless already completed. */
     final boolean completeThrowable(Throwable x) {
         return U.compareAndSwapObject(this, RESULT, null,
-                                           encodeThrowable(x));
+                                      encodeThrowable(x));
     }
 
     /**
@@ -266,7 +266,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     final boolean completeThrowable(Throwable x, Object r) {
         return U.compareAndSwapObject(this, RESULT, null,
-                                           encodeThrowable(x, r));
+                                      encodeThrowable(x, r));
     }
 
     /**
@@ -296,7 +296,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     final boolean completeRelay(Object r) {
         return U.compareAndSwapObject(this, RESULT, null,
-                                           encodeRelay(r));
+                                      encodeRelay(r));
     }
 
     /**

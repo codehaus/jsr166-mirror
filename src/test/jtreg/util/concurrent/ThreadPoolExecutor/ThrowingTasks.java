@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,6 @@
  * @test
  * @bug 6450200 6450205 6450207 6450211
  * @summary Test proper handling of tasks that terminate abruptly
- * @run main/othervm ThrowingTasks
  * @author Martin Buchholz
  */
 
@@ -33,6 +32,7 @@ import java.security.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ThrowingTasks {
     static final Random rnd = new Random();
@@ -156,6 +156,7 @@ public class ThrowingTasks {
     }
 
     static class CheckingExecutor extends ThreadPoolExecutor {
+        private final ReentrantLock lock = new ReentrantLock();
         CheckingExecutor() {
             super(10, 10,
                   1L, TimeUnit.HOURS,
@@ -163,10 +164,20 @@ public class ThrowingTasks {
                   tf);
         }
         @Override protected void beforeExecute(Thread t, Runnable r) {
-            allStarted.countDown();
-            if (allStarted.getCount() < getCorePoolSize())
+            final boolean lessThanCorePoolSize;
+            // Add a lock to sync allStarted.countDown() and
+            // allStarted.getCount() < getCorePoolSize()
+            lock.lock();
+            try {
+                allStarted.countDown();
+                lessThanCorePoolSize = allStarted.getCount() < getCorePoolSize();
+            } finally {
+                lock.unlock();
+            }
+            if (lessThanCorePoolSize) {
                 try { allContinue.await(); }
                 catch (InterruptedException x) { unexpected(x); }
+            }
             beforeExecuteCount.getAndIncrement();
             check(! isTerminated());
             ((Flaky)r).beforeExecute.run();

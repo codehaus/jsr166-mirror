@@ -2994,6 +2994,58 @@ public class CompletableFutureTest extends JSR166TestCase {
         checkCancelled(f);
     }}
 
+    /**
+     * thenCompose result completes exceptionally if the result of the action does
+     */
+    public void testThenCompose_actionReturnsFailingFuture() {
+        for (ExecutionMode m : ExecutionMode.values())
+        for (int order = 0; order < 6; order++)
+        for (Integer v1 : new Integer[] { 1, null })
+    {
+        final CFException ex = new CFException();
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+        final CompletableFuture<Integer> g = new CompletableFuture<>();
+        final CompletableFuture<Integer> h;
+        // Test all permutations of orders
+        switch (order) {
+        case 0:
+            assertTrue(f.complete(v1));
+            assertTrue(g.completeExceptionally(ex));
+            h = m.thenCompose(f, (x -> g));
+            break;
+        case 1:
+            assertTrue(f.complete(v1));
+            h = m.thenCompose(f, (x -> g));
+            assertTrue(g.completeExceptionally(ex));
+            break;
+        case 2:
+            assertTrue(g.completeExceptionally(ex));
+            assertTrue(f.complete(v1));
+            h = m.thenCompose(f, (x -> g));
+            break;
+        case 3:
+            assertTrue(g.completeExceptionally(ex));
+            h = m.thenCompose(f, (x -> g));
+            assertTrue(f.complete(v1));
+            break;
+        case 4:
+            h = m.thenCompose(f, (x -> g));
+            assertTrue(f.complete(v1));
+            assertTrue(g.completeExceptionally(ex));
+            break;
+        case 5:
+            h = m.thenCompose(f, (x -> g));
+            assertTrue(f.complete(v1));
+            assertTrue(g.completeExceptionally(ex));
+            break;
+        default: throw new AssertionError();
+        }
+
+        checkCompletedExceptionally(g, ex);
+        checkCompletedWithWrappedException(h, ex);
+        checkCompletedNormally(f, v1);
+    }}
+
     // other static methods
 
     /**

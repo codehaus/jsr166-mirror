@@ -571,7 +571,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     private <V> CompletableFuture<V> uniApplyStage(
         Executor e, Function<? super T,? extends V> f) {
         if (f == null) throw new NullPointerException();
-        CompletableFuture<V> d =  new CompletableFuture<V>();
+        CompletableFuture<V> d = new CompletableFuture<V>();
         if (e != null || !d.uniApply(this, f, null)) {
             UniApply<T,V> c = new UniApply<T,V>(e, d, this, f);
             push(c);

@@ -54,9 +54,9 @@ import java.util.function.Supplier;
  *
  * <li>All CompletionStage methods return CompletableFutures.  To
  * restrict usages to only those methods defined in interface
- * CompletionStage, use the new CompletionStage from method {@link
- * minimalCompletionStage}. Or to ensure only that clients do not
- * themselves modify a future, use method {@link copy}. </li> </ul>
+ * CompletionStage, use method {@link #minimalCompletionStage}. Or to
+ * ensure only that clients do not themselves modify a future, use
+ * method {@link copy}. </li> </ul>
  *
  * <p>CompletableFuture also implements {@link Future} with the following
  * policies: <ul>
@@ -2501,6 +2501,26 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /**
+     * Completes this CompletableFuture with the given value if not
+     * otherwise completed before the given timeout.
+     *
+     * @param value the value to use upon timeout
+     * @param timeout how long to wait before completing.
+     * @param unit a {@code TimeUnit} determining how to interpret the
+     *        {@code timeout} parameter
+     * @return this CompletableFuture
+     * @since 1.9
+     */
+    public CompletableFuture<T> completeOnTimeout(T value, long timeout, 
+                                                  TimeUnit unit) {
+        if (result == null)
+            whenComplete(new Canceller(Delayer.delay(
+                                           new DelayedCompleter<T>(this, value),
+                                           timeout, unit)));
+        return this;
+    }
+
+    /**
      * Returns a new Executor that submits a task to the given base
      * executor after the given delay.
      *
@@ -2634,6 +2654,14 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             if (f != null && !f.isDone())
                 f.completeExceptionally(new TimeoutException());
         }
+    }
+
+    /** Action to completeExceptionally on timeout */
+    static final class DelayedCompleter<U> implements Runnable {
+        final CompletableFuture<U> f;
+        final U u;
+        DelayedCompleter(CompletableFuture<U> f, U u) { this.f = f; this.u = u; }
+        public void run() { f.complete(u); }
     }
 
     /** Action to cancel unneeded timeouts */

@@ -2419,7 +2419,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * normally. If this CompletableFuture completes exceptionally,
      * then the returned CompletableFuture completes exceptionally
      * with a CompletionException with this exception as cause. The
-     * behavior equivalent is to {@code thenApply(x -> x)}. This
+     * behavior is equivalent to {@code thenApply(x -> x)}. This
      * method may be useful as a form of "defensive copying", to
      * prevent clients from completing, while still being able to
      * arrange dependent actions.

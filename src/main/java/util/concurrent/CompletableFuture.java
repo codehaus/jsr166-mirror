@@ -2393,8 +2393,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * class as this CompletableFuture. The default implementation
      * returns an instance of class CompletableFuture.
      *
-     * @return a new CompletableFuture
      * @param <U> the type of the value
+     * @return a new CompletableFuture
      * @since 1.9
      */
     public <U> CompletableFuture<U> newIncompleteFuture() {

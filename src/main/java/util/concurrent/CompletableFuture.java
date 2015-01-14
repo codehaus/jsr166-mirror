@@ -56,7 +56,7 @@ import java.util.function.Supplier;
  * restrict usages to only those methods defined in interface
  * CompletionStage, use method {@link #minimalCompletionStage}. Or to
  * ensure only that clients do not themselves modify a future, use
- * method {@link copy}. </li> </ul>
+ * method {@link #copy}. </li> </ul>
  *
  * <p>CompletableFuture also implements {@link Future} with the following
  * policies: <ul>
@@ -999,7 +999,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     d.completeRelay(s);
                 else {
                     UniRelay<V> c = new UniRelay<V>(d, g);
-                    push(c);
+                    g.push(c);
                     c.tryFire(SYNC);
                 }
                 return d;
@@ -2632,15 +2632,15 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             this.delay = delay; this.unit = unit; this.executor = executor;
         }
         public void execute(Runnable r) {
-            Delayer.delay(new Submitter(executor, r), delay, unit);
+            Delayer.delay(new TaskSubmitter(executor, r), delay, unit);
         }
     }
 
-    /** Delay action to asynchronously start user task */
-    static final class Submitter implements Runnable {
+    /** Action to submit user task */
+    static final class TaskSubmitter implements Runnable {
         final Executor executor;
         final Runnable action;
-        Submitter(Executor executor, Runnable action) {
+        TaskSubmitter(Executor executor, Runnable action) {
             this.executor = executor;
             this.action = action;
         }
@@ -2657,7 +2657,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         }
     }
 
-    /** Action to completeExceptionally on timeout */
+    /** Action to complete on timeout */
     static final class DelayedCompleter<U> implements Runnable {
         final CompletableFuture<U> f;
         final U u;

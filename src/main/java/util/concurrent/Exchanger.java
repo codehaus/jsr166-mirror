@@ -596,37 +596,33 @@ public class Exchanger<V> {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long BOUND;
     private static final long SLOT;
     private static final long MATCH;
     private static final long BLOCKER;
     private static final int ABASE;
     static {
-        int s;
         try {
-            U = sun.misc.Unsafe.getUnsafe();
-            Class<?> ek = Exchanger.class;
-            Class<?> nk = Node.class;
-            Class<?> ak = Node[].class;
-            Class<?> tk = Thread.class;
             BOUND = U.objectFieldOffset
-                (ek.getDeclaredField("bound"));
+                (Exchanger.class.getDeclaredField("bound"));
             SLOT = U.objectFieldOffset
-                (ek.getDeclaredField("slot"));
-            MATCH = U.objectFieldOffset
-                (nk.getDeclaredField("match"));
-            BLOCKER = U.objectFieldOffset
-                (tk.getDeclaredField("parkBlocker"));
-            s = U.arrayIndexScale(ak);
-            // ABASE absorbs padding in front of element 0
-            ABASE = U.arrayBaseOffset(ak) + (1 << ASHIFT);
+                (Exchanger.class.getDeclaredField("slot"));
 
-        } catch (Exception e) {
+            MATCH = U.objectFieldOffset
+                (Node.class.getDeclaredField("match"));
+
+            BLOCKER = U.objectFieldOffset
+                (Thread.class.getDeclaredField("parkBlocker"));
+
+            int scale = U.arrayIndexScale(Node[].class);
+            if ((scale & (scale - 1)) != 0 || scale > (1 << ASHIFT))
+                throw new Error("Unsupported array scale");
+            // ABASE absorbs padding in front of element 0
+            ABASE = U.arrayBaseOffset(Node[].class) + (1 << ASHIFT);
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
-        if ((s & (s-1)) != 0 || s > (1 << ASHIFT))
-            throw new Error("Unsupported array scale");
     }
 
 }

@@ -2034,6 +2034,7 @@ public abstract class AbstractQueuedSynchronizer
                 throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
+            long initialNanos = nanosTimeout;
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
             final long deadline = System.nanoTime() + nanosTimeout;
@@ -2055,7 +2056,8 @@ public abstract class AbstractQueuedSynchronizer
                 unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
-            return deadline - System.nanoTime();
+            long remaining = deadline - System.nanoTime(); // avoid overflow
+            return (remaining < initialNanos) ? remaining : Long.MIN_VALUE;
         }
 
         /**

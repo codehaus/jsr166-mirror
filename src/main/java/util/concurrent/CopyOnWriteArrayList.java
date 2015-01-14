@@ -1012,7 +1012,7 @@ public class CopyOnWriteArrayList<E>
         if (!(o instanceof List))
             return false;
 
-        List<?> list = (List<?>)(o);
+        List<?> list = (List<?>)o;
         Iterator<?> it = list.iterator();
         Object[] elements = getArray();
         int len = elements.length;
@@ -1628,17 +1628,15 @@ public class CopyOnWriteArrayList<E>
 
     // Support for resetting lock while deserializing
     private void resetLock() {
-        UNSAFE.putObjectVolatile(this, lockOffset, new ReentrantLock());
+        U.putObjectVolatile(this, LOCK, new ReentrantLock());
     }
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long lockOffset;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+    private static final long LOCK;
     static {
         try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = CopyOnWriteArrayList.class;
-            lockOffset = UNSAFE.objectFieldOffset
-                (k.getDeclaredField("lock"));
-        } catch (Exception e) {
+            LOCK = U.objectFieldOffset
+                (CopyOnWriteArrayList.class.getDeclaredField("lock"));
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

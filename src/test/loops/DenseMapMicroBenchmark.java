@@ -47,13 +47,13 @@ public class DenseMapMicroBenchmark {
         time0(NANOS_PER_JOB, jobs);
 
         final String nameHeader = "Method";
-        int nameWidth  = nameHeader.length();
+        int nameWidth = nameHeader.length();
         for (Job job : jobs)
             nameWidth = Math.max(nameWidth, job.name().length());
 
         final int itemsPerTest = SIZE * OPS_PER_ITER * ITERS_PER_TEST;
         final String timeHeader = "Nanos/item";
-        int timeWidth  = timeHeader.length();
+        int timeWidth = timeHeader.length();
         final String ratioHeader = "Ratio";
         int ratioWidth = ratioHeader.length();
         String format = String.format("%%-%ds %%%dd %%.3f%%n",

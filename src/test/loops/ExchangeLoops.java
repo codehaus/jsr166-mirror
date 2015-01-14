@@ -12,7 +12,7 @@ public class ExchangeLoops {
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
 
     static final int  DEFAULT_THREADS = NCPUS + 2;
-    static final long DEFAULT_TRIAL_MILLIS   = 10000;
+    static final long DEFAULT_TRIAL_MILLIS = 10000;
 
     public static void main(String[] args) throws Exception {
         int maxThreads = DEFAULT_THREADS;

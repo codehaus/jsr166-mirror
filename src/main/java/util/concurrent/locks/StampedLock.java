@@ -1369,7 +1369,7 @@ public class StampedLock implements java.io.Serializable {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe U;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long STATE;
     private static final long WHEAD;
     private static final long WTAIL;
@@ -1380,26 +1380,23 @@ public class StampedLock implements java.io.Serializable {
 
     static {
         try {
-            U = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = StampedLock.class;
-            Class<?> wk = WNode.class;
             STATE = U.objectFieldOffset
-                (k.getDeclaredField("state"));
+                (StampedLock.class.getDeclaredField("state"));
             WHEAD = U.objectFieldOffset
-                (k.getDeclaredField("whead"));
+                (StampedLock.class.getDeclaredField("whead"));
             WTAIL = U.objectFieldOffset
-                (k.getDeclaredField("wtail"));
-            WSTATUS = U.objectFieldOffset
-                (wk.getDeclaredField("status"));
-            WNEXT = U.objectFieldOffset
-                (wk.getDeclaredField("next"));
-            WCOWAIT = U.objectFieldOffset
-                (wk.getDeclaredField("cowait"));
-            Class<?> tk = Thread.class;
-            PARKBLOCKER = U.objectFieldOffset
-                (tk.getDeclaredField("parkBlocker"));
+                (StampedLock.class.getDeclaredField("wtail"));
 
-        } catch (Exception e) {
+            WSTATUS = U.objectFieldOffset
+                (WNode.class.getDeclaredField("status"));
+            WNEXT = U.objectFieldOffset
+                (WNode.class.getDeclaredField("next"));
+            WCOWAIT = U.objectFieldOffset
+                (WNode.class.getDeclaredField("cowait"));
+
+            PARKBLOCKER = U.objectFieldOffset
+                (Thread.class.getDeclaredField("parkBlocker"));
+        } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
     }

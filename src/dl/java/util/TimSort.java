@@ -209,7 +209,7 @@ class TimSort<T> {
         }
 
         Arrays.checkStartAndEnd(a.length, lo, hi);
-        int nRemaining  = hi - lo;
+        int nRemaining = hi - lo;
         if (nRemaining < 2)
             return;  // Arrays of size 0 and 1 are always sorted
 

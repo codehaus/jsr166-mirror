@@ -161,7 +161,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * this -- see method comparableClassFor).  The added complexity
      * of tree bins is worthwhile in providing worst-case O(log n)
      * operations when keys either have distinct hashes or are
-     * orderable, Thus, performance degrades gracefully under
+     * orderable. Thus, performance degrades gracefully under
      * accidental or malicious usages in which hashCode() methods
      * return values that are poorly distributed, as well as those in
      * which many keys share a hashCode, so long as they are also

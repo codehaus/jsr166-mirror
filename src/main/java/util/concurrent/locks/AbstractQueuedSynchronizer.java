@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import sun.misc.Unsafe;
 
 /**
  * Provides a framework for implementing blocking locks and related
@@ -471,17 +470,11 @@ public abstract class AbstractQueuedSynchronizer
                 return p;
         }
 
-        Node() {    // Used to establish initial head or SHARED marker
-        }
+        /** Establishes initial head or SHARED marker. */
+        Node() {}
 
-        Node(Thread thread, Node mode) {     // Used by addWaiter
-            this.nextWaiter = mode;
-            this.thread = thread;
-        }
-
-        Node(Thread thread, int waitStatus) { // Used by Condition
-            this.waitStatus = waitStatus;
-            this.thread = thread;
+        Node(Node nextWaiter) { // Used by addWaiter
+            this.nextWaiter = nextWaiter;
         }
     }
 
@@ -551,18 +544,17 @@ public abstract class AbstractQueuedSynchronizer
      * @param node the node to insert
      * @return node's predecessor
      */
-    private Node enq(final Node node) {
+    private Node enq(Node node) {
         for (;;) {
-            Node t = tail;
-            if (t == null) { // Must initialize
-                if (compareAndSetHead(new Node()))
-                    tail = head;
-            } else {
-                node.prev = t;
-                if (compareAndSetTail(t, node)) {
-                    t.next = node;
-                    return t;
+            Node oldTail = tail;
+            if (oldTail != null) {
+                U.putObject(node, PREV, oldTail);
+                if (compareAndSetTail(oldTail, node)) {
+                    oldTail.next = node;
+                    return oldTail;
                 }
+            } else {
+                initializeSyncQueue();
             }
         }
     }
@@ -574,18 +566,21 @@ public abstract class AbstractQueuedSynchronizer
      * @return the new node
      */
     private Node addWaiter(Node mode) {
-        Node node = new Node(Thread.currentThread(), mode);
-        // Try the fast path of enq; backup to full enq on failure
-        Node pred = tail;
-        if (pred != null) {
-            node.prev = pred;
-            if (compareAndSetTail(pred, node)) {
-                pred.next = node;
-                return node;
+        Node node = new Node(mode);
+        U.putObject(node, THREAD, Thread.currentThread());
+
+        for (;;) {
+            Node oldTail = tail;
+            if (oldTail != null) {
+                U.putObject(node, PREV, oldTail);
+                if (compareAndSetTail(oldTail, node)) {
+                    oldTail.next = node;
+                    return node;
+                }
+            } else {
+                initializeSyncQueue();
             }
         }
-        enq(node);
-        return node;
     }
 
     /**
@@ -625,9 +620,9 @@ public abstract class AbstractQueuedSynchronizer
         Node s = node.next;
         if (s == null || s.waitStatus > 0) {
             s = null;
-            for (Node t = tail; t != null && t != node; t = t.prev)
-                if (t.waitStatus <= 0)
-                    s = t;
+            for (Node p = tail; p != node && p != null; p = p.prev)
+                if (p.waitStatus <= 0)
+                    s = p;
         }
         if (s != null)
             LockSupport.unpark(s.thread);
@@ -1491,8 +1486,7 @@ public abstract class AbstractQueuedSynchronizer
      * acquire.  The value is only an estimate because the number of
      * threads may change dynamically while this method traverses
      * internal data structures.  This method is designed for use in
-     * monitoring system state, not for synchronization
-     * control.
+     * monitoring system state, not for synchronization control.
      *
      * @return the estimated number of threads waiting to acquire
      */
@@ -1577,7 +1571,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public String toString() {
         int s = getState();
-        String q  = hasQueuedThreads() ? "non" : "";
+        String q = hasQueuedThreads() ? "non" : "";
         return super.toString() +
             "[State = " + s + ", " + q + "empty queue]";
     }
@@ -1613,13 +1607,15 @@ public abstract class AbstractQueuedSynchronizer
      * @return true if present
      */
     private boolean findNodeFromTail(Node node) {
-        Node t = tail;
-        for (;;) {
-            if (t == node)
+        // We check for node first, since it's likely to be at or near tail.
+        // tail is known to be non-null, so we could re-order to "save"
+        // one null check, but we leave it this way to help the VM.
+        for (Node p = tail;;) {
+            if (p == node)
                 return true;
-            if (t == null)
+            if (p == null)
                 return false;
-            t = t.prev;
+            p = p.prev;
         }
     }
 
@@ -1732,8 +1728,8 @@ public abstract class AbstractQueuedSynchronizer
      * given condition associated with this synchronizer. Note that
      * because timeouts and interrupts may occur at any time, the
      * estimate serves only as an upper bound on the actual number of
-     * waiters.  This method is designed for use in monitoring of the
-     * system state, not for synchronization control.
+     * waiters.  This method is designed for use in monitoring system
+     * state, not for synchronization control.
      *
      * @param condition the condition
      * @return the estimated number of waiting threads
@@ -1811,7 +1807,11 @@ public abstract class AbstractQueuedSynchronizer
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
-            Node node = new Node(Thread.currentThread(), Node.CONDITION);
+
+            Node node = new Node();
+            U.putInt(node, WAITSTATUS, Node.CONDITION);
+            U.putObject(node, THREAD, Thread.currentThread());
+
             if (t == null)
                 firstWaiter = node;
             else
@@ -2218,41 +2218,54 @@ public abstract class AbstractQueuedSynchronizer
      * are at it, we do the same for other CASable fields (which could
      * otherwise be done with atomic field updaters).
      */
-    private static final Unsafe U = Unsafe.getUnsafe();
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long STATE;
     private static final long HEAD;
     private static final long TAIL;
     private static final long WAITSTATUS;
+    private static final long PREV;
     private static final long NEXT;
+    private static final long THREAD;
 
     static {
         try {
-            Class<?> k = AbstractQueuedSynchronizer.class;
-            STATE = U.objectFieldOffset(k.getDeclaredField("state"));
-            HEAD = U.objectFieldOffset(k.getDeclaredField("head"));
-            TAIL = U.objectFieldOffset(k.getDeclaredField("tail"));
-            k = Node.class;
-            WAITSTATUS = U.objectFieldOffset(k.getDeclaredField("waitStatus"));
-            NEXT = U.objectFieldOffset(k.getDeclaredField("next"));
-        } catch (Exception ex) { throw new Error(ex); }
+            STATE = U.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("state"));
+            HEAD = U.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("head"));
+            TAIL = U.objectFieldOffset
+                (AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+
+            WAITSTATUS = U.objectFieldOffset
+                (Node.class.getDeclaredField("waitStatus"));
+            PREV = U.objectFieldOffset
+                (Node.class.getDeclaredField("prev"));
+            NEXT = U.objectFieldOffset
+                (Node.class.getDeclaredField("next"));
+            THREAD = U.objectFieldOffset
+                (Node.class.getDeclaredField("thread"));
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
+        }
     }
 
     /**
-     * CAS head field. Used only by enq.
+     * Initializes head and tail fields on first contention.
      */
-    private final boolean compareAndSetHead(Node update) {
-        return U.compareAndSwapObject(this, HEAD, null, update);
+    private final void initializeSyncQueue() {
+        if (U.compareAndSwapObject(this, HEAD, null, new Node()))
+            tail = head;
     }
 
     /**
-     * CAS tail field. Used only by enq.
+     * CASes tail field.
      */
     private final boolean compareAndSetTail(Node expect, Node update) {
         return U.compareAndSwapObject(this, TAIL, expect, update);
     }
 
     /**
-     * CAS waitStatus field of a node.
+     * CASes waitStatus field of a node.
      */
     private static final boolean compareAndSetWaitStatus(Node node,
                                                          int expect,
@@ -2261,7 +2274,7 @@ public abstract class AbstractQueuedSynchronizer
     }
 
     /**
-     * CAS next field of a node.
+     * CASes next field of a node.
      */
     private static final boolean compareAndSetNext(Node node,
                                                    Node expect,

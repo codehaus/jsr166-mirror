@@ -180,18 +180,18 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     volatile Completion stack;    // Top of Treiber stack of dependent actions
 
     final boolean internalComplete(Object r) { // CAS from null to r
-        return UNSAFE.compareAndSwapObject(this, RESULT, null, r);
+        return U.compareAndSwapObject(this, RESULT, null, r);
     }
 
     final boolean casStack(Completion cmp, Completion val) {
-        return UNSAFE.compareAndSwapObject(this, STACK, cmp, val);
+        return U.compareAndSwapObject(this, STACK, cmp, val);
     }
 
     /** Returns true if successfully pushed c onto stack. */
     final boolean tryPushStack(Completion c) {
         Completion h = stack;
         lazySetNext(c, h);
-        return UNSAFE.compareAndSwapObject(this, STACK, h, c);
+        return U.compareAndSwapObject(this, STACK, h, c);
     }
 
     /** Unconditionally pushes c onto stack, retrying if necessary. */
@@ -211,8 +211,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /** Completes with the null value, unless already completed. */
     final boolean completeNull() {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
-                                           NIL);
+        return U.compareAndSwapObject(this, RESULT, null,
+                                      NIL);
     }
 
     /** Returns the encoding of the given non-exceptional value. */
@@ -222,8 +222,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /** Completes with a non-exceptional result, unless already completed. */
     final boolean completeValue(T t) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
-                                           (t == null) ? NIL : t);
+        return U.compareAndSwapObject(this, RESULT, null,
+                                      (t == null) ? NIL : t);
     }
 
     /**
@@ -237,8 +237,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /** Completes with an exceptional result, unless already completed. */
     final boolean completeThrowable(Throwable x) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
-                                           encodeThrowable(x));
+        return U.compareAndSwapObject(this, RESULT, null,
+                                      encodeThrowable(x));
     }
 
     /**
@@ -265,8 +265,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * existing CompletionException.
      */
     final boolean completeThrowable(Throwable x, Object r) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
-                                           encodeThrowable(x, r));
+        return U.compareAndSwapObject(this, RESULT, null,
+                                      encodeThrowable(x, r));
     }
 
     /**
@@ -295,8 +295,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * If exceptional, r is first coerced to a CompletionException.
      */
     final boolean completeRelay(Object r) {
-        return UNSAFE.compareAndSwapObject(this, RESULT, null,
-                                           encodeRelay(r));
+        return U.compareAndSwapObject(this, RESULT, null,
+                                      encodeRelay(r));
     }
 
     /**
@@ -407,7 +407,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     static void lazySetNext(Completion c, Completion next) {
-        UNSAFE.putOrderedObject(c, NEXT, next);
+        U.putOrderedObject(c, NEXT, next);
     }
 
     /**
@@ -571,7 +571,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     private <V> CompletableFuture<V> uniApplyStage(
         Executor e, Function<? super T,? extends V> f) {
         if (f == null) throw new NullPointerException();
-        CompletableFuture<V> d =  new CompletableFuture<V>();
+        CompletableFuture<V> d = new CompletableFuture<V>();
         if (e != null || !d.uniApply(this, f, null)) {
             UniApply<T,V> c = new UniApply<T,V>(e, d, this, f);
             push(c);
@@ -939,7 +939,15 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             }
             try {
                 @SuppressWarnings("unchecked") T t = (T) r;
-                return f.apply(t).toCompletableFuture();
+                CompletableFuture<V> g = f.apply(t).toCompletableFuture();
+                Object s = g.result;
+                if (s != null)
+                    return new CompletableFuture<V>(encodeRelay(s));
+                CompletableFuture<V> d = new CompletableFuture<V>();
+                UniRelay<V> copy = new UniRelay<V>(d, g);
+                g.push(copy);
+                copy.tryFire(SYNC);
+                return d;
             } catch (Throwable ex) {
                 return new CompletableFuture<V>(encodeThrowable(ex));
             }
@@ -2318,21 +2326,20 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     // Unsafe mechanics
-    private static final sun.misc.Unsafe UNSAFE;
+    private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long RESULT;
     private static final long STACK;
     private static final long NEXT;
     static {
         try {
-            final sun.misc.Unsafe u;
-            UNSAFE = u = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = CompletableFuture.class;
-            RESULT = u.objectFieldOffset(k.getDeclaredField("result"));
-            STACK = u.objectFieldOffset(k.getDeclaredField("stack"));
-            NEXT = u.objectFieldOffset
+            RESULT = U.objectFieldOffset
+                (CompletableFuture.class.getDeclaredField("result"));
+            STACK = U.objectFieldOffset
+                (CompletableFuture.class.getDeclaredField("stack"));
+            NEXT = U.objectFieldOffset
                 (Completion.class.getDeclaredField("next"));
-        } catch (Exception x) {
-            throw new Error(x);
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
         }
     }
 }

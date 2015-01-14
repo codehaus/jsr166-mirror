@@ -174,7 +174,7 @@ class ComparableTimSort {
      */
     static void sort(Object[] a, int lo, int hi, Object[] work, int workBase, int workLen) {
         Arrays.checkStartAndEnd(a.length, lo, hi);
-        int nRemaining  = hi - lo;
+        int nRemaining = hi - lo;
         if (nRemaining < 2)
             return;  // Arrays of size 0 and 1 are always sorted
 

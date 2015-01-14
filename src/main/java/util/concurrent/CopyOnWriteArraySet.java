@@ -339,7 +339,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
             return true;
         if (!(o instanceof Set))
             return false;
-        Set<?> set = (Set<?>)(o);
+        Set<?> set = (Set<?>)o;
         Iterator<?> it = set.iterator();
 
         // Uses O(n^2) algorithm that is only appropriate

@@ -652,7 +652,7 @@ public class Semaphore implements java.io.Serializable {
      * Returns an estimate of the number of threads waiting to acquire.
      * The value is only an estimate because the number of threads may
      * change dynamically while this method traverses internal data
-     * structures.  This method is designed for use in monitoring of the
+     * structures.  This method is designed for use in monitoring
      * system state, not for synchronization control.
      *
      * @return the estimated number of threads waiting for this lock

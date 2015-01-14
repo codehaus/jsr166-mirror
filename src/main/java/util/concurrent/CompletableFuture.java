@@ -2415,7 +2415,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /**
      * Returns a new CompletableFuture that is completed normally with
-     * the same value as this Completablefuture when it completes
+     * the same value as this CompletableFuture when it completes
      * normally. If this CompletableFuture completes exceptionally,
      * then the returned CompletableFuture completes exceptionally
      * with a CompletionException with this exception as cause. The
@@ -2433,7 +2433,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
     /**
      * Returns a new CompletionStage that is completed normally with
-     * the same value as this Completablefuture when it completes
+     * the same value as this CompletableFuture when it completes
      * normally, and cannot be independently completed or otherwise
      * used in ways not defined by the methods of interface {@link
      * CompletionStage}.  If this CompletableFuture completes

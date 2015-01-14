@@ -2400,6 +2400,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     public <U> CompletableFuture<U> newIncompleteFuture() {
         return new CompletableFuture<U>();
     }
+
     /**
      * Returns the default Executor used for async methods that do not
      * specify an Executor. This class uses the {@link
@@ -2511,7 +2512,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @return this CompletableFuture
      * @since 1.9
      */
-    public CompletableFuture<T> completeOnTimeout(T value, long timeout, 
+    public CompletableFuture<T> completeOnTimeout(T value, long timeout,
                                                   TimeUnit unit) {
         if (result == null)
             whenComplete(new Canceller(Delayer.delay(
@@ -2665,7 +2666,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     /** Action to cancel unneeded timeouts */
-    static final class Canceller implements BiConsumer<Object, Throwable>  {
+    static final class Canceller implements BiConsumer<Object, Throwable> {
         final Future<?> f;
         Canceller(Future<?> f) { this.f = f; }
         public void accept(Object ignore, Throwable ex) {

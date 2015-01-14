@@ -2387,7 +2387,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     // jdk9 additions
 
     /**
-     * Creates a new incomplete CompletableFuture of the type to be
+     * Returns a new incomplete CompletableFuture of the type to be
      * returned by a CompletionStage method. Subclasses should
      * normally override this method to return an instance of the same
      * class as this CompletableFuture. The default implementation
@@ -2506,7 +2506,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * otherwise completed before the given timeout.
      *
      * @param value the value to use upon timeout
-     * @param timeout how long to wait before completing.
+     * @param timeout how long to wait before completing normally
+     *        with the given value, in units of {@code unit}
      * @param unit a {@code TimeUnit} determining how to interpret the
      *        {@code timeout} parameter
      * @return this CompletableFuture

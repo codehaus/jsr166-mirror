@@ -93,7 +93,7 @@ import java.util.function.Supplier;
  *     return myExecutor; }
  *   public void obtrudeValue(T value) {
  *     throw new UnsupportedOperationException(); }
- *    public void obtrudeException(Throwable ex) {
+ *   public void obtrudeException(Throwable ex) {
  *     throw new UnsupportedOperationException(); }
  * }}</pre>
  *
@@ -1589,8 +1589,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     @SuppressWarnings("serial")
     static final class AsyncSupply<T> extends ForkJoinTask<Void>
         implements Runnable, AsynchronousCompletionTask {
-        CompletableFuture<T> dep; Supplier<T> fn;
-        AsyncSupply(CompletableFuture<T> dep, Supplier<T> fn) {
+        CompletableFuture<T> dep; Supplier<? extends T> fn;
+        AsyncSupply(CompletableFuture<T> dep, Supplier<? extends T> fn) {
             this.dep = dep; this.fn = fn;
         }
 
@@ -1599,7 +1599,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         public final boolean exec() { run(); return true; }
 
         public void run() {
-            CompletableFuture<T> d; Supplier<T> f;
+            CompletableFuture<T> d; Supplier<? extends T> f;
             if ((d = dep) != null && (f = fn) != null) {
                 dep = null; fn = null;
                 if (d.result == null) {
@@ -2460,7 +2460,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @return this CompletableFuture
      * @since 1.9
      */
-    public CompletableFuture<T> completeAsync(Supplier<T> supplier,
+    public CompletableFuture<T> completeAsync(Supplier<? extends T> supplier,
                                               Executor executor) {
         if (supplier == null || executor == null)
             throw new NullPointerException();
@@ -2478,7 +2478,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @return this CompletableFuture
      * @since 1.9
      */
-    public CompletableFuture<T> completeAsync(Supplier<T> supplier) {
+    public CompletableFuture<T> completeAsync(Supplier<? extends T> supplier) {
         return completeAsync(supplier, defaultExecutor());
     }
 

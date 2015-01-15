@@ -167,7 +167,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         BufferedSubscription<T> sub = new BufferedSubscription<T>(
             subscriber, executor, minBufferCapacity, maxBufferCapacity);
         boolean present = false, clsd;
-        synchronized(this) {
+        synchronized (this) {
             clsd = closed;
             BufferedSubscription<T> pred = null, next;
             for (BufferedSubscription<T> b = clients; b != null; b = next) {
@@ -177,7 +177,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                         clients = next;
                     else
                         pred.next = next;
-                }                    
+                }
                 else if (subscriber == b.subscriber) {
                     present = true;
                     break;
@@ -227,7 +227,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                      BiPredicate<Flow.Subscriber<? super T>, ? super T> onDrop) {
         if (item == null) throw new NullPointerException();
         int drops = 0;
-        synchronized(this) {
+        synchronized (this) {
             if (closed)
                 throw new IllegalStateException("Closed");
             BufferedSubscription<T> pred = null, next;
@@ -287,7 +287,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         if (item == null) throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
         int drops = 0;
-        synchronized(this) {
+        synchronized (this) {
             if (closed)
                 throw new IllegalStateException("Closed");
             BufferedSubscription<T> pred = null, next;
@@ -333,7 +333,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      */
     public void submit(T item) {
         if (item == null) throw new NullPointerException();
-        synchronized(this) {
+        synchronized (this) {
             if (closed)
                 throw new IllegalStateException("Closed");
             BufferedSubscription<T> pred = null, next;
@@ -361,7 +361,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     public void close() {
         if (!closed) {
             BufferedSubscription<T> b, next;
-            synchronized(this) {
+            synchronized (this) {
                 b = clients;
                 clients = null;
                 closed = true;
@@ -387,7 +387,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             throw new NullPointerException();
         if (!closed) {
             BufferedSubscription<T> b, next;
-            synchronized(this) {
+            synchronized (this) {
                 b = clients;
                 clients = null;
                 closed = true;
@@ -417,7 +417,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     public boolean hasSubscribers() {
         boolean nonEmpty = false;
         if (!closed) {
-            synchronized(this) {
+            synchronized (this) {
                 BufferedSubscription<T> pred = null, next;
                 for (BufferedSubscription<T> b = clients; b != null; b = next) {
                     next = b.next;
@@ -426,7 +426,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                             clients = next;
                         else
                             pred.next = next;
-                    }                    
+                    }
                     else {
                         nonEmpty = true;
                         break;
@@ -471,7 +471,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      */
     public List<Flow.Subscriber<? super T>> getSubscribers() {
         ArrayList<Flow.Subscriber<? super T>> subs = new ArrayList<>();
-        synchronized(this) {
+        synchronized (this) {
             BufferedSubscription<T> pred = null, next;
             for (BufferedSubscription<T> b = clients; b != null; b = next) {
                 next = b.next;
@@ -480,14 +480,14 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                         clients = next;
                     else
                         pred.next = next;
-                }                    
+                }
                 else
                     subs.add(b.subscriber);
             }
         }
         return subs;
     }
-    
+
     /**
      * Returns true if the given Subscriber is currently subscribed.
      *
@@ -495,8 +495,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * @return true if currently subscribed
      */
     public boolean isSubscribed(Flow.Subscriber<? super T> subscriber) {
-        if (!closed) { 
-            synchronized(this) {
+        if (!closed) {
+            synchronized (this) {
                 BufferedSubscription<T> pred = null, next;
                 for (BufferedSubscription<T> b = clients; b != null; b = next) {
                     next = b.next;
@@ -505,7 +505,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                             clients = next;
                         else
                             pred.next = next;
-                    }                    
+                    }
                     else if (subscriber == b.subscriber)
                         return true;
                 }
@@ -545,7 +545,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * @return the new Processor
      * @throws NullPointerException if transform is null
      * @throws IllegalArgumentException if requestSize not positive
-     * @param <S> the subscribed item type 
+     * @param <S> the subscribed item type
      */
     public <S> Flow.Processor<S,T> newTransformProcessor(
         long requestSize,
@@ -754,7 +754,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             if ((e = executor) != null) {
                 try {
                     e.execute(new ConsumerTask<T>(this));
-                } catch(Throwable ex) { // back out and force signal
+                } catch (Throwable ex) { // back out and force signal
                     for (int c;;) {
                         if ((c = ctl) < 0 || (c & ACTIVE) == 0)
                             break;
@@ -842,7 +842,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                     if (s != null) {
                         try {
                             s.onError(ex);
-                        } catch(Throwable ignore) {
+                        } catch (Throwable ignore) {
                         }
                     }
                     detach();
@@ -959,7 +959,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                         if (ex != null) {
                             try {
                                 s.onError(ex);
-                            } catch(Throwable ignore) {
+                            } catch (Throwable ignore) {
                             }
                         }
                     }
@@ -976,7 +976,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                                 ctl = DISABLED;
                                 try {
                                     s.onComplete();
-                                } catch(Throwable ignore) {
+                                } catch (Throwable ignore) {
                                 }
                             }
                             else
@@ -1006,7 +1006,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                         try {
                             @SuppressWarnings("unchecked") T y = (T) x;
                             s.onNext(y);
-                        } catch(Throwable ex) {
+                        } catch (Throwable ex) {
                             ctl = DISABLED;
                         }
                     }

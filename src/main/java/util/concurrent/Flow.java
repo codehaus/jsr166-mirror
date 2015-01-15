@@ -17,7 +17,7 @@ import java.util.stream.Stream;
  * Subscribers}, each managed by a {@link Subscription
  * Subscription}. The use of flow control helps address common
  * resource issues in "push" based asynchronous systems.
- * 
+ *
  * <p>These interfaces correspond to the <a
  * href="http://www.reactive-streams.org/"> reactive-streams</a>
  * specification. (<b>Preliminary release note:</b> This spec is
@@ -85,7 +85,7 @@ public final class Flow {
      *   final Consumer<? super T> consumer;
      *   Subscription subscription;
      *   final long requestSize;
-     *   long count; 
+     *   long count;
      *   SampleSubscriber(long requestSize, Consumer<? super T> consumer) {
      *     this.requestSize = requestSize;
      *     this.consumer = consumer;
@@ -95,7 +95,7 @@ public final class Flow {
      *     (this.subscription = subscription).request(requestSize);
      *   }
      *   public void onNext(T item) {
-     *     if (--count <= 0) 
+     *     if (--count <= 0)
      *       subscription.request(count = requestSize);
      *     consumer.accept(item);
      *   }
@@ -163,7 +163,7 @@ public final class Flow {
          * negative, the Subscriber will receive an onError signal
          * with an IllegalArgumentException argument. Otherwise, the
          * Subscriber will receive up to {@code n} additional onNext
-         * invocations (or fewer if terminated). 
+         * invocations (or fewer if terminated).
          *
          * @param n the increment of demand; a value of {@code
          * Long.MAX_VALUE} may be considered as effectively unbounded
@@ -178,11 +178,11 @@ public final class Flow {
     }
 
     /**
-     * A component that acts as both a Subscriber and Publisher. 
+     * A component that acts as both a Subscriber and Publisher.
      *
-     * @param <T> the subscribed item type 
-     * @param <R> the published item type 
-     */     
+     * @param <T> the subscribed item type
+     * @param <R> the published item type
+     */
     public static interface Processor<T, R> extends Subscriber<T>, Publisher<R> {
     }
 
@@ -190,13 +190,13 @@ public final class Flow {
 
     static final long DEFAULT_REQUEST_SIZE = 64L;
 
-    static abstract class CompletableSubscriber<T,U> implements Subscriber<T>, 
+    static abstract class CompletableSubscriber<T,U> implements Subscriber<T>,
                                                                 Consumer<T> {
         final CompletableFuture<U> status;
         Subscription subscription;
         final long requestSize;
-        long count; 
-        CompletableSubscriber(long requestSize, 
+        long count;
+        CompletableSubscriber(long requestSize,
                               CompletableFuture<U> status) {
             this.status = status;
             this.requestSize = requestSize;
@@ -206,8 +206,8 @@ public final class Flow {
             (this.subscription = subscription).request(requestSize);
             status.exceptionally(ex -> { subscription.cancel(); return null;});
         }
-        public final void onError(Throwable ex) { 
-            if (ex == null) 
+        public final void onError(Throwable ex) {
+            if (ex == null)
                 ex = new IllegalStateException("null onError argument");
             status.completeExceptionally(ex);
         }
@@ -218,7 +218,7 @@ public final class Flow {
                     new IllegalStateException("onNext without subscription"));
             else {
                 try {
-                    if (--count <= 0) 
+                    if (--count <= 0)
                         s.request(count = requestSize);
                     accept(item);
                 } catch (Throwable ex) {
@@ -227,10 +227,10 @@ public final class Flow {
             }
         }
     }
-    
+
     static final class ConsumeSubscriber<T> extends CompletableSubscriber<T,Void> {
         final Consumer<? super T> consumer;
-        ConsumeSubscriber(long requestSize, 
+        ConsumeSubscriber(long requestSize,
                           CompletableFuture<Void> status,
                           Consumer<? super T> consumer) {
             super(requestSize, status);
@@ -295,7 +295,7 @@ public final class Flow {
     static final class StreamSubscriber<T,R> extends CompletableSubscriber<T,R> {
         final Function<? super Stream<T>, ? extends R> fn;
         final ArrayList<T> items;
-        StreamSubscriber(long requestSize, 
+        StreamSubscriber(long requestSize,
                          CompletableFuture<R> status,
                          Function<? super Stream<T>, ? extends R> fn) {
             super(requestSize, status);
@@ -341,7 +341,7 @@ public final class Flow {
                                 requestSize, status, streamFunction));
         return status;
     }
-        
+
     /**
      * Equivalent to {@link #stream(long, Publisher, Function)}
      * with a request size of 64.
@@ -356,7 +356,7 @@ public final class Flow {
      * @param <R> the result type of the stream function
      */
     public static <T,R> CompletableFuture<R> stream(
-        Publisher<T> publisher, 
+        Publisher<T> publisher,
         Function<? super Stream<T>,? extends R> streamFunction) {
         return stream(DEFAULT_REQUEST_SIZE, publisher, streamFunction);
     }

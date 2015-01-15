@@ -6,11 +6,11 @@
 
 package java.util.concurrent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * A {@link Flow.Publisher} that asynchronously issues submitted items

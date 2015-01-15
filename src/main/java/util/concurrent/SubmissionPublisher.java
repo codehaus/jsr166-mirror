@@ -679,7 +679,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         }
 
         /**
-         * Create or expand buffer if possible, then offer
+         * Creates or expands buffer if possible, then offers.
          */
         final int growAndOffer(T item) {
             int oldLen, len;
@@ -1014,8 +1014,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             }
         }
 
-        // Unsafe setup
-        private static final sun.misc.Unsafe U;
+        // Unsafe mechanics
+        private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
         private static final long CTL;
         private static final long TAIL;
         private static final long HEAD;
@@ -1025,23 +1025,21 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
 
         static {
             try {
-                U = sun.misc.Unsafe.getUnsafe();
-                Class<?> k = BufferedSubscription.class;
                 CTL = U.objectFieldOffset
-                    (k.getDeclaredField("ctl"));
+                    (BufferedSubscription.class.getDeclaredField("ctl"));
                 TAIL = U.objectFieldOffset
-                    (k.getDeclaredField("tail"));
+                    (BufferedSubscription.class.getDeclaredField("tail"));
                 HEAD = U.objectFieldOffset
-                    (k.getDeclaredField("head"));
+                    (BufferedSubscription.class.getDeclaredField("head"));
                 DEMAND = U.objectFieldOffset
-                    (k.getDeclaredField("demand"));
-                Class<?> ak = Object[].class;
-                ABASE = U.arrayBaseOffset(ak);
-                int scale = U.arrayIndexScale(ak);
+                    (BufferedSubscription.class.getDeclaredField("demand"));
+
+                ABASE = U.arrayBaseOffset(Object[].class);
+                int scale = U.arrayIndexScale(Object[].class);
                 if ((scale & (scale - 1)) != 0)
                     throw new Error("data type scale not a power of two");
                 ASHIFT = 31 - Integer.numberOfLeadingZeros(scale);
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 throw new Error(e);
             }
         }

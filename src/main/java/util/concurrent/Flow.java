@@ -172,7 +172,7 @@ public final class Flow {
 
         /**
          * Causes the Subscriber to (eventually) stop receiving onNext
-         * messages
+         * messages.
          */
         public void cancel();
     }

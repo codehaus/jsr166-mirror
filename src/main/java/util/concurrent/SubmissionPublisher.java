@@ -410,7 +410,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /**
-     * Returns true if this publisher has any subscribers,
+     * Returns true if this publisher has any subscribers.
      *
      * @return true if this publisher has any subscribers
      */

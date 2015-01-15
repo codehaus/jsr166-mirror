@@ -446,7 +446,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         return executor;
     }
 
-    /*
+    /**
      * Returns the initial per-subscriber buffer capacity.
      *
      * @return the initial per-subscriber buffer capacity
@@ -455,7 +455,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         return minBufferCapacity;
     }
 
-    /*
+    /**
      * Returns the maximum per-subscriber buffer capacity.
      *
      * @return the maximum per-subscriber buffer capacity

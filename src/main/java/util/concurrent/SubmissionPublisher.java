@@ -113,7 +113,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * async delivery to subscribers, and with the given initial and
      * maximum buffer sizes for each subscriber. In the absence of
      * other constraints, consider using {@code
-     * ForrkJoinPool.commonPool(), 8, 1024}.
+     * ForkJoinPool.commonPool(), 8, 1024}.
      *
      * @param executor the executor to use for async delivery,
      * supporting creation of at least one independent thread
@@ -379,7 +379,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * subscribers with the given error, and disallows subsequent
      * attempts to publish.
      *
-     * @param error the onError argument sent to suibscribers
+     * @param error the onError argument sent to subscribers
      * @throws NullPointerException if error is null
      */
     public void closeExceptionally(Throwable error) {
@@ -447,18 +447,18 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /*
-     * Returns the initial per-subsciber buffer capacity.
+     * Returns the initial per-subscriber buffer capacity.
      *
-     * @return the initial per-subsciber buffer capacity
+     * @return the initial per-subscriber buffer capacity
      */
     public int getInitialBufferCapacity() {
         return minBufferCapacity;
     }
 
     /*
-     * Returns the maximum per-subsciber buffer capacity.
+     * Returns the maximum per-subscriber buffer capacity.
      *
-     * @return the maximum per-subsciber buffer capacity
+     * @return the maximum per-subscriber buffer capacity
      */
     public int getMaxBufferCapacity() {
         return maxBufferCapacity;
@@ -719,8 +719,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         }
 
         /**
-         * Tries to start consumer task if items are availsble.
-         * Backs out and relays exception if executor fails
+         * Tries to start consumer task if items are available.
+         * Backs out and relays exception if executor fails.
          */
         final int startOnOffer() {
             for (;;) {

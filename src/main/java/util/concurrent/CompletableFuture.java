@@ -2471,7 +2471,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     /**
      * Completes this CompletableFuture with the result of the given
      * Supplier function invoked from an asynchronous task using the
-     * the default executor.
+     * default executor.
      *
      * @param supplier a function returning the value to be used
      * to complete this CompletableFuture

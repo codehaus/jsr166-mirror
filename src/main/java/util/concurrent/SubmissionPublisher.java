@@ -217,8 +217,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * @param onDrop if non-null, the handler invoked upon a drop to a
      * subscriber, with arguments of the subscriber and item; if it
      * returns true, an offer is re-attempted (once)
-     * @return the number of drops (failed attempts to to issue
-     * the item to a subscriber)
+     * @return the number of drops (failed attempts to issue the item
+     * to a subscriber)
      * @throws IllegalStateException if closed
      * @throws NullPointerException if item is null
      * @throws RejectedExecutionException if thrown by Executor
@@ -259,7 +259,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * subscriber by asynchronously invoking its onNext method,
      * blocking while resources for any subscription are unavailable,
      * up to the specified timeout or the caller thread is
-     * interrupted, at which point the the given handler (if non-null)
+     * interrupted, at which point the given handler (if non-null)
      * is invoked, and if it returns true, retried once.
      *
      * <p>If the Executor for this publisher throws a
@@ -276,8 +276,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * @param onDrop if non-null, the handler invoked upon a drop to a
      * subscriber, with arguments of the subscriber and item; if it
      * returns true, an offer is re-attempted (once)
-     * @return the number of drops (failed attempts to to issue
-     * the item to a subscriber)
+     * @return the number of drops (failed attempts to issue the item
+     * to a subscriber)
      * @throws IllegalStateException if closed
      * @throws NullPointerException if item is null
      * @throws RejectedExecutionException if thrown by Executor

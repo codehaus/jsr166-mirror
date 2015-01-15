@@ -923,7 +923,7 @@ public class Microscope extends JPanel {
     }
 
     /**
-     * Implements a classic all-possible-move search algorith using
+     * Implements a classic all-possible-move search algorithm using
      * ForkJoinTasks.  The move finder is not all that smart. Among
      * other possible improvements, it could keep a cache of explored
      * moves and avoid repeating them. This would likely speed it up

@@ -120,7 +120,6 @@ public class ProducerConsumerLoops {
             System.out.print("SynchronousQueue        ");
         oneRun(new SynchronousQueue<Integer>(), n, iters);
 
-
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("SynchronousQueue(fair)  ");

@@ -42,7 +42,6 @@ public class SMap implements Map {
         return m.containsValue(value);
     }
 
-
     public synchronized Set keySet() { // Not implemented
         return m.keySet();
     }
@@ -64,8 +63,6 @@ public class SMap implements Map {
     public synchronized String toString() {
         return m.toString();
     }
-
-
 
     public synchronized Object put(Object key, Object value) {
         return m.put(key, value);

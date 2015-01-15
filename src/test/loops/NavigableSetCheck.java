@@ -37,7 +37,6 @@ public class NavigableSetCheck {
             }
         }
 
-
         if (args.length > 1)
             numTests = Integer.parseInt(args[1]);
 
@@ -45,7 +44,6 @@ public class NavigableSetCheck {
             size = Integer.parseInt(args[2]);
 
         System.out.println("Testing " + setClass.getName() + " trials: " + numTests + " size: " + size);
-
 
         absentSize = 8;
         while (absentSize < size) absentSize <<= 1;
@@ -58,7 +56,6 @@ public class NavigableSetCheck {
         Integer[] key = new Integer[size];
         for (int i = 0; i < size; ++i)
             key[i] = new Integer(i * 2 + 1);
-
 
         for (int rep = 0; rep < numTests; ++rep) {
             runTest(newSet(setClass), key);
@@ -76,7 +73,6 @@ public class NavigableSetCheck {
             throw new RuntimeException("Can't instantiate " + cl + ": " + e);
         }
     }
-
 
     static void runTest(NavigableSet s, Integer[] key) {
         shuffle(key);
@@ -171,7 +167,6 @@ public class NavigableSetCheck {
         reallyAssert(sum == expect);
     }
 
-
     static void higherTest(NavigableSet s) {
         int sum = 0;
         int iters = s.size();
@@ -226,7 +221,6 @@ public class NavigableSetCheck {
         reallyAssert(sum == iters-1);
     }
 
-
     static void ktest(NavigableSet s, int size, Integer[] key) {
         timer.start("Contains               ", size);
         int sum = 0;
@@ -236,7 +230,6 @@ public class NavigableSetCheck {
         timer.finish();
         reallyAssert(sum == size);
     }
-
 
     static void ittest1(NavigableSet s, int size) {
         int sum = 0;
@@ -268,7 +261,6 @@ public class NavigableSetCheck {
         rittest1(s, size);
     }
 
-
     static void rtest(NavigableSet s, int size) {
         timer.start("Remove (iterator)      ", size);
         for (Iterator it = s.iterator(); it.hasNext(); ) {
@@ -277,8 +269,6 @@ public class NavigableSetCheck {
         }
         timer.finish();
     }
-
-
 
     static void dtest(NavigableSet s, int size, Integer[] key) {
         timer.start("Add (addAll)           ", size * 2);
@@ -328,8 +318,6 @@ public class NavigableSetCheck {
         timer.finish();
         reallyAssert(s2.isEmpty() && s.isEmpty());
     }
-
-
 
     static void test(NavigableSet s, Integer[] key) {
         int size = key.length;
@@ -390,7 +378,6 @@ public class NavigableSetCheck {
             this.numOps = numOps;
             startTime = System.currentTimeMillis();
         }
-
 
         String classify() {
             if (name.startsWith("Contains"))

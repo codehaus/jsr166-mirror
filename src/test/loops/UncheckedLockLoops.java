@@ -403,7 +403,6 @@ public final class UncheckedLockLoops {
 
     }
 
-
     private static class FairReentrantReadWriteLockLoop extends LockLoop {
         private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         final int loop(int n) {

@@ -826,7 +826,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                 a, (long)((i << ASHIFT) + ABASE), x);
         }
 
-
         WorkQueue(ForkJoinPool pool, ForkJoinWorkerThread owner) {
             this.pool = pool;
             this.owner = owner;

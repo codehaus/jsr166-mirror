@@ -106,6 +106,4 @@ public final class AsyncNQueensCS extends LinkedAsyncAction {
 
     static final AtomicIntegerFieldUpdater<AsyncNQueensCS> solutionUpdater =
         AtomicIntegerFieldUpdater.newUpdater(AsyncNQueensCS.class, "solutions");
-
-
 }

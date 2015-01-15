@@ -22,7 +22,6 @@ public class DequeBash {
     static int nextHead = -1;
     static int size() { return nextTail - nextHead - 1; }
 
-
     static int random(int bound) {
         int x = seed;
         int t = (x % 127773) * 16807 - (x / 127773) * 2836;
@@ -154,7 +153,6 @@ public class DequeBash {
                                 deque.getLast() + " expecting " + (nextTail - 1));
     }
 
-
     static void randomOp(Deque<Integer> deque) throws Exception {
 
         // Perform a random operation
@@ -230,7 +228,6 @@ public class DequeBash {
             throw new Exception("How'd we get here");
         }
     }
-
 
     private static void testEqual(Deque<Integer> d1, Deque<Integer> d2)
         throws Exception

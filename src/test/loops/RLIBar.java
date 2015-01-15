@@ -137,8 +137,6 @@ public class RLIBar {
                 e.printStackTrace();
             }
         }
-
-
     }
 
     public static void main(String[] args) throws Exception {
@@ -229,8 +227,6 @@ public class RLIBar {
                     HoldQ.unlock();
                 }
             }
-
-
 
             // there's no synchronization here, so the total i get is
             // approximate, but that's OK since any i miss for this

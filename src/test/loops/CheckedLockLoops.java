@@ -398,7 +398,6 @@ public final class CheckedLockLoops {
 
     }
 
-
     private static class FairReentrantReadWriteLockLoop extends LockLoop {
         private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
         final int loop(int n) {

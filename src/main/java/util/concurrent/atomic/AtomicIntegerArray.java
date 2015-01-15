@@ -219,7 +219,6 @@ public class AtomicIntegerArray implements java.io.Serializable {
         return getAndAdd(i, delta) + delta;
     }
 
-
     /**
      * Atomically updates the element at index {@code i} with the results
      * of applying the given function, returning the previous value. The

@@ -180,7 +180,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
         } catch (Throwable fail) { threadUnexpectedException(fail); }
     }
 
-
     public static final class FJException extends RuntimeException {
         FJException() { super(); }
     }

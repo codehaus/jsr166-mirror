@@ -29,7 +29,6 @@ public class CyclicBarrierLoops {
             this.size = size;
         }
 
-
         public void run() {
             try {
                 int n = size;

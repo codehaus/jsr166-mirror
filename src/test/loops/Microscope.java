@@ -11,7 +11,6 @@ import java.util.concurrent.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
-
 /**
  * Microscope implements a version of the 7th Guest
  * game found looking in the Microscope in the laboratory.
@@ -115,7 +114,6 @@ public class Microscope extends JPanel {
     synchronized Player getPlayer() { return player; }
     synchronized void setPlayer(Player p) { player = p; }
 
-
     final AutoMover auto;                  // The move finder.
     final User user;                       // Mover for user moves
     Mover mover = null;    // the current Mover (always == auto or user or null)
@@ -194,13 +192,11 @@ public class Microscope extends JPanel {
         //        scoreLabel.setMinimumSize(labDim);
         //        scoreLabel.setPreferredSize(labDim);
 
-
         topPanel.add(autoButton);
         topPanel.add(modeButton);
         topPanel.add(undoButton);
         topPanel.add(scoreLabel);
         add(topPanel);
-
 
         levelSlider.setLabelTable(levelSlider.createStandardLabels(1));
         levelSlider.setPaintLabels(true);
@@ -236,7 +232,6 @@ public class Microscope extends JPanel {
         }
     }
 
-
     synchronized void setLevel(int l) {
         lookAheads = l;
         if (lookAheads <= 1) lookAheads = 2;
@@ -244,9 +239,7 @@ public class Microscope extends JPanel {
 
     public int level() { return Microscope.lookAheads; }
 
-
     // process a move (called only from mover)
-
     public void move(Move m, Mover mvr) {
         if (mvr != mover ||
             m == null ||
@@ -303,7 +296,6 @@ public class Microscope extends JPanel {
         }
     }
 
-
     // handle Undo button
     synchronized void undo() {
         if (mover == null) {
@@ -348,14 +340,12 @@ public class Microscope extends JPanel {
 
     }
 
-
     static final int CELL_SIZE = 40; // size of a tile/cell
 
     static final Color paleGreen = new Color(152, 251, 152);
     static final Color darkGreen = new Color(60, 179, 113);
 
     static final Color possibleMoveColor = Color.yellow;
-
 
     public static Color displayColor(Player pl) {
         if (pl.isBlue()) return Color.blue;
@@ -368,7 +358,6 @@ public class Microscope extends JPanel {
         else if (pl.isGreen()) return paleGreen;
         else return Color.gray;
     }
-
 
     class BoardPanel extends Canvas implements MouseListener {
 
@@ -535,7 +524,6 @@ public class Microscope extends JPanel {
 
         }
 
-
         public static boolean inBounds(int row, int col) {
             return (0 <= row)  && (row < RANKS) && (0 <= col) && (col < RANKS);
         }
@@ -563,7 +551,6 @@ public class Microscope extends JPanel {
         long getBlue() { return blue_; }
         long getGreen() { return green_; }
 
-
         public Player occupant(int row, int col) {
             if ((0 <= row)  && (row < RANKS) && (0 <= col) && (col < RANKS)) {
                 long m = 1L << (row + col * RANKS);
@@ -577,7 +564,6 @@ public class Microscope extends JPanel {
 
 
         // place a tile without taking opponent tiles
-
         public void occupy(Player player, int row, int col) {
             long m = 1L << (row + col * RANKS);
             long nm = ~m;
@@ -601,10 +587,7 @@ public class Microscope extends JPanel {
             green_ &= nm;
         }
 
-
-
         // place a tile, taking all adjacent tiles of opponent
-
         public void take(Player player, int row, int col) {
             int k = row + col * RANKS;
             long dest = 1L << k;
@@ -627,7 +610,6 @@ public class Microscope extends JPanel {
                 ((blue_ & ~BLUEBIT) == 0) ||
                 ((green_ & ~BLUEBIT) == 0);
         }
-
 
         public int score(Player player) {
             if (player.isBlue()) {
@@ -678,8 +660,6 @@ public class Microscope extends JPanel {
             return hb - ((lg + hg) & 0xff);
         }
 
-
-
         static int slowscore(long b, long g) {
             int score = 0;
             for (int l = 0; l < CELLS; ++l) {
@@ -690,8 +670,6 @@ public class Microscope extends JPanel {
             }
             return score;
         }
-
-
     }
 
     /**
@@ -791,7 +769,6 @@ public class Microscope extends JPanel {
         synchronized boolean hasTo() { // is to set?
             return toRow != NO_VALUE && toCol != NO_VALUE;
         }
-
 
         synchronized boolean possibleTo(int r, int c) { // is (r, c) a legal `to'?
             return hasFrom() &&
@@ -901,7 +878,6 @@ public class Microscope extends JPanel {
 
     }
 
-
     /**
      * AutoMover constructs Finders that compute actual moves
      */
@@ -914,7 +890,6 @@ public class Microscope extends JPanel {
             super(ap);
         }
 
-
         public synchronized boolean placing() {
             return currentFinder != null;
         }
@@ -922,7 +897,6 @@ public class Microscope extends JPanel {
         synchronized void stopPlacing() {
             currentFinder = null;
         }
-
 
         public synchronized void cancel() {
             if (placing()) {
@@ -947,7 +921,6 @@ public class Microscope extends JPanel {
         }
 
     }
-
 
     /**
      * Implements a classic all-possible-move search algorith using
@@ -998,7 +971,6 @@ public class Microscope extends JPanel {
             else
                 search();
         }
-
 
         final void search() {
             int best = NOMOVE;    // For direct evaluation when level == 1
@@ -1121,7 +1093,6 @@ public class Microscope extends JPanel {
             this.automover = automover;
         }
 
-
         /**
          * This differs from default version by recording
          * and calling back with best move
@@ -1179,6 +1150,4 @@ public class Microscope extends JPanel {
             automover.relay(move);
         }
     }
-
-
 }

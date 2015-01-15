@@ -69,7 +69,6 @@ public abstract class LinkedAsyncAction extends ForkJoinTask<Void> {
     static final AtomicIntegerFieldUpdater<LinkedAsyncAction> controlStateUpdater =
         AtomicIntegerFieldUpdater.newUpdater(LinkedAsyncAction.class, "controlState");
 
-
     /**
      * Parent to notify on completion
      */

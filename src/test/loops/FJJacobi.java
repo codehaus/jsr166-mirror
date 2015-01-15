@@ -77,7 +77,6 @@ public class FJJacobi {
         }
     }
 
-
     abstract static class MatrixTree extends RecursiveAction {
         // maximum difference between old and new values
         double maxDiff;
@@ -97,7 +96,6 @@ public class FJJacobi {
         }
 
     }
-
 
     static final class LeafNode extends MatrixTree {
         final double[][] A; // matrix to get old values from
@@ -162,7 +160,6 @@ public class FJJacobi {
         }
     }
 
-
     static final class TwoNode extends MatrixTree {
         final MatrixTree q1;
         final MatrixTree q2;
@@ -177,7 +174,6 @@ public class FJJacobi {
         }
 
     }
-
 
     static final class Driver extends RecursiveAction {
         MatrixTree mat;
@@ -250,6 +246,4 @@ public class FJJacobi {
             System.out.println("max diff after " + steps + " steps = " + md);
         }
     }
-
-
 }

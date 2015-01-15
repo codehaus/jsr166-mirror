@@ -1564,7 +1564,6 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         return true;
     }
 
-
     /** Recursively constructs a tree of completions. */
     static CompletableFuture<Object> orTree(CompletableFuture<?>[] cfs,
                                             int lo, int hi) {

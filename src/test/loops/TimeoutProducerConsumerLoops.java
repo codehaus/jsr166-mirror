@@ -6,7 +6,6 @@
 
 import java.util.concurrent.*;
 
-
 public class TimeoutProducerConsumerLoops {
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
     static final ExecutorService pool = Executors.newCachedThreadPool();

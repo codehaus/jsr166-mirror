@@ -95,7 +95,6 @@ public class CancelledProducerConsumerLoops {
             System.out.print("SynchronousQueue        ");
         oneRun(new SynchronousQueue<Integer>(), pairs, iters / 8);
 
-
         if (print)
             System.out.print("SynchronousQueue(fair)  ");
         oneRun(new SynchronousQueue<Integer>(true), pairs, iters / 8);

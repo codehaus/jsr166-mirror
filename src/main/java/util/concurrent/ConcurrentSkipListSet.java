@@ -356,7 +356,6 @@ public class ConcurrentSkipListSet<E>
 
     /* ---------------- SortedSet operations -------------- */
 
-
     public Comparator<? super E> comparator() {
         return m.comparator();
     }

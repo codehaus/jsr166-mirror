@@ -78,7 +78,6 @@ class ScalarLongSort {
         }
         System.out.println(pool);
 
-
         pool.shutdown();
     }
 
@@ -246,6 +245,4 @@ class ScalarLongSort {
             }
         }
     }
-
-
 }

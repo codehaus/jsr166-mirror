@@ -26,7 +26,6 @@
  * if this program is called with (any) second argument
  */
 
-
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
@@ -115,7 +114,6 @@ public class CASLoops {
                 valueUpdater = AtomicIntegerFieldUpdater.newUpdater
                 (UpdaterAtomicInteger.class, "value");
 
-
         UpdaterAtomicInteger() {}
         int get() {
             return value;
@@ -160,7 +158,6 @@ public class CASLoops {
         }
         synchronized void set(int val) { value = val; }
     }
-
 
     static final class LockedInteger extends AbstractQueuedSynchronizer {
         int value;
@@ -537,7 +534,6 @@ public class CASLoops {
         return timer.getTime();
     }
 
-
     static long runSynched(int n, long iters) throws Exception {
         LoopHelpers.BarrierTimer timer = new LoopHelpers.BarrierTimer();
         CyclicBarrier b = new CyclicBarrier(n+1, timer);
@@ -573,7 +569,6 @@ public class CASLoops {
         System.out.println("\t " + secs + "s run time");
     }
 
-
     static void oneRun(int i, long iters, boolean print) throws Exception {
         if (print)
             System.out.println("threads : " + i +
@@ -606,6 +601,4 @@ public class CASLoops {
             report("Synchronized: ", stime, ntime, i, iters);
         Thread.sleep(100L);
     }
-
-
 }

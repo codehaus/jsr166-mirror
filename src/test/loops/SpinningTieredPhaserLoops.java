@@ -44,7 +44,6 @@ public class SpinningTieredPhaserLoops {
             phaser.register();
         }
 
-
         public void run() {
             int n = size;
             Phaser b = phaser;

@@ -34,7 +34,6 @@ public class IntMapCheck {
             }
         }
 
-
         if (args.length > 1)
             numTests = Integer.parseInt(args[1]);
 
@@ -68,7 +67,6 @@ public class IntMapCheck {
 
         TestTimer.printStats();
 
-
         if (doSerializeTest)
             stest(newMap(mapClass), size);
     }
@@ -81,7 +79,6 @@ public class IntMapCheck {
             throw new RuntimeException("Can't instantiate " + cl + ": " + e);
         }
     }
-
 
     static void runTest(Map<Integer,Integer> s, Integer[] key) {
         int size = key.length;
@@ -114,7 +111,6 @@ public class IntMapCheck {
         timer.finish();
         reallyAssert(sum == expect * iters);
     }
-
 
     static void t2(String nm, int n, Map<Integer,Integer> s, Integer[] key, int expect) {
         int sum = 0;
@@ -190,7 +186,6 @@ public class IntMapCheck {
         reallyAssert(sum == expect);
     }
 
-
     static void t9(Map<Integer,Integer> s) {
         int sum = 0;
         int iters = 20;
@@ -202,7 +197,6 @@ public class IntMapCheck {
         reallyAssert(sum != 0);
     }
 
-
     static void ktest(Map<Integer,Integer> s, int size, Integer[] key) {
         timer.start("ContainsKey            ", size);
         Set ks = s.keySet();
@@ -213,7 +207,6 @@ public class IntMapCheck {
         timer.finish();
         reallyAssert(sum == size);
     }
-
 
     static void ittest1(Map<Integer,Integer> s, int size) {
         int sum = 0;
@@ -286,7 +279,6 @@ public class IntMapCheck {
         reallyAssert(s.size() == size);
     }
 
-
     static void ittest(Map<Integer,Integer> s, int size) {
         for (int i = 0; i < 4; ++i) {
             ittest1(s, size);
@@ -319,7 +311,6 @@ public class IntMapCheck {
         timer.finish();
         reallyAssert(sum == size);
     }
-
 
     static void entest3(Hashtable ht, int size) {
         int sum = 0;
@@ -398,7 +389,6 @@ public class IntMapCheck {
         if (s instanceof IdentityHashMap) return;
         reallyAssert(s.equals(m));
     }
-
 
     static void test(Map<Integer,Integer> s, Integer[] key) {
         int size = key.length;
@@ -550,7 +540,6 @@ public class IntMapCheck {
             this.numOps = numOps;
             startTime = System.nanoTime();
         }
-
 
         String classify() {
             if (name.startsWith("Get"))

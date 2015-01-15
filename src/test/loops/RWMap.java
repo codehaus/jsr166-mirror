@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
-
 /**
  * This is an incomplete implementation of a wrapper class
  * that places read-write locks around unsynchronized Maps.

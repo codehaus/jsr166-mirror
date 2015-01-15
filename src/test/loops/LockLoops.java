@@ -378,6 +378,4 @@ public final class LockLoops {
             return sum;
         }
     }
-
-
 }

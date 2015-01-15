@@ -63,7 +63,6 @@ class LoopHelpers {
         return x * 134775813 + 1;
     }
 
-
     /**
      * Yet another random number generator
      */
@@ -117,7 +116,6 @@ class LoopHelpers {
             return x;
         }
     }
-
 
     /** Multiplication-free RNG from Marsaglia "Xorshift RNGs" paper */
     public static final class MarsagliaRandom {

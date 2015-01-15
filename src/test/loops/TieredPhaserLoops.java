@@ -33,7 +33,6 @@ public class TieredPhaserLoops {
         }
     }
 
-
     static final class PhaserAction implements Runnable {
         final int id;
         final int size;
@@ -44,7 +43,6 @@ public class TieredPhaserLoops {
             this.size = size;
             phaser.register();
         }
-
 
         public void run() {
             int n = size;

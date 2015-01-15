@@ -70,7 +70,6 @@ public class DenseMapMicroBenchmark {
         }
     }
 
-
     static Long[] toLongs(Integer[] ints) {
         Long[] longs = new Long[ints.length];
         for (int i = 0; i < ints.length; i++)
@@ -99,7 +98,6 @@ public class DenseMapMicroBenchmark {
             doubles[i] = ints[i].doubleValue();
         return doubles;
     }
-
 
     static final class Hasher extends Job {
         final Object[] elts;

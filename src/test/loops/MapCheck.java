@@ -143,7 +143,6 @@ public class MapCheck {
         if (m.get(null) != null) throw new Error();
     }
 
-
     static void getTest(String nm, int n, Map s, Object[] key, int expect) {
         int sum = 0;
         timer.start(nm, n);
@@ -156,7 +155,6 @@ public class MapCheck {
         reallyAssert(sum == expect);
         checkSum += sum;
     }
-
 
     // unused
     static void getTestBoxed(String nm, int n, Map s, Object[] key, int expect) {
@@ -243,7 +241,6 @@ public class MapCheck {
         reallyAssert(sum == 0);
         checkSum += sum;
     }
-
 
     static Object kitTest(Map s, int size) {
         Object last = null;
@@ -511,8 +508,6 @@ public class MapCheck {
         reallyAssert(s.size() == size);
     }
 
-
-
     static void initializeKeys(Object[] key, Object[] absent, int size) {
         if (eclass == Object.class) {
             for (int i = 0; i < size; ++i) key[i] = new Object();
@@ -621,7 +616,6 @@ public class MapCheck {
         }
     }
 
-
     static void randomWords(Object[] ws, int origin, int size) {
         for (int i = origin; i < size; ++i) {
             int k = 0;
@@ -701,7 +695,6 @@ public class MapCheck {
             number += n;
         }
     }
-
 
     static void shuffle(Object[] keys) {
         int size = keys.length;

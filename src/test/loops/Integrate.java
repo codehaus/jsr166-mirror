@@ -90,7 +90,6 @@ public final class Integrate {
         g.shutdown();
     }
 
-
     // Sequential version
     static final class SQuad extends RecursiveAction {
         static double computeArea(ForkJoinPool pool, double l, double r) {

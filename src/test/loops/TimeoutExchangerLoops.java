@@ -111,7 +111,6 @@ public class TimeoutExchangerLoops {
         //        x.printStats();
     }
 
-
     static final class Runner implements Runnable {
         final Exchanger exchanger;
         final CountDownLatch start;

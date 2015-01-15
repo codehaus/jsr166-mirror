@@ -122,6 +122,4 @@ public final class IteratorLoops {
         try { Thread.sleep(500); }
         catch (Exception ex) { return; }
     }
-
-
 }

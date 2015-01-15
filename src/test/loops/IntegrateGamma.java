@@ -91,7 +91,6 @@ public class IntegrateGamma {
         }
     }
 
-
     static class Integrator {
         final Function f;      // The function to integrate
         final double errorTolerance;
@@ -113,7 +112,6 @@ public class IntegrateGamma {
             g.invoke(q);
             return q.area;
         }
-
 
         /**
          * FJTask to recursively perform the quadrature.

@@ -85,7 +85,6 @@ class Producer extends Thread
     }
 }
 
-
 public class RLJBar                             // ProdConsTest
 {
 

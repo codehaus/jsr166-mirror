@@ -360,6 +360,4 @@ public final class Flow {
         Function<? super Stream<T>,? extends R> streamFunction) {
         return stream(DEFAULT_REQUEST_SIZE, publisher, streamFunction);
     }
-
-
 }

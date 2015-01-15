@@ -223,7 +223,6 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertFalse(set2.contains(six));
     }
 
-
     /**
      * keySet.addAll adds each element from the given collection
      */

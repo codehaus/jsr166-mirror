@@ -249,6 +249,7 @@ public final class Flow {
      * including an exception thrown by the Consumer (in which case
      * the subscription is cancelled if not already terminated).
      *
+     * @param <T> the published item type
      * @param requestSize the request size for subscriptions
      * @param publisher the publisher
      * @param consumer the function applied to each onNext item
@@ -257,7 +258,6 @@ public final class Flow {
      * upon any error.
      * @throws NullPointerException if publisher or consumer are null
      * @throws IllegalArgumentException if requestSize not positive
-     * @param <T> the published item type
      */
     public static <T> CompletableFuture<Void> consume(
         long requestSize, Publisher<T> publisher, Consumer<? super T> consumer) {
@@ -275,13 +275,13 @@ public final class Flow {
      * Equivalent to {@link #consume(long, Publisher, Consumer)}
      * with a request size of 64.
      *
+     * @param <T> the published item type
      * @param publisher the publisher
      * @param consumer the function applied to each onNext item
      * @return a CompletableFuture that is completed normally
      * when the publisher signals onComplete, and exceptionally
      * upon any error.
      * @throws NullPointerException if publisher or consumer are null
-     * @param <T> the published item type
      */
     public static <T> CompletableFuture<Void> consume(
         Publisher<T> publisher, Consumer<? super T> consumer) {
@@ -318,6 +318,8 @@ public final class Flow {
      * collects all items before executing the stream
      * computation. Improvements are pending Stream integration.
      *
+     * @param <T> the published item type
+     * @param <R> the result type of the stream function
      * @param requestSize the request size for subscriptions
      * @param publisher the publisher
      * @param streamFunction the operation on elements
@@ -326,8 +328,6 @@ public final class Flow {
      * onComplete, and exceptionally upon any error.
      * @throws NullPointerException if publisher or function are null
      * @throws IllegalArgumentException if requestSize not positive
-     * @param <T> the published item type
-     * @param <R> the result type of the stream function
      */
     public static <T,R> CompletableFuture<R> stream(
         long requestSize, Publisher<T> publisher,
@@ -346,14 +346,14 @@ public final class Flow {
      * Equivalent to {@link #stream(long, Publisher, Function)}
      * with a request size of 64.
      *
+     * @param <T> the published item type
+     * @param <R> the result type of the stream function
      * @param publisher the publisher
      * @param streamFunction the operation on elements
      * @return a CompletableFuture that is completed normally with the
      * result of the given function as result when the publisher signals
      * onComplete, and exceptionally upon any error.
      * @throws NullPointerException if publisher or function are null
-     * @param <T> the published item type
-     * @param <R> the result type of the stream function
      */
     public static <T,R> CompletableFuture<R> stream(
         Publisher<T> publisher,

@@ -539,13 +539,13 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * requestSizes should range from the initial and maximum buffer
      * capacity of this SubmissionPublisher.)
      *
+     * @param <S> the subscribed item type
      * @param requestSize the request size for subscriptions
      * with the source
      * @param transform the transform function
      * @return the new Processor
      * @throws NullPointerException if transform is null
      * @throws IllegalArgumentException if requestSize not positive
-     * @param <S> the subscribed item type
      */
     public <S> Flow.Processor<S,T> newTransformProcessor(
         long requestSize,

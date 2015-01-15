@@ -2592,7 +2592,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @return the exceptionally completed CompletionStage
      * @since 1.9
      */
-    public static <U> CompletableFuture<U> failedStage(Throwable ex) {
+    public static <U> CompletionStage<U> failedStage(Throwable ex) {
         if (ex == null) throw new NullPointerException();
         return new MinimalStage<U>(encodeThrowable(ex));
     }

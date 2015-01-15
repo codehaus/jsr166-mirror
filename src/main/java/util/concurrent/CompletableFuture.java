@@ -99,7 +99,8 @@ import java.util.function.Supplier;
  *
  * @author Doug Lea
  * @since 1.8
- * @param <T> The result type returned by this future's {@code get} methods
+ * @param <T> The result type returned by this future's {@code join}
+ * and {@code get} methods
  */
 public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 

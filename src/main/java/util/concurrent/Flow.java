@@ -183,7 +183,7 @@ public final class Flow {
      * @param <T> the subscribed item type
      * @param <R> the published item type
      */
-    public static interface Processor<T, R> extends Subscriber<T>, Publisher<R> {
+    public static interface Processor<T,R> extends Subscriber<T>, Publisher<R> {
     }
 
     // Support for static methods

@@ -255,7 +255,7 @@ public final class Flow {
      * @param consumer the function applied to each onNext item
      * @return a CompletableFuture that is completed normally
      * when the publisher signals onComplete, and exceptionally
-     * upon any error.
+     * upon any error
      * @throws NullPointerException if publisher or consumer are null
      * @throws IllegalArgumentException if requestSize not positive
      */
@@ -280,7 +280,7 @@ public final class Flow {
      * @param consumer the function applied to each onNext item
      * @return a CompletableFuture that is completed normally
      * when the publisher signals onComplete, and exceptionally
-     * upon any error.
+     * upon any error
      * @throws NullPointerException if publisher or consumer are null
      */
     public static <T> CompletableFuture<Void> consume(
@@ -325,7 +325,7 @@ public final class Flow {
      * @param streamFunction the operation on elements
      * @return a CompletableFuture that is completed normally with the
      * result of the given function as result when the publisher signals
-     * onComplete, and exceptionally upon any error.
+     * onComplete, and exceptionally upon any error
      * @throws NullPointerException if publisher or function are null
      * @throws IllegalArgumentException if requestSize not positive
      */
@@ -352,7 +352,7 @@ public final class Flow {
      * @param streamFunction the operation on elements
      * @return a CompletableFuture that is completed normally with the
      * result of the given function as result when the publisher signals
-     * onComplete, and exceptionally upon any error.
+     * onComplete, and exceptionally upon any error
      * @throws NullPointerException if publisher or function are null
      */
     public static <T,R> CompletableFuture<R> stream(

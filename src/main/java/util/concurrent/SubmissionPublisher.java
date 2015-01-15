@@ -522,7 +522,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      *
      * @param subscription the subscription
      * @return the estimate, or zero if the subscription is of an
-     * unknown type.
+     * unknown type
      */
     public static int estimateAvailable(Flow.Subscription subscription) {
         if (subscription instanceof BufferedSubscription)

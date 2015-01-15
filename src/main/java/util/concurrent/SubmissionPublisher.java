@@ -44,13 +44,14 @@ import java.util.function.Function;
  * <p>Publication methods support different policies about what to do
  * when buffers are saturated. Method {@link #submit} blocks until
  * resources are available. This is simplest (and often appropriate
- * for relay stages; see {@link #newTransformProcessor}), but least
- * responsive. The {@code offer} methods may either immediately, or
- * with bounded timeout, drop items, but provide an opportunity to
- * interpose a handler and then retry.  While the handler is invoked,
- * other calls to methods in this class by other threads are blocked.
- * Unless recovery is assured, options are usually limited to logging
- * the error and/or issuing an onError signal to the subscriber.
+ * for relay stages; see {@link #newTransformProcessor newTransformProcessor}),
+ * but least responsive. The {@code offer} methods may either
+ * immediately, or with bounded timeout, drop items, but provide an
+ * opportunity to interpose a handler and then retry.  While the
+ * handler is invoked, other calls to methods in this class by other
+ * threads are blocked.  Unless recovery is assured, options are
+ * usually limited to logging the error and/or issuing an onError
+ * signal to the subscriber.
  *
  * <p>If any Subscriber method throws an exception, its subscription
  * is cancelled.  If the supplied Executor throws
@@ -59,7 +60,7 @@ import java.util.function.Function;
  * exception when processing a dropped item, then the exception is
  * rethrown. In these cases, some but not all subscribers may have
  * received items. It is usually good practice to {@link
- * #closeExceptionally} in these cases.
+ * #closeExceptionally closeExceptionally} in these cases.
  *
  * @param <T> the published item type
  * @author Doug Lea

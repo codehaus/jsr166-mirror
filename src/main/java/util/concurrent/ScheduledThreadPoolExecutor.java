@@ -42,11 +42,11 @@ import java.util.concurrent.locks.ReentrantLock;
  * removed from the work queue at time of cancellation.
  *
  * <p>Successive executions of a periodic task scheduled via
- * {@link #scheduleAtFixedRate} or
- * {@link #scheduleWithFixedDelay} do not overlap. While different
- * executions may be performed by different threads, the effects of
- * prior executions <a
- * href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * {@link #scheduleAtFixedRate scheduleAtFixedRate} or
+ * {@link #scheduleWithFixedDelay scheduleWithFixedDelay}
+ * do not overlap. While different executions may be performed by
+ * different threads, the effects of prior executions
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
  * those of subsequent ones.
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
@@ -780,8 +780,8 @@ public class ScheduledThreadPoolExecutor
      *         For tasks submitted via one of the {@code schedule}
      *         methods, the element will be identical to the returned
      *         {@code ScheduledFuture}.  For tasks submitted using
-     *         {@link #execute}, the element will be a zero-delay {@code
-     *         ScheduledFuture}.
+     *         {@link #execute execute}, the element will be a
+     *         zero-delay {@code ScheduledFuture}.
      * @throws SecurityException {@inheritDoc}
      */
     public List<Runnable> shutdownNow() {
@@ -793,8 +793,8 @@ public class ScheduledThreadPoolExecutor
      * Each element of this list is a {@link ScheduledFuture}.
      * For tasks submitted via one of the {@code schedule} methods, the
      * element will be identical to the returned {@code ScheduledFuture}.
-     * For tasks submitted using {@link #execute}, the element will be a
-     * zero-delay {@code ScheduledFuture}.
+     * For tasks submitted using {@link #execute execute}, the element
+     * will be a zero-delay {@code ScheduledFuture}.
      *
      * <p>Iteration over this queue is <em>not</em> guaranteed to traverse
      * tasks in the order in which they will execute.

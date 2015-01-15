@@ -190,7 +190,7 @@ public final class Flow {
 
     static final long DEFAULT_REQUEST_SIZE = 64L;
 
-    static abstract class CompletableSubscriber<T,U> implements Subscriber<T>,
+    abstract static class CompletableSubscriber<T,U> implements Subscriber<T>,
                                                                 Consumer<T> {
         final CompletableFuture<U> status;
         Subscription subscription;

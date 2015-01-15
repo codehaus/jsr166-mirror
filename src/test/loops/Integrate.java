@@ -7,7 +7,7 @@
 import java.util.concurrent.*;
 
 /**
- * Sample program using Guassian Quadrature for numerical integration.
+ * Sample program using Gaussian Quadrature for numerical integration.
  * This version uses a simplified hardwired function.  Inspired by a
  * <A href="http://www.cs.uga.edu/~dkl/filaments/dist.html">
  * Filaments</A> demo program.

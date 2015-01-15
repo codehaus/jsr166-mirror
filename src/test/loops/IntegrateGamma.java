@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 
 /**
  * Adapted from FJTask version.
- * Sample program using Guassian Quadrature for numerical integration.
+ * Sample program using Gaussian Quadrature for numerical integration.
  * Inspired by a
  * <A href="http://www.cs.uga.edu/~dkl/filaments/dist.html"> Filaments</A>
  * demo program.

@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.*;
  * <pre>
  * class GraphVisitor extends LinkedAsyncAction {
  *   final Node node;
- *   GraphVisitor(GraphVistor parent, Node node) {
+ *   GraphVisitor(GraphVisitor parent, Node node) {
  *     super(parent); this.node = node;
  *   }
  *   protected void compute() {

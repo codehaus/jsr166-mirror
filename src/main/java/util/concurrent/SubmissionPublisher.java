@@ -95,9 +95,9 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * (via their "next" fields). This works well for publish loops.
      * It requires O(n) traversal to check for duplicate subscribers,
      * but we expect that subscribing is much less common than
-     * publishing. Unsubscribing occurs only during publish loops,
-     * when BufferedSubscription methods return negative values
-     * signifying that they have been disabled (cancelled or closed).
+     * publishing. Unsubscribing occurs only during traversal loops,
+     * when BufferedSubscription methods or status checks return
+     * negative values signifying that they have been disabled.
      */
     BufferedSubscription<T> clients;
 
@@ -156,8 +156,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * Subscription (upon exception, the exception is rethrown and the
      * Subscriber remains unsubscribed). If this SubmissionPublisher
      * is closed, the subscriber's onComplete method is then invoked.
-     * Subscribers may enable receiving items by invoking the request
-     * method of the returned Subscription, and may unsubscribe by
+     * Subscribers may enable receiving items by invoking the {@code
+     * request} method of the new Subscription, and may unsubscribe by
      * invoking its cancel method.
      *
      * @param subscriber the subscriber
@@ -573,7 +573,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         ConsumerTask(BufferedSubscription<T> s) { this.s = s; }
         public final Void getRawResult() { return null; }
         public final void setRawResult(Void v) {}
-        public final boolean exec() { s.consume(); return true; }
+        public final boolean exec() { s.consume(); return false; }
         public final void run() { s.consume(); }
     }
 
@@ -716,7 +716,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             }
             a[j & mask] = item;
             U.putOrderedInt(this, TAIL, j + 1);
-            return startOnOffer();
+            return (ctl & ACTIVE) != 0 ? 1 : startOnOffer();
         }
 
         /**
@@ -724,23 +724,27 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
          * Backs out and relays exception if executor fails.
          */
         final int startOnOffer() {
-            for (;;) {
-                int c; Executor e;
-                if (((c = ctl) & ACTIVE) != 0 || demand == 0L || tail == head)
-                    break;
-                if (c < 0 || (e = executor) == null)
-                    return -1;
-                if (U.compareAndSwapInt(this, CTL, c, c | ACTIVE)) {
-                    try {
-                        e.execute(new ConsumerTask<T>(this));
+            if (demand != 0L) {
+                ConsumerTask<T> task = new ConsumerTask<T>(this);
+                for (int c;;) {
+                    if (((c = ctl) & ACTIVE) != 0)
                         break;
-                    } catch (RuntimeException | Error ex) { // back out
-                        for (;;) {
-                            if ((c = ctl) < 0 || (c & ACTIVE) == 0 ||
-                                U.compareAndSwapInt(this, CTL, c, c & ~ACTIVE))
-                                throw ex;
+                    else if (c < 0)
+                        return -1;
+                    else if (U.compareAndSwapInt(this, CTL, c, c | ACTIVE)) {
+                        try {
+                            executor.execute(task);
+                            break;
+                        } catch (RuntimeException | Error ex) { // back out
+                            do {} while((c = ctl) >= 0 &&
+                                        (c & ACTIVE) != 0 &&
+                                        !U.compareAndSwapInt(this, CTL, c,
+                                                             c & ~ACTIVE));
+                            throw ex;
                         }
                     }
+                    else if (demand == 0L || tail == head)
+                        break;
                 }
             }
             return 1;

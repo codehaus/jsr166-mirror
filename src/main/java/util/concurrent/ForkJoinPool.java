@@ -2425,7 +2425,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Push a possibly-external submission
+     * Pushes a possibly-external submission.
      */
     final <T> ForkJoinTask<T> doSubmit(ForkJoinTask<T> task) {
         Thread t; ForkJoinWorkerThread w;

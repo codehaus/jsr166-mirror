@@ -419,7 +419,7 @@ public class Semaphore implements java.io.Serializable {
      * one of two things happens:
      * <ul>
      * <li>Some other thread invokes one of the {@link #release() release}
-     * methods for this semaphore, and the current thread is next to be assigned
+     * methods for this semaphore, the current thread is next to be assigned
      * permits and the number of available permits satisfies this request; or
      * <li>Some other thread {@linkplain Thread#interrupt interrupts}
      * the current thread.

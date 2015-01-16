@@ -125,7 +125,6 @@ public class OfferPollLoops {
             System.out.print("ArrayBlockingQueue      ");
         oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE), n, iters);
 
-
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("PriorityBlockingQueue   ");
@@ -235,6 +234,5 @@ public class OfferPollLoops {
         if (print)
             System.out.println("\t: " + LoopHelpers.rightJustify(time / (iters * n)) + " ns per transfer");
     }
-
 
 }

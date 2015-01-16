@@ -210,7 +210,6 @@ public class MapMicroBenchmark {
         System.out.println("\n");
     }
 
-
     static final class Job {
         final String name;
         final Class<?> elementClass;
@@ -362,7 +361,6 @@ public class MapMicroBenchmark {
         }
 
     }
-
 
     static final Random rng = new Random(3122688);
 

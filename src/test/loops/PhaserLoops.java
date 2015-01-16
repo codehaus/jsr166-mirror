@@ -30,7 +30,6 @@ public class PhaserLoops {
             phaser.register();
         }
 
-
         public void run() {
             int n = size;
             Phaser b = phaser;

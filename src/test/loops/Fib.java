@@ -56,7 +56,6 @@ public final class Fib extends RecursiveAction {
         }
     }
 
-
     /** for time conversion */
     static final long NPS = (1000L * 1000 * 1000);
 
@@ -79,7 +78,6 @@ public final class Fib extends RecursiveAction {
         System.out.printf(" Workers: %5d", g.getPoolSize());
         System.out.println();
     }
-
 
     // Initialized with argument; replaced with result
     int number;

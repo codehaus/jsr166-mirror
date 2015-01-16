@@ -73,7 +73,6 @@ public class ExchangeLoops {
             Thread.sleep(sleepTime);
         }
 
-
     }
 
     static void oneRun(int nThreads, long trialMillis) throws Exception {

@@ -20,7 +20,6 @@ public class LastKeyOfSubMap {
             }
         };
 
-
     public static void main(String[] pArgs) {
         SortedMap m1 = new TreeMap(NULL_AT_END);
         m1.put("a", "a");

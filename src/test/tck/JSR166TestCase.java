@@ -465,7 +465,7 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
-     * Find missing try { ... } finally { joinPool(e); }
+     * Finds missing try { ... } finally { joinPool(e); }
      */
     void checkForkJoinPoolThreadLeaks() throws InterruptedException {
         Thread[] survivors = new Thread[5];

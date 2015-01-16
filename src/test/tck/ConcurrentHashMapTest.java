@@ -589,7 +589,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         assertFalse(map2.equals(map1));
     }
 
-
     /**
      * get(null) throws NPE
      */

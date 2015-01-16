@@ -120,7 +120,6 @@ public class MultipleProducersSingleConsumerLoops {
             System.out.print("SynchronousQueue        ");
         oneRun(new SynchronousQueue<Integer>(), n, iters);
 
-
         Thread.sleep(100); // System.gc();
         if (print)
             System.out.print("SynchronousQueue(fair)  ");
@@ -145,7 +144,6 @@ public class MultipleProducersSingleConsumerLoops {
         if (print)
             System.out.print("ArrayBlockingQueue(fair)");
         oneRun(new ArrayBlockingQueue<Integer>(POOL_SIZE, true), n, fairIters);
-
 
     }
 
@@ -228,7 +226,6 @@ public class MultipleProducersSingleConsumerLoops {
         }
 
     }
-
 
     static void oneRun(BlockingQueue<Integer> q, int n, int iters) throws Exception {
 

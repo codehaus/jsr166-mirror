@@ -37,7 +37,6 @@ public class NavigableMapCheck {
             }
         }
 
-
         if (args.length > 1)
             numTests = Integer.parseInt(args[1]);
 
@@ -45,7 +44,6 @@ public class NavigableMapCheck {
             size = Integer.parseInt(args[2]);
 
         System.out.println("Testing " + mapClass.getName() + " trials: " + numTests + " size: " + size);
-
 
         absentSize = 8;
         while (absentSize < size) absentSize <<= 1;
@@ -58,7 +56,6 @@ public class NavigableMapCheck {
         Integer[] key = new Integer[size];
         for (int i = 0; i < size; ++i)
             key[i] = new Integer(i * 2 + 1);
-
 
         for (int rep = 0; rep < numTests; ++rep) {
             runTest(newMap(mapClass), key);
@@ -76,7 +73,6 @@ public class NavigableMapCheck {
             throw new RuntimeException("Can't instantiate " + cl + ": " + e);
         }
     }
-
 
     static void runTest(NavigableMap s, Integer[] key) {
         shuffle(key);
@@ -171,7 +167,6 @@ public class NavigableMapCheck {
         reallyAssert(sum == expect);
     }
 
-
     static void t9(NavigableMap s) {
         int sum = 0;
         int iters = 20;
@@ -237,7 +232,6 @@ public class NavigableMapCheck {
         reallyAssert(sum == iters-1);
     }
 
-
     static void ktest(NavigableMap s, int size, Integer[] key) {
         timer.start("ContainsKey            ", size);
         Set ks = s.keySet();
@@ -248,7 +242,6 @@ public class NavigableMapCheck {
         timer.finish();
         reallyAssert(sum == size);
     }
-
 
     static void ittest1(NavigableMap s, int size) {
         int sum = 0;
@@ -299,12 +292,10 @@ public class NavigableMapCheck {
         reallyAssert(sum == size);
     }
 
-
     static void rittest(NavigableMap s, int size) {
         rittest1(s, size);
         //        rittest2(s, size);
     }
-
 
     static void rtest(NavigableMap s, int size) {
         timer.start("Remove (iterator)      ", size);
@@ -323,7 +314,6 @@ public class NavigableMapCheck {
         }
         timer.finish();
     }
-
 
     static void dtest(NavigableMap s, int size, Integer[] key) {
         timer.start("Put (putAll)           ", size * 2);
@@ -391,8 +381,6 @@ public class NavigableMapCheck {
         reallyAssert(s2.isEmpty() && s.isEmpty());
     }
 
-
-
     static void test(NavigableMap s, Integer[] key) {
         int size = key.length;
 
@@ -453,7 +441,6 @@ public class NavigableMapCheck {
             this.numOps = numOps;
             startTime = System.currentTimeMillis();
         }
-
 
         String classify() {
             if (name.startsWith("Get"))

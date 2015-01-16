@@ -25,7 +25,6 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
             return;
         }
 
-
         for (int reps = 0; reps < 2; ++reps) {
             ForkJoinPool g = (procs == 0) ? new ForkJoinPool() :
                 new ForkJoinPool(procs);
@@ -58,7 +57,6 @@ public final class DynamicLeftSpineFib extends RecursiveAction {
         System.out.printf(" Workers: %8d", g.getPoolSize());
         System.out.println();
     }
-
 
     // Initialized with argument; replaced with result
     int number;

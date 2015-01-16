@@ -826,7 +826,6 @@ public class ForkJoinPool extends AbstractExecutorService {
                 a, (long)((i << ASHIFT) + ABASE), x);
         }
 
-
         WorkQueue(ForkJoinPool pool, ForkJoinWorkerThread owner) {
             this.pool = pool;
             this.owner = owner;
@@ -3356,7 +3355,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final long QCURRENTJOIN;
 
     static {
-        // initialize field offsets for CAS etc
         try {
             CTL = U.objectFieldOffset
                 (ForkJoinPool.class.getDeclaredField("ctl"));

@@ -54,7 +54,6 @@ public final class DynamicFib extends RecursiveAction {
         System.out.println();
     }
 
-
     int number;     // Initialized with argument; replaced with result
     DynamicFib(int n) { number = n; }
     public void compute() {

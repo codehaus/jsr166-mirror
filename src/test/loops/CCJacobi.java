@@ -77,13 +77,11 @@ public class CCJacobi {
         }
     }
 
-
     abstract static class MatrixTree extends CountedCompleter<Void> {
         // maximum difference between old and new values
         double maxDiff;
         MatrixTree(CountedCompleter<?> p, int c) { super(p, c); }
     }
-
 
     static final class LeafNode extends MatrixTree {
         final double[][] A; // matrix to get old values from
@@ -157,7 +155,6 @@ public class CCJacobi {
             q1.compute();
         }
     }
-
 
     static final class TwoNode extends MatrixTree {
         MatrixTree q1;
@@ -260,6 +257,4 @@ public class CCJacobi {
             System.out.println("max diff after " + steps + " steps = " + md);
         }
     }
-
-
 }

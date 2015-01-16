@@ -99,7 +99,6 @@ public class ThreadPhaserJacobi {
             barrier.register();
         }
 
-
         public void run() {
             try {
                 double[][] a = A;
@@ -137,7 +136,6 @@ public class ThreadPhaserJacobi {
         }
 
     }
-
 
     static class Driver {
         double[][] A; // matrix to get old values from
@@ -206,6 +204,4 @@ public class ThreadPhaserJacobi {
             System.out.println("Max diff after " + steps + " steps = " + maxd);
         }
     }
-
-
 }

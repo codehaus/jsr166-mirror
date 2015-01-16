@@ -7,7 +7,6 @@
 //import jsr166y.*;
 import java.util.concurrent.*;
 
-
 /**
  * LU matrix decomposition demo
  * Based on those in Cilk and Hood
@@ -73,7 +72,6 @@ public final class LU {
         pool.shutdown();
     }
 
-
     static void randomInit(double[][] M, int n) {
         java.util.Random rng = new java.util.Random();
         for (int i = 0; i < n; ++i)
@@ -103,7 +101,6 @@ public final class LU {
 
         System.out.println("Max difference = " + maxDiff);
     }
-
 
     // Blocks record underlying matrix, and offsets into current block
     static final class Block {
@@ -217,7 +214,6 @@ public final class LU {
                 Block L10 = new Block(L.m, L.loRow+h, L.loCol);
                 Block L11 = new Block(L.m, L.loRow+h, L.loCol+h);
 
-
                 Seq3 s1 =
                     seq(new Lower(h, L00, M00),
                         new Schur(h, L10, M00, M10),
@@ -232,7 +228,6 @@ public final class LU {
             }
         }
     }
-
 
     static final class Upper extends RecursiveAction {
         final int size;
@@ -256,7 +251,6 @@ public final class LU {
                 }
             }
         }
-
 
         public void compute() {
             if (size == BLOCK_SIZE) {
@@ -289,7 +283,6 @@ public final class LU {
             }
         }
     }
-
 
     static final class LowerUpper extends RecursiveAction {
         final int size;

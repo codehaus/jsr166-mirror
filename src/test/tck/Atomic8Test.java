@@ -191,7 +191,6 @@ public class Atomic8Test extends JSR166TestCase {
         assertEquals(new Integer(10), a.get());
     }
 
-
     /**
      * AtomicLongArray getAndUpdate returns previous value and updates
      * result of supplied function
@@ -436,7 +435,6 @@ public class Atomic8Test extends JSR166TestCase {
         assertEquals(10, a.get(this));
         assertEquals(10, anIntField);
     }
-
 
     /**
      * AtomicReferenceFieldUpdater getAndUpdate returns previous value

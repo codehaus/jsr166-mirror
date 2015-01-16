@@ -7,7 +7,6 @@
 //import jsr166y.*;
 import java.util.concurrent.*;
 
-
 /**
  * Divide and Conquer matrix multiply demo
  */
@@ -78,7 +77,6 @@ public class MatrixMultiply {
         System.out.println(pool.toString());
         pool.shutdown();
     }
-
 
     // To simplify checking, fill with all 1's. Answer should be all n's.
     static void init(float[][] a, float[][] b, int n) {
@@ -247,6 +245,4 @@ public class MatrixMultiply {
             snd.invoke();
         }
     }
-
-
 }

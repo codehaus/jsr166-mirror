@@ -48,8 +48,6 @@ public class ListBash {
         System.out.println("Time: " + (elapsed/1000000000.0) + "s");
     }
 
-
-
     static void elementLoop() {
         List<Integer> s1 = newList(cl, synch);
         AddRandoms(s1, listSize);

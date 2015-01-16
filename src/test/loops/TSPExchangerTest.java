@@ -229,7 +229,6 @@ public class TSPExchangerTest {
         p.printSnapshot(secs);
     }
 
-
     /**
      * A Population creates the subpops, subpops, and threads for a run
      * and has control methods to start, stop, and report progress.

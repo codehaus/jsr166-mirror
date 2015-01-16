@@ -16,7 +16,6 @@ public class FinalLongTest {
     static Long n2 = new Long(23);
     static Long n3 = new Long(23);
 
-
     public static void main(String[] args) {
         for (int i = 0; i < LEN; ++i)
             nums[i] = new Long(i+1);

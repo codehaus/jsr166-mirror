@@ -40,7 +40,6 @@ class Mutex100M {
         return x;
     }
 
-
     static final class Mutex extends AbstractQueuedSynchronizer {
         public boolean isHeldExclusively() { return getState() == 1; }
 

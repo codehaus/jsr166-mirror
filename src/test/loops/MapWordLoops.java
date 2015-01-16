@@ -65,7 +65,6 @@ public class MapWordLoops {
         }
     }
 
-
     static Map<String,String> newMap(Class<?> cl) {
         try {
             Map m = (Map<String,String>)cl.newInstance();
@@ -127,7 +126,6 @@ public class MapWordLoops {
         return runTime;
     }
 
-
     static class Runner implements Runnable {
         final Map<String,String> map;
         final String[] key;
@@ -147,7 +145,6 @@ public class MapWordLoops {
             pctins = (int)(((long)pinsert * (long)(Integer.MAX_VALUE/2)) / 50);
             rng = new LoopHelpers.SimpleRandom((id + 1) * 8862213513L);
         }
-
 
         int oneStep(int j) {
             int n = key.length;

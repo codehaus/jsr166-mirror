@@ -63,7 +63,6 @@ public class CollectionWordLoops {
         }
     }
 
-
     static Collection<String> newCollection(Class<?> cl) {
         try {
             Collection m = (Collection<String>) cl.newInstance();
@@ -125,7 +124,6 @@ public class CollectionWordLoops {
         return runTime;
     }
 
-
     static class Runner implements Runnable {
         final Collection<String> collection;
         final String[] key;
@@ -144,7 +142,6 @@ public class CollectionWordLoops {
             pctrem = (int)(((long)premove * (long)(Integer.MAX_VALUE/2)) / 50);
             pctins = (int)(((long)pinsert * (long)(Integer.MAX_VALUE/2)) / 50);
         }
-
 
         int oneStep(int j) {
             int n = key.length;

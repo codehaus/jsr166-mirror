@@ -45,7 +45,6 @@ public class RLMap implements Map {
         rl.lock(); try {return m.containsValue(value);} finally { rl.unlock(); }
     }
 
-
     public Set keySet() { // Not implemented
         return m.keySet();
     }
@@ -67,8 +66,6 @@ public class RLMap implements Map {
     public String toString() {
         rl.lock(); try {return m.toString();} finally { rl.unlock(); }
     }
-
-
 
     public Object put(Object key, Object value) {
         rl.lock(); try {return m.put(key, value);} finally { rl.unlock(); }

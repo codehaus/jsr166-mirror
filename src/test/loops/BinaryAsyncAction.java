@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.*;
  * have smaller stack space footprints and faster completion mechanics
  * but higher per-task footprints. Compared to LinkedAsyncActions,
  * BinaryAsyncActions are simpler to use and have less overhead in
- * typical uasges but are restricted to binary computation trees.
+ * typical usages but are restricted to binary computation trees.
  *
  * <p>Upon construction, a BinaryAsyncAction does not bear any
  * linkages. For non-root tasks, links must be established using

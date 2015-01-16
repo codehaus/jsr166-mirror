@@ -546,7 +546,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         }
     }
 
-
     class CompletableFutureInc extends CheckedIntegerAction
         implements Function<Integer, CompletableFuture<Integer>>
     {

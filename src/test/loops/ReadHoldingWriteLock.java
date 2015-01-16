@@ -141,7 +141,5 @@ class ReadHoldingWriteLock {
         t2.join(MEDIUM_DELAY_MS);
         assertTrue(!t1.isAlive());
         assertTrue(!t2.isAlive());
-
-
     }
 }

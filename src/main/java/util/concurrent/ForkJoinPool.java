@@ -2425,6 +2425,21 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
+     * Push a possibly-external submission
+     */
+    final <T> ForkJoinTask<T> doSubmit(ForkJoinTask<T> task) {
+        Thread t; ForkJoinWorkerThread w;
+        if (task == null)
+            throw new NullPointerException();
+        if (((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) &&
+            (w = (ForkJoinWorkerThread)t).pool == this)
+            w.workQueue.push(task);
+        else 
+            externalPush(task);
+        return task;
+    }
+
+    /**
      * Returns common pool queue for an external thread.
      */
     static WorkQueue commonSubmitterQueue() {
@@ -2617,7 +2632,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     public <T> T invoke(ForkJoinTask<T> task) {
         if (task == null)
             throw new NullPointerException();
-        externalPush(task);
+        doSubmit(task);
         return task.join();
     }
 
@@ -2630,9 +2645,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public void execute(ForkJoinTask<?> task) {
-        if (task == null)
-            throw new NullPointerException();
-        externalPush(task);
+        doSubmit(task);
     }
 
     // AbstractExecutorService methods
@@ -2650,7 +2663,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             job = (ForkJoinTask<?>) task;
         else
             job = new ForkJoinTask.RunnableExecuteAction(task);
-        externalPush(job);
+        doSubmit(job);
     }
 
     /**
@@ -2664,10 +2677,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> ForkJoinTask<T> submit(ForkJoinTask<T> task) {
-        if (task == null)
-            throw new NullPointerException();
-        externalPush(task);
-        return task;
+        return doSubmit(task);
     }
 
     /**
@@ -2676,9 +2686,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
-        ForkJoinTask<T> job = new ForkJoinTask.AdaptedCallable<T>(task);
-        externalPush(job);
-        return job;
+        return doSubmit(new ForkJoinTask.AdaptedCallable<T>(task));
     }
 
     /**
@@ -2687,9 +2695,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> ForkJoinTask<T> submit(Runnable task, T result) {
-        ForkJoinTask<T> job = new ForkJoinTask.AdaptedRunnable<T>(task, result);
-        externalPush(job);
-        return job;
+        return doSubmit(new ForkJoinTask.AdaptedRunnable<T>(task, result));
     }
 
     /**
@@ -2705,8 +2711,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             job = (ForkJoinTask<?>) task;
         else
             job = new ForkJoinTask.AdaptedRunnableAction(task);
-        externalPush(job);
-        return job;
+        return doSubmit(job);
     }
 
     /**
@@ -2723,7 +2728,7 @@ public class ForkJoinPool extends AbstractExecutorService {
             for (Callable<T> t : tasks) {
                 ForkJoinTask<T> f = new ForkJoinTask.AdaptedCallable<T>(t);
                 futures.add(f);
-                externalPush(f);
+                doSubmit(f);
             }
             for (int i = 0, size = futures.size(); i < size; i++)
                 ((ForkJoinTask<?>)futures.get(i)).quietlyJoin();

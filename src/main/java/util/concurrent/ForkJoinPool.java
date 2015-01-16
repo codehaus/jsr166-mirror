@@ -2434,7 +2434,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) &&
             (w = (ForkJoinWorkerThread)t).pool == this)
             w.workQueue.push(task);
-        else 
+        else
             externalPush(task);
         return task;
     }

@@ -736,10 +736,10 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                             executor.execute(task);
                             break;
                         } catch (RuntimeException | Error ex) { // back out
-                            do {} while((c = ctl) >= 0 &&
-                                        (c & ACTIVE) != 0 &&
-                                        !U.compareAndSwapInt(this, CTL, c,
-                                                             c & ~ACTIVE));
+                            do {} while ((c = ctl) >= 0 &&
+                                         (c & ACTIVE) != 0 &&
+                                         !U.compareAndSwapInt(this, CTL, c,
+                                                              c & ~ACTIVE));
                             throw ex;
                         }
                     }

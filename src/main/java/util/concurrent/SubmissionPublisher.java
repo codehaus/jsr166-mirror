@@ -748,7 +748,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
 
         /**
          * Tries to start consumer task upon a signal or request;
-         * disables on failure
+         * disables on failure.
          */
         final void startOrDisable() {
             Executor e; // skip if already disabled

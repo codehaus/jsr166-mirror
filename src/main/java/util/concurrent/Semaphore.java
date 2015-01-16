@@ -452,7 +452,7 @@ public class Semaphore implements java.io.Serializable {
      *
      * <p>Acquires the given number of permits, if they are available,
      * and returns immediately, reducing the number of available permits
-     * by the given amount.This method has the same effect as the
+     * by the given amount. This method has the same effect as the
      * loop {@code for (int i = 0; i < permits; ++i) acquireUninterruptibly();}
      * except that it atomically acquires the permits all at once:
      *

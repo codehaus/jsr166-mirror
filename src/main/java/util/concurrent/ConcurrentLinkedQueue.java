@@ -447,18 +447,23 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public boolean remove(Object o) {
         if (o != null) {
-            Node<E> pred = null;
-            for (Node<E> p = first(); p != null; p = succ(p)) {
+            Node<E> next, pred = null;
+            for (Node<E> p = first(); p != null; pred = p, p = next) {
+                boolean removed = false;
                 E item = p.item;
-                if (item != null &&
-                    o.equals(item) &&
-                    casItem(p, item, null)) {
-                    Node<E> next = succ(p);
-                    if (pred != null && next != null)
-                        casNext(pred, p, next);
-                    return true;
+                if (item != null) {
+                    if (!o.equals(item)) {
+                        next = succ(p);
+                        continue;
+                    }
+                    removed = casItem(p, item, null);
                 }
-                pred = p;
+
+                next = succ(p);
+                if (pred != null && next != null) // unlink
+                    casNext(pred, p, next);
+                if (removed)
+                    return true;
             }
         }
         return false;

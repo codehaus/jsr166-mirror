@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A {@link Flow.Publisher} that asynchronously issues submitted items
@@ -19,8 +20,6 @@ import java.util.function.Function;
  * exceptions are encountered.  Using a SubmissionPublisher allows
  * item generators to act as Publishers, although without integrated
  * flow control.  Instead they rely on drop handling and/or blocking.
- * This class may also serve as a base for subclasses that generate
- * items, and use the methods in this class to publish them.
  *
  * <p>A SubmissionPublisher uses the Executor supplied in its
  * constructor for delivery to subscribers. The best choice of
@@ -61,6 +60,32 @@ import java.util.function.Function;
  * rethrown. In these cases, some but not all subscribers may have
  * received items. It is usually good practice to {@link
  * #closeExceptionally closeExceptionally} in these cases.
+ *
+ * <p>This class may also serve as a convenient base for subclasses
+ * that generate items, and use the methods in this class to publish
+ * them.  For example here is a class that periodically publishes the
+ * items generated from a supplier. (In practice you might add methods
+ * to independently start and stop generation, to share schedulers
+ * among publishers, and so on.)
+ *
+ * <pre> {@code
+ * class PeriodicPublisher<T> extends SubmissionPublisher<T> {
+ *   final ScheduledFuture<?> periodicTask;
+ *   final ScheduledExecutorService scheduler;
+ *   PeriodicPublisher(Executor executor, int initialBufferCapacity,
+ *                     int maxBufferCapacity, Supplier<? extends T> supplier,
+ *                     long period, TimeUnit unit) {
+ *     super(executor, initialBufferCapacity, maxBufferCapacity);
+ *     scheduler = new ScheduledThreadPoolExecutor(1);
+ *     periodicTask = scheduler.scheduleAtFixedRate(
+ *       () -> submit(supplier.get()), 0, period, unit);
+ *   }
+ *   public void close() {
+ *     periodicTask.cancel(false);
+ *     scheduler.shutdown();
+ *     super.close();
+ *   }
+ * }}</pre>
  *
  * @param <T> the published item type
  * @author Doug Lea
@@ -559,27 +584,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /**
-     * A task for consuming buffer items and signals, created and
-     * executed whenever they become available. A task consumes as
-     * many items/signals as possible before terminating, at which
-     * point another task is created when needed. The dual Runnable
-     * and ForkJoinTask declaration saves overhead when executed by
-     * ForkJoinPools, without impacting other kinds of Executors.
-     */
-    @SuppressWarnings("serial")
-    static final class ConsumerTask<T> extends ForkJoinTask<Void>
-        implements Runnable {
-        final BufferedSubscription<T> s;
-        ConsumerTask(BufferedSubscription<T> s) { this.s = s; }
-        public final Void getRawResult() { return null; }
-        public final void setRawResult(Void v) {}
-        public final boolean exec() { s.consume(); return false; }
-        public final void run() { s.consume(); }
-    }
-
-    /**
-     * A bounded (ring) buffer with integrated control to start
-     * consumer tasks whenever items are available.  The buffer
+     * A bounded (ring) buffer with integrated control to start a
+     * consumer task whenever items are available.  The buffer
      * algorithm is similar to one used inside ForkJoinPool,
      * specialized for the case of at most one concurrent producer and
      * consumer, and power of two buffer sizes. This allows methods to
@@ -594,10 +600,15 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * coded to exploit the most common case in which they are only
      * called by consumers (usually within onNext).
      *
-     * Control over creating ConsumerTasks is managed using the ACTIVE
-     * ctl bit. We ensure that a task is active when consumable items
-     * (and usually, ERROR or COMPLETE signals) are present and there
-     * is demand (unfulfilled requests).  This is complicated on the
+     * This class also serves as its own consumer task, consuming as
+     * many items/signals as possible before terminating, at which
+     * point it is re-executed created when needed. (The dual Runnable
+     * and ForkJoinTask declaration saves overhead when executed by
+     * ForkJoinPools, without impacting other kinds of Executors.)
+     * Execution control is managed using the ACTIVE ctl bit. We
+     * ensure that a task is active when consumable items (and
+     * usually, ERROR or COMPLETE signals) are present and there is
+     * demand (unfulfilled requests).  This is complicated on the
      * creation side by the possibility of exceptions when trying to
      * execute tasks. These eventually force DISABLED state, but
      * sometimes not directly. On the task side, termination (clearing
@@ -628,9 +639,10 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * Addressing this may require allocating substantially more space
      * than users expect.
      */
+    @SuppressWarnings("serial")
     @sun.misc.Contended
-    static final class BufferedSubscription<T> implements Flow.Subscription,
-        ForkJoinPool.ManagedBlocker {
+    static final class BufferedSubscription<T> extends ForkJoinTask<Void>
+        implements Runnable, Flow.Subscription, ForkJoinPool.ManagedBlocker {
         // Order-sensitive field declarations
         long timeout;                     // > 0 if timed wait
         volatile long demand;             // # unfilled requests
@@ -725,15 +737,15 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
          */
         final int startOnOffer() {
             if (demand != 0L) {
-                ConsumerTask<T> task = new ConsumerTask<T>(this);
                 for (int c;;) {
+                    Executor e = executor;
                     if (((c = ctl) & ACTIVE) != 0)
                         break;
-                    else if (c < 0)
+                    else if (c < 0 || e == null)
                         return -1;
                     else if (U.compareAndSwapInt(this, CTL, c, c | ACTIVE)) {
                         try {
-                            executor.execute(task);
+                            e.execute(this);
                             break;
                         } catch (RuntimeException | Error ex) { // back out
                             do {} while ((c = ctl) >= 0 &&
@@ -758,7 +770,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             Executor e; // skip if already disabled
             if ((e = executor) != null) {
                 try {
-                    e.execute(new ConsumerTask<T>(this));
+                    e.execute(this);
                 } catch (Throwable ex) { // back out and force signal
                     for (int c;;) {
                         if ((c = ctl) < 0 || (c & ACTIVE) == 0)
@@ -943,8 +955,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             return putStat;
         }
 
-        /** Consume loop called only from ConsumerTask */
-        final void consume() {
+        /** Consumer task loop */
+        public final void run() {
             Flow.Subscriber<? super T> s;
             if ((s = subscriber) != null) { // else disabled
                 for (;;) {
@@ -1018,6 +1030,18 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 }
             }
         }
+
+        /** Allows resubmission when used as ForkJoinTask */
+        public final boolean exec() {
+            try {
+                run();
+            } catch (Throwable ex) {
+                reinitialize();
+            }
+            return false; // must return false
+        }
+        public final Void getRawResult() { return null; }
+        public final void setRawResult(Void v) {}
 
         // Unsafe mechanics
         private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
@@ -1096,4 +1120,5 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             sink.close();
         }
     }
+
 }

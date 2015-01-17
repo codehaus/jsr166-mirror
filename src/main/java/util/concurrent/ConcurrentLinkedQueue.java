@@ -683,7 +683,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         public boolean hasNext() {
-            return nextNode != null;
+            return nextItem != null;
         }
 
         public E next() {

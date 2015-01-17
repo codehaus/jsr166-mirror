@@ -473,27 +473,21 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      */
     public void testIterator() {
         ConcurrentSkipListSet q = populatedSet(SIZE);
-        int i = 0;
         Iterator it = q.iterator();
-        while (it.hasNext()) {
+        int i;
+        for (i = 0; it.hasNext(); i++)
             assertTrue(q.contains(it.next()));
-            ++i;
-        }
         assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
     }
 
     /**
      * iterator of empty set has no elements
      */
     public void testEmptyIterator() {
-        ConcurrentSkipListSet q = new ConcurrentSkipListSet();
-        int i = 0;
-        Iterator it = q.iterator();
-        while (it.hasNext()) {
-            assertTrue(q.contains(it.next()));
-            ++i;
-        }
-        assertEquals(0, i);
+        NavigableSet s = new ConcurrentSkipListSet();
+        assertIteratorExhausted(s.iterator());
+        assertIteratorExhausted(s.descendingSet().iterator());
     }
 
     /**

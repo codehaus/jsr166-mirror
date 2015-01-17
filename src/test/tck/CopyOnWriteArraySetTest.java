@@ -194,11 +194,14 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             assertTrue(it.hasNext());
             assertEquals(elements[j], it.next());
         }
-        assertFalse(it.hasNext());
-        try {
-            it.next();
-            shouldThrow();
-        } catch (NoSuchElementException success) {}
+        assertIteratorExhausted(it);
+    }
+
+    /**
+     * iterator of empty collection has no elements
+     */
+    public void testEmptyIterator() {
+        assertIteratorExhausted(new CopyOnWriteArraySet().iterator());
     }
 
     /**

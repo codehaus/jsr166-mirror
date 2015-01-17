@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.PropertyPermission;
@@ -1468,4 +1469,12 @@ public class JSR166TestCase extends TestCase {
                 shouldThrow(expectedExceptionClass.getName());
         }
     }
+
+    public void assertIteratorExhausted(Iterator<?> it) {
+        try {
+            it.next();
+            shouldThrow();
+        } catch (NoSuchElementException success) {}
+        assertFalse(it.hasNext());
+    }        
 }

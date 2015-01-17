@@ -698,9 +698,24 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testIterator() throws InterruptedException {
         ArrayBlockingQueue q = populatedQueue(SIZE);
         Iterator it = q.iterator();
-        while (it.hasNext()) {
+        int i;
+        for (i = 0; it.hasNext(); i++)
+            assertTrue(q.contains(it.next()));
+        assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+
+        it = q.iterator();
+        for (i = 0; it.hasNext(); i++)
             assertEquals(it.next(), q.take());
-        }
+        assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+    }
+
+    /**
+     * iterator of empty collection has no elements
+     */
+    public void testEmptyIterator() {
+        assertIteratorExhausted(new ArrayBlockingQueue(SIZE).iterator());
     }
 
     /**

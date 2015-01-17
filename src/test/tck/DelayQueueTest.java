@@ -614,6 +614,14 @@ public class DelayQueueTest extends JSR166TestCase {
             ++i;
         }
         assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+    }
+
+    /**
+     * iterator of empty collection has no elements
+     */
+    public void testEmptyIterator() {
+        assertIteratorExhausted(new DelayQueue().iterator());
     }
 
     /**

@@ -500,11 +500,24 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
     public void testIterator() throws InterruptedException {
         LinkedTransferQueue q = populatedQueue(SIZE);
         Iterator it = q.iterator();
-        int i = 0;
-        while (it.hasNext()) {
-            assertEquals(it.next(), i++);
-        }
+        int i;
+        for (i = 0; it.hasNext(); i++)
+            assertTrue(q.contains(it.next()));
         assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+
+        it = q.iterator();
+        for (i = 0; it.hasNext(); i++)
+            assertEquals(it.next(), q.take());
+        assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+    }
+
+    /**
+     * iterator of empty collection has no elements
+     */
+    public void testEmptyIterator() {
+        assertIteratorExhausted(new LinkedTransferQueue().iterator());
     }
 
     /**

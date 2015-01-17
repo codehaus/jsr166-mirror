@@ -428,27 +428,19 @@ public class TreeSubSetTest extends JSR166TestCase {
      */
     public void testIterator() {
         NavigableSet q = populatedSet(SIZE);
-        int i = 0;
         Iterator it = q.iterator();
-        while (it.hasNext()) {
+        int i;
+        for (i = 0; it.hasNext(); i++)
             assertTrue(q.contains(it.next()));
-            ++i;
-        }
         assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
     }
 
     /**
      * iterator of empty set has no elements
      */
     public void testEmptyIterator() {
-        NavigableSet q = set0();
-        int i = 0;
-        Iterator it = q.iterator();
-        while (it.hasNext()) {
-            assertTrue(q.contains(it.next()));
-            ++i;
-        }
-        assertEquals(0, i);
+        assertIteratorExhausted(set0().iterator());
     }
 
     /**

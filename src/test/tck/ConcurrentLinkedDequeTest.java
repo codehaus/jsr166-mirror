@@ -696,13 +696,21 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
      */
     public void testIterator() {
         ConcurrentLinkedDeque q = populatedDeque(SIZE);
-        int i = 0;
         Iterator it = q.iterator();
-        while (it.hasNext()) {
+        int i;
+        for (i = 0; it.hasNext(); i++)
             assertTrue(q.contains(it.next()));
-            ++i;
-        }
         assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+    }
+
+    /**
+     * iterator of empty collection has no elements
+     */
+    public void testEmptyIterator() {
+        Deque c = new ConcurrentLinkedDeque();
+        assertIteratorExhausted(c.iterator());
+        assertIteratorExhausted(c.descendingIterator());
     }
 
     /**

@@ -654,33 +654,24 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         /**
-         * Moves to next valid node and returns item to return for
-         * next(), or null if no such.
+         * Moves to next valid node.
          */
-        private E advance() {
+        private void advance() {
             lastRet = nextNode;
-            E x = nextItem;
 
-            Node<E> pred, p;
-            if (nextNode == null) {
-                p = first();
-                pred = null;
-            } else {
-                pred = nextNode;
-                p = succ(nextNode);
-            }
+            final Node<E> pred = nextNode;
 
-            for (;;) {
+            for (Node<E> p = (pred == null) ? first() : succ(pred);;) {
                 if (p == null) {
                     nextNode = null;
                     nextItem = null;
-                    return x;
+                    break;
                 }
                 E item = p.item;
                 if (item != null) {
                     nextNode = p;
                     nextItem = item;
-                    return x;
+                    break;
                 } else {
                     // skip over nulls
                     Node<E> next = succ(p);
@@ -696,8 +687,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         public E next() {
-            if (nextNode == null) throw new NoSuchElementException();
-            return advance();
+            E x = nextItem;
+            if (x == null) throw new NoSuchElementException();
+            advance();
+            return x;
         }
 
         public void remove() {

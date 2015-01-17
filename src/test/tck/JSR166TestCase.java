@@ -1476,5 +1476,5 @@ public class JSR166TestCase extends TestCase {
             shouldThrow();
         } catch (NoSuchElementException success) {}
         assertFalse(it.hasNext());
-    }        
+    }
 }

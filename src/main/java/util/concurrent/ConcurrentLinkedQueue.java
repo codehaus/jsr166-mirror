@@ -256,6 +256,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * as sentinel for succ(), below.
      */
     final void updateHead(Node<E> h, Node<E> p) {
+        // assert h != null && p != null && (h == p || h.item == null);
         if (h != p && casHead(h, p))
             lazySetNext(h, h);
     }

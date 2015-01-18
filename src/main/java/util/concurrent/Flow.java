@@ -24,8 +24,81 @@ import java.util.stream.Stream;
  * specification. (<b>Preliminary release note:</b> This spec is
  * not yet finalized, so minor details could change.)
  *
- * <p><b>Preliminary release note:</b> This class may later include
- * methods supporting periodic events and/or async IO.
+ * <p><b>Examples.</b> A {@link Publisher} usually defines its own
+ * {@link Subscription} implementation; constructing one in method
+ * {@code subscribe} and issuing it to the calling {@link
+ * Subscriber}. It publishes items to the subscriber asynchronously,
+ * normally using an {@link Executor}.  For example, here is a very
+ * simple publisher that only issues (when requested) a single {@code
+ * TRUE} item to each subscriber, then completes.  Because each
+ * subscriber receives only the same single item, this class does not
+ * need the buffering and ordering control required in most
+ * implementations.
+ *
+ * <pre> {@code
+ * class OneShotPublisher implements Publisher<Boolean> {
+ *   final Executor executor = Executors.newSingleThreadExecutor();
+ *   public void subscribe(Subscriber<? super Boolean> subscriber) {
+ *       subscriber.onSubscribe(new OneShotSubscription(subscriber));
+ *   }
+ *   static class OneShotSubscription implements Subscription {
+ *     final Subscriber<? super Boolean> subscriber;
+ *     final Executor executor;
+ *     boolean completed;
+ *     OneShotSubscription(Subscriber<? super Boolean> subscriber,
+ *                         Executor executor) {
+ *       this.subscriber = subscriber;
+ *       this.executor = executor;
+ *     }
+ *     public synchronized void request(long n) {
+ *       if (n > 0 && !completed) {
+ *         completed = true;
+ *         executor.execute(() -> {
+ *                   subscriber.onNext(Boolean.TRUE);
+ *                   subscriber.onComplete();
+ *               });
+ *       }
+ *       else if (n < 0) {
+ *         completed = true;
+ *         subscriber.onError(new IllegalArgumentException());
+         }
+ *     }
+ *     public synchronized void cancel() { completed = true; }
+ *   }
+ * }}</pre>
+ *
+ * <p> A {@link Subscriber} arranges that items be requested and
+ * processed.  Items (invocations of {@link Subscriber#onNext}) are
+ * not issued unless requested, but multiple items may be requested.
+ * Many Subscriber implementations can arrange this in the style of
+ * the following example, where a buffer size of 1 single-steps, and
+ * larger sizes usually allow for more efficient overlapped processing
+ * with less communication; for example with a value of 64, this keeps
+ * total outstanding requests between 32 and 64.  (See also {@link
+ * #consume(long, Publisher, Consumer)} that automates a common case.)
+ *
+ * <pre> {@code
+ * class SampleSubscriber<T> implements Subscriber<T> {
+ *   final Consumer<? super T> consumer;
+ *   Subscription subscription;
+ *   final long bufferSize;
+ *   long count;
+ *   SampleSubscriber(long bufferSize, Consumer<? super T> consumer) {
+ *     this.bufferSize = bufferSize;
+ *     this.consumer = consumer;
+ *   }
+ *   public void onSubscribe(Subscription subscription) {
+ *     (this.subscription = subscription).request(bufferSize);
+ *     count = bufferSize - bufferSize / 2; // re-request when half consumed
+ *   }
+ *   public void onNext(T item) {
+ *     if (--count <= 0)
+ *       subscription.request(count = bufferSize - bufferSize / 2);
+ *     consumer.accept(item);
+ *   }
+ *   public void onError(Throwable ex) { ex.printStackTrace(); }
+ *   public void onComplete() {}
+ * }}</pre>
  *
  * @author Doug Lea
  * @since 1.9
@@ -72,37 +145,6 @@ public final class Flow {
      * A receiver of messages.  The methods in this interface must be
      * invoked sequentially by each Subscription, so are not required
      * to be thread-safe unless subscribing to multiple publishers.
-     *
-     * <p>Items (invocations of {@link #onNext}) are not issued unless
-     * requested, but multiple items may be requested.  Many
-     * Subscriber implementations can arrange this in the style of the
-     * following example, where a request size of 1 single-steps, and
-     * larger sizes (for example 64) usually allow for more efficient
-     * overlapped processing.  (See also {@link #consume(long, Publisher,
-     * Consumer)} that automates a common case.)
-     *
-     * <pre> {@code
-     * class SampleSubscriber<T> implements Subscriber<T> {
-     *   final Consumer<? super T> consumer;
-     *   Subscription subscription;
-     *   final long requestSize;
-     *   long count;
-     *   SampleSubscriber(long requestSize, Consumer<? super T> consumer) {
-     *     this.requestSize = requestSize;
-     *     this.consumer = consumer;
-     *   }
-     *   public void onSubscribe(Subscription subscription) {
-     *     count = requestSize / 2; // re-request when half consumed
-     *     (this.subscription = subscription).request(requestSize);
-     *   }
-     *   public void onNext(T item) {
-     *     if (--count <= 0)
-     *       subscription.request(count = requestSize);
-     *     consumer.accept(item);
-     *   }
-     *   public void onError(Throwable ex) { ex.printStackTrace(); }
-     *   public void onComplete() {}
-     * }}</pre>
      *
      * @param <T> the subscribed item type
      */
@@ -189,52 +231,42 @@ public final class Flow {
 
     // Support for static methods
 
-    static final long DEFAULT_REQUEST_SIZE = 64L;
+    static final long DEFAULT_BUFFER_SIZE = 64L;
 
     abstract static class CompletableSubscriber<T,U> implements Subscriber<T>,
                                                                 Consumer<T> {
         final CompletableFuture<U> status;
         Subscription subscription;
-        final long requestSize;
+        long requestSize;
         long count;
-        CompletableSubscriber(long requestSize,
-                              CompletableFuture<U> status) {
+        CompletableSubscriber(long bufferSize, CompletableFuture<U> status) {
             this.status = status;
-            this.requestSize = requestSize;
-            this.count = requestSize >>> 1;
+            this.requestSize = bufferSize;
         }
         public final void onSubscribe(Subscription subscription) {
             (this.subscription = subscription).request(requestSize);
-            status.exceptionally(ex -> { subscription.cancel(); return null;});
+            count = requestSize -= (requestSize >>> 1);
         }
         public final void onError(Throwable ex) {
-            if (ex == null)
-                ex = new IllegalStateException("null onError argument");
             status.completeExceptionally(ex);
         }
         public void onNext(T item) {
-            Subscription s = subscription;
-            if (s == null)
-                status.completeExceptionally(
-                    new IllegalStateException("onNext without subscription"));
-            else {
-                try {
-                    if (--count <= 0)
-                        s.request(count = requestSize);
-                    accept(item);
-                } catch (Throwable ex) {
-                    status.completeExceptionally(ex);
-                }
+            try {
+                if (--count <= 0)
+                    subscription.request(count = requestSize);
+                accept(item);
+            } catch (Throwable ex) {
+                status.completeExceptionally(ex);
             }
         }
     }
 
     static final class ConsumeSubscriber<T> extends CompletableSubscriber<T,Void> {
         final Consumer<? super T> consumer;
-        ConsumeSubscriber(long requestSize,
+        ConsumeSubscriber(long bufferSize,
                           CompletableFuture<Void> status,
                           Consumer<? super T> consumer) {
-            super(requestSize, status);
+            super(bufferSize, status);
             this.consumer = consumer;
         }
         public void accept(T item) { consumer.accept(item); }
@@ -244,37 +276,37 @@ public final class Flow {
     /**
      * Creates and subscribes a Subscriber that consumes all items
      * from the given publisher using the given Consumer function, and
-     * using the given requestSize for buffering. Returns a
+     * using the given bufferSize for buffering. Returns a
      * CompletableFuture that is completed normally when the publisher
      * signals onComplete, or completed exceptionally upon any error,
      * including an exception thrown by the Consumer (in which case
      * the subscription is cancelled if not already terminated).
      *
      * @param <T> the published item type
-     * @param requestSize the request size for subscriptions
+     * @param bufferSize the request size for subscriptions
      * @param publisher the publisher
      * @param consumer the function applied to each onNext item
      * @return a CompletableFuture that is completed normally
      * when the publisher signals onComplete, and exceptionally
      * upon any error
      * @throws NullPointerException if publisher or consumer are null
-     * @throws IllegalArgumentException if requestSize not positive
+     * @throws IllegalArgumentException if bufferSize not positive
      */
     public static <T> CompletableFuture<Void> consume(
-        long requestSize, Publisher<T> publisher, Consumer<? super T> consumer) {
-        if (requestSize <= 0L)
-            throw new IllegalArgumentException("requestSize must be positive");
+        long bufferSize, Publisher<T> publisher, Consumer<? super T> consumer) {
+        if (bufferSize <= 0L)
+            throw new IllegalArgumentException("bufferSize must be positive");
         if (publisher == null || consumer == null)
             throw new NullPointerException();
         CompletableFuture<Void> status = new CompletableFuture<>();
         publisher.subscribe(new ConsumeSubscriber<T>(
-                                requestSize, status, consumer));
+                                bufferSize, status, consumer));
         return status;
     }
 
     /**
      * Equivalent to {@link #consume(long, Publisher, Consumer)}
-     * with a request size of 64.
+     * with a buffer size of 64.
      *
      * @param <T> the published item type
      * @param publisher the publisher
@@ -286,7 +318,7 @@ public final class Flow {
      */
     public static <T> CompletableFuture<Void> consume(
         Publisher<T> publisher, Consumer<? super T> consumer) {
-        return consume(DEFAULT_REQUEST_SIZE, publisher, consumer);
+        return consume(DEFAULT_BUFFER_SIZE, publisher, consumer);
     }
 
     /**
@@ -296,10 +328,10 @@ public final class Flow {
     static final class StreamSubscriber<T,R> extends CompletableSubscriber<T,R> {
         final Function<? super Stream<T>, ? extends R> fn;
         final ArrayList<T> items;
-        StreamSubscriber(long requestSize,
+        StreamSubscriber(long bufferSize,
                          CompletableFuture<R> status,
                          Function<? super Stream<T>, ? extends R> fn) {
-            super(requestSize, status);
+            super(bufferSize, status);
             this.fn = fn;
             this.items = new ArrayList<T>();
         }
@@ -309,7 +341,7 @@ public final class Flow {
 
     /**
      * Creates and subscribes a Subscriber that applies the given
-     * stream operation to items, and uses the given requestSize for
+     * stream operation to items, and uses the given bufferSize for
      * buffering. Returns a CompletableFuture that is completed
      * normally with the result of this function when the publisher
      * signals onComplete, or is completed exceptionally upon any
@@ -321,31 +353,31 @@ public final class Flow {
      *
      * @param <T> the published item type
      * @param <R> the result type of the stream function
-     * @param requestSize the request size for subscriptions
+     * @param bufferSize the request size for subscriptions
      * @param publisher the publisher
      * @param streamFunction the operation on elements
      * @return a CompletableFuture that is completed normally with the
      * result of the given function as result when the publisher signals
      * onComplete, and exceptionally upon any error
      * @throws NullPointerException if publisher or function are null
-     * @throws IllegalArgumentException if requestSize not positive
+     * @throws IllegalArgumentException if bufferSize not positive
      */
     public static <T,R> CompletableFuture<R> stream(
-        long requestSize, Publisher<T> publisher,
+        long bufferSize, Publisher<T> publisher,
         Function<? super Stream<T>, ? extends R> streamFunction) {
-        if (requestSize <= 0L)
-            throw new IllegalArgumentException("requestSize must be positive");
+        if (bufferSize <= 0L)
+            throw new IllegalArgumentException("bufferSize must be positive");
         if (publisher == null || streamFunction == null)
             throw new NullPointerException();
         CompletableFuture<R> status = new CompletableFuture<>();
         publisher.subscribe(new StreamSubscriber<T,R>(
-                                requestSize, status, streamFunction));
+                                bufferSize, status, streamFunction));
         return status;
     }
 
     /**
      * Equivalent to {@link #stream(long, Publisher, Function)}
-     * with a request size of 64.
+     * with a buffer size of 64.
      *
      * @param <T> the published item type
      * @param <R> the result type of the stream function
@@ -359,6 +391,7 @@ public final class Flow {
     public static <T,R> CompletableFuture<R> stream(
         Publisher<T> publisher,
         Function<? super Stream<T>,? extends R> streamFunction) {
-        return stream(DEFAULT_REQUEST_SIZE, publisher, streamFunction);
+        return stream(DEFAULT_BUFFER_SIZE, publisher, streamFunction);
     }
+
 }

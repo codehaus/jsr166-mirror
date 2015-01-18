@@ -100,6 +100,21 @@ import java.util.stream.Stream;
  *   public void onComplete() {}
  * }}</pre>
  *
+ * <p>If there is no chance that a publisher will produce elements
+ * faster than they can be consumed, a subscriber may initially
+ * request an effectively unbounded number of items, as in:
+ *
+ * <pre> {@code
+ * class UnboundedSubscriber<T> implements Subscriber<T> {
+ *   public void onSubscribe(Subscription subscription) {
+ *     subscription.request(Long.MAX_VALUE); // effectively unbounded
+ *   }
+ *   public void onNext(T item) { use(item); }
+ *   public void onError(Throwable ex) { ex.printStackTrace(); }
+ *   public void onComplete() {}
+ *   void use(T item) { ... }
+ * }}</pre>
+
  * @author Doug Lea
  * @since 1.9
  */

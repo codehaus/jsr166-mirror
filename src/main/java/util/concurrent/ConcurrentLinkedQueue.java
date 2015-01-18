@@ -187,7 +187,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * - it is permitted for tail to lag behind head, that is, for tail
      *   to not be reachable from head!
      */
-    private transient volatile Node<E> head;
+    transient volatile Node<E> head;
 
     /**
      * A node from which the last node on list (that is, the unique
@@ -651,35 +651,22 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         private Node<E> lastRet;
 
         Itr() {
-            advance();
-        }
-
-        /**
-         * Moves to next valid node.
-         */
-        private void advance() {
-            lastRet = nextNode;
-
-            final Node<E> pred = nextNode;
-
-            for (Node<E> p = (pred == null) ? first() : succ(pred);;) {
-                if (p == null) {
-                    nextNode = null;
-                    nextItem = null;
-                    break;
+            restartFromHead: for (;;) {
+                Node<E> h, p, q;
+                for (p = h = head;; p = q) {
+                    E item;
+                    if ((item = p.item) != null) {
+                        nextNode = p;
+                        nextItem = item;
+                        break;
+                    }
+                    else if ((q = p.next) == null)
+                        break;
+                    else if (p == q)
+                        continue restartFromHead;
                 }
-                E item = p.item;
-                if (item != null) {
-                    nextNode = p;
-                    nextItem = item;
-                    break;
-                } else {
-                    // skip over nulls
-                    Node<E> next = succ(p);
-                    if (pred != null && next != null)
-                        casNext(pred, p, next);
-                    p = next;
-                }
+                updateHead(h, p);
+                return;
             }
         }
 
@@ -688,10 +675,23 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         public E next() {
-            E x = nextItem;
-            if (x == null) throw new NoSuchElementException();
-            advance();
-            return x;
+            final Node<E> pred = nextNode;
+            if (pred == null) throw new NoSuchElementException();
+            // assert nextItem != null;
+            lastRet = pred;
+            E item = null;
+
+            for (Node<E> p = succ(pred), q;; p = q) {
+                if (p == null || (item = p.item) != null) {
+                    nextNode = p;
+                    E x = nextItem;
+                    nextItem = item;
+                    return x;
+                }
+                // unlink deleted nodes
+                if ((q = succ(p)) != null)
+                    casNext(pred, p, q);
+            }
         }
 
         public void remove() {

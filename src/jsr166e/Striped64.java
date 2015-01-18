@@ -5,6 +5,7 @@
  */
 
 package jsr166e;
+
 import java.util.Random;
 
 /**

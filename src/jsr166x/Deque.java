@@ -5,6 +5,7 @@
  */
 
 package jsr166x;     // XXX This belongs in java.util!!! XXX
+
 import java.util.*;    // XXX This import goes away        XXX
 
 /**

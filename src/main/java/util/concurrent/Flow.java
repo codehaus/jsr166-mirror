@@ -39,7 +39,7 @@ import java.util.stream.Stream;
  * class OneShotPublisher implements Publisher<Boolean> {
  *   final Executor executor = Executors.newSingleThreadExecutor();
  *   public void subscribe(Subscriber<? super Boolean> subscriber) {
- *       subscriber.onSubscribe(new OneShotSubscription(subscriber));
+ *       subscriber.onSubscribe(new OneShotSubscription(subscriber, executor));
  *   }
  *   static class OneShotSubscription implements Subscription {
  *     final Subscriber<? super Boolean> subscriber;

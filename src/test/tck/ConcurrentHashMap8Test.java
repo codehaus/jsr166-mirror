@@ -419,11 +419,17 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
             assertTrue(it.hasNext());
             it.next();
         }
-        assertFalse(it.hasNext());
-        try {
-            it.next();
-            shouldThrow();
-        } catch (NoSuchElementException success) {}
+        assertIteratorExhausted(it);
+    }
+
+    /**
+     * iterator of empty collections has no elements
+     */
+    public void testEmptyIterator() {
+        assertIteratorExhausted(ConcurrentHashMap.newKeySet().iterator());
+        assertIteratorExhausted(new ConcurrentHashMap().entrySet().iterator());
+        assertIteratorExhausted(new ConcurrentHashMap().values().iterator());
+        assertIteratorExhausted(new ConcurrentHashMap().keySet().iterator());
     }
 
     /**

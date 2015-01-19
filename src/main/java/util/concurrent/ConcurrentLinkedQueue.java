@@ -187,7 +187,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * - it is permitted for tail to lag behind head, that is, for tail
      *   to not be reachable from head!
      */
-    private transient volatile Node<E> head;
+    transient volatile Node<E> head;
 
     /**
      * A node from which the last node on list (that is, the unique
@@ -256,6 +256,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * as sentinel for succ(), below.
      */
     final void updateHead(Node<E> h, Node<E> p) {
+        // assert h != null && p != null && (h == p || h.item == null);
         if (h != p && casHead(h, p))
             lazySetNext(h, h);
     }
@@ -447,18 +448,23 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     public boolean remove(Object o) {
         if (o != null) {
-            Node<E> pred = null;
-            for (Node<E> p = first(); p != null; p = succ(p)) {
+            Node<E> next, pred = null;
+            for (Node<E> p = first(); p != null; pred = p, p = next) {
+                boolean removed = false;
                 E item = p.item;
-                if (item != null &&
-                    o.equals(item) &&
-                    casItem(p, item, null)) {
-                    Node<E> next = succ(p);
-                    if (pred != null && next != null)
-                        casNext(pred, p, next);
-                    return true;
+                if (item != null) {
+                    if (!o.equals(item)) {
+                        next = succ(p);
+                        continue;
+                    }
+                    removed = casItem(p, item, null);
                 }
-                pred = p;
+
+                next = succ(p);
+                if (pred != null && next != null) // unlink
+                    casNext(pred, p, next);
+                if (removed)
+                    return true;
             }
         }
         return false;
@@ -645,54 +651,47 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         private Node<E> lastRet;
 
         Itr() {
-            advance();
-        }
-
-        /**
-         * Moves to next valid node and returns item to return for
-         * next(), or null if no such.
-         */
-        private E advance() {
-            lastRet = nextNode;
-            E x = nextItem;
-
-            Node<E> pred, p;
-            if (nextNode == null) {
-                p = first();
-                pred = null;
-            } else {
-                pred = nextNode;
-                p = succ(nextNode);
-            }
-
-            for (;;) {
-                if (p == null) {
-                    nextNode = null;
-                    nextItem = null;
-                    return x;
+            restartFromHead: for (;;) {
+                Node<E> h, p, q;
+                for (p = h = head;; p = q) {
+                    E item;
+                    if ((item = p.item) != null) {
+                        nextNode = p;
+                        nextItem = item;
+                        break;
+                    }
+                    else if ((q = p.next) == null)
+                        break;
+                    else if (p == q)
+                        continue restartFromHead;
                 }
-                E item = p.item;
-                if (item != null) {
-                    nextNode = p;
-                    nextItem = item;
-                    return x;
-                } else {
-                    // skip over nulls
-                    Node<E> next = succ(p);
-                    if (pred != null && next != null)
-                        casNext(pred, p, next);
-                    p = next;
-                }
+                updateHead(h, p);
+                return;
             }
         }
 
         public boolean hasNext() {
-            return nextNode != null;
+            return nextItem != null;
         }
 
         public E next() {
-            if (nextNode == null) throw new NoSuchElementException();
-            return advance();
+            final Node<E> pred = nextNode;
+            if (pred == null) throw new NoSuchElementException();
+            // assert nextItem != null;
+            lastRet = pred;
+            E item = null;
+
+            for (Node<E> p = succ(pred), q;; p = q) {
+                if (p == null || (item = p.item) != null) {
+                    nextNode = p;
+                    E x = nextItem;
+                    nextItem = item;
+                    return x;
+                }
+                // unlink deleted nodes
+                if ((q = succ(p)) != null)
+                    casNext(pred, p, q);
+            }
         }
 
         public void remove() {

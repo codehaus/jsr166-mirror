@@ -434,13 +434,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testIterator()      { testIterator(false); }
     public void testIterator_fair() { testIterator(true); }
     public void testIterator(boolean fair) {
-        final SynchronousQueue q = new SynchronousQueue(fair);
-        Iterator it = q.iterator();
-        assertFalse(it.hasNext());
-        try {
-            Object x = it.next();
-            shouldThrow();
-        } catch (NoSuchElementException success) {}
+        assertIteratorExhausted(new SynchronousQueue(fair).iterator());
     }
 
     /**

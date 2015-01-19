@@ -6,7 +6,6 @@
 
 package jsr166e;
 
-
 /**
  * A thread managed by a {@link ForkJoinPool}, which executes
  * {@link ForkJoinTask}s.

@@ -419,7 +419,7 @@ public class Semaphore implements java.io.Serializable {
      * one of two things happens:
      * <ul>
      * <li>Some other thread invokes one of the {@link #release() release}
-     * methods for this semaphore, and the current thread is next to be assigned
+     * methods for this semaphore and the current thread is next to be assigned
      * permits and the number of available permits satisfies this request; or
      * <li>Some other thread {@linkplain Thread#interrupt interrupts}
      * the current thread.
@@ -452,14 +452,14 @@ public class Semaphore implements java.io.Serializable {
      *
      * <p>Acquires the given number of permits, if they are available,
      * and returns immediately, reducing the number of available permits
-     * by the given amount.This method has the same effect as the
+     * by the given amount. This method has the same effect as the
      * loop {@code for (int i = 0; i < permits; ++i) acquireUninterruptibly();}
      * except that it atomically acquires the permits all at once:
      *
      * <p>If insufficient permits are available then the current thread becomes
      * disabled for thread scheduling purposes and lies dormant until
      * some other thread invokes one of the {@link #release() release}
-     * methods for this semaphore, the current thread is next to be assigned
+     * methods for this semaphore and the current thread is next to be assigned
      * permits and the number of available permits satisfies this request.
      *
      * <p>If the current thread is {@linkplain Thread#interrupt interrupted}
@@ -521,7 +521,7 @@ public class Semaphore implements java.io.Serializable {
      * purposes and lies dormant until one of three things happens:
      * <ul>
      * <li>Some other thread invokes one of the {@link #release() release}
-     * methods for this semaphore, the current thread is next to be assigned
+     * methods for this semaphore and the current thread is next to be assigned
      * permits and the number of available permits satisfies this request; or
      * <li>Some other thread {@linkplain Thread#interrupt interrupts}
      * the current thread; or

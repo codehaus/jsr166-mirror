@@ -478,27 +478,19 @@ public class TreeSetTest extends JSR166TestCase {
      */
     public void testIterator() {
         TreeSet q = populatedSet(SIZE);
-        int i = 0;
         Iterator it = q.iterator();
-        while (it.hasNext()) {
+        int i;
+        for (i = 0; it.hasNext(); i++)
             assertTrue(q.contains(it.next()));
-            ++i;
-        }
         assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
     }
 
     /**
      * iterator of empty set has no elements
      */
     public void testEmptyIterator() {
-        TreeSet q = new TreeSet();
-        int i = 0;
-        Iterator it = q.iterator();
-        while (it.hasNext()) {
-            assertTrue(q.contains(it.next()));
-            ++i;
-        }
-        assertEquals(0, i);
+        assertIteratorExhausted(new TreeSet().iterator());
     }
 
     /**

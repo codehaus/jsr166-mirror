@@ -1128,6 +1128,13 @@
 
   <target name="lint">
     <antcall target="dists">
+      <param name="build.javadoc.access" value="public"/>
+    </antcall>
+  </target>
+
+<!-- Generates all doclint warnings, even for private methods (rarely useful) -->
+  <target name="lint-private">
+    <antcall target="dist">
       <param name="build.javadoc.access" value="private"/>
     </antcall>
   </target>

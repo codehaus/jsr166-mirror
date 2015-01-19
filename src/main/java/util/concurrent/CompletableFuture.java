@@ -433,7 +433,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         abstract boolean isLive();
 
         public final void run()                { tryFire(ASYNC); }
-        public final boolean exec()            { tryFire(ASYNC); return true; }
+        public final boolean exec()            { tryFire(ASYNC); return false; }
         public final Void getRawResult()       { return null; }
         public final void setRawResult(Void v) {}
     }
@@ -2496,6 +2496,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @since 1.9
      */
     public CompletableFuture<T> orTimeout(long timeout, TimeUnit unit) {
+        if (unit == null)
+            throw new NullPointerException();
         if (result == null)
             whenComplete(new Canceller(Delayer.delay(new Timeout(this),
                                                      timeout, unit)));
@@ -2516,6 +2518,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      */
     public CompletableFuture<T> completeOnTimeout(T value, long timeout,
                                                   TimeUnit unit) {
+        if (unit == null)
+            throw new NullPointerException();
         if (result == null)
             whenComplete(new Canceller(Delayer.delay(
                                            new DelayedCompleter<T>(this, value),
@@ -2602,7 +2606,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * Singleton delay scheduler, used only for starting and
      * cancelling tasks.
      */
-    static final class Delayer extends ScheduledThreadPoolExecutor {
+    static final class Delayer {
+        static ScheduledFuture<?> delay(Runnable command, long delay,
+                                        TimeUnit unit) {
+            return delayer.schedule(command, delay, unit);
+        }
+
         static final class DaemonThreadFactory implements ThreadFactory {
             public Thread newThread(Runnable r) {
                 Thread t = new Thread(r);
@@ -2611,16 +2620,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 return t;
             }
         }
-        Delayer() {
-            super(1, new DaemonThreadFactory());
-            setRemoveOnCancelPolicy(true);
-        }
-        static final Delayer instance = new Delayer();
 
-        public static ScheduledFuture<?> delay(Runnable command,
-                                               long delay,
-                                               TimeUnit unit) {
-            return instance.schedule(command, delay, unit);
+        static final ScheduledThreadPoolExecutor delayer;
+        static {
+            (delayer = new ScheduledThreadPoolExecutor(
+                1, new DaemonThreadFactory())).
+                setRemoveOnCancelPolicy(true);
         }
     }
 

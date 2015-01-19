@@ -772,34 +772,26 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             return current != null;
         }
 
-        /**
-         * Returns the next live successor of p, or null if no such.
-         *
-         * Unlike other traversal methods, iterators need to handle both:
-         * - dequeued nodes (p.next == p)
-         * - (possibly multiple) interior removed nodes (p.item == null)
-         */
-        private Node<E> nextNode(Node<E> p) {
-            for (;;) {
-                Node<E> s = p.next;
-                if (s == p)
-                    return head.next;
-                if (s == null || s.item != null)
-                    return s;
-                p = s;
-            }
-        }
-
         public E next() {
             fullyLock();
             try {
                 if (current == null)
                     throw new NoSuchElementException();
-                E x = currentElement;
                 lastRet = current;
-                current = nextNode(current);
-                currentElement = (current == null) ? null : current.item;
-                return x;
+                E item = null;
+                // Unlike other traversal methods, iterators must handle both:
+                // - dequeued nodes (p.next == p)
+                // - (possibly multiple) interior removed nodes (p.item == null)
+                for (Node<E> p = current, q;; p = q) {
+                    if ((q = p.next) == p)
+                        q = head.next;
+                    if (q == null || (item = q.item) != null) {
+                        current = q;
+                        E x = currentElement;
+                        currentElement = item;
+                        return x;
+                    }
+                }
             } finally {
                 fullyUnlock();
             }

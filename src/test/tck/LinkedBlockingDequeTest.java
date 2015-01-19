@@ -1518,9 +1518,26 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
     public void testIterator() throws InterruptedException {
         LinkedBlockingDeque q = populatedDeque(SIZE);
         Iterator it = q.iterator();
-        while (it.hasNext()) {
+        int i;
+        for (i = 0; it.hasNext(); i++)
+            assertTrue(q.contains(it.next()));
+        assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+
+        it = q.iterator();
+        for (i = 0; it.hasNext(); i++)
             assertEquals(it.next(), q.take());
-        }
+        assertEquals(i, SIZE);
+        assertIteratorExhausted(it);
+    }
+
+    /**
+     * iterator of empty collection has no elements
+     */
+    public void testEmptyIterator() {
+        Deque c = new LinkedBlockingDeque();
+        assertIteratorExhausted(c.iterator());
+        assertIteratorExhausted(c.descendingIterator());
     }
 
     /**

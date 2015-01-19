@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  *
  * <pre> {@code
  * class OneShotPublisher implements Publisher<Boolean> {
- *   final Executor executor = ForkJoinPool.commonPool(); // daemon-based
+ *   final ExecutorService executor = ForkJoinPool.commonPool(); // daemon-based
  *   boolean subscribed = false; // true after first subscribe
  *   public synchronized void subscribe(Subscriber<? super Boolean> subscriber) {
  *     if (subscribed)
@@ -52,17 +52,18 @@ import java.util.stream.Stream;
  *   }
  *   static class OneShotSubscription implements Subscription {
  *     final Subscriber<? super Boolean> subscriber;
- *     final Executor executor;
+ *     final ExecutorService executor;
+ *     Future<?> future; // to allow cancellation
  *     boolean completed = false;
  *     OneShotSubscription(Subscriber<? super Boolean> subscriber,
- *                         Executor executor) {
+ *                         ExecutorService executor) {
  *       this.subscriber = subscriber;
  *       this.executor = executor;
  *     }
  *     public synchronized void request(long n) {
  *       if (n != 0 && !completed) {
  *         completed = true;
- *         executor.execute(() -> {
+ *         future = executor.submit(() -> {
  *           if (n < 0)
  *             subscriber.onError(new IllegalArgumentException());
  *           else {
@@ -72,7 +73,8 @@ import java.util.stream.Stream;
  *       }
  *     }
  *     public synchronized void cancel() {
- *       completed = true; // ineffective if task already started
+ *       completed = true;
+ *       if (future != null) future.cancel(false);
  *     }
  *   }
  * }}</pre>

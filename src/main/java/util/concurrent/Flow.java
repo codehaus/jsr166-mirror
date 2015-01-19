@@ -33,38 +33,43 @@ import java.util.stream.Stream;
  * Subscriber}. It publishes items to the subscriber asynchronously,
  * normally using an {@link Executor}.  For example, here is a very
  * simple publisher that only issues (when requested) a single {@code
- * TRUE} item to any subscriber.  Because each subscriber receives
- * only the same single item, this class does not use buffering and
- * ordering control required in most implementations (for example
- * {@link SubmissionPublisher}).
+ * TRUE} item to a single subscriber.  Because the subscriber receives
+ * only a single item, this class does not use buffering and ordering
+ * control required in most implementations (for example {@link
+ * SubmissionPublisher}).
  *
  * <pre> {@code
  * class OneShotPublisher implements Publisher<Boolean> {
  *   final Executor executor = ForkJoinPool.commonPool(); // daemon-based
- *   public void subscribe(Subscriber<? super Boolean> subscriber) {
+ *   boolean subscribed = false; // true after first subscribe
+ *   public synchronized void subscribe(Subscriber<? super Boolean> subscriber) {
+ *     if (subscribed)
+ *        subscriber.onError(new IllegalStateException()); // only one allowed
+ *     else {
+ *       subscribed = true;
  *       subscriber.onSubscribe(new OneShotSubscription(subscriber, executor));
+ *     }
  *   }
  *   static class OneShotSubscription implements Subscription {
  *     final Subscriber<? super Boolean> subscriber;
  *     final Executor executor;
- *     boolean completed;
+ *     boolean completed = false;
  *     OneShotSubscription(Subscriber<? super Boolean> subscriber,
  *                         Executor executor) {
  *       this.subscriber = subscriber;
  *       this.executor = executor;
  *     }
  *     public synchronized void request(long n) {
- *       if (n > 0 && !completed) {
+ *       if (n != 0 && !completed) {
  *         completed = true;
  *         executor.execute(() -> {
- *                   subscriber.onNext(Boolean.TRUE);
- *                   subscriber.onComplete();
- *               });
+ *           if (n < 0)
+ *             subscriber.onError(new IllegalArgumentException());
+ *           else {
+ *             subscriber.onNext(Boolean.TRUE);
+ *             subscriber.onComplete();
+ *           }});
  *       }
- *       else if (n < 0) {
- *         completed = true;
- *         subscriber.onError(new IllegalArgumentException());
-         }
  *     }
  *     public synchronized void cancel() {
  *       completed = true; // ineffective if task already started

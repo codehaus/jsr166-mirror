@@ -18,8 +18,8 @@ import java.util.function.Supplier;
  * to current subscribers until it is closed.  Each current subscriber
  * receives newly submitted items in the same order unless drops or
  * exceptions are encountered.  Using a SubmissionPublisher allows
- * item generators to act as Publishers, although without integrated
- * flow control.  Instead they rely on drop handling and/or blocking.
+ * item generators to act as Publishers relying on drop handling
+ * and/or blocking for flow control.
  *
  * <p>A SubmissionPublisher uses the {@link Executor} supplied in its
  * constructor for delivery to subscribers. The best choice of
@@ -43,8 +43,8 @@ import java.util.function.Supplier;
  * <p>Publication methods support different policies about what to do
  * when buffers are saturated. Method {@link #submit} blocks until
  * resources are available. This is simplest, but least
- * responsive. The {@code offer} methods may either immediately, or
- * with bounded timeout, drop items, but provide an opportunity to
+ * responsive. The {@code offer} methods may drop items (either
+ * immediately or with bounded timeout), but provide an opportunity to
  * interpose a handler and then retry.
  *
  * <p>If any Subscriber method throws an exception, its subscription
@@ -117,10 +117,10 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                                                AutoCloseable {
     /*
      * Most mechanics are handled by BufferedSubscription. This class
-     * mainly ensures sequentiality by using built-in synchronization
-     * locks across public methods. (Using built-in locks works well
-     * in the most typical case in which only one thread submits
-     * items).
+     * mainly tracks subscribers and ensures sequentiality, by using
+     * built-in synchronization locks across public methods. (Using
+     * built-in locks works well in the most typical case in which
+     * only one thread submits items).
      */
 
     // Ensuring that all arrays have power of two length
@@ -570,20 +570,29 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /**
-     * If the given subscription is managed by a SubmissionPublisher,
-     * returns an estimate of the number of items produced but not yet
-     * consumed; otherwise returns zero. This method is designed only
-     * for monitoring purposes, not for control.
+     * Returns an estimate of the number of buffered items (those
+     * produced but not consumed), summed across all current
+     * subscribers.
      *
-     * @param subscription the subscription
-     * @return the estimate, or zero if the subscription is of an
-     * unknown type
+     * @return the estimate
      */
-    public static int estimateAvailable(Flow.Subscription subscription) {
-        if (subscription instanceof BufferedSubscription)
-            return ((BufferedSubscription)subscription).estimateAvailable();
-        else
-            return 0;
+    public long estimateBuffered() {
+        long sum = 0L;
+        synchronized (this) {
+            BufferedSubscription<T> pred = null, next;
+            for (BufferedSubscription<T> b = clients; b != null; b = next) {
+                next = b.next;
+                if (b.ctl < 0) {
+                    if (pred == null)
+                        clients = next;
+                    else
+                        pred.next = next;
+                }
+                else
+                    sum += b.estimateBuffered();
+            }
+        }
+        return sum;
     }
 
     /**
@@ -605,8 +614,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      *
      * This class also serves as its own consumer task, consuming as
      * many items/signals as possible before terminating, at which
-     * point it is re-executed created when needed. (The dual Runnable
-     * and ForkJoinTask declaration saves overhead when executed by
+     * point it is re-executed when needed. (The dual Runnable and
+     * ForkJoinTask declaration saves overhead when executed by
      * ForkJoinPools, without impacting other kinds of Executors.)
      * Execution control is managed using the ACTIVE ctl bit. We
      * ensure that a task is active when consumable items (and
@@ -647,8 +656,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     static final class BufferedSubscription<T> extends ForkJoinTask<Void>
         implements Runnable, Flow.Subscription, ForkJoinPool.ManagedBlocker {
         // Order-sensitive field declarations
-        long timeout;                     // > 0 if timed wait
         volatile long demand;             // # unfilled requests
+        long timeout;                     // > 0 if timed wait
         final int minCapacity;            // initial buffer size
         int maxCapacity;                  // reduced on OOME
         int putStat;                      // offer result for ManagedBlocker
@@ -884,7 +893,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                                        "negative subscription request"));
         }
 
-        final int estimateAvailable() {
+        final int estimateBuffered() {
             int n;
             return (ctl >= 0 && (n = tail - head) > 0) ? n : 0;
         }

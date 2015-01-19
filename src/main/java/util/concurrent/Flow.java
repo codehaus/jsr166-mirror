@@ -67,7 +67,7 @@ import java.util.stream.Stream;
  *   }
  * }}</pre>
  *
- * <p> A {@link Subscriber} arranges that items be requested and
+ * <p>A {@link Subscriber} arranges that items be requested and
  * processed.  Items (invocations of {@link Subscriber#onNext}) are
  * not issued unless requested, but multiple items may be requested.
  * Many Subscriber implementations can arrange this in the style of
@@ -114,7 +114,7 @@ import java.util.stream.Stream;
  *   public void onComplete() {}
  *   void use(T item) { ... }
  * }}</pre>
-
+ *
  * @author Doug Lea
  * @since 1.9
  */

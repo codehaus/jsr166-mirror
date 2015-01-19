@@ -34,13 +34,13 @@ import java.util.stream.Stream;
  * normally using an {@link Executor}.  For example, here is a very
  * simple publisher that only issues (when requested) a single {@code
  * TRUE} item to any subscriber.  Because each subscriber receives
- * only the same single item, this class does not need the buffering
- * and ordering control required in most implementations (for
- * example {@link SubmissionPublisher}).
+ * only the same single item, this class does not use buffering and
+ * ordering control required in most implementations (for example
+ * {@link SubmissionPublisher}).
  *
  * <pre> {@code
  * class OneShotPublisher implements Publisher<Boolean> {
- *   final Executor executor = Executors.newSingleThreadExecutor();
+ *   final Executor executor = ForkJoinPool.commonPool(); // daemon-based
  *   public void subscribe(Subscriber<? super Boolean> subscriber) {
  *       subscriber.onSubscribe(new OneShotSubscription(subscriber, executor));
  *   }
@@ -66,7 +66,9 @@ import java.util.stream.Stream;
  *         subscriber.onError(new IllegalArgumentException());
          }
  *     }
- *     public synchronized void cancel() { completed = true; }
+ *     public synchronized void cancel() {
+ *       completed = true; // ineffective if task already started
+ *     }
  *   }
  * }}</pre>
  *
@@ -134,20 +136,20 @@ public final class Flow {
      * Subscribers.  Each current {@link Subscriber} receives the same
      * items (via method {@code onNext}) in the same order, unless
      * drops or errors are encountered. If a Publisher encounters an
-     * error that does not allow further items to be issued to a
-     * Subscriber, that Subscriber receives {@code onError}, and then
-     * receives no further messages.  Otherwise, if it is known that
-     * no further items will be produced, each Subscriber receives
-     * {@code onComplete}.  Publishers ensure that Subscriber method
+     * error that does not allow items to be issued to a Subscriber,
+     * that Subscriber receives {@code onError}, and then receives no
+     * further messages.  Otherwise, when it is known that no further
+     * messages will be issued to it, a subscriber receives {@code
+     * onComplete}.  Publishers ensure that Subscriber method
      * invocations for each subscription are strictly ordered in <a
      * href="package-summary.html#MemoryVisibility"><i>happens-before</i></a>
      * order.
      *
-     * <p>Publishers may vary in policy about whether drops
-     * (failures to issue an item because of resource limitations) are
-     * treated as errors.  Publishers may also vary about whether
-     * Subscribers receive items that were produced or available
-     * before they subscribed.
+     * <p>Publishers may vary in policy about whether drops (failures
+     * to issue an item because of resource limitations) are treated
+     * as unrecoverable errors.  Publishers may also vary about
+     * whether Subscribers receive items that were produced or
+     * available before they subscribed.
      *
      * @param <T> the published item type
      */
@@ -184,9 +186,8 @@ public final class Flow {
          * an exception, resulting behavior is not guaranteed, but may
          * cause the Subscription to be cancelled.
          *
-         * <p>Typically, implementations of this method invoke the
-         * subscription's {@code request} method to enable receiving
-         * items.
+         * <p>Typically, implementations of this method invoke {@code
+         * subscription.request} to enable receiving items.
          *
          * @param subscription a new subscription
          */
@@ -213,11 +214,11 @@ public final class Flow {
         public void onError(Throwable throwable);
 
         /**
-         * Method invoked when it is known that no additional {@code
-         * onNext} invocations will occur for a Subscription that is
-         * not already terminated by error, after which no other
-         * Subscriber methods are invoked by the Subscription.  If
-         * this method throws an exception, resulting behavior is
+         * Method invoked when it is known that no additional
+         * Subscriber method invocations will occur for a Subscription
+         * that is not already terminated by error, after which no
+         * other Subscriber methods are invoked by the Subscription.
+         * If this method throws an exception, resulting behavior is
          * undefined.
          */
         public void onComplete();
@@ -247,8 +248,10 @@ public final class Flow {
 
         /**
          * Causes the Subscriber to (eventually) stop receiving
-         * messages.  Implementation is best-effort -- one or more
-         * messages may be received after invoking this method.
+         * messages.  Implementation is best-effort -- additional
+         * messages may be received after invoking this method.  A
+         * cancelled subscription need not ever receive an {@code
+         * onComplete} signal.
          */
         public void cancel();
     }
@@ -426,5 +429,4 @@ public final class Flow {
         Function<? super Stream<T>,? extends R> streamFunction) {
         return stream(DEFAULT_BUFFER_SIZE, publisher, streamFunction);
     }
-
 }

@@ -40,6 +40,10 @@ import java.util.function.Supplier;
  * rates, resources, and usages, that usually benefit from empirical
  * testing.  As first guesses, consider initial 8 and maximum 1024.
  *
+ * <p>An overloaded version of method {@code subscribe} allows
+ * subscribers to override executor and buffer parameters for
+ * a new subscription.
+ *
  * <p>Publication methods support different policies about what to do
  * when buffers are saturated. Method {@link #submit} blocks until
  * resources are available. This is simplest, but least
@@ -180,6 +184,18 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     public SubmissionPublisher(Executor executor,
                                int initialBufferCapacity,
                                int maxBufferCapacity) {
+        checkSubscriptionParams(executor, initialBufferCapacity,
+                                maxBufferCapacity);
+        int minc = roundCapacity(initialBufferCapacity);
+        int maxc = roundCapacity(maxBufferCapacity);
+        this.executor = executor;
+        this.minBufferCapacity = minc;
+        this.maxBufferCapacity = maxc;
+    }
+
+    static void checkSubscriptionParams(Executor executor,
+                                        int initialBufferCapacity,
+                                        int maxBufferCapacity) {
         if (executor == null)
             throw new NullPointerException();
         if (initialBufferCapacity <= 0 || maxBufferCapacity <= 0)
@@ -188,32 +204,13 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             throw new IllegalArgumentException("capacity exceeds limit");
         if (initialBufferCapacity > maxBufferCapacity)
             throw new IllegalArgumentException("initial cannot exceed max capacity");
-        int minc = roundCapacity(initialBufferCapacity);
-        int maxc = roundCapacity(maxBufferCapacity);
-        this.executor = executor;
-        this.minBufferCapacity = minc;
-        this.maxBufferCapacity = maxc;
     }
 
     /**
-     * Adds the given Subscriber unless already subscribed.  If
-     * already subscribed, the Subscriber's onError method is invoked
-     * with an IllegalStateException.  Otherwise, upon success, the
-     * Subscriber's onSubscribe method is invoked with a new
-     * Subscription (upon exception, the exception is rethrown and the
-     * Subscriber remains unsubscribed). If this SubmissionPublisher
-     * is closed, the subscriber's onComplete method is then invoked.
-     * Subscribers may enable receiving items by invoking the {@code
-     * request} method of the new Subscription, and may unsubscribe by
-     * invoking its cancel method.
-     *
-     * @param subscriber the subscriber
-     * @throws NullPointerException if subscriber is null
+     * Implements Publisher.subscribe for given subscriber and subscription
      */
-    public void subscribe(Flow.Subscriber<? super T> subscriber) {
-        if (subscriber == null) throw new NullPointerException();
-        BufferedSubscription<T> sub = new BufferedSubscription<T>(
-            subscriber, executor, minBufferCapacity, maxBufferCapacity);
+    final void trySubscribe(Flow.Subscriber<? super T> subscriber,
+                            BufferedSubscription<T> sub) {
         boolean present = false, clsd;
         synchronized (this) {
             BufferedSubscription<T> pred = null, next;
@@ -247,6 +244,63 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             subscriber.onComplete();
         else if (present)
             subscriber.onError(new IllegalStateException("Already subscribed"));
+    }
+
+    /**
+     * Adds the given Subscriber unless already subscribed.  If
+     * already subscribed, the Subscriber's onError method is invoked
+     * with an IllegalStateException.  Otherwise, upon success, the
+     * Subscriber's onSubscribe method is invoked with a new
+     * Subscription (upon exception, the exception is rethrown and the
+     * Subscriber remains unsubscribed). If this SubmissionPublisher
+     * is closed, the subscriber's onComplete method is then invoked.
+     * Subscribers may enable receiving items by invoking the {@code
+     * request} method of the new Subscription, and may unsubscribe by
+     * invoking its cancel method.
+     *
+     * @param subscriber the subscriber
+     * @throws NullPointerException if subscriber is null
+     */
+    public void subscribe(Flow.Subscriber<? super T> subscriber) {
+        if (subscriber == null) throw new NullPointerException();
+        trySubscribe(subscriber,
+                     new BufferedSubscription<T>(subscriber, executor,
+                                                 minBufferCapacity,
+                                                 maxBufferCapacity));
+    }
+
+    /**
+     * Adds the given subscriber, with the same effects as {@link
+     * #subscribe(Flow.Subscriber)}, but overriding the
+     * executor and/or buffer capacities otherwise used by this
+     * Publisher.
+     *
+     * @param subscriber the subscriber
+     * @param executor the executor to use for async delivery,
+     * supporting creation of at least one independent thread
+     * @param initialBufferCapacity the initial capacity for each
+     * subscriber's buffer (the actual capacity may be rounded up to
+     * the nearest power of two)
+     * @param maxBufferCapacity the maximum capacity for each
+     * subscriber's buffer (the actual capacity may be rounded up to
+     * the nearest power of two)
+     * @throws NullPointerException if executor or subscriber are null
+     * @throws IllegalArgumentException if initialBufferCapacity is
+     * not positive or exceeds maxBufferCapacity, or maxBufferCapacity
+     * exceeds {@code 1<<30} (about 1 billion), the maximum bound for
+     * a power of two array size
+     */
+    public void subscribe(Flow.Subscriber<? super T> subscriber,
+                          Executor executor,
+                          int initialBufferCapacity,
+                          int maxBufferCapacity) {
+        if (subscriber == null) throw new NullPointerException();
+        checkSubscriptionParams(executor, initialBufferCapacity, maxBufferCapacity);
+        int minc = roundCapacity(initialBufferCapacity);
+        int maxc = roundCapacity(maxBufferCapacity);
+        trySubscribe(subscriber,
+                     new BufferedSubscription<T>(subscriber, executor,
+                                                 minc, maxc));
     }
 
     /**

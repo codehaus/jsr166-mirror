@@ -207,66 +207,22 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /**
-     * Implements Publisher.subscribe for given subscriber and subscription
-     */
-    final void trySubscribe(Flow.Subscriber<? super T> subscriber,
-                            BufferedSubscription<T> sub) {
-        boolean present = false, clsd;
-        synchronized (this) {
-            BufferedSubscription<T> pred = null, next;
-            if (!(clsd = closed)) {
-                for (BufferedSubscription<T> b = clients; b != null; b = next) {
-                    next = b.next;
-                    if (b.ctl < 0) { // disabled; remove
-                        if (pred == null)
-                            clients = next;
-                        else
-                            pred.next = next;
-                    }
-                    else if (subscriber == b.subscriber) {
-                        present = true;
-                        break;
-                    }
-                    pred = b;
-                }
-            }
-            if (!present) {
-                subscriber.onSubscribe(sub); // don't link on exception
-                if (!clsd) {
-                    if (pred == null)
-                        clients = sub;
-                    else
-                        pred.next = sub;
-                }
-            }
-        }
-        if (clsd)
-            subscriber.onComplete();
-        else if (present)
-            subscriber.onError(new IllegalStateException("Already subscribed"));
-    }
-
-    /**
      * Adds the given Subscriber unless already subscribed.  If
      * already subscribed, the Subscriber's onError method is invoked
      * with an IllegalStateException.  Otherwise, upon success, the
      * Subscriber's onSubscribe method is invoked with a new
-     * Subscription (upon exception, the exception is rethrown and the
-     * Subscriber remains unsubscribed). If this SubmissionPublisher
-     * is closed, the subscriber's onComplete method is then invoked.
-     * Subscribers may enable receiving items by invoking the {@code
-     * request} method of the new Subscription, and may unsubscribe by
-     * invoking its cancel method.
+     * Subscription (upon exception, the subscription is
+     * cancelled). If this SubmissionPublisher is closed, the
+     * subscriber's onComplete method is then invoked.  Subscribers
+     * may enable receiving items by invoking the {@code request}
+     * method of the new Subscription, and may unsubscribe by invoking
+     * its cancel method.
      *
      * @param subscriber the subscriber
      * @throws NullPointerException if subscriber is null
      */
     public void subscribe(Flow.Subscriber<? super T> subscriber) {
-        if (subscriber == null) throw new NullPointerException();
-        trySubscribe(subscriber,
-                     new BufferedSubscription<T>(subscriber, executor,
-                                                 minBufferCapacity,
-                                                 maxBufferCapacity));
+        doSubscribe(subscriber, executor, minBufferCapacity, maxBufferCapacity);
     }
 
     /**
@@ -294,13 +250,50 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                           Executor executor,
                           int initialBufferCapacity,
                           int maxBufferCapacity) {
-        if (subscriber == null) throw new NullPointerException();
         checkSubscriptionParams(executor, initialBufferCapacity, maxBufferCapacity);
-        int minc = roundCapacity(initialBufferCapacity);
-        int maxc = roundCapacity(maxBufferCapacity);
-        trySubscribe(subscriber,
-                     new BufferedSubscription<T>(subscriber, executor,
-                                                 minc, maxc));
+        doSubscribe(subscriber, executor,
+                    roundCapacity(initialBufferCapacity),
+                    roundCapacity(maxBufferCapacity));
+    }
+
+    /**
+     * Implements both forms of subscribe
+     */
+    final void doSubscribe(Flow.Subscriber<? super T> subscriber,
+                           Executor e, int minCap, int maxCap) {
+        if (subscriber == null) throw new NullPointerException();
+        BufferedSubscription<T> sbn =
+            new BufferedSubscription<T>(subscriber, e, minCap, maxCap);
+        boolean present = false;
+        synchronized (this) {
+            BufferedSubscription<T> pred = null, next;
+            for (BufferedSubscription<T> b = clients; ; b = next) {
+                if (b == null) {
+                    if (pred == null)
+                        clients = sbn;
+                    else
+                        pred.next = sbn;
+                    sbn.onSubscribe();
+                    if (closed)
+                        sbn.onComplete();
+                    break;
+                }
+                next = b.next;
+                if (b.isDisabled()) { // remove
+                    if (pred == null)
+                        clients = next;
+                    else
+                        pred.next = next;
+                }
+                else if (subscriber == b.subscriber) {
+                    present = true;
+                    break;
+                }
+                pred = b;
+            }
+        }
+        if (present)
+            subscriber.onError(new IllegalStateException("Already subscribed"));
     }
 
     /**
@@ -444,7 +437,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             for (BufferedSubscription<T> b = clients; b != null; b = next) {
                 int stat;
                 next = b.next;
-                if ((stat = b.timedOffer(item, nanos)) == 0 &&
+                if ((stat = b.offerNanos(item, nanos)) == 0 &&
                     onDrop != null && onDrop.test(b.subscriber, item))
                     stat = b.offer(item);
                 if (stat < 0) {
@@ -477,7 +470,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             }
             while (b != null) {
                 next = b.next;
-                b.close();
+                b.onComplete();
                 b = next;
             }
         }
@@ -503,7 +496,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             }
             while (b != null) {
                 next = b.next;
-                b.closeExceptionally(error);
+                b.onError(error);
                 b = next;
             }
         }
@@ -530,7 +523,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 BufferedSubscription<T> pred = null, next;
                 for (BufferedSubscription<T> b = clients; b != null; b = next) {
                     next = b.next;
-                    if (b.ctl < 0) {
+                    if (b.isDisabled()) {
                         if (pred == null)
                             clients = next;
                         else
@@ -584,7 +577,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             BufferedSubscription<T> pred = null, next;
             for (BufferedSubscription<T> b = clients; b != null; b = next) {
                 next = b.next;
-                if (b.ctl < 0) {
+                if (b.isDisabled()) {
                     if (pred == null)
                         clients = next;
                     else
@@ -609,7 +602,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 BufferedSubscription<T> pred = null, next;
                 for (BufferedSubscription<T> b = clients; b != null; b = next) {
                     next = b.next;
-                    if (b.ctl < 0) {
+                    if (b.isDisabled()) {
                         if (pred == null)
                             clients = next;
                         else
@@ -636,7 +629,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             BufferedSubscription<T> pred = null, next;
             for (BufferedSubscription<T> b = clients; b != null; b = next) {
                 next = b.next;
-                if (b.ctl < 0) {
+                if (b.isDisabled()) {
                     if (pred == null)
                         clients = next;
                     else
@@ -673,10 +666,10 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * ForkJoinPools, without impacting other kinds of Executors.)
      * Execution control is managed using the ACTIVE ctl bit. We
      * ensure that a task is active when consumable items (and
-     * usually, ERROR or COMPLETE signals) are present and there is
-     * demand (unfulfilled requests).  This is complicated on the
-     * creation side by the possibility of exceptions when trying to
-     * execute tasks. These eventually force DISABLED state, but
+     * usually, SUBSCRIBE, ERROR or COMPLETE signals) are present and
+     * there is demand (unfulfilled requests).  This is complicated on
+     * the creation side by the possibility of exceptions when trying
+     * to execute tasks. These eventually force DISABLED state, but
      * sometimes not directly. On the task side, termination (clearing
      * ACTIVE) may race with producers or request() calls, so in some
      * cases requires a re-check, re-activating if possible.
@@ -727,12 +720,13 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         BufferedSubscription<T> next;     // used only by publisher
 
         // ctl values
-        static final int ACTIVE   = 0x01;       // consumer task active
-        static final int ERROR    = 0x02;       // signal pending error
-        static final int COMPLETE = 0x04;       // signal completion when done
-        static final int DISABLED = 0x80000000; // must be negative
+        static final int ACTIVE    = 0x01;       // consumer task active
+        static final int ERROR     = 0x02;       // signal onError
+        static final int SUBSCRIBE = 0x04;       // signal onSubscribe
+        static final int COMPLETE  = 0x08;       // signal onComplete when done
+        static final int DISABLED  = 0x80000000; // must be negative
 
-        static final long INTERRUPTED = -1L;    // timeout vs interrupt sentinel
+        static final long INTERRUPTED = -1L;     // timeout vs interrupt sentinel
 
         BufferedSubscription(Flow.Subscriber<? super T> subscriber,
                              Executor executor, int minBufferCapacity,
@@ -741,6 +735,10 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             this.executor = executor;
             this.minCapacity = minBufferCapacity;
             this.maxCapacity = maxBufferCapacity;
+        }
+
+        final boolean isDisabled() {
+            return ctl < 0;
         }
 
         /**
@@ -838,40 +836,10 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         }
 
         /**
-         * Tries to start consumer task upon a signal or request;
-         * disables on failure.
+         * Issues error signal, asynchronously if a task is running,
+         * else synchronously
          */
-        final void startOrDisable() {
-            Executor e; // skip if already disabled
-            if ((e = executor) != null) {
-                try {
-                    e.execute(this);
-                } catch (Throwable ex) { // back out and force signal
-                    for (int c;;) {
-                        if ((c = ctl) < 0 || (c & ACTIVE) == 0)
-                            break;
-                        if (U.compareAndSwapInt(this, CTL, c, c & ~ACTIVE)) {
-                            closeExceptionally(ex);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        final void close() {
-            for (int c;;) {
-                if ((c = ctl) < 0)
-                    break;
-                if (U.compareAndSwapInt(this, CTL, c, c | (ACTIVE | COMPLETE))) {
-                    if ((c & ACTIVE) == 0)
-                        startOrDisable();
-                    break;
-                }
-            }
-        }
-
-        final void closeExceptionally(Throwable ex) {
+        final void onError(Throwable ex) {
             for (int c;;) {
                 if ((c = ctl) < 0)
                     break;
@@ -889,6 +857,52 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                         }
                     }
                     detach();
+                    break;
+                }
+            }
+        }
+
+        /**
+         * Tries to start consumer task upon a signal or request;
+         * disables on failure.
+         */
+        final void startOrDisable() {
+            Executor e; // skip if already disabled
+            if ((e = executor) != null) {
+                try {
+                    e.execute(this);
+                } catch (Throwable ex) { // back out and force signal
+                    for (int c;;) {
+                        if ((c = ctl) < 0 || (c & ACTIVE) == 0)
+                            break;
+                        if (U.compareAndSwapInt(this, CTL, c, c & ~ACTIVE)) {
+                            onError(ex);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        final void onComplete() {
+            for (int c;;) {
+                if ((c = ctl) < 0)
+                    break;
+                if (U.compareAndSwapInt(this, CTL, c, c | (ACTIVE | COMPLETE))) {
+                    if ((c & ACTIVE) == 0)
+                        startOrDisable();
+                    break;
+                }
+            }
+        }
+
+        final void onSubscribe() {
+            for (int c;;) {
+                if ((c = ctl) < 0)
+                    break;
+                if (U.compareAndSwapInt(this, CTL, c, c | (ACTIVE | SUBSCRIBE))) {
+                    if ((c & ACTIVE) == 0)
+                        startOrDisable();
                     break;
                 }
             }
@@ -943,8 +957,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 }
             }
             else if (n < 0L)
-                closeExceptionally(new IllegalArgumentException(
-                                       "negative subscription request"));
+                onError(new IllegalArgumentException(
+                            "negative subscription request"));
         }
 
         final int estimateBuffered() {
@@ -1010,7 +1024,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             return stat;
         }
 
-        final int timedOffer(T item, long nanos) {
+        final int offerNanos(T item, long nanos) {
             int stat;
             if ((stat = offer(item)) == 0 && (timeout = nanos) > 0L) {
                 putItem = item;
@@ -1050,6 +1064,15 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                             try {
                                 s.onError(ex);
                             } catch (Throwable ignore) {
+                            }
+                        }
+                    }
+                    else if ((c & SUBSCRIBE) != 0) {
+                        if (U.compareAndSwapInt(this, CTL, c, c & ~SUBSCRIBE)) {
+                            try {
+                                s.onSubscribe(this);
+                            } catch (Throwable ex) {
+                                ctl = DISABLED;
                             }
                         }
                     }

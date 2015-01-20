@@ -16,13 +16,16 @@ import java.util.stream.Stream;
  * flow-controlled components in which {@link Publisher Publishers}
  * produce items consumed by one or more {@link Subscriber
  * Subscribers}, each managed by a {@link Subscription
- * Subscription}. The use of flow control helps address common
- * resource issues in "push" based asynchronous systems.
+ * Subscription}.
  *
  * <p>These interfaces correspond to the <a
  * href="http://www.reactive-streams.org/"> reactive-streams</a>
- * specification. (<b>Preliminary release note:</b> This spec is
- * not yet finalized, so minor details could change.)
+ * specification.  They apply in both concurrent and distributed
+ * asynchronous settings: All (seven) methods are defined in {@code
+ * void} "oneway" message style. Communication relies on a simple form
+ * of flow control (method {@link Subscription#request}) that can be
+ * used to avoid resource management problems that may otherwise occur
+ * in "push" based systems.
  *
  * <p><b>Examples.</b> A {@link Publisher} usually defines its own
  * {@link Subscription} implementation; constructing one in method
@@ -30,40 +33,49 @@ import java.util.stream.Stream;
  * Subscriber}. It publishes items to the subscriber asynchronously,
  * normally using an {@link Executor}.  For example, here is a very
  * simple publisher that only issues (when requested) a single {@code
- * TRUE} item to each subscriber, then completes.  Because each
- * subscriber receives only the same single item, this class does not
- * need the buffering and ordering control required in most
- * implementations.
+ * TRUE} item to a single subscriber.  Because the subscriber receives
+ * only a single item, this class does not use buffering and ordering
+ * control required in most implementations (for example {@link
+ * SubmissionPublisher}).
  *
  * <pre> {@code
  * class OneShotPublisher implements Publisher<Boolean> {
- *   final Executor executor = Executors.newSingleThreadExecutor();
- *   public void subscribe(Subscriber<? super Boolean> subscriber) {
+ *   final ExecutorService executor = ForkJoinPool.commonPool(); // daemon-based
+ *   boolean subscribed = false; // true after first subscribe
+ *   public synchronized void subscribe(Subscriber<? super Boolean> subscriber) {
+ *     if (subscribed)
+ *        subscriber.onError(new IllegalStateException()); // only one allowed
+ *     else {
+ *       subscribed = true;
  *       subscriber.onSubscribe(new OneShotSubscription(subscriber, executor));
+ *     }
  *   }
  *   static class OneShotSubscription implements Subscription {
  *     final Subscriber<? super Boolean> subscriber;
- *     final Executor executor;
- *     boolean completed;
+ *     final ExecutorService executor;
+ *     Future<?> future; // to allow cancellation
+ *     boolean completed = false;
  *     OneShotSubscription(Subscriber<? super Boolean> subscriber,
- *                         Executor executor) {
+ *                         ExecutorService executor) {
  *       this.subscriber = subscriber;
  *       this.executor = executor;
  *     }
  *     public synchronized void request(long n) {
- *       if (n > 0 && !completed) {
+ *       if (n != 0 && !completed) {
  *         completed = true;
- *         executor.execute(() -> {
- *                   subscriber.onNext(Boolean.TRUE);
- *                   subscriber.onComplete();
- *               });
+ *         future = executor.submit(() -> {
+ *           if (n < 0)
+ *             subscriber.onError(new IllegalArgumentException());
+ *           else {
+ *             subscriber.onNext(Boolean.TRUE);
+ *             subscriber.onComplete();
+ *           }});
  *       }
- *       else if (n < 0) {
- *         completed = true;
- *         subscriber.onError(new IllegalArgumentException());
-         }
  *     }
- *     public synchronized void cancel() { completed = true; }
+ *     public synchronized void cancel() {
+ *       completed = true;
+ *       if (future != null) future.cancel(false);
+ *     }
  *   }
  * }}</pre>
  *
@@ -76,6 +88,11 @@ import java.util.stream.Stream;
  * with less communication; for example with a value of 64, this keeps
  * total outstanding requests between 32 and 64.  (See also {@link
  * #consume(long, Publisher, Consumer)} that automates a common case.)
+ * Because Subscriber method invocations for a given {@link
+ * Subscription} are strictly ordered, there is no need for these
+ * methods to use locks or volatiles unless a Subscriber maintains
+ * multiple Subscriptions (in which case it is better to instead
+ * define multiple Subscribers, each with its own Subscription).
  *
  * <pre> {@code
  * class SampleSubscriber<T> implements Subscriber<T> {
@@ -100,8 +117,7 @@ import java.util.stream.Stream;
  *   public void onComplete() {}
  * }}</pre>
  *
- * <p>If there is no chance that a publisher will produce elements
- * faster than they can be consumed, a subscriber may initially
+ * <p>When flow control is inapplicable, a subscriber may initially
  * request an effectively unbounded number of items, as in:
  *
  * <pre> {@code
@@ -125,16 +141,22 @@ public final class Flow {
     /**
      * A producer of items (and related control messages) received by
      * Subscribers.  Each current {@link Subscriber} receives the same
-     * items (via method onNext) in the same order, unless drops or
-     * errors are encountered. If a Publisher encounters an error that
-     * does not allow further items to be issued to a Subscriber, that
-     * Subscriber receives onError, and then receives no further
-     * messages.  Otherwise, if it is known that no further items will
-     * be produced, each Subscriber receives onComplete.  Publishers
-     * may vary in policy about whether drops (failures to issue an
-     * item because of resource limitations) are treated as errors.
-     * Publishers may also vary about whether Subscribers receive
-     * items that were produced or available before they subscribed.
+     * items (via method {@code onNext}) in the same order, unless
+     * drops or errors are encountered. If a Publisher encounters an
+     * error that does not allow items to be issued to a Subscriber,
+     * that Subscriber receives {@code onError}, and then receives no
+     * further messages.  Otherwise, when it is known that no further
+     * messages will be issued to it, a subscriber receives {@code
+     * onComplete}.  Publishers ensure that Subscriber method
+     * invocations for each subscription are strictly ordered in <a
+     * href="package-summary.html#MemoryVisibility"><i>happens-before</i></a>
+     * order.
+     *
+     * <p>Publishers may vary in policy about whether drops (failures
+     * to issue an item because of resource limitations) are treated
+     * as unrecoverable errors.  Publishers may also vary about
+     * whether Subscribers receive items that were produced or
+     * available before they subscribed.
      *
      * @param <T> the published item type
      */
@@ -143,12 +165,13 @@ public final class Flow {
         /**
          * Adds the given Subscriber if possible.  If already
          * subscribed, or the attempt to subscribe fails due to policy
-         * violations or errors, the Subscriber's onError method is
-         * invoked with an IllegalStateException.  Otherwise, upon
-         * success, the Subscriber's onSubscribe method is invoked
-         * with a new Subscription.  Subscribers may enable receiving
-         * items by invoking the request method of this Subscription,
-         * and may unsubscribe by invoking its cancel method.
+         * violations or errors, the Subscriber's {@code onError}
+         * method is invoked with an {@link IllegalStateException}.
+         * Otherwise, the Subscriber's {@code onSubscribe} method is
+         * invoked with a new {@link Subscription}.  Subscribers may
+         * enable receiving items by invoking the {@code request}
+         * method of this Subscription, and may unsubscribe by
+         * invoking its {@code cancel} method.
          *
          * @param subscriber the subscriber
          * @throws NullPointerException if subscriber is null
@@ -157,9 +180,9 @@ public final class Flow {
     }
 
     /**
-     * A receiver of messages.  The methods in this interface must be
-     * invoked sequentially by each Subscription, so are not required
-     * to be thread-safe unless subscribing to multiple publishers.
+     * A receiver of messages.  The methods in this interface are
+     * invoked in strict sequential order for each {@link
+     * Subscription}.
      *
      * @param <T> the subscribed item type
      */
@@ -170,8 +193,8 @@ public final class Flow {
          * an exception, resulting behavior is not guaranteed, but may
          * cause the Subscription to be cancelled.
          *
-         * <p>Typically, implementations of this method invoke the
-         * subscription's request method to enable receiving items.
+         * <p>Typically, implementations of this method invoke {@code
+         * subscription.request} to enable receiving items.
          *
          * @param subscription a new subscription
          */
@@ -198,30 +221,32 @@ public final class Flow {
         public void onError(Throwable throwable);
 
         /**
-         * Method invoked when it is known that no additional onNext
-         * invocations will occur for a Subscription that is not
-         * already terminated by error, after which no other
-         * Subscriber methods are invoked by the Subscription.  If
-         * this method itself throws an exception, resulting behavior
-         * is undefined.
+         * Method invoked when it is known that no additional
+         * Subscriber method invocations will occur for a Subscription
+         * that is not already terminated by error, after which no
+         * other Subscriber methods are invoked by the Subscription.
+         * If this method throws an exception, resulting behavior is
+         * undefined.
          */
         public void onComplete();
     }
 
     /**
-     * Message control linking Publishers and Subscribers.
-     * Subscribers receive items (via onNext) only when requested, and
-     * may cancel at any time. The methods in this interface are
-     * intended to be invoked only by their Subscribers.
+     * Message control linking a {@link Publisher} and {@link
+     * Subscriber}.  Subscribers receive items only when requested,
+     * and may cancel at any time. The methods in this interface are
+     * intended to be invoked only by their Subscribers; usages in
+     * other contexts have undefined effects.
      */
     public static interface Subscription {
         /**
          * Adds the given number {@code n} of items to the current
          * unfulfilled demand for this subscription.  If {@code n} is
-         * negative, the Subscriber will receive an onError signal
-         * with an IllegalArgumentException argument. Otherwise, the
-         * Subscriber will receive up to {@code n} additional onNext
-         * invocations (or fewer if terminated).
+         * negative, the Subscriber will receive an {@code onError}
+         * signal with an {@link IllegalArgumentException}
+         * argument. Otherwise, the Subscriber will receive up to
+         * {@code n} additional {@code onNext} invocations (or fewer
+         * if terminated).
          *
          * @param n the increment of demand; a value of {@code
          * Long.MAX_VALUE} may be considered as effectively unbounded
@@ -229,8 +254,11 @@ public final class Flow {
         public void request(long n);
 
         /**
-         * Causes the Subscriber to (eventually) stop receiving onNext
-         * messages.
+         * Causes the Subscriber to (eventually) stop receiving
+         * messages.  Implementation is best-effort -- additional
+         * messages may be received after invoking this method.  A
+         * cancelled subscription need not ever receive an {@code
+         * onComplete} signal.
          */
         public void cancel();
     }
@@ -293,9 +321,9 @@ public final class Flow {
      * from the given publisher using the given Consumer function, and
      * using the given bufferSize for buffering. Returns a
      * CompletableFuture that is completed normally when the publisher
-     * signals onComplete, or completed exceptionally upon any error,
-     * including an exception thrown by the Consumer (in which case
-     * the subscription is cancelled if not already terminated).
+     * signals {@code onComplete}, or completed exceptionally upon any
+     * error, including an exception thrown by the Consumer (in which
+     * case the subscription is cancelled if not already terminated).
      *
      * @param <T> the published item type
      * @param bufferSize the request size for subscriptions
@@ -359,8 +387,8 @@ public final class Flow {
      * stream operation to items, and uses the given bufferSize for
      * buffering. Returns a CompletableFuture that is completed
      * normally with the result of this function when the publisher
-     * signals onComplete, or is completed exceptionally upon any
-     * error.
+     * signals {@code onComplete}, or is completed exceptionally upon
+     * any error.
      *
      * <p><b>Preliminary release note:</b> Currently, this method
      * collects all items before executing the stream
@@ -408,5 +436,4 @@ public final class Flow {
         Function<? super Stream<T>,? extends R> streamFunction) {
         return stream(DEFAULT_BUFFER_SIZE, publisher, streamFunction);
     }
-
 }

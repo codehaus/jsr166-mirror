@@ -505,6 +505,8 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FibAction f = new FibAction(8);
                 assertSame(f, f.fork());
                 helpQuiesce();
+                while (!f.isDone()) // wait out race
+                    ;
                 assertEquals(21, f.result);
                 assertEquals(0, getQueuedTaskCount());
                 checkCompletedNormally(f);

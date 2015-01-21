@@ -636,7 +636,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 }
             }
         }
-        return nonEmpty? min : 0;
+        return nonEmpty ? min : 0;
     }
 
     /**
@@ -752,7 +752,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
 
         static final long INTERRUPTED = -1L; // timeout vs interrupt sentinel
 
-        /** 
+        /**
          * Initial/Minimum buffer capacity. Must be a power of two, at least 2.
          */
         static final int MINCAP = 8;
@@ -774,7 +774,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
          */
         final int estimateLag() {
             int n;
-            return (ctl == DISABLED)? -1 : ((n = tail - head) > 0) ? n : 0;
+            return (ctl == DISABLED) ? -1 : ((n = tail - head) > 0) ? n : 0;
         }
 
         /**

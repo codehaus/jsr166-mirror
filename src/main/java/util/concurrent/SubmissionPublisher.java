@@ -300,7 +300,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * consumed) among all current subscribers. This value is at least
      * one (accounting for this submitted item) if there are any
      * subscribers, else zero.
-
+     *
      * <p>If the Executor for this publisher throws a
      * RejectedExecutionException (or any other RuntimeException or
      * Error) when attempting to asynchronously notify subscribers, or

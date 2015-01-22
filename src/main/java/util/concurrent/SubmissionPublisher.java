@@ -36,10 +36,10 @@ import java.util.function.Supplier;
  * nearest power of two and/or bounded by the largest value supported
  * by this implementation.)  Invocations of {@link
  * Flow.Subscription#request} do not directly result in buffer
- * expansion, but risk saturation if unfulfilled requests exceed the
+ * expansion, but risk saturation if unfilled requests exceed the
  * maximum capacity.  Choices of buffer parameters rely on expected
  * rates, resources, and usages, that usually benefit from empirical
- * testing.  As a first guess, consider a value of 256.
+ * testing.  As a first guess, consider a value of 64.
  *
  * <p>Publication methods support different policies about what to do
  * when buffers are saturated. Method {@link #submit} blocks until
@@ -162,7 +162,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * async delivery to subscribers, and with the given maximum
      * buffer size for each subscriber. In the absence of other
      * constraints, consider using {@code ForkJoinPool.commonPool(),
-     * 256}.
+     * 64}.
      *
      * @param executor the executor to use for async delivery,
      * supporting creation of at least one independent thread
@@ -262,24 +262,52 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         synchronized (this) {
             if (closed)
                 throw new IllegalStateException("Closed");
-            BufferedSubscription<T> pred = null, next;
-            for (BufferedSubscription<T> b = clients; b != null; b = next) {
+            /*
+             * To reduce head-of-line blocking, try offer() on each,
+             * place saturated ones in retries list, and later wait
+             * them out.
+             */
+            BufferedSubscription<T> b = clients, retries = null,
+                rtail = null, pred = null, next;
+            for ( ; b != null; b = next) {
                 int stat;
                 next = b.next;
-                if ((stat = b.submit(item)) < 0) {
+                if ((stat = b.offer(item)) < 0) {
                     if (pred == null)
                         clients = next;
                     else
                         pred.next = next;
                 }
                 else {
-                    pred = b;
+                    if (stat == 0) {
+                        if (rtail == null)
+                            retries = b;
+                        else
+                            rtail.nextRetry = b;
+                        rtail = b;
+                        stat = maxBufferCapacity;
+                    }
                     if (stat > lag)
                         lag = stat;
+                    pred = b;
                 }
             }
+            if (retries != null)
+                retrySubmit(retries, item);
         }
         return lag;
+    }
+
+    /**
+     * Calls submit on each subscription on retry list.
+     */
+    private void retrySubmit(BufferedSubscription<T> retries, T item) {
+        for (BufferedSubscription<T> r = retries; r != null;) {
+            BufferedSubscription<T> nextRetry = r.nextRetry;
+            r.nextRetry = null;
+            r.submit(item);
+            r = nextRetry;
+        }
     }
 
     /**
@@ -690,7 +718,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * Execution control is managed using the ACTIVE ctl bit. We
      * ensure that a task is active when consumable items (and
      * usually, SUBSCRIBE, ERROR or COMPLETE signals) are present and
-     * there is demand (unfulfilled requests).  This is complicated on
+     * there is demand (unfilled requests).  This is complicated on
      * the creation side by the possibility of exceptions when trying
      * to execute tasks. These eventually force DISABLED state, but
      * sometimes not directly. On the task side, termination (clearing
@@ -742,6 +770,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         volatile Thread waiter;           // blocked producer thread
         T putItem;                        // for offer within ManagedBlocker
         BufferedSubscription<T> next;     // used only by publisher
+        BufferedSubscription<T> nextRetry;// used only by publisher
 
         // ctl values
         static final int ACTIVE    = 0x01; // consumer task active
@@ -819,22 +848,22 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
          */
         final int growAndAdd(Object[] oldArray, T item) {
             int oldLen, newLen;
-            if (oldArray != null)
-                newLen = (oldLen = oldArray.length) << 1;
-            else if (ctl >= 0) {
+            if (oldArray == null) {
                 oldLen = 0;
-                newLen = (maxCapacity < MINCAP) ? maxCapacity : MINCAP;
+                newLen = (maxCapacity >= MINCAP ? MINCAP :
+                          maxCapacity >= 2 ? maxCapacity : 2);
             }
-            else
-                return -1;                        // disabled
-            if (oldLen >= maxCapacity || newLen <= 0)
+            else if ((oldLen = oldArray.length) >= maxCapacity ||
+                     (newLen = oldLen << 1) <= 0)
                 return 0;                         // cannot grow
+            if (ctl == DISABLED)
+                return -1;
             Object[] newArray;
             try {
                 newArray = new Object[newLen];
             } catch (Throwable ex) {              // try to cope with OOME
-                if (oldLen > 0)                   // avoid continuous failure
-                    maxCapacity = oldLen;
+                if (oldLen > 0)
+                    maxCapacity = oldLen;        // avoid continuous failure
                 return 0;
             }
             array = newArray;

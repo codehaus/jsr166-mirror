@@ -16,10 +16,11 @@ package java.util.concurrent.locks;
  * if the permit is available, consuming it in the process; otherwise
  * it <em>may</em> block.  A call to {@code unpark} makes the permit
  * available, if it was not already available. (Unlike with Semaphores
- * though, permits do not accumulate. There is at most one.)  The
- * memory ordering semantics of {@code park} are the same as those of
- * a volatile read and write to a variable also written by any caller
- * of {@code unpark} for that thread.
+ * though, permits do not accumulate. There is at most one.)
+ * Reliable usage requires the use of volatile (or atomic) variables
+ * to control when to park or unpark.  Orderings of calls to these
+ * methods are maintained with respect to volatile variable accesses,
+ * but not necessarily non-volatile variable accesses.
  *
  * <p>Methods {@code park} and {@code unpark} provide efficient
  * means of blocking and unblocking threads that do not encounter the

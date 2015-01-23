@@ -117,8 +117,12 @@ import java.util.stream.Stream;
  *   public void onComplete() {}
  * }}</pre>
  *
- * <p>When flow control is inapplicable, a subscriber may initially
- * request an effectively unbounded number of items, as in:
+ * <p>The default value of {@link #defaultBufferSize} may provide a
+ * useful starting point for choosing request sizes and capacities in
+ * Flow components based on expected rates, resources, and usages.
+ * Or, when flow control is known to be always inapplicable, a
+ * subscriber may initially request an effectively unbounded number of
+ * items, as in:
  *
  * <pre> {@code
  * class UnboundedSubscriber<T> implements Subscriber<T> {
@@ -274,7 +278,20 @@ public final class Flow {
 
     // Support for static methods
 
-    static final long DEFAULT_BUFFER_SIZE = 64L;
+    static final int DEFAULT_BUFFER_SIZE = 256;
+
+    /**
+     * Returns a default value for Publisher or Subscriber buffering,
+     * that may be used in the absence of other constraints.
+     *
+     * @implNote
+     * The current value returned is 256.
+     *
+     * @return the buffer size value
+     */
+    public static int defaultBufferSize() {
+        return DEFAULT_BUFFER_SIZE;
+    }
 
     abstract static class CompletableSubscriber<T,U> implements Subscriber<T>,
                                                                 Consumer<T> {
@@ -349,7 +366,7 @@ public final class Flow {
 
     /**
      * Equivalent to {@link #consume(long, Publisher, Consumer)}
-     * with a buffer size of 64.
+     * with {@link #defaultBufferSize}.
      *
      * @param <T> the published item type
      * @param publisher the publisher
@@ -361,7 +378,7 @@ public final class Flow {
      */
     public static <T> CompletableFuture<Void> consume(
         Publisher<T> publisher, Consumer<? super T> consumer) {
-        return consume(DEFAULT_BUFFER_SIZE, publisher, consumer);
+        return consume(defaultBufferSize(), publisher, consumer);
     }
 
     /**
@@ -420,7 +437,7 @@ public final class Flow {
 
     /**
      * Equivalent to {@link #stream(long, Publisher, Function)}
-     * with a buffer size of 64.
+     * with {@link #defaultBufferSize}.
      *
      * @param <T> the published item type
      * @param <R> the result type of the stream function
@@ -434,6 +451,6 @@ public final class Flow {
     public static <T,R> CompletableFuture<R> stream(
         Publisher<T> publisher,
         Function<? super Stream<T>,? extends R> streamFunction) {
-        return stream(DEFAULT_BUFFER_SIZE, publisher, streamFunction);
+        return stream(defaultBufferSize(), publisher, streamFunction);
     }
 }

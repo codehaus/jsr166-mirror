@@ -22,7 +22,7 @@ import java.util.stream.Stream;
  * href="http://www.reactive-streams.org/"> reactive-streams</a>
  * specification.  They apply in both concurrent and distributed
  * asynchronous settings: All (seven) methods are defined in {@code
- * void} "oneway" message style. Communication relies on a simple form
+ * void} "one-way" message style. Communication relies on a simple form
  * of flow control (method {@link Subscription#request}) that can be
  * used to avoid resource management problems that may otherwise occur
  * in "push" based systems.

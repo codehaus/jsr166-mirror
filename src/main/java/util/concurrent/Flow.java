@@ -63,13 +63,16 @@ import java.util.stream.Stream;
  *     public synchronized void request(long n) {
  *       if (n != 0 && !completed) {
  *         completed = true;
- *         future = executor.submit(() -> {
- *           if (n < 0)
- *             subscriber.onError(new IllegalArgumentException());
- *           else {
+ *         if (n < 0) {
+ *           IllegalStateException ex = new IllegalStateException();
+ *           executor.submit(() -> subscriber.onError(ex));
+ *         }
+ *         else {
+ *           future = executor.submit(() -> {
  *             subscriber.onNext(Boolean.TRUE);
  *             subscriber.onComplete();
- *           }});
+ *           });
+ *         }
  *       }
  *     }
  *     public synchronized void cancel() {

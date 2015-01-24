@@ -902,7 +902,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         }
 
         /**
-         * Tries to create or expand buffer, then adds item if possible
+         * Tries to create or expand buffer, then adds item if possible.
          */
         private int growAndAdd(Object[] a, T item) {
             int cap, stat;
@@ -964,7 +964,6 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
          * initial offer return 0. Tries helping if either the
          * producer and consumers are in same ForkJoinPool, or
          * consumers are in commonPool.
-         *
          */
         final int submit(T item) {
             Executor e = executor;

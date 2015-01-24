@@ -43,10 +43,10 @@ import java.util.function.Supplier;
  *
  * <p>Publication methods support different policies about what to do
  * when buffers are saturated. Method {@link #submit} blocks until
- * resources are available. This is simplest, but least
- * responsive. The {@code offer} methods may drop items (either
- * immediately or with bounded timeout), but provide an opportunity to
- * interpose a handler and then retry.
+ * resources are available. This is simplest, but least responsive.
+ * The {@code offer} methods may drop items (either immediately or
+ * with bounded timeout), but provide an opportunity to interpose a
+ * handler and then retry.
  *
  * <p>If any Subscriber method throws an exception, its subscription
  * is cancelled.  If the supplied Executor throws
@@ -1012,7 +1012,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
 
         /**
          * Issues error signal, asynchronously if a task is running,
-         * else synchronously
+         * else synchronously.
          */
         final void onError(Throwable ex) {
             for (int c;;) {

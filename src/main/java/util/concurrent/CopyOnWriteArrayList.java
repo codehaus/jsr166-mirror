@@ -815,10 +815,8 @@ public class CopyOnWriteArrayList<E>
 
     public void forEach(Consumer<? super E> action) {
         if (action == null) throw new NullPointerException();
-        Object[] elements = getArray();
-        int len = elements.length;
-        for (int i = 0; i < len; ++i) {
-            @SuppressWarnings("unchecked") E e = (E) elements[i];
+        for (Object x : getArray()) {
+            @SuppressWarnings("unchecked") E e = (E) x;
             action.accept(e);
         }
     }
@@ -973,12 +971,8 @@ public class CopyOnWriteArrayList<E>
      */
     public int hashCode() {
         int hashCode = 1;
-        Object[] elements = getArray();
-        int len = elements.length;
-        for (int i = 0; i < len; ++i) {
-            Object obj = elements[i];
-            hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
-        }
+        for (Object x : getArray())
+            hashCode = 31 * hashCode + (x == null ? 0 : x.hashCode());
         return hashCode;
     }
 

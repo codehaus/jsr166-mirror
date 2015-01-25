@@ -65,7 +65,7 @@ import java.util.stream.Stream;
  *         completed = true;
  *         if (n < 0) {
  *           IllegalStateException ex = new IllegalStateException();
- *           executor.submit(() -> subscriber.onError(ex));
+ *           executor.execute(() -> subscriber.onError(ex));
  *         }
  *         else {
  *           future = executor.submit(() -> {

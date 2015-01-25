@@ -370,6 +370,10 @@ public class CopyOnWriteArrayList<E>
         return (E) a[index];
     }
 
+    static String outOfBounds(int index, int size) {
+        return "Index: " + index + ", Size: " + size;
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -432,8 +436,7 @@ public class CopyOnWriteArrayList<E>
             Object[] elements = getArray();
             int len = elements.length;
             if (index > len || index < 0)
-                throw new IndexOutOfBoundsException("Index: "+index+
-                                                    ", Size: "+len);
+                throw new IndexOutOfBoundsException(outOfBounds(index, len));
             Object[] newElements;
             int numMoved = len - index;
             if (numMoved == 0)
@@ -790,8 +793,7 @@ public class CopyOnWriteArrayList<E>
             Object[] elements = getArray();
             int len = elements.length;
             if (index > len || index < 0)
-                throw new IndexOutOfBoundsException("Index: "+index+
-                                                    ", Size: "+len);
+                throw new IndexOutOfBoundsException(outOfBounds(index, len));
             if (cs.length == 0)
                 return false;
             int numMoved = len - index;
@@ -1020,7 +1022,7 @@ public class CopyOnWriteArrayList<E>
         Object[] elements = getArray();
         int len = elements.length;
         if (index < 0 || index > len)
-            throw new IndexOutOfBoundsException("Index: "+index);
+            throw new IndexOutOfBoundsException(outOfBounds(index, len));
 
         return new COWIterator<E>(elements, index);
     }
@@ -1184,8 +1186,7 @@ public class CopyOnWriteArrayList<E>
         private void rangeCheck(int index) {
             // assert Thread.holdsLock(l.lock);
             if (index < 0 || index >= size)
-                throw new IndexOutOfBoundsException("Index: "+index+
-                                                    ",Size: "+size);
+                throw new IndexOutOfBoundsException(outOfBounds(index, size));
         }
 
         public E set(int index, E element) {
@@ -1217,7 +1218,8 @@ public class CopyOnWriteArrayList<E>
             synchronized (l.lock) {
                 checkForComodification();
                 if (index < 0 || index > size)
-                    throw new IndexOutOfBoundsException();
+                    throw new IndexOutOfBoundsException
+                        (outOfBounds(index, size));
                 l.add(index+offset, element);
                 expectedArray = l.getArray();
                 size++;
@@ -1263,8 +1265,8 @@ public class CopyOnWriteArrayList<E>
             synchronized (l.lock) {
                 checkForComodification();
                 if (index < 0 || index > size)
-                    throw new IndexOutOfBoundsException("Index: "+index+
-                                                        ", Size: "+size);
+                    throw new IndexOutOfBoundsException
+                        (outOfBounds(index, size));
                 return new COWSubListIterator<E>(l, index, offset, size);
             }
         }

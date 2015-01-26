@@ -6,6 +6,7 @@
 
 package java.util.concurrent.atomic;
 
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.LongBinaryOperator;
@@ -227,12 +228,8 @@ abstract class Striped64 extends Number {
                     collide = true;
                 else if (cellsBusy == 0 && casCellsBusy()) {
                     try {
-                        if (cells == as) {      // Expand table unless stale
-                            Cell[] rs = new Cell[n << 1];
-                            for (int i = 0; i < n; ++i)
-                                rs[i] = as[i];
-                            cells = rs;
-                        }
+                        if (cells == as)        // Expand table unless stale
+                            cells = Arrays.copyOf(as, n << 1);
                     } finally {
                         cellsBusy = 0;
                     }
@@ -319,12 +316,8 @@ abstract class Striped64 extends Number {
                     collide = true;
                 else if (cellsBusy == 0 && casCellsBusy()) {
                     try {
-                        if (cells == as) {      // Expand table unless stale
-                            Cell[] rs = new Cell[n << 1];
-                            for (int i = 0; i < n; ++i)
-                                rs[i] = as[i];
-                            cells = rs;
-                        }
+                        if (cells == as)        // Expand table unless stale
+                            cells = Arrays.copyOf(as, n << 1);
                     } finally {
                         cellsBusy = 0;
                     }

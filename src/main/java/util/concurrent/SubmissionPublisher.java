@@ -53,8 +53,8 @@ import java.util.function.Supplier;
  * RejectedExecutionException} (or any other RuntimeException or
  * Error) when attempting to execute a task, or a drop handler throws
  * an exception when processing a dropped item, then the exception is
- * rethrown. In these cases, some but not all subscribers may have
- * received the published item. It is usually good practice to {@link
+ * rethrown. In these cases, not all subscribers will have been issued
+ * the published item. It is usually good practice to {@link
  * #closeExceptionally closeExceptionally} in these cases.
  *
  * <p>This class may also serve as a convenient base for subclasses
@@ -262,8 +262,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * <p>If the Executor for this publisher throws a
      * RejectedExecutionException (or any other RuntimeException or
      * Error) when attempting to asynchronously notify subscribers,
-     * then this exception is rethrown, in which case some but not all
-     * subscribers may have received this item.
+     * then this exception is rethrown, in which case not all
+     * subscribers will have been issued this item.
      *
      * @param item the (non-null) item to publish
      * @return the estimated maximum lag among subscribers
@@ -543,15 +543,11 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         boolean nonEmpty = false;
         if (!closed) {
             synchronized (this) {
-                BufferedSubscription<T> pred = null, next;
-                for (BufferedSubscription<T> b = clients; b != null; b = next) {
-                    next = b.next;
+                for (BufferedSubscription<T> b = clients; b != null;) {
+                    BufferedSubscription<T> next = b.next;
                     if (b.isDisabled()) {
                         b.next = null;
-                        if (pred == null)
-                            clients = next;
-                        else
-                            pred.next = next;
+                        b = clients = next;
                     }
                     else {
                         nonEmpty = true;
@@ -796,10 +792,11 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * helping is currently supported.
      *
      * This class uses @Contended and heuristic field declaration
-     * ordering to reduce memory contention on BufferedSubscription
-     * itself, but it does not currently attempt to avoid memory
-     * contention (especially including card-marks) among buffer
-     * elements, that can significantly slow down some usages.
+     * ordering to reduce false-sharing-based memory contention among
+     * instances of BufferedSubscription, but it does not currently
+     * attempt to avoid memory contention among buffers. This field
+     * and element packing can hurt performance especially when each
+     * publisher has only one client operating at a high rate.
      * Addressing this may require allocating substantially more space
      * than users expect.
      */
@@ -1185,8 +1182,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                     if ((d = prev + n) < prev) // saturate
                         d = Long.MAX_VALUE;
                     if (U.compareAndSwapLong(this, DEMAND, prev, d)) {
-                        while (d != 0L) {
-                            int c, h;
+                        for (int c, h;;) {
                             if ((c = ctl) == DISABLED)
                                 break;
                             else if ((c & ACTIVE) != 0) {
@@ -1204,7 +1200,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                             }
                             else if (head == h && tail == h)
                                 break;          // else stale
-                            d = demand;
+                            if (demand == 0L)
+                                break;
                         }
                         break;
                     }

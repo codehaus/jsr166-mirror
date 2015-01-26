@@ -191,27 +191,24 @@ abstract class Striped64 extends Number {
             wasUncontended = true;
         }
         boolean collide = false;                // True if last slot nonempty
-        for (;;) {
+        done: for (;;) {
             Cell[] as; Cell a; int n; long v;
             if ((as = cells) != null && (n = as.length) > 0) {
                 if ((a = as[(n - 1) & h]) == null) {
                     if (cellsBusy == 0) {       // Try to attach new Cell
                         Cell r = new Cell(x);   // Optimistically create
                         if (cellsBusy == 0 && casCellsBusy()) {
-                            boolean created = false;
                             try {               // Recheck under lock
                                 Cell[] rs; int m, j;
                                 if ((rs = cells) != null &&
                                     (m = rs.length) > 0 &&
                                     rs[j = (m - 1) & h] == null) {
                                     rs[j] = r;
-                                    created = true;
+                                    break done;
                                 }
                             } finally {
                                 cellsBusy = 0;
                             }
-                            if (created)
-                                break;
                             continue;           // Slot is now non-empty
                         }
                     }
@@ -239,23 +236,21 @@ abstract class Striped64 extends Number {
                 h = advanceProbe(h);
             }
             else if (cellsBusy == 0 && cells == as && casCellsBusy()) {
-                boolean init = false;
                 try {                           // Initialize table
                     if (cells == as) {
                         Cell[] rs = new Cell[2];
                         rs[h & 1] = new Cell(x);
                         cells = rs;
-                        init = true;
+                        break done;
                     }
                 } finally {
                     cellsBusy = 0;
                 }
-                if (init)
-                    break;
             }
+            // Fall back on using base
             else if (casBase(v = base,
                              (fn == null) ? v + x : fn.applyAsLong(v, x)))
-                break;                          // Fall back on using base
+                break done;
         }
     }
 
@@ -280,27 +275,24 @@ abstract class Striped64 extends Number {
             wasUncontended = true;
         }
         boolean collide = false;                // True if last slot nonempty
-        for (;;) {
+        done: for (;;) {
             Cell[] as; Cell a; int n; long v;
             if ((as = cells) != null && (n = as.length) > 0) {
                 if ((a = as[(n - 1) & h]) == null) {
                     if (cellsBusy == 0) {       // Try to attach new Cell
                         Cell r = new Cell(Double.doubleToRawLongBits(x));
                         if (cellsBusy == 0 && casCellsBusy()) {
-                            boolean created = false;
                             try {               // Recheck under lock
                                 Cell[] rs; int m, j;
                                 if ((rs = cells) != null &&
                                     (m = rs.length) > 0 &&
                                     rs[j = (m - 1) & h] == null) {
                                     rs[j] = r;
-                                    created = true;
+                                    break done;
                                 }
                             } finally {
                                 cellsBusy = 0;
                             }
-                            if (created)
-                                break;
                             continue;           // Slot is now non-empty
                         }
                     }
@@ -327,22 +319,20 @@ abstract class Striped64 extends Number {
                 h = advanceProbe(h);
             }
             else if (cellsBusy == 0 && cells == as && casCellsBusy()) {
-                boolean init = false;
                 try {                           // Initialize table
                     if (cells == as) {
                         Cell[] rs = new Cell[2];
                         rs[h & 1] = new Cell(Double.doubleToRawLongBits(x));
                         cells = rs;
-                        init = true;
+                        break done;
                     }
                 } finally {
                     cellsBusy = 0;
                 }
-                if (init)
-                    break;
             }
+            // Fall back on using base
             else if (casBase(v = base, apply(fn, v, x)))
-                break;                          // Fall back on using base
+                break done;
         }
     }
 

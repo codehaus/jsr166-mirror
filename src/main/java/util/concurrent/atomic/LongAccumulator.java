@@ -96,13 +96,12 @@ public class LongAccumulator extends Striped64 implements Serializable {
      * @return the current value
      */
     public long get() {
-        Cell[] as = cells; Cell a;
+        Cell[] as = cells;
         long result = base;
         if (as != null) {
-            for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null)
+            for (Cell a : as)
+                if (a != null)
                     result = function.applyAsLong(result, a.value);
-            }
         }
         return result;
     }
@@ -116,13 +115,12 @@ public class LongAccumulator extends Striped64 implements Serializable {
      * updating.
      */
     public void reset() {
-        Cell[] as = cells; Cell a;
+        Cell[] as = cells;
         base = identity;
         if (as != null) {
-            for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null)
+            for (Cell a : as)
+                if (a != null)
                     a.value = identity;
-            }
         }
     }
 
@@ -137,12 +135,12 @@ public class LongAccumulator extends Striped64 implements Serializable {
      * @return the value before reset
      */
     public long getThenReset() {
-        Cell[] as = cells; Cell a;
+        Cell[] as = cells;
         long result = base;
         base = identity;
         if (as != null) {
-            for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null) {
+            for (Cell a : as) {
+                if (a != null) {
                     long v = a.value;
                     a.value = identity;
                     result = function.applyAsLong(result, v);

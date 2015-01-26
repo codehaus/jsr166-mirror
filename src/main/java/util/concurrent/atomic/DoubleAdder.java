@@ -86,13 +86,12 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * @return the sum
      */
     public double sum() {
-        Cell[] as = cells; Cell a;
+        Cell[] as = cells;
         double sum = Double.longBitsToDouble(base);
         if (as != null) {
-            for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null)
+            for (Cell a : as)
+                if (a != null)
                     sum += Double.longBitsToDouble(a.value);
-            }
         }
         return sum;
     }
@@ -105,13 +104,12 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * known that no threads are concurrently updating.
      */
     public void reset() {
-        Cell[] as = cells; Cell a;
+        Cell[] as = cells;
         base = 0L; // relies on fact that double 0 must have same rep as long
         if (as != null) {
-            for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null)
+            for (Cell a : as)
+                if (a != null)
                     a.value = 0L;
-            }
         }
     }
 
@@ -126,12 +124,12 @@ public class DoubleAdder extends Striped64 implements Serializable {
      * @return the sum
      */
     public double sumThenReset() {
-        Cell[] as = cells; Cell a;
+        Cell[] as = cells;
         double sum = Double.longBitsToDouble(base);
         base = 0L;
         if (as != null) {
-            for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null) {
+            for (Cell a : as) {
+                if (a != null) {
                     long v = a.value;
                     a.value = 0L;
                     sum += Double.longBitsToDouble(v);

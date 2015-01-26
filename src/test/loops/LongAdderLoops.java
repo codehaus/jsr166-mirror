@@ -10,10 +10,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Phaser;
 
 public class LongAdderLoops {
-    static final int ITERS = 10000000;
+    static final int ITERS = 100_000_000;
     static final int NCPU = Runtime.getRuntime().availableProcessors();
     static final int MAX_THREADS = NCPU * 2;
-    static final long NPS = (1000L * 1000 * 1000);
 
     static final ExecutorService pool = Executors.newCachedThreadPool();
 

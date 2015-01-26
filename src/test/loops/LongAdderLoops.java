@@ -56,8 +56,8 @@ public class LongAdderLoops {
         final Phaser phaser;
         final int incs;
         volatile long result;
-        AdderTask(LongAdder adder, Phaser phaser, int incs) { 
-            this.adder = adder; 
+        AdderTask(LongAdder adder, Phaser phaser, int incs) {
+            this.adder = adder;
             this.phaser = phaser;
             this.incs = incs;
         }

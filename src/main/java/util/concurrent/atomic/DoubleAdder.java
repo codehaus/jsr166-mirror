@@ -109,7 +109,7 @@ public class DoubleAdder extends Striped64 implements Serializable {
         if (as != null) {
             for (Cell a : as)
                 if (a != null)
-                    a.value = 0L;
+                    a.reset();
         }
     }
 
@@ -131,7 +131,7 @@ public class DoubleAdder extends Striped64 implements Serializable {
             for (Cell a : as) {
                 if (a != null) {
                     long v = a.value;
-                    a.value = 0L;
+                    a.reset();
                     sum += Double.longBitsToDouble(v);
                 }
             }

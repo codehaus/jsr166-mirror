@@ -111,7 +111,7 @@ public class LongAdder extends Striped64 implements Serializable {
         if (as != null) {
             for (Cell a : as)
                 if (a != null)
-                    a.value = 0L;
+                    a.reset();
         }
     }
 
@@ -133,7 +133,7 @@ public class LongAdder extends Striped64 implements Serializable {
             for (Cell a : as) {
                 if (a != null) {
                     sum += a.value;
-                    a.value = 0L;
+                    a.reset();
                 }
             }
         }

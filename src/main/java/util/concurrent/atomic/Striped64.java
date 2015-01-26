@@ -96,6 +96,12 @@ abstract class Striped64 extends Number {
         final boolean cas(long cmp, long val) {
             return U.compareAndSwapLong(this, VALUE, cmp, val);
         }
+        final void reset() {
+            U.putLongVolatile(this, VALUE, 0L);
+        }
+        final void reset(long identity) {
+            U.putLongVolatile(this, VALUE, identity);
+        }
 
         // Unsafe mechanics
         private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();

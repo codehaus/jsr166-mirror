@@ -120,7 +120,7 @@ public class LongAccumulator extends Striped64 implements Serializable {
         if (as != null) {
             for (Cell a : as)
                 if (a != null)
-                    a.value = identity;
+                    a.reset(identity);
         }
     }
 
@@ -142,7 +142,7 @@ public class LongAccumulator extends Striped64 implements Serializable {
             for (Cell a : as) {
                 if (a != null) {
                     long v = a.value;
-                    a.value = identity;
+                    a.reset(identity);
                     result = function.applyAsLong(result, v);
                 }
             }

@@ -123,7 +123,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
         if (as != null) {
             for (Cell a : as)
                 if (a != null)
-                    a.value = identity;
+                    a.reset(identity);
         }
     }
 
@@ -145,7 +145,7 @@ public class DoubleAccumulator extends Striped64 implements Serializable {
             for (Cell a : as) {
                 if (a != null) {
                     double v = Double.longBitsToDouble(a.value);
-                    a.value = identity;
+                    a.reset(identity);
                     result = function.applyAsDouble(result, v);
                 }
             }

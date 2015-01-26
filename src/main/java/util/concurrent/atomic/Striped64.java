@@ -262,6 +262,12 @@ abstract class Striped64 extends Number {
         }
     }
 
+    private static long apply(DoubleBinaryOperator fn, long v, double x) {
+        double d = Double.longBitsToDouble(v);
+        d = (fn == null) ? d + x : fn.applyAsDouble(d, x);
+        return Double.doubleToRawLongBits(d);
+    }
+
     /**
      * Same as longAccumulate, but injecting long/double conversions
      * in too many places to sensibly merge with long version, given
@@ -305,13 +311,7 @@ abstract class Striped64 extends Number {
                 }
                 else if (!wasUncontended)       // CAS already known to fail
                     wasUncontended = true;      // Continue after rehash
-                else if (a.cas(v = a.value,
-                               ((fn == null) ?
-                                Double.doubleToRawLongBits
-                                (Double.longBitsToDouble(v) + x) :
-                                Double.doubleToRawLongBits
-                                (fn.applyAsDouble
-                                 (Double.longBitsToDouble(v), x)))))
+                else if (a.cas(v = a.value, apply(fn, v, x)))
                     break;
                 else if (n >= NCPU || cells != as)
                     collide = false;            // At max size or stale
@@ -348,13 +348,7 @@ abstract class Striped64 extends Number {
                 if (init)
                     break;
             }
-            else if (casBase(v = base,
-                             ((fn == null) ?
-                              Double.doubleToRawLongBits
-                              (Double.longBitsToDouble(v) + x) :
-                              Double.doubleToRawLongBits
-                              (fn.applyAsDouble
-                               (Double.longBitsToDouble(v), x)))))
+            else if (casBase(v = base, apply(fn, v, x)))
                 break;                          // Fall back on using base
         }
     }

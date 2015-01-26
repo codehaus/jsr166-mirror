@@ -483,14 +483,15 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      */
     public void close() {
         if (!closed) {
-            BufferedSubscription<T> b, next;
+            BufferedSubscription<T> b;
             synchronized (this) {
                 b = clients;
                 clients = null;
                 closed = true;
             }
             while (b != null) {
-                next = b.next;
+                BufferedSubscription<T> next = b.next;
+                b.next = null;
                 b.onComplete();
                 b = next;
             }
@@ -511,14 +512,15 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         if (error == null)
             throw new NullPointerException();
         if (!closed) {
-            BufferedSubscription<T> b, next;
+            BufferedSubscription<T> b;
             synchronized (this) {
                 b = clients;
                 clients = null;
                 closed = true;
             }
             while (b != null) {
-                next = b.next;
+                BufferedSubscription<T> next = b.next;
+                b.next = null;
                 b.onError(error);
                 b = next;
             }
@@ -690,6 +692,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                     if ((d = b.demand - n) < min)
                         min = d;
                     nonEmpty = true;
+                    pred = b;
                 }
             }
         }
@@ -716,8 +719,11 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                     else
                         pred.next = next;
                 }
-                else if (n > max)
-                    max = n;
+                else {
+                    if (n > max)
+                        max = n;
+                    pred = b;
+                }
             }
         }
         return max;

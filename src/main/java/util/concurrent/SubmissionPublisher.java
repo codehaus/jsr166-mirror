@@ -26,35 +26,35 @@ import java.util.function.Supplier;
  * Executor depends on expected usage. If the generator(s) of
  * submitted items run in separate threads, and the number of
  * subscribers can be estimated, consider using a {@link
- * Executors#newFixedThreadPool}. Otherwise consider using a
- * work-stealing pool (including {@link ForkJoinPool#commonPool}).
+ * Executors#newFixedThreadPool}. Otherwise consider using
+ * the default {@link ForkJoinPool#commonPool}.
  *
  * <p>Buffering allows producers and consumers to transiently operate
  * at different rates.  Each subscriber uses an independent buffer.
  * Buffers are created upon first use and expanded as needed up to the
- * given maximum. (the enforced capacity may be rounded up to the
+ * given maximum. (The enforced capacity may be rounded up to the
  * nearest power of two and/or bounded by the largest value supported
  * by this implementation.)  Invocations of {@link
  * Flow.Subscription#request} do not directly result in buffer
  * expansion, but risk saturation if unfilled requests exceed the
- * maximum capacity.  Choices of buffer parameters rely on expected
- * rates, resources, and usages, that usually benefit from empirical
- * testing.  As a first guess, consider a value of 64.
+ * maximum capacity.  The default value of {@link
+ * Flow#defaultBufferSize} may provide a useful starting point for
+ * choosing a capacity based on expected rates, resources, and usages.
  *
  * <p>Publication methods support different policies about what to do
  * when buffers are saturated. Method {@link #submit} blocks until
- * resources are available. This is simplest, but least
- * responsive. The {@code offer} methods may drop items (either
- * immediately or with bounded timeout), but provide an opportunity to
- * interpose a handler and then retry.
+ * resources are available. This is simplest, but least responsive.
+ * The {@code offer} methods may drop items (either immediately or
+ * with bounded timeout), but provide an opportunity to interpose a
+ * handler and then retry.
  *
  * <p>If any Subscriber method throws an exception, its subscription
- * is cancelled.  If the supplied Executor throws
- * RejectedExecutionException (or any other RuntimeException or Error)
- * when attempting to execute a task, or a drop handler throws an
- * exception when processing a dropped item, then the exception is
- * rethrown. In these cases, some but not all subscribers may have
- * received items. It is usually good practice to {@link
+ * is cancelled.  If the supplied Executor throws {@link
+ * RejectedExecutionException} (or any other RuntimeException or
+ * Error) when attempting to execute a task, or a drop handler throws
+ * an exception when processing a dropped item, then the exception is
+ * rethrown. In these cases, not all subscribers will have been issued
+ * the published item. It is usually good practice to {@link
  * #closeExceptionally closeExceptionally} in these cases.
  *
  * <p>This class may also serve as a convenient base for subclasses
@@ -62,8 +62,8 @@ import java.util.function.Supplier;
  * them.  For example here is a class that periodically publishes the
  * items generated from a supplier. (In practice you might add methods
  * to independently start and stop generation, to share schedulers
- * among publishers, and so on, or instead use a SubmissionPublisher
- * as a component rather than a superclass.)
+ * among publishers, and so on, or use a SubmissionPublisher as a
+ * component rather than a superclass.)
  *
  * <pre> {@code
  * class PeriodicPublisher<T> extends SubmissionPublisher<T> {
@@ -87,7 +87,7 @@ import java.util.function.Supplier;
  * <p>Here is an example of a {@link Flow.Processor} implementation.
  * It uses single-step requests to its publisher for simplicity of
  * illustration. A more adaptive version could monitor flow using the
- * lag estimate returned from {@code submit} and/or other utility
+ * lag estimate returned from {@code submit}, along with other utility
  * methods.
  *
  * <pre> {@code
@@ -125,9 +125,10 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * only one thread submits items).
      */
 
-    // Ensuring that all arrays have power of two length
+    /** The largest possible power of two array size. */
+    static final int BUFFER_CAPACITY_LIMIT  = 1 << 30;
 
-    static final int MAXIMUM_BUFFER_CAPACITY  = 1 << 30;
+    /** Round capacity to power of 2, at least 2, at most limit. */
     static final int roundCapacity(int cap) { // to nearest power of 2
         int n = cap - 1;
         n |= n >>> 1;
@@ -136,7 +137,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         n |= n >>> 8;
         n |= n >>> 16;
         return (n <= 0) ? 2 : // at least 2
-            (n >= MAXIMUM_BUFFER_CAPACITY) ? MAXIMUM_BUFFER_CAPACITY : n + 1;
+            (n >= BUFFER_CAPACITY_LIMIT) ? BUFFER_CAPACITY_LIMIT : n + 1;
     }
 
     /**
@@ -145,8 +146,12 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * It requires O(n) traversal to check for duplicate subscribers,
      * but we expect that subscribing is much less common than
      * publishing. Unsubscribing occurs only during traversal loops,
-     * when BufferedSubscription methods or status checks return
-     * negative values signifying that they have been disabled.
+     * when BufferedSubscription methods return negative values
+     * signifying that they have been disabled.  To reduce
+     * head-of-line blocking, submit and offer methods first call
+     * BufferedSubscription.offer on each subscriber, and place
+     * saturated ones in retries list (using nextRetry field), and
+     * retry, possibly blocking or dropping.
      */
     BufferedSubscription<T> clients;
 
@@ -160,9 +165,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     /**
      * Creates a new SubmissionPublisher using the given Executor for
      * async delivery to subscribers, and with the given maximum
-     * buffer size for each subscriber. In the absence of other
-     * constraints, consider using {@code ForkJoinPool.commonPool(),
-     * 64}.
+     * buffer size for each subscriber.
      *
      * @param executor the executor to use for async delivery,
      * supporting creation of at least one independent thread
@@ -185,16 +188,28 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /**
+     * Creates a new SubmissionPublisher using the {@link
+     * ForkJoinPool#commonPool()} for async delivery to subscribers,
+     * and with maximum buffer capacity of {@link
+     * Flow#defaultBufferSize}.
+     */
+    public SubmissionPublisher() {
+        this(ForkJoinPool.commonPool(), Flow.defaultBufferSize());
+    }
+
+    /**
      * Adds the given Subscriber unless already subscribed.  If
-     * already subscribed, the Subscriber's onError method is invoked
-     * with an IllegalStateException.  Otherwise, upon success, the
-     * Subscriber's onSubscribe method is invoked with a new
-     * Subscription. If onSubscribe throws an exception, the
-     * subscription is cancelled. Otherwise, if this
-     * SubmissionPublisher is closed, the subscriber's onComplete
-     * method is then invoked.  Subscribers may enable receiving items
-     * by invoking the {@code request} method of the new Subscription,
-     * and may unsubscribe by invoking its cancel method.
+     * already subscribed, the Subscriber's {@code onError} method is
+     * invoked on the existing subscription with an {@link
+     * IllegalStateException}.  Otherwise, upon success, the
+     * Subscriber's {@code onSubscribe} method is invoked
+     * asynchronously with a new {@link Flow.Subscription}. If {@code
+     * onSubscribe} throws an exception, the subscription is
+     * cancelled. Otherwise, if this SubmissionPublisher is closed,
+     * the subscriber's {@code onComplete} method is then invoked.
+     * Subscribers may enable receiving items by invoking the {@code
+     * request} method of the new Subscription, and may unsubscribe by
+     * invoking its {@code cancel} method.
      *
      * @param subscriber the subscriber
      * @throws NullPointerException if subscriber is null
@@ -203,52 +218,52 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         if (subscriber == null) throw new NullPointerException();
         BufferedSubscription<T> subscription =
             new BufferedSubscription<T>(subscriber, executor, maxBufferCapacity);
-        boolean present = false, complete;
         synchronized (this) {
-            complete = closed;
-            BufferedSubscription<T> pred = null, next;
-            for (BufferedSubscription<T> b = clients; ; b = next) {
+            for (BufferedSubscription<T> b = clients, pred = null;;) {
                 if (b == null) {
-                    if (pred == null)
+                    subscription.onSubscribe();
+                    if (closed)
+                        subscription.onComplete();
+                    else if (pred == null)
                         clients = subscription;
                     else
                         pred.next = subscription;
-                    subscription.onSubscribe();
                     break;
                 }
-                next = b.next;
+                BufferedSubscription<T> next = b.next;
                 if (b.isDisabled()) { // remove
+                    b.next = null;    // detach
                     if (pred == null)
                         clients = next;
                     else
                         pred.next = next;
                 }
                 else if (subscriber.equals(b.subscriber)) {
-                    present = true;
+                    b.onError(new IllegalStateException("Duplicate subscribe"));
                     break;
                 }
-                pred = b;
+                else
+                    pred = b;
+                b = next;
             }
         }
-        if (present)
-            subscriber.onError(new IllegalStateException("Already subscribed"));
-        else if (complete)
-            subscription.onComplete();
     }
 
     /**
      * Publishes the given item to each current subscriber by
-     * asynchronously invoking its onNext method, blocking
-     * uninterruptibly while resources for any subscriber are
-     * unavailable. This method returns an estimate of the maximum lag
-     * (number of items submitted but not yet consumed) among all
-     * current subscribers. This value is at least one (accounting for
-     * this submitted item) if there are any subscribers, else zero.
+     * asynchronously invoking its {@link Flow.Subscriber#onNext}
+     * method, blocking uninterruptibly while resources for any
+     * subscriber are unavailable. This method returns an estimate of
+     * the maximum lag (number of items submitted but not yet
+     * consumed) among all current subscribers. This value is at least
+     * one (accounting for this submitted item) if there are any
+     * subscribers, else zero.
      *
      * <p>If the Executor for this publisher throws a
      * RejectedExecutionException (or any other RuntimeException or
      * Error) when attempting to asynchronously notify subscribers,
-     * then this exception is rethrown.
+     * then this exception is rethrown, in which case not all
+     * subscribers will have been issued this item.
      *
      * @param item the (non-null) item to publish
      * @return the estimated maximum lag among subscribers
@@ -259,67 +274,66 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     public int submit(T item) {
         if (item == null) throw new NullPointerException();
         int lag = 0;
+        boolean complete;
         synchronized (this) {
-            if (closed)
-                throw new IllegalStateException("Closed");
-            /*
-             * To reduce head-of-line blocking, try offer() on each,
-             * place saturated ones in retries list, and later wait
-             * them out.
-             */
-            BufferedSubscription<T> b = clients, retries = null,
-                rtail = null, pred = null, next;
-            for ( ; b != null; b = next) {
-                int stat;
-                next = b.next;
-                if ((stat = b.offer(item)) < 0) {
-                    if (pred == null)
-                        clients = next;
-                    else
-                        pred.next = next;
-                }
-                else {
-                    if (stat == 0) {
-                        if (rtail == null)
-                            retries = b;
+            complete = closed;
+            BufferedSubscription<T> b = clients;
+            if (!complete) {
+                BufferedSubscription<T> pred = null, r = null, rtail = null;
+                while (b != null) {
+                    BufferedSubscription<T> next = b.next;
+                    int stat = b.offer(item);
+                    if (stat < 0) {           // disabled
+                        b.next = null;
+                        if (pred == null)
+                            clients = next;
                         else
-                            rtail.nextRetry = b;
-                        rtail = b;
-                        stat = maxBufferCapacity;
+                            pred.next = next;
                     }
+                    else {
+                        if (stat > lag)
+                            lag = stat;
+                        else if (stat == 0) { // place on retry list
+                            b.nextRetry = null;
+                            if (rtail == null)
+                                r = b;
+                            else
+                                rtail.nextRetry = b;
+                            rtail = b;
+                        }
+                        pred = b;
+                    }
+                    b = next;
+                }
+                while (r != null) {
+                    BufferedSubscription<T> nextRetry = r.nextRetry;
+                    r.nextRetry = null;
+                    int stat = r.submit(item);
                     if (stat > lag)
                         lag = stat;
-                    pred = b;
+                    else if (stat < 0 && clients == r)
+                        clients = r.next; // postpone internal unsubscribes
+                    r = nextRetry;
                 }
             }
-            if (retries != null)
-                retrySubmit(retries, item);
         }
-        return lag;
-    }
-
-    /**
-     * Calls submit on each subscription on retry list.
-     */
-    private void retrySubmit(BufferedSubscription<T> retries, T item) {
-        for (BufferedSubscription<T> r = retries; r != null;) {
-            BufferedSubscription<T> nextRetry = r.nextRetry;
-            r.nextRetry = null;
-            r.submit(item);
-            r = nextRetry;
-        }
+        if (complete)
+            throw new IllegalStateException("Closed");
+        else
+            return lag;
     }
 
     /**
      * Publishes the given item, if possible, to each current
-     * subscriber by asynchronously invoking its onNext method. The
-     * item may be dropped by one or more subscribers if resource
-     * limits are exceeded, in which case the given handler (if
-     * non-null) is invoked, and if it returns true, retried once.
-     * Other calls to methods in this class by other threads are
-     * blocked while the handler is invoked.  Unless recovery is
-     * assured, options are usually limited to logging the error
-     * and/or issuing an onError signal to the subscriber.
+     * subscriber by asynchronously invoking its {@link
+     * Flow.Subscriber#onNext} method. The item may be dropped by one
+     * or more subscribers if resource limits are exceeded, in which
+     * case the given handler (if non-null) is invoked, and if it
+     * returns true, retried once.  Other calls to methods in this
+     * class by other threads are blocked while the handler is
+     * invoked.  Unless recovery is assured, options are usually
+     * limited to logging the error and/or issuing an {@code onError}
+     * signal to the subscriber.
      *
      * <p>This method returns a status indicator: If negative, it
      * represents the (negative) number of drops (failed attempts to
@@ -347,50 +361,23 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      */
     public int offer(T item,
                      BiPredicate<Flow.Subscriber<? super T>, ? super T> onDrop) {
-        if (item == null) throw new NullPointerException();
-        int ret = 0;
-        synchronized (this) {
-            if (closed)
-                throw new IllegalStateException("Closed");
-            BufferedSubscription<T> pred = null, next;
-            for (BufferedSubscription<T> b = clients; b != null; b = next) {
-                int stat;
-                next = b.next;
-                if ((stat = b.offer(item)) == 0 &&
-                    onDrop != null &&
-                    onDrop.test(b.subscriber, item))
-                    stat = b.offer(item);
-                if (stat < 0) {
-                    if (pred == null)
-                        clients = next;
-                    else
-                        pred.next = next;
-                }
-                else {
-                    pred = b;
-                    if (stat == 0)
-                        ret = (ret >= 0) ? -1 : ret - 1;
-                    else if (ret >= 0 && stat > ret)
-                        ret = stat;
-                }
-            }
-            return ret;
-        }
+        return doOffer(0L, item, onDrop);
     }
 
     /**
      * Publishes the given item, if possible, to each current
-     * subscriber by asynchronously invoking its onNext method,
-     * blocking while resources for any subscription are unavailable,
-     * up to the specified timeout or the caller thread is
-     * interrupted, at which point the given handler (if non-null) is
-     * invoked, and if it returns true, retried once. (The drop
-     * handler may distinguish timeouts from interrupts by checking
-     * whether the current thread is interrupted.) Other calls to
-     * methods in this class by other threads are blocked while the
-     * handler is invoked.  Unless recovery is assured, options are
-     * usually limited to logging the error and/or issuing an onError
-     * signal to the subscriber.
+     * subscriber by asynchronously invoking its {@link
+     * Flow.Subscriber#onNext} method, blocking while resources for
+     * any subscription are unavailable, up to the specified timeout
+     * or the caller thread is interrupted, at which point the given
+     * handler (if non-null) is invoked, and if it returns true,
+     * retried once. (The drop handler may distinguish timeouts from
+     * interrupts by checking whether the current thread is
+     * interrupted.) Other calls to methods in this class by other
+     * threads are blocked while the handler is invoked.  Unless
+     * recovery is assured, options are usually limited to logging the
+     * error and/or issuing an {@code onError} signal to the
+     * subscriber.
      *
      * <p>This method returns a status indicator: If negative, it
      * represents the (negative) number of drops (failed attempts to
@@ -422,51 +409,89 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      */
     public int offer(T item, long timeout, TimeUnit unit,
                      BiPredicate<Flow.Subscriber<? super T>, ? super T> onDrop) {
+        return doOffer(unit.toNanos(timeout), item, onDrop);
+    }
+
+    /** Common implementation for both forms of offer */
+    final int doOffer(long nanos, T item,
+                      BiPredicate<Flow.Subscriber<? super T>, ? super T> onDrop) {
         if (item == null) throw new NullPointerException();
-        long nanos = unit.toNanos(timeout);
-        int ret = 0;
+        int lag = 0, drops = 0;
+        boolean complete;
         synchronized (this) {
-            if (closed)
-                throw new IllegalStateException("Closed");
-            BufferedSubscription<T> pred = null, next;
-            for (BufferedSubscription<T> b = clients; b != null; b = next) {
-                int stat;
-                next = b.next;
-                if ((stat = b.offerNanos(item, nanos)) == 0 &&
-                    onDrop != null && onDrop.test(b.subscriber, item))
-                    stat = b.offer(item);
-                if (stat < 0) {
-                    if (pred == null)
-                        clients = next;
-                    else
-                        pred.next = next;
+            complete = closed;
+            BufferedSubscription<T> b = clients;
+            if (!complete) {
+                BufferedSubscription<T> pred = null, r = null, rtail = null;
+                while (b != null) {
+                    BufferedSubscription<T> next = b.next;
+                    int stat = b.offer(item);
+                    if (stat < 0) {
+                        b.next = null;
+                        if (pred == null)
+                            clients = next;
+                        else
+                            pred.next = next;
+                    }
+                    else {
+                        if (stat > lag)
+                            lag = stat;
+                        else if (stat == 0) {
+                            b.nextRetry = null;
+                            if (rtail == null)
+                                r = b;
+                            else
+                                rtail.nextRetry = b;
+                            rtail = b;
+                        }
+                        else if (stat > lag)
+                            lag = stat;
+                        pred = b;
+                    }
+                    b = next;
                 }
-                else {
-                    pred = b;
+                while (r != null) {
+                    BufferedSubscription<T> nextRetry = r.nextRetry;
+                    r.nextRetry = null;
+                    int stat = (nanos > 0L) ? r.timedOffer(item, nanos) :
+                        r.offer(item);
+                    if (stat == 0 && onDrop != null &&
+                        onDrop.test(r.subscriber, item))
+                        stat = r.offer(item);
                     if (stat == 0)
-                        ret = (ret >= 0) ? -1 : ret - 1;
-                    else if (ret >= 0 && stat > ret)
-                        ret = stat;
+                        ++drops;
+                    else if (stat > lag)
+                        lag = stat;
+                    else if (stat < 0 && clients == r)
+                        clients = r.next;
+                    r = nextRetry;
                 }
             }
         }
-        return ret;
+        if (complete)
+            throw new IllegalStateException("Closed");
+        else
+            return (drops > 0) ? -drops : lag;
     }
 
     /**
-     * Unless already closed, issues onComplete signals to current
-     * subscribers, and disallows subsequent attempts to publish.
+     * Unless already closed, issues {@link
+     * Flow.Subscriber#onComplete} signals to current subscribers, and
+     * disallows subsequent attempts to publish. Upon return, this
+     * method does <em>NOT</em> guarantee that all subscribers have
+     * yet completed.
      */
     public void close() {
         if (!closed) {
-            BufferedSubscription<T> b, next;
+            BufferedSubscription<T> b;
             synchronized (this) {
                 b = clients;
                 clients = null;
                 closed = true;
             }
             while (b != null) {
-                next = b.next;
+                BufferedSubscription<T> next = b.next;
+                b.next = null;
                 b.onComplete();
                 b = next;
             }
@@ -474,25 +499,28 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /**
-     * Unless already closed, issues onError signals to current
-     * subscribers with the given error, and disallows subsequent
-     * attempts to publish.
+     * Unless already closed, issues {@link Flow.Subscriber#onError}
+     * signals to current subscribers with the given error, and
+     * disallows subsequent attempts to publish. Upon return, this
+     * method does <em>NOT</em> guarantee that all subscribers have
+     * yet completed.
      *
-     * @param error the onError argument sent to subscribers
+     * @param error the {@code onError} argument sent to subscribers
      * @throws NullPointerException if error is null
      */
     public void closeExceptionally(Throwable error) {
         if (error == null)
             throw new NullPointerException();
         if (!closed) {
-            BufferedSubscription<T> b, next;
+            BufferedSubscription<T> b;
             synchronized (this) {
                 b = clients;
                 clients = null;
                 closed = true;
             }
             while (b != null) {
-                next = b.next;
+                BufferedSubscription<T> next = b.next;
+                b.next = null;
                 b.onError(error);
                 b = next;
             }
@@ -517,14 +545,11 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         boolean nonEmpty = false;
         if (!closed) {
             synchronized (this) {
-                BufferedSubscription<T> pred = null, next;
-                for (BufferedSubscription<T> b = clients; b != null; b = next) {
-                    next = b.next;
+                for (BufferedSubscription<T> b = clients; b != null;) {
+                    BufferedSubscription<T> next = b.next;
                     if (b.isDisabled()) {
-                        if (pred == null)
-                            clients = next;
-                        else
-                            pred.next = next;
+                        b.next = null;
+                        b = clients = next;
                     }
                     else {
                         nonEmpty = true;
@@ -549,6 +574,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 for (BufferedSubscription<T> b = clients; b != null; b = next) {
                     next = b.next;
                     if (b.isDisabled()) {
+                        b.next = null;
                         if (pred == null)
                             clients = next;
                         else
@@ -583,7 +609,9 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
     }
 
     /**
-     * Returns a list of current subscribers.
+     * Returns a list of current subscribers for monitoring and
+     * tracking purposes, not for invoking {@link Flow.Subscriber}
+     * methods on the subscribers.
      *
      * @return list of current subscribers
      */
@@ -594,6 +622,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             for (BufferedSubscription<T> b = clients; b != null; b = next) {
                 next = b.next;
                 if (b.isDisabled()) {
+                    b.next = null;
                     if (pred == null)
                         clients = next;
                     else
@@ -621,6 +650,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 for (BufferedSubscription<T> b = clients; b != null; b = next) {
                     next = b.next;
                     if (b.isDisabled()) {
+                        b.next = null;
                         if (pred == null)
                             clients = next;
                         else
@@ -652,6 +682,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 int n; long d;
                 next = b.next;
                 if ((n = b.estimateLag()) < 0) {
+                    b.next = null;
                     if (pred == null)
                         clients = next;
                     else
@@ -661,6 +692,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                     if ((d = b.demand - n) < min)
                         min = d;
                     nonEmpty = true;
+                    pred = b;
                 }
             }
         }
@@ -681,16 +713,41 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 int n;
                 next = b.next;
                 if ((n = b.estimateLag()) < 0) {
+                    b.next = null;
                     if (pred == null)
                         clients = next;
                     else
                         pred.next = next;
                 }
-                else if (n > max)
-                    max = n;
+                else {
+                    if (n > max)
+                        max = n;
+                    pred = b;
+                }
             }
         }
         return max;
+    }
+
+    /**
+     * A task for consuming buffer items and signals, created and
+     * executed whenever they become available. A task consumes as
+     * many items/signals as possible before terminating, at which
+     * point another task is created when needed. The dual Runnable
+     * and ForkJoinTask declaration saves overhead when executed by
+     * ForkJoinPools, without impacting other kinds of Executors.
+     */
+    @SuppressWarnings("serial")
+    static final class ConsumerTask<T> extends ForkJoinTask<Void>
+        implements Runnable {
+        final BufferedSubscription<T> consumer;
+        ConsumerTask(BufferedSubscription<T> consumer) {
+            this.consumer = consumer;
+        }
+        public final Void getRawResult() { return null; }
+        public final void setRawResult(Void v) {}
+        public final boolean exec() { consumer.consume(); return false; }
+        public final void run() { consumer.consume(); }
     }
 
     /**
@@ -710,11 +767,6 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * coded to exploit the most common case in which they are only
      * called by consumers (usually within onNext).
      *
-     * This class also serves as its own consumer task, consuming as
-     * many items/signals as possible before terminating, at which
-     * point it is re-executed when needed. (The dual Runnable and
-     * ForkJoinTask declaration saves overhead when executed by
-     * ForkJoinPools, without impacting other kinds of Executors.)
      * Execution control is managed using the ACTIVE ctl bit. We
      * ensure that a task is active when consumable items (and
      * usually, SUBSCRIBE, ERROR or COMPLETE signals) are present and
@@ -722,8 +774,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * the creation side by the possibility of exceptions when trying
      * to execute tasks. These eventually force DISABLED state, but
      * sometimes not directly. On the task side, termination (clearing
-     * ACTIVE) may race with producers or request() calls, so in some
-     * cases requires a re-check, re-activating if possible.
+     * ACTIVE) that would otherwise race with producers or request()
+     * calls uses the CONSUME keep-alive bit to force a recheck.
      *
      * The ctl field also manages run state. When DISABLED, no further
      * updates are possible. Disabling may be preceded by setting
@@ -740,44 +792,49 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
      * the field before trying to block, but must then recheck (via
      * offer) before parking. Signalling then just unparks and clears
      * waiter field. If the producer and consumer are both in the same
-     * ForkJoinPool, the producer attempts to help run consumer tasks
-     * that it forked before blocking.
+     * ForkJoinPool, or consumers are running in commonPool, the
+     * producer attempts to help run consumer tasks that it forked
+     * before blocking.  To avoid potential cycles, only one level of
+     * helping is currently supported.
      *
      * This class uses @Contended and heuristic field declaration
-     * ordering to reduce memory contention on BufferedSubscription
-     * itself, but it does not currently attempt to avoid memory
-     * contention (especially including card-marks) among buffer
-     * elements, that can significantly slow down some usages.
+     * ordering to reduce false-sharing-based memory contention among
+     * instances of BufferedSubscription, but it does not currently
+     * attempt to avoid memory contention among buffers. This field
+     * and element packing can hurt performance especially when each
+     * publisher has only one client operating at a high rate.
      * Addressing this may require allocating substantially more space
      * than users expect.
      */
     @SuppressWarnings("serial")
     @sun.misc.Contended
-    static final class BufferedSubscription<T> extends ForkJoinTask<Void>
-        implements Runnable, Flow.Subscription, ForkJoinPool.ManagedBlocker {
+    static final class BufferedSubscription<T>
+        implements Flow.Subscription, ForkJoinPool.ManagedBlocker {
         // Order-sensitive field declarations
-        long timeout;                     // > 0 if timed wait
-        volatile long demand;             // # unfilled requests
-        int maxCapacity;                  // reduced on OOME
-        int putStat;                      // offer result for ManagedBlocker
-        volatile int ctl;                 // atomic run state flags
-        volatile int head;                // next position to take
-        volatile int tail;                // next position to put
-        volatile Object[] array;          // buffer: null if disabled
+        long timeout;                      // > 0 if timed wait
+        volatile long demand;              // # unfilled requests
+        int maxCapacity;                   // reduced on OOME
+        int putStat;                       // offer result for ManagedBlocker
+        int helpDepth;                     // nested helping depth (at most 1)
+        volatile int ctl;                  // atomic run state flags
+        volatile int head;                 // next position to take
+        volatile int tail;                 // next position to put
+        Object[] array;                    // buffer: null if disabled
         Flow.Subscriber<? super T> subscriber; // null if disabled
-        Executor executor;                // null if disabled
-        volatile Throwable pendingError;  // holds until onError issued
-        volatile Thread waiter;           // blocked producer thread
-        T putItem;                        // for offer within ManagedBlocker
-        BufferedSubscription<T> next;     // used only by publisher
-        BufferedSubscription<T> nextRetry;// used only by publisher
+        Executor executor;                 // null if disabled
+        volatile Throwable pendingError;   // holds until onError issued
+        volatile Thread waiter;            // blocked producer thread
+        T putItem;                         // for offer within ManagedBlocker
+        BufferedSubscription<T> next;      // used only by publisher
+        BufferedSubscription<T> nextRetry; // used only by publisher
 
         // ctl values
         static final int ACTIVE    = 0x01; // consumer task active
-        static final int DISABLED  = 0x02; // final state
-        static final int ERROR     = 0x04; // signal onError then disable
-        static final int SUBSCRIBE = 0x08; // signal onSubscribe
-        static final int COMPLETE  = 0x10; // signal onComplete when done
+        static final int CONSUME   = 0x02; // keep-alive for consumer task
+        static final int DISABLED  = 0x04; // final state
+        static final int ERROR     = 0x08; // signal onError then disable
+        static final int SUBSCRIBE = 0x10; // signal onSubscribe
+        static final int COMPLETE  = 0x20; // signal onComplete when done
 
         static final long INTERRUPTED = -1L; // timeout vs interrupt sentinel
 
@@ -812,27 +869,193 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
          */
         final int offer(T item) {
             Object[] a = array;
-            int t = tail, stat = t + 1 - head, n, i;
-            if (a != null && (n = a.length) >= stat && (i = t & (n - 1)) >= 0) {
+            int t = tail, size = t + 1 - head, stat, cap, i;
+            if (a == null || (cap = a.length) < size || (i = t & (cap - 1)) < 0)
+                stat = growAndAdd(a, item);
+            else {
                 a[i] = item;
                 U.putOrderedInt(this, TAIL, t + 1);
+                stat = size;
             }
-            else if ((stat = growAndAdd(a, item)) <= 0)
-                return stat;
-            for (int c;;) { // possibly start task
-                Executor e;
-                if (((c = ctl) & ACTIVE) != 0)
+            return (stat > 0 &&
+                    (ctl & (ACTIVE | CONSUME)) != (ACTIVE | CONSUME)) ?
+                startOnOffer(stat) : stat;
+        }
+
+        /**
+         * Tries to create or expand buffer, then adds item if possible.
+         */
+        private int growAndAdd(Object[] a, T item) {
+            int cap, stat;
+            if ((ctl & (ERROR | DISABLED)) != 0) {
+                cap = 0;
+                stat = -1;
+            }
+            else if (a == null) {
+                cap = 0;
+                stat = 1;
+            }
+            else if ((cap = a.length) >= maxCapacity)
+                stat = 0;                       // cannot grow
+            else
+                stat = cap + 1;
+            if (stat > 0) {
+                int newCap = (cap > 0 ? cap << 1 :
+                              maxCapacity >= MINCAP ? MINCAP :
+                              maxCapacity >= 2 ? maxCapacity : 2);
+                if (newCap <= cap)
+                    stat = 0;
+                else {
+                    Object[] newArray = null;
+                    try {
+                        newArray = new Object[newCap];
+                    } catch (Throwable ex) {     // try to cope with OOME
+                    }
+                    if (newArray == null) {
+                        if (cap > 0)
+                            maxCapacity = cap;   // avoid continuous failure
+                        stat = 0;
+                    }
+                    else {
+                        array = newArray;
+                        int t = tail;
+                        int newMask = newCap - 1;
+                        if (a != null && cap > 0) {
+                            int mask = cap - 1;
+                            for (int j = head; j != t; ++j) {
+                                Object x;  // races with consumer
+                                int k = j & mask;
+                                if ((x = a[k]) != null &&
+                                    U.compareAndSwapObject(
+                                        a, (((long)k) << ASHIFT) + ABASE,
+                                        x, null))
+                                    newArray[j & newMask] = x;
+                            }
+                        }
+                        newArray[t & newMask] = item;
+                        tail = t + 1;
+                    }
+                }
+            }
+            return stat;
+        }
+
+        /**
+         * Spins/helps/blocks while offer returns 0.  Called only if
+         * initial offer return 0.
+         */
+        final int submit(T item) {
+            int stat = 0;
+            Executor e = executor;
+            if (helpDepth == 0 && (e instanceof ForkJoinPool)) {
+                Thread thread = Thread.currentThread();
+                // split cases to help compiler specialization
+                if ((thread instanceof ForkJoinWorkerThread) &&
+                    ((ForkJoinWorkerThread)thread).getPool() == e) {
+                    ForkJoinTask<?> t;
+                    while ((t = ForkJoinTask.peekNextLocalTask()) != null &&
+                           (t instanceof ConsumerTask)) {
+                        if ((stat = offer(item)) != 0 || !t.tryUnfork())
+                            break;
+                        ((ConsumerTask<?>)t).consumer.helpConsume();
+                    }
+                }
+                else if (e == ForkJoinPool.commonPool()) {
+                    ForkJoinTask<?> t;
+                    while ((t = ForkJoinTask.peekNextLocalTask()) != null &&
+                           (t instanceof ConsumerTask)) {
+                        if ((stat = offer(item)) != 0 || !t.tryUnfork())
+                            break;
+                        ((ConsumerTask<?>)t).consumer.helpConsume();
+                    }
+                }
+            }
+            if (stat == 0 && (stat = offer(item)) == 0) {
+                putItem = item;
+                timeout = 0L;
+                try {
+                    ForkJoinPool.managedBlock(this);
+                } catch (InterruptedException ie) {
+                    timeout = INTERRUPTED;
+                }
+                stat = putStat;
+                if (timeout < 0L)
+                    Thread.currentThread().interrupt();
+            }
+            return stat;
+        }
+
+        /**
+         * Timeout version; similar to submit
+         */
+        final int timedOffer(T item, long nanos) {
+            int stat = 0;
+            Executor e = executor;
+            if (helpDepth == 0 && (e instanceof ForkJoinPool)) {
+                Thread thread = Thread.currentThread();
+                if (((thread instanceof ForkJoinWorkerThread) &&
+                     ((ForkJoinWorkerThread)thread).getPool() == e) ||
+                    e == ForkJoinPool.commonPool()) {
+                    ForkJoinTask<?> t;
+                    long deadline = System.nanoTime() + nanos;
+                    while ((t = ForkJoinTask.peekNextLocalTask()) != null &&
+                           (t instanceof ConsumerTask)) {
+                        if ((stat = offer(item)) != 0 ||
+                            (nanos = deadline - System.nanoTime()) <= 0L ||
+                            !t.tryUnfork())
+                            break;
+                        ((ConsumerTask<?>)t).consumer.helpConsume();
+                    }
+                }
+            }
+            if (stat == 0 && (stat = offer(item)) == 0 &&
+                (timeout = nanos) > 0L) {
+                putItem = item;
+                try {
+                    ForkJoinPool.managedBlock(this);
+                } catch (InterruptedException ie) {
+                    timeout = INTERRUPTED;
+                }
+                stat = putStat;
+                if (timeout < 0L)
+                    Thread.currentThread().interrupt();
+            }
+            return stat;
+        }
+
+        /** Version of consume called when helping in submit or timedOffer */
+        private void helpConsume() {
+            helpDepth = 1; // only one level allowed
+            consume();
+            helpDepth = 0;
+        }
+
+        /**
+         * Tries to start consumer task after offer.
+         * @return -1 if now disabled, else argument
+         */
+        private int startOnOffer(int stat) {
+            for (;;) {
+                Executor e; int c;
+                if ((c = ctl) == DISABLED || (e = executor) == null) {
+                    stat = -1;
                     break;
-                else if (c == DISABLED || (e = executor) == null)
-                    return -1;
+                }
+                else if ((c & ACTIVE) != 0) { // ensure keep-alive
+                    if ((c & CONSUME) != 0 ||
+                        U.compareAndSwapInt(this, CTL, c,
+                                            c | CONSUME))
+                        break;
+                }
                 else if (demand == 0L || tail == head)
                     break;
-                else if (U.compareAndSwapInt(this, CTL, c, c | ACTIVE)) {
+                else if (U.compareAndSwapInt(this, CTL, c,
+                                             c | (ACTIVE | CONSUME))) {
                     try {
-                        e.execute(this);
+                        e.execute(new ConsumerTask<T>(this));
                         break;
                     } catch (RuntimeException | Error ex) { // back out
-                        do {} while ((c = ctl) >= 0 &&
+                        do {} while (((c = ctl) & DISABLED) == 0 &&
                                      (c & ACTIVE) != 0 &&
                                      !U.compareAndSwapInt(this, CTL, c,
                                                           c & ~ACTIVE));
@@ -844,141 +1067,28 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         }
 
         /**
-         * Tries to create or expand buffer, then adds item if possible
-         */
-        final int growAndAdd(Object[] oldArray, T item) {
-            int oldLen, newLen;
-            if (oldArray == null) {
-                oldLen = 0;
-                newLen = (maxCapacity >= MINCAP ? MINCAP :
-                          maxCapacity >= 2 ? maxCapacity : 2);
-            }
-            else if ((oldLen = oldArray.length) >= maxCapacity ||
-                     (newLen = oldLen << 1) <= 0)
-                return 0;                         // cannot grow
-            if (ctl == DISABLED)
-                return -1;
-            Object[] newArray;
-            try {
-                newArray = new Object[newLen];
-            } catch (Throwable ex) {              // try to cope with OOME
-                if (oldLen > 0)
-                    maxCapacity = oldLen;        // avoid continuous failure
-                return 0;
-            }
-            array = newArray;
-            int t = tail, oldMask = oldLen - 1, newMask = newLen - 1;
-            if (oldArray != null && oldMask >= 0 && newMask >= oldMask) {
-                for (int j = head; j != t; ++j) { // races with consumer
-                    Object x;
-                    int i = j & oldMask;
-                    if ((x = oldArray[i]) != null &&
-                        U.compareAndSwapObject(oldArray,
-                                               (((long)i) << ASHIFT) + ABASE,
-                                               x, null))
-                        newArray[j & newMask] = x;
-                }
-            }
-            newArray[t & newMask] = item;
-            tail = t + 1;
-            return oldLen + 1;
-        }
-
-        /**
-         * Spins/helps/blocks while offer returns 0
-         */
-        final int submit(T item) {
-            int stat;
-            if ((stat = offer(item)) == 0) {
-                Thread thread = Thread.currentThread();
-                if ((thread instanceof ForkJoinWorkerThread) &&
-                    ((ForkJoinWorkerThread)thread).getPool() == executor) {
-                    for (ForkJoinTask<?> t;;) { // try helping
-                        if ((t = ForkJoinTask.peekNextLocalTask()) == null ||
-                            !(t instanceof BufferedSubscription))
-                            break;
-                        if (t.tryUnfork())
-                            ((BufferedSubscription<?>)t).exec();
-                        if ((stat = offer(item)) != 0)
-                            break;
-                    }
-                }
-                if (stat == 0) {
-                    putItem = item;
-                    timeout = 0L;
-                    try {
-                        ForkJoinPool.managedBlock(this);
-                    } catch (InterruptedException ie) {
-                        timeout = INTERRUPTED;
-                    }
-                    stat = putStat;
-                    if (timeout < 0L)
-                        Thread.currentThread().interrupt();
-                }
-            }
-            return stat;
-        }
-
-        /**
-         * Timeout version of offer
-         */
-        final int offerNanos(T item, long nanos) {
-            int stat;
-            if ((stat = offer(item)) == 0 && nanos > 0L) {
-                Thread thread = Thread.currentThread();
-                if ((thread instanceof ForkJoinWorkerThread) &&
-                    ((ForkJoinWorkerThread)thread).getPool() == executor) {
-                    long deadline = System.nanoTime() + nanos;
-                    for (ForkJoinTask<?> t;;) { // similar to above
-                        if ((t = ForkJoinTask.peekNextLocalTask()) == null ||
-                            !(t instanceof BufferedSubscription))
-                            break;
-                        if (t.tryUnfork())
-                            ((BufferedSubscription<?>)t).exec();
-                        if ((stat = offer(item)) != 0 ||
-                            (nanos = deadline - System.nanoTime()) <= 0L)
-                            break;
-                    }
-                }
-                if (stat == 0 && (timeout = nanos) > 0L) {
-                    putItem = item;
-                    try {
-                        ForkJoinPool.managedBlock(this);
-                    } catch (InterruptedException ie) {
-                        timeout = INTERRUPTED;
-                    }
-                    stat = putStat;
-                    if (timeout < 0L)
-                        Thread.currentThread().interrupt();
-                }
-            }
-            return stat;
-        }
-
-        /**
          * Nulls out most fields, mainly to avoid garbage retention
          * until publisher unsubscribes, but also to help cleanly stop
          * upon error by nulling required components.
          */
-        final void detach() {
-            pendingError = null;
-            subscriber = null;
-            executor = null;
-            array = null;
+        private void detach() {
             Thread w = waiter;
-            if (w != null) {
-                waiter = null;
+            array = null;
+            executor = null;
+            subscriber = null;
+            pendingError = null;
+            waiter = null;
+            if (w != null)
                 LockSupport.unpark(w); // force wakeup
-            }
         }
 
         /**
          * Issues error signal, asynchronously if a task is running,
-         * else synchronously
+         * else synchronously.
          */
         final void onError(Throwable ex) {
             for (int c;;) {
-                if ((c = ctl) == DISABLED)
+                if (((c = ctl) & (ERROR | DISABLED)) != 0)
                     break;
                 else if ((c & ACTIVE) != 0) {
                     pendingError = ex;
@@ -1003,12 +1113,12 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
          * Tries to start consumer task upon a signal or request;
          * disables on failure.
          */
-        final void startOrDisable() {
-            Executor e; // skip if already disabled
-            if ((e = executor) != null) {
+        private void startOrDisable() {
+            Executor e;
+            if ((e = executor) != null) { // skip if already disabled
                 try {
-                    e.execute(this);
-                } catch (Throwable ex) { // back out and force signal
+                    e.execute(new ConsumerTask<T>(this));
+                } catch (Throwable ex) {  // back out and force signal
                     for (int c;;) {
                         if ((c = ctl) == DISABLED || (c & ACTIVE) == 0)
                             break;
@@ -1025,7 +1135,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             for (int c;;) {
                 if ((c = ctl) == DISABLED)
                     break;
-                if (U.compareAndSwapInt(this, CTL, c, c | (ACTIVE | COMPLETE))) {
+                if (U.compareAndSwapInt(this, CTL, c,
+                                        c | (ACTIVE | CONSUME | COMPLETE))) {
                     if ((c & ACTIVE) == 0)
                         startOrDisable();
                     break;
@@ -1037,7 +1148,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
             for (int c;;) {
                 if ((c = ctl) == DISABLED)
                     break;
-                if (U.compareAndSwapInt(this, CTL, c, c | (ACTIVE | SUBSCRIBE))) {
+                if (U.compareAndSwapInt(this, CTL, c,
+                                        c | (ACTIVE | CONSUME | SUBSCRIBE))) {
                     if ((c & ACTIVE) == 0)
                         startOrDisable();
                     break;
@@ -1055,7 +1167,8 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                 if ((c = ctl) == DISABLED)
                     break;
                 else if ((c & ACTIVE) != 0) {
-                    if (U.compareAndSwapInt(this, CTL, c, c | ERROR))
+                    if (U.compareAndSwapInt(this, CTL, c,
+                                            c | (CONSUME | ERROR)))
                         break;
                 }
                 else if (U.compareAndSwapInt(this, CTL, c, DISABLED)) {
@@ -1076,17 +1189,24 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                         d = Long.MAX_VALUE;
                     if (U.compareAndSwapLong(this, DEMAND, prev, d)) {
                         for (int c, h;;) {
-                            if (((c = ctl) & (ACTIVE | DISABLED)) != 0 ||
-                                demand == 0L)
+                            if ((c = ctl) == DISABLED)
                                 break;
-                            if ((h = head) != tail) {
+                            else if ((c & ACTIVE) != 0) {
+                                if ((c & CONSUME) != 0 ||
+                                    U.compareAndSwapInt(this, CTL, c,
+                                                        c | CONSUME))
+                                    break;
+                            }
+                            else if ((h = head) != tail) {
                                 if (U.compareAndSwapInt(this, CTL, c,
-                                                        c | ACTIVE)) {
+                                                        c | (ACTIVE|CONSUME))) {
                                     startOrDisable();
                                     break;
                                 }
                             }
                             else if (head == h && tail == h)
+                                break;          // else stale
+                            if (demand == 0L)
                                 break;
                         }
                         break;
@@ -1100,10 +1220,20 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
 
         public final boolean isReleasable() { // for ManagedBlocker
             T item = putItem;
-            if (item != null) {
-                if ((putStat = offer(item)) == 0)
-                    return false;
-                putItem = null;
+            if (item != null) { // A few randomized spins
+                for (int spins = MINCAP, r = 0;;) {
+                    if ((putStat = offer(item)) != 0) {
+                        putItem = null;
+                        break;
+                    }
+                    else if (r == 0)
+                        r = ThreadLocalRandom.nextSecondarySeed();
+                    else {
+                        r ^= r << 6; r ^= r >>> 21; r ^= r << 7; // xorshift
+                        if (r >= 0 && --spins <= 0)
+                            return false;
+                    }
+                }
             }
             return true;
         }
@@ -1139,24 +1269,20 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
         }
 
         /**
-         * Consumer task loop; supports resubmission when used as
-         * ForkJoinTask.
+         * Consumer loop, called from ConsumerTask, or indirectly
+         * via helpConsume when helping during submit.
          */
-        public final boolean exec() {
+        final void consume() {
             Flow.Subscriber<? super T> s;
-            if ((s = subscriber) != null) { // else disabled
-                for (;;) {
-                    long d = demand; // read volatile fields in acceptable order
-                    int c = ctl;
-                    int h = head;
-                    int t = tail;
-                    Object[] a = array;
-                    int i, n; Object x; Thread w;
-                    if ((c & (ERROR | SUBSCRIBE | DISABLED)) != 0) {
+            if ((s = subscriber) != null) {           // else disabled
+                for (int h = head;;) {
+                    long d = demand;
+                    int c, n, i; Object[] a; Object x; Thread w;
+                    if (((c = ctl) & (ERROR | SUBSCRIBE | DISABLED)) != 0) {
                         if ((c & ERROR) != 0) {
                             Throwable ex = pendingError;
-                            ctl = DISABLED; // no need for CAS
-                            if (ex != null) {
+                            ctl = DISABLED;           // no need for CAS
+                            if (ex != null) {         // null if errorless cancel
                                 try {
                                     s.onError(ex);
                                 } catch (Throwable ignore) {
@@ -1169,7 +1295,7 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                                 try {
                                     s.onSubscribe(this);
                                 } catch (Throwable ex) {
-                                    ctl = DISABLED;   // disable on throw
+                                    onError(ex);
                                 }
                             }
                         }
@@ -1178,62 +1304,55 @@ public class SubmissionPublisher<T> implements Flow.Publisher<T>,
                             break;
                         }
                     }
-                    else if (h == t) {                     // empty
-                        if (h == tail &&
-                            U.compareAndSwapInt(this, CTL, c, c &= ~ACTIVE)) {
-                            if (h != tail || c != (c = ctl)) { // recheck
-                                if ((c & (ACTIVE | DISABLED)) != 0 ||
-                                    !U.compareAndSwapInt(this, CTL, c,
-                                                         c | ACTIVE))
-                                    break;
-                            }
-                            else if ((c & COMPLETE) != 0) {
-                                ctl = DISABLED;
+                    else if (h == tail) {             // apparently empty
+                        if ((c & CONSUME) != 0)       // recheck
+                            U.compareAndSwapInt(this, CTL, c, c & ~CONSUME);
+                        else if ((c & COMPLETE) != 0) {
+                            if (U.compareAndSwapInt(this, CTL, c, DISABLED)) {
                                 try {
                                     s.onComplete();
                                 } catch (Throwable ignore) {
                                 }
                             }
-                            else
+                        }
+                        else if (U.compareAndSwapInt(this, CTL, c,
+                                                     c & ~ACTIVE))
+                            break;
+                    }
+                    else if (d == 0L) {               // can't consume
+                        if (demand == 0L) {           // recheck
+                            if ((c & CONSUME) != 0)
+                                U.compareAndSwapInt(this, CTL, c,
+                                                    c & ~CONSUME);
+                            else if (U.compareAndSwapInt(this, CTL, c,
+                                                         c & ~ACTIVE))
                                 break;
                         }
                     }
-                    else if (a == null || (n = a.length) == 0 ||
+                    else if ((a = array) == null || (n = a.length) == 0 ||
                              (x = a[i = h & (n - 1)]) == null)
-                        ;                                  // stale; retry
-                    else if (d == 0L) {                    // can't take
-                        if (demand == 0L &&
-                            U.compareAndSwapInt(this, CTL, c, c &= ~ACTIVE) &&
-                            ((demand == 0L && c == (c = ctl)) || // recheck
-                             (c & (ACTIVE | DISABLED)) != 0 ||
-                             !U.compareAndSwapInt(this, CTL, c, c | ACTIVE)))
-                            break;
-                    }
+                        ;                             // stale; retry
+                    else if ((c & CONSUME) == 0)
+                        U.compareAndSwapInt(this, CTL, c, c | CONSUME);
                     else if (U.compareAndSwapObject(
                                  a, (((long)i) << ASHIFT) + ABASE, x, null)) {
-                        U.putOrderedInt(this, HEAD, h + 1);
+                        U.putOrderedInt(this, HEAD, ++h);
                         while (!U.compareAndSwapLong(this, DEMAND, d, d - 1L))
-                            d = demand;                     // almost never fails
+                            d = demand;               // almost never fails
                         if ((w = waiter) != null) {
                             waiter = null;
-                            LockSupport.unpark(w);          // release producer
+                            LockSupport.unpark(w);    // release producer
                         }
                         try {
                             @SuppressWarnings("unchecked") T y = (T) x;
                             s.onNext(y);
-                        } catch (Throwable ex) {            // disable on throw
-                            ctl = DISABLED;
+                        } catch (Throwable ex) {
+                            onError(ex);
                         }
                     }
                 }
             }
-            return false; // resubmittable; never joined
         }
-
-        // Runnable and FJ support
-        public final void run() { exec(); }
-        public final Void getRawResult() { return null; }
-        public final void setRawResult(Void v) {}
 
         // Unsafe mechanics
         private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();

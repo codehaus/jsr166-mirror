@@ -22,7 +22,7 @@ import java.util.stream.Stream;
  * href="http://www.reactive-streams.org/"> reactive-streams</a>
  * specification.  They apply in both concurrent and distributed
  * asynchronous settings: All (seven) methods are defined in {@code
- * void} "oneway" message style. Communication relies on a simple form
+ * void} "one-way" message style. Communication relies on a simple form
  * of flow control (method {@link Subscription#request}) that can be
  * used to avoid resource management problems that may otherwise occur
  * in "push" based systems.
@@ -63,13 +63,16 @@ import java.util.stream.Stream;
  *     public synchronized void request(long n) {
  *       if (n != 0 && !completed) {
  *         completed = true;
- *         future = executor.submit(() -> {
- *           if (n < 0)
- *             subscriber.onError(new IllegalArgumentException());
- *           else {
+ *         if (n < 0) {
+ *           IllegalStateException ex = new IllegalStateException();
+ *           executor.execute(() -> subscriber.onError(ex));
+ *         }
+ *         else {
+ *           future = executor.submit(() -> {
  *             subscriber.onNext(Boolean.TRUE);
  *             subscriber.onComplete();
- *           }});
+ *           });
+ *         }
  *       }
  *     }
  *     public synchronized void cancel() {
@@ -117,8 +120,12 @@ import java.util.stream.Stream;
  *   public void onComplete() {}
  * }}</pre>
  *
- * <p>When flow control is inapplicable, a subscriber may initially
- * request an effectively unbounded number of items, as in:
+ * <p>The default value of {@link #defaultBufferSize} may provide a
+ * useful starting point for choosing request sizes and capacities in
+ * Flow components based on expected rates, resources, and usages.
+ * Or, when flow control is known to be always inapplicable, a
+ * subscriber may initially request an effectively unbounded number of
+ * items, as in:
  *
  * <pre> {@code
  * class UnboundedSubscriber<T> implements Subscriber<T> {
@@ -243,10 +250,10 @@ public final class Flow {
          * Adds the given number {@code n} of items to the current
          * unfulfilled demand for this subscription.  If {@code n} is
          * negative, the Subscriber will receive an {@code onError}
-         * signal with an {@link IllegalArgumentException}
-         * argument. Otherwise, the Subscriber will receive up to
-         * {@code n} additional {@code onNext} invocations (or fewer
-         * if terminated).
+         * signal with an {@link IllegalArgumentException} argument.
+         * Otherwise, the Subscriber will receive up to {@code n}
+         * additional {@code onNext} invocations (or fewer if
+         * terminated).
          *
          * @param n the increment of demand; a value of {@code
          * Long.MAX_VALUE} may be considered as effectively unbounded
@@ -274,10 +281,24 @@ public final class Flow {
 
     // Support for static methods
 
-    static final long DEFAULT_BUFFER_SIZE = 64L;
+    static final int DEFAULT_BUFFER_SIZE = 256;
 
-    abstract static class CompletableSubscriber<T,U> implements Subscriber<T>,
-                                                                Consumer<T> {
+    /**
+     * Returns a default value for Publisher or Subscriber buffering,
+     * that may be used in the absence of other constraints.
+     *
+     * @implNote
+     * The current value returned is 256.
+     *
+     * @return the buffer size value
+     */
+    public static int defaultBufferSize() {
+        return DEFAULT_BUFFER_SIZE;
+    }
+
+    abstract static class CompletableSubscriber<T,U>
+        implements Subscriber<T>, Consumer<T>
+    {
         final CompletableFuture<U> status;
         Subscription subscription;
         long requestSize;
@@ -349,7 +370,7 @@ public final class Flow {
 
     /**
      * Equivalent to {@link #consume(long, Publisher, Consumer)}
-     * with a buffer size of 64.
+     * with {@link #defaultBufferSize}.
      *
      * @param <T> the published item type
      * @param publisher the publisher
@@ -361,7 +382,7 @@ public final class Flow {
      */
     public static <T> CompletableFuture<Void> consume(
         Publisher<T> publisher, Consumer<? super T> consumer) {
-        return consume(DEFAULT_BUFFER_SIZE, publisher, consumer);
+        return consume(defaultBufferSize(), publisher, consumer);
     }
 
     /**
@@ -420,7 +441,7 @@ public final class Flow {
 
     /**
      * Equivalent to {@link #stream(long, Publisher, Function)}
-     * with a buffer size of 64.
+     * with {@link #defaultBufferSize}.
      *
      * @param <T> the published item type
      * @param <R> the result type of the stream function
@@ -434,6 +455,6 @@ public final class Flow {
     public static <T,R> CompletableFuture<R> stream(
         Publisher<T> publisher,
         Function<? super Stream<T>,? extends R> streamFunction) {
-        return stream(DEFAULT_BUFFER_SIZE, publisher, streamFunction);
+        return stream(defaultBufferSize(), publisher, streamFunction);
     }
 }

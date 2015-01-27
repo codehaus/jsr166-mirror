@@ -51,7 +51,7 @@ public final class FutileTimedTryLockLoops {
                     continue nextArg;
                 }
             }
-            throw new Error("Usage: FutileTimedTryLockLoops minThreads=n maxThreads=n Threads=n nanos=n iters=n");
+            throw new Error("Usage: FutileTimedTryLockLoops minThreads=n maxThreads=n threads=n nanos=n iters=n");
         }
         final ExecutorService pool = Executors.newCachedThreadPool();
         final ReentrantLock lock = new ReentrantLock();

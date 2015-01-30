@@ -221,8 +221,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * any special processing that needs to be done once the Executor has
  * fully terminated.
  *
- * <p>If hook or callback methods throw exceptions, internal worker
- * threads may in turn fail and abruptly terminate.</dd>
+ * <p>If hook, callback, or BlockingQueue methods throw exceptions,
+ * internal worker threads may in turn fail, abruptly terminate, and
+ * possibly be replaced.</dd>
  *
  * <dt>Queue maintenance</dt>
  *
@@ -1951,7 +1952,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *   // ...
      *   protected void afterExecute(Runnable r, Throwable t) {
      *     super.afterExecute(r, t);
-     *     if (t == null && r instanceof Future<?>) {
+     *     if (t == null && r instanceof Future<?> && ((Future<?>)r).isDone()) {
      *       try {
      *         Object result = ((Future<?>) r).get();
      *       } catch (CancellationException ce) {

@@ -1952,7 +1952,9 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *   // ...
      *   protected void afterExecute(Runnable r, Throwable t) {
      *     super.afterExecute(r, t);
-     *     if (t == null && r instanceof Future<?> && ((Future<?>)r).isDone()) {
+     *     if (t == null
+     *         && r instanceof Future<?>
+     *         && ((Future<?>)r).isDone()) {
      *       try {
      *         Object result = ((Future<?>) r).get();
      *       } catch (CancellationException ce) {
@@ -1960,7 +1962,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *       } catch (ExecutionException ee) {
      *         t = ee.getCause();
      *       } catch (InterruptedException ie) {
-     *         Thread.currentThread().interrupt(); // ignore/reset
+     *         // ignore/reset
+     *         Thread.currentThread().interrupt();
      *       }
      *     }
      *     if (t != null)

@@ -29,23 +29,23 @@ public class ReentrantLockTest extends JSR166TestCase {
     }
 
     /**
-     * A runnable calling lockInterruptibly
+     * A checked runnable calling lockInterruptibly
      */
     class InterruptibleLockRunnable extends CheckedRunnable {
         final ReentrantLock lock;
-        InterruptibleLockRunnable(ReentrantLock l) { lock = l; }
+        InterruptibleLockRunnable(ReentrantLock lock) { this.lock = lock; }
         public void realRun() throws InterruptedException {
             lock.lockInterruptibly();
         }
     }
 
     /**
-     * A runnable calling lockInterruptibly that expects to be
+     * A checked runnable calling lockInterruptibly that expects to be
      * interrupted
      */
     class InterruptedLockRunnable extends CheckedInterruptedRunnable {
         final ReentrantLock lock;
-        InterruptedLockRunnable(ReentrantLock l) { lock = l; }
+        InterruptedLockRunnable(ReentrantLock lock) { this.lock = lock; }
         public void realRun() throws InterruptedException {
             lock.lockInterruptibly();
         }

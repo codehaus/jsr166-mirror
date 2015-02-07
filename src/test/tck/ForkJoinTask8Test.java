@@ -729,10 +729,13 @@ public class ForkJoinTask8Test extends JSR166TestCase {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = null;
-                try {
-                    invokeAll(f, g, h);
-                    shouldThrow();
-                } catch (NullPointerException success) {}
+                Runnable[] throwingActions = {
+                    () -> invokeAll(h),
+                    () -> invokeAll(f, g, h),
+                    () -> invokeAll(f, h, g),
+                    () -> invokeAll(h, f, g),
+                };
+                assertThrows(NullPointerException.class, throwingActions);
             }};
         testInvokeOnPool(mainPool(), a);
     }

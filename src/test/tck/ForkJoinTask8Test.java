@@ -721,19 +721,20 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(tasks) with any null task throws NPE
+     * invokeAll(tasks) with any null task throws NullPointerException
      */
-    public void testInvokeAllNPE() {
+    public void testInvokeAllNullTask() {
         RecursiveAction a = new CheckedRecursiveAction() {
             protected void realCompute() {
                 AsyncFib f = new AsyncFib(8);
                 AsyncFib g = new AsyncFib(9);
-                AsyncFib h = null;
+                AsyncFib nul = null;
                 Runnable[] throwingActions = {
-                    () -> invokeAll(h),
-                    () -> invokeAll(f, g, h),
-                    () -> invokeAll(f, h, g),
-                    () -> invokeAll(h, f, g),
+                    () -> invokeAll(nul),
+                    () -> invokeAll(nul, nul),
+                    () -> invokeAll(f, g, nul),
+                    () -> invokeAll(f, nul, g),
+                    () -> invokeAll(nul, f, g),
                 };
                 assertThrows(NullPointerException.class, throwingActions);
             }};

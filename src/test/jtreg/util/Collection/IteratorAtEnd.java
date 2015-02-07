@@ -86,7 +86,7 @@ public class IteratorAtEnd {
             THROWS(NoSuchElementException.class,
                    new Fun() {void f() { while (true) it.next(); }});
             try { it.remove(); }
-            catch (UnsupportedOperationException _) { return; }
+            catch (UnsupportedOperationException ok) { return; }
             pass();
         } catch (Throwable t) { unexpected(t); }
 
@@ -99,7 +99,7 @@ public class IteratorAtEnd {
                 THROWS(NoSuchElementException.class,
                        new Fun() {void f() { it.previous(); }});
                 try { it.remove(); }
-                catch (UnsupportedOperationException _) { return; }
+                catch (UnsupportedOperationException ok) { return; }
                 pass();
                 check(! list.get(0).equals(x));
             } catch (Throwable t) { unexpected(t); }
@@ -111,7 +111,7 @@ public class IteratorAtEnd {
                 THROWS(NoSuchElementException.class,
                        new Fun() {void f() { it.next(); }});
                 try { it.remove(); }
-                catch (UnsupportedOperationException _) { return; }
+                catch (UnsupportedOperationException ok) { return; }
                 pass();
                 check(! list.get(list.size()-1).equals(x));
             } catch (Throwable t) { unexpected(t); }

@@ -102,6 +102,7 @@ public enum TimeUnit {
 
     /**
      * Time unit representing sixty seconds
+     * @since 1.6
      */
     MINUTES {
         public long toNanos(long d)   { return x(d, C4/C0, MAX/(C4/C0)); }
@@ -117,6 +118,7 @@ public enum TimeUnit {
 
     /**
      * Time unit representing sixty minutes
+     * @since 1.6
      */
     HOURS {
         public long toNanos(long d)   { return x(d, C5/C0, MAX/(C5/C0)); }
@@ -132,6 +134,7 @@ public enum TimeUnit {
 
     /**
      * Time unit representing twenty four hours
+     * @since 1.6
      */
     DAYS {
         public long toNanos(long d)   { return x(d, C6/C0, MAX/(C6/C0)); }

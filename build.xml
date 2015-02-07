@@ -213,7 +213,6 @@
            source="@{compile-target}"
            target="@{compile-target}"
            classpath="${junit.jar}"
-           bootclasspath="@{classes}:${bootclasspath@{compile-target}}"
            includeAntRuntime="false"
            includeJavaRuntime="false"
            executable="${javac@{compile-target}}"
@@ -222,6 +221,7 @@
       <include name="*.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial,-deprecation"/>
+      <compilerarg value="-Xbootclasspath/p:@{classes}"/>
       <compilerarg line="${build.args}"/>
       <javac-elements/>
 

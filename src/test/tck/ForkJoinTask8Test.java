@@ -8,6 +8,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -873,30 +874,6 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     }
 
     /**
-     * invokeAll(t1, t2) throw exception if any task does
-     */
-    public void testAbnormalInvokeAll2() {
-        testAbnormalInvokeAll2(mainPool());
-    }
-    public void testAbnormalInvokeAll2_Singleton() {
-        testAbnormalInvokeAll2(singletonPool());
-    }
-    public void testAbnormalInvokeAll2(ForkJoinPool pool) {
-        RecursiveAction a = new CheckedRecursiveAction() {
-            protected void realCompute() {
-                AsyncFib f = new AsyncFib(8);
-                FailingAsyncFib g = new FailingAsyncFib(9);
-                try {
-                    invokeAll(f, g);
-                    shouldThrow();
-                } catch (FJException success) {
-                    checkCompletedAbnormally(g, success);
-                }
-            }};
-        testInvokeOnPool(pool, a);
-    }
-
-    /**
      * invokeAll(tasks) with 1 argument throws exception if task does
      */
     public void testAbnormalInvokeAll1() {
@@ -920,6 +897,32 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     }
 
     /**
+     * invokeAll(t1, t2) throw exception if any task does
+     */
+    public void testAbnormalInvokeAll2() {
+        testAbnormalInvokeAll2(mainPool());
+    }
+    public void testAbnormalInvokeAll2_Singleton() {
+        testAbnormalInvokeAll2(singletonPool());
+    }
+    public void testAbnormalInvokeAll2(ForkJoinPool pool) {
+        RecursiveAction a = new CheckedRecursiveAction() {
+            protected void realCompute() {
+                AsyncFib f = new AsyncFib(8);
+                FailingAsyncFib g = new FailingAsyncFib(9);
+                ForkJoinTask[] tasks = { f, g };
+                Collections.shuffle(Arrays.asList(tasks));
+                try {
+                    invokeAll(tasks[0], tasks[1]);
+                    shouldThrow();
+                } catch (FJException success) {
+                    checkCompletedAbnormally(g, success);
+                }
+            }};
+        testInvokeOnPool(pool, a);
+    }
+
+    /**
      * invokeAll(tasks) with > 2 argument throws exception if any task does
      */
     public void testAbnormalInvokeAll3() {
@@ -934,8 +937,10 @@ public class ForkJoinTask8Test extends JSR166TestCase {
                 AsyncFib f = new AsyncFib(8);
                 FailingAsyncFib g = new FailingAsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
+                ForkJoinTask[] tasks = { f, g, h };
+                Collections.shuffle(Arrays.asList(tasks));
                 try {
-                    invokeAll(f, g, h);
+                    invokeAll(tasks[0], tasks[1], tasks[2]);
                     shouldThrow();
                 } catch (FJException success) {
                     checkCompletedAbnormally(g, success);
@@ -960,6 +965,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
                 AsyncFib g = new AsyncFib(9);
                 AsyncFib h = new AsyncFib(7);
                 ForkJoinTask[] tasks = { f, g, h };
+                Collections.shuffle(Arrays.asList(tasks));
                 try {
                     invokeAll(Arrays.asList(tasks));
                     shouldThrow();

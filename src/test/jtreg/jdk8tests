@@ -1,2 +1,4 @@
 util/concurrent/CompletableFuture/Basic.java
+util/concurrent/CompletableFuture/ThenComposeAsyncTest.java
+util/concurrent/CompletableFuture/ThenComposeExceptionTest.java
 util/concurrent/locks/StampedLock/Basic.java

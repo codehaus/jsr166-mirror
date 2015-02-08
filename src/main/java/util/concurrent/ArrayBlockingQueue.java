@@ -1286,17 +1286,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (isDetached())
                 return true;
 
-            final int cycles = itrs.cycles;
             final int takeIndex = ArrayBlockingQueue.this.takeIndex;
-            final int prevCycles = this.prevCycles;
             final int prevTakeIndex = this.prevTakeIndex;
             final int len = items.length;
-            int cycleDiff = cycles - prevCycles;
-            if (removedIndex < takeIndex)
-                cycleDiff++;
+            // distance from prevTakeIndex to removedIndex
             final int removedDistance =
-                (cycleDiff * len) + (removedIndex - prevTakeIndex);
-            // assert removedDistance >= 0;
+                len * (itrs.cycles - this.prevCycles
+                       + ((removedIndex < takeIndex) ? 1 : 0))
+                + (removedIndex - prevTakeIndex);
+            // assert itrs.cycles - this.prevCycles >= 0;
+            // assert itrs.cycles - this.prevCycles <= 1;
+            // assert removedDistance > 0;
+            // assert removedIndex != takeIndex;
             int cursor = this.cursor;
             if (cursor >= 0) {
                 int x = distance(cursor, prevTakeIndex, len);
@@ -1325,7 +1326,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 else if (x > removedDistance)
                     this.nextIndex = nextIndex = dec(nextIndex);
             }
-            else if (cursor < 0 && nextIndex < 0 && lastRet < 0) {
+            if (cursor < 0 && nextIndex < 0 && lastRet < 0) {
                 this.prevTakeIndex = DETACHED;
                 return true;
             }

@@ -464,11 +464,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     public boolean remove(Object o) {
         if (o == null) return false;
-        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (count > 0) {
+                final Object[] items = this.items;
                 final int putIndex = this.putIndex;
                 int i = takeIndex;
                 do {
@@ -496,11 +496,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     public boolean contains(Object o) {
         if (o == null) return false;
-        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (count > 0) {
+                final Object[] items = this.items;
                 final int putIndex = this.putIndex;
                 int i = takeIndex;
                 do {
@@ -530,12 +530,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @return an array containing all of the elements in this queue
      */
     public Object[] toArray() {
-        Object[] a;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             final int count = this.count;
-            a = new Object[count];
+            final Object[] a = new Object[count];
             int n = items.length - takeIndex;
             if (count <= n)
                 System.arraycopy(items, takeIndex, a, 0, count);
@@ -543,10 +542,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 System.arraycopy(items, takeIndex, a, 0, n);
                 System.arraycopy(items, 0, a, n, count - n);
             }
+            return a;
         } finally {
             lock.unlock();
         }
-        return a;
     }
 
     /**

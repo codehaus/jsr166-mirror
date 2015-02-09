@@ -98,7 +98,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     // Internal helper methods
 
     /**
-     * Circularly decrement i.
+     * Circularly decrements array index i.
      */
     final int dec(int i) {
         return ((i == 0) ? items.length : i) - 1;

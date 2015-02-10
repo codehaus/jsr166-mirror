@@ -278,6 +278,33 @@ public class IteratorConsistency {
         } catch (Throwable t) { unexpected(t); }
 
         //----------------------------------------------------------------
+        // Interior removal of elements used by an iterator will cause
+        // it to be untracked.
+        //----------------------------------------------------------------
+        try {
+            ArrayBlockingQueue q = new ArrayBlockingQueue(capacity, fair);
+            q.add(0);
+            for (int i = 1; i < 2 * capacity; i++) {
+                q.add(i);
+                Integer[] elts = { -1, -2, -3 };
+                for (Integer elt : elts) q.add(elt);
+                equal(q.remove(), i - 1);
+                Iterator it = q.iterator();
+                equal(it.next(), i);
+                equal(it.next(), elts[0]);
+                Collections.shuffle(Arrays.asList(elts));
+                check(q.remove(elts[0]));
+                check(q.remove(elts[1]));
+                equal(trackedIterators(q), Collections.singletonList(it));
+                check(q.remove(elts[2]));
+                check(itrs(q) == null);
+                equal(it.next(), -2);
+                if (rnd.nextBoolean()) checkExhausted(it);
+                if (rnd.nextBoolean()) checkDetached(it);
+            }
+        } catch (Throwable t) { unexpected(t); }
+
+        //----------------------------------------------------------------
         // Check iterators on an empty q
         //----------------------------------------------------------------
         try {

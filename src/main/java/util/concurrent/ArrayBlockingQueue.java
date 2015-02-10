@@ -98,7 +98,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     // Internal helper methods
 
     /**
-     * Circularly decrement i.
+     * Circularly decrements array index i.
      */
     final int dec(int i) {
         return ((i == 0) ? items.length : i) - 1;
@@ -464,11 +464,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     public boolean remove(Object o) {
         if (o == null) return false;
-        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (count > 0) {
+                final Object[] items = this.items;
                 final int putIndex = this.putIndex;
                 int i = takeIndex;
                 do {
@@ -496,11 +496,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     public boolean contains(Object o) {
         if (o == null) return false;
-        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             if (count > 0) {
+                final Object[] items = this.items;
                 final int putIndex = this.putIndex;
                 int i = takeIndex;
                 do {
@@ -530,12 +530,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @return an array containing all of the elements in this queue
      */
     public Object[] toArray() {
-        Object[] a;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             final int count = this.count;
-            a = new Object[count];
+            final Object[] a = new Object[count];
             int n = items.length - takeIndex;
             if (count <= n)
                 System.arraycopy(items, takeIndex, a, 0, count);
@@ -543,10 +542,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 System.arraycopy(items, takeIndex, a, 0, n);
                 System.arraycopy(items, 0, a, n, count - n);
             }
+            return a;
         } finally {
             lock.unlock();
         }
-        return a;
     }
 
     /**
@@ -1286,17 +1285,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             if (isDetached())
                 return true;
 
-            final int cycles = itrs.cycles;
             final int takeIndex = ArrayBlockingQueue.this.takeIndex;
-            final int prevCycles = this.prevCycles;
             final int prevTakeIndex = this.prevTakeIndex;
             final int len = items.length;
-            int cycleDiff = cycles - prevCycles;
-            if (removedIndex < takeIndex)
-                cycleDiff++;
+            // distance from prevTakeIndex to removedIndex
             final int removedDistance =
-                (cycleDiff * len) + (removedIndex - prevTakeIndex);
-            // assert removedDistance >= 0;
+                len * (itrs.cycles - this.prevCycles
+                       + ((removedIndex < takeIndex) ? 1 : 0))
+                + (removedIndex - prevTakeIndex);
+            // assert itrs.cycles - this.prevCycles >= 0;
+            // assert itrs.cycles - this.prevCycles <= 1;
+            // assert removedDistance > 0;
+            // assert removedIndex != takeIndex;
             int cursor = this.cursor;
             if (cursor >= 0) {
                 int x = distance(cursor, prevTakeIndex, len);
@@ -1325,7 +1325,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 else if (x > removedDistance)
                     this.nextIndex = nextIndex = dec(nextIndex);
             }
-            else if (cursor < 0 && nextIndex < 0 && lastRet < 0) {
+            if (cursor < 0 && nextIndex < 0 && lastRet < 0) {
                 this.prevTakeIndex = DETACHED;
                 return true;
             }

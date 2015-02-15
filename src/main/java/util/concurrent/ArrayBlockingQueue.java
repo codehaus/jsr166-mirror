@@ -131,8 +131,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // assert items[putIndex] == null;
         final Object[] items = this.items;
         items[putIndex] = x;
-        if (++putIndex == items.length)
-            putIndex = 0;
+        if (++putIndex == items.length) putIndex = 0;
         count++;
         notEmpty.signal();
     }
@@ -148,8 +147,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         @SuppressWarnings("unchecked")
         E x = (E) items[takeIndex];
         items[takeIndex] = null;
-        if (++takeIndex == items.length)
-            takeIndex = 0;
+        if (++takeIndex == items.length) takeIndex = 0;
         count--;
         if (itrs != null)
             itrs.elementDequeued();
@@ -170,8 +168,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (removeIndex == takeIndex) {
             // removing front item; just advance
             items[takeIndex] = null;
-            if (++takeIndex == items.length)
-                takeIndex = 0;
+            if (++takeIndex == items.length) takeIndex = 0;
             count--;
             if (itrs != null)
                 itrs.elementDequeued();
@@ -472,8 +469,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                         removeAt(i);
                         return true;
                     }
-                    if (++i == items.length)
-                        i = 0;
+                    if (++i == items.length) i = 0;
                 } while (i != putIndex);
             }
             return false;
@@ -502,8 +498,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 do {
                     if (o.equals(items[i]))
                         return true;
-                    if (++i == items.length)
-                        i = 0;
+                    if (++i == items.length) i = 0;
                 } while (i != putIndex);
             }
             return false;
@@ -622,8 +617,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 if (--k == 0)
                     return sb.append(']').toString();
                 sb.append(',').append(' ');
-                if (++i == items.length)
-                    i = 0;
+                if (++i == items.length) i = 0;
             }
         } finally {
             lock.unlock();
@@ -645,8 +639,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 int i = takeIndex;
                 do {
                     items[i] = null;
-                    if (++i == items.length)
-                        i = 0;
+                    if (++i == items.length) i = 0;
                 } while (i != putIndex);
                 takeIndex = putIndex;
                 count = 0;
@@ -695,8 +688,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     E x = (E) items[take];
                     c.add(x);
                     items[take] = null;
-                    if (++take == items.length)
-                        take = 0;
+                    if (++take == items.length) take = 0;
                     i++;
                 }
                 return n;
@@ -1062,10 +1054,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
         private int incCursor(int index) {
             // assert lock.getHoldCount() == 1;
-            if (++index == items.length)
-                index = 0;
-            if (index == putIndex)
-                index = NONE;
+            if (++index == items.length) index = 0;
+            if (index == putIndex) index = NONE;
             return index;
         }
 

@@ -179,19 +179,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             // an "interior" remove
 
             // slide over all others up through putIndex.
-            final int putIndex = this.putIndex;
-            for (int i = removeIndex;;) {
-                int next = i + 1;
-                if (next == items.length)
-                    next = 0;
-                if (next != putIndex) {
-                    items[i] = items[next];
-                    i = next;
-                } else {
-                    items[i] = null;
-                    this.putIndex = i;
+            for (int i = removeIndex, putIndex = this.putIndex;;) {
+                int pred = i;
+                if (++i == items.length) i = 0;
+                if (i == putIndex) {
+                    items[pred] = null;
+                    this.putIndex = pred;
                     break;
                 }
+                items[pred] = items[i];
             }
             count--;
             if (itrs != null)

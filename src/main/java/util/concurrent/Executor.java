@@ -12,7 +12,7 @@ package java.util.concurrent;
  * mechanics of how each task will be run, including details of thread
  * use, scheduling, etc.  An {@code Executor} is normally used
  * instead of explicitly creating threads. For example, rather than
- * invoking {@code new Thread(new(RunnableTask())).start()} for each
+ * invoking {@code new Thread(new RunnableTask()).start()} for each
  * of a set of tasks, you might use:
  *
  * <pre>

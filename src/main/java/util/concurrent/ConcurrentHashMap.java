@@ -596,10 +596,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             this.next = next;
         }
 
-        public final K getKey()       { return key; }
-        public final V getValue()     { return val; }
-        public final int hashCode()   { return key.hashCode() ^ val.hashCode(); }
-        public final String toString(){ return key + "=" + val; }
+        public final K getKey()        { return key; }
+        public final V getValue()      { return val; }
+        public final String toString() { return key + "=" + val; }
+        public final int hashCode() {
+            return key.hashCode() ^ val.hashCode();
+        }
         public final V setValue(V value) {
             throw new UnsupportedOperationException();
         }

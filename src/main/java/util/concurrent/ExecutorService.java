@@ -43,7 +43,7 @@ import java.util.List;
  * pool service incoming requests. It uses the preconfigured {@link
  * Executors#newFixedThreadPool} factory method:
  *
- *  <pre> {@code
+ * <pre> {@code
  * class NetworkService implements Runnable {
  *   private final ServerSocket serverSocket;
  *   private final ExecutorService pool;
@@ -77,7 +77,7 @@ import java.util.List;
  * first by calling {@code shutdown} to reject incoming tasks, and then
  * calling {@code shutdownNow}, if necessary, to cancel any lingering tasks:
  *
- *  <pre> {@code
+ * <pre> {@code
  * void shutdownAndAwaitTermination(ExecutorService pool) {
  *   pool.shutdown(); // Disable new tasks from being submitted
  *   try {

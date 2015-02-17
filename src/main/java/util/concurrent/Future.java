@@ -25,7 +25,7 @@ package java.util.concurrent;
  * <b>Sample Usage</b> (Note that the following classes are all
  * made-up.)
  *
- *  <pre> {@code
+ * <pre> {@code
  * interface ArchiveSearcher { String search(String target); }
  * class App {
  *   ExecutorService executor = ...
@@ -47,7 +47,7 @@ package java.util.concurrent;
  * The {@link FutureTask} class is an implementation of {@code Future} that
  * implements {@code Runnable}, and so may be executed by an {@code Executor}.
  * For example, the above construction with {@code submit} could be replaced by:
- *  <pre> {@code
+ * <pre> {@code
  * FutureTask<String> future =
  *   new FutureTask<>(new Callable<String>() {
  *     public String call() {

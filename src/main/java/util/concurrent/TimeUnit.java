@@ -23,12 +23,12 @@ package java.util.concurrent;
  * the following code will timeout in 50 milliseconds if the {@link
  * java.util.concurrent.locks.Lock lock} is not available:
  *
- *  <pre> {@code
+ * <pre> {@code
  * Lock lock = ...;
  * if (lock.tryLock(50L, TimeUnit.MILLISECONDS)) ...}</pre>
  *
  * while this code will timeout in 50 seconds:
- *  <pre> {@code
+ * <pre> {@code
  * Lock lock = ...;
  * if (lock.tryLock(50L, TimeUnit.SECONDS)) ...}</pre>
  *
@@ -300,7 +300,7 @@ public enum TimeUnit {
      * method (see {@link BlockingQueue#poll BlockingQueue.poll})
      * using:
      *
-     *  <pre> {@code
+     * <pre> {@code
      * public synchronized Object poll(long timeout, TimeUnit unit)
      *     throws InterruptedException {
      *   while (empty) {

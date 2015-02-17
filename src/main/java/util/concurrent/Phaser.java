@@ -124,7 +124,7 @@ import java.util.concurrent.locks.LockSupport;
  * The typical idiom is for the method setting this up to first
  * register, then start the actions, then deregister, as in:
  *
- *  <pre> {@code
+ * <pre> {@code
  * void runTasks(List<Runnable> tasks) {
  *   final Phaser phaser = new Phaser(1); // "1" to register self
  *   // create and start threads
@@ -145,7 +145,7 @@ import java.util.concurrent.locks.LockSupport;
  * <p>One way to cause a set of threads to repeatedly perform actions
  * for a given number of iterations is to override {@code onAdvance}:
  *
- *  <pre> {@code
+ * <pre> {@code
  * void startTasks(List<Runnable> tasks, final int iterations) {
  *   final Phaser phaser = new Phaser() {
  *     protected boolean onAdvance(int phase, int registeredParties) {
@@ -169,7 +169,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * If the main task must later await termination, it
  * may re-register and then execute a similar loop:
- *  <pre> {@code
+ * <pre> {@code
  *   // ...
  *   phaser.register();
  *   while (!phaser.isTerminated())
@@ -179,7 +179,7 @@ import java.util.concurrent.locks.LockSupport;
  * in contexts where you are sure that the phase will never wrap around
  * {@code Integer.MAX_VALUE}. For example:
  *
- *  <pre> {@code
+ * <pre> {@code
  * void awaitPhase(Phaser phaser, int phase) {
  *   int p = phaser.register(); // assumes caller not already registered
  *   while (p < phase) {
@@ -199,7 +199,7 @@ import java.util.concurrent.locks.LockSupport;
  * new Phaser())}, these tasks could then be started, for example by
  * submitting to a pool:
  *
- *  <pre> {@code
+ * <pre> {@code
  * void build(Task[] tasks, int lo, int hi, Phaser ph) {
  *   if (hi - lo > TASKS_PER_PHASER) {
  *     for (int i = lo; i < hi; i += TASKS_PER_PHASER) {

@@ -41,7 +41,7 @@ package java.util.concurrent;
  * Here is a class with a method that sets up a ScheduledExecutorService
  * to beep every ten seconds for an hour:
  *
- *  <pre> {@code
+ * <pre> {@code
  * import static java.util.concurrent.TimeUnit.*;
  * class BeeperControl {
  *   private final ScheduledExecutorService scheduler =

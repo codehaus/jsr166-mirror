@@ -51,7 +51,7 @@ package java.util.concurrent.locks;
  * useful for most concurrency control applications.  The {@code park}
  * method is designed for use only in constructions of the form:
  *
- *  <pre> {@code
+ * <pre> {@code
  * while (!canProceed()) { ... LockSupport.park(this); }}</pre>
  *
  * where neither {@code canProceed} nor any other actions prior to the
@@ -61,7 +61,7 @@ package java.util.concurrent.locks;
  *
  * <p><b>Sample Usage.</b> Here is a sketch of a first-in-first-out
  * non-reentrant lock class:
- *  <pre> {@code
+ * <pre> {@code
  * class FIFOMutex {
  *   private final AtomicBoolean locked = new AtomicBoolean(false);
  *   private final Queue<Thread> waiters

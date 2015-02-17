@@ -99,7 +99,7 @@ import java.util.concurrent.TimeUnit;
  * not strictly needed here because no exceptions can occur in their
  * bodies.<br>
  *
- *  <pre>{@code
+ * <pre> {@code
  * class Point {
  *   private double x, y;
  *   private final StampedLock sl = new StampedLock();

@@ -38,7 +38,7 @@ import java.util.function.Predicate;
  * copy-on-write set to maintain a set of Handler objects that
  * perform some action upon state updates.
  *
- *  <pre> {@code
+ * <pre> {@code
  * class Handler { void handle(); ... }
  *
  * class X {
@@ -174,7 +174,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * The following code can be used to dump the set into a newly allocated
      * array of {@code String}:
      *
-     *  <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
+     * <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
      *
      * Note that {@code toArray(new Object[0])} is identical in function to
      * {@code toArray()}.

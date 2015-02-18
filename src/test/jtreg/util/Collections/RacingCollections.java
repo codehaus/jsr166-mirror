@@ -158,7 +158,7 @@ public class RacingCollections {
             quittingTime = System.nanoTime() + workTimeMillis * 1024 * 1024;
         }
         boolean keepGoing() {
-            return (i++ % 128 != 0) || (System.nanoTime() < quittingTime);
+            return (i++ % 128 != 0) || (System.nanoTime() - quittingTime < 0);
         }
     }
 
@@ -235,6 +235,7 @@ public class RacingCollections {
     private static List<Queue<Integer>> newConcurrentQueues() {
         List<Queue<Integer>> list =
             new ArrayList<Queue<Integer>>(newConcurrentDeques());
+        list.add(new ArrayBlockingQueue<Integer>(10));
         list.add(new LinkedBlockingQueue<Integer>(10));
         list.add(new LinkedTransferQueue<Integer>());
         list.add(new ConcurrentLinkedQueue<Integer>());

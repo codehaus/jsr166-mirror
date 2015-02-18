@@ -793,10 +793,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                     if (++count == Integer.MAX_VALUE)
                         break;  // @see Collection.size()
                 }
-                Node next = p.next;
-                if (p == next)
+                if (p == (p = p.next))
                     continue restartFromHead;
-                p = next;
             }
             return count;
         }

@@ -1113,10 +1113,8 @@ public class ConcurrentLinkedDeque<E>
                 if (p.item != null)
                     if (++count == Integer.MAX_VALUE)
                         break;  // @see Collection.size()
-                Node<E> next = p.next;
-                if (p == next)
+                if (p == (p = p.next))
                     continue restartFromHead;
-                p = next;
             }
             return count;
         }

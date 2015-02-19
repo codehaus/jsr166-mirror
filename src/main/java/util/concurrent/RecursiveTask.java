@@ -11,7 +11,7 @@ package java.util.concurrent;
  *
  * <p>For a classic example, here is a task computing Fibonacci numbers:
  *
- *  <pre> {@code
+ * <pre> {@code
  * class Fibonacci extends RecursiveTask<Integer> {
  *   final int n;
  *   Fibonacci(int n) { this.n = n; }

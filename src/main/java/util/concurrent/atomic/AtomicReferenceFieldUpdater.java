@@ -24,7 +24,7 @@ import sun.reflect.Reflection;
  * independently subject to atomic updates. For example, a tree node
  * might be declared as
  *
- *  <pre> {@code
+ * <pre> {@code
  * class Node {
  *   private volatile Node left, right;
  *

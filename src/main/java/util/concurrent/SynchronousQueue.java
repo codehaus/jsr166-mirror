@@ -1071,6 +1071,14 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Always returns {@code "[]"}.
+     * @return {@code "[]"}
+     */
+    public String toString() {
+        return "[]";
+    }
+
+    /**
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException            {@inheritDoc}
      * @throws NullPointerException          {@inheritDoc}

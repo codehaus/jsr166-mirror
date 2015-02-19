@@ -280,7 +280,7 @@ public interface Condition {
      * condition still does not hold. Typical uses of this method take
      * the following form:
      *
-     *  <pre> {@code
+     * <pre> {@code
      * boolean aMethod(long timeout, TimeUnit unit) {
      *   long nanos = unit.toNanos(timeout);
      *   lock.lock();
@@ -333,7 +333,7 @@ public interface Condition {
      * Causes the current thread to wait until it is signalled or interrupted,
      * or the specified waiting time elapses. This method is behaviorally
      * equivalent to:
-     *  <pre> {@code awaitNanos(unit.toNanos(time)) > 0}</pre>
+     * <pre> {@code awaitNanos(unit.toNanos(time)) > 0}</pre>
      *
      * @param time the maximum time to wait
      * @param unit the time unit of the {@code time} argument
@@ -382,7 +382,7 @@ public interface Condition {
      *
      * <p>The return value indicates whether the deadline has elapsed,
      * which can be used as follows:
-     *  <pre> {@code
+     * <pre> {@code
      * boolean aMethod(Date deadline) {
      *   boolean stillWaiting = true;
      *   lock.lock();

@@ -21,7 +21,7 @@ package java.util.concurrent;
  * to swap buffers between threads so that the thread filling the
  * buffer gets a freshly emptied one when it needs it, handing off the
  * filled one to the thread emptying the buffer.
- *  <pre> {@code
+ * <pre> {@code
  * class FillAndEmpty {
  *   Exchanger<DataBuffer> exchanger = new Exchanger<>();
  *   DataBuffer initialEmptyBuffer = ... a made-up type

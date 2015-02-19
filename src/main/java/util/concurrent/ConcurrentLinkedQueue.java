@@ -407,10 +407,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                 if (p.item != null)
                     if (++count == Integer.MAX_VALUE)
                         break;  // @see Collection.size()
-                Node<E> next = p.next;
-                if (p == next)
+                if (p == (p = p.next))
                     continue restartFromHead;
-                p = next;
             }
             return count;
         }
@@ -578,7 +576,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * The following code can be used to dump the queue into a newly
      * allocated array of {@code String}:
      *
-     *  <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
+     * <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
      *
      * Note that {@code toArray(new Object[0])} is identical in function to
      * {@code toArray()}.

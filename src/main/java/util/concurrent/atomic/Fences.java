@@ -73,7 +73,7 @@ package java.util.concurrent.atomic;
  * turn because it is used in a framework requiring that all classes
  * have a no-argument constructor; as in:
  *
- *  <pre> {@code
+ * <pre> {@code
  * class WidgetHolder {
  *   private Widget widget;
  *   public WidgetHolder() {}
@@ -108,7 +108,7 @@ package java.util.concurrent.atomic;
  * practice, among other changes, you would use access methods instead
  * of a public field.
  *
- *  <pre> {@code
+ * <pre> {@code
  * class AnotherWidgetHolder {
  *   public Widget widget;
  *   void publish(Widget w) {
@@ -132,7 +132,7 @@ package java.util.concurrent.atomic;
  * {@code c} contains an accessible variable {@code data} that should
  * have been declared as {@code volatile} but wasn't:
  *
- *  <pre> {@code
+ * <pre> {@code
  * class C {
  *   Object data;  // need volatile access but not volatile
  *   // ...
@@ -187,7 +187,7 @@ package java.util.concurrent.atomic;
  * already ensured by the referenced objects.
  * For example:
  *
- *  <pre> {@code
+ * <pre> {@code
  * class Item {
  *   synchronized f(); // ALL methods are synchronized
  *   // ...
@@ -231,7 +231,7 @@ package java.util.concurrent.atomic;
  * in method {@link Object#finalize}, which may otherwise run
  * concurrently.
  *
- *  <pre> {@code
+ * <pre> {@code
  * class Resource {
  *   private static ExternalResource[] externalResourceArray = ...
  *
@@ -278,7 +278,7 @@ package java.util.concurrent.atomic;
  * finalizer had already executed (nulling out slot), then you could
  * localize use of {@code reachabilityFence}:
  *
- *  <pre> {@code
+ * <pre> {@code
  * public void action2() {
  *   // ...
  *   Resource.update(getExternalResource());

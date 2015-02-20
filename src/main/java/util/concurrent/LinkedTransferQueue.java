@@ -7,6 +7,7 @@
 package java.util.concurrent;
 
 import java.util.AbstractQueue;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -798,6 +799,141 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             }
             return count;
         }
+    }
+
+    public String toString() {
+        String[] a = null;
+        restartFromHead: for (;;) {
+            int charLength = 0;
+            int size = 0;
+            for (Node p = head; p != null;) {
+                Object item = p.item;
+                if (p.isData) {
+                    if (item != null && item != p) {
+                        if (a == null)
+                            a = new String[4];
+                        else if (size == a.length)
+                            a = Arrays.copyOf(a, 2 * size);
+                        String s = item.toString();
+                        a[size++] = s;
+                        charLength += s.length();
+                    }
+                } else if (item == null)
+                    break;
+                if (p == (p = p.next))
+                    continue restartFromHead;
+            }
+
+            if (size == 0)
+                return "[]";
+
+            // Copy each string into a perfectly sized char[]
+            final char[] chars = new char[charLength + 2 * size];
+            chars[0] = '[';
+            int j = 1;
+            for (int i = 0; i < size; i++) {
+                if (i > 0) {
+                    chars[j++] = ',';
+                    chars[j++] = ' ';
+                }
+                String s = a[i];
+                int len = s.length();
+                s.getChars(0, len, chars, j);
+                j += len;
+            }
+            chars[j] = ']';
+            return new String(chars);
+        }
+    }
+
+    private Object[] toArrayInternal(Object[] a) {
+        Object[] x = a;
+        restartFromHead: for (;;) {
+            int size = 0;
+            for (Node p = head; p != null;) {
+                Object item = p.item;
+                if (p.isData) {
+                    if (item != null && item != p) {
+                        if (x == null)
+                            x = new Object[4];
+                        else if (size == x.length)
+                            x = Arrays.copyOf(x, 2 * (size + 4));
+                        x[size++] = item;
+                    }
+                } else if (item == null)
+                    break;
+                if (p == (p = p.next))
+                    continue restartFromHead;
+            }
+            if (x == null)
+                return new Object[0];
+            else if (a != null && size <= a.length) {
+                if (a != x)
+                    System.arraycopy(x, 0, a, 0, size);
+                if (size < a.length)
+                    a[size] = null;
+                return a;
+            }
+            return (size == x.length) ? x : Arrays.copyOf(x, size);
+        }
+    }
+
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence.
+     *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this queue.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     *
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
+     * @return an array containing all of the elements in this queue
+     */
+    public Object[] toArray() {
+        return toArrayInternal(null);
+    }
+
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence; the runtime type of the returned array is that of
+     * the specified array.  If the queue fits in the specified array, it
+     * is returned therein.  Otherwise, a new array is allocated with the
+     * runtime type of the specified array and the size of this queue.
+     *
+     * <p>If this queue fits in the specified array with room to spare
+     * (i.e., the array has more elements than this queue), the element in
+     * the array immediately following the end of the queue is set to
+     * {@code null}.
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+     *
+     * <p>Suppose {@code x} is a queue known to contain only strings.
+     * The following code can be used to dump the queue into a newly
+     * allocated array of {@code String}:
+     *
+     * <pre> {@code String[] y = x.toArray(new String[0]);}</pre>
+     *
+     * Note that {@code toArray(new Object[0])} is identical in function to
+     * {@code toArray()}.
+     *
+     * @param a the array into which the elements of the queue are to
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     * @return an array containing all of the elements in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this queue
+     * @throws NullPointerException if the specified array is null
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T[] a) {
+        if (a == null) throw new NullPointerException();
+        return (T[]) toArrayInternal(a);
     }
 
     final class Itr implements Iterator<E> {

@@ -7,7 +7,7 @@
 package java.util.concurrent;
 
 import java.util.AbstractCollection;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
@@ -781,22 +781,6 @@ public class ConcurrentLinkedDeque<E>
     }
 
     /**
-     * Creates an array list and fills it with elements of this list.
-     * Used by toArray.
-     *
-     * @return the array list
-     */
-    private ArrayList<E> toArrayList() {
-        ArrayList<E> list = new ArrayList<E>();
-        for (Node<E> p = first(); p != null; p = succ(p)) {
-            E item = p.item;
-            if (item != null)
-                list.add(item);
-        }
-        return list;
-    }
-
-    /**
      * Constructs an empty deque.
      */
     public ConcurrentLinkedDeque() {
@@ -1210,6 +1194,77 @@ public class ConcurrentLinkedDeque<E>
             ;
     }
 
+    public String toString() {
+        String[] a = null;
+        restartFromHead: for (;;) {
+            int charLength = 0;
+            int size = 0;
+            for (Node<E> p = first(); p != null;) {
+                E item = p.item;
+                if (item != null) {
+                    if (a == null)
+                        a = new String[4];
+                    else if (size == a.length)
+                        a = Arrays.copyOf(a, 2 * size);
+                    String s = item.toString();
+                    a[size++] = s;
+                    charLength += s.length();
+                }
+                if (p == (p = p.next))
+                    continue restartFromHead;
+            }
+
+            if (size == 0)
+                return "[]";
+
+            // Copy each string into a perfectly sized char[]
+            final char[] chars = new char[charLength + 2 * size];
+            chars[0] = '[';
+            int j = 1;
+            for (int i = 0; i < size; i++) {
+                if (i > 0) {
+                    chars[j++] = ',';
+                    chars[j++] = ' ';
+                }
+                String s = a[i];
+                int len = s.length();
+                s.getChars(0, len, chars, j);
+                j += len;
+            }
+            chars[j] = ']';
+            return new String(chars);
+        }
+    }
+
+    private Object[] toArrayInternal(Object[] a) {
+        Object[] x = a;
+        restartFromHead: for (;;) {
+            int size = 0;
+            for (Node<E> p = first(); p != null;) {
+                E item = p.item;
+                if (item != null) {
+                    if (x == null)
+                        x = new Object[4];
+                    else if (size == x.length)
+                        x = Arrays.copyOf(x, 2 * (size + 4));
+                    x[size++] = item;
+                }
+                if (p == (p = p.next))
+                    continue restartFromHead;
+            }
+            if (x == null)
+                return new Object[0];
+            else if (a != null && size <= a.length) {
+                if (a != x)
+                    System.arraycopy(x, 0, a, 0, size);
+                if (size < a.length)
+                    a[size] = null;
+                return a;
+            }
+            return (size == x.length) ? x : Arrays.copyOf(x, size);
+        }
+    }
+
     /**
      * Returns an array containing all of the elements in this deque, in
      * proper sequence (from first to last element).
@@ -1224,7 +1279,7 @@ public class ConcurrentLinkedDeque<E>
      * @return an array containing all of the elements in this deque
      */
     public Object[] toArray() {
-        return toArrayList().toArray();
+        return toArrayInternal(null);
     }
 
     /**
@@ -1264,8 +1319,10 @@ public class ConcurrentLinkedDeque<E>
      *         this deque
      * @throws NullPointerException if the specified array is null
      */
+    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
-        return toArrayList().toArray(a);
+        if (a == null) throw new NullPointerException();
+        return (T[]) toArrayInternal(a);
     }
 
     /**

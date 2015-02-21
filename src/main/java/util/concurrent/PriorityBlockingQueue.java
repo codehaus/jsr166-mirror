@@ -678,29 +678,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /**
-     * Returns an array containing all of the elements in this queue.
-     * The returned array elements are in no particular order.
-     *
-     * <p>The returned array will be "safe" in that no references to it are
-     * maintained by this queue.  (In other words, this method must allocate
-     * a new array).  The caller is thus free to modify the returned array.
-     *
-     * <p>This method acts as bridge between array-based and collection-based
-     * APIs.
-     *
-     * @return an array containing all of the elements in this queue
-     */
-    public Object[] toArray() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            return Arrays.copyOf(queue, size);
-        } finally {
-            lock.unlock();
-        }
-    }
-
     public String toString() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -772,6 +749,29 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             size = 0;
             for (int i = 0; i < n; i++)
                 array[i] = null;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns an array containing all of the elements in this queue.
+     * The returned array elements are in no particular order.
+     *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this queue.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     *
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
+     * @return an array containing all of the elements in this queue
+     */
+    public Object[] toArray() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            return Arrays.copyOf(queue, size);
         } finally {
             lock.unlock();
         }

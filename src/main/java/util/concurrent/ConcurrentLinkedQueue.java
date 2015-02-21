@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -223,8 +224,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     public ConcurrentLinkedQueue(Collection<? extends E> c) {
         Node<E> h = null, t = null;
         for (E e : c) {
-            checkNotNull(e);
-            Node<E> newNode = newNode(e);
+            Node<E> newNode = newNode(Objects.requireNonNull(e));
             if (h == null)
                 h = t = newNode;
             else {
@@ -280,8 +280,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
-        checkNotNull(e);
-        final Node<E> newNode = newNode(e);
+        final Node<E> newNode = newNode(Objects.requireNonNull(e));
 
         for (Node<E> t = tail, p = t;;) {
             Node<E> q = p.next;
@@ -489,8 +488,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         // Copy c into a private chain of Nodes
         Node<E> beginningOfTheEnd = null, last = null;
         for (E e : c) {
-            checkNotNull(e);
-            Node<E> newNode = newNode(e);
+            Node<E> newNode = newNode(Objects.requireNonNull(e));
             if (beginningOfTheEnd == null)
                 beginningOfTheEnd = last = newNode;
             else {
@@ -905,16 +903,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     @Override
     public Spliterator<E> spliterator() {
         return new CLQSpliterator<E>(this);
-    }
-
-    /**
-     * Throws NullPointerException if argument is null.
-     *
-     * @param v the element
-     */
-    private static void checkNotNull(Object v) {
-        if (v == null)
-            throw new NullPointerException();
     }
 
     private boolean casTail(Node<E> cmp, Node<E> val) {

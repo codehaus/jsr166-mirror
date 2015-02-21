@@ -11,6 +11,7 @@ import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.locks.Condition;
@@ -110,16 +111,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     @SuppressWarnings("unchecked")
     final E itemAt(int i) {
         return (E) items[i];
-    }
-
-    /**
-     * Throws NullPointerException if argument is null.
-     *
-     * @param v the element
-     */
-    private static void checkNotNull(Object v) {
-        if (v == null)
-            throw new NullPointerException();
     }
 
     /**
@@ -248,10 +239,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             int i = 0;
             try {
-                for (E e : c) {
-                    checkNotNull(e);
-                    items[i++] = e;
-                }
+                for (E e : c)
+                    items[i++] = Objects.requireNonNull(e);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new IllegalArgumentException();
             }
@@ -287,7 +276,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
-        checkNotNull(e);
+        Objects.requireNonNull(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -310,7 +299,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException {@inheritDoc}
      */
     public void put(E e) throws InterruptedException {
-        checkNotNull(e);
+        Objects.requireNonNull(e);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
@@ -333,7 +322,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
 
-        checkNotNull(e);
+        Objects.requireNonNull(e);
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
@@ -667,7 +656,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c, int maxElements) {
-        checkNotNull(c);
+        Objects.requireNonNull(c);
         if (c == this)
             throw new IllegalArgumentException();
         if (maxElements <= 0)

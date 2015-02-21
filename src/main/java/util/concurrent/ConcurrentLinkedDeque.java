@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -319,8 +320,7 @@ public class ConcurrentLinkedDeque<E>
      * Links e as first element.
      */
     private void linkFirst(E e) {
-        checkNotNull(e);
-        final Node<E> newNode = new Node<E>(e);
+        final Node<E> newNode = new Node<E>(Objects.requireNonNull(e));
 
         restartFromHead:
         for (;;)
@@ -352,8 +352,7 @@ public class ConcurrentLinkedDeque<E>
      * Links e as last element.
      */
     private void linkLast(E e) {
-        checkNotNull(e);
-        final Node<E> newNode = new Node<E>(e);
+        final Node<E> newNode = new Node<E>(Objects.requireNonNull(e));
 
         restartFromTail:
         for (;;)
@@ -758,16 +757,6 @@ public class ConcurrentLinkedDeque<E>
     // Minor convenience utilities
 
     /**
-     * Throws NullPointerException if argument is null.
-     *
-     * @param v the element
-     */
-    private static void checkNotNull(Object v) {
-        if (v == null)
-            throw new NullPointerException();
-    }
-
-    /**
      * Returns element unless it is null, in which case throws
      * NoSuchElementException.
      *
@@ -800,8 +789,7 @@ public class ConcurrentLinkedDeque<E>
         // Copy c into a private chain of Nodes
         Node<E> h = null, t = null;
         for (E e : c) {
-            checkNotNull(e);
-            Node<E> newNode = new Node<E>(e);
+            Node<E> newNode = new Node<E>(Objects.requireNonNull(e));
             if (h == null)
                 h = t = newNode;
             else {
@@ -1011,7 +999,7 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean removeFirstOccurrence(Object o) {
-        checkNotNull(o);
+        Objects.requireNonNull(o);
         for (Node<E> p = first(); p != null; p = succ(p)) {
             E item = p.item;
             if (item != null && o.equals(item) && p.casItem(item, null)) {
@@ -1035,7 +1023,7 @@ public class ConcurrentLinkedDeque<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean removeLastOccurrence(Object o) {
-        checkNotNull(o);
+        Objects.requireNonNull(o);
         for (Node<E> p = last(); p != null; p = pred(p)) {
             E item = p.item;
             if (item != null && o.equals(item) && p.casItem(item, null)) {
@@ -1142,8 +1130,7 @@ public class ConcurrentLinkedDeque<E>
         // Copy c into a private chain of Nodes
         Node<E> beginningOfTheEnd = null, last = null;
         for (E e : c) {
-            checkNotNull(e);
-            Node<E> newNode = new Node<E>(e);
+            Node<E> newNode = new Node<E>(Objects.requireNonNull(e));
             if (beginningOfTheEnd == null)
                 beginningOfTheEnd = last = newNode;
             else {

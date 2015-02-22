@@ -287,6 +287,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         assertEquals("A", (String)map.get(one));
         ConcurrentHashMap empty = new ConcurrentHashMap();
         assertNull(map.get("anything"));
+        assertNull(empty.get("anything"));
     }
 
     /**

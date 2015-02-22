@@ -148,7 +148,7 @@ public class DelayQueueTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            DelayQueue q = new DelayQueue(null);
+            new DelayQueue(null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -159,7 +159,7 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testConstructor4() {
         try {
             PDelay[] ints = new PDelay[SIZE];
-            DelayQueue q = new DelayQueue(Arrays.asList(ints));
+            new DelayQueue(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -172,7 +172,7 @@ public class DelayQueueTest extends JSR166TestCase {
             PDelay[] ints = new PDelay[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new PDelay(i);
-            DelayQueue q = new DelayQueue(Arrays.asList(ints));
+            new DelayQueue(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }

@@ -7,10 +7,12 @@
 package java.util.concurrent;
 
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.locks.Condition;
@@ -110,16 +112,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     @SuppressWarnings("unchecked")
     final E itemAt(int i) {
         return (E) items[i];
-    }
-
-    /**
-     * Throws NullPointerException if argument is null.
-     *
-     * @param v the element
-     */
-    private static void checkNotNull(Object v) {
-        if (v == null)
-            throw new NullPointerException();
     }
 
     /**
@@ -248,10 +240,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             int i = 0;
             try {
-                for (E e : c) {
-                    checkNotNull(e);
-                    items[i++] = e;
-                }
+                for (E e : c)
+                    items[i++] = Objects.requireNonNull(e);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new IllegalArgumentException();
             }
@@ -287,7 +277,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
-        checkNotNull(e);
+        Objects.requireNonNull(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -310,7 +300,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException {@inheritDoc}
      */
     public void put(E e) throws InterruptedException {
-        checkNotNull(e);
+        Objects.requireNonNull(e);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
@@ -333,7 +323,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
 
-        checkNotNull(e);
+        Objects.requireNonNull(e);
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
@@ -524,15 +514,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            final int count = this.count;
-            final Object[] a = new Object[count];
-            int n = items.length - takeIndex;
-            if (count <= n)
-                System.arraycopy(items, takeIndex, a, 0, count);
-            else {
-                System.arraycopy(items, takeIndex, a, 0, n);
-                System.arraycopy(items, 0, a, n, count - n);
-            }
+            final Object[] items = this.items;
+            final int end = takeIndex + count;
+            final Object[] a = Arrays.copyOfRange(items, takeIndex, end);
+            if (end != putIndex)
+                System.arraycopy(items, 0, a, items.length - takeIndex, putIndex);
             return a;
         } finally {
             lock.unlock();
@@ -576,28 +562,26 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
-        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
+            final Object[] items = this.items;
             final int count = this.count;
-            final int len = a.length;
-            if (len < count)
-                a = (T[])java.lang.reflect.Array.newInstance(
-                    a.getClass().getComponentType(), count);
-            int n = items.length - takeIndex;
-            if (count <= n)
-                System.arraycopy(items, takeIndex, a, 0, count);
-            else {
-                System.arraycopy(items, takeIndex, a, 0, n);
-                System.arraycopy(items, 0, a, n, count - n);
+            final int firstLeg = Math.min(items.length - takeIndex, count);
+            if (a.length < count) {
+                a = (T[]) Arrays.copyOfRange(items, takeIndex, takeIndex + count,
+                                             a.getClass());
+            } else {
+                System.arraycopy(items, takeIndex, a, 0, firstLeg);
+                if (a.length > count)
+                    a[count] = null;
             }
-            if (len > count)
-                a[count] = null;
+            if (firstLeg < count)
+                System.arraycopy(items, 0, a, firstLeg, putIndex);
+            return a;
         } finally {
             lock.unlock();
         }
-        return a;
     }
 
     public String toString() {
@@ -670,7 +654,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws IllegalArgumentException      {@inheritDoc}
      */
     public int drainTo(Collection<? super E> c, int maxElements) {
-        checkNotNull(c);
+        Objects.requireNonNull(c);
         if (c == this)
             throw new IllegalArgumentException();
         if (maxElements <= 0)

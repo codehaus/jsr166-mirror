@@ -36,7 +36,7 @@ public class AtomicIntegerArrayTest extends JSR166TestCase {
     public void testConstructor2NPE() {
         try {
             int[] a = null;
-            AtomicIntegerArray aa = new AtomicIntegerArray(a);
+            new AtomicIntegerArray(a);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

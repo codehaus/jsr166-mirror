@@ -59,7 +59,7 @@ public class PriorityQueueTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         try {
-            PriorityQueue q = new PriorityQueue(0);
+            new PriorityQueue(0);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -69,7 +69,7 @@ public class PriorityQueueTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            PriorityQueue q = new PriorityQueue((Collection)null);
+            new PriorityQueue((Collection)null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -80,7 +80,7 @@ public class PriorityQueueTest extends JSR166TestCase {
     public void testConstructor4() {
         try {
             Integer[] ints = new Integer[SIZE];
-            PriorityQueue q = new PriorityQueue(Arrays.asList(ints));
+            new PriorityQueue(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -93,7 +93,7 @@ public class PriorityQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
-            PriorityQueue q = new PriorityQueue(Arrays.asList(ints));
+            new PriorityQueue(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }

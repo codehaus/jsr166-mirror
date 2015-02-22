@@ -422,7 +422,7 @@
     <mirror-dir src="${docs.dir}" dst="${dist.docs.dir}"/>
   </target>
 
-
+  <target name="tck" depends="test-tck" description="alias for test-tck"/>
   <target name="test-tck"
 	  depends="jar"
           description="Runs tck tests for main directly">
@@ -447,6 +447,7 @@
     </antcall>
   </target>
 
+  <target name="jtreg" depends="test-jtreg" description="alias for test-jtreg"/>
   <target name="test-jtreg"
 	  depends="jar"
           description="Runs jtreg tests for main using the jtreg ant task">

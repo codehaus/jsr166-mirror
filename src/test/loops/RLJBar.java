@@ -157,6 +157,6 @@ public class RLJBar                             // ProdConsTest
         System.out.println("Outer time: " + (System.currentTimeMillis()-cyBase));
 
         // Let workers quiesce/exit.
-        try { Thread.sleep (1000); } catch (Exception ex) {};
+        try { Thread.sleep (1000); } catch (Exception ex) {}
     }
 }

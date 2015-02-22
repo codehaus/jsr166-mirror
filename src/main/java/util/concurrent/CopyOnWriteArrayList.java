@@ -1047,7 +1047,7 @@ public class CopyOnWriteArrayList<E>
         /** Index of element to be returned by subsequent call to next.  */
         private int cursor;
 
-        private COWIterator(Object[] elements, int initialCursor) {
+        COWIterator(Object[] elements, int initialCursor) {
             cursor = initialCursor;
             snapshot = elements;
         }

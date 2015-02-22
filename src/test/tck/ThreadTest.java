@@ -34,11 +34,14 @@ public class ThreadTest extends JSR166TestCase {
         Thread current = Thread.currentThread();
         ThreadGroup tg = current.getThreadGroup();
         MyHandler eh = new MyHandler();
-        assertEquals(tg, current.getUncaughtExceptionHandler());
+        assertSame(tg, current.getUncaughtExceptionHandler());
         current.setUncaughtExceptionHandler(eh);
-        assertEquals(eh, current.getUncaughtExceptionHandler());
-        current.setUncaughtExceptionHandler(null);
-        assertEquals(tg, current.getUncaughtExceptionHandler());
+        try {
+            assertSame(eh, current.getUncaughtExceptionHandler());
+        } finally {
+            current.setUncaughtExceptionHandler(null);
+        }
+        assertSame(tg, current.getUncaughtExceptionHandler());
     }
 
     /**
@@ -49,17 +52,21 @@ public class ThreadTest extends JSR166TestCase {
         assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
         // failure due to securityException is OK.
         // Would be nice to explicitly test both ways, but cannot yet.
+        Thread.UncaughtExceptionHandler defaultHandler
+            = Thread.getDefaultUncaughtExceptionHandler();
+        Thread current = Thread.currentThread();
+        MyHandler eh = new MyHandler();
         try {
-            Thread current = Thread.currentThread();
-            ThreadGroup tg = current.getThreadGroup();
-            MyHandler eh = new MyHandler();
             Thread.setDefaultUncaughtExceptionHandler(eh);
-            assertEquals(eh, Thread.getDefaultUncaughtExceptionHandler());
-            Thread.setDefaultUncaughtExceptionHandler(null);
+            try {
+                assertSame(eh, Thread.getDefaultUncaughtExceptionHandler());
+            } finally {
+                Thread.setDefaultUncaughtExceptionHandler(defaultHandler);
+            }
+        } catch (SecurityException ok) {
+            assertNotNull(System.getSecurityManager());
         }
-        catch (SecurityException ok) {
-        }
-        assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
+        assertSame(defaultHandler, Thread.getDefaultUncaughtExceptionHandler());
     }
 
     // How to test actually using UEH within junit?

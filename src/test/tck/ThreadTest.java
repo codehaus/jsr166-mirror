@@ -54,7 +54,6 @@ public class ThreadTest extends JSR166TestCase {
         // Would be nice to explicitly test both ways, but cannot yet.
         Thread.UncaughtExceptionHandler defaultHandler
             = Thread.getDefaultUncaughtExceptionHandler();
-        Thread current = Thread.currentThread();
         MyHandler eh = new MyHandler();
         try {
             Thread.setDefaultUncaughtExceptionHandler(eh);

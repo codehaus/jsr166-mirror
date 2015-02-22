@@ -592,7 +592,7 @@ public class RecursiveActionTest extends JSR166TestCase {
                 FailingFibAction f = new FailingFibAction(8);
                 assertSame(f, f.fork());
                 try {
-                    f.get(5L, TimeUnit.SECONDS);
+                    f.get(5L, SECONDS);
                     shouldThrow();
                 } catch (ExecutionException success) {
                     Throwable cause = success.getCause();

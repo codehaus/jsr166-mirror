@@ -7,6 +7,7 @@
 package java.util.concurrent;
 
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Iterator;
@@ -496,20 +497,6 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    /** Copies the elements of this queue into a, in FIFO order. */
-    private <T> T[] copyElements(T[] a) {
-        final int count;
-        final Object[] items = this.items;
-        int n = items.length - takeIndex;
-        if ((count = this.count) <= n)
-            System.arraycopy(items, takeIndex, a, 0, count);
-        else {
-            System.arraycopy(items, takeIndex, a, 0, n);
-            System.arraycopy(items, 0, a, n, count - n);
-        }
-        return a;
-    }
-
     /**
      * Returns an array containing all of the elements in this queue, in
      * proper sequence.
@@ -527,7 +514,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            return copyElements(new Object[count]);
+            final Object[] items = this.items;
+            final int end = takeIndex + count;
+            final Object[] a = Arrays.copyOfRange(items, takeIndex, end);
+            if (end != putIndex)
+                System.arraycopy(items, 0, a, items.length - takeIndex, putIndex);
+            return a;
         } finally {
             lock.unlock();
         }
@@ -573,14 +565,20 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
+            final Object[] items = this.items;
             final int count = this.count;
-            final int len = a.length;
-            if (len < count)
-                a = (T[])java.lang.reflect.Array.newInstance(
-                    a.getClass().getComponentType(), count);
-            else if (len > count)
-                a[count] = null;
-            return copyElements(a);
+            final int firstLeg = Math.min(items.length - takeIndex, count);
+            if (a.length < count) {
+                a = (T[]) Arrays.copyOfRange(items, takeIndex, takeIndex + count,
+                                             a.getClass());
+            } else {
+                System.arraycopy(items, takeIndex, a, 0, firstLeg);
+                if (a.length > count)
+                    a[count] = null;
+            }
+            if (firstLeg < count)
+                System.arraycopy(items, 0, a, firstLeg, putIndex);
+            return a;
         } finally {
             lock.unlock();
         }

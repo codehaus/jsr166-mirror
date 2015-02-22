@@ -81,7 +81,7 @@ public class TreeSetTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            TreeSet q = new TreeSet((Collection)null);
+            new TreeSet((Collection)null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -92,7 +92,7 @@ public class TreeSetTest extends JSR166TestCase {
     public void testConstructor4() {
         try {
             Integer[] ints = new Integer[SIZE];
-            TreeSet q = new TreeSet(Arrays.asList(ints));
+            new TreeSet(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -105,7 +105,7 @@ public class TreeSetTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
-            TreeSet q = new TreeSet(Arrays.asList(ints));
+            new TreeSet(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }

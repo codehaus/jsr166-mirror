@@ -108,7 +108,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ints[i] = i;
         Collection<Integer> elements = Arrays.asList(ints);
         try {
-            new ArrayBlockingQueue(SIZE, false, Arrays.asList(ints));
+            new ArrayBlockingQueue(SIZE, false, elements);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

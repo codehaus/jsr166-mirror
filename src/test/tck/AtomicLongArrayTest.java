@@ -35,7 +35,7 @@ public class AtomicLongArrayTest extends JSR166TestCase {
     public void testConstructor2NPE() {
         try {
             long[] a = null;
-            AtomicLongArray aa = new AtomicLongArray(a);
+            new AtomicLongArray(a);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

@@ -1197,7 +1197,6 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     public void testTryAcquireSharedNanos_Timeout() {
         final BooleanLatch l = new BooleanLatch();
         final BooleanLatch observedQueued = new BooleanLatch();
-        final long timeoutMillis = timeoutMillis();
         Thread t = newStartedThread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
                 assertFalse(l.isSignalled());

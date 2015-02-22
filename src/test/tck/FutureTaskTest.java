@@ -135,7 +135,7 @@ public class FutureTaskTest extends JSR166TestCase {
         pf.set(new Object());
         pf.setException(new Error());
         for (boolean mayInterruptIfRunning : new boolean[] { true, false }) {
-            pf.cancel(true);
+            pf.cancel(mayInterruptIfRunning);
         }
     }
 

@@ -55,7 +55,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            ConcurrentLinkedDeque q = new ConcurrentLinkedDeque((Collection)null);
+            new ConcurrentLinkedDeque((Collection)null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -66,7 +66,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
     public void testConstructor4() {
         try {
             Integer[] ints = new Integer[SIZE];
-            ConcurrentLinkedDeque q = new ConcurrentLinkedDeque(Arrays.asList(ints));
+            new ConcurrentLinkedDeque(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -79,7 +79,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             for (int i = 0; i < SIZE-1; ++i)
                 ints[i] = new Integer(i);
-            ConcurrentLinkedDeque q = new ConcurrentLinkedDeque(Arrays.asList(ints));
+            new ConcurrentLinkedDeque(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
     }

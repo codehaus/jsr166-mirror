@@ -36,7 +36,7 @@ public class AtomicReferenceArrayTest extends JSR166TestCase {
     public void testConstructor2NPE() {
         try {
             Integer[] a = null;
-            AtomicReferenceArray<Integer> aa = new AtomicReferenceArray<Integer>(a);
+            new AtomicReferenceArray<Integer>(a);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

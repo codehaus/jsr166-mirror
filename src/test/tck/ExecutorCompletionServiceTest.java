@@ -36,7 +36,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
      */
     public void testConstructorNPE() {
         try {
-            ExecutorCompletionService ecs = new ExecutorCompletionService(null);
+            new ExecutorCompletionService(null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -47,7 +47,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase {
     public void testConstructorNPE2() {
         try {
             ExecutorService e = Executors.newCachedThreadPool();
-            ExecutorCompletionService ecs = new ExecutorCompletionService(e, null);
+            new ExecutorCompletionService(e, null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

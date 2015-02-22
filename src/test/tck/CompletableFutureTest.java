@@ -273,8 +273,9 @@ public class CompletableFutureTest extends JSR166TestCase {
     {
         CompletableFuture<Integer> f = new CompletableFuture<>();
         checkIncomplete(f);
-        assertTrue(f.cancel(true));
-        assertTrue(f.cancel(true));
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        assertTrue(f.cancel(mayInterruptIfRunning));
+        assertTrue(f.cancel(!mayInterruptIfRunning));
         checkCancelled(f);
     }}
 
@@ -906,7 +907,6 @@ public class CompletableFutureTest extends JSR166TestCase {
 
     public void testExceptionally_exceptionalCompletionActionFailed() {
         for (boolean createIncomplete : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
     {
         final AtomicInteger a = new AtomicInteger(0);
         final CFException ex1 = new CFException();
@@ -960,7 +960,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     public void testWhenComplete_exceptionalCompletion() {
         for (ExecutionMode m : ExecutionMode.values())
         for (boolean createIncomplete : new boolean[] { true, false })
-        for (Integer v1 : new Integer[] { 1, null })
     {
         final AtomicInteger a = new AtomicInteger(0);
         final CFException ex = new CFException();
@@ -1045,7 +1044,6 @@ public class CompletableFutureTest extends JSR166TestCase {
     public void testWhenComplete_actionFailedSourceFailed() {
         for (boolean createIncomplete : new boolean[] { true, false })
         for (ExecutionMode m : ExecutionMode.values())
-        for (Integer v1 : new Integer[] { 1, null })
     {
         final AtomicInteger a = new AtomicInteger(0);
         final CFException ex1 = new CFException();
@@ -3212,7 +3210,6 @@ public class CompletableFutureTest extends JSR166TestCase {
         CompletableFuture<Integer> f = new CompletableFuture<>();
         CompletableFuture<Integer> g = new CompletableFuture<>();
         CompletableFuture<Integer> nullFuture = (CompletableFuture<Integer>)null;
-        CompletableFuture<?> h;
         ThreadExecutor exec = new ThreadExecutor();
 
         Runnable[] throwingActions = {

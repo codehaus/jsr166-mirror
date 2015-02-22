@@ -50,7 +50,7 @@ public class LinkedListTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            LinkedList q = new LinkedList((Collection)null);
+            new LinkedList((Collection)null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }

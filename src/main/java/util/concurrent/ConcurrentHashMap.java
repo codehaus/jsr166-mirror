@@ -1649,7 +1649,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                         if (fh >= 0) {
                             binCount = 1;
                             for (Node<K,V> e = f;; ++binCount) {
-                                K ek; V ev;
+                                K ek;
                                 if (e.hash == h &&
                                     ((ek = e.key) == key ||
                                      (ek != null && key.equals(ek)))) {

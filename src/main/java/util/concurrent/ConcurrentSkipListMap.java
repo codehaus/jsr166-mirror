@@ -3545,14 +3545,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     // Unsafe mechanics
     private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long HEAD;
-    private static final long SECONDARY;
     static {
         try {
             HEAD = U.objectFieldOffset
                 (ConcurrentSkipListMap.class.getDeclaredField("head"));
-
-            SECONDARY = U.objectFieldOffset
-                (Thread.class.getDeclaredField("threadLocalRandomSecondarySeed"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }

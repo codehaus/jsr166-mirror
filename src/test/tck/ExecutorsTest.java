@@ -285,7 +285,6 @@ public class ExecutorsTest extends JSR166TestCase {
         for (final ExecutorService executor : executors) {
             threads.add(newStartedThread(new CheckedRunnable() {
                 public void realRun() {
-                    long startTime = System.nanoTime();
                     Future future = executor.submit(sleeper);
                     assertFutureTimesOut(future);
                 }}));

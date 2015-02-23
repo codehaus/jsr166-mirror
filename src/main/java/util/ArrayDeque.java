@@ -901,7 +901,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
                 throw new NullPointerException();
             Object[] a = deq.elements;
             int m = a.length - 1, f = getFence(), i = index;
-            if (i != fence) {
+            if (i != f) {
                 @SuppressWarnings("unchecked") E e = (E)a[i];
                 index = (i + 1) & m;
                 if (e == null)

@@ -10,7 +10,6 @@ import jsr166y.*;
 import static extra166y.Ops.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
-import java.lang.reflect.Array;
 
 /**
  * A prefix view of ParallelLongArray that causes operations to apply

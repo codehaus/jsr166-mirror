@@ -7,7 +7,6 @@
 import java.util.concurrent.Phaser;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
 import jsr166e.DoubleAdder;
 
 public class DoubleAdderDemo {

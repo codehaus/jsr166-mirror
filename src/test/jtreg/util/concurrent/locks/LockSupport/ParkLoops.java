@@ -20,7 +20,7 @@ import java.util.concurrent.locks.LockSupport;
 public final class ParkLoops {
     public static void main(String[] args) throws Exception {
         final int nThreads = 4; // must be power of two
-        final int iters = 300000; // crank up for serious stress testing
+        final int iters = 300_000; // crank up for serious stress testing
         final ExecutorService pool = Executors.newCachedThreadPool();
         final AtomicReferenceArray<Thread> threads
             = new AtomicReferenceArray<>(nThreads);
@@ -31,7 +31,9 @@ public final class ParkLoops {
             for (int k = iters;;) {
                 int j = rng.next() & (nThreads - 1);
                 if (threads.compareAndSet(j, null, current)) {
-                    LockSupport.park();
+                    do {                // handle spurious wakeups
+                        LockSupport.park();
+                    } while (threads.get(j) == current);
                     if (k-- <= 0) break;
                 }
             }

@@ -251,7 +251,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
      */
     public void testAdd2() {
         Set full = populatedSet(3);
-        full.add(one);
+        assertFalse(full.add(one));
         assertEquals(3, full.size());
     }
 
@@ -260,7 +260,9 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
      */
     public void testAdd3() {
         Set full = populatedSet(3);
-        full.add(three);
+        assertTrue(full.add(three));
+        assertTrue(full.contains(three));
+        assertFalse(full.add(three));
         assertTrue(full.contains(three));
     }
 

@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
@@ -165,7 +164,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; i++)
             a.add(i);
-        assertFalse(a.isEmpty());
+        assertEquals(n == 0, a.isEmpty());
         assertEquals(n, a.size());
         return a;
     }
@@ -228,11 +227,9 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
      */
     public void testAddAll() {
         Set full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(three);
-        v.add(four);
-        v.add(five);
-        full.addAll(v);
+        assertTrue(full.addAll(Arrays.asList(three, four, five)));
+        assertEquals(6, full.size());
+        assertFalse(full.addAll(Arrays.asList(three, four, five)));
         assertEquals(6, full.size());
     }
 
@@ -242,11 +239,10 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
      */
     public void testAddAll2() {
         Set full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(three);
-        v.add(four);
-        v.add(one); // will not add this element
-        full.addAll(v);
+        // "one" is duplicate and will not be added
+        assertTrue(full.addAll(Arrays.asList(three, four, one)));
+        assertEquals(5, full.size());
+        assertFalse(full.addAll(Arrays.asList(three, four, one)));
         assertEquals(5, full.size());
     }
 
@@ -376,23 +372,20 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
      * KeySet.containsAll returns true for collections with subset of elements
      */
     public void testContainsAll() {
-        Set full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(one);
-        v.add(two);
-        assertTrue(full.containsAll(v));
-        v.add(six);
-        assertFalse(full.containsAll(v));
+        Collection full = populatedSet(3);
+        assertTrue(full.containsAll(Arrays.asList()));
+        assertTrue(full.containsAll(Arrays.asList(one)));
+        assertTrue(full.containsAll(Arrays.asList(one, two)));
+        assertFalse(full.containsAll(Arrays.asList(one, two, six)));
+        assertFalse(full.containsAll(Arrays.asList(six)));
     }
 
     /**
      * KeySet.isEmpty is true when empty, else false
      */
     public void testIsEmpty() {
-        Set empty = ConcurrentHashMap.newKeySet();
-        Set full = populatedSet(3);
-        assertTrue(empty.isEmpty());
-        assertFalse(full.isEmpty());
+        assertTrue(populatedSet(0).isEmpty());
+        assertFalse(populatedSet(3).isEmpty());
     }
 
     /**
@@ -463,10 +456,9 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
      */
     public void testRemoveAll() {
         Set full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(one);
-        v.add(two);
-        full.removeAll(v);
+        assertTrue(full.removeAll(Arrays.asList(one, two)));
+        assertEquals(1, full.size());
+        assertFalse(full.removeAll(Arrays.asList(one, two)));
         assertEquals(1, full.size());
     }
 

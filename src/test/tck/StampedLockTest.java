@@ -285,7 +285,7 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.writeLockInterruptibly();
             }});
-        
+
         running.await();
         waitForThreadToEnterWaitState(t, 100);
         t.interrupt();
@@ -305,7 +305,7 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.tryWriteLock(2 * LONG_DELAY_MS, MILLISECONDS);
             }});
-        
+
         running.await();
         waitForThreadToEnterWaitState(t, 100);
         t.interrupt();
@@ -326,7 +326,7 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.readLockInterruptibly();
             }});
-        
+
         running.await();
         waitForThreadToEnterWaitState(t, 100);
         t.interrupt();
@@ -346,7 +346,7 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.tryReadLock(2 * LONG_DELAY_MS, MILLISECONDS);
             }});
-        
+
         running.await();
         waitForThreadToEnterWaitState(t, 100);
         t.interrupt();
@@ -378,7 +378,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long ws = lock.tryWriteLock();
                 assertTrue(ws == 0L);
             }});
-        
+
         awaitTermination(t);
         releaseWriteLock(lock, s);
     }
@@ -394,7 +394,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long rs = lock.tryReadLock();
                 assertEquals(rs, 0L);
             }});
-        
+
         awaitTermination(t);
         releaseWriteLock(lock, s);
     }
@@ -416,7 +416,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long s4 = lock.readLock();
                 lock.unlockRead(s4);
             }});
-        
+
         awaitTermination(t);
         lock.unlockRead(s);
     }
@@ -434,7 +434,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long s = lock.writeLock();
                 lock.unlockWrite(s);
             }});
-        
+
         running.await();
         waitForThreadToEnterWaitState(t, 100);
         assertFalse(lock.isWriteLocked());
@@ -454,7 +454,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long rs = lock.readLock();
                 lock.unlockRead(rs);
             }});
-        
+
         awaitTermination(t1);
 
         Thread t2 = newStartedThread(new CheckedRunnable() {
@@ -462,7 +462,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long ws = lock.writeLock();
                 lock.unlockWrite(ws);
             }});
-        
+
         assertFalse(lock.isWriteLocked());
         lock.unlockRead(s);
         awaitTermination(t2);
@@ -599,7 +599,7 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.readLockInterruptibly();
             }});
-        
+
         running.await();
         waitForThreadToEnterWaitState(t, 100);
         t.interrupt();
@@ -704,7 +704,7 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.writeLockInterruptibly();
             }});
-        
+
         running.await();
         assertFalse(lock.validate(p));
         assertFalse((p = lock.tryOptimisticRead()) != 0L);

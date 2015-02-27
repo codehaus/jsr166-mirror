@@ -163,7 +163,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         Set<Integer> a = ConcurrentHashMap.<Integer>newKeySet();
         assertTrue(a.isEmpty());
         for (int i = 0; i < n; i++)
-            a.add(i);
+            assertTrue(a.add(i));
         assertEquals(n == 0, a.isEmpty());
         assertEquals(n, a.size());
         return a;
@@ -173,7 +173,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         Set<Integer> a = ConcurrentHashMap.<Integer>newKeySet();
         assertTrue(a.isEmpty());
         for (int i = 0; i < elements.length; i++)
-            a.add(elements[i]);
+            assertTrue(a.add(elements[i]));
         assertFalse(a.isEmpty());
         assertEquals(elements.length, a.size());
         return a;
@@ -301,9 +301,9 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
             shouldThrow();
         } catch (NullPointerException success) {}
         ConcurrentHashMap.KeySetView set = map.keySet(one);
-        set.add(one);
-        set.add(six);
-        set.add(seven);
+        assertFalse(set.add(one));
+        assertTrue(set.add(six));
+        assertTrue(set.add(seven));
         assertTrue(set.getMappedValue() == one);
         assertTrue(map.get(one) != one);
         assertTrue(map.get(six) == one);

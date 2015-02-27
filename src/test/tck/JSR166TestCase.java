@@ -652,7 +652,7 @@ public class JSR166TestCase extends TestCase {
                      " did not terminate in a timely manner");
         } catch (SecurityException ok) {
             // Allowed in case test doesn't have privs
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException fail) {
             fail("Unexpected InterruptedException");
         }
     }
@@ -683,7 +683,7 @@ public class JSR166TestCase extends TestCase {
             // No need to optimize the failing case via Thread.join.
             delay(millis);
             assertTrue(thread.isAlive());
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException fail) {
             fail("Unexpected InterruptedException");
         }
     }
@@ -705,7 +705,7 @@ public class JSR166TestCase extends TestCase {
             delay(millis);
             for (Thread thread : threads)
                 assertTrue(thread.isAlive());
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException fail) {
             fail("Unexpected InterruptedException");
         }
     }
@@ -727,8 +727,8 @@ public class JSR166TestCase extends TestCase {
             future.get(timeoutMillis, MILLISECONDS);
             shouldThrow();
         } catch (TimeoutException success) {
-        } catch (Exception e) {
-            threadUnexpectedException(e);
+        } catch (Exception fail) {
+            threadUnexpectedException(fail);
         } finally { future.cancel(true); }
         assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
     }
@@ -884,10 +884,10 @@ public class JSR166TestCase extends TestCase {
     void sleep(long millis) {
         try {
             delay(millis);
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException fail) {
             AssertionFailedError afe =
                 new AssertionFailedError("Unexpected InterruptedException");
-            afe.initCause(ie);
+            afe.initCause(fail);
             throw afe;
         }
     }
@@ -979,8 +979,8 @@ public class JSR166TestCase extends TestCase {
     void awaitTermination(Thread t, long timeoutMillis) {
         try {
             t.join(timeoutMillis);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
+        } catch (InterruptedException fail) {
+            threadUnexpectedException(fail);
         } finally {
             if (t.getState() != Thread.State.TERMINATED) {
                 t.interrupt();
@@ -1006,8 +1006,8 @@ public class JSR166TestCase extends TestCase {
         public final void run() {
             try {
                 realRun();
-            } catch (Throwable t) {
-                threadUnexpectedException(t);
+            } catch (Throwable fail) {
+                threadUnexpectedException(fail);
             }
         }
     }
@@ -1061,8 +1061,8 @@ public class JSR166TestCase extends TestCase {
                 threadShouldThrow("InterruptedException");
             } catch (InterruptedException success) {
                 threadAssertFalse(Thread.interrupted());
-            } catch (Throwable t) {
-                threadUnexpectedException(t);
+            } catch (Throwable fail) {
+                threadUnexpectedException(fail);
             }
         }
     }
@@ -1073,8 +1073,8 @@ public class JSR166TestCase extends TestCase {
         public final T call() {
             try {
                 return realCall();
-            } catch (Throwable t) {
-                threadUnexpectedException(t);
+            } catch (Throwable fail) {
+                threadUnexpectedException(fail);
                 return null;
             }
         }
@@ -1091,8 +1091,8 @@ public class JSR166TestCase extends TestCase {
                 return result;
             } catch (InterruptedException success) {
                 threadAssertFalse(Thread.interrupted());
-            } catch (Throwable t) {
-                threadUnexpectedException(t);
+            } catch (Throwable fail) {
+                threadUnexpectedException(fail);
             }
             return null;
         }
@@ -1132,16 +1132,16 @@ public class JSR166TestCase extends TestCase {
     public void await(CountDownLatch latch) {
         try {
             assertTrue(latch.await(LONG_DELAY_MS, MILLISECONDS));
-        } catch (Throwable t) {
-            threadUnexpectedException(t);
+        } catch (Throwable fail) {
+            threadUnexpectedException(fail);
         }
     }
 
     public void await(Semaphore semaphore) {
         try {
             assertTrue(semaphore.tryAcquire(LONG_DELAY_MS, MILLISECONDS));
-        } catch (Throwable t) {
-            threadUnexpectedException(t);
+        } catch (Throwable fail) {
+            threadUnexpectedException(fail);
         }
     }
 
@@ -1335,8 +1335,8 @@ public class JSR166TestCase extends TestCase {
         @Override protected final void compute() {
             try {
                 realCompute();
-            } catch (Throwable t) {
-                threadUnexpectedException(t);
+            } catch (Throwable fail) {
+                threadUnexpectedException(fail);
             }
         }
     }
@@ -1350,8 +1350,8 @@ public class JSR166TestCase extends TestCase {
         @Override protected final T compute() {
             try {
                 return realCompute();
-            } catch (Throwable t) {
-                threadUnexpectedException(t);
+            } catch (Throwable fail) {
+                threadUnexpectedException(fail);
                 return null;
             }
         }
@@ -1375,12 +1375,12 @@ public class JSR166TestCase extends TestCase {
         public int await() {
             try {
                 return super.await(2 * LONG_DELAY_MS, MILLISECONDS);
-            } catch (TimeoutException e) {
+            } catch (TimeoutException timedOut) {
                 throw new AssertionFailedError("timed out");
-            } catch (Exception e) {
+            } catch (Exception fail) {
                 AssertionFailedError afe =
-                    new AssertionFailedError("Unexpected exception: " + e);
-                afe.initCause(e);
+                    new AssertionFailedError("Unexpected exception: " + fail);
+                afe.initCause(fail);
                 throw afe;
             }
         }
@@ -1408,9 +1408,7 @@ public class JSR166TestCase extends TestCase {
                 q.remove();
                 shouldThrow();
             } catch (NoSuchElementException success) {}
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
     }
 
     void assertSerialEquals(Object x, Object y) {
@@ -1429,8 +1427,8 @@ public class JSR166TestCase extends TestCase {
             oos.flush();
             oos.close();
             return bos.toByteArray();
-        } catch (Throwable t) {
-            threadUnexpectedException(t);
+        } catch (Throwable fail) {
+            threadUnexpectedException(fail);
             return new byte[0];
         }
     }
@@ -1443,8 +1441,8 @@ public class JSR166TestCase extends TestCase {
             T clone = (T) ois.readObject();
             assertSame(o.getClass(), clone.getClass());
             return clone;
-        } catch (Throwable t) {
-            threadUnexpectedException(t);
+        } catch (Throwable fail) {
+            threadUnexpectedException(fail);
             return null;
         }
     }

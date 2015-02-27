@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import junit.framework.Test;
@@ -72,11 +71,9 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      */
     public void testAddAll() {
         CopyOnWriteArraySet full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(three);
-        v.add(four);
-        v.add(five);
-        full.addAll(v);
+        assertTrue(full.addAll(Arrays.asList(three, four, five)));
+        assertEquals(6, full.size());
+        assertFalse(full.addAll(Arrays.asList(three, four, five)));
         assertEquals(6, full.size());
     }
 
@@ -86,11 +83,10 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      */
     public void testAddAll2() {
         CopyOnWriteArraySet full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(three);
-        v.add(four);
-        v.add(one); // will not add this element
-        full.addAll(v);
+        // "one" is duplicate and will not be added
+        assertTrue(full.addAll(Arrays.asList(three, four, one)));
+        assertEquals(5, full.size());
+        assertFalse(full.addAll(Arrays.asList(three, four, one)));
         assertEquals(5, full.size());
     }
 
@@ -153,12 +149,11 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      */
     public void testContainsAll() {
         CopyOnWriteArraySet full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(one);
-        v.add(two);
-        assertTrue(full.containsAll(v));
-        v.add(six);
-        assertFalse(full.containsAll(v));
+        assertTrue(full.containsAll(Arrays.asList()));
+        assertTrue(full.containsAll(Arrays.asList(one)));
+        assertTrue(full.containsAll(Arrays.asList(one, two)));
+        assertFalse(full.containsAll(Arrays.asList(one, two, six)));
+        assertFalse(full.containsAll(Arrays.asList(six)));
     }
 
     /**
@@ -235,10 +230,9 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      */
     public void testRemoveAll() {
         CopyOnWriteArraySet full = populatedSet(3);
-        Vector v = new Vector();
-        v.add(one);
-        v.add(two);
-        full.removeAll(v);
+        assertTrue(full.removeAll(Arrays.asList(one, two)));
+        assertEquals(1, full.size());
+        assertFalse(full.removeAll(Arrays.asList(one, two)));
         assertEquals(1, full.size());
     }
 

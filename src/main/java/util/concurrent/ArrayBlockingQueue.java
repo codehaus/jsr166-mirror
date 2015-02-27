@@ -95,7 +95,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * are known not to be any.  Allows queue operations to update
      * iterator state.
      */
-    transient Itrs itrs = null;
+    transient Itrs itrs;
 
     // Internal helper methods
 

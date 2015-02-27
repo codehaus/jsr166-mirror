@@ -275,7 +275,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         try {
             full.add(three);
             shouldThrow();
-        } catch (UnsupportedOperationException e){}
+        } catch (UnsupportedOperationException success) {}
     }
 
     /**
@@ -287,7 +287,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         try {
             full.add(null);
             shouldThrow();
-        } catch (NullPointerException e){}
+        } catch (NullPointerException success) {}
     }
 
     /**

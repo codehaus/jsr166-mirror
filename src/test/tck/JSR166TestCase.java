@@ -564,11 +564,11 @@ public class JSR166TestCase extends TestCase {
     public void threadAssertEquals(Object x, Object y) {
         try {
             assertEquals(x, y);
-        } catch (AssertionFailedError t) {
-            threadRecordFailure(t);
-            throw t;
-        } catch (Throwable t) {
-            threadUnexpectedException(t);
+        } catch (AssertionFailedError fail) {
+            threadRecordFailure(fail);
+            throw fail;
+        } catch (Throwable fail) {
+            threadUnexpectedException(fail);
         }
     }
 
@@ -580,9 +580,9 @@ public class JSR166TestCase extends TestCase {
     public void threadAssertSame(Object x, Object y) {
         try {
             assertSame(x, y);
-        } catch (AssertionFailedError t) {
-            threadRecordFailure(t);
-            throw t;
+        } catch (AssertionFailedError fail) {
+            threadRecordFailure(fail);
+            throw fail;
         }
     }
 

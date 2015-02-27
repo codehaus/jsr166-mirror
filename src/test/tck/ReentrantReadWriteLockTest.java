@@ -830,9 +830,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             new PublicReentrantReadWriteLock(fair);
         try {
             lock.writeLock().lockInterruptibly();
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.writeLock().lockInterruptibly();
@@ -857,9 +855,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             lock.readLock().lockInterruptibly();
             lock.readLock().unlock();
             lock.writeLock().lockInterruptibly();
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 lock.readLock().lockInterruptibly();
@@ -885,7 +881,9 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
                 await(c, awaitMethod);
                 shouldThrow();
             } catch (IllegalMonitorStateException success) {
-            } catch (InterruptedException e) { threadUnexpectedException(e); }
+            } catch (InterruptedException fail) {
+                threadUnexpectedException(fail);
+            }
             assertTrue(millisElapsedSince(startTime) < LONG_DELAY_MS);
         }
     }
@@ -936,9 +934,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertTrue(nanosRemaining <= 0);
             assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
             lock.writeLock().unlock();
-        } catch (InterruptedException e) {
-            threadUnexpectedException(e);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
     }
 
     /**

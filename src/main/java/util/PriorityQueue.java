@@ -111,7 +111,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * The number of times this priority queue has been
      * <i>structurally modified</i>.  See AbstractList for gory details.
      */
-    transient int modCount = 0; // non-private to simplify nested class access
+    transient int modCount;     // non-private for nested class access
 
     /**
      * Creates a {@code PriorityQueue} with the default initial

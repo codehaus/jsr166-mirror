@@ -140,7 +140,7 @@ public class ScheduledThreadPoolExecutor
     /**
      * True if ScheduledFutureTask.cancel should remove from queue.
      */
-    private volatile boolean removeOnCancel = false;
+    private volatile boolean removeOnCancel;
 
     /**
      * Sequence number to break scheduling ties, and in turn to
@@ -1258,8 +1258,8 @@ public class ScheduledThreadPoolExecutor
          */
         private class Itr implements Iterator<Runnable> {
             final RunnableScheduledFuture<?>[] array;
-            int cursor = 0;     // index of next element to return
-            int lastRet = -1;   // index of last element, or -1 if no such
+            int cursor;        // index of next element to return; initially 0
+            int lastRet = -1;  // index of last element returned; -1 if no such
 
             Itr(RunnableScheduledFuture<?>[] array) {
                 this.array = array;

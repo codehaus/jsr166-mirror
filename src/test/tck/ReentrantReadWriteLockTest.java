@@ -957,9 +957,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertFalse(c.await(timeoutMillis, MILLISECONDS));
             assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
             lock.writeLock().unlock();
-        } catch (InterruptedException e) {
-            threadUnexpectedException(e);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
     }
 
     /**
@@ -979,9 +977,7 @@ public class ReentrantReadWriteLockTest extends JSR166TestCase {
             assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + timeoutMillis)));
             assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
             lock.writeLock().unlock();
-        } catch (InterruptedException e) {
-            threadUnexpectedException(e);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
     }
 
     /**

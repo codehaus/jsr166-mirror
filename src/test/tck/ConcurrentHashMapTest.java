@@ -538,12 +538,12 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         try {
             new ConcurrentHashMap(-1, .75f);
             shouldThrow();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException success) {}
 
         try {
             new ConcurrentHashMap(16, -1);
             shouldThrow();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -554,17 +554,17 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         try {
             new ConcurrentHashMap(-1, .75f, 1);
             shouldThrow();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException success) {}
 
         try {
             new ConcurrentHashMap(16, -1, 1);
             shouldThrow();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException success) {}
 
         try {
             new ConcurrentHashMap(16, .75f, -1);
             shouldThrow();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -575,7 +575,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
         try {
             new ConcurrentHashMap(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
     }
 
     /**

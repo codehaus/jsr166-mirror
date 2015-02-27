@@ -233,57 +233,50 @@ public class StampedLockTest extends JSR166TestCase {
     /**
      * A stamp obtained from a successful lock operation validates
      */
-    public void testValidate() {
-        try {
-            StampedLock lock = new StampedLock();
-            long s = lock.writeLock();
-            assertTrue(lock.validate(s));
-            lock.unlockWrite(s);
-            s = lock.readLock();
-            assertTrue(lock.validate(s));
-            lock.unlockRead(s);
-            assertTrue((s = lock.tryWriteLock()) != 0L);
-            assertTrue(lock.validate(s));
-            lock.unlockWrite(s);
-            assertTrue((s = lock.tryReadLock()) != 0L);
-            assertTrue(lock.validate(s));
-            lock.unlockRead(s);
-            assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
-            assertTrue(lock.validate(s));
-            lock.unlockWrite(s);
-            assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
-            assertTrue(lock.validate(s));
-            lock.unlockRead(s);
-            assertTrue((s = lock.tryOptimisticRead()) != 0L);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+    public void testValidate() throws InterruptedException {
+        StampedLock lock = new StampedLock();
+        long s = lock.writeLock();
+        assertTrue(lock.validate(s));
+        lock.unlockWrite(s);
+        s = lock.readLock();
+        assertTrue(lock.validate(s));
+        lock.unlockRead(s);
+        assertTrue((s = lock.tryWriteLock()) != 0L);
+        assertTrue(lock.validate(s));
+        lock.unlockWrite(s);
+        assertTrue((s = lock.tryReadLock()) != 0L);
+        assertTrue(lock.validate(s));
+        lock.unlockRead(s);
+        assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
+        assertTrue(lock.validate(s));
+        lock.unlockWrite(s);
+        assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
+        assertTrue(lock.validate(s));
+        lock.unlockRead(s);
+        assertTrue((s = lock.tryOptimisticRead()) != 0L);
     }
 
     /**
      * A stamp obtained from an unsuccessful lock operation does not validate
      */
-    public void testValidate2() {
-        try {
-            StampedLock lock = new StampedLock();
-            long s;
-            assertTrue((s = lock.writeLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertFalse(lock.validate(lock.tryWriteLock()));
-            assertFalse(lock.validate(lock.tryWriteLock(10L, MILLISECONDS)));
-            assertFalse(lock.validate(lock.tryReadLock()));
-            assertFalse(lock.validate(lock.tryReadLock(10L, MILLISECONDS)));
-            assertFalse(lock.validate(lock.tryOptimisticRead()));
-            lock.unlockWrite(s);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+    public void testValidate2() throws InterruptedException {
+        StampedLock lock = new StampedLock();
+        long s;
+        assertTrue((s = lock.writeLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertFalse(lock.validate(lock.tryWriteLock()));
+        assertFalse(lock.validate(lock.tryWriteLock(10L, MILLISECONDS)));
+        assertFalse(lock.validate(lock.tryReadLock()));
+        assertFalse(lock.validate(lock.tryReadLock(10L, MILLISECONDS)));
+        assertFalse(lock.validate(lock.tryOptimisticRead()));
+        lock.unlockWrite(s);
     }
 
     /**
      * writeLockInterruptibly is interruptible
      */
-    public void testWriteLockInterruptibly_Interruptible() {
+    public void testWriteLockInterruptibly_Interruptible()
+            throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
         long s = lock.writeLock();
@@ -292,21 +285,18 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.writeLockInterruptibly();
             }});
-        try {
-            running.await();
-            waitForThreadToEnterWaitState(t, 100);
-            t.interrupt();
-            awaitTermination(t);
-            releaseWriteLock(lock, s);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        
+        running.await();
+        waitForThreadToEnterWaitState(t, 100);
+        t.interrupt();
+        awaitTermination(t);
+        releaseWriteLock(lock, s);
     }
 
     /**
      * timed tryWriteLock is interruptible
      */
-    public void testWriteTryLock_Interruptible() {
+    public void testWriteTryLock_Interruptible() throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
         long s = lock.writeLock();
@@ -315,21 +305,19 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.tryWriteLock(2 * LONG_DELAY_MS, MILLISECONDS);
             }});
-        try {
-            running.await();
-            waitForThreadToEnterWaitState(t, 100);
-            t.interrupt();
-            awaitTermination(t);
-            releaseWriteLock(lock, s);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        
+        running.await();
+        waitForThreadToEnterWaitState(t, 100);
+        t.interrupt();
+        awaitTermination(t);
+        releaseWriteLock(lock, s);
     }
 
     /**
      * readLockInterruptibly is interruptible
      */
-    public void testReadLockInterruptibly_Interruptible() {
+    public void testReadLockInterruptibly_Interruptible()
+            throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
         long s = lock.writeLock();
@@ -338,21 +326,18 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.readLockInterruptibly();
             }});
-        try {
-            running.await();
-            waitForThreadToEnterWaitState(t, 100);
-            t.interrupt();
-            awaitTermination(t);
-            releaseWriteLock(lock, s);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        
+        running.await();
+        waitForThreadToEnterWaitState(t, 100);
+        t.interrupt();
+        awaitTermination(t);
+        releaseWriteLock(lock, s);
     }
 
     /**
      * timed tryReadLock is interruptible
      */
-    public void testReadTryLock_Interruptible() {
+    public void testReadTryLock_Interruptible() throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
         long s = lock.writeLock();
@@ -361,15 +346,12 @@ public class StampedLockTest extends JSR166TestCase {
                 running.countDown();
                 lock.tryReadLock(2 * LONG_DELAY_MS, MILLISECONDS);
             }});
-        try {
-            running.await();
-            waitForThreadToEnterWaitState(t, 100);
-            t.interrupt();
-            awaitTermination(t);
-            releaseWriteLock(lock, s);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        
+        running.await();
+        waitForThreadToEnterWaitState(t, 100);
+        t.interrupt();
+        awaitTermination(t);
+        releaseWriteLock(lock, s);
     }
 
     /**
@@ -396,7 +378,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long ws = lock.tryWriteLock();
                 assertTrue(ws == 0L);
             }});
-
+        
         awaitTermination(t);
         releaseWriteLock(lock, s);
     }
@@ -412,7 +394,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long rs = lock.tryReadLock();
                 assertEquals(rs, 0L);
             }});
-
+        
         awaitTermination(t);
         releaseWriteLock(lock, s);
     }
@@ -434,7 +416,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long s4 = lock.readLock();
                 lock.unlockRead(s4);
             }});
-
+        
         awaitTermination(t);
         lock.unlockRead(s);
     }
@@ -442,7 +424,7 @@ public class StampedLockTest extends JSR166TestCase {
     /**
      * A writelock succeeds only after a reading thread unlocks
      */
-    public void testWriteAfterReadLock() {
+    public void testWriteAfterReadLock() throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
         long rs = lock.readLock();
@@ -452,16 +434,13 @@ public class StampedLockTest extends JSR166TestCase {
                 long s = lock.writeLock();
                 lock.unlockWrite(s);
             }});
-        try {
-            running.await();
-            waitForThreadToEnterWaitState(t, 100);
-            assertFalse(lock.isWriteLocked());
-            lock.unlockRead(rs);
-            awaitTermination(t);
-            assertFalse(lock.isWriteLocked());
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        
+        running.await();
+        waitForThreadToEnterWaitState(t, 100);
+        assertFalse(lock.isWriteLocked());
+        lock.unlockRead(rs);
+        awaitTermination(t);
+        assertFalse(lock.isWriteLocked());
     }
 
     /**
@@ -475,6 +454,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long rs = lock.readLock();
                 lock.unlockRead(rs);
             }});
+        
         awaitTermination(t1);
 
         Thread t2 = newStartedThread(new CheckedRunnable() {
@@ -482,6 +462,7 @@ public class StampedLockTest extends JSR166TestCase {
                 long ws = lock.writeLock();
                 lock.unlockWrite(ws);
             }});
+        
         assertFalse(lock.isWriteLocked());
         lock.unlockRead(s);
         awaitTermination(t2);
@@ -585,62 +566,45 @@ public class StampedLockTest extends JSR166TestCase {
     /**
      * writeLockInterruptibly succeeds if unlocked, else is interruptible
      */
-    public void testWriteLockInterruptibly() {
+    public void testWriteLockInterruptibly() throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
-        long s = 0L;
-        try {
-            s = lock.writeLockInterruptibly();
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        long s = lock.writeLockInterruptibly();
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 running.countDown();
                 lock.writeLockInterruptibly();
             }});
 
-        try {
-            running.await();
-            waitForThreadToEnterWaitState(t, 100);
-            t.interrupt();
-            assertTrue(lock.isWriteLocked());
-            awaitTermination(t);
-            releaseWriteLock(lock, s);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
-
+        running.await();
+        waitForThreadToEnterWaitState(t, 100);
+        t.interrupt();
+        assertTrue(lock.isWriteLocked());
+        awaitTermination(t);
+        releaseWriteLock(lock, s);
     }
 
     /**
      * readLockInterruptibly succeeds if lock free else is interruptible
      */
-    public void testReadLockInterruptibly() {
+    public void testReadLockInterruptibly() throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
-        long s = 0L;
-        try {
-            s = lock.readLockInterruptibly();
-            lock.unlockRead(s);
-            s = lock.writeLockInterruptibly();
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        long s;
+        s = lock.readLockInterruptibly();
+        lock.unlockRead(s);
+        s = lock.writeLockInterruptibly();
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
             public void realRun() throws InterruptedException {
                 running.countDown();
                 lock.readLockInterruptibly();
             }});
-        try {
-            running.await();
-            waitForThreadToEnterWaitState(t, 100);
-            t.interrupt();
-            awaitTermination(t);
-            releaseWriteLock(lock, s);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        
+        running.await();
+        waitForThreadToEnterWaitState(t, 100);
+        t.interrupt();
+        awaitTermination(t);
+        releaseWriteLock(lock, s);
     }
 
     /**
@@ -674,44 +638,40 @@ public class StampedLockTest extends JSR166TestCase {
     /**
      * tryOptimisticRead succeeds and validates if unlocked, fails if locked
      */
-    public void testValidateOptimistic() {
-        try {
-            StampedLock lock = new StampedLock();
-            long s, p;
-            assertTrue((p = lock.tryOptimisticRead()) != 0L);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.writeLock()) != 0L);
-            assertFalse((p = lock.tryOptimisticRead()) != 0L);
-            assertTrue(lock.validate(s));
-            lock.unlockWrite(s);
-            assertTrue((p = lock.tryOptimisticRead()) != 0L);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.readLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryOptimisticRead()) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockRead(s);
-            assertTrue((s = lock.tryWriteLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertFalse((p = lock.tryOptimisticRead()) != 0L);
-            lock.unlockWrite(s);
-            assertTrue((s = lock.tryReadLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryOptimisticRead()) != 0L);
-            lock.unlockRead(s);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
-            assertFalse((p = lock.tryOptimisticRead()) != 0L);
-            assertTrue(lock.validate(s));
-            lock.unlockWrite(s);
-            assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryOptimisticRead()) != 0L);
-            lock.unlockRead(s);
-            assertTrue((p = lock.tryOptimisticRead()) != 0L);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+    public void testValidateOptimistic() throws InterruptedException {
+        StampedLock lock = new StampedLock();
+        long s, p;
+        assertTrue((p = lock.tryOptimisticRead()) != 0L);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.writeLock()) != 0L);
+        assertFalse((p = lock.tryOptimisticRead()) != 0L);
+        assertTrue(lock.validate(s));
+        lock.unlockWrite(s);
+        assertTrue((p = lock.tryOptimisticRead()) != 0L);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.readLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryOptimisticRead()) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockRead(s);
+        assertTrue((s = lock.tryWriteLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertFalse((p = lock.tryOptimisticRead()) != 0L);
+        lock.unlockWrite(s);
+        assertTrue((s = lock.tryReadLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryOptimisticRead()) != 0L);
+        lock.unlockRead(s);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
+        assertFalse((p = lock.tryOptimisticRead()) != 0L);
+        assertTrue(lock.validate(s));
+        lock.unlockWrite(s);
+        assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryOptimisticRead()) != 0L);
+        lock.unlockRead(s);
+        assertTrue((p = lock.tryOptimisticRead()) != 0L);
     }
 
     /**
@@ -732,156 +692,142 @@ public class StampedLockTest extends JSR166TestCase {
      * tryOptimisticRead stamp does not validate if a write lock
      * intervenes in another thread
      */
-    public void testValidateOptimisticWriteLocked2() {
+    public void testValidateOptimisticWriteLocked2()
+            throws InterruptedException {
         final CountDownLatch running = new CountDownLatch(1);
         final StampedLock lock = new StampedLock();
         long s, p;
         assertTrue((p = lock.tryOptimisticRead()) != 0L);
         Thread t = newStartedThread(new CheckedInterruptedRunnable() {
-                public void realRun() throws InterruptedException {
-                    lock.writeLockInterruptibly();
-                    running.countDown();
-                    lock.writeLockInterruptibly();
-                }});
-        try {
-            running.await();
-            assertFalse(lock.validate(p));
-            assertFalse((p = lock.tryOptimisticRead()) != 0L);
-            t.interrupt();
-            awaitTermination(t);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+            public void realRun() throws InterruptedException {
+                lock.writeLockInterruptibly();
+                running.countDown();
+                lock.writeLockInterruptibly();
+            }});
+        
+        running.await();
+        assertFalse(lock.validate(p));
+        assertFalse((p = lock.tryOptimisticRead()) != 0L);
+        t.interrupt();
+        awaitTermination(t);
     }
 
     /**
      * tryConvertToOptimisticRead succeeds and validates if successfully locked,
      */
-    public void testTryConvertToOptimisticRead() {
-        try {
-            StampedLock lock = new StampedLock();
-            long s, p;
-            s = 0L;
-            assertFalse((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue((s = lock.tryOptimisticRead()) != 0L);
-            assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue((s = lock.writeLock()) != 0L);
-            assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.readLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.tryWriteLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.tryReadLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
-            assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue(lock.validate(p));
-            assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
-            assertTrue(lock.validate(p));
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+    public void testTryConvertToOptimisticRead() throws InterruptedException {
+        StampedLock lock = new StampedLock();
+        long s, p;
+        s = 0L;
+        assertFalse((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue((s = lock.tryOptimisticRead()) != 0L);
+        assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue((s = lock.writeLock()) != 0L);
+        assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.readLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.tryWriteLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.tryReadLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
+        assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue(lock.validate(p));
+        assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToOptimisticRead(s)) != 0L);
+        assertTrue(lock.validate(p));
     }
 
     /**
      * tryConvertToReadLock succeeds and validates if successfully locked
      * or lock free;
      */
-    public void testTryConvertToReadLock() {
-        try {
-            StampedLock lock = new StampedLock();
-            long s, p;
-            s = 0L;
-            assertFalse((p = lock.tryConvertToReadLock(s)) != 0L);
-            assertTrue((s = lock.tryOptimisticRead()) != 0L);
-            assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
-            lock.unlockRead(p);
-            assertTrue((s = lock.writeLock()) != 0L);
-            assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockRead(p);
-            assertTrue((s = lock.readLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockRead(p);
-            assertTrue((s = lock.tryWriteLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockRead(p);
-            assertTrue((s = lock.tryReadLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockRead(p);
-            assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
-            assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockRead(p);
-            assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockRead(p);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+    public void testTryConvertToReadLock() throws InterruptedException {
+        StampedLock lock = new StampedLock();
+        long s, p;
+        s = 0L;
+        assertFalse((p = lock.tryConvertToReadLock(s)) != 0L);
+        assertTrue((s = lock.tryOptimisticRead()) != 0L);
+        assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
+        lock.unlockRead(p);
+        assertTrue((s = lock.writeLock()) != 0L);
+        assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockRead(p);
+        assertTrue((s = lock.readLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockRead(p);
+        assertTrue((s = lock.tryWriteLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockRead(p);
+        assertTrue((s = lock.tryReadLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockRead(p);
+        assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
+        assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockRead(p);
+        assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToReadLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockRead(p);
     }
 
     /**
      * tryConvertToWriteLock succeeds and validates if successfully locked
      * or lock free;
      */
-    public void testTryConvertToWriteLock() {
-        try {
-            StampedLock lock = new StampedLock();
-            long s, p;
-            s = 0L;
-            assertFalse((p = lock.tryConvertToWriteLock(s)) != 0L);
-            assertTrue((s = lock.tryOptimisticRead()) != 0L);
-            assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
-            lock.unlockWrite(p);
-            assertTrue((s = lock.writeLock()) != 0L);
-            assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockWrite(p);
-            assertTrue((s = lock.readLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockWrite(p);
-            assertTrue((s = lock.tryWriteLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockWrite(p);
-            assertTrue((s = lock.tryReadLock()) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockWrite(p);
-            assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
-            assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockWrite(p);
-            assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
-            assertTrue(lock.validate(s));
-            assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
-            assertTrue(lock.validate(p));
-            lock.unlockWrite(p);
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+    public void testTryConvertToWriteLock() throws InterruptedException {
+        StampedLock lock = new StampedLock();
+        long s, p;
+        s = 0L;
+        assertFalse((p = lock.tryConvertToWriteLock(s)) != 0L);
+        assertTrue((s = lock.tryOptimisticRead()) != 0L);
+        assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
+        lock.unlockWrite(p);
+        assertTrue((s = lock.writeLock()) != 0L);
+        assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockWrite(p);
+        assertTrue((s = lock.readLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockWrite(p);
+        assertTrue((s = lock.tryWriteLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockWrite(p);
+        assertTrue((s = lock.tryReadLock()) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockWrite(p);
+        assertTrue((s = lock.tryWriteLock(100L, MILLISECONDS)) != 0L);
+        assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockWrite(p);
+        assertTrue((s = lock.tryReadLock(100L, MILLISECONDS)) != 0L);
+        assertTrue(lock.validate(s));
+        assertTrue((p = lock.tryConvertToWriteLock(s)) != 0L);
+        assertTrue(lock.validate(p));
+        lock.unlockWrite(p);
     }
 
     /**

@@ -299,7 +299,7 @@ public class ConcurrentHashMap8Test extends JSR166TestCase {
         try {
             map.keySet(null);
             shouldThrow();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException success) {}
         ConcurrentHashMap.KeySetView set = map.keySet(one);
         set.add(one);
         set.add(six);

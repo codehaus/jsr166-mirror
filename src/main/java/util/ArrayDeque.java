@@ -251,10 +251,10 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         @SuppressWarnings("unchecked")
         E result = (E) elements[h];
         // Element is null if deque empty
-        if (result == null)
-            return null;
-        elements[h] = null;     // Must null out slot
-        head = (h + 1) & (elements.length - 1);
+        if (result != null) {
+            elements[h] = null; // Must null out slot
+            head = (h + 1) & (elements.length - 1);
+        }
         return result;
     }
 
@@ -262,10 +262,10 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         int t = (tail - 1) & (elements.length - 1);
         @SuppressWarnings("unchecked")
         E result = (E) elements[t];
-        if (result == null)
-            return null;
-        elements[t] = null;
-        tail = t;
+        if (result != null) {
+            elements[t] = null;
+            tail = t;
+        }
         return result;
     }
 

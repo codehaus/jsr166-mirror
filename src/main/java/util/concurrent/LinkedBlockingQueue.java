@@ -479,10 +479,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         takeLock.lock();
         try {
             Node<E> first = head.next;
-            if (first == null)
-                return null;
-            else
-                return first.item;
+            return (first == null) ? null : first.item;
         } finally {
             takeLock.unlock();
         }

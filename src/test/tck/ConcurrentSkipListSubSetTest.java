@@ -167,7 +167,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         try {
             q.add(new Object());
             q.add(new Object());
-            q.add(new Object());
             shouldThrow();
         } catch (ClassCastException success) {}
     }
@@ -662,7 +661,6 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public void testDescendingAddNonComparable() {
         NavigableSet q = dset0();
         try {
-            q.add(new Object());
             q.add(new Object());
             q.add(new Object());
             shouldThrow();

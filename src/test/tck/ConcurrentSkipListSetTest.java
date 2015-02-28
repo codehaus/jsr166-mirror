@@ -166,8 +166,8 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * add(null) throws NPE
      */
     public void testAddNull() {
+        ConcurrentSkipListSet q = new ConcurrentSkipListSet();
         try {
-            ConcurrentSkipListSet q = new ConcurrentSkipListSet();
             q.add(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -195,9 +195,8 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * Add of non-Comparable throws CCE
      */
     public void testAddNonComparable() {
+        ConcurrentSkipListSet q = new ConcurrentSkipListSet();
         try {
-            ConcurrentSkipListSet q = new ConcurrentSkipListSet();
-            q.add(new Object());
             q.add(new Object());
             q.add(new Object());
             shouldThrow();
@@ -208,8 +207,8 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * addAll(null) throws NPE
      */
     public void testAddAll1() {
+        ConcurrentSkipListSet q = new ConcurrentSkipListSet();
         try {
-            ConcurrentSkipListSet q = new ConcurrentSkipListSet();
             q.addAll(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -219,9 +218,9 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
+        ConcurrentSkipListSet q = new ConcurrentSkipListSet();
+        Integer[] ints = new Integer[SIZE];
         try {
-            ConcurrentSkipListSet q = new ConcurrentSkipListSet();
-            Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -232,11 +231,11 @@ public class ConcurrentSkipListSetTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testAddAll3() {
+        ConcurrentSkipListSet q = new ConcurrentSkipListSet();
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
         try {
-            ConcurrentSkipListSet q = new ConcurrentSkipListSet();
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}

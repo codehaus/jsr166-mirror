@@ -197,9 +197,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * Offer of non-Comparable throws CCE
      */
     public void testOfferNonComparable() {
+        PriorityBlockingQueue q = new PriorityBlockingQueue(1);
         try {
-            PriorityBlockingQueue q = new PriorityBlockingQueue(1);
-            q.offer(new Object());
             q.offer(new Object());
             q.offer(new Object());
             shouldThrow();

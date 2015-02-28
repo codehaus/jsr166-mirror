@@ -203,7 +203,6 @@ public class TreeSetTest extends JSR166TestCase {
         try {
             q.add(new Object());
             q.add(new Object());
-            q.add(new Object());
             shouldThrow();
         } catch (ClassCastException success) {}
     }

@@ -132,8 +132,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      * add(null) throws NPE
      */
     public void testAddNull() {
+        NavigableSet q = set0();
         try {
-            NavigableSet q = set0();
             q.add(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -160,9 +160,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      * Add of non-Comparable throws CCE
      */
     public void testAddNonComparable() {
+        NavigableSet q = set0();
         try {
-            NavigableSet q = set0();
-            q.add(new Object());
             q.add(new Object());
             q.add(new Object());
             shouldThrow();
@@ -173,8 +172,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      * addAll(null) throws NPE
      */
     public void testAddAll1() {
+        NavigableSet q = set0();
         try {
-            NavigableSet q = set0();
             q.addAll(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -184,9 +183,9 @@ public class TreeSubSetTest extends JSR166TestCase {
      * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
+        NavigableSet q = set0();
+        Integer[] ints = new Integer[SIZE];
         try {
-            NavigableSet q = set0();
-            Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -197,11 +196,11 @@ public class TreeSubSetTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testAddAll3() {
+        NavigableSet q = set0();
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i+SIZE);
         try {
-            NavigableSet q = set0();
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i+SIZE);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -646,9 +645,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      * Add of non-Comparable throws CCE
      */
     public void testDescendingAddNonComparable() {
+        NavigableSet q = dset0();
         try {
-            NavigableSet q = dset0();
-            q.add(new Object());
             q.add(new Object());
             q.add(new Object());
             shouldThrow();
@@ -659,8 +657,8 @@ public class TreeSubSetTest extends JSR166TestCase {
      * addAll(null) throws NPE
      */
     public void testDescendingAddAll1() {
+        NavigableSet q = dset0();
         try {
-            NavigableSet q = dset0();
             q.addAll(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -670,9 +668,9 @@ public class TreeSubSetTest extends JSR166TestCase {
      * addAll of a collection with null elements throws NPE
      */
     public void testDescendingAddAll2() {
+        NavigableSet q = dset0();
+        Integer[] ints = new Integer[SIZE];
         try {
-            NavigableSet q = dset0();
-            Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -683,11 +681,11 @@ public class TreeSubSetTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testDescendingAddAll3() {
+        NavigableSet q = dset0();
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i+SIZE);
         try {
-            NavigableSet q = dset0();
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i+SIZE);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}

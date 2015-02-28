@@ -1066,10 +1066,9 @@ public class ScheduledThreadPoolExecutor
             lock.lock();
             try {
                 RunnableScheduledFuture<?> first = queue[0];
-                if (first == null || first.getDelay(NANOSECONDS) > 0)
-                    return null;
-                else
-                    return finishPoll(first);
+                return (first == null || first.getDelay(NANOSECONDS) > 0)
+                    ? null
+                    : finishPoll(first);
             } finally {
                 lock.unlock();
             }

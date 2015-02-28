@@ -165,11 +165,11 @@ public class AbstractQueueTest extends JSR166TestCase {
      * addAll throws ISE if an add fails
      */
     public void testAddAll4() {
+        Fail q = new Fail();
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
         try {
-            Fail q = new Fail();
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (IllegalStateException success) {}

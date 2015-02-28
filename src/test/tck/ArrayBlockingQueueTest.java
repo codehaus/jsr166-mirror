@@ -185,12 +185,12 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * add succeeds if not full; throws ISE if full
      */
     public void testAdd() {
+        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            assertTrue(q.add(new Integer(i)));
+        }
+        assertEquals(0, q.remainingCapacity());
         try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
-            for (int i = 0; i < SIZE; ++i) {
-                assertTrue(q.add(new Integer(i)));
-            }
-            assertEquals(0, q.remainingCapacity());
             q.add(new Integer(SIZE));
             shouldThrow();
         } catch (IllegalStateException success) {}
@@ -200,8 +200,8 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * addAll(this) throws IAE
      */
     public void testAddAllSelf() {
+        ArrayBlockingQueue q = populatedQueue(SIZE);
         try {
-            ArrayBlockingQueue q = populatedQueue(SIZE);
             q.addAll(q);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
@@ -212,11 +212,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testAddAll3() {
+        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
         try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -226,11 +226,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * addAll throws ISE if not enough room
      */
     public void testAddAll4() {
+        ArrayBlockingQueue q = new ArrayBlockingQueue(1);
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE; ++i)
+            ints[i] = new Integer(i);
         try {
-            ArrayBlockingQueue q = new ArrayBlockingQueue(1);
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE; ++i)
-                ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (IllegalStateException success) {}

@@ -694,8 +694,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * get(null) of nonempty map throws NPE
      */
     public void testGet_NullPointerException() {
+        ConcurrentSkipListMap c = map5();
         try {
-            ConcurrentSkipListMap c = map5();
             c.get(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -705,8 +705,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * containsKey(null) of nonempty map throws NPE
      */
     public void testContainsKey_NullPointerException() {
+        ConcurrentSkipListMap c = map5();
         try {
-            ConcurrentSkipListMap c = map5();
             c.containsKey(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -716,8 +716,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * containsValue(null) throws NPE
      */
     public void testContainsValue_NullPointerException() {
+        ConcurrentSkipListMap c = new ConcurrentSkipListMap();
         try {
-            ConcurrentSkipListMap c = new ConcurrentSkipListMap();
             c.containsValue(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -727,8 +727,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * put(null,x) throws NPE
      */
     public void testPut1_NullPointerException() {
+        ConcurrentSkipListMap c = map5();
         try {
-            ConcurrentSkipListMap c = map5();
             c.put(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -738,8 +738,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * putIfAbsent(null, x) throws NPE
      */
     public void testPutIfAbsent1_NullPointerException() {
+        ConcurrentSkipListMap c = map5();
         try {
-            ConcurrentSkipListMap c = map5();
             c.putIfAbsent(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -749,8 +749,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * replace(null, x) throws NPE
      */
     public void testReplace_NullPointerException() {
+        ConcurrentSkipListMap c = map5();
         try {
-            ConcurrentSkipListMap c = map5();
             c.replace(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -760,8 +760,8 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * replace(null, x, y) throws NPE
      */
     public void testReplaceValue_NullPointerException() {
+        ConcurrentSkipListMap c = map5();
         try {
-            ConcurrentSkipListMap c = map5();
             c.replace(null, one, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -771,9 +771,9 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * remove(null) throws NPE
      */
     public void testRemove1_NullPointerException() {
+        ConcurrentSkipListMap c = new ConcurrentSkipListMap();
+        c.put("sadsdf", "asdads");
         try {
-            ConcurrentSkipListMap c = new ConcurrentSkipListMap();
-            c.put("sadsdf", "asdads");
             c.remove(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -783,9 +783,9 @@ public class ConcurrentSkipListMapTest extends JSR166TestCase {
      * remove(null, x) throws NPE
      */
     public void testRemove2_NullPointerException() {
+        ConcurrentSkipListMap c = new ConcurrentSkipListMap();
+        c.put("sadsdf", "asdads");
         try {
-            ConcurrentSkipListMap c = new ConcurrentSkipListMap();
-            c.put("sadsdf", "asdads");
             c.remove(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}

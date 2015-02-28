@@ -594,8 +594,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * get(null) throws NPE
      */
     public void testGet_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.get(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -605,8 +605,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * containsKey(null) throws NPE
      */
     public void testContainsKey_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.containsKey(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -616,8 +616,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * containsValue(null) throws NPE
      */
     public void testContainsValue_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.containsValue(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -627,8 +627,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * contains(null) throws NPE
      */
     public void testContains_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.contains(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -638,8 +638,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * put(null,x) throws NPE
      */
     public void testPut1_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.put(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -649,8 +649,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * put(x, null) throws NPE
      */
     public void testPut2_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.put("whatever", null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -660,8 +660,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * putIfAbsent(null, x) throws NPE
      */
     public void testPutIfAbsent1_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.putIfAbsent(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -671,8 +671,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * replace(null, x) throws NPE
      */
     public void testReplace_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -682,8 +682,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * replace(null, x, y) throws NPE
      */
     public void testReplaceValue_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace(null, one, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -693,8 +693,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * putIfAbsent(x, null) throws NPE
      */
     public void testPutIfAbsent2_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.putIfAbsent("whatever", null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -704,8 +704,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * replace(x, null) throws NPE
      */
     public void testReplace2_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace("whatever", null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -715,8 +715,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * replace(x, null, y) throws NPE
      */
     public void testReplaceValue2_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace("whatever", null, "A");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -726,8 +726,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * replace(x, y, null) throws NPE
      */
     public void testReplaceValue3_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
             c.replace("whatever", one, null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -737,9 +737,9 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * remove(null) throws NPE
      */
     public void testRemove1_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
+        c.put("sadsdf", "asdads");
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
-            c.put("sadsdf", "asdads");
             c.remove(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -749,9 +749,9 @@ public class ConcurrentHashMapTest extends JSR166TestCase {
      * remove(null, x) throws NPE
      */
     public void testRemove2_NullPointerException() {
+        ConcurrentHashMap c = new ConcurrentHashMap(5);
+        c.put("sadsdf", "asdads");
         try {
-            ConcurrentHashMap c = new ConcurrentHashMap(5);
-            c.put("sadsdf", "asdads");
             c.remove(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}

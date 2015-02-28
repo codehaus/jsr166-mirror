@@ -575,8 +575,8 @@ public class TreeMapTest extends JSR166TestCase {
      * get(null) of nonempty map throws NPE
      */
     public void testGet_NullPointerException() {
+        TreeMap c = map5();
         try {
-            TreeMap c = map5();
             c.get(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -586,8 +586,8 @@ public class TreeMapTest extends JSR166TestCase {
      * containsKey(null) of nonempty map throws NPE
      */
     public void testContainsKey_NullPointerException() {
+        TreeMap c = map5();
         try {
-            TreeMap c = map5();
             c.containsKey(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -597,9 +597,9 @@ public class TreeMapTest extends JSR166TestCase {
      * remove(null) throws NPE for nonempty map
      */
     public void testRemove1_NullPointerException() {
+        TreeMap c = new TreeMap();
+        c.put("sadsdf", "asdads");
         try {
-            TreeMap c = new TreeMap();
-            c.put("sadsdf", "asdads");
             c.remove(null);
             shouldThrow();
         } catch (NullPointerException success) {}

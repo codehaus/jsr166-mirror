@@ -170,8 +170,8 @@ public class TreeSetTest extends JSR166TestCase {
      * add(null) throws NPE if nonempty
      */
     public void testAddNull() {
+        TreeSet q = populatedSet(SIZE);
         try {
-            TreeSet q = populatedSet(SIZE);
             q.add(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -199,8 +199,8 @@ public class TreeSetTest extends JSR166TestCase {
      * Add of non-Comparable throws CCE
      */
     public void testAddNonComparable() {
+        TreeSet q = new TreeSet();
         try {
-            TreeSet q = new TreeSet();
             q.add(new Object());
             q.add(new Object());
             q.add(new Object());
@@ -212,8 +212,8 @@ public class TreeSetTest extends JSR166TestCase {
      * addAll(null) throws NPE
      */
     public void testAddAll1() {
+        TreeSet q = new TreeSet();
         try {
-            TreeSet q = new TreeSet();
             q.addAll(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -223,9 +223,9 @@ public class TreeSetTest extends JSR166TestCase {
      * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
+        TreeSet q = new TreeSet();
+        Integer[] ints = new Integer[SIZE];
         try {
-            TreeSet q = new TreeSet();
-            Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -236,11 +236,11 @@ public class TreeSetTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testAddAll3() {
+        TreeSet q = new TreeSet();
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
         try {
-            TreeSet q = new TreeSet();
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}

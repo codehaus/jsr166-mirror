@@ -486,8 +486,8 @@ public class FutureTaskTest extends JSR166TestCase {
         final PublicFutureTask task =
             new PublicFutureTask(new Runnable() {
                 public void run() {
+                    pleaseCancel.countDown();
                     try {
-                        pleaseCancel.countDown();
                         delay(LONG_DELAY_MS);
                         threadShouldThrow();
                     } catch (InterruptedException success) {

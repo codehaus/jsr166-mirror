@@ -247,7 +247,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     public E pollFirst() {
-        int h = head;
+        final Object[] elements = this.elements;
+        final int h = head;
         @SuppressWarnings("unchecked")
         E result = (E) elements[h];
         // Element is null if deque empty
@@ -259,7 +260,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     public E pollLast() {
-        int t = (tail - 1) & (elements.length - 1);
+        final Object[] elements = this.elements;
+        final int t = (tail - 1) & (elements.length - 1);
         @SuppressWarnings("unchecked")
         E result = (E) elements[t];
         if (result != null) {

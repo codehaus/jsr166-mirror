@@ -115,16 +115,16 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * remainingCapacity() always returns Integer.MAX_VALUE
      */
     public void testRemainingCapacity() {
-        LinkedTransferQueue<Integer> q = populatedQueue(SIZE);
+        BlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
             assertEquals(SIZE - i, q.size());
-            q.remove();
+            assertEquals(i, q.remove());
         }
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
             assertEquals(i, q.size());
-            q.add(i);
+            assertTrue(q.add(i));
         }
     }
 

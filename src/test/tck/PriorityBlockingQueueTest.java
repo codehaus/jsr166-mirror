@@ -47,8 +47,6 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                             new InitialCapacity().testSuite());
     }
 
-    private static final int NOCAP = Integer.MAX_VALUE;
-
     /** Sample Comparator */
     static class MyReverseComparator implements Comparator {
         public int compare(Object x, Object y) {
@@ -69,7 +67,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         for (int i = (n & 1); i < n; i += 2)
             assertTrue(q.offer(new Integer(i)));
         assertFalse(q.isEmpty());
-        assertEquals(NOCAP, q.remainingCapacity());
+        assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
         assertEquals(n, q.size());
         return q;
     }
@@ -78,7 +76,8 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * A new queue has unbounded capacity
      */
     public void testConstructor1() {
-        assertEquals(NOCAP, new PriorityBlockingQueue(SIZE).remainingCapacity());
+        assertEquals(Integer.MAX_VALUE,
+                     new PriorityBlockingQueue(SIZE).remainingCapacity());
     }
 
     /**
@@ -159,7 +158,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testEmpty() {
         PriorityBlockingQueue q = new PriorityBlockingQueue(2);
         assertTrue(q.isEmpty());
-        assertEquals(NOCAP, q.remainingCapacity());
+        assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
         q.add(one);
         assertFalse(q.isEmpty());
         q.add(two);
@@ -169,20 +168,19 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     }
 
     /**
-     * remainingCapacity does not change when elements added or removed,
-     * but size does
+     * remainingCapacity() always returns Integer.MAX_VALUE
      */
     public void testRemainingCapacity() {
-        PriorityBlockingQueue q = populatedQueue(SIZE);
+        BlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(NOCAP, q.remainingCapacity());
-            assertEquals(SIZE-i, q.size());
-            q.remove();
+            assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
+            assertEquals(SIZE - i, q.size());
+            assertEquals(i, q.remove());
         }
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(NOCAP, q.remainingCapacity());
+            assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
             assertEquals(i, q.size());
-            q.add(new Integer(i));
+            assertTrue(q.add(i));
         }
     }
 

@@ -159,16 +159,16 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * remainingCapacity decreases on add, increases on remove
      */
     public void testRemainingCapacity() {
-        ArrayBlockingQueue q = populatedQueue(SIZE);
+        BlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(i, q.remainingCapacity());
-            assertEquals(SIZE-i, q.size());
-            q.remove();
+            assertEquals(SIZE, q.size() + q.remainingCapacity());
+            assertEquals(i, q.remove());
         }
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(SIZE-i, q.remainingCapacity());
-            assertEquals(i, q.size());
-            q.add(new Integer(i));
+            assertEquals(SIZE, q.size() + q.remainingCapacity());
+            assertTrue(q.add(i));
         }
     }
 

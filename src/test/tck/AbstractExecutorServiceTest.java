@@ -167,8 +167,8 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
      * execute(null runnable) throws NPE
      */
     public void testExecuteNullRunnable() {
+        ExecutorService e = new DirectExecutorService();
         try {
-            ExecutorService e = new DirectExecutorService();
             e.submit((Runnable) null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -178,8 +178,8 @@ public class AbstractExecutorServiceTest extends JSR166TestCase {
      * submit(null callable) throws NPE
      */
     public void testSubmitNullCallable() {
+        ExecutorService e = new DirectExecutorService();
         try {
-            ExecutorService e = new DirectExecutorService();
             e.submit((Callable) null);
             shouldThrow();
         } catch (NullPointerException success) {}

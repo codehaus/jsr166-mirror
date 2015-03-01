@@ -1407,8 +1407,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             try {
                 result = callable.call();
                 return true;
-            } catch (Error err) {
-                throw err;
             } catch (RuntimeException rex) {
                 throw rex;
             } catch (Exception ex) {

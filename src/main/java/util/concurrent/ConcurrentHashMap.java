@@ -596,11 +596,11 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             this.next = next;
         }
 
-        public final K getKey()        { return key; }
-        public final V getValue()      { return val; }
-        public final String toString() { return key + "=" + val; }
-        public final int hashCode() {
-            return key.hashCode() ^ val.hashCode();
+        public final K getKey()     { return key; }
+        public final V getValue()   { return val; }
+        public final int hashCode() { return key.hashCode() ^ val.hashCode(); }
+        public final String toString() {
+            return Helpers.mapEntryToString(key, val);
         }
         public final V setValue(V value) {
             throw new UnsupportedOperationException();
@@ -3454,7 +3454,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         public K getKey()        { return key; }
         public V getValue()      { return val; }
         public int hashCode()    { return key.hashCode() ^ val.hashCode(); }
-        public String toString() { return key + "=" + val; }
+        public String toString() {
+            return Helpers.mapEntryToString(key, val);
+        }
 
         public boolean equals(Object o) {
             Object k, v; Map.Entry<?,?> e;

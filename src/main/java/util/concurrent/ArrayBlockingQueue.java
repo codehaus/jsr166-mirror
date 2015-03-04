@@ -585,27 +585,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public String toString() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            int k = count;
-            if (k == 0)
-                return "[]";
-
-            final Object[] items = this.items;
-            StringBuilder sb = new StringBuilder();
-            sb.append('[');
-            for (int i = takeIndex; ; ) {
-                Object e = items[i];
-                sb.append(e == this ? "(this Collection)" : e);
-                if (--k == 0)
-                    return sb.append(']').toString();
-                sb.append(',').append(' ');
-                if (++i == items.length) i = 0;
-            }
-        } finally {
-            lock.unlock();
-        }
+        return Helpers.collectionToString(this);
     }
 
     /**

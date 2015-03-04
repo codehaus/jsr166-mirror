@@ -827,22 +827,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (size == 0)
                 return "[]";
 
-            // Copy each string into a perfectly sized char[]
-            final char[] chars = new char[charLength + 2 * size];
-            chars[0] = '[';
-            int j = 1;
-            for (int i = 0; i < size; i++) {
-                if (i > 0) {
-                    chars[j++] = ',';
-                    chars[j++] = ' ';
-                }
-                String s = a[i];
-                int len = s.length();
-                s.getChars(0, len, chars, j);
-                j += len;
-            }
-            chars[j] = ']';
-            return new String(chars);
+            return Helpers.toString(a, size, charLength);
         }
     }
 

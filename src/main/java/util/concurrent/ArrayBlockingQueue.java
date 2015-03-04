@@ -593,12 +593,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * The queue will be empty after this call returns.
      */
     public void clear() {
-        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int k = count;
             if (k > 0) {
+                final Object[] items = this.items;
                 final int putIndex = this.putIndex;
                 int i = takeIndex;
                 do {

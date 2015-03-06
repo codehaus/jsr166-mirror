@@ -28,14 +28,13 @@ public final class ParkLoops {
         final Runnable parker = new Runnable() { public void run() {
             final SimpleRandom rng = new SimpleRandom();
             final Thread current = Thread.currentThread();
-            for (int k = iters;;) {
-                int j = rng.next() & (nThreads - 1);
-                if (threads.compareAndSet(j, null, current)) {
-                    do {                // handle spurious wakeups
-                        LockSupport.park();
-                    } while (threads.get(j) == current);
-                    if (k-- <= 0) break;
-                }
+            for (int k = iters, j; k > 0; k--) {
+                do {
+                    j = rng.next() & (nThreads - 1);
+                } while (!threads.compareAndSet(j, null, current));
+                do {                    // handle spurious wakeups
+                    LockSupport.park();
+                } while (threads.get(j) == current);
             }
             done.countDown();
         }};

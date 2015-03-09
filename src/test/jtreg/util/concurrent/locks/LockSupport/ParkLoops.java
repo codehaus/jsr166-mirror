@@ -10,6 +10,8 @@
  */
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +22,8 @@ import java.util.concurrent.locks.LockSupport;
 public final class ParkLoops {
     public static void main(String[] args) throws Exception {
         final int nThreads = 4; // must be power of two
-        final int iters = 300_000; // crank up for serious stress testing
+        final int iters = 2_000_000;
+        final int timeout = 3500;  // in seconds
         final ExecutorService pool = Executors.newCachedThreadPool();
         final AtomicReferenceArray<Thread> threads
             = new AtomicReferenceArray<>(nThreads);
@@ -53,9 +56,23 @@ public final class ParkLoops {
             pool.submit(parker);
             pool.submit(unparker);
         }
-        done.await();
-        pool.shutdown();
-        pool.awaitTermination(10L, SECONDS);
+        try {
+          if (!done.await(timeout, SECONDS)) {
+            dumpAllStacks();
+            throw new AssertionError("lost unpark");
+          }
+        } finally {
+          pool.shutdown();
+          pool.awaitTermination(10L, SECONDS);
+        }
+    }
+
+    static void dumpAllStacks() {
+        ThreadInfo[] threadInfos =
+            ManagementFactory.getThreadMXBean().dumpAllThreads(true, true);
+        for (ThreadInfo threadInfo : threadInfos) {
+            System.err.print(threadInfo);
+        }
     }
 
     /**
